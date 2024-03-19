@@ -2,7 +2,7 @@
   "name": "react-expenses",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://marjina-constantin.github.io/expenses",
+  "homepage": "https://sergiusticiffw.github.io/expenses",
   "dependencies": {
     "googleapis": "^134",
     "highcharts": "^11.2.0",
