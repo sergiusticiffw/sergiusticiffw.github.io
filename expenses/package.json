@@ -1,0 +1,59 @@
+{
+  "name": "react-expenses",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://marjina-constantin.github.io/expenses",
+  "dependencies": {
+    "googleapis": "^134",
+    "highcharts": "^11.2.0",
+    "highcharts-react-official": "^3.2.1",
+    "nodemailer": "^6.9.8",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-google-login": "^5.2.2",
+    "react-icons": "^5.0.1",
+    "react-router-dom": "^6.21.1",
+    "sass": "^1.69.7",
+    "web-vitals": "^3.5.1",
+    "workbox-core": "^7.0.0",
+    "workbox-expiration": "^7.0.0",
+    "workbox-precaching": "^7.0.0",
+    "workbox-routing": "^7.0.0",
+    "workbox-strategies": "^7.0.0"
+  },
+  "scripts": {
+    "start": "vite",
+    "build": "GENERATE_SOURCEMAP=false vite build && mv dist home",
+    "lint": "eslint --fix src/"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.57.0",
+    "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-react": "^7.34.1",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.2",
+    "vite": "^5.1.6",
+    "vite-plugin-pwa": "^0.19.4"
+  },
+  "prettier": {
+    "trailingComma": "es5",
+    "tabWidth": 2,
+    "semi": true,
+    "singleQuote": true
+  }
+}
