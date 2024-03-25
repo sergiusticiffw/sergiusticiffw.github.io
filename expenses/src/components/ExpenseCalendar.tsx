@@ -165,6 +165,7 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
   };
 
   const handleTodayButtonClick = () => {
+    setCurrentMonthIndex(0);
     const calendarApi = calendarRef.current.getApi();
     calendarApi.gotoDate(new Date());
   };
