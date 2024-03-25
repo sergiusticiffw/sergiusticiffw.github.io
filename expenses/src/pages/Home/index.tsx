@@ -152,6 +152,10 @@ const Home = () => {
   const profit = parseFloat((income - total).toFixed(2));
   const [activeTab, setActiveTab] = useState('table');
 
+  const handleMonthChange = (newMonthIndex) => {
+    setCurrentMonthIndex(newMonthIndex);
+  };
+
   return (
     <div>
       <Modal
@@ -283,7 +287,7 @@ const Home = () => {
                 </ul>
               </div>
               {activeTab === 'calendar' ? (
-                <ExpenseCalendar />
+                <ExpenseCalendar setCurrentMonthIndex={handleMonthChange} currentMonthIndex={currentMonthIndex} />
               ) : (
                 <>
                   <TransactionsTable

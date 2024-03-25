@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   useAuthDispatch,
   useAuthState,
@@ -15,7 +15,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
-const ExpenseCalendar = () => {
+const ExpenseCalendar = ({setCurrentMonthIndex, currentMonthIndex}) => {
   const { data, dataDispatch } = useData() as DataState;
   const items = data.filtered_raw || data.raw;
   const showNotification = useNotification();
@@ -137,9 +137,24 @@ const ExpenseCalendar = () => {
     return <>{eventInfo.event.title}</>;
   };
 
+  const [prevDates, setPrevDates] = useState(null);
+  const calendarRef = useRef(null);
+
+  const handleDates = (dateInfo) => {
+    if (prevDates) {
+      if (dateInfo.start < prevDates.start) {
+        setCurrentMonthIndex(currentMonthIndex + 1)
+      } else if (dateInfo.start > prevDates.start) {
+        setCurrentMonthIndex(currentMonthIndex - 1)
+      }
+    }
+    setPrevDates(dateInfo);
+  }
+
   return (
     <>
       <FullCalendar
+        ref={calendarRef}
         plugins={[interactionPlugin, dayGridPlugin]}
         initialView="dayGridMonth"
         editable={false}
@@ -148,6 +163,7 @@ const ExpenseCalendar = () => {
         events={events}
         eventColor="#378006"
         eventContent={renderEventContent}
+        datesSet={handleDates}
       />
       <Modal
         show={showDeleteModal}
