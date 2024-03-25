@@ -109,17 +109,38 @@ body {
   transition: background-color 0.3s ease;
 }
 
+.tab-buttons {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  overflow: auto; /* Enable horizontal scrolling on smaller screens */
+  display: flex; /* Center the tabs horizontally */
+  justify-content: center; /* Center the tabs horizontally */
+}
+
 .tabs-titles {
-  list-style: none;
-  padding: 0px;
+  list-style-type: none;
+  padding: 0;
   margin: 0;
+  display: flex;
+  overflow-x: auto; /* Enable horizontal scrolling on smaller screens */
+  -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
+  scroll-snap-type: x mandatory; /* Snap scrolling to tabs */
 }
 
 .tab-title {
-  display: inline-block;
-  padding: 10px;
   cursor: pointer;
-  margin-left: 1px;
+  padding: 10px 15px; /* Adjusted padding for smaller screens */
+  margin-right: 10px;
+  background: var(--bg-color);
+  border: 1px solid var(--accent-color);
+  border-radius: 20px;
+  white-space: nowrap; /* Prevent text wrapping */
+  flex-shrink: 0; /* Prevent tabs from shrinking */
+  scroll-snap-align: start; /* Snap tabs to start */
+}
+
+.tab-title.active {
+  background-color: var(--accent-color);
 }
 
 .navbar {
