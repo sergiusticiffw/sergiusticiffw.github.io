@@ -30,6 +30,7 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
   const dispatch = useAuthDispatch();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nextDisabled, setNextDisabled] = useState(false);
+  const [todayDisabled, setTodayDisabled] = useState(false);
 
   const handleEdit = (id: string) => {
     const item = selectedEvent?.data?.find(
@@ -139,7 +140,9 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
 
   const calendarRef = useRef(null);
   const transactions = data.filtered || data;
-  const months = transactions.groupedData ? Object.keys(transactions.groupedData) : [];
+  const months = transactions.groupedData
+    ? Object.keys(transactions.groupedData)
+    : [];
   const date = new Date(`01 ${months[currentMonthIndex]}`);
 
   useEffect(() => {
@@ -174,7 +177,12 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
     if (dateToCheck >= startDate && dateToCheck <= endDate) {
       setNextDisabled(true);
     } else {
-      setNextDisabled(false);
+      if (!months[currentMonthIndex - 1]) {
+        setNextDisabled(true);
+        setTodayDisabled(true);
+      } else {
+        setNextDisabled(false);
+      }
     }
   };
 
@@ -211,7 +219,11 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
           >
             Next
           </button>
-          <button className="button today-btn" onClick={handleTodayButtonClick}>
+          <button
+            disabled={todayDisabled}
+            className="button today-btn"
+            onClick={handleTodayButtonClick}
+          >
             Today
           </button>
         </div>
