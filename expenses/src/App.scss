@@ -90,6 +90,25 @@ body {
   padding-bottom: 100px;
 }
 
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.full-calendar-container {
+  width: 100%;
+}
+.prev-btn,
+.next-btn,
+.today-btn {
+  margin: 5px;
+  padding: 8px 16px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
 .tabs-titles {
   list-style: none;
   padding: 0px;

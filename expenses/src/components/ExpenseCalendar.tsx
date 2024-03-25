@@ -76,6 +76,10 @@ const ExpenseCalendar = ({setCurrentMonthIndex, currentMonthIndex}) => {
   };
 
   useEffect(() => {
+    if (items.length > 0) {
+      const firstDate = new Date(items[0].dt);
+      setInitialDate(firstDate);
+    }
     // Process expense data to format it for the calendar
     const formattedEvents = (groupByDate(items) ?? []).map((expense) => ({
       id: expense.date,
@@ -137,34 +141,61 @@ const ExpenseCalendar = ({setCurrentMonthIndex, currentMonthIndex}) => {
     return <>{eventInfo.event.title}</>;
   };
 
-  const [prevDates, setPrevDates] = useState(null);
   const calendarRef = useRef(null);
+  const today = new Date();
+  const [initialDate, setInitialDate] = useState(today);
 
-  const handleDates = (dateInfo) => {
-    if (prevDates) {
-      if (dateInfo.start < prevDates.start) {
-        setCurrentMonthIndex(currentMonthIndex + 1)
-      } else if (dateInfo.start > prevDates.start) {
-        setCurrentMonthIndex(currentMonthIndex - 1)
-      }
+  useEffect(() => {
+    if (calendarRef.current) {
+      calendarRef.current.getApi().gotoDate(initialDate);
     }
-    setPrevDates(dateInfo);
-  }
+  }, [initialDate]);
+
+  const handleNextButtonClick = () => {
+    setCurrentMonthIndex(currentMonthIndex - 1)
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.next();
+  };
+
+  const handlePrevButtonClick = () => {
+    setCurrentMonthIndex(currentMonthIndex + 1)
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.prev();
+  };
+
+  const handleTodayButtonClick = () => {
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.gotoDate(new Date());
+  };
 
   return (
     <>
-      <FullCalendar
-        ref={calendarRef}
-        plugins={[interactionPlugin, dayGridPlugin]}
-        initialView="dayGridMonth"
-        editable={false}
-        selectable={true}
-        eventClick={handleEventSelect}
-        events={events}
-        eventColor="#378006"
-        eventContent={renderEventContent}
-        datesSet={handleDates}
-      />
+      <div className="calendar-container">
+        <div className="full-calendar-container">
+          <FullCalendar
+            ref={calendarRef}
+            initialDate={initialDate}
+            plugins={[interactionPlugin, dayGridPlugin]}
+            initialView="dayGridMonth"
+            editable={false}
+            selectable={true}
+            eventClick={handleEventSelect}
+            events={events}
+            eventColor="#378006"
+            eventContent={renderEventContent}
+            headerToolbar={{
+              left: '',
+              center: 'title',
+              right: ''
+            }}
+          />
+        </div>
+        <div>
+          <button className="prev-btn" onClick={handlePrevButtonClick}>Previous</button>
+          <button className="next-btn" onClick={handleNextButtonClick}>Next</button>
+          <button className="today-btn" onClick={handleTodayButtonClick}>Today</button>
+        </div>
+      </div>
       <Modal
         show={showDeleteModal}
         onClose={(e) => {
