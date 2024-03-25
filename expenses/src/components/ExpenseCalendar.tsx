@@ -181,6 +181,7 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
         setNextDisabled(true);
         setTodayDisabled(true);
       } else {
+        setTodayDisabled(false);
         setNextDisabled(false);
       }
     }
