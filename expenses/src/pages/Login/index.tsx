@@ -42,7 +42,7 @@ const Login = () => {
       <h4>Please login using Google in order to access app functionality.</h4>
       {errorMessage ? <p>We have some errors: {errorMessage}</p> : null}
       <GoogleLogin
-        clientId="954790461001-2p4vab8hud9u6mj4n6hb6iio4uaiofe5.apps.googleusercontent.com"
+        clientId="14695610160-ui3d8l2qa7tdjfi4s1t46hfl609qcmie.apps.googleusercontent.com"
         buttonText="Login"
         render={(renderProps) => (
           <button
