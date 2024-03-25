@@ -4,6 +4,7 @@ import './index.css';
 import App from './App';
 import { registerSW } from 'virtual:pwa-register';
 
+// @ts-expect-error
 registerSW({ immediate: true, scope: '/expenses/' });
 
 ReactDOM.render(

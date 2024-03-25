@@ -15,7 +15,12 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
-const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
+interface ExpenseCalendarProps {
+  currentMonthIndex: number;
+  setCurrentMonthIndex: (newMonthIndex: number) => void;
+}
+
+const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({ setCurrentMonthIndex, currentMonthIndex }) => {
   const { data, dataDispatch } = useData() as DataState;
   const items = data.filtered_raw || data.raw;
   const showNotification = useNotification();
@@ -34,6 +39,7 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
   const [prevDisabled, setPrevDisabled] = useState(false);
 
   const handleEdit = (id: string) => {
+    // @ts-expect-error
     const item = selectedEvent?.data?.find(
       (item: TransactionOrIncomeItem) => item.id === id
     );
@@ -54,9 +60,12 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
         const { type, dt: date, sum } = transaction;
         if (type === 'transaction') {
           const parsedSum = parseFloat(sum);
+          // @ts-expect-error
           if (!acc[date]) {
+            // @ts-expect-error
             acc[date] = parsedSum;
           } else {
+            // @ts-expect-error
             acc[date] += parsedSum;
           }
         }
@@ -67,6 +76,7 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
 
     return Object.keys(groupedTransactions).map((date) => ({
       date,
+      // @ts-expect-error
       sum: groupedTransactions[date],
     }));
   };
@@ -86,10 +96,11 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
       start: new Date(expense.date),
       end: new Date(expense.date),
     }));
+    // @ts-expect-error
     setEvents(formattedEvents);
   }, [items]);
 
-  const handleEventSelect = (event) => {
+  const handleEventSelect = (event: { event: { id: string } }) => {
     const selectedItems = getTransactionsByDate(event.event.id);
     const date = new Date(event.event.id);
     const formattedDate = date.toLocaleDateString('en-US', {
@@ -98,6 +109,7 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
       day: 'numeric',
     });
     setSelectedEvent({
+      // @ts-expect-error
       title: formattedDate,
       data: selectedItems,
     });
@@ -135,7 +147,7 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
     }
   };
 
-  const renderEventContent = (eventInfo) => {
+  const renderEventContent = (eventInfo: { event: { title: string } }) => {
     return <>{eventInfo.event.title}</>;
   };
 
@@ -148,29 +160,33 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
 
   useEffect(() => {
     if (calendarRef.current) {
+      // @ts-expect-error
       calendarRef.current.getApi().gotoDate(date);
     }
   }, [date]);
 
   const handleNextButtonClick = () => {
     setCurrentMonthIndex(currentMonthIndex - 1);
+    // @ts-expect-error
     const calendarApi = calendarRef.current.getApi();
     calendarApi.next();
   };
 
   const handlePrevButtonClick = () => {
     setCurrentMonthIndex(currentMonthIndex + 1);
+    // @ts-expect-error
     const calendarApi = calendarRef.current.getApi();
     calendarApi.prev();
   };
 
   const handleTodayButtonClick = () => {
     setCurrentMonthIndex(0);
+    // @ts-expect-error
     const calendarApi = calendarRef.current.getApi();
     calendarApi.gotoDate(new Date());
   };
 
-  const handleDatesSet = (dateInfo) => {
+  const handleDatesSet = (dateInfo: any) => {
     const startDate = new Date(dateInfo.startStr);
     const endDate = new Date(dateInfo.endStr);
     const dateToCheck = new Date();
@@ -249,6 +265,7 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
       >
         <h3>Are you sure you want to delete the transaction?</h3>
         <button
+          // @ts-expect-error
           onClick={() => handleDelete(showDeleteModal, token)}
           className="button wide"
         >
@@ -293,10 +310,15 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
           setSelectedEvent(null);
         }}
       >
-        <span className="heading">{selectedEvent?.title}</span>
+        <span className="heading">{
+          // @ts-expect-error
+          selectedEvent?.title
+        }</span>
         <TransactionsTable
           handleEdit={handleEdit}
+          // @ts-expect-error
           setShowDeleteModal={handleDelete}
+          // @ts-expect-error
           items={selectedEvent?.data ? selectedEvent.data : []}
         />
       </Modal>

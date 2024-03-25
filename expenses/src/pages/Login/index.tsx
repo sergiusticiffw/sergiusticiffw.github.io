@@ -37,6 +37,7 @@ const Login = () => {
       <h4>Please login using Google in order to access app functionality.</h4>
       {errorMessage ? <p>We have some errors: {errorMessage}</p> : null}
       <button
+        // @ts-expect-error
         onClick={useGoogleLogin({
           onSuccess: handleLogin,
           onError: failedResponseGoogle,

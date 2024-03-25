@@ -152,7 +152,7 @@ const Home = () => {
   const profit = parseFloat((income - total).toFixed(2));
   const [activeTab, setActiveTab] = useState('table');
 
-  const handleMonthChange = (newMonthIndex) => {
+  const handleMonthChange = (newMonthIndex: number) => {
     setCurrentMonthIndex(newMonthIndex);
   };
 

@@ -32,8 +32,8 @@ export default function LastMonth() {
       }
       // @ts-expect-error
       lastMonthTotals[category].y = parseFloat(
-        // @ts-expect-error
         (
+          // @ts-expect-error
           parseFloat(lastMonthTotals[category].y) + parseFloat(item.sum)
         ).toFixed(2)
       );
