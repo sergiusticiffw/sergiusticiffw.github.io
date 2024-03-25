@@ -77,11 +77,6 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
   };
 
   useEffect(() => {
-    if (items.length > 0) {
-      const firstDate = new Date(items[0].dt);
-      setInitialDate(firstDate);
-    }
-    // Process expense data to format it for the calendar
     const formattedEvents = (groupByDate(items) ?? []).map((expense) => ({
       id: expense.date,
       title: expense.sum,
@@ -143,14 +138,15 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
   };
 
   const calendarRef = useRef(null);
-  const today = new Date();
-  const [initialDate, setInitialDate] = useState(today);
+  const transactions = data.filtered || data;
+  const months = transactions.groupedData ? Object.keys(transactions.groupedData) : [];
+  const date = new Date(`01 ${months[currentMonthIndex]}`);
 
   useEffect(() => {
     if (calendarRef.current) {
-      calendarRef.current.getApi().gotoDate(initialDate);
+      calendarRef.current.getApi().gotoDate(date);
     }
-  }, [initialDate]);
+  }, [date]);
 
   const handleNextButtonClick = () => {
     setCurrentMonthIndex(currentMonthIndex - 1);
@@ -188,7 +184,7 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
         <div className="full-calendar-container">
           <FullCalendar
             ref={calendarRef}
-            initialDate={initialDate}
+            initialDate={date}
             plugins={[interactionPlugin, dayGridPlugin]}
             initialView="dayGridMonth"
             editable={false}
