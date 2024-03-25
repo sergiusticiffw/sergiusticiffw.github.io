@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import moment from 'moment';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
 import {
   useAuthDispatch,
   useAuthState,
@@ -14,8 +11,9 @@ import { AuthState, TransactionOrIncomeItem, DataState } from '../type/types';
 import TransactionForm from './TransactionForm';
 import { deleteNode, fetchData } from '../utils/utils';
 import { notificationType } from '../utils/constants';
-
-const localizer = momentLocalizer(moment);
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
 
 const ExpenseCalendar = () => {
   const { data, dataDispatch } = useData() as DataState;
@@ -24,7 +22,6 @@ const ExpenseCalendar = () => {
   const { token } = useAuthState() as AuthState;
 
   const [events, setEvents] = useState([]);
-  const [calendarHeight, setCalendarHeight] = useState('500px');
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [focusedItem, setFocusedItem] = useState({});
@@ -83,29 +80,16 @@ const ExpenseCalendar = () => {
     const formattedEvents = (groupByDate(items) ?? []).map((expense) => ({
       id: expense.date,
       title: expense.sum,
+      allDay: true,
       start: new Date(expense.date),
       end: new Date(expense.date),
     }));
     setEvents(formattedEvents);
   }, [items]);
 
-  // Adjust calendar height for mobile devices
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setCalendarHeight('300px'); // Set a smaller height for mobile devices
-      } else {
-        setCalendarHeight('500px'); // Set the default height for larger screens
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   const handleEventSelect = (event) => {
-    const selectedItems = getTransactionsByDate(event.id);
-    const date = new Date(event.id);
+    const selectedItems = getTransactionsByDate(event.event.id);
+    const date = new Date(event.event.id);
     const formattedDate = date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -149,17 +133,22 @@ const ExpenseCalendar = () => {
     }
   };
 
+  const renderEventContent = (eventInfo) => {
+    return <>{eventInfo.event.title}</>;
+  };
+
   return (
     <>
-      <div style={{ height: calendarHeight }}>
-        <Calendar
-          localizer={localizer}
-          events={events}
-          titleAccessor="title"
-          views={['month']}
-          onSelectEvent={handleEventSelect}
-        />
-      </div>
+      <FullCalendar
+        plugins={[interactionPlugin, dayGridPlugin]}
+        initialView="dayGridMonth"
+        editable={false}
+        selectable={true}
+        eventClick={handleEventSelect}
+        events={events}
+        eventColor="#378006"
+        eventContent={renderEventContent}
+      />
       <Modal
         show={showDeleteModal}
         onClose={(e) => {
