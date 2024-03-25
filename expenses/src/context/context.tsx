@@ -1,6 +1,7 @@
 import React, { useReducer } from 'react';
 import { AuthReducer, DataReducer, initialData, initialState } from './reducer';
 import { AuthState, DataItems, DataState } from '../type/types';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const AuthStateContext = React.createContext<AuthState | null>(null);
 const AuthDispatchContext = React.createContext<React.Dispatch<any> | null>(
@@ -51,12 +52,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 
   return (
-    <AuthStateContext.Provider value={user}>
-      <AuthDispatchContext.Provider value={dispatch}>
-        <DataContext.Provider value={{ data, dataDispatch }}>
-          {children}
-        </DataContext.Provider>
-      </AuthDispatchContext.Provider>
-    </AuthStateContext.Provider>
+    <GoogleOAuthProvider clientId="14695610160-ui3d8l2qa7tdjfi4s1t46hfl609qcmie.apps.googleusercontent.com">
+      <AuthStateContext.Provider value={user}>
+        <AuthDispatchContext.Provider value={dispatch}>
+          <DataContext.Provider value={{ data, dataDispatch }}>
+            {children}
+          </DataContext.Provider>
+        </AuthDispatchContext.Provider>
+      </AuthStateContext.Provider>
+    </GoogleOAuthProvider>
   );
 };

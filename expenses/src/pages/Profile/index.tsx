@@ -12,6 +12,7 @@ import { FaUserCircle } from 'react-icons/fa';
 import { fetchRequest } from '../../utils/utils';
 import { notificationType, themeList } from '../../utils/constants';
 import { AuthState } from '../../type/types';
+import { googleLogout } from '@react-oauth/google';
 
 const Profile = () => {
   const showNotification = useNotification();
@@ -31,6 +32,7 @@ const Profile = () => {
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     event.preventDefault();
+    googleLogout();
     logout(dispatch, dataDispatch);
     navigate('/expenses/login'); //navigate to logout page on logout
   };
