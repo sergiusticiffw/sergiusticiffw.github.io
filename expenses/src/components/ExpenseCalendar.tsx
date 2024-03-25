@@ -31,6 +31,7 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nextDisabled, setNextDisabled] = useState(false);
   const [todayDisabled, setTodayDisabled] = useState(false);
+  const [prevDisabled, setPrevDisabled] = useState(false);
 
   const handleEdit = (id: string) => {
     const item = selectedEvent?.data?.find(
@@ -184,6 +185,12 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
         setTodayDisabled(false);
         setNextDisabled(false);
       }
+
+      if (!months[currentMonthIndex + 1]) {
+        setPrevDisabled(true);
+      } else {
+        setPrevDisabled(false);
+      }
     }
   };
 
@@ -203,14 +210,18 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
             eventContent={renderEventContent}
             headerToolbar={{
               left: '',
-              center: 'title',
+              center: '',
               right: '',
             }}
             datesSet={handleDatesSet}
           />
         </div>
         <div>
-          <button className="button prev-btn" onClick={handlePrevButtonClick}>
+          <button
+            disabled={prevDisabled}
+            className="button prev-btn"
+            onClick={handlePrevButtonClick}
+          >
             Previous
           </button>
           <button
