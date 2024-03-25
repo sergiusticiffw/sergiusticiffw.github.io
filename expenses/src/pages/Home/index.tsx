@@ -287,7 +287,10 @@ const Home = () => {
                 </ul>
               </div>
               {activeTab === 'calendar' ? (
-                <ExpenseCalendar setCurrentMonthIndex={handleMonthChange} currentMonthIndex={currentMonthIndex} />
+                <ExpenseCalendar
+                  setCurrentMonthIndex={handleMonthChange}
+                  currentMonthIndex={currentMonthIndex}
+                />
               ) : (
                 <>
                   <TransactionsTable

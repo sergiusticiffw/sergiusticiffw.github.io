@@ -15,7 +15,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
-const ExpenseCalendar = ({setCurrentMonthIndex, currentMonthIndex}) => {
+const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
   const { data, dataDispatch } = useData() as DataState;
   const items = data.filtered_raw || data.raw;
   const showNotification = useNotification();
@@ -29,6 +29,7 @@ const ExpenseCalendar = ({setCurrentMonthIndex, currentMonthIndex}) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const dispatch = useAuthDispatch();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [nextDisabled, setNextDisabled] = useState(false);
 
   const handleEdit = (id: string) => {
     const item = selectedEvent?.data?.find(
@@ -152,13 +153,13 @@ const ExpenseCalendar = ({setCurrentMonthIndex, currentMonthIndex}) => {
   }, [initialDate]);
 
   const handleNextButtonClick = () => {
-    setCurrentMonthIndex(currentMonthIndex - 1)
+    setCurrentMonthIndex(currentMonthIndex - 1);
     const calendarApi = calendarRef.current.getApi();
     calendarApi.next();
   };
 
   const handlePrevButtonClick = () => {
-    setCurrentMonthIndex(currentMonthIndex + 1)
+    setCurrentMonthIndex(currentMonthIndex + 1);
     const calendarApi = calendarRef.current.getApi();
     calendarApi.prev();
   };
@@ -166,6 +167,18 @@ const ExpenseCalendar = ({setCurrentMonthIndex, currentMonthIndex}) => {
   const handleTodayButtonClick = () => {
     const calendarApi = calendarRef.current.getApi();
     calendarApi.gotoDate(new Date());
+  };
+
+  const handleDatesSet = (dateInfo) => {
+    const startDate = new Date(dateInfo.startStr);
+    const endDate = new Date(dateInfo.endStr);
+    const dateToCheck = new Date();
+
+    if (dateToCheck >= startDate && dateToCheck <= endDate) {
+      setNextDisabled(true);
+    } else {
+      setNextDisabled(false);
+    }
   };
 
   return (
@@ -186,14 +199,25 @@ const ExpenseCalendar = ({setCurrentMonthIndex, currentMonthIndex}) => {
             headerToolbar={{
               left: '',
               center: 'title',
-              right: ''
+              right: '',
             }}
+            datesSet={handleDatesSet}
           />
         </div>
         <div>
-          <button className="prev-btn" onClick={handlePrevButtonClick}>Previous</button>
-          <button className="next-btn" onClick={handleNextButtonClick}>Next</button>
-          <button className="today-btn" onClick={handleTodayButtonClick}>Today</button>
+          <button className="prev-btn" onClick={handlePrevButtonClick}>
+            Previous
+          </button>
+          <button
+            disabled={nextDisabled}
+            className="next-btn"
+            onClick={handleNextButtonClick}
+          >
+            Next
+          </button>
+          <button className="today-btn" onClick={handleTodayButtonClick}>
+            Today
+          </button>
         </div>
       </div>
       <Modal
