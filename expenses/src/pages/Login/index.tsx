@@ -2,7 +2,7 @@ import React from 'react';
 import { loginUser, useAuthDispatch, useAuthState } from '../../context';
 import { useNavigate } from 'react-router-dom';
 import { AuthState } from '../../type/types';
-import { useGoogleLogin } from '@react-oauth/google';
+import { useGoogleLogin, TokenResponse } from '@react-oauth/google';
 
 const Login = () => {
   const dispatch = useAuthDispatch();
@@ -13,7 +13,7 @@ const Login = () => {
     navigate('/expenses');
   }
 
-  const handleLogin = async (googleResponse) => {
+  const handleLogin = async (googleResponse: TokenResponse) => {
     if ('access_token' in googleResponse) {
       const payload = { access_token: googleResponse.access_token };
       try {
