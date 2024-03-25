@@ -276,13 +276,13 @@ const Home = () => {
                     onClick={() => setActiveTab('table')}
                     className="tab-title"
                   >
-                    Table
+                    Table View
                   </li>
                   <li
                     onClick={() => setActiveTab('calendar')}
                     className="tab-title"
                   >
-                    Calendar
+                    Calendar View
                   </li>
                 </ul>
               </div>
