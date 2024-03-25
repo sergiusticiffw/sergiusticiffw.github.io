@@ -195,7 +195,6 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
             selectable={true}
             eventClick={handleEventSelect}
             events={events}
-            eventColor="#378006"
             eventContent={renderEventContent}
             headerToolbar={{
               left: '',
@@ -206,17 +205,17 @@ const ExpenseCalendar = ({ setCurrentMonthIndex, currentMonthIndex }) => {
           />
         </div>
         <div>
-          <button className="prev-btn" onClick={handlePrevButtonClick}>
+          <button className="button prev-btn" onClick={handlePrevButtonClick}>
             Previous
           </button>
           <button
             disabled={nextDisabled}
-            className="next-btn"
+            className="button next-btn"
             onClick={handleNextButtonClick}
           >
             Next
           </button>
-          <button className="today-btn" onClick={handleTodayButtonClick}>
+          <button className="button today-btn" onClick={handleTodayButtonClick}>
             Today
           </button>
         </div>
