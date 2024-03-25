@@ -271,20 +271,20 @@ const Home = () => {
                 ) : null}
               </div>
               <div className="tab-buttons">
-                <ul className="tabs-titles">
-                  <li
+                <div className="tabs-titles">
+                  <div
                     onClick={() => setActiveTab('table')}
                     className={activeTab === 'table' ? "tab-title active" : "tab-title"}
                   >
                     Table View
-                  </li>
-                  <li
+                  </div>
+                  <div
                     onClick={() => setActiveTab('calendar')}
                     className={activeTab === 'calendar' ? "tab-title active" : "tab-title"}
                   >
                     Calendar View
-                  </li>
-                </ul>
+                  </div>
+                </div>
               </div>
               {activeTab === 'calendar' ? (
                 <ExpenseCalendar
