@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   useAuthDispatch,
   useAuthState,
@@ -9,7 +9,7 @@ import Modal from './Modal';
 import TransactionsTable from './TransactionsTable';
 import { AuthState, TransactionOrIncomeItem, DataState } from '../type/types';
 import TransactionForm from './TransactionForm';
-import { deleteNode, fetchData } from '../utils/utils';
+import { deleteNode, fetchData, formatNumber } from '../utils/utils';
 import { notificationType } from '../utils/constants';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -57,7 +57,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
     setShowEditModal(true);
   };
 
-  const groupByDate = (transactions: TransactionOrIncomeItem[]) => {
+  const groupByDate = useCallback((transactions: TransactionOrIncomeItem[]) => {
     const groupedTransactions = (transactions ?? []).reduce(
       (acc, transaction) => {
         const { type, dt: date, sum } = transaction;
@@ -82,7 +82,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
       // @ts-expect-error
       sum: groupedTransactions[date],
     }));
-  };
+  }, []);
 
   const getTransactionsByDate = (id: string) => {
     return (items ?? [])?.filter(
@@ -119,15 +119,14 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
     setShowModal(true);
   };
 
-  const [id, setId] = useState('');
-
-  const handleDelete = (idToRemove: string, token: string) => {
-    setId(idToRemove);
+  const [idToRemove, setId] = useState('');
+  const handleDelete = (id: string, token: string) => {
+    setId(id);
     setShowModal(false);
     setShowDeleteModal(true);
-    if (idToRemove && showDeleteModal) {
+    if (id && showDeleteModal) {
       setIsSubmitting(true);
-      deleteNode(id, token, (response: Response) => {
+      deleteNode(idToRemove, token, (response: Response) => {
         if (response.ok) {
           showNotification(
             'Transaction was successfully deleted.',
@@ -150,9 +149,9 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
     }
   };
 
-  const renderEventContent = (eventInfo: { event: { title: string } }) => {
-    return <>{eventInfo.event.title}</>;
-  };
+  const renderEventContent = useCallback((eventInfo: { event: { title: string } }) => {
+    return <>{formatNumber(eventInfo.event.title)}</>;
+  }, []);
 
   const calendarRef = useRef(null);
   const transactions = data.filtered || data;
