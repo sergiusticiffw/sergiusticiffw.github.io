@@ -2,7 +2,7 @@
   "name": "react-expenses",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://marjina-constantin.github.io/expenses",
+  "homepage": "https://sergiusticiffw.github.io/expenses",
   "dependencies": {
     "@fullcalendar/core": "^6.1.11",
     "@fullcalendar/daygrid": "^6.1.11",
@@ -20,7 +20,7 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "GENERATE_SOURCEMAP=false vite build && mv dist home",
+    "build": "vite build && mv dist home",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives"
   },
   "browserslist": {
