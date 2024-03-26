@@ -227,7 +227,10 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   const handleTouchEnd = () => {
     if (isSwiping) {
       const deltaX = touchEndX - touchStartX;
-      const threshold = 50;
+      const thresholdPercentage = 0.25;
+      const containerWidth = window.innerWidth;
+      const threshold = containerWidth * thresholdPercentage;
+
       if (Math.abs(deltaX) > threshold) {
         if (deltaX > 0) {
           if (prevDisabled) return;
