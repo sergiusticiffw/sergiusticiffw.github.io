@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useData } from '../context';
+import { useData } from '@context/context';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import { TransactionOrIncomeItem, Daily, DataState } from '../type/types';
+import { TransactionOrIncomeItem, Daily, DataState } from '@type/types';
 
 export default function DailyAverageTrend() {
   const { data } = useData() as DataState;

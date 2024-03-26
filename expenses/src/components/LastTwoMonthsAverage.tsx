@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { useAuthState, useData } from '../context';
-import { formatNumber } from '../utils/utils';
-import { AuthState, DataState, TransactionOrIncomeItem } from '../type/types';
+import { useAuthState, useData } from '@context/context';
+import { formatNumber } from '@utils/utils';
+import { AuthState, DataState, TransactionOrIncomeItem } from '@type/types';
 
 export default function LastTwoMonthsAverage() {
   const { data } = useData() as DataState;

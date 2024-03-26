@@ -1,11 +1,11 @@
-import { categories, monthNames } from '../utils/constants';
+import { categories, monthNames } from '@utils/constants';
 import {
   AuthState,
   ActionType,
   TransactionOrIncomeItem,
   Accumulator,
   DataItems,
-} from '../type/types';
+} from '@type/types';
 
 const user = localStorage.getItem('currentUser')
   ? JSON.parse(localStorage.getItem('currentUser')!)

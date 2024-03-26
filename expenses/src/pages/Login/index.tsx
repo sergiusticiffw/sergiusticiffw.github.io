@@ -1,7 +1,8 @@
 import React from 'react';
-import { loginUser, useAuthDispatch, useAuthState } from '../../context';
+import { useAuthDispatch, useAuthState } from '@context/context';
+import { loginUser } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
-import { AuthState } from '../../type/types';
+import { AuthState } from '@type/types';
 import { useGoogleLogin, TokenResponse } from '@react-oauth/google';
 
 const Login = () => {

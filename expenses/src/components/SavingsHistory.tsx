@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useData } from '../context';
+import { useData } from '@context/context';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import { DataState, TransactionOrIncomeItem } from '../type/types';
+import { DataState, TransactionOrIncomeItem } from '@type/types';
 
 interface SavingsData {
   [key: string]: [number, number];

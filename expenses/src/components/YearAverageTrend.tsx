@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import { useAuthState, useData } from '../context';
+import { useAuthState, useData } from '@context/context';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import { formatDataForChart, formatNumber } from '../utils/utils';
-import { monthNames } from '../utils/constants';
-import { AuthState, DataState } from '../type/types';
+import { formatDataForChart, formatNumber } from '@utils/utils';
+import { monthNames } from '@utils/constants';
+import { AuthState, DataState } from '@type/types';
 
 export default function YearAverageTrend() {
   const { data } = useData() as DataState;

@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-import {
-  logout,
-  useAuthDispatch,
-  useAuthState,
-  useData,
-  useNotification,
-} from '../../context';
+import { useAuthDispatch, useAuthState, useData } from '../../context';
+import { useNotification } from '@context/notification';
+import { logout } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
-import { currencies } from '../../utils/constants';
+import { currencies } from '@utils/constants';
 import { FaUserCircle } from 'react-icons/fa';
-import { fetchRequest } from '../../utils/utils';
-import { notificationType, themeList } from '../../utils/constants';
-import { AuthState } from '../../type/types';
+import { fetchRequest } from '@utils/utils';
+import { notificationType, themeList } from '@utils/constants';
+import { AuthState } from '@type/types';
 import { googleLogout } from '@react-oauth/google';
 
 const Profile = () => {

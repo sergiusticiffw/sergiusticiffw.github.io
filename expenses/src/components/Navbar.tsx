@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { useAuthState } from '../context';
+import { useAuthState } from '@context/context';
 import {
   FaChartPie,
   FaHome,
@@ -8,7 +8,7 @@ import {
   FaUser,
 } from 'react-icons/fa';
 import React, { useState } from 'react';
-import { AuthState } from '../type/types';
+import { AuthState } from '@type/types';
 
 export default function Navbar() {
   const { userIsLoggedIn } = useAuthState() as AuthState;

@@ -1,8 +1,8 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { categories } from '../utils/constants';
-import { useData } from '../context';
+import { categories } from '@utils/constants';
+import { useData } from '@context/context';
 import { FaSearch } from 'react-icons/fa';
-import { DataState } from '../type/types';
+import { DataState } from '@type/types';
 
 export default function Filters() {
   const { data, dataDispatch } = useData() as DataState;

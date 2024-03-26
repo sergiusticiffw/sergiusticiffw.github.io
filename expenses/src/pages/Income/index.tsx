@@ -1,17 +1,13 @@
 import React, { Suspense, useEffect, useState } from 'react';
-import IncomeForm from '../../components/IncomeForm';
-import { deleteNode, fetchData } from '../../utils/utils';
-import {
-  useAuthDispatch,
-  useAuthState,
-  useData,
-  useNotification,
-} from '../../context';
-import Modal from '../../components/Modal';
-import IncomeTable from '../../components/IncomeTable';
-import { notificationType } from '../../utils/constants';
-import YearIncomeAverageTrend from '../../components/YearIncomeAverageTrend';
-import { AuthState, TransactionOrIncomeItem } from '../../type/types';
+import IncomeForm from '@components/IncomeForm';
+import { deleteNode, fetchData } from '@utils/utils';
+import { useAuthDispatch, useAuthState, useData } from '@context/context';
+import { useNotification } from '@context/notification';
+import Modal from '@components/Modal';
+import IncomeTable from '@components/IncomeTable';
+import { notificationType } from '@utils/constants';
+import YearIncomeAverageTrend from '@components/YearIncomeAverageTrend';
+import { AuthState, TransactionOrIncomeItem } from '@type/types';
 
 const Income = () => {
   const showNotification = useNotification();

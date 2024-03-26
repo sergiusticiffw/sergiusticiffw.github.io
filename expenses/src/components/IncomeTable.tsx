@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
-import useSwipeActions from '../hooks/useSwipeActions';
+import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash } from 'react-icons/fa';
-import { getClassNamesFor, useSortableData } from '../utils/useSortableData';
-import { formatNumber } from '../utils/utils';
-import { TransactionOrIncomeItem } from '../type/types';
+import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
+import { formatNumber } from '@utils/utils';
+import { TransactionOrIncomeItem } from '@type/types';
 
 interface IncomeTableProps {
   items: TransactionOrIncomeItem[];

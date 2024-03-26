@@ -1,11 +1,11 @@
-import { loginUser, logout } from './actions';
+import { loginUser, logout } from '@context/actions';
 import {
   AuthProvider,
   useAuthDispatch,
   useAuthState,
   useData,
 } from './context';
-import { NotificationProvider, useNotification } from './notification';
+import { NotificationProvider, useNotification } from '@context/notification';
 
 export {
   AuthProvider,

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { useAuthState, useData } from '../context';
-import { AuthState, DataState, TransactionOrIncomeItem } from '../type/types';
-import { formatNumber, getCategory } from '../utils/utils';
+import { useAuthState, useData } from '@context/context';
+import { AuthState, DataState, TransactionOrIncomeItem } from '@type/types';
+import { formatNumber, getCategory } from '@utils/utils';
 
 export default function MostExpensiveProductDisplay() {
   // All time section

@@ -1,9 +1,9 @@
-import Charts from '../pages/Charts';
-import Home from '../pages/Home';
-import Login from '../pages/Login';
-import Profile from '../pages/Profile';
-import AddTransaction from '../pages/AddTransaction';
-import Income from '../pages/Income';
+import Charts from '@pages/Charts';
+import Home from '@pages/Home';
+import Login from '@pages/Login';
+import Profile from '@pages/Profile';
+import AddTransaction from '@pages/AddTransaction';
+import Income from '@pages/Income';
 
 const routes = [
   {

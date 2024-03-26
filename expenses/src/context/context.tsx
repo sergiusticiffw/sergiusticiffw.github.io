@@ -1,6 +1,11 @@
 import React, { useReducer } from 'react';
-import { AuthReducer, DataReducer, initialData, initialState } from './reducer';
-import { AuthState, DataItems, DataState } from '../type/types';
+import {
+  AuthReducer,
+  DataReducer,
+  initialData,
+  initialState,
+} from '@context/reducer';
+import { AuthState, DataItems, DataState } from '@type/types';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const AuthStateContext = React.createContext<AuthState | null>(null);

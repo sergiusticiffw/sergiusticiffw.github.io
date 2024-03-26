@@ -1,15 +1,15 @@
 import React, { Suspense, useEffect } from 'react';
 import Highcharts from 'highcharts';
 import DarkUnica from 'highcharts/themes/dark-unica';
-import { useAuthDispatch, useAuthState, useData } from '../../context';
-import { fetchData } from '../../utils/utils';
-import Filters from '../../components/Filters';
-import MonthlyTotals from '../../components/MonthlyTotals';
-import YearAverageTrend from '../../components/YearAverageTrend';
-import MostExpensiveProductDisplay from '../../components/MostExpensiveProductDisplay';
+import { useAuthDispatch, useAuthState, useData } from '@context/context';
+import { fetchData } from '@utils/utils';
+import Filters from '@components/Filters';
+import MonthlyTotals from '@components/MonthlyTotals';
+import YearAverageTrend from '@components/YearAverageTrend';
+import MostExpensiveProductDisplay from '@components/MostExpensiveProductDisplay';
 import Boost from 'highcharts/modules/boost';
 import NoData from 'highcharts/modules/no-data-to-display';
-import { AuthState } from '../../type/types';
+import { AuthState } from '@type/types';
 
 Boost(Highcharts);
 DarkUnica(Highcharts);

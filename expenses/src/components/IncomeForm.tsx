@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
-import { fetchRequest } from '../utils/utils';
-import {
-  useAuthDispatch,
-  useAuthState,
-  useData,
-  useNotification,
-} from '../context';
-import { notificationType } from '../utils/constants';
-import { AuthState, DataState, NodeData } from '../type/types';
+import { fetchRequest } from '@utils/utils';
+import { useAuthDispatch, useAuthState, useData } from '@context/context';
+import { useNotification } from '@context/notification';
+import { notificationType } from '@utils/constants';
+import { AuthState, DataState, NodeData } from '@type/types';
 
 interface IncomeFormProps {
   formType: string;

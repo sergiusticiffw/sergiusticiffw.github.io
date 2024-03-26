@@ -1,10 +1,6 @@
-import { categories, monthNames } from './constants';
-import { logout } from '../context';
-import {
-  DataStructure,
-  ItemTotal,
-  TransactionOrIncomeItem,
-} from '../type/types';
+import { categories, monthNames } from '@utils//constants';
+import { logout } from '@context/actions';
+import { DataStructure, ItemTotal, TransactionOrIncomeItem } from '@type/types';
 
 const handleErrors = (
   response: Response,

@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import Notification from '../components/Notification';
-import { notificationType, themeList } from '../utils/constants';
-import { useAuthState } from './context';
-import { AuthState } from '../type/types';
+import Notification from '@components/Notification';
+import { notificationType, themeList } from '@utils/constants';
+import { useAuthState } from '@context/context';
+import { AuthState } from '@type/types';
 
 interface NotificationContextProps {
   children: ReactNode;

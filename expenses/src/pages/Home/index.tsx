@@ -1,20 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import {
-  useAuthDispatch,
-  useAuthState,
-  useData,
-  useNotification,
-} from '../../context';
-import { deleteNode, fetchData, formatNumber } from '../../utils/utils';
-import Modal from '../../components/Modal';
-import TransactionForm from '../../components/TransactionForm';
-import TransactionsTable from '../../components/TransactionsTable';
-import Filters from '../../components/Filters';
-import ExpenseCalendar from '../../components/ExpenseCalendar';
-import { monthNames, notificationType } from '../../utils/constants';
+import React, { Suspense, useEffect, useState } from 'react';
+import { useAuthDispatch, useAuthState, useData } from '@context/context';
+import { useNotification } from '@context/notification';
+import { deleteNode, fetchData, formatNumber } from '@utils/utils';
+import Modal from '@components/Modal';
+import TransactionForm from '@components/TransactionForm';
+import TransactionsTable from '@components/TransactionsTable';
+import Filters from '@components/Filters';
+import ExpenseCalendar from '@components/ExpenseCalendar';
+import { monthNames, notificationType } from '@utils/constants';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
-import { AuthState, TransactionOrIncomeItem } from '../../type/types';
-import NumberDisplay from '../../components/NumberDisplay';
+import { AuthState, TransactionOrIncomeItem } from '@type/types';
+import NumberDisplay from '@components/NumberDisplay';
 
 const Home = () => {
   const showNotification = useNotification();
@@ -293,36 +289,40 @@ const Home = () => {
                 </div>
               </div>
               {activeTab === 'calendar' ? (
-                <ExpenseCalendar
-                  setCurrentMonthIndex={handleMonthChange}
-                  currentMonthIndex={currentMonthIndex}
-                />
+                <Suspense fallback="">
+                  <ExpenseCalendar
+                    setCurrentMonthIndex={handleMonthChange}
+                    currentMonthIndex={currentMonthIndex}
+                  />
+                </Suspense>
               ) : (
                 <>
-                  <TransactionsTable
-                    items={items.groupedData[currentMonth]}
-                    handleEdit={handleEdit}
-                    // @ts-expect-error
-                    setShowDeleteModal={setShowDeleteModal}
-                  />
-                  <div className="pager-navigation">
-                    <button
-                      disabled={!months[currentMonthIndex + 1]}
-                      onClick={() =>
-                        setCurrentMonthIndex(currentMonthIndex + 1)
-                      }
-                    >
-                      <FaArrowLeft />
-                    </button>
-                    <button
-                      disabled={!months[currentMonthIndex - 1]}
-                      onClick={() =>
-                        setCurrentMonthIndex(currentMonthIndex - 1)
-                      }
-                    >
-                      <FaArrowRight />
-                    </button>
-                  </div>
+                  <Suspense fallback="">
+                    <TransactionsTable
+                      items={items.groupedData[currentMonth]}
+                      handleEdit={handleEdit}
+                      // @ts-expect-error
+                      setShowDeleteModal={setShowDeleteModal}
+                    />
+                    <div className="pager-navigation">
+                      <button
+                        disabled={!months[currentMonthIndex + 1]}
+                        onClick={() =>
+                          setCurrentMonthIndex(currentMonthIndex + 1)
+                        }
+                      >
+                        <FaArrowLeft />
+                      </button>
+                      <button
+                        disabled={!months[currentMonthIndex - 1]}
+                        onClick={() =>
+                          setCurrentMonthIndex(currentMonthIndex - 1)
+                        }
+                      >
+                        <FaArrowRight />
+                      </button>
+                    </div>
+                  </Suspense>
                 </>
               )}
             </>

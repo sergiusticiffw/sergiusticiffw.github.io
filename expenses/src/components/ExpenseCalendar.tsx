@@ -1,16 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  useAuthDispatch,
-  useAuthState,
-  useData,
-  useNotification,
-} from '../context';
-import Modal from './Modal';
-import TransactionsTable from './TransactionsTable';
-import { AuthState, TransactionOrIncomeItem, DataState } from '../type/types';
-import TransactionForm from './TransactionForm';
-import { deleteNode, fetchData, formatNumber } from '../utils/utils';
-import { notificationType } from '../utils/constants';
+import { useAuthDispatch, useAuthState, useData } from '@context/context';
+import { useNotification } from '@context/notification';
+import Modal from '@components/Modal';
+import TransactionsTable from '@components/TransactionsTable';
+import { AuthState, TransactionOrIncomeItem, DataState } from '@type/types';
+import TransactionForm from '@components/TransactionForm';
+import { deleteNode, fetchData, formatNumber } from '@utils/utils';
+import { notificationType } from '@utils/constants';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -149,9 +145,12 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
     }
   };
 
-  const renderEventContent = useCallback((eventInfo: { event: { title: string } }) => {
-    return <>{formatNumber(eventInfo.event.title)}</>;
-  }, []);
+  const renderEventContent = useCallback(
+    (eventInfo: { event: { title: string } }) => {
+      return <>{formatNumber(eventInfo.event.title)}</>;
+    },
+    []
+  );
 
   const calendarRef = useRef(null);
   const transactions = data.filtered || data;

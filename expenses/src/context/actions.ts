@@ -1,4 +1,4 @@
-import { LoginPayload, UserData } from '../type/types';
+import { LoginPayload, UserData } from '@type/types';
 
 const ROOT_URL = 'https://dev-expenses-api.pantheonsite.io';
 
