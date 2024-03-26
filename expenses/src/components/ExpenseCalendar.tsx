@@ -215,11 +215,11 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   let touchEndX = 0;
   let isSwiping = false;
 
-  const handleTouchStart = (event) => {
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     touchStartX = event.touches[0].clientX;
   };
 
-  const handleTouchMove = (event) => {
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
     touchEndX = event.touches[0].clientX;
     isSwiping = true;
   };
@@ -232,10 +232,12 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
         if (deltaX > 0) {
           if (prevDisabled) return;
           setCurrentMonthIndex(currentMonthIndex + 1);
+          // @ts-expect-error
           calendarRef.current.getApi().prev();
         } else {
           if (nextDisabled) return;
           setCurrentMonthIndex(currentMonthIndex - 1);
+          // @ts-expect-error
           calendarRef.current.getApi().next();
         }
       }
