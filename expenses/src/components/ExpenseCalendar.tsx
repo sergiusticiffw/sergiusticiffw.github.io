@@ -315,6 +315,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({ setCurrentMonthIndex,
           selectedEvent?.title
         }</span>
         <TransactionsTable
+          isModal={true}
           handleEdit={handleEdit}
           // @ts-expect-error
           setShowDeleteModal={handleDelete}

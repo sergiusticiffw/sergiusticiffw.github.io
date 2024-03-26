@@ -7,6 +7,7 @@ import { TransactionOrIncomeItem } from '../type/types';
 
 interface TransactionsTableProps {
   items: TransactionOrIncomeItem[];
+  isModal?: boolean;
   handleEdit: (id: string) => void;
   setShowDeleteModal: (id: string) => void;
 }
@@ -14,6 +15,7 @@ interface TransactionsTableProps {
 const TransactionsTable: React.FC<TransactionsTableProps> = ({
   items,
   handleEdit,
+  isModal = false,
   setShowDeleteModal,
 }) => {
   const { sortedItems, requestSort, sortConfig } = useSortableData(items || []);
@@ -33,7 +35,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
       <table className="expenses-table" cellSpacing="0" cellPadding="0">
         <thead>
           <tr>
-            <th>Date</th>
+            {!isModal ? <th>Date</th> : null}
             <th
               onClick={() => requestSort('sum')}
               className={`sortable ${getClassNamesFor(sortConfig, 'sum')}`}
@@ -63,7 +65,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                 )
               }
             >
-              <td>{element.dt.split('-')[2]}</td>
+              {!isModal ? <td>{element.dt.split('-')[2]}</td> : null}
               <td>{formatNumber(element.sum)}</td>
               <td>{getCategory[element.cat]}</td>
               <td>{element.dsc}</td>
