@@ -20,7 +20,10 @@ interface ExpenseCalendarProps {
   setCurrentMonthIndex: (newMonthIndex: number) => void;
 }
 
-const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({ setCurrentMonthIndex, currentMonthIndex }) => {
+const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
+  setCurrentMonthIndex,
+  currentMonthIndex,
+}) => {
   const { data, dataDispatch } = useData() as DataState;
   const items = data.filtered_raw || data.raw;
   const showNotification = useNotification();
@@ -210,10 +213,47 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({ setCurrentMonthIndex,
     }
   };
 
+  let touchStartX = 0;
+  let touchEndX = 0;
+  let isSwiping = false;
+
+  const handleTouchStart = (event) => {
+    touchStartX = event.touches[0].clientX;
+  };
+
+  const handleTouchMove = (event) => {
+    touchEndX = event.touches[0].clientX;
+    isSwiping = true;
+  };
+
+  const handleTouchEnd = () => {
+    if (isSwiping) {
+      const deltaX = touchEndX - touchStartX;
+      const threshold = 50;
+      if (Math.abs(deltaX) > threshold) {
+        if (deltaX > 0) {
+          if (prevDisabled) return;
+          setCurrentMonthIndex(currentMonthIndex + 1);
+          calendarRef.current.getApi().prev();
+        } else {
+          if (nextDisabled) return;
+          setCurrentMonthIndex(currentMonthIndex - 1);
+          calendarRef.current.getApi().next();
+        }
+      }
+    }
+    isSwiping = false;
+  };
+
   return (
     <>
       <div className="calendar-container">
-        <div className="full-calendar-container">
+        <div
+          className="full-calendar-container"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <FullCalendar
             ref={calendarRef}
             initialDate={date}
@@ -235,21 +275,21 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({ setCurrentMonthIndex,
         <div>
           <button
             disabled={prevDisabled}
-            className="button prev-btn"
+            className="button prev-btn desktop-only"
             onClick={handlePrevButtonClick}
           >
             Previous
           </button>
           <button
             disabled={nextDisabled}
-            className="button next-btn"
+            className="button next-btn desktop-only"
             onClick={handleNextButtonClick}
           >
             Next
           </button>
           <button
             disabled={todayDisabled}
-            className="button today-btn"
+            className="button today-btn desktop-only"
             onClick={handleTodayButtonClick}
           >
             Today
@@ -310,10 +350,12 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({ setCurrentMonthIndex,
           setSelectedEvent(null);
         }}
       >
-        <span className="heading">{
-          // @ts-expect-error
-          selectedEvent?.title
-        }</span>
+        <span className="heading">
+          {
+            // @ts-expect-error
+            selectedEvent?.title
+          }
+        </span>
         <TransactionsTable
           isModal={true}
           handleEdit={handleEdit}

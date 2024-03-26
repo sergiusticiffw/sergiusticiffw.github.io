@@ -48,10 +48,12 @@ export default function MostExpensiveProductDisplay() {
               <td>
                 {formatNumber(transactionWithMaxSum?.sum)} {currency}
               </td>
-              <td>{
-                // @ts-expect-error
-                getCategory[transactionWithMaxSum?.cat]
-              }</td>
+              <td>
+                {
+                  // @ts-expect-error
+                  getCategory[transactionWithMaxSum?.cat]
+                }
+              </td>
               <td>{transactionWithMaxSum?.dsc}</td>
             </tr>
           </tbody>

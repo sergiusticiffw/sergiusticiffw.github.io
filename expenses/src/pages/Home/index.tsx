@@ -274,13 +274,19 @@ const Home = () => {
                 <div className="tabs-titles">
                   <div
                     onClick={() => setActiveTab('table')}
-                    className={activeTab === 'table' ? "tab-title active" : "tab-title"}
+                    className={
+                      activeTab === 'table' ? 'tab-title active' : 'tab-title'
+                    }
                   >
                     Table View
                   </div>
                   <div
                     onClick={() => setActiveTab('calendar')}
-                    className={activeTab === 'calendar' ? "tab-title active" : "tab-title"}
+                    className={
+                      activeTab === 'calendar'
+                        ? 'tab-title active'
+                        : 'tab-title'
+                    }
                   >
                     Calendar View
                   </div>
