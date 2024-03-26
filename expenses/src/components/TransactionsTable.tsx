@@ -89,14 +89,14 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
           ))}
         </tbody>
       </table>
-      {deleteVisible && (
+      {deleteVisible && !isModal && (
         <div style={{ ...extraRowStyle }}>
           <div className="action delete">
             <FaTrash />
           </div>
         </div>
       )}
-      {editVisible && (
+      {editVisible && !isModal && (
         <div style={{ ...extraRowStyle }}>
           <div className="action edit">
             <FaPen />
