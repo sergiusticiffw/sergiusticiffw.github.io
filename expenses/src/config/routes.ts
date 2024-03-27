@@ -1,7 +1,6 @@
-import React from 'react';
 import Income from '@pages/Income';
 import AddTransaction from '@pages/AddTransaction';
-import Charts from '@pages/Charts';
+import LazyCharts from '@pages/LazyCharts';
 import Profile from '@pages/Profile';
 import Login from '@pages/Login';
 import Home from '@pages/Home';
@@ -14,7 +13,7 @@ const routes = [
   },
   {
     path: '/expenses/charts',
-    component: Charts,
+    component: LazyCharts,
     isPrivate: true,
   },
   {
