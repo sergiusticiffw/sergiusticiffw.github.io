@@ -18,6 +18,7 @@
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/ban-ts-comment": "off",
+    "react-hooks/exhaustive-deps": "off",
     "eqeqeq": "error",
     "require-await": "error",
     "no-var": "error",
