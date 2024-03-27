@@ -4,7 +4,7 @@ import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { AuthState, DataState } from '@type/types';
 
-export default function AllTimeSpendings() {
+const AllTimeSpendings = () => {
   // All time section
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
@@ -58,4 +58,6 @@ export default function AllTimeSpendings() {
       </div>
     </>
   );
-}
+};
+
+export default AllTimeSpendings;

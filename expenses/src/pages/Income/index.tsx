@@ -4,12 +4,14 @@ import { deleteNode, fetchData } from '@utils/utils';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import Modal from '@components/Modal';
-import IncomeTable from '@components/IncomeTable';
 import { notificationType } from '@utils/constants';
-import YearIncomeAverageTrend from '@components/YearIncomeAverageTrend';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 
 const Income = () => {
+  const IncomeTable = React.lazy(() => import('@components/IncomeTable'));
+  const YearIncomeAverageTrend = React.lazy(
+    () => import('@components/YearIncomeAverageTrend')
+  );
   const showNotification = useNotification();
   const { token } = useAuthState() as AuthState;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -124,13 +126,15 @@ const Income = () => {
           </button>
 
           {data.incomeData && data.incomeData.length ? (
-            <IncomeTable
-              key={'income'}
-              items={data.incomeData.slice(0, nrOfItemsToShow)}
-              handleEdit={handleEdit}
-              // @ts-expect-error
-              setShowDeleteModal={setShowDeleteModal}
-            />
+            <Suspense fallback="">
+              <IncomeTable
+                key={'income'}
+                items={data.incomeData.slice(0, nrOfItemsToShow)}
+                handleEdit={handleEdit}
+                // @ts-expect-error
+                setShowDeleteModal={setShowDeleteModal}
+              />
+            </Suspense>
           ) : (
             ''
           )}

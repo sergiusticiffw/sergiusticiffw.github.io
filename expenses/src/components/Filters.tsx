@@ -4,7 +4,7 @@ import { useData } from '@context/context';
 import { FaSearch } from 'react-icons/fa';
 import { DataState } from '@type/types';
 
-export default function Filters() {
+const Filters = () => {
   const { data, dataDispatch } = useData() as DataState;
 
   const [state, setState] = useState({
@@ -99,4 +99,6 @@ export default function Filters() {
       )}
     </div>
   );
-}
+};
+
+export default Filters;

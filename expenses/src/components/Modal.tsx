@@ -6,7 +6,7 @@ interface ModalProps {
   children: ReactNode;
 }
 
-export default function Modal({ show, onClose, children }: ModalProps) {
+const Modal = ({ show, onClose, children }: ModalProps) => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const checkIfClickedOutside = (e: MouseEvent) => {
@@ -38,4 +38,6 @@ export default function Modal({ show, onClose, children }: ModalProps) {
       )}
     </>
   );
-}
+};
+
+export default Modal;

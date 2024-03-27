@@ -3,11 +3,11 @@ import { useAuthState, useData } from '@context/context';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { categories } from '@utils/constants';
-import { AuthState } from '@type/types';
+import { AuthState, DataState } from '@type/types';
+import { formatNumber } from '@utils/utils';
 
-export default function LastMonth() {
-  // Last month section
-  const { data } = useData();
+const LastMonth = () => {
+  const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
 
   // Re-render the component only when dependencies are changed.
@@ -15,6 +15,7 @@ export default function LastMonth() {
 
   const oneMonthAgo = new Date().setDate(new Date().getDate() - 30);
   const lastMonthTotals = {};
+  let totalSpending = 0;
   for (const item of data.raw) {
     if (item.type === 'incomes') {
       continue;
@@ -30,15 +31,16 @@ export default function LastMonth() {
         // @ts-expect-error
         lastMonthTotals[category] = { name: category, y: 0 };
       }
+      totalSpending += parseFloat(item.sum);
       // @ts-expect-error
       lastMonthTotals[category].y = parseFloat(
-        (
-          // @ts-expect-error
-          parseFloat(lastMonthTotals[category].y) + parseFloat(item.sum)
-        ).toFixed(2)
+        // @ts-expect-error
+        (lastMonthTotals[category].y + parseFloat(item.sum)).toFixed(2)
       );
     }
   }
+
+  console.log('Total spending:', totalSpending); // Output the total spending
 
   const lastMonthOptions = {
     chart: {
@@ -46,6 +48,9 @@ export default function LastMonth() {
     },
     title: {
       text: 'Last 30 days spendings',
+    },
+    tooltip: {
+      pointFormat: '{point.y} {series.name} ({point.percentage:.2f})%',
     },
     plotOptions: {
       pie: {
@@ -64,5 +69,14 @@ export default function LastMonth() {
     },
   };
 
-  return <HighchartsReact highcharts={Highcharts} options={lastMonthOptions} />;
-}
+  return (
+    <>
+      <HighchartsReact highcharts={Highcharts} options={lastMonthOptions} />
+      <div className="average-spending">
+        Total spent: {formatNumber(totalSpending)} {currency}
+      </div>
+    </>
+  );
+};
+
+export default LastMonth;

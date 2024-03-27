@@ -5,7 +5,7 @@ import HighchartsReact from 'highcharts-react-official';
 import { categories } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
 
-export default function MonthlyTotals() {
+const MonthlyTotals = () => {
   const { data } = useData() as DataState;
   const items = data.filtered || data;
   const { currency } = useAuthState() as AuthState;
@@ -84,7 +84,7 @@ export default function MonthlyTotals() {
         data: items.incomeTotals
           ? Object.values(items.incomeTotals)
               .reverse()
-              .map(function (item) {
+              .map((item) => {
                 return item;
               })
           : [],
@@ -93,4 +93,6 @@ export default function MonthlyTotals() {
   };
 
   return <HighchartsReact highcharts={Highcharts} options={allTimeOptions} />;
-}
+};
+
+export default MonthlyTotals;

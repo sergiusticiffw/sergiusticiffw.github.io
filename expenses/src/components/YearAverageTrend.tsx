@@ -6,7 +6,7 @@ import { formatDataForChart, formatNumber } from '@utils/utils';
 import { monthNames } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
 
-export default function YearAverageTrend() {
+const YearAverageTrend = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
   const items =
@@ -74,4 +74,6 @@ export default function YearAverageTrend() {
       </table>
     </>
   );
-}
+};
+
+export default YearAverageTrend;

@@ -4,15 +4,19 @@ import { useNotification } from '@context/notification';
 import { deleteNode, fetchData, formatNumber } from '@utils/utils';
 import Modal from '@components/Modal';
 import TransactionForm from '@components/TransactionForm';
-import TransactionsTable from '@components/TransactionsTable';
 import Filters from '@components/Filters';
-import ExpenseCalendar from '@components/ExpenseCalendar';
 import { monthNames, notificationType } from '@utils/constants';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import NumberDisplay from '@components/NumberDisplay';
 
 const Home = () => {
+  const TransactionsTable = React.lazy(
+    () => import('@components/TransactionsTable')
+  );
+  const ExpenseCalendar = React.lazy(
+    () => import('@components/ExpenseCalendar')
+  );
   const showNotification = useNotification();
   const { token } = useAuthState() as AuthState;
   const [showDeleteModal, setShowDeleteModal] = useState(false);

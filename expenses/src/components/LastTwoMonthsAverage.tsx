@@ -3,7 +3,7 @@ import { useAuthState, useData } from '@context/context';
 import { formatNumber } from '@utils/utils';
 import { AuthState, DataState, TransactionOrIncomeItem } from '@type/types';
 
-export default function LastTwoMonthsAverage() {
+const LastTwoMonthsAverage = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
 
@@ -39,4 +39,6 @@ export default function LastTwoMonthsAverage() {
       {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} {currency} / day
     </span>
   );
-}
+};
+
+export default LastTwoMonthsAverage;

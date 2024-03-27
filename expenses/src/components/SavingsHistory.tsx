@@ -8,7 +8,7 @@ interface SavingsData {
   [key: string]: [number, number];
 }
 
-export default function SavingsHistory() {
+const SavingsHistory = () => {
   const { data } = useData() as DataState;
   const [items, setItems] = useState<TransactionOrIncomeItem[]>([]);
 
@@ -90,4 +90,6 @@ export default function SavingsHistory() {
   };
 
   return <HighchartsReact highcharts={Highcharts} options={savingsOptions} />;
-}
+};
+
+export default SavingsHistory;

@@ -10,7 +10,7 @@ import {
 import React, { useState } from 'react';
 import { AuthState } from '@type/types';
 
-export default function Navbar() {
+const Navbar = () => {
   const { userIsLoggedIn } = useAuthState() as AuthState;
   const [cssClass, setCssClass] = useState('closed');
   const [xDown, setXDown] = useState<number | null>(null);
@@ -80,4 +80,6 @@ export default function Navbar() {
       </ul>
     </div>
   );
-}
+};
+
+export default Navbar;

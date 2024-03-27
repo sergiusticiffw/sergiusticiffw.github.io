@@ -4,7 +4,7 @@ import { formatNumber } from '@utils/utils';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import { AuthState, DataState } from '@type/types';
 
-export default function DailyAverage() {
+const DailyAverage = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
 
@@ -57,4 +57,6 @@ export default function DailyAverage() {
       </div>
     </>
   );
-}
+};
+
+export default DailyAverage;

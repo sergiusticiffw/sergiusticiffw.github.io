@@ -3,7 +3,8 @@ import { useAuthState, useData } from '@context/context';
 import { formatNumber } from '@utils/utils';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import { AuthState, DataState } from '@type/types';
-export default function MonthlyAverage() {
+
+const MonthlyAverage = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
 
@@ -50,4 +51,6 @@ export default function MonthlyAverage() {
       </div>
     </>
   );
-}
+};
+
+export default MonthlyAverage;

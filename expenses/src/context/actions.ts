@@ -2,7 +2,7 @@ import { LoginPayload, UserData } from '@type/types';
 
 const ROOT_URL = 'https://dev-expenses-api.pantheonsite.io';
 
-export async function loginUser(dispatch: any, loginPayload: LoginPayload) {
+export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
   const requestOptions = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -27,11 +27,11 @@ export async function loginUser(dispatch: any, loginPayload: LoginPayload) {
   } catch (error) {
     dispatch({ type: 'LOGIN_ERROR', error: error });
   }
-}
+};
 
-export async function logout(dispatch: any, dataDispatch: any) {
+export const logout = async (dispatch: any, dataDispatch: any) => {
   await dispatch({ type: 'LOGOUT' });
   await dataDispatch({ type: 'REMOVE_DATA' });
   await localStorage.removeItem('currentUser');
   await localStorage.removeItem('token');
-}
+};

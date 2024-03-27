@@ -6,7 +6,7 @@ import { formatDataForChart, formatNumber } from '@utils/utils';
 import { monthNames } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
 
-export default function YearIncomeAverageTrend() {
+const YearIncomeAverageTrend = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
 
@@ -113,4 +113,6 @@ export default function YearIncomeAverageTrend() {
       </div>
     </>
   );
-}
+};
+
+export default YearIncomeAverageTrend;

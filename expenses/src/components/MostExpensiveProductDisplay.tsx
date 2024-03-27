@@ -3,7 +3,7 @@ import { useAuthState, useData } from '@context/context';
 import { AuthState, DataState, TransactionOrIncomeItem } from '@type/types';
 import { formatNumber, getCategory } from '@utils/utils';
 
-export default function MostExpensiveProductDisplay() {
+const MostExpensiveProductDisplay = () => {
   // All time section
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
@@ -39,22 +39,28 @@ export default function MostExpensiveProductDisplay() {
   return (
     <>
       <span className="heading">The most expensive item</span>
-      <div class="most-expensive-table-container">
-        <div class="table-row">
-          <span class="label">Date:</span> {formattedDate}
+      <div className="most-expensive-table-container">
+        <div className="table-row">
+          <span className="label">Date:</span> {formattedDate}
         </div>
-        <div class="table-row">
-          <span class="label">Amount:</span>{' '}
+        <div className="table-row">
+          <span className="label">Amount:</span>{' '}
           {formatNumber(transactionWithMaxSum?.sum)} {currency}
         </div>
-        <div class="table-row">
-          <span class="label">Category:</span>{' '}
-          {getCategory[transactionWithMaxSum?.cat]}
+        <div className="table-row">
+          <span className="label">Category:</span>{' '}
+          {
+            // @ts-expect-error
+            getCategory[transactionWithMaxSum?.cat]
+          }
         </div>
-        <div class="table-row">
-          <span class="label">Description:</span> {transactionWithMaxSum?.dsc}
+        <div className="table-row">
+          <span className="label">Description:</span>{' '}
+          {transactionWithMaxSum?.dsc}
         </div>
       </div>
     </>
   );
-}
+};
+
+export default MostExpensiveProductDisplay;

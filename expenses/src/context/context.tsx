@@ -17,32 +17,32 @@ export const DataContext = React.createContext<DataState>({
   dataDispatch: () => {},
 });
 
-export function useAuthState() {
+export const useAuthState = () => {
   const context = React.useContext(AuthStateContext);
   if (context === undefined) {
     throw new Error('useAuthState must be used within a AuthProvider');
   }
 
   return context;
-}
+};
 
-export function useData() {
+export const useData = () => {
   const context = React.useContext(DataContext);
   if (context === undefined) {
     throw new Error('useData must be used within a AuthProvider');
   }
 
   return context;
-}
+};
 
-export function useAuthDispatch() {
+export const useAuthDispatch = () => {
   const context = React.useContext(AuthDispatchContext);
   if (context === undefined) {
     throw new Error('useAuthDispatch must be used within a AuthProvider');
   }
 
   return context;
-}
+};
 
 interface AuthProviderProps {
   children: React.ReactNode;

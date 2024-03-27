@@ -7,7 +7,7 @@ import React from 'react';
 import routes from '@config/routes';
 import Navbar from '@components/Navbar';
 
-function App() {
+const App = () => {
   return (
     <AuthProvider>
       <NotificationProvider>
@@ -32,6 +32,6 @@ function App() {
       </NotificationProvider>
     </AuthProvider>
   );
-}
+};
 
 export default App;

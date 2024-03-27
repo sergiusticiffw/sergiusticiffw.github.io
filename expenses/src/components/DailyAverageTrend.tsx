@@ -4,7 +4,7 @@ import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { TransactionOrIncomeItem, Daily, DataState } from '@type/types';
 
-export default function DailyAverageTrend() {
+const DailyAverageTrend = () => {
   const { data } = useData() as DataState;
 
   const [items, setItems] = useState<TransactionOrIncomeItem[]>([]);
@@ -120,4 +120,6 @@ export default function DailyAverageTrend() {
   return (
     <HighchartsReact highcharts={Highcharts} options={dailyAverageOptions} />
   );
-}
+};
+
+export default DailyAverageTrend;
