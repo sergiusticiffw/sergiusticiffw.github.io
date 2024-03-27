@@ -6,6 +6,70 @@ import AppRoute from '@components/AppRoute';
 import React from 'react';
 import routes from '@config/routes';
 import Navbar from '@components/Navbar';
+import Highcharts from 'highcharts';
+import Boost from 'highcharts/modules/boost';
+import DarkUnica from 'highcharts/themes/dark-unica';
+import NoData from 'highcharts/modules/no-data-to-display';
+
+Boost(Highcharts);
+DarkUnica(Highcharts);
+NoData(Highcharts);
+
+const bgColors: Record<string, string> = {
+  'carrot-orange': '#102433',
+  inchworm: '#201f1e',
+};
+const theme = localStorage.getItem('theme') || 'blue-pink-gradient';
+
+Highcharts.theme = {
+  chart: {
+    backgroundColor: theme ? bgColors[theme] : '#282a36',
+  },
+  tooltip: {
+    style: {
+      fontSize: '15px',
+    },
+  },
+};
+
+Highcharts.setOptions(Highcharts.theme);
+// Radialize the colors
+Highcharts.setOptions({
+  colors:
+    (Highcharts.getOptions().colors || []).map(
+      (
+        color:
+          | string
+          | Highcharts.GradientColorObject
+          | Highcharts.PatternObject
+      ) => {
+        return {
+          radialGradient: {
+            cx: 0.5,
+            cy: 0.3,
+            r: 0.7,
+          },
+          stops: [
+            [0, color],
+            [
+              1,
+              Highcharts.color(color as string)
+                .brighten(-0.25)
+                .get('rgb'),
+            ], // darken
+          ] as Highcharts.GradientColorObject['stops'],
+        };
+      }
+    ) ?? [],
+});
+Highcharts.setOptions({
+  plotOptions: {
+    series: {
+      animation: false,
+      boostThreshold: 4000,
+    },
+  },
+});
 
 const App = () => {
   return (

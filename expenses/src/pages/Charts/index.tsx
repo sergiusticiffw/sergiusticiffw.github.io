@@ -1,72 +1,8 @@
 import React, { Suspense, useEffect } from 'react';
-import Highcharts from 'highcharts';
-import DarkUnica from 'highcharts/themes/dark-unica';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { fetchData } from '@utils/utils';
 import Filters from '@components/Filters';
-import Boost from 'highcharts/modules/boost';
-import NoData from 'highcharts/modules/no-data-to-display';
 import { AuthState } from '@type/types';
-
-Boost(Highcharts);
-DarkUnica(Highcharts);
-NoData(Highcharts);
-
-const bgColors: Record<string, string> = {
-  'carrot-orange': '#102433',
-  inchworm: '#201f1e',
-};
-const theme = localStorage.getItem('theme') || 'blue-pink-gradient';
-
-Highcharts.theme = {
-  chart: {
-    backgroundColor: theme ? bgColors[theme] : '#282a36',
-  },
-  tooltip: {
-    style: {
-      fontSize: '15px',
-    },
-  },
-};
-
-Highcharts.setOptions(Highcharts.theme);
-// Radialize the colors
-Highcharts.setOptions({
-  colors:
-    (Highcharts.getOptions().colors || []).map(
-      (
-        color:
-          | string
-          | Highcharts.GradientColorObject
-          | Highcharts.PatternObject
-      ) => {
-        return {
-          radialGradient: {
-            cx: 0.5,
-            cy: 0.3,
-            r: 0.7,
-          },
-          stops: [
-            [0, color],
-            [
-              1,
-              Highcharts.color(color as string)
-                .brighten(-0.25)
-                .get('rgb'),
-            ], // darken
-          ] as Highcharts.GradientColorObject['stops'],
-        };
-      }
-    ) ?? [],
-});
-Highcharts.setOptions({
-  plotOptions: {
-    series: {
-      animation: false,
-      boostThreshold: 4000,
-    },
-  },
-});
 
 const Charts = () => {
   const AllTimeSpendings = React.lazy(
