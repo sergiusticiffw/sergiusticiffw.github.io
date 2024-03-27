@@ -1,9 +1,11 @@
-import Charts from '@pages/Charts';
-import Home from '@pages/Home';
-import Login from '@pages/Login';
-import Profile from '@pages/Profile';
-import AddTransaction from '@pages/AddTransaction';
-import Income from '@pages/Income';
+import React from 'react';
+
+const AddTransaction = React.lazy(() => import('@pages/AddTransaction'));
+const Charts = React.lazy(() => import('@pages/Charts'));
+const Income = React.lazy(() => import('@pages/Income'));
+const Profile = React.lazy(() => import('@pages/Profile'));
+const Login = React.lazy(() => import('@pages/Login'));
+const Home = React.lazy(() => import('@pages/Home'));
 
 const routes = [
   {
