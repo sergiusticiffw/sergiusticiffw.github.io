@@ -61,6 +61,12 @@ $color-map: (
     bg-color: #13122d,
     text-color: $white,
   ),
+  navy-blue: (
+    accent-color: #40739E,
+    secondary-color: #282a36,
+    bg-color: #201f1e,
+    text-color: $dark,
+  ),
 );
 
 @each $class, $colors in $color-map {

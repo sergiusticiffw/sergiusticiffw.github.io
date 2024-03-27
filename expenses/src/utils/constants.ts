@@ -255,4 +255,5 @@ export const themeList = {
   cadetblue: 'Cadet blue',
   'blue-pink-gradient': 'Blue pink gradient',
   'pearl-aqua': 'Pearl Aqua',
+  'navy-blue': 'Navy Blue',
 };

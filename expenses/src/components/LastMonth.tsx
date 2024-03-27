@@ -40,8 +40,6 @@ const LastMonth = () => {
     }
   }
 
-  console.log('Total spending:', totalSpending); // Output the total spending
-
   const lastMonthOptions = {
     chart: {
       type: 'pie',
