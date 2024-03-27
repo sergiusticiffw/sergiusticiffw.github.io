@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  Suspense,
+} from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import Modal from '@components/Modal';
@@ -10,6 +16,7 @@ import { notificationType } from '@utils/constants';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import MostExpensiveProductDisplay from '@components/MostExpensiveProductDisplay';
 
 interface ExpenseCalendarProps {
   currentMonthIndex: number;
@@ -298,6 +305,11 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
             Today
           </button>
         </div>
+      </div>
+      <div className="charts-section">
+        <Suspense fallback="">
+          <MostExpensiveProductDisplay />
+        </Suspense>
       </div>
       <Modal
         show={showDeleteModal}

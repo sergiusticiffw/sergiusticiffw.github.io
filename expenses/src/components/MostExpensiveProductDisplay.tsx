@@ -29,35 +29,31 @@ export default function MostExpensiveProductDisplay() {
     return null;
   }
 
+  const date = new Date(transactionWithMaxSum.dt);
+  const formattedDate = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+
   return (
     <>
       <span className="heading">The most expensive item</span>
-      <div className="table-wrapper">
-        <table className="expenses-table" cellSpacing="0" cellPadding="0">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Amount</th>
-              <th>Category</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>{transactionWithMaxSum?.dt}</td>
-              <td>
-                {formatNumber(transactionWithMaxSum?.sum)} {currency}
-              </td>
-              <td>
-                {
-                  // @ts-expect-error
-                  getCategory[transactionWithMaxSum?.cat]
-                }
-              </td>
-              <td>{transactionWithMaxSum?.dsc}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="most-expensive-table-container">
+        <div class="table-row">
+          <span class="label">Date:</span> {formattedDate}
+        </div>
+        <div class="table-row">
+          <span class="label">Amount:</span>{' '}
+          {formatNumber(transactionWithMaxSum?.sum)} {currency}
+        </div>
+        <div class="table-row">
+          <span class="label">Category:</span>{' '}
+          {getCategory[transactionWithMaxSum?.cat]}
+        </div>
+        <div class="table-row">
+          <span class="label">Description:</span> {transactionWithMaxSum?.dsc}
+        </div>
       </div>
     </>
   );

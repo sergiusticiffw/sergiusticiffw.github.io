@@ -90,6 +90,16 @@ body {
   padding-bottom: 100px;
 }
 
+.most-expensive-table-container {
+  margin: 20px;
+}
+.most-expensive-table-container .table-row {
+  margin-bottom: 10px;
+}
+.most-expensive-table-container .table-row .label {
+  font-weight: bold;
+}
+
 .calendar-container {
   display: flex;
   flex-direction: column;
