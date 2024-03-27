@@ -25,6 +25,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Build
         run: cd expenses && CI=false && yarn && yarn build && cp home/index.html ../404.html && mv home/* .
+        env:
+          VITE_CRYPT_KEY: ${{ secrets.VITE_CRYPT_KEY }}
       - name: Deploy
         run: |
           LAST_COMMIT_MSG=$(git log -1 --pretty=%B)
