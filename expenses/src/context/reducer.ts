@@ -6,13 +6,18 @@ import {
   Accumulator,
   DataItems,
 } from '@type/types';
+import CryptoJS from 'crypto-js';
 
-const user = localStorage.getItem('currentUser')
-  ? JSON.parse(localStorage.getItem('currentUser')!)
-  : '';
-const token = localStorage.getItem('currentUser')
-  ? JSON.parse(localStorage.getItem('currentUser')!).jwt_token
-  : '';
+console.log(123, import.meta.env.VITE_CRYPT_KEY);
+
+const decryptedData = localStorage.getItem('currentUser')
+  ? CryptoJS.AES.decrypt(
+      localStorage.getItem('currentUser')!,
+      import.meta.env.VITE_CRYPT_KEY
+    ).toString(CryptoJS.enc.Utf8)
+  : null;
+const user = decryptedData ? JSON.parse(decryptedData)! : '';
+const token = decryptedData ? JSON.parse(decryptedData)!.jwt_token : '';
 const theme = localStorage.getItem('theme')
   ? JSON.parse(localStorage.getItem('theme')!)
   : '';

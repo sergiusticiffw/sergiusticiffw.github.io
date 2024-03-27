@@ -1,4 +1,5 @@
 import { LoginPayload, UserData } from '@type/types';
+import AES from 'crypto-js/aes';
 
 const ROOT_URL = 'https://dev-expenses-api.pantheonsite.io';
 
@@ -19,7 +20,11 @@ export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
 
     if (data.current_user) {
       dispatch({ type: 'LOGIN_SUCCESS', payload: data });
-      localStorage.setItem('currentUser', JSON.stringify(data));
+      const encryptedData = AES.encrypt(
+        JSON.stringify(data),
+        import.meta.env.VITE_CRYPT_KEY
+      ).toString();
+      localStorage.setItem('currentUser', encryptedData);
       return data;
     }
 
