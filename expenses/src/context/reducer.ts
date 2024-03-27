@@ -8,8 +8,6 @@ import {
 } from '@type/types';
 import CryptoJS from 'crypto-js';
 
-console.log(123, import.meta.env.VITE_CRYPT_KEY);
-
 const decryptedData = localStorage.getItem('currentUser')
   ? CryptoJS.AES.decrypt(
       localStorage.getItem('currentUser')!,
