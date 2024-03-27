@@ -1,9 +1,11 @@
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import { deleteNode, fetchData, formatNumber } from '@utils/utils';
 import Modal from '@components/Modal';
 import TransactionForm from '@components/TransactionForm';
+import TransactionsTable from '@components/TransactionsTable';
+import ExpenseCalendar from '@components/ExpenseCalendar';
 import Filters from '@components/Filters';
 import { monthNames, notificationType } from '@utils/constants';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
@@ -11,12 +13,6 @@ import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import NumberDisplay from '@components/NumberDisplay';
 
 const Home = () => {
-  const TransactionsTable = React.lazy(
-    () => import('@components/TransactionsTable')
-  );
-  const ExpenseCalendar = React.lazy(
-    () => import('@components/ExpenseCalendar')
-  );
   const showNotification = useNotification();
   const { token } = useAuthState() as AuthState;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -293,40 +289,36 @@ const Home = () => {
                 </div>
               </div>
               {activeTab === 'calendar' ? (
-                <Suspense fallback="">
-                  <ExpenseCalendar
-                    setCurrentMonthIndex={handleMonthChange}
-                    currentMonthIndex={currentMonthIndex}
-                  />
-                </Suspense>
+                <ExpenseCalendar
+                  setCurrentMonthIndex={handleMonthChange}
+                  currentMonthIndex={currentMonthIndex}
+                />
               ) : (
                 <>
-                  <Suspense fallback="">
-                    <TransactionsTable
-                      items={items.groupedData[currentMonth]}
-                      handleEdit={handleEdit}
-                      // @ts-expect-error
-                      setShowDeleteModal={setShowDeleteModal}
-                    />
-                    <div className="pager-navigation">
-                      <button
-                        disabled={!months[currentMonthIndex + 1]}
-                        onClick={() =>
-                          setCurrentMonthIndex(currentMonthIndex + 1)
-                        }
-                      >
-                        <FaArrowLeft />
-                      </button>
-                      <button
-                        disabled={!months[currentMonthIndex - 1]}
-                        onClick={() =>
-                          setCurrentMonthIndex(currentMonthIndex - 1)
-                        }
-                      >
-                        <FaArrowRight />
-                      </button>
-                    </div>
-                  </Suspense>
+                  <TransactionsTable
+                    items={items.groupedData[currentMonth]}
+                    handleEdit={handleEdit}
+                    // @ts-expect-error
+                    setShowDeleteModal={setShowDeleteModal}
+                  />
+                  <div className="pager-navigation">
+                    <button
+                      disabled={!months[currentMonthIndex + 1]}
+                      onClick={() =>
+                        setCurrentMonthIndex(currentMonthIndex + 1)
+                      }
+                    >
+                      <FaArrowLeft />
+                    </button>
+                    <button
+                      disabled={!months[currentMonthIndex - 1]}
+                      onClick={() =>
+                        setCurrentMonthIndex(currentMonthIndex - 1)
+                      }
+                    >
+                      <FaArrowRight />
+                    </button>
+                  </div>
                 </>
               )}
             </>

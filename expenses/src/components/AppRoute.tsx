@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthState } from '@context/context';
 import { AuthState } from '@type/types';
@@ -18,11 +18,7 @@ const AppRoute: React.FC<AppRouteProps> = ({
     return <Navigate to="/expenses/login" />;
   }
 
-  return (
-    <Suspense fallback="">
-      <Component />
-    </Suspense>
-  );
+  return <Component />;
 };
 
 export default AppRoute;

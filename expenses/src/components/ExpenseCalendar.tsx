@@ -16,7 +16,6 @@ import { notificationType } from '@utils/constants';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import MostExpensiveProductDisplay from '@components/MostExpensiveProductDisplay';
 
 interface ExpenseCalendarProps {
   currentMonthIndex: number;
@@ -27,6 +26,9 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   setCurrentMonthIndex,
   currentMonthIndex,
 }) => {
+  const MostExpensiveProductDisplay = React.lazy(
+    () => import('@components/MostExpensiveProductDisplay')
+  );
   const { data, dataDispatch } = useData() as DataState;
   const items = data.filtered_raw || data.raw;
   const showNotification = useNotification();
