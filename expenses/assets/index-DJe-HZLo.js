@@ -1,0 +1,1 @@
+import{u as o,a as r,b as e,j as n}from"./index-yYSWdq1x.js";import{T as c}from"./TransactionForm-H0WaEwxJ.js";import{f as u}from"./utils-CuM0x6WJ.js";import"./actions-CthaWQ-X.js";const f=()=>{const{token:t}=o(),{dataDispatch:a}=r(),s=e();return n.jsx(c,{formType:"add",values:null,onSuccess:()=>{u(t,a,s)}})};export{f as default};
