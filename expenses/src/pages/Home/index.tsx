@@ -323,7 +323,7 @@ const Home = () => {
               )}
             </>
           ) : (
-            ''
+            <p>No transaction records found.</p>
           )}
         </div>
       )}

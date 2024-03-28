@@ -257,6 +257,10 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
     isSwiping = false;
   };
 
+  if (events.length <= 0) {
+    return <p>No transaction records found.</p>;
+  }
+
   return (
     <>
       <div className="calendar-container">

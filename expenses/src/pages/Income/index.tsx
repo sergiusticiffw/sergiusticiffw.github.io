@@ -134,7 +134,7 @@ const Income = () => {
               setShowDeleteModal={setShowDeleteModal}
             />
           ) : (
-            ''
+            <p>No income records found.</p>
           )}
 
           {data.incomeData?.length > nrOfItemsToShow && (
