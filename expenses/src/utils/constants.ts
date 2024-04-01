@@ -213,12 +213,11 @@ export const suggestions = {
     'ceai/cafea',
     'restaurant',
     'ingetata',
-    'ciocolata',
     'parc',
     'wiskey + cola',
     'cinema',
   ],
-  3: ['market', 'lunch', 'inghetata', 'straus/glovo food'],
+  3: ['market', 'apa', 'lunch', 'inghetata', 'straus/glovo food'],
   4: ['flori'],
   5: ['igiena/curatinie', 'scutece'],
   6: ['apartment rent'],
@@ -236,7 +235,7 @@ export const suggestions = {
   10: ['gaz', 'lumina', 'starnet', 'infocom', 'orange', 'infobon'],
   11: [],
   12: ['Nelea', 'Leo'],
-  13: ['nunta', 'cumatrie'],
+  13: [],
   14: ['vin', 'bere', 'whiskey', 'cognac', 'gin', 'cocktails'],
 };
 
