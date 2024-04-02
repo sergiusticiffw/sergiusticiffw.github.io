@@ -271,6 +271,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
           onTouchEnd={handleTouchEnd}
         >
           <FullCalendar
+            firstDay={1}
             ref={calendarRef}
             initialDate={date}
             plugins={[interactionPlugin, dayGridPlugin]}
