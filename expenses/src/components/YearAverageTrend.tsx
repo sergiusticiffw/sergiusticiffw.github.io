@@ -21,6 +21,7 @@ const YearAverageTrend = () => {
     data?.filtered?.totalPerYear,
   ]);
 
+  const totalSpent = data.filtered?.totalSpent || data?.totalSpent;
   const formattedData = formatDataForChart(items);
 
   const dailyAverageOptions = {
@@ -70,6 +71,12 @@ const YearAverageTrend = () => {
               </tr>
             );
           })}
+          <tr>
+            <td>Total</td>
+            <td>
+              {formatNumber(totalSpent)} {currency}
+            </td>
+          </tr>
         </tbody>
       </table>
     </>
