@@ -22,7 +22,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const { dataDispatch } = useData() as DataState;
   const initialState = {
     field_amount: '',
-    field_date: new Date().toISOString().substr(0, 10),
+    field_date: new Date().toISOString().slice(0, 10),
     field_category: '',
     field_description: '',
   };
