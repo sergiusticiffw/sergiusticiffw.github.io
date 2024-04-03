@@ -15,11 +15,9 @@ export const useSortableData = (
     const sortableItems = [...items];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
-        if (sortConfig.direction === 'ascending') {
-          return a[sortConfig.key] - b[sortConfig.key];
-        } else {
-          return b[sortConfig.key] - a[sortConfig.key];
-        }
+        return sortConfig.direction === 'ascending'
+          ? a[sortConfig.key] - b[sortConfig.key]
+          : b[sortConfig.key] - a[sortConfig.key];
       });
     }
     return sortableItems;

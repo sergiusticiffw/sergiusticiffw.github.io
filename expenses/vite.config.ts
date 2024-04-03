@@ -8,6 +8,5 @@ export default defineConfig({
   plugins: [react(), VitePWA({ registerType: 'autoUpdate' }), tsconfigPaths()],
   server: {
     port: 3000,
-    open: true,
   },
 });
