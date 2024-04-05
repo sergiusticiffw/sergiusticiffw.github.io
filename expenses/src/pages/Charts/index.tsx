@@ -60,11 +60,13 @@ const Charts = () => {
               </Suspense>
             </div>
 
-            <div className="charts-section">
-              <Suspense fallback="">
-                <LastMonth />
-              </Suspense>
-            </div>
+            {!data.filtered && (
+              <div className="charts-section">
+                <Suspense fallback="">
+                  <LastMonth />
+                </Suspense>
+              </div>
+            )}
 
             <div className="charts-section">
               <Suspense fallback="">
@@ -78,11 +80,13 @@ const Charts = () => {
               </Suspense>
             </div>
 
-            <div className="charts-section">
-              <Suspense fallback="">
-                <SavingsHistory />
-              </Suspense>
-            </div>
+            {!data.filtered && (
+              <div className="charts-section">
+                <Suspense fallback="">
+                  <SavingsHistory />
+                </Suspense>
+              </div>
+            )}
 
             <div className="charts-section">
               <Suspense fallback="">
@@ -96,11 +100,13 @@ const Charts = () => {
               </Suspense>
             </div>
 
-            <div className="charts-section">
-              <Suspense fallback="">
-                <LastTwoMonthsAverage />
-              </Suspense>
-            </div>
+            {!data.filtered && (
+              <div className="charts-section">
+                <Suspense fallback="">
+                  <LastTwoMonthsAverage />
+                </Suspense>
+              </div>
+            )}
           </div>
         )
       )}
