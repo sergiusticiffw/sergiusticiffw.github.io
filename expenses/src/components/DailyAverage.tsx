@@ -48,13 +48,15 @@ const DailyAverage = () => {
           ))}
         </tbody>
       </table>
-      <div className="average-spending">
-        Average spending per day:{' '}
-        {formatNumber(
-          parseFloat(String(data.totalSpent / daysPassed)).toFixed(2)
-        )}{' '}
-        {currency}
-      </div>
+      {!data.filtered && (
+        <div className="average-spending">
+          Average spending per day:{' '}
+          {formatNumber(
+            parseFloat(String(data.totalSpent / daysPassed)).toFixed(2)
+          )}{' '}
+          {currency}
+        </div>
+      )}
     </>
   );
 };

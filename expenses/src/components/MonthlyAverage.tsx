@@ -46,9 +46,11 @@ const MonthlyAverage = () => {
           ))}
         </tbody>
       </table>
-      <div className="average-spending">
-        Average spending per month: {formatNumber(monthlyAverage)} {currency}
-      </div>
+      {!data.filtered && (
+        <div className="average-spending">
+          Average spending per month: {formatNumber(monthlyAverage)} {currency}
+        </div>
+      )}
     </>
   );
 };
