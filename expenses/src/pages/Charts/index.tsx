@@ -68,17 +68,21 @@ const Charts = () => {
               </div>
             )}
 
-            <div className="charts-section">
-              <Suspense fallback="">
-                <AllTimeSpendings />
-              </Suspense>
-            </div>
+            {!data.filtered && (
+              <div className="charts-section">
+                <Suspense fallback="">
+                  <AllTimeSpendings />
+                </Suspense>
+              </div>
+            )}
 
-            <div className="charts-section">
-              <Suspense fallback="">
-                <MonthlyAverage />
-              </Suspense>
-            </div>
+            {!data.filtered && (
+              <div className="charts-section">
+                <Suspense fallback="">
+                  <MonthlyAverage />
+                </Suspense>
+              </div>
+            )}
 
             {!data.filtered && (
               <div className="charts-section">
@@ -88,11 +92,13 @@ const Charts = () => {
               </div>
             )}
 
-            <div className="charts-section">
-              <Suspense fallback="">
-                <DailyAverage />
-              </Suspense>
-            </div>
+            {!data.filtered && (
+              <div className="charts-section">
+                <Suspense fallback="">
+                  <DailyAverage />
+                </Suspense>
+              </div>
+            )}
 
             <div className="charts-section">
               <Suspense fallback="">

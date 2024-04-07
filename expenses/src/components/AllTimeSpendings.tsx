@@ -3,13 +3,15 @@ import { useAuthState, useData } from '@context/context';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { AuthState, DataState } from '@type/types';
+import { formatNumber } from '@utils/utils';
 
 const AllTimeSpendings = () => {
   // All time section
-  const { data } = useData() as DataState;
+  const {
+    data: { categoryTotals, totalSpent },
+    data,
+  } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
-
-  const items = data.filtered || data;
 
   // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data, currency]);
@@ -21,6 +23,7 @@ const AllTimeSpendings = () => {
   const monthsPassed = daysPassed
     ? parseFloat(String(daysPassed / 30.42)).toFixed(2)
     : 0;
+  const items = categoryTotals ? Object.values(categoryTotals) : {};
   const allTimeSpendings = {
     chart: {
       type: 'pie',
@@ -41,7 +44,7 @@ const AllTimeSpendings = () => {
       {
         name: currency,
         colorByPoint: true,
-        data: Object.values(items.categoryTotals),
+        data: items,
       },
     ],
     credits: {
@@ -53,8 +56,8 @@ const AllTimeSpendings = () => {
     <>
       <HighchartsReact highcharts={Highcharts} options={allTimeSpendings} />
       <div className="average-spending">
-        Total spent: {parseFloat(items.totalSpent)?.toLocaleString()} {currency}{' '}
-        in {monthsPassed} months
+        Total spent: {formatNumber(totalSpent)} {currency} in {monthsPassed}{' '}
+        months
       </div>
     </>
   );
