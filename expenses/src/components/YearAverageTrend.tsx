@@ -51,7 +51,6 @@ const YearAverageTrend = () => {
     },
     tooltip: {
       shared: true,
-      split: true,
     },
     credits: {
       enabled: false,

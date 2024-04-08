@@ -41,7 +41,6 @@ const YearIncomeAverageTrend = () => {
     },
     tooltip: {
       shared: true,
-      split: true,
     },
     credits: {
       enabled: false,
