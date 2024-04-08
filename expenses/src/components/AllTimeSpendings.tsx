@@ -3,7 +3,7 @@ import { useAuthState, useData } from '@context/context';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { AuthState, DataState } from '@type/types';
-import { formatNumber } from '@utils/utils';
+import { formatNumber, getMonthsPassed } from '@utils/utils';
 
 const AllTimeSpendings = () => {
   // All time section
@@ -17,12 +17,6 @@ const AllTimeSpendings = () => {
   useEffect(() => {}, [data, currency]);
 
   const firstDay = data.raw[data.raw.length - 1]?.dt;
-  const daysPassed = parseInt(
-    String((new Date().getTime() - new Date(firstDay).getTime()) / 86400000 + 1)
-  );
-  const monthsPassed = daysPassed
-    ? parseFloat(String(daysPassed / 30.42)).toFixed(2)
-    : 0;
   const items = categoryTotals ? Object.values(categoryTotals) : {};
   const allTimeSpendings = {
     chart: {
@@ -56,8 +50,8 @@ const AllTimeSpendings = () => {
     <>
       <HighchartsReact highcharts={Highcharts} options={allTimeSpendings} />
       <div className="average-spending">
-        Total spent: {formatNumber(totalSpent)} {currency} in {monthsPassed}{' '}
-        months
+        Total spent: {formatNumber(totalSpent)} {currency} in{' '}
+        {getMonthsPassed(firstDay as string)} months
       </div>
     </>
   );

@@ -2,7 +2,11 @@ import React, { useEffect } from 'react';
 import { useAuthState, useData } from '@context/context';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import { formatDataForChart, formatNumber } from '@utils/utils';
+import {
+  formatDataForChart,
+  formatNumber,
+  getMonthsPassed,
+} from '@utils/utils';
 import { monthNames } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
 
@@ -54,7 +58,7 @@ const YearAverageTrend = () => {
     },
     series: formattedData,
   };
-
+  const firstDay = data.raw[data.raw.length - 1]?.dt;
   return (
     <>
       <HighchartsReact highcharts={Highcharts} options={dailyAverageOptions} />
@@ -72,11 +76,17 @@ const YearAverageTrend = () => {
             );
           })}
           <tr>
-            <td>Total</td>
+            <td>Total Spent</td>
             <td>
               {formatNumber(totalSpent)} {currency}
             </td>
           </tr>
+          {data.filtered && (
+            <tr>
+              <td>Total Months</td>
+              <td>{getMonthsPassed(firstDay as string)} months</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </>

@@ -242,3 +242,10 @@ export const getCategory: { [key: string]: string } = categories.reduce(
   },
   {}
 );
+
+export const getMonthsPassed = (firstDay: string) => {
+  const daysPassed = parseInt(
+    String((new Date().getTime() - new Date(firstDay).getTime()) / 86400000 + 1)
+  );
+  return daysPassed ? parseFloat(String(daysPassed / 30.42)).toFixed(2) : 0;
+};
