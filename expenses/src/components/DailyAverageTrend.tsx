@@ -76,12 +76,14 @@ const DailyAverageTrend = () => {
     {
       name: 'Daily expenses',
       data: dailyExpenses,
+      color: '#E91E63',
     },
   ];
   if (!isFiltered) {
     series.push({
       name: 'Daily incomes',
       data: dailyIncomes,
+      color: '#4DD0E1',
     });
   }
 
@@ -96,7 +98,6 @@ const DailyAverageTrend = () => {
     title: {
       text: 'Daily average trends',
     },
-    colors: ['#E91E63', '#4DD0E1'],
     yAxis: {
       title: {
         text: 'Daily average',
