@@ -53,6 +53,7 @@ const LastMonth = () => {
     plotOptions: {
       pie: {
         borderWidth: 0,
+        innerSize: '50%',
       },
     },
     series: [

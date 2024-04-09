@@ -28,7 +28,7 @@ const YearAverageTrend = () => {
   const totalSpent = data.filtered?.totalSpent || data?.totalSpent;
   const formattedData = formatDataForChart(items);
 
-  const dailyAverageOptions = {
+  const options = {
     chart: {
       type: 'line',
       zoomType: 'x',
@@ -60,7 +60,7 @@ const YearAverageTrend = () => {
   const firstDay = data.raw[data.raw.length - 1]?.dt;
   return (
     <>
-      <HighchartsReact highcharts={Highcharts} options={dailyAverageOptions} />
+      <HighchartsReact highcharts={Highcharts} options={options} />
       <span className="heading">Total spent per year:</span>
       <table className="daily-average">
         <tbody>
