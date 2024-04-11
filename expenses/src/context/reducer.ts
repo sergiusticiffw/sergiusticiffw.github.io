@@ -128,8 +128,9 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
 
         if (action.textFilter) {
           const textFilterLower = action.textFilter.toLowerCase();
-          filtered = filtered.filter((item) =>
-            item.dsc?.toLowerCase()?.includes(textFilterLower)
+          filtered = filtered.filter(
+            (item: TransactionOrIncomeItem) =>
+              item.dsc && item.dsc.toLowerCase().includes(textFilterLower)
           );
         }
         const newState = filtered.reduce(
