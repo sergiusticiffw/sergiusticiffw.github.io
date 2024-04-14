@@ -33,9 +33,55 @@ const Form = () => {
       }
     }
 
+    const upload = async () => {
+      const apiKeyH = 'eu1-55b4-6d4c-40c2-b9c3-5e7b62c5f54d';
+      const postUrlfolder = 'https://api.hubspot.com/files/v3/folders?hapikey=' + apiKeyH;
+
+      const body = {
+        name: 'testFolder',
+        parentPath: '/path/to/parent/folder',
+      };
+
+      const responseFolder = await fetch(postUrlfolder, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKeyH}`,
+        },
+        body: JSON.stringify(body)
+      });
+
+      const dataFolder = await responseFolder.json();
+      console.log(1, responseFolder)
+      console.log(2, dataFolder);
+
+      const fileOptions = {
+        access: 'PUBLIC_INDEXABLE',
+        ttl: 'P3M',
+        overwrite: true,
+        duplicateValidationStrategy: 'NONE',
+        duplicateValidationScope: 'ENTIRE_PORTAL'
+      };
+      formData.append('options', JSON.stringify(fileOptions));
+      formData.append('folderId', '99786270969');
+
+      const postUrl = 'https://api.hubapi.com/filemanager/api/v3/files/upload?hapikey=eu1-55b4-6d4c-40c2-b9c3-5e7b62c5f54d';
+      const response = await fetch(postUrl, {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+      console.log(3, response)
+      console.log(4, data)
+    }
+
     const file = formData.get('file');
 
-    if (file) scanFile(file)
+    if (file) {
+      scanFile(file)
+      upload();
+    }
   };
 
   return (
