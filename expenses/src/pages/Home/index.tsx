@@ -11,6 +11,7 @@ import { monthNames, notificationType } from '@utils/constants';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import NumberDisplay from '@components/NumberDisplay';
+import { MdTableView, MdCalendarViewMonth } from 'react-icons/md';
 
 const Home = () => {
   const showNotification = useNotification();
@@ -273,8 +274,9 @@ const Home = () => {
                     className={
                       activeTab === 'table' ? 'tab-title active' : 'tab-title'
                     }
+                    aria-label="Table View"
                   >
-                    Table View
+                    <MdTableView />
                   </div>
                   <div
                     onClick={() => setActiveTab('calendar')}
@@ -283,8 +285,9 @@ const Home = () => {
                         ? 'tab-title active'
                         : 'tab-title'
                     }
+                    aria-label="Calendar View"
                   >
-                    Calendar View
+                    <MdCalendarViewMonth />
                   </div>
                 </div>
               </div>
