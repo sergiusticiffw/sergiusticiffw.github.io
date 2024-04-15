@@ -54,6 +54,7 @@ const LastMonth = () => {
       pie: {
         borderWidth: 0,
         innerSize: '50%',
+        allowPointSelect: true,
       },
     },
     series: [
