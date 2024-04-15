@@ -31,6 +31,17 @@ const Form = () => {
       } catch (e) {
         console.error(e)
       }
+
+      const cloudmersive = await fetch('https://api.cloudmersive.com/virus/scan/file', {
+        method: 'POST',
+        headers: {
+          'Apikey': 'e4bee107-0e31-4e34-90a0-542541b1ef29',
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+      const cloudmersivedata = await cloudmersive.json()
+      console.log(1, cloudmersivedata)
     }
 
     const upload = async () => {
