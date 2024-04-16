@@ -3,6 +3,7 @@ import { categories } from '@utils/constants';
 import { useData } from '@context/context';
 import { FaSearch } from 'react-icons/fa';
 import { DataState } from '@type/types';
+import { MdFilterAltOff } from 'react-icons/md';
 
 const Filters = () => {
   const { data, dataDispatch } = useData() as DataState;
@@ -94,7 +95,7 @@ const Filters = () => {
       </select>
       {(state.textFilter || state.category) && (
         <button onClick={handleClearFilters} className="btn-outline">
-          Clear Filters
+          <MdFilterAltOff />
         </button>
       )}
     </div>

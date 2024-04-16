@@ -7,6 +7,8 @@ import Modal from '@components/Modal';
 import IncomeTable from '@components/IncomeTable';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
+import { MdMoreHoriz } from 'react-icons/md';
+import { FaPlus } from 'react-icons/fa';
 
 const Income = () => {
   const YearIncomeAverageTrend = React.lazy(
@@ -122,12 +124,11 @@ const Income = () => {
             }}
             className="button wide"
           >
-            Add new income
+            <FaPlus />
           </button>
 
           {data.incomeData && data.incomeData.length ? (
             <IncomeTable
-              key={'income'}
               items={data.incomeData.slice(0, nrOfItemsToShow)}
               handleEdit={handleEdit}
               // @ts-expect-error
@@ -143,7 +144,7 @@ const Income = () => {
                 onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
                 className="btn-outline"
               >
-                Load more
+                <MdMoreHoriz />
               </button>
             </div>
           )}

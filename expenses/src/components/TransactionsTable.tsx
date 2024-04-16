@@ -4,6 +4,7 @@ import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash } from 'react-icons/fa';
 import { formatNumber, getCategory } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
+import { MdEdit, MdDelete } from 'react-icons/md';
 
 interface TransactionsTableProps {
   items: TransactionOrIncomeItem[];
@@ -74,7 +75,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                   onClick={() => handleEdit(element.id)}
                   className="btn-outline"
                 >
-                  Edit
+                  <MdEdit />
                 </button>
               </td>
               <td className="desktop-only">
@@ -82,7 +83,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                   onClick={() => setShowDeleteModal(element.id)}
                   className="btn-outline"
                 >
-                  Delete
+                  <MdDelete />
                 </button>
               </td>
             </tr>
