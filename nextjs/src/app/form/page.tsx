@@ -15,7 +15,7 @@ const Form = () => {
           },
           body: formData,
         });
-        const { data: {links: {self}} } = await response.json();
+        const { data: { links: { self } } } = await response.json();
         if (self) {
           const analysis = await fetch(self, {
             method: 'GET',
@@ -24,12 +24,12 @@ const Form = () => {
               'Accept': 'application/json',
             },
           });
-          const { data: {attributes} } = await analysis.json();
+          const { data: { attributes } } = await analysis.json();
 
-          console.log(attributes)
+          console.log(attributes);
         }
       } catch (e) {
-        console.error(e)
+        console.error(e);
       }
 
       const cloudmersive = await fetch('https://api.cloudmersive.com/virus/scan/file', {
@@ -40,38 +40,38 @@ const Form = () => {
         },
         body: formData,
       });
-      const cloudmersivedata = await cloudmersive.json()
-      console.log(1, cloudmersivedata)
-    }
+      const cloudmersivedata = await cloudmersive.json();
+      console.log(1, cloudmersivedata);
+    };
 
     const upload = async () => {
-      const apiKeyH = 'eu1-55b4-6d4c-40c2-b9c3-5e7b62c5f54d';
-      const postUrlfolder = 'https://api.hubspot.com/files/v3/folders?hapikey=' + apiKeyH;
-
-      const body = {
-        name: 'testFolder',
-        parentPath: '/path/to/parent/folder',
-      };
-
-      const responseFolder = await fetch(postUrlfolder, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKeyH}`,
-        },
-        body: JSON.stringify(body)
-      });
-
-      const dataFolder = await responseFolder.json();
-      console.log(1, responseFolder)
-      console.log(2, dataFolder);
+      // const apiKeyH = 'eu1-55b4-6d4c-40c2-b9c3-5e7b62c5f54d';
+      // const postUrlfolder = 'https://api.hubspot.com/files/v3/folders?hapikey=' + apiKeyH;
+      //
+      // const body = {
+      //   name: 'testFolder',
+      //   parentPath: '/path/to/parent/folder',
+      // };
+      //
+      // const responseFolder = await fetch(postUrlfolder, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `Bearer ${apiKeyH}`,
+      //   },
+      //   body: JSON.stringify(body)
+      // });
+      //
+      // const dataFolder = await responseFolder.json();
+      // console.log(1, responseFolder)
+      // console.log(2, dataFolder);
 
       const fileOptions = {
         access: 'PUBLIC_INDEXABLE',
         ttl: 'P3M',
         overwrite: true,
         duplicateValidationStrategy: 'NONE',
-        duplicateValidationScope: 'ENTIRE_PORTAL'
+        duplicateValidationScope: 'ENTIRE_PORTAL',
       };
       formData.append('options', JSON.stringify(fileOptions));
       formData.append('folderId', '99786270969');
@@ -79,13 +79,53 @@ const Form = () => {
       const postUrl = 'https://api.hubapi.com/filemanager/api/v3/files/upload?hapikey=eu1-55b4-6d4c-40c2-b9c3-5e7b62c5f54d';
       const response = await fetch(postUrl, {
         method: 'POST',
-        body: formData
+        body: formData,
       });
 
       const data = await response.json();
-      console.log(3, response)
-      console.log(4, data)
-    }
+
+      if (data.objects[0]) {
+        const furl = data.objects[0].s3_url;
+      const hubspotUrl = 'https://api.hsforms.com/submissions/v3/integration/submit/144507663/af3c0965-a011-436d-a293-4e3afb3d9a4f';
+      const dataForm = {
+        fields: [
+          {
+            "objectTypeId": "0-1",
+            "name": "email",
+            "value": "example@example.com"
+          },
+          {
+            "objectTypeId": "0-1",
+            "name": "firstname",
+            "value": "Jeff"
+          },
+          {
+            "objectTypeId": "0-1",
+            "name": "lastname",
+            "value": "Jeff"
+          },
+          {
+            "objectTypeId": "0-1",
+            "name": "file",
+            "value": furl
+          }
+        ]
+        };
+
+      const jsonBody = JSON.stringify(dataForm);
+        const formRes = await fetch(hubspotUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer eu1-55b4-6d4c-40c2-b9c3-5e7b62c5f54d`,
+          },
+          body: jsonBody,
+        });
+        const formD = await formRes.json()
+        console.log(91, formD)
+      }
+    };
+
 
     const file = formData.get('file');
 
@@ -105,7 +145,7 @@ const Form = () => {
         <button type="submit">save</button>
       </form>
     </>
-  )
+  );
 }
 
 export default Form;
