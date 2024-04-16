@@ -4,6 +4,8 @@ import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
 import { AuthState, DataState, NodeData } from '@type/types';
+import { MdEdit } from 'react-icons/md';
+import { FaPlus } from 'react-icons/fa';
 
 interface IncomeFormProps {
   formType: string;
@@ -130,9 +132,9 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
               <span className="loader__element"></span>
             </div>
           ) : formType === 'add' ? (
-            'Add income'
+            <FaPlus />
           ) : (
-            'Edit income'
+            <MdEdit />
           )}
         </button>
       </form>

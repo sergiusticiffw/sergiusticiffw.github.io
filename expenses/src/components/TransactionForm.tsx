@@ -5,6 +5,8 @@ import { useNotification } from '@context/notification';
 import { categories, suggestions } from '@utils/constants';
 import { notificationType } from '@utils/constants';
 import { AuthState, DataState, NodeData } from '@type/types';
+import { MdEdit } from 'react-icons/md';
+import { FaPlus } from 'react-icons/fa';
 
 interface TransactionFormProps {
   formType: 'add' | 'edit';
@@ -186,9 +188,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               <span className="loader__element"></span>
             </div>
           ) : formType === 'add' ? (
-            'Add transaction'
+            <FaPlus />
           ) : (
-            'Edit transaction'
+            <MdEdit />
           )}
         </button>
       </form>

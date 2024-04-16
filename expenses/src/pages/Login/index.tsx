@@ -4,6 +4,7 @@ import { loginUser } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
 import { AuthState } from '@type/types';
 import { useGoogleLogin, TokenResponse } from '@react-oauth/google';
+import { MdLogin } from 'react-icons/md';
 
 const Login = () => {
   const dispatch = useAuthDispatch();
@@ -47,7 +48,7 @@ const Login = () => {
         className="button wide"
         disabled={loading}
       >
-        Log in
+        <MdLogin />
       </button>
     </div>
   );

@@ -16,6 +16,7 @@ import { notificationType } from '@utils/constants';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { MdDelete } from 'react-icons/md';
 
 interface ExpenseCalendarProps {
   currentMonthIndex: number;
@@ -340,7 +341,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
               <span className="loader__element"></span>
             </div>
           ) : (
-            'Yes, remove the transaction'
+            <MdDelete />
           )}
         </button>
       </Modal>

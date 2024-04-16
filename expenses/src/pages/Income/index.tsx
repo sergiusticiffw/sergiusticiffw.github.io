@@ -9,6 +9,7 @@ import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import { MdMoreHoriz } from 'react-icons/md';
 import { FaPlus } from 'react-icons/fa';
+import { MdDelete } from 'react-icons/md';
 
 const Income = () => {
   const YearIncomeAverageTrend = React.lazy(
@@ -91,7 +92,7 @@ const Income = () => {
               <span className="loader__element"></span>
             </div>
           ) : (
-            'Yes, remove the income'
+            <MdDelete />
           )}
         </button>
       </Modal>

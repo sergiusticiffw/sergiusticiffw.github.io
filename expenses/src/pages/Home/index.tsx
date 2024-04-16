@@ -11,7 +11,7 @@ import { monthNames, notificationType } from '@utils/constants';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import NumberDisplay from '@components/NumberDisplay';
-import { MdTableView, MdCalendarViewMonth } from 'react-icons/md';
+import { MdTableView, MdCalendarViewMonth, MdDelete } from 'react-icons/md';
 
 const Home = () => {
   const showNotification = useNotification();
@@ -174,7 +174,7 @@ const Home = () => {
               <span className="loader__element"></span>
             </div>
           ) : (
-            'Yes, remove the transaction'
+            <MdDelete />
           )}
         </button>
       </Modal>
