@@ -28,10 +28,12 @@ const YearAverageTrend = () => {
   const totalSpent = data.filtered?.totalSpent || data?.totalSpent;
   const formattedData = formatDataForChart(items);
 
-  const options = {
+  const options: Highcharts.Options = {
     chart: {
       type: 'line',
-      zoomType: 'x',
+      zooming: {
+        type: 'x',
+      },
     },
     boost: {
       useGPUTranslations: true,
@@ -55,6 +57,7 @@ const YearAverageTrend = () => {
     credits: {
       enabled: false,
     },
+    // @ts-expect-error fix the tsc.
     series: formattedData,
   };
   const firstDay = data.raw[data.raw.length - 1]?.dt;

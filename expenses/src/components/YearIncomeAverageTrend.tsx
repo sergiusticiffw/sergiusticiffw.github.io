@@ -18,10 +18,12 @@ const YearIncomeAverageTrend = () => {
     data?.totalIncomePerYearAndMonth || {}
   );
 
-  const yearIncomeAverageOptions = {
+  const yearIncomeAverageOptions: Highcharts.Options = {
     chart: {
       type: 'line',
-      zoomType: 'x',
+      zooming: {
+        type: 'x',
+      },
     },
     boost: {
       useGPUTranslations: true,
@@ -45,6 +47,7 @@ const YearIncomeAverageTrend = () => {
     credits: {
       enabled: false,
     },
+    // @ts-expect-error fix the tsc.
     series: formattedIncomeData,
   };
 

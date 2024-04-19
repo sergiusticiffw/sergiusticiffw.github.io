@@ -72,11 +72,12 @@ const DailyAverageTrend = () => {
     dailyIncomes.splice(0, 14);
   }
 
-  const series = [
+  const series: Highcharts.SeriesOptionsType[] = [
     {
       name: 'Daily expenses',
       data: dailyExpenses,
       color: '#E91E63',
+      type: 'line',
     },
   ];
   if (!isFiltered) {
@@ -84,13 +85,16 @@ const DailyAverageTrend = () => {
       name: 'Daily incomes',
       data: dailyIncomes,
       color: '#4DD0E1',
+      type: 'line',
     });
   }
 
-  const dailyAverageOptions = {
+  const dailyAverageOptions: Highcharts.Options = {
     chart: {
       type: 'line',
-      zoomType: 'x',
+      zooming: {
+        type: 'x',
+      },
     },
     boost: {
       useGPUTranslations: true,

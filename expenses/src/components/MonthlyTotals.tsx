@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAuthState, useData } from '@context/context';
-import Highcharts from 'highcharts';
+import Highcharts, { YAxisPlotLinesOptions } from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { categories } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
@@ -20,10 +20,12 @@ const MonthlyTotals = () => {
   const monthsPassed: number = daysPassed / 30.42;
   const monthlyAverage: number = items.totalSpent / monthsPassed;
 
-  const allTimeOptions = {
+  const allTimeOptions: Highcharts.Options = {
     chart: {
       type: 'column',
-      zoomType: 'x',
+      zooming: {
+        type: 'x',
+      },
     },
     title: {
       text: 'Monthly Totals',
@@ -53,8 +55,8 @@ const MonthlyTotals = () => {
           zIndex: 4,
           dashStyle: 'ShortDot',
         },
-      ],
-    },
+      ] as Highcharts.YAxisOptions,
+    } as Highcharts.YAxisOptions,
     plotOptions: {
       column: {
         pointPadding: 0.2,
@@ -90,7 +92,7 @@ const MonthlyTotals = () => {
               })
           : [],
       },
-    ],
+    ] as Highcharts.SeriesOptionsType[],
   };
 
   return <HighchartsReact highcharts={Highcharts} options={allTimeOptions} />;

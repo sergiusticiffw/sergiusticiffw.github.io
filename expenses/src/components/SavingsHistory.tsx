@@ -50,18 +50,21 @@ const SavingsHistory = () => {
     savingsArray.splice(0, 14);
   }
 
-  const series = [
+  const series: Highcharts.SeriesOptionsType[] = [
     {
       name: 'Savings',
       data: savingsArray,
       negativeColor: '#E91E63',
+      type: 'line',
     },
   ];
 
-  const savingsOptions = {
+  const savingsOptions: Highcharts.Options = {
     chart: {
       type: 'line',
-      zoomType: 'x',
+      zooming: {
+        type: 'x',
+      },
     },
     boost: {
       useGPUTranslations: true,

@@ -40,7 +40,7 @@ const LastMonth = () => {
     }
   }
 
-  const lastMonthOptions = {
+  const lastMonthOptions: Highcharts.Options = {
     chart: {
       type: 'pie',
     },
@@ -63,7 +63,7 @@ const LastMonth = () => {
         colorByPoint: true,
         data: Object.values(lastMonthTotals),
       },
-    ],
+    ] as Highcharts.SeriesOptionsType[],
     credits: {
       enabled: false,
     },
