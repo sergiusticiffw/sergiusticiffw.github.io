@@ -15,7 +15,8 @@ const MonthlyTotals = () => {
 
   const firstDay = data.raw[data.raw.length - 1]?.dt;
   const daysPassed: number =
-    (new Date().getTime() - new Date(firstDay).getTime()) / 86400000 + 1;
+    (new Date().getTime() - new Date(firstDay as string).getTime()) / 86400000 +
+    1;
   const monthsPassed: number = daysPassed / 30.42;
   const monthlyAverage: number = items.totalSpent / monthsPassed;
 

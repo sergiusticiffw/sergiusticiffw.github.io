@@ -13,7 +13,11 @@ const DailyAverage = () => {
 
   const firstDay = data.raw[data.raw.length - 1]?.dt;
   const daysPassed = parseInt(
-    String((new Date().getTime() - new Date(firstDay).getTime()) / 86400000 + 1)
+    String(
+      (new Date().getTime() - new Date(firstDay as string).getTime()) /
+        86400000 +
+        1
+    )
   );
   const { sortedItems, requestSort, sortConfig } = useSortableData(
     Object.values(data.categoryTotals || [])

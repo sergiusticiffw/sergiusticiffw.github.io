@@ -21,7 +21,7 @@ const DailyAverageTrend = () => {
     };
   }, [data.raw, data.filtered_raw]);
 
-  const firstDay = new Date(data.raw[data.raw.length - 1]?.dt);
+  const firstDay = new Date(data.raw[data.raw.length - 1]?.dt as string);
   const getNrOfDaysFromStart = (endDate: Date) => {
     const difference = endDate.getTime() - firstDay.getTime();
     return parseInt(String(difference / (1000 * 3600 * 24))) + 1;

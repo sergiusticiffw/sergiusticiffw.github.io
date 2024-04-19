@@ -8,7 +8,7 @@ import { formatNumber, getMonthsPassed } from '@utils/utils';
 const AllTimeSpendings = () => {
   // All time section
   const {
-    data: { categoryTotals, totalSpent },
+    data: { categoryTotals = {}, totalSpent },
     data,
   } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
@@ -17,8 +17,8 @@ const AllTimeSpendings = () => {
   useEffect(() => {}, [data, currency]);
 
   const firstDay = data.raw[data.raw.length - 1]?.dt;
-  const items = categoryTotals ? Object.values(categoryTotals) : {};
-  const allTimeSpendings = {
+  const items = categoryTotals ? Object.values(categoryTotals) : [];
+  const allTimeSpendings: Highcharts.Options = {
     chart: {
       type: 'pie',
     },
@@ -37,7 +37,7 @@ const AllTimeSpendings = () => {
     series: [
       {
         name: currency,
-        colorByPoint: true,
+        type: 'pie',
         data: items,
       },
     ],
