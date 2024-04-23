@@ -17,15 +17,18 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { MdDelete } from 'react-icons/md';
+import Month from '@components/Month';
 
 interface ExpenseCalendarProps {
   currentMonthIndex: number;
+  currentMonth: string;
   setCurrentMonthIndex: (newMonthIndex: number) => void;
 }
 
 const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   setCurrentMonthIndex,
   currentMonthIndex,
+  currentMonth,
 }) => {
   const MostExpensiveProductDisplay = React.lazy(
     () => import('@components/MostExpensiveProductDisplay')
@@ -316,6 +319,11 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
           </button>
         </div>
       </div>
+      {!data.filtered && (
+        <div className="charts-section">
+          <Month month={currentMonth} />
+        </div>
+      )}
       <div className="charts-section">
         <Suspense fallback="">
           <MostExpensiveProductDisplay />

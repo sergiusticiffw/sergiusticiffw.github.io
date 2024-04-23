@@ -1,18 +1,20 @@
 import React from 'react';
-import { useAuthState } from '@context/context';
+import { useAuthState, useData } from '@context/context';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { categories } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 
 interface MonthProps {
-  items: TransactionOrIncomeItem[];
   month: string;
 }
 
-const Month: React.FC<MonthProps> = ({ items, month }) => {
-  if (!items) return null;
+const Month: React.FC<MonthProps> = ({ month }) => {
+  const { data } = useData();
   const { currency } = useAuthState() as AuthState;
+  const items: TransactionOrIncomeItem[] | undefined =
+    data?.groupedData?.[month];
+  if (!items) return null;
 
   const totals = {};
   for (const item of items) {
@@ -40,7 +42,7 @@ const Month: React.FC<MonthProps> = ({ items, month }) => {
       type: 'pie',
     },
     title: {
-      text: `${month}`,
+      text: '',
     },
     tooltip: {
       pointFormat: '{point.y} {series.name} ({point.percentage:.2f})%',

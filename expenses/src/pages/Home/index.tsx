@@ -12,7 +12,6 @@ import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import NumberDisplay from '@components/NumberDisplay';
 import { MdTableView, MdCalendarViewMonth, MdDelete } from 'react-icons/md';
-import Month from '@components/Month';
 
 const Home = () => {
   const showNotification = useNotification();
@@ -296,6 +295,7 @@ const Home = () => {
                 <ExpenseCalendar
                   setCurrentMonthIndex={handleMonthChange}
                   currentMonthIndex={currentMonthIndex}
+                  currentMonth={currentMonth}
                 />
               ) : (
                 <>
@@ -330,13 +330,6 @@ const Home = () => {
             <p>No transaction records found.</p>
           )}
         </div>
-      )}
-
-      {!data.filtered && (
-        <Month
-          items={items?.groupedData?.[currentMonth]}
-          month={currentMonth}
-        />
       )}
     </div>
   );
