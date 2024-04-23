@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAuthState, useData } from '@context/context';
-import Highcharts, { YAxisPlotLinesOptions } from 'highcharts';
+import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { categories } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';

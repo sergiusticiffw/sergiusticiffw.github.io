@@ -1,7 +1,6 @@
 import { categories, monthNames } from '@utils//constants';
 import { logout } from '@context/actions';
 import { DataStructure, ItemTotal, TransactionOrIncomeItem } from '@type/types';
-import Highcharts from 'highcharts';
 
 const handleErrors = (
   response: Response,
