@@ -21,7 +21,6 @@ const Charts = () => {
     () => import('@components/YearAverageTrend')
   );
   const MonthlyTotals = React.lazy(() => import('@components/MonthlyTotals'));
-  const LastMonth = React.lazy(() => import('@components/LastMonth'));
 
   const { data, dataDispatch } = useData();
   const noData = data.groupedData === null;
@@ -59,14 +58,6 @@ const Charts = () => {
                 <YearAverageTrend />
               </Suspense>
             </div>
-
-            {!data.filtered && (
-              <div className="charts-section">
-                <Suspense fallback="">
-                  <LastMonth />
-                </Suspense>
-              </div>
-            )}
 
             {!data.filtered && (
               <div className="charts-section">
