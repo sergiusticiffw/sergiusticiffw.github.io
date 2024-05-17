@@ -20,8 +20,7 @@
   },
   "scripts": {
     "start": "vite",
-    "build": "vite build && mv dist home",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives"
+    "build": "vite build && mv dist home"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
@@ -29,14 +28,13 @@
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.5.0",
     "@vitejs/plugin-react": "^4.2.1",
-    "eslint": "^8.57.0",
     "eslint-plugin-deprecation": "^2.0.0",
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "prettier": "^3.2.5",
     "typescript": "^5.4.2",
     "vite": "^5.1.6",
-    "vite-plugin-pwa": "^0.19.4",
+    "vite-plugin-pwa": "^0.20.0",
     "vite-tsconfig-paths": "^4.3.2"
   },
   "prettier": {
