@@ -7,17 +7,13 @@ import { AuthState, DataState } from '@type/types';
 
 const MonthlyTotals = () => {
   const { data } = useData() as DataState;
-  const items = data.filtered || data;
+  const items = data;
   const { currency } = useAuthState() as AuthState;
 
   // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data, currency]);
 
   const firstDay = new Date(data.raw[data.raw.length - 1]?.dt as string);
-  const daysPassed: number =
-    (new Date().getTime() - firstDay.getTime()) / 86400000 + 1;
-  const monthsPassed: number = daysPassed / 30.42;
-  const monthlyAverage: number = items.totalSpent / monthsPassed;
 
   const allTimeOptions: Highcharts.Options = {
     chart: {
@@ -29,32 +25,11 @@ const MonthlyTotals = () => {
     title: {
       text: 'Monthly Totals',
     },
-    xAxis: {
-      categories: items.totals ? Object.keys(items.totals).reverse() : [],
-      crosshair: true,
-    },
     yAxis: {
       min: 0,
       title: {
         text: currency,
       },
-      stackLabels: {
-        style: {
-          color: '#FFFFFF',
-          fontWeight: 'bold',
-        },
-        enabled: true,
-        verticalAlign: 'top',
-      },
-      plotLines: [
-        {
-          color: '#00a8ad',
-          value: monthlyAverage,
-          width: '1',
-          zIndex: 4,
-          dashStyle: 'ShortDot',
-        },
-      ] as Highcharts.YAxisOptions,
     } as Highcharts.YAxisOptions,
     plotOptions: {
       column: {
