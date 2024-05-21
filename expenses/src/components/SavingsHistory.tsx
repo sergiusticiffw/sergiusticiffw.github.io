@@ -56,6 +56,9 @@ const SavingsHistory = () => {
       data: savingsArray,
       negativeColor: '#E91E63',
       type: 'line',
+      tooltip: {
+        valueDecimals: 2,
+      },
     },
   ];
 
@@ -83,7 +86,7 @@ const SavingsHistory = () => {
       crosshair: true,
     },
     tooltip: {
-      pointFormat: '{series.name}: {point.y:.2f} %',
+      valueSuffix: '%',
       xDateFormat: '%e %b %Y',
     },
     credits: {

@@ -78,6 +78,9 @@ const DailyAverageTrend = () => {
       data: dailyExpenses,
       color: '#E91E63',
       type: 'line',
+      tooltip: {
+        valueDecimals: 2,
+      },
     },
   ];
   if (!isFiltered) {
@@ -86,7 +89,9 @@ const DailyAverageTrend = () => {
       data: dailyIncomes,
       color: '#4DD0E1',
       type: 'line',
-      pointIntervalUnit: 'day',
+      tooltip: {
+        valueDecimals: 2,
+      },
     });
   }
 
@@ -113,7 +118,6 @@ const DailyAverageTrend = () => {
       crosshair: true,
     },
     tooltip: {
-      pointFormat: '{series.name}: {point.y:.2f}',
       xDateFormat: '%e %b %Y',
       shared: true,
       split: true,
