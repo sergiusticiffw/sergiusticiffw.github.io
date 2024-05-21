@@ -7,6 +7,7 @@ import React from 'react';
 import routes from '@config/routes';
 import Navbar from '@components/Navbar';
 import Highcharts from 'highcharts';
+import Highstock from 'highcharts/highstock';
 import Boost from 'highcharts/modules/boost';
 import DarkUnica from 'highcharts/themes/dark-unica';
 import NoData from 'highcharts/modules/no-data-to-display';
@@ -14,6 +15,9 @@ import NoData from 'highcharts/modules/no-data-to-display';
 Boost(Highcharts);
 DarkUnica(Highcharts);
 NoData(Highcharts);
+Boost(Highstock);
+DarkUnica(Highstock);
+NoData(Highstock);
 
 const bgColors: Record<string, string> = {
   'carrot-orange': '#102433',

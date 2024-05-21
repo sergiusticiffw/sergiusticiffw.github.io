@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useData } from '@context/context';
-import Highcharts from 'highcharts';
+import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { DataState, TransactionOrIncomeItem } from '@type/types';
 
@@ -92,7 +92,7 @@ const SavingsHistory = () => {
     series: series,
   };
 
-  return <HighchartsReact highcharts={Highcharts} options={savingsOptions} />;
+  return <HighchartsReact highcharts={Highcharts} constructorType={'stockChart'} options={savingsOptions} />;
 };
 
 export default SavingsHistory;

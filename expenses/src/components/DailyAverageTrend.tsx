@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useData } from '@context/context';
-import Highcharts from 'highcharts';
+import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { TransactionOrIncomeItem, Daily, DataState } from '@type/types';
 
@@ -120,10 +120,13 @@ const DailyAverageTrend = () => {
       enabled: false,
     },
     series: series,
+    legend: {
+      enabled: true
+    }
   };
 
   return (
-    <HighchartsReact highcharts={Highcharts} options={dailyAverageOptions} />
+    <HighchartsReact highcharts={Highcharts} constructorType={'stockChart'} options={dailyAverageOptions} />
   );
 };
 
