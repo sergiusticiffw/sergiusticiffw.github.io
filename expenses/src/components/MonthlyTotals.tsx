@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAuthState, useData } from '@context/context';
-import Highcharts from 'highcharts';
+import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { categories } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
@@ -13,10 +13,9 @@ const MonthlyTotals = () => {
   // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data, currency]);
 
-  const firstDay = data.raw[data.raw.length - 1]?.dt;
+  const firstDay = new Date(data.raw[data.raw.length - 1]?.dt as string);
   const daysPassed: number =
-    (new Date().getTime() - new Date(firstDay as string).getTime()) / 86400000 +
-    1;
+    (new Date().getTime() - firstDay.getTime()) / 86400000 + 1;
   const monthsPassed: number = daysPassed / 30.42;
   const monthlyAverage: number = items.totalSpent / monthsPassed;
 
@@ -78,9 +77,13 @@ const MonthlyTotals = () => {
           : 'Monthly totals',
         data: items.totals ? Object.values(items.totals).reverse() : [],
         colorByPoint: true,
+        pointIntervalUnit: 'month',
+        pointStart: Date.UTC(firstDay.getUTCFullYear(), firstDay.getMonth(), 1),
       },
       {
         name: 'Income',
+        pointIntervalUnit: 'month',
+        pointStart: Date.UTC(firstDay.getUTCFullYear(), firstDay.getMonth(), 1),
         type: 'spline',
         color: '#4DD0E1',
         visible: false,
@@ -93,9 +96,15 @@ const MonthlyTotals = () => {
           : [],
       },
     ] as Highcharts.SeriesOptionsType[],
+    legend: {
+      enabled: true,
+    },
+    rangeSelector: {
+      selected: 4,
+    },
   };
 
-  return <HighchartsReact highcharts={Highcharts} options={allTimeOptions} />;
+  return <HighchartsReact highcharts={Highcharts} constructorType={'stockChart'} options={allTimeOptions} />;
 };
 
 export default MonthlyTotals;

@@ -86,6 +86,7 @@ const DailyAverageTrend = () => {
       data: dailyIncomes,
       color: '#4DD0E1',
       type: 'line',
+      pointIntervalUnit: 'day',
     });
   }
 
@@ -121,8 +122,8 @@ const DailyAverageTrend = () => {
     },
     series: series,
     legend: {
-      enabled: true
-    }
+      enabled: true,
+    },
   };
 
   return (
