@@ -132,7 +132,11 @@ const DailyAverageTrend = () => {
   };
 
   return (
-    <HighchartsReact highcharts={Highcharts} constructorType={'stockChart'} options={dailyAverageOptions} />
+    <HighchartsReact
+      highcharts={Highcharts}
+      constructorType={'stockChart'}
+      options={dailyAverageOptions}
+    />
   );
 };
 

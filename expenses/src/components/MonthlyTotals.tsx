@@ -79,7 +79,13 @@ const MonthlyTotals = () => {
     },
   };
 
-  return <HighchartsReact highcharts={Highcharts} constructorType={'stockChart'} options={allTimeOptions} />;
+  return (
+    <HighchartsReact
+      highcharts={Highcharts}
+      constructorType={'stockChart'}
+      options={allTimeOptions}
+    />
+  );
 };
 
 export default MonthlyTotals;
