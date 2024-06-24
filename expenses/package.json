@@ -19,7 +19,7 @@
     "sass": "^1.69.7"
   },
   "scripts": {
-    "start": "vite",
+    "dev": "vite",
     "build": "vite build && mv dist home"
   },
   "devDependencies": {
