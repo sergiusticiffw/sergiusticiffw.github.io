@@ -43,8 +43,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       [event.target.name]: value,
     });
     if (event.target.name === 'field_category') {
-      // @ts-expect-error TBC
-      setSuggestionData(suggestions[value]);
+      setSuggestionData(suggestions[value as keyof typeof suggestions]);
     }
   };
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -103,8 +102,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     .split('T')[0];
 
   const [suggestionData, setSuggestionData] = useState<string[]>(
-    // @ts-expect-error TBC
-    suggestions[formState.field_category]
+    suggestions[formState.field_category as keyof typeof suggestions]
   );
   const [selectedIndices, setSelectedIndices] = useState<string[]>([]);
 

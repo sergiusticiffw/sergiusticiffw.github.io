@@ -50,8 +50,7 @@ const MostExpensiveProductDisplay = () => {
         <div className="table-row">
           <span className="label">Category:</span>{' '}
           {
-            // @ts-expect-error
-            getCategory[transactionWithMaxSum?.cat]
+            getCategory[transactionWithMaxSum.cat as string]
           }
         </div>
         <div className="table-row">

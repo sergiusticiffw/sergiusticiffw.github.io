@@ -22,8 +22,7 @@ const Profile = () => {
     weeklyBudget: weeklyBudget,
     monthlyBudget: monthlyBudget,
   });
-  // @ts-expect-error
-  theme = themeList[theme] ? theme : 'blue-pink-gradient';
+  theme = themeList[theme as keyof typeof themeList] ? theme : 'blue-pink-gradient';
   const navigate = useNavigate();
   const handleLogout = (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
