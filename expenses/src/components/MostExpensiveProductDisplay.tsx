@@ -49,9 +49,7 @@ const MostExpensiveProductDisplay = () => {
         </div>
         <div className="table-row">
           <span className="label">Category:</span>{' '}
-          {
-            getCategory[transactionWithMaxSum.cat as string]
-          }
+          {getCategory[transactionWithMaxSum.cat as string]}
         </div>
         <div className="table-row">
           <span className="label">Description:</span>{' '}

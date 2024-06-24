@@ -22,7 +22,9 @@ const Profile = () => {
     weeklyBudget: weeklyBudget,
     monthlyBudget: monthlyBudget,
   });
-  theme = themeList[theme as keyof typeof themeList] ? theme : 'blue-pink-gradient';
+  theme = themeList[theme as keyof typeof themeList]
+    ? theme
+    : 'blue-pink-gradient';
   const navigate = useNavigate();
   const handleLogout = (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
