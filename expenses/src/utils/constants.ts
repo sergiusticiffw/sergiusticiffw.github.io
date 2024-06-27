@@ -221,7 +221,7 @@ export const suggestions = {
   4: ['flori'],
   5: ['igiena/curatinie', 'scutece'],
   6: ['apartment rent'],
-  7: ['farmacie', 'stomatolog', 'pediatru'],
+  7: ['farmacie', 'stomatolog', 'pediatru', 'Nelea', 'Leo'],
   8: ['haircut', 'nails'],
   9: [
     'benzina',
@@ -234,7 +234,7 @@ export const suggestions = {
   ],
   10: ['gaz', 'lumina', 'starnet', 'infocom', 'orange', 'infobon'],
   11: [],
-  12: ['Nelea', 'Leo'],
+  12: ['Nelea', 'Leo', 'dadaca'],
   13: [],
   14: ['vin', 'bere', 'whiskey', 'cognac', 'gin', 'cocktails'],
 };
