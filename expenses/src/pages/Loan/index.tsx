@@ -132,7 +132,6 @@ const Loan = () => {
             field_rate: loan.fr,
             field_day_count_method: loan.fdcm,
             field_initial_fee: loan.fif,
-            field_show_recurring: false,
             field_recurring_amount: loan.fra,
             field_recurring_payment_method: '',
             field_rec_first_payment_date: loan.pdt,
