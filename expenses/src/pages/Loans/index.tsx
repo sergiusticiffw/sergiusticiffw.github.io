@@ -154,8 +154,9 @@ const Loans = () => {
       {noData ? (
         'No loans found'
       ) : (
-        <table className="expenses-table" cellSpacing="0" cellPadding="0">
-          <thead>
+        <div className="table-wrapper">
+          <table className="expenses-table" cellSpacing="0" cellPadding="0">
+            <thead>
             <tr>
               <th>Title</th>
               <th>Principal</th>
@@ -165,8 +166,8 @@ const Loans = () => {
               <th className="desktop-only"></th>
               <th className="desktop-only"></th>
             </tr>
-          </thead>
-          <tbody ref={tableRef}>
+            </thead>
+            <tbody ref={tableRef}>
             {loans?.map((loan) => {
               return (
                 <tr
@@ -210,8 +211,9 @@ const Loans = () => {
                 </tr>
               );
             })}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       )}
       {deleteVisible && (
         <div style={{ ...extraRowStyle }}>

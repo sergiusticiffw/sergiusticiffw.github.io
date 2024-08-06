@@ -137,7 +137,7 @@ const PaymentDetails = (props) => {
       </Modal>
 
       {payments.length ? (
-        <>
+        <div className="table-wrapper">
           <h2>Payments</h2>
           <table className="expenses-table" cellSpacing="0" cellPadding="0">
             <thead>
@@ -206,7 +206,7 @@ const PaymentDetails = (props) => {
               </div>
             </div>
           )}
-        </>
+        </div>
       ) : (
         ''
       )}
