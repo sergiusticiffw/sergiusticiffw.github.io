@@ -1,6 +1,7 @@
 import './App.scss';
 import { AuthProvider } from '@context/context';
 import { NotificationProvider } from '@context/notification';
+import { LoanProvider } from '@context/loan';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import AppRoute from '@components/AppRoute';
 import React from 'react';
@@ -79,24 +80,26 @@ const App = () => {
   return (
     <AuthProvider>
       <NotificationProvider>
-        <Router>
-          <Navbar />
+        <LoanProvider>
+          <Router>
+            <Navbar />
 
-          <Routes>
-            {routes.map((route) => (
-              <Route
-                key={route.path}
-                path={route.path}
-                element={
-                  <AppRoute
-                    component={route.component}
-                    isPrivate={route.isPrivate}
-                  />
-                }
-              />
-            ))}
-          </Routes>
-        </Router>
+            <Routes>
+              {routes.map((route) => (
+                <Route
+                  key={route.path}
+                  path={route.path}
+                  element={
+                    <AppRoute
+                      component={route.component}
+                      isPrivate={route.isPrivate}
+                    />
+                  }
+                />
+              ))}
+            </Routes>
+          </Router>
+        </LoanProvider>
       </NotificationProvider>
     </AuthProvider>
   );

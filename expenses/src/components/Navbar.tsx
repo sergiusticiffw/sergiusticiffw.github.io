@@ -6,6 +6,7 @@ import {
   FaMoneyBill,
   FaPlus,
   FaUser,
+  FaPiggyBank,
 } from 'react-icons/fa';
 import React, { useState } from 'react';
 import { AuthState } from '@type/types';
@@ -66,6 +67,11 @@ const Navbar = () => {
         <li>
           <NavLink to="/expenses/income">
             <FaMoneyBill />
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/expenses/loans">
+            <FaPiggyBank />
           </NavLink>
         </li>
         {userIsLoggedIn ? (

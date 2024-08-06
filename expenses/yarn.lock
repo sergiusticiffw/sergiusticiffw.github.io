@@ -2615,6 +2615,11 @@ path-parse@^1.0.7:
   resolved "https://registry.yarnpkg.com/path-parse/-/path-parse-1.0.7.tgz#fbc114b60ca42b30d9daf5858e4bd68bbedb6735"
   integrity sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==
 
+paydown@^0.0.18:
+  version "0.0.18"
+  resolved "https://registry.yarnpkg.com/paydown/-/paydown-0.0.18.tgz#b8982b20bb1cef23b27450dcd76abe7a6be78d8b"
+  integrity sha512-lw/f1MaeAUQCj3j3iAxFl9KbqlnoQVZbDWjaT9YTOry4NNyt43N6r+0l04oZrDhteTsdlA8u6M5Lq6v6DtkhJQ==
+
 picocolors@^1.0.0, picocolors@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.0.1.tgz#a8ad579b571952f0e5d25892de5445bcfe25aaa1"

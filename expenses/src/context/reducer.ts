@@ -51,6 +51,11 @@ export const initialData = {
   totalSpent: 0,
 };
 
+export const initialLoanData = {
+  loans: null,
+  payments: [],
+};
+
 export const AuthReducer = (initialState: AuthState, action: ActionType) => {
   switch (action.type) {
     case 'REQUEST_LOGIN':
@@ -208,5 +213,16 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
 
     default:
       throw new Error(`Unhandled action type: ${action.type}`);
+  }
+};
+
+export const LoanReducer = (initialState, action) => {
+  switch (action.type) {
+    case 'SET_DATA':
+      return {
+        ...initialState,
+        loans: action.loans,
+        payments: action.payments,
+      };
   }
 };

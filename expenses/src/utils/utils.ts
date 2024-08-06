@@ -216,6 +216,51 @@ export const fetchData = (
   );
 };
 
+export const fetchLoans = (
+  token: string,
+  dataDispatch: any,
+  dispatch: any,
+) => {
+  const fetchOptions = {
+    method: 'GET',
+    headers: new Headers({
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'JWT-Authorization': 'Bearer ' + token,
+    }),
+  };
+  fetchRequest(
+    'https://dev-expenses-api.pantheonsite.io/api/loans',
+    fetchOptions,
+    dataDispatch,
+    dispatch,
+    async (data) => {
+      if (data.length > 0) {
+        const paymentPromises = data.map((item) =>
+          fetch(
+            `https://dev-expenses-api.pantheonsite.io/api/payments/${item.id}`,
+            fetchOptions
+          )
+            .then((response) => response.json())
+            .then((responseData) => ({ loanId: item.id, data: responseData }))
+        );
+        const payments = await Promise.all(paymentPromises);
+        dataDispatch({
+          type: 'SET_DATA',
+          loans: data,
+          payments,
+        });
+      } else {
+        dataDispatch({
+          type: 'SET_DATA',
+          loans: null,
+          payments: [],
+        });
+      }
+    }
+  );
+};
+
 export const formatNumber = (value: unknown): string => {
   // Try to parse the value as a floating-point number
   const parsedValue = parseFloat(value as string);
@@ -248,4 +293,22 @@ export const getMonthsPassed = (firstDay: string) => {
     String((new Date().getTime() - new Date(firstDay).getTime()) / 86400000 + 1)
   );
   return daysPassed ? parseFloat(String(daysPassed / 30.42)).toFixed(2) : 0;
+};
+
+export const transformToNumber = (value: string | number): number => {
+  if (typeof value === 'number') {
+    return value;
+  }
+  return value?.includes('.') ? parseFloat(value) : parseInt(value, 10);
+};
+
+export const transformDateFormat = (dateString: string): string => {
+  const [year, month, day] = dateString.split('-');
+  return `${day}.${month}.${year}`;
+};
+
+export const addOneDay = (dateStr: string) => {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() + 1);
+  return date.toISOString().slice(0, 10);
 };

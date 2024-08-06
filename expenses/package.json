@@ -12,6 +12,7 @@
     "crypto-js": "^4.2.0",
     "highcharts": "^11.2.0",
     "highcharts-react-official": "^3.2.1",
+    "paydown": "^0.0.18",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.0.1",
