@@ -19,12 +19,12 @@ const Loans = () => {
   const { token } = useAuthState() as AuthState;
   const dispatch = useAuthDispatch();
   const { loans } = data;
-  const noData = data.loans === null;
+  const noData = !data.loans || data?.loans?.length === 0;
   useEffect(() => {
     if (noData) {
       fetchLoans(token, dataDispatch, dispatch);
     }
-  }, [data, dataDispatch, noData, token, dispatch]);
+  }, [dataDispatch, noData, token, dispatch]);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
