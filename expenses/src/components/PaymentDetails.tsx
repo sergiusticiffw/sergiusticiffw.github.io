@@ -5,12 +5,11 @@ import { useNotification } from '@context/notification';
 import { AuthState } from '@type/types';
 import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash } from 'react-icons/fa';
-import { deleteNode, fetchLoans, formatNumber } from '@utils/utils';
+import { deleteNode, fetchLoans } from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import Modal from '@components/Modal';
 import PaymentForm from '@components/PaymentForm';
 import { useLoan } from '@context/loan';
-import NumberDisplay from '@components/NumberDisplay';
 
 const PaymentDetails = (props) => {
   const payments = props?.payments ?? [];
