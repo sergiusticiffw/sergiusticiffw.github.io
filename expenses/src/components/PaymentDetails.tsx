@@ -5,11 +5,12 @@ import { useNotification } from '@context/notification';
 import { AuthState } from '@type/types';
 import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash } from 'react-icons/fa';
-import { deleteNode, fetchLoans } from '@utils/utils';
+import { deleteNode, fetchLoans, formatNumber } from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import Modal from '@components/Modal';
 import PaymentForm from '@components/PaymentForm';
 import { useLoan } from '@context/loan';
+import NumberDisplay from '@components/NumberDisplay';
 
 const PaymentDetails = (props) => {
   const payments = props?.payments ?? [];
@@ -71,6 +72,10 @@ const PaymentDetails = (props) => {
     });
   };
 
+  const totalPaidAmount = payments.reduce((sum, item) => {
+    return sum + parseFloat(item.fpi || 0);
+  }, 0);
+
   return (
     <div className="incomes-page">
       <button
@@ -131,6 +136,12 @@ const PaymentDetails = (props) => {
       {payments.length ? (
         <div className="table-wrapper">
           <h2>Payments</h2>
+          {totalPaidAmount > 0 && (
+            <>
+              <div>Amount Paid to Date: {totalPaidAmount}</div>
+              <br />
+            </>
+          )}
           <table className="expenses-table" cellSpacing="0" cellPadding="0">
             <thead>
               <tr>
