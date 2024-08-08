@@ -57,7 +57,6 @@ const Loan = () => {
       ? {
           recurring: {
             first_payment_date: transformDateFormat(loan.pdt),
-            ...(loan.fra ? { amount: transformToNumber(loan.fra) } : {}),
             ...(loan.frpd ? { payment_day: transformToNumber(loan.frpd) } : {}),
             ...(loan.frpp
               ? { payment_period: transformToNumber(loan.frpp) }
