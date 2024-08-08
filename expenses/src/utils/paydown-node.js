@@ -690,7 +690,9 @@ function _Paydown() {
     const totalDays = calculate_day_count(data.start_date, data.end_date);
     const count = data.day_count_method === 'act/360' ? 360 : 365;
     const dailyRate = data.rate / 100 / count;
-    return data.principal * dailyRate * totalDays;
+    const months = getNumberOfMonths(data.start_date, data.end_date);
+    const total = data.principal + (data.principal * dailyRate * totalDays);
+    return total / months;
   };
 
   this.set_init = function (data) {
@@ -1062,6 +1064,34 @@ function zero_fill(i) {
 function split_date(date) {
   var splitted = date.split('.');
   return [splitted[0], splitted[1], splitted[2]];
+}
+
+function getNumberOfMonths(first_date, second_date) {
+  var first_date_array = first_date.split('.');
+  var second_date_array = second_date.split('.');
+
+  var date_1 = new Date(
+    Number(first_date_array[2]),
+    Number(first_date_array[1]) - 1,
+    Number(first_date_array[0])
+  );
+  var date_2 = new Date(
+    Number(second_date_array[2]),
+    Number(second_date_array[1] - 1),
+    Number(second_date_array[0])
+  );
+
+  const startYear = date_1.getFullYear();
+  const startMonth = date_1.getMonth();
+
+  const endYear = date_2.getFullYear();
+  const endMonth = date_2.getMonth();
+
+  const yearDiff = endYear - startYear;
+  const monthDiff = endMonth - startMonth;
+
+  // Total number of months
+  return yearDiff * 12 + monthDiff;
 }
 
 function calculate_day_count(first_date, second_date, exclude_last_day) {
