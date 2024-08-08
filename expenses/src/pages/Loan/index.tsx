@@ -52,7 +52,7 @@ const Loan = () => {
     end_date: transformDateFormat(loan.edt),
     principal: transformToNumber(loan.fp),
     rate: transformToNumber(loan.fr),
-    day_count_method: loan.fdcm,
+    day_count_method: 'act/365',
     ...(loan.pdt
       ? {
           recurring: {
@@ -97,7 +97,6 @@ const Loan = () => {
             field_start_date: loan.sdt,
             field_end_date: loan.edt,
             field_rate: loan.fr,
-            field_day_count_method: loan.fdcm,
             field_initial_fee: loan.fif,
             field_rec_first_payment_date: loan.pdt,
             field_recurring_payment_day: loan.frpd,

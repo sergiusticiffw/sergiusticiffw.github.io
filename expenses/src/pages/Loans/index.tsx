@@ -36,14 +36,10 @@ const Loans = () => {
     field_start_date: new Date().toISOString().slice(0, 10),
     field_end_date: new Date().toISOString().slice(0, 10),
     field_rate: '',
-    field_day_count_method: 'act/365',
     field_initial_fee: '',
-    field_recurring_amount: '',
-    field_recurring_payment_method: 'equal_installment',
     field_rec_first_payment_date: null,
     field_recurring_payment_day: '',
     field_recurring_payment_fee: '',
-    field_recurring_payment_period: '',
   });
 
   const {
@@ -64,14 +60,10 @@ const Loans = () => {
       field_start_date: item.sdt,
       field_end_date: item.edt,
       field_rate: item.fr,
-      field_day_count_method: item.fdcm,
       field_initial_fee: item.fif,
-      field_recurring_amount: item.fra,
-      field_recurring_payment_method: '',
       field_rec_first_payment_date: item.pdt,
       field_recurring_payment_day: item.frpd,
       field_recurring_payment_fee: item.frpf,
-      field_recurring_payment_period: item.frpp,
     });
     setShowEditModal(true);
   };

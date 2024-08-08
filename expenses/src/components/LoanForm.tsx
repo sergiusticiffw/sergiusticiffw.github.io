@@ -16,7 +16,6 @@ interface LoanFormProps {
     field_start_date: string;
     field_end_date: string;
     field_rate: number;
-    field_day_count_method?: string;
     field_initial_fee?: number;
 
     field_recurring_payment_method?: string;
@@ -37,7 +36,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
     field_start_date: new Date().toISOString().slice(0, 10),
     field_end_date: new Date().toISOString().slice(0, 10),
     field_rate: '',
-    field_day_count_method: 'act/365',
     field_initial_fee: '',
 
     field_rec_first_payment_date: null,
@@ -71,7 +69,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
       field_start_date: [formState.field_start_date],
       field_end_date: [formState.field_end_date],
       field_rate: [formState.field_rate],
-      field_day_count_method: [formState.field_day_count_method],
       field_initial_fee: [formState.field_initial_fee],
       field_rec_first_payment_date: [formState.field_rec_first_payment_date],
       field_recurring_payment_day: [formState.field_recurring_payment_day],
@@ -158,17 +155,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           value={formState.field_rate}
           onChange={handleChange}
         />
-        <select
-          value={formState.field_day_count_method}
-          name="field_day_count_method"
-          onChange={handleChange}
-        >
-          {['act/365', 'act/360'].map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
         <input
           placeholder="Initial fee"
           type="number"
