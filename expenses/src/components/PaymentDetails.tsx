@@ -26,12 +26,8 @@ const PaymentDetails = (props) => {
   const [focusedItem, setFocusedItem] = useState({
     field_date: new Date().toISOString().slice(0, 10),
     field_rate: '',
-    field_recurring_amount: '',
     field_pay_installment: '',
-    field_pay_reduction: '',
-    field_payment_method: '',
     field_pay_single_fee: '',
-    field_recurring_fee_amount: '',
   });
 
   const {
@@ -50,12 +46,8 @@ const PaymentDetails = (props) => {
       title: item.title,
       field_date: item.fdt,
       field_rate: item.fr,
-      field_recurring_amount: item.fra,
       field_pay_installment: item.fpi,
-      field_pay_reduction: item.fpr,
-      field_payment_method: item.fpm,
       field_pay_single_fee: item.fpsf,
-      field_recurring_fee_amount: item.frfa,
     });
     setShowEditModal(true);
   };

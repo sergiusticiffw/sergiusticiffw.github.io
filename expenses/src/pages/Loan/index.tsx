@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import LoanDetails from '@components/LoanDetails';
 import LoanForm from '@components/LoanForm';
-import Paydown from 'paydown';
+import Paydown from '@utils/paydown-node';
 import Modal from '@components/Modal';
 import { useParams } from 'react-router-dom';
 import PaymentDetails from '@components/PaymentDetails';
@@ -42,41 +42,10 @@ const Loan = () => {
       return {
         date: transformDateFormat(item.fdt),
         ...(item.fr ? { rate: transformToNumber(item.fr) } : {}),
-        ...(item.fra ? { recurring_amount: transformToNumber(item.fra) } : {}),
         ...(item.fpi ? { pay_installment: transformToNumber(item.fpi) } : {}),
-        ...(item.fpr ? { pay_reduction: transformToNumber(item.fpr) } : {}),
         ...(item.fpsf ? { pay_single_fee: transformToNumber(item.fpsf) } : {}),
-        ...(item.frfa
-          ? { recurring_fee_amount: transformToNumber(item.frfa) }
-          : {}),
-        ...(item.fpm ? { payment_method: item.fpm } : {}),
       };
     }) || [];
-
-  const events = [
-    {
-      id: '1',
-      date: '31.04.2024',
-      rate: 5,
-      recurring_amount: '',
-      pay_installment: '',
-      pay_reduction: '',
-      payment_method: '',
-      pay_single_fee: '',
-      recurring_fee_amount: '',
-    },
-    {
-      id: '2',
-      date: '31.05.2024',
-      rate: 7,
-      recurring_amount: '',
-      pay_installment: '',
-      pay_reduction: '',
-      payment_method: '',
-      pay_single_fee: '',
-      recurring_fee_amount: '',
-    },
-  ];
 
   const loanData = {
     start_date: transformDateFormat(loan.sdt),
@@ -90,7 +59,6 @@ const Loan = () => {
             first_payment_date: transformDateFormat(loan.pdt),
             ...(loan.fra ? { amount: transformToNumber(loan.fra) } : {}),
             ...(loan.frpd ? { payment_day: transformToNumber(loan.frpd) } : {}),
-            ...(loan.frpf ? { payment_fee: transformToNumber(loan.frpf) } : {}),
             ...(loan.frpp
               ? { payment_period: transformToNumber(loan.frpp) }
               : {}),
@@ -132,12 +100,8 @@ const Loan = () => {
             field_rate: loan.fr,
             field_day_count_method: loan.fdcm,
             field_initial_fee: loan.fif,
-            field_recurring_amount: loan.fra,
-            field_recurring_payment_method: '',
             field_rec_first_payment_date: loan.pdt,
             field_recurring_payment_day: loan.frpd,
-            field_recurring_payment_fee: loan.frpf,
-            field_recurring_payment_period: loan.frpp,
           }}
           onSuccess={() => {
             setShowEditModal(false);

@@ -1,9 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  ReactNode,
-  useReducer,
-} from 'react';
+import React, { createContext, useContext, ReactNode, useReducer } from 'react';
 import { initialLoanData, LoanReducer } from '@context/reducer';
 
 interface LoanContextProps {

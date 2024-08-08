@@ -31,9 +31,7 @@ const Modal = ({ show, onClose, children }: ModalProps) => {
             <a href="/" onClick={onClose} title="Close" className="modal-close">
               <MdClose />
             </a>
-            <div className="modal-body">
-              {children}
-            </div>
+            <div className="modal-body">{children}</div>
           </div>
         </div>
       ) : (

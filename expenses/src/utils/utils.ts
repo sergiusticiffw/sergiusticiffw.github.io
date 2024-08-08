@@ -216,11 +216,7 @@ export const fetchData = (
   );
 };
 
-export const fetchLoans = (
-  token: string,
-  dataDispatch: any,
-  dispatch: any,
-) => {
+export const fetchLoans = (token: string, dataDispatch: any, dispatch: any) => {
   const fetchOptions = {
     method: 'GET',
     headers: new Headers({
