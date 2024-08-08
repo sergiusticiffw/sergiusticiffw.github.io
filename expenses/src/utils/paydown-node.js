@@ -451,7 +451,7 @@ function _Paydown() {
 
   this.calculate_to_date = function (array_of_events, array_of_debug_prints) {
     var index;
-    var reduction, installment;
+    var installment;
     var final_interest = 0;
 
     if (typeof this.init.principal !== 'number' || isNaN(this.init.principal)) {
@@ -560,16 +560,16 @@ function _Paydown() {
         this.sum_of_fees += this.current_recurring_fee;
         // recurring payment transaction occurs
         if (this.init.payment_method === 'equal_installment') {
-          const item =
-            this.event_array[index].hasOwnProperty('wasPayed') &&
-            this.event_array[index].hasOwnProperty('pay_installment')
-              ? this.event_array[index].pay_installment
-              : this.current_recurring_payment;
+          installment = this.event_array[index].hasOwnProperty(
+            'pay_installment'
+          )
+            ? this.event_array[index].pay_installment
+            : this.current_recurring_payment;
           if (
             !this.func_pay_installment(
               index,
               date_obj,
-              item,
+              installment,
               this.current_recurring_fee
             )
           ) {
@@ -582,20 +582,7 @@ function _Paydown() {
         }
       }
 
-      if (this.event_array[index].hasOwnProperty('pay_installment')) {
-        installment = this.event_array[index].pay_installment;
-
-        if (
-          !this.func_pay_installment(
-            index,
-            date_obj,
-            installment,
-            this.current_single_fee
-          )
-        ) {
-          break;
-        }
-      } else if (this.current_single_fee) {
+      if (this.current_single_fee) {
         if (!this.event_array[index].hasOwnProperty('ending')) {
           this.log_payment([
             this.event_array[index].date,
@@ -687,12 +674,13 @@ function _Paydown() {
   };
 
   this.calculateRecurringAmount = function (data) {
-    const totalDays = calculate_day_count(data.start_date, data.end_date);
-    const count = data.day_count_method === 'act/360' ? 360 : 365;
-    const dailyRate = data.rate / 100 / count;
     const months = getNumberOfMonths(data.start_date, data.end_date);
-    const total = data.principal + (data.principal * dailyRate * totalDays);
-    return total / months;
+    const monthlyRate = data.rate / 12 / 100;
+    const monthlyPayment =
+      (data.principal * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+      (Math.pow(1 + monthlyRate, months) - 1);
+
+    return monthlyPayment + 1;
   };
 
   this.set_init = function (data) {
@@ -796,6 +784,7 @@ function _Paydown() {
     }
 
     event.wasPayed = true;
+    event.pay_recurring = true;
     this.event_array.push(Object.assign({}, event));
   };
 
@@ -1080,18 +1069,11 @@ function getNumberOfMonths(first_date, second_date) {
     Number(second_date_array[1] - 1),
     Number(second_date_array[0])
   );
-
-  const startYear = date_1.getFullYear();
-  const startMonth = date_1.getMonth();
-
-  const endYear = date_2.getFullYear();
-  const endMonth = date_2.getMonth();
-
-  const yearDiff = endYear - startYear;
-  const monthDiff = endMonth - startMonth;
-
-  // Total number of months
-  return yearDiff * 12 + monthDiff;
+  return (
+    (date_2.getFullYear() - date_1.getFullYear()) * 12 +
+    (date_2.getMonth() - date_1.getMonth()) +
+    1
+  );
 }
 
 function calculate_day_count(first_date, second_date, exclude_last_day) {
