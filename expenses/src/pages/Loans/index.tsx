@@ -20,6 +20,7 @@ const Loans = () => {
   const dispatch = useAuthDispatch();
   const { loans } = data;
   const noData = !data.loans || data?.loans?.length === 0;
+  const loading = data.loading;
   useEffect(() => {
     if (noData) {
       fetchLoans(token, dataDispatch, dispatch);
@@ -89,135 +90,148 @@ const Loans = () => {
 
   return (
     <div className="incomes-page">
-      <button
-        onClick={() => {
-          setShowEditModal(true);
-          setIsNewModal(true);
-        }}
-        className="button wide"
-      >
-        Add New Loan
-      </button>
-      <br />
-      <br />
-      <Modal
-        show={showDeleteModal}
-        onClose={(e) => {
-          e.preventDefault();
-          setShowDeleteModal(false);
-        }}
-      >
-        <h3>Are you sure you want to delete the loan?</h3>
-        <button
-          onClick={() => handleDelete(showDeleteModal, token)}
-          className="button wide"
-        >
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : (
-            <MdDelete />
-          )}
-        </button>
-      </Modal>
-      <Modal
-        show={showEditModal}
-        onClose={(e) => {
-          e.preventDefault();
-          setShowEditModal(false);
-          setIsNewModal(false);
-        }}
-      >
-        <LoanForm
-          formType={!isNewModal ? 'edit' : 'add'}
-          values={focusedItem}
-          onSuccess={() => {
-            setIsNewModal(false);
-            setShowEditModal(false);
-            fetchLoans(token, dataDispatch, dispatch);
-          }}
-        />
-      </Modal>
-      {noData ? (
-        'No loans found'
+      {loading ? (
+        <div className="lds-ripple">
+          <div></div>
+          <div></div>
+        </div>
       ) : (
-        <div className="table-wrapper">
-          <table className="expenses-table" cellSpacing="0" cellPadding="0">
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Principal</th>
-                <th>Rate</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th className="desktop-only"></th>
-                <th className="desktop-only"></th>
-              </tr>
-            </thead>
-            <tbody ref={tableRef}>
-              {loans?.map((loan) => {
-                return (
-                  <tr
-                    key={loan.id}
-                    data-id={loan.id}
-                    onTouchStart={(e) => handleTouchStart(e, loan.id, tableRef)}
-                    onTouchMove={(e) => handleTouchMove(e, tableRef)}
-                    onTouchEnd={(e) =>
-                      handleTouchEnd(
-                        e,
-                        tableRef,
-                        loan.id,
-                        handleEdit,
-                        setShowDeleteModal
-                      )
-                    }
-                  >
-                    <td>
-                      <Link to={`/expenses/loan/${loan.id}`}>{loan.title}</Link>
-                    </td>
-                    <td>{loan.fp}</td>
-                    <td>{loan.fr}</td>
-                    <td>{loan.sdt}</td>
-                    <td>{loan.edt}</td>
-                    <td className="desktop-only">
-                      <button
-                        onClick={() => handleEdit(loan.id)}
-                        className="btn-outline"
-                      >
-                        <MdEdit />
-                      </button>
-                    </td>
-                    <td className="desktop-only">
-                      <button
-                        onClick={() => setShowDeleteModal(loan.id)}
-                        className="btn-outline"
-                      >
-                        <MdDelete />
-                      </button>
-                    </td>
+        <>
+          <button
+            onClick={() => {
+              setShowEditModal(true);
+              setIsNewModal(true);
+            }}
+            className="button wide"
+          >
+            Add New Loan
+          </button>
+          <br />
+          <br />
+          <Modal
+            show={showDeleteModal}
+            onClose={(e) => {
+              e.preventDefault();
+              setShowDeleteModal(false);
+            }}
+          >
+            <h3>Are you sure you want to delete the loan?</h3>
+            <button
+              onClick={() => handleDelete(showDeleteModal, token)}
+              className="button wide"
+            >
+              {isSubmitting ? (
+                <div className="loader">
+                  <span className="loader__element"></span>
+                  <span className="loader__element"></span>
+                  <span className="loader__element"></span>
+                </div>
+              ) : (
+                <MdDelete />
+              )}
+            </button>
+          </Modal>
+          <Modal
+            show={showEditModal}
+            onClose={(e) => {
+              e.preventDefault();
+              setShowEditModal(false);
+              setIsNewModal(false);
+            }}
+          >
+            <LoanForm
+              formType={!isNewModal ? 'edit' : 'add'}
+              values={focusedItem}
+              onSuccess={() => {
+                setIsNewModal(false);
+                setShowEditModal(false);
+                fetchLoans(token, dataDispatch, dispatch);
+              }}
+            />
+          </Modal>
+          {noData ? (
+            'No loans found'
+          ) : (
+            <div className="table-wrapper">
+              <table className="expenses-table" cellSpacing="0" cellPadding="0">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Principal</th>
+                    <th>Rate</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th className="desktop-only"></th>
+                    <th className="desktop-only"></th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {deleteVisible && (
-        <div style={{ ...extraRowStyle }}>
-          <div className="action delete">
-            <FaTrash />
-          </div>
-        </div>
-      )}
-      {editVisible && (
-        <div style={{ ...extraRowStyle }}>
-          <div className="action edit">
-            <FaPen />
-          </div>
-        </div>
+                </thead>
+                <tbody ref={tableRef}>
+                  {loans?.map((loan) => {
+                    return (
+                      <tr
+                        key={loan.id}
+                        data-id={loan.id}
+                        onTouchStart={(e) =>
+                          handleTouchStart(e, loan.id, tableRef)
+                        }
+                        onTouchMove={(e) => handleTouchMove(e, tableRef)}
+                        onTouchEnd={(e) =>
+                          handleTouchEnd(
+                            e,
+                            tableRef,
+                            loan.id,
+                            handleEdit,
+                            setShowDeleteModal
+                          )
+                        }
+                      >
+                        <td>
+                          <Link to={`/expenses/loan/${loan.id}`}>
+                            {loan.title}
+                          </Link>
+                        </td>
+                        <td>{loan.fp}</td>
+                        <td>{loan.fr}</td>
+                        <td>{loan.sdt}</td>
+                        <td>{loan.edt}</td>
+                        <td className="desktop-only">
+                          <button
+                            onClick={() => handleEdit(loan.id)}
+                            className="btn-outline"
+                          >
+                            <MdEdit />
+                          </button>
+                        </td>
+                        <td className="desktop-only">
+                          <button
+                            onClick={() => setShowDeleteModal(loan.id)}
+                            className="btn-outline"
+                          >
+                            <MdDelete />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {deleteVisible && (
+            <div style={{ ...extraRowStyle }}>
+              <div className="action delete">
+                <FaTrash />
+              </div>
+            </div>
+          )}
+          {editVisible && (
+            <div style={{ ...extraRowStyle }}>
+              <div className="action edit">
+                <FaPen />
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

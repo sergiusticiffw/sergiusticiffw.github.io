@@ -22,6 +22,7 @@ const Income = () => {
   const [isNewModal, setIsNewModal] = useState(false);
   const { data, dataDispatch } = useData();
   const noData = data.groupedData === null;
+  const loading = data.loading;
   const dispatch = useAuthDispatch();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nrOfItemsToShow, setNrOfItemsToShow] = useState(20);
@@ -113,52 +114,61 @@ const Income = () => {
           }}
         />
       </Modal>
-      <h2>Incomes</h2>
-      {noData ? (
-        ''
+      {loading ? (
+        <div className="lds-ripple">
+          <div></div>
+          <div></div>
+        </div>
       ) : (
-        <div>
-          <button
-            onClick={() => {
-              setShowEditModal(true);
-              setIsNewModal(true);
-            }}
-            className="button wide"
-          >
-            <FaPlus />
-          </button>
-
-          {data.incomeData && data.incomeData.length ? (
-            <IncomeTable
-              items={data.incomeData.slice(0, nrOfItemsToShow)}
-              handleEdit={handleEdit}
-              // @ts-expect-error
-              setShowDeleteModal={setShowDeleteModal}
-            />
+        <>
+          <h2>Incomes</h2>
+          {noData ? (
+            ''
           ) : (
-            <p>No income records found.</p>
-          )}
-
-          {data.incomeData?.length > nrOfItemsToShow && (
-            <div className="load-more">
+            <div>
               <button
-                onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
-                className="btn-outline"
+                onClick={() => {
+                  setShowEditModal(true);
+                  setIsNewModal(true);
+                }}
+                className="button wide"
               >
-                <MdMoreHoriz />
+                <FaPlus />
               </button>
+
+              {data.incomeData && data.incomeData.length ? (
+                <IncomeTable
+                  items={data.incomeData.slice(0, nrOfItemsToShow)}
+                  handleEdit={handleEdit}
+                  // @ts-expect-error
+                  setShowDeleteModal={setShowDeleteModal}
+                />
+              ) : (
+                <p>No income records found.</p>
+              )}
+
+              {data.incomeData?.length > nrOfItemsToShow && (
+                <div className="load-more">
+                  <button
+                    onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
+                    className="btn-outline"
+                  >
+                    <MdMoreHoriz />
+                  </button>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
-      {data.incomeData?.length ? (
-        <div className="charts-section">
-          <Suspense fallback="">
-            <YearIncomeAverageTrend />
-          </Suspense>
-        </div>
-      ) : (
-        ''
+          {data.incomeData?.length ? (
+            <div className="charts-section">
+              <Suspense fallback="">
+                <YearIncomeAverageTrend />
+              </Suspense>
+            </div>
+          ) : (
+            ''
+          )}
+        </>
       )}
     </div>
   );

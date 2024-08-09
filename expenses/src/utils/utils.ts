@@ -245,12 +245,14 @@ export const fetchLoans = (token: string, dataDispatch: any, dispatch: any) => {
           type: 'SET_DATA',
           loans: data,
           payments,
+          loading: false,
         });
       } else {
         dataDispatch({
           type: 'SET_DATA',
           loans: null,
           payments: [],
+          loading: false,
         });
       }
     }

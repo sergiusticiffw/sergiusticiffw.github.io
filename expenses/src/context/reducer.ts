@@ -53,6 +53,7 @@ export const initialData = {
 
 export const initialLoanData = {
   loans: null,
+  loading: true,
   payments: [],
 };
 
@@ -223,6 +224,7 @@ export const LoanReducer = (initialState, action) => {
         ...initialState,
         loans: action.loans,
         payments: action.payments,
+        loading: action.loading,
       };
   }
 };

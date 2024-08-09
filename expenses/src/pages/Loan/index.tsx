@@ -30,7 +30,15 @@ const Loan = () => {
   }, [data, dataDispatch, noData, token, dispatch]);
 
   const loan = loans?.find((item) => item.id === id);
-  if (!loan) return 'No loan found';
+  if (!loan)
+    return (
+      <>
+        <div className="lds-ripple">
+          <div></div>
+          <div></div>
+        </div>
+      </>
+    );
 
   const [filteredData] =
     data?.payments?.filter(
