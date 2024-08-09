@@ -262,7 +262,12 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   };
 
   if (events.length <= 0) {
-    return <p>No transaction records found.</p>;
+    return (
+      <div className="lds-ripple">
+        <div></div>
+        <div></div>
+      </div>
+    );
   }
 
   return (
