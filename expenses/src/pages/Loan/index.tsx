@@ -61,6 +61,11 @@ const Loan = () => {
     principal: transformToNumber(loan.fp),
     rate: transformToNumber(loan.fr),
     day_count_method: 'act/365',
+    ...(loan.fif
+      ? {
+          initial_fee: transformToNumber(loan.fif),
+        }
+      : {}),
     ...(loan.pdt
       ? {
           recurring: {
