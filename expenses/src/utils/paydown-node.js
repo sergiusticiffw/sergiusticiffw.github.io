@@ -11,7 +11,9 @@ export default function Paydown() {
 
     var local_array = [];
 
+    let lastPaymentDate;
     if (events_array) {
+      lastPaymentDate = events_array[0]?.date;
       local_array = events_array.slice();
     }
 
@@ -36,7 +38,7 @@ export default function Paydown() {
         latest_payment_date,
         final_interest,
         fees,
-      ] = paydown.calculate_to_date(payments_array, debug_array);
+      ] = paydown.calculate_to_date(payments_array, debug_array, lastPaymentDate);
     } catch (err) {
       throw err;
     }
@@ -103,12 +105,6 @@ function _Paydown() {
   this.current_recurring_fee = 0;
   this.current_single_fee = 0;
   this.recurring_payment_period = 1; // period in months
-  /* // these 4 are for performance analysis:
-  this.timeSpent = 0
-  this.callCount = 0
-  this.rateEventIterations = 0
-  this.mainLoopIterations = 0
-*/
   this.rateHashMap = {};
 
   this.round = function (input) {
@@ -133,10 +129,6 @@ function _Paydown() {
 
   // period lasts from the beginning of start date to the end of end_date
   this.get_period_interests = function (principal, rate, start_date, end_date) {
-    /*  // these 2 are for performance analysis:
-    this.callCount++
-    var timeBegin = Date.now();
-*/
     var sum_of_interests = 0;
     var rate_event;
 
@@ -313,22 +305,6 @@ function _Paydown() {
     return false;
   };
 
-  // param property is a property of the seeked event
-  this.check_if_date_has_event = function (property, date) {
-    for (var index = 0; index < this.event_array.length; index++) {
-      if (
-        date_to_integer(this.event_array[index].date) === date_to_integer(date)
-      ) {
-        if (this.event_array[index].hasOwnProperty(property)) {
-          return this.event_array[index];
-        } else {
-          return false;
-        }
-      }
-    }
-    return false;
-  };
-
   this.check_date = function (date, context) {
     if (!context) {
       context = '';
@@ -449,7 +425,7 @@ function _Paydown() {
     return true;
   };
 
-  this.calculate_to_date = function (array_of_events, array_of_debug_prints) {
+  this.calculate_to_date = function (array_of_events, array_of_debug_prints, lastPaymentDate) {
     var index;
     var installment;
     var final_interest = 0;
@@ -490,7 +466,7 @@ function _Paydown() {
     if (this.current_recurring_payment !== null) {
       // null indicates that recurring data is missing or invalid
       this.check_first_payment_date();
-      this.generate_payment_events_till(this.init.end_date);
+      this.generate_payment_events_till(this.init.end_date, lastPaymentDate);
     }
 
     this.add_event({ date: this.init.end_date, ending: true });
@@ -783,7 +759,6 @@ function _Paydown() {
       }
     }
 
-    event.wasPayed = true;
     event.pay_recurring = true;
     this.event_array.push(Object.assign({}, event));
   };
@@ -830,12 +805,24 @@ function _Paydown() {
     }
   };
 
-  this.generate_payment_events_till = function (date) {
+  this.generate_payment_events_till = function (date, lastPaymentDate) {
     var date_obj = new _Days(this.init.first_payment_date);
-    var event = { date: date_obj.get_current(), pay_recurring: true };
 
-    this.add_event(event);
+    // Helper function to add an event if it meets the conditions
+    const addEventIfValid = (eventDate) => {
+      const eventDateInt = date_to_integer(eventDate);
+      const lastPaymentDateInt = lastPaymentDate ? date_to_integer(lastPaymentDate) : null;
 
+      // Add event if no last payment date or event date is greater than last payment date
+      if (!lastPaymentDate || eventDateInt > lastPaymentDateInt) {
+        this.add_event({ date: eventDate, pay_recurring: true });
+      }
+    };
+
+    // Add the first event based on the initial payment date
+    addEventIfValid(date_obj.get_current());
+
+    // Generate recurring events while the date is within the limit
     while (
       date_to_integer(
         date_obj.get_nth_month_nth_day(
@@ -843,9 +830,12 @@ function _Paydown() {
           this.init.payment_day
         )
       ) <= date_to_integer(date)
-    ) {
-      event = { date: date_obj.get_current(), pay_recurring: true };
-      this.add_event(event);
+      ) {
+      // Move to the next payment date
+      const nextPaymentDate = date_obj.get_current();
+
+      // Add the next payment event if valid
+      addEventIfValid(nextPaymentDate);
     }
   };
 
