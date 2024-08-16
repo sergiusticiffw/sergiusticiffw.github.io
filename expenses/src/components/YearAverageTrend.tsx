@@ -85,17 +85,20 @@ const YearAverageTrend = () => {
             </td>
           </tr>
           {data.filtered && (
-            <>
-              <tr>
-                <td>Total Months</td>
-                <td>{getMonthsPassed(firstDay as string)} months</td>
-              </tr>
-              <tr>
-                <td>Monthly Average</td>
-                <td>{formatNumber(monthlyAverage)} {currency}</td>
-              </tr>
-            </>
+            <tr>
+              <td>Total Months</td>
+              <td>{getMonthsPassed(firstDay as string)} months</td>
+            </tr>
           )}
+        </tbody>
+      </table>
+      <span className="heading">Monthly</span>
+      <table className="daily-average">
+        <tbody>
+        <tr>
+          <td>Monthly Average</td>
+          <td>{formatNumber(monthlyAverage)} {currency}</td>
+        </tr>
         </tbody>
       </table>
     </>
