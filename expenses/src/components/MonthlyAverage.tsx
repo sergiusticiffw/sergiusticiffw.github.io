@@ -16,7 +16,6 @@ const MonthlyAverage = () => {
     (new Date().getTime() - new Date(firstDay as string).getTime()) / 86400000 +
     1;
   const monthsPassed: number = daysPassed / 30.42;
-  const monthlyAverage: number = data.totalSpent / monthsPassed;
   const { sortedItems, requestSort, sortConfig } = useSortableData(
     Object.values(data.categoryTotals || [])
   );
@@ -47,9 +46,6 @@ const MonthlyAverage = () => {
           ))}
         </tbody>
       </table>
-      <div className="average-spending">
-        Average spending per month: {formatNumber(monthlyAverage)} {currency}
-      </div>
     </>
   );
 };

@@ -84,12 +84,10 @@ const YearAverageTrend = () => {
               {formatNumber(totalSpent)} {currency}
             </td>
           </tr>
-          {data.filtered && (
-            <tr>
-              <td>Total Months</td>
-              <td>{getMonthsPassed(firstDay as string)} months</td>
-            </tr>
-          )}
+          <tr>
+            <td>Total Months</td>
+            <td>{getMonthsPassed(firstDay as string)} months</td>
+          </tr>
         </tbody>
       </table>
       <span className="heading">Monthly</span>

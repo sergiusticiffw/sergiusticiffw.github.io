@@ -8,7 +8,7 @@ import { formatNumber, getMonthsPassed } from '@utils/utils';
 const AllTimeSpendings = () => {
   // All time section
   const {
-    data: { categoryTotals = {}, totalSpent },
+    data: { categoryTotals = {} },
     data,
   } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
@@ -16,7 +16,6 @@ const AllTimeSpendings = () => {
   // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data, currency]);
 
-  const firstDay = data.raw[data.raw.length - 1]?.dt;
   const items = categoryTotals ? Object.values(categoryTotals) : [];
   const allTimeSpendings: Highcharts.Options = {
     chart: {
@@ -46,15 +45,7 @@ const AllTimeSpendings = () => {
     },
   };
 
-  return (
-    <>
-      <HighchartsReact highcharts={Highcharts} options={allTimeSpendings} />
-      <div className="average-spending">
-        Total spent: {formatNumber(totalSpent)} {currency} in{' '}
-        {getMonthsPassed(firstDay as string)} months
-      </div>
-    </>
-  );
+  return <HighchartsReact highcharts={Highcharts} options={allTimeSpendings} />;
 };
 
 export default AllTimeSpendings;
