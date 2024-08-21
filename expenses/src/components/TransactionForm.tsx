@@ -130,6 +130,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           name="field_amount"
           value={formState.field_amount}
           onChange={handleChange}
+          min={0}
         />
         <input
           required
