@@ -117,7 +117,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           value={formState.title}
           onChange={handleChange}
         />
-        <label>Event Date</label>
         <input
           required
           placeholder="Event date"

@@ -133,7 +133,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           min={0}
           step={0.01}
         />
-        <label>Start Date</label>
         <input
           required
           placeholder="Start Date"
@@ -142,7 +141,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           value={formState.field_start_date}
           onChange={handleChange}
         />
-        <label>End Date</label>
         <input
           required
           placeholder="End Date"
@@ -168,7 +166,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           value={formState.field_initial_fee}
           onChange={handleChange}
         />
-        <label>1st recurring payment date</label>
         <input
           required
           placeholder="1st recurring payment date"
