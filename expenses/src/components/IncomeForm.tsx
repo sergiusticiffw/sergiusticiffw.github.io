@@ -108,6 +108,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
           value={formState.field_amount}
           onChange={handleChange}
           min={0}
+          step={0.01}
         />
         <input
           required

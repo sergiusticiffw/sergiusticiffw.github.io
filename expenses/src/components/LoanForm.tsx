@@ -131,6 +131,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           value={formState.field_principal}
           onChange={handleChange}
           min={0}
+          step={0.01}
         />
         <label>Start Date</label>
         <input
@@ -158,6 +159,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           value={formState.field_rate}
           onChange={handleChange}
           min={0}
+          step={0.01}
         />
         <input
           placeholder="Initial fee"

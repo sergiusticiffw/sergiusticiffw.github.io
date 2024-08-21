@@ -135,6 +135,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           value={formState.field_rate}
           onChange={handleChange}
           min={0}
+          step={0.01}
         />
         <input
           placeholder="Installment payment"
@@ -143,6 +144,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           value={formState.field_pay_installment}
           onChange={handleChange}
           min={0}
+          step={0.01}
         />
         <input
           placeholder="Individual fee"
@@ -151,6 +153,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           value={formState.field_pay_single_fee}
           onChange={handleChange}
           min={0}
+          step={0.01}
         />
 
         <button type="submit" disabled={isSubmitting} className="button w-100">
