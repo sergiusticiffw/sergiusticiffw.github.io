@@ -747,6 +747,8 @@ function _Paydown() {
           'this.check_and_add_event: invalid pay_installment in event ' +
             event.date
         );
+      } else {
+        event.pay_recurring = true;
       }
     }
 
@@ -759,7 +761,6 @@ function _Paydown() {
       }
     }
 
-    event.pay_recurring = true;
     this.event_array.push(Object.assign({}, event));
   };
 
