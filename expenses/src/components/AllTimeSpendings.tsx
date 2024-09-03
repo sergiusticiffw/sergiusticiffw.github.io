@@ -3,7 +3,6 @@ import { useAuthState, useData } from '@context/context';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { AuthState, DataState } from '@type/types';
-import { formatNumber, getMonthsPassed } from '@utils/utils';
 
 const AllTimeSpendings = () => {
   // All time section

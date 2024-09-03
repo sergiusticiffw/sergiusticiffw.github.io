@@ -5,13 +5,14 @@ import { useNotification } from '@context/notification';
 import { AuthState } from '@type/types';
 import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash } from 'react-icons/fa';
-import { deleteNode, fetchLoans } from '@utils/utils';
+import { deleteNode, fetchLoans, formatNumber } from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import Modal from '@components/Modal';
 import PaymentForm from '@components/PaymentForm';
 import { useLoan } from '@context/loan';
 
 const PaymentDetails = (props) => {
+  const { currency } = useAuthState() as AuthState;
   const payments = props?.payments ?? [];
   const loan = props?.loan ?? {};
   const tableRef = useRef(null);
@@ -136,7 +137,7 @@ const PaymentDetails = (props) => {
           <h2>Payments</h2>
           {totalPaidAmount > 0 && (
             <>
-              <div>Amount Paid to Date: {totalPaidAmount}</div>
+              <div>Amount Paid to Date: {formatNumber(totalPaidAmount)} {currency}</div>
               <br />
             </>
           )}

@@ -11,6 +11,7 @@ import { useAuthDispatch, useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
 import { FaPen, FaTrash } from 'react-icons/fa';
 import { useLoan } from '@context/loan';
+import { formatNumber } from '@utils/utils';
 
 const Loans = () => {
   const tableRef = useRef(null);
@@ -190,8 +191,8 @@ const Loans = () => {
                             {loan.title}
                           </Link>
                         </td>
-                        <td>{loan.fp}</td>
-                        <td>{loan.fr}</td>
+                        <td>{formatNumber(loan.fp)}</td>
+                        <td>{formatNumber(loan.fr)}</td>
                         <td>{loan.sdt}</td>
                         <td>{loan.edt}</td>
                         <td className="desktop-only">

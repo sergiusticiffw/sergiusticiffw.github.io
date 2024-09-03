@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatNumber } from '@utils/utils';
 
 const AmortizationScheduleTable = ({ amortizationSchedule }) => {
   return (
@@ -19,12 +20,12 @@ const AmortizationScheduleTable = ({ amortizationSchedule }) => {
           {amortizationSchedule?.map((element) => (
             <tr key={element[0]} data-id={element[0]}>
               <td>{element[0]}</td>
-              <td>{element[1]}</td>
-              <td>{element[2]}</td>
-              <td>{element[3]}</td>
-              <td>{element[4]}</td>
-              <td>{element[5]}</td>
-              <td>{element[6]}</td>
+              <td>{formatNumber(element[1])}</td>
+              <td>{formatNumber(element[2])}</td>
+              <td>{formatNumber(element[3])}</td>
+              <td>{formatNumber(element[4])}</td>
+              <td>{formatNumber(element[5])}</td>
+              <td>{formatNumber(element[6])}</td>
             </tr>
           ))}
         </tbody>

@@ -273,7 +273,7 @@ export const formatNumber = (value: unknown): string => {
     return formattedValue;
   } else {
     // Handle non-numeric values or invalid input
-    return 'Invalid Input';
+    return '-';
   }
 };
 
