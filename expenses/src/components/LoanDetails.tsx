@@ -9,6 +9,13 @@ const LoanDetails = (props) => {
   const loan = props?.loan ?? {};
   const amortizationSchedule = props?.amortizationSchedule ?? [];
 
+  const sumInstallments = loan?.sum_of_installments +
+    loan?.remaining_principal +
+    loan?.unpaid_interest +
+    loan?.sum_of_fees;
+
+  const payPerDay = sumInstallments / loan?.days_calculated;
+
   return (
     <>
       <h2>Prediction for this loan</h2>
@@ -18,22 +25,14 @@ const LoanDetails = (props) => {
           {formatNumber(loan?.sum_of_interests + loan?.unpaid_interest)} {currency}
         </li>
         <li>
-          Sum of reductions:{' '}
-          {formatNumber(loan?.sum_of_reductions + loan?.remaining_principal)} {currency}
-        </li>
-        <li>
           Sum of installments:{' '}
-          {formatNumber(
-            loan?.sum_of_installments +
-            loan?.remaining_principal +
-            loan?.unpaid_interest +
-            loan?.sum_of_fees
-          )} {currency}
+          {formatNumber(sumInstallments)} {currency}
         </li>
         <li>Days calculated: {loan?.days_calculated}</li>
         <li>Actual end date: {loan?.actual_end_date}</li>
         <li>Latest payment date: {loan?.latest_payment_date}</li>
         <li>Sum of fees: {formatNumber(loan?.sum_of_fees)} {currency}</li>
+        <li>Cost of loan per day: {formatNumber(payPerDay)} {currency}</li>
       </ul>
 
       <AmortizationScheduleTable amortizationSchedule={amortizationSchedule} />
