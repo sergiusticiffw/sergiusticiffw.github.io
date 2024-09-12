@@ -30,7 +30,7 @@
     "typescript": "^5.4.2",
     "vite": "^5.1.6",
     "vite-plugin-pwa": "^0.20.0",
-    "vite-tsconfig-paths": "^4.3.2"
+    "vite-tsconfig-paths": "^5.0.1"
   },
   "prettier": {
     "trailingComma": "es5",
