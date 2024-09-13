@@ -20,6 +20,9 @@ const Charts = () => {
   const YearAverageTrend = React.lazy(
     () => import('@components/YearAverageTrend')
   );
+  const MonthlyAverageTrend = React.lazy(
+    () => import('@components/MonthlyAverageTrend')
+  );
   const MonthlyTotals = React.lazy(() => import('@components/MonthlyTotals'));
 
   const { data, dataDispatch } = useData();
@@ -81,6 +84,14 @@ const Charts = () => {
               <div className="charts-section">
                 <Suspense fallback="">
                   <SavingsHistory />
+                </Suspense>
+              </div>
+            )}
+
+            {!data.filtered && (
+              <div className="charts-section">
+                <Suspense fallback="">
+                  <MonthlyAverageTrend />
                 </Suspense>
               </div>
             )}
