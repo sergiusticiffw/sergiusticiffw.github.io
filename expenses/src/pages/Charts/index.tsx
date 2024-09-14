@@ -50,13 +50,11 @@ const Charts = () => {
       ) : (
         !noEntries && (
           <div className="charts-page">
-            {!data.filtered && (
-              <div className="charts-section">
-                <Suspense fallback="">
-                  <MonthlyTotals />
-                </Suspense>
-              </div>
-            )}
+            <div className="charts-section">
+              <Suspense fallback="">
+                <MonthlyTotals />
+              </Suspense>
+            </div>
 
             <div className="charts-section">
               <Suspense fallback="">
@@ -88,13 +86,11 @@ const Charts = () => {
               </div>
             )}
 
-            {!data.filtered && (
-              <div className="charts-section">
-                <Suspense fallback="">
-                  <MonthlyAverageTrend />
-                </Suspense>
-              </div>
-            )}
+            <div className="charts-section">
+              <Suspense fallback="">
+                <MonthlyAverageTrend />
+              </Suspense>
+            </div>
 
             {!data.filtered && (
               <div className="charts-section">

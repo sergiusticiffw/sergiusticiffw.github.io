@@ -3,17 +3,13 @@ import { useData } from '@context/context';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { TransactionOrIncomeItem, DataState } from '@type/types';
+import { formatMonth } from '@utils/utils';
 
 export default function MonthlyAverageTrend() {
   const { data } = useData() as DataState;
   const items = data.filtered_raw || data.raw;
 
   useEffect(() => {}, [data.raw, data.filtered_raw]);
-
-  // Helper function to format month as "January 2024".
-  const formatMonth = (date: Date) => {
-    return date.toLocaleString('default', { month: 'long', year: 'numeric' });
-  };
 
   const firstDay = new Date(data.raw[data.raw.length - 1]?.dt);
   let monthlyExpenses: { [s: string]: any; } | ArrayLike<any> = [];
@@ -92,10 +88,9 @@ export default function MonthlyAverageTrend() {
   };
 
   return (
-      <HighchartsReact
-        highcharts={Highcharts}
-        constructorType={'stockChart'}
-        options={monthlyAverageOptions}
-      />
+    <HighchartsReact
+      highcharts={Highcharts}
+      options={monthlyAverageOptions}
+    />
   );
 }

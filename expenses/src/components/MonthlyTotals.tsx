@@ -4,16 +4,52 @@ import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { categories } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
+import { formatMonth } from '@utils/utils';
 
 const MonthlyTotals = () => {
   const { data } = useData() as DataState;
-  const items = data;
+  const items = data.filtered || data;
   const { currency } = useAuthState() as AuthState;
 
   // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data, currency]);
 
+  // Get the first and last day in the dataset
   const firstDay = new Date(data.raw[data.raw.length - 1]?.dt as string);
+  const lastDay = new Date(data.raw[0]?.dt as string);
+
+  // Initialize monthly totals with all months from the firstDay to the lastDay.
+  let monthlyTotals: { [key: string]: number } = {};
+
+  // Function to generate all months between the first and last date.
+  const generateAllMonths = (startDate: Date, endDate: Date) => {
+    const months = [];
+    const date = new Date(startDate);
+
+    while (date <= endDate) {
+      const formattedDate = formatMonth(date);
+      months.push(formattedDate);
+      monthlyTotals[formattedDate] = 0; // Initialize with zero
+      date.setMonth(date.getMonth() + 1);
+    }
+    return months;
+  };
+
+  // Generate months between first and last transaction
+  const allMonths = generateAllMonths(firstDay, lastDay);
+
+  // Now fill in the totals for the available months
+  items.totals &&
+  Object.keys(items.totals).forEach((month) => {
+    const formattedMonth = new Date(month).toLocaleString('default', {
+      month: 'long',
+      year: 'numeric',
+    });
+    monthlyTotals[formattedMonth] = items.totals[month];
+  });
+
+  // Prepare the data for the chart, ensuring every month is accounted for.
+  const seriesData = allMonths.map((month) => monthlyTotals[month]);
 
   const allTimeOptions: Highcharts.Options = {
     chart: {
@@ -50,7 +86,7 @@ const MonthlyTotals = () => {
         name: data.category
           ? categories.find((element) => element.value === data.category)?.label
           : 'Monthly totals',
-        data: items.totals ? Object.values(items.totals).reverse() : [],
+        data: seriesData,
         colorByPoint: true,
         pointIntervalUnit: 'month',
         pointStart: Date.UTC(firstDay.getUTCFullYear(), firstDay.getMonth(), 1),
