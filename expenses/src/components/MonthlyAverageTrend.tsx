@@ -70,7 +70,7 @@ const MonthlyAverageTrend = () => {
     title: {
       text: 'Monthly Average Trends',
     },
-    colors: ['#E91E63', '#4DD0E1'],
+    colors: ['#E91E63'],
     yAxis: {
       title: {
         text: 'Monthly average',
