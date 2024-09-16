@@ -2,52 +2,44 @@ import React, { useEffect } from 'react';
 import { useData } from '@context/context';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
-import { TransactionOrIncomeItem, DataState } from '@type/types';
+import { DataState } from '@type/types';
 import { formatMonth } from '@utils/utils';
 
 export default function MonthlyAverageTrend() {
   const { data } = useData() as DataState;
-  const items = data.filtered_raw || data.raw;
-
   useEffect(() => {}, [data.raw, data.filtered_raw]);
 
-  const firstDay = new Date(data.raw[data.raw.length - 1]?.dt);
-  let monthlyExpenses: { [s: string]: any; } | ArrayLike<any> = [];
-  let totalExpensesAtDate = 0;
-  let prevMonth = formatMonth(firstDay);
-  let prevItemDate = firstDay;
-  const dataInChronologicalOrder = items.slice().reverse();
+  const totals = data?.filtered?.totals || data?.totals;
 
-  for (const item of dataInChronologicalOrder) {
-    const itemDate = new Date(item.dt);
-    const currentMonth = formatMonth(itemDate);
-    if (currentMonth != prevMonth) {
-      const daysPassed: number = (prevItemDate.getTime() - firstDay.getTime()) / 86400000 + 1;
+  const firstDay = new Date(data.raw[data.raw.length - 1]?.dt as string);
+  const fillMonths = (startDate: string | number | Date, endDate: number | Date) => {
+    const filledMonths = [];
+    let currentDate = new Date(startDate);
+    let total = 0;
+    while (currentDate <= endDate) {
+      const monthStr = formatMonth(currentDate);
+      const lastDayOfMonth = new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth() + 1, 0);
+      const daysPassed: number = (lastDayOfMonth.getTime() - firstDay.getTime()) / 86400000 + 1;
       const monthsPassed: number = daysPassed / 30.42;
-      monthlyExpenses[prevMonth] = [
-        prevMonth,
-        parseFloat(
-            parseFloat(
-                String(totalExpensesAtDate / monthsPassed)
-            ).toFixed(2)
-        ),
-      ];
+      total = total + (totals[monthStr] || 0);
+      filledMonths.push([
+        monthStr,
+        parseFloat(parseFloat(String(total / monthsPassed)).toFixed(2)),
+      ]);
+      currentDate.setMonth(currentDate.getMonth() + 1);
     }
 
-    if ((item as TransactionOrIncomeItem).type === 'transaction') {
-      totalExpensesAtDate += parseFloat(item.sum);
-    }
+    return filledMonths;
+  };
 
-    prevMonth = currentMonth;
-    prevItemDate = itemDate;
-  }
-
-  monthlyExpenses = Object.values(monthlyExpenses);
+  const now = new Date();
+  const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const monthsData = fillMonths(firstDay, lastDayOfCurrentMonth);
 
   const series = [
     {
       name: 'Monthly average',
-      data: monthlyExpenses,
+      data: monthsData,
       pointIntervalUnit: 'month',
       pointStart: Date.UTC(firstDay.getUTCFullYear(), firstDay.getMonth(), 1),
     },
@@ -73,7 +65,7 @@ export default function MonthlyAverageTrend() {
       },
     },
     xAxis: {
-      type: 'category',
+      type: 'datetime',
       crosshair: true,
     },
     tooltip: {
@@ -90,6 +82,7 @@ export default function MonthlyAverageTrend() {
   return (
     <HighchartsReact
       highcharts={Highcharts}
+      constructorType={'stockChart'}
       options={monthlyAverageOptions}
     />
   );
