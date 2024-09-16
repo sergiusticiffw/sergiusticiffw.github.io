@@ -51,7 +51,7 @@ const MonthlyAverageTrend = () => {
   const series = [
     {
       name: 'Monthly average',
-      data: monthsData,
+      data: monthsData.slice(0, -1),
       pointIntervalUnit: 'month',
       pointStart: Date.UTC(firstDay.getUTCFullYear(), firstDay.getMonth(), 1),
     },
