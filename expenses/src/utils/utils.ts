@@ -314,5 +314,8 @@ export const addOneDay = (dateStr: string) => {
 
 // Helper function to format month as "January 2024".
 export const formatMonth = (date: Date) => {
-  return new Date(date.getFullYear(), date.getMonth(), 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+  return new Date(date.getFullYear(), date.getMonth(), 1).toLocaleString(
+    'default',
+    { month: 'long', year: 'numeric' }
+  );
 };

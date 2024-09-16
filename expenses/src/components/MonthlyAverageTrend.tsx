@@ -5,21 +5,29 @@ import HighchartsReact from 'highcharts-react-official';
 import { DataState } from '@type/types';
 import { formatMonth } from '@utils/utils';
 
-export default function MonthlyAverageTrend() {
+const MonthlyAverageTrend = () => {
   const { data } = useData() as DataState;
   useEffect(() => {}, [data.raw, data.filtered_raw]);
 
   const totals = data?.filtered?.totals || data?.totals;
 
   const firstDay = new Date(data.raw[data.raw.length - 1]?.dt as string);
-  const fillMonths = (startDate: string | number | Date, endDate: number | Date) => {
+  const fillMonths = (
+    startDate: string | number | Date,
+    endDate: number | Date
+  ) => {
     const filledMonths = [];
     let currentDate = new Date(startDate);
     let total = 0;
     while (currentDate <= endDate) {
       const monthStr = formatMonth(currentDate);
-      const lastDayOfMonth = new Date(currentDate.getUTCFullYear(), currentDate.getUTCMonth() + 1, 0);
-      const daysPassed: number = (lastDayOfMonth.getTime() - firstDay.getTime()) / 86400000 + 1;
+      const lastDayOfMonth = new Date(
+        currentDate.getUTCFullYear(),
+        currentDate.getUTCMonth() + 1,
+        0
+      );
+      const daysPassed: number =
+        (lastDayOfMonth.getTime() - firstDay.getTime()) / 86400000 + 1;
       const monthsPassed: number = daysPassed / 30.42;
       total = total + (totals[monthStr] || 0);
       filledMonths.push([
@@ -33,7 +41,11 @@ export default function MonthlyAverageTrend() {
   };
 
   const now = new Date();
-  const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const lastDayOfCurrentMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0
+  );
   const monthsData = fillMonths(firstDay, lastDayOfCurrentMonth);
 
   const series = [
@@ -86,4 +98,6 @@ export default function MonthlyAverageTrend() {
       options={monthlyAverageOptions}
     />
   );
-}
+};
+
+export default MonthlyAverageTrend;

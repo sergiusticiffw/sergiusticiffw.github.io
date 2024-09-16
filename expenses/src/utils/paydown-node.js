@@ -38,7 +38,11 @@ export default function Paydown() {
         latest_payment_date,
         final_interest,
         fees,
-      ] = paydown.calculate_to_date(payments_array, debug_array, lastPaymentDate);
+      ] = paydown.calculate_to_date(
+        payments_array,
+        debug_array,
+        lastPaymentDate
+      );
     } catch (err) {
       throw err;
     }
@@ -425,7 +429,11 @@ function _Paydown() {
     return true;
   };
 
-  this.calculate_to_date = function (array_of_events, array_of_debug_prints, lastPaymentDate) {
+  this.calculate_to_date = function (
+    array_of_events,
+    array_of_debug_prints,
+    lastPaymentDate
+  ) {
     var index;
     var installment;
     var final_interest = 0;
@@ -812,7 +820,9 @@ function _Paydown() {
     // Helper function to add an event if it meets the conditions
     const addEventIfValid = (eventDate) => {
       const eventDateInt = date_to_integer(eventDate);
-      const lastPaymentDateInt = lastPaymentDate ? date_to_integer(lastPaymentDate) : null;
+      const lastPaymentDateInt = lastPaymentDate
+        ? date_to_integer(lastPaymentDate)
+        : null;
 
       // Add event if no last payment date or event date is greater than last payment date
       if (!lastPaymentDate || eventDateInt > lastPaymentDateInt) {
@@ -831,7 +841,7 @@ function _Paydown() {
           this.init.payment_day
         )
       ) <= date_to_integer(date)
-      ) {
+    ) {
       // Move to the next payment date
       const nextPaymentDate = date_obj.get_current();
 

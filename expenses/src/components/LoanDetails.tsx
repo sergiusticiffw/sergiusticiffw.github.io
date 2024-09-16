@@ -9,7 +9,8 @@ const LoanDetails = (props) => {
   const loan = props?.loan ?? {};
   const amortizationSchedule = props?.amortizationSchedule ?? [];
 
-  const sumInstallments = loan?.sum_of_installments +
+  const sumInstallments =
+    loan?.sum_of_installments +
     loan?.remaining_principal +
     loan?.unpaid_interest +
     loan?.sum_of_fees;
@@ -22,17 +23,21 @@ const LoanDetails = (props) => {
       <ul className="loan-details">
         <li>
           Sum of interests:{' '}
-          {formatNumber(loan?.sum_of_interests + loan?.unpaid_interest)} {currency}
+          {formatNumber(loan?.sum_of_interests + loan?.unpaid_interest)}{' '}
+          {currency}
         </li>
         <li>
-          Sum of installments:{' '}
-          {formatNumber(sumInstallments)} {currency}
+          Sum of installments: {formatNumber(sumInstallments)} {currency}
         </li>
         <li>Days calculated: {loan?.days_calculated}</li>
         <li>Actual end date: {loan?.actual_end_date}</li>
         <li>Latest payment date: {loan?.latest_payment_date}</li>
-        <li>Sum of fees: {formatNumber(loan?.sum_of_fees)} {currency}</li>
-        <li>Cost of loan per day: {formatNumber(payPerDay)} {currency}</li>
+        <li>
+          Sum of fees: {formatNumber(loan?.sum_of_fees)} {currency}
+        </li>
+        <li>
+          Cost of loan per day: {formatNumber(payPerDay)} {currency}
+        </li>
       </ul>
 
       <AmortizationScheduleTable amortizationSchedule={amortizationSchedule} />

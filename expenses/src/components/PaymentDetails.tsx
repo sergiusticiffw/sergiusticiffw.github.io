@@ -137,7 +137,9 @@ const PaymentDetails = (props) => {
           <h2>Payments</h2>
           {totalPaidAmount > 0 && (
             <>
-              <div>Amount Paid to Date: {formatNumber(totalPaidAmount)} {currency}</div>
+              <div>
+                Amount Paid to Date: {formatNumber(totalPaidAmount)} {currency}
+              </div>
               <br />
             </>
           )}

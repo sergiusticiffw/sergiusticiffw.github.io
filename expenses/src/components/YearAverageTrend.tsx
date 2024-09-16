@@ -61,7 +61,8 @@ const YearAverageTrend = () => {
     series: formattedData,
   };
   const firstDay = data.raw[data.raw.length - 1]?.dt;
-  const monthlyAverage: number = totalSpent / getMonthsPassed(firstDay as string);
+  const monthlyAverage: number =
+    totalSpent / getMonthsPassed(firstDay as string);
   return (
     <>
       <HighchartsReact highcharts={Highcharts} options={options} />
@@ -93,10 +94,12 @@ const YearAverageTrend = () => {
       <span className="heading">Monthly</span>
       <table className="daily-average">
         <tbody>
-        <tr>
-          <td>Monthly Average</td>
-          <td>{formatNumber(monthlyAverage)} {currency}</td>
-        </tr>
+          <tr>
+            <td>Monthly Average</td>
+            <td>
+              {formatNumber(monthlyAverage)} {currency}
+            </td>
+          </tr>
         </tbody>
       </table>
     </>

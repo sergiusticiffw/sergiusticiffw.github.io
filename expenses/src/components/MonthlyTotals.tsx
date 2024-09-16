@@ -40,13 +40,13 @@ const MonthlyTotals = () => {
 
   // Now fill in the totals for the available months
   items.totals &&
-  Object.keys(items.totals).forEach((month) => {
-    const formattedMonth = new Date(month).toLocaleString('default', {
-      month: 'long',
-      year: 'numeric',
+    Object.keys(items.totals).forEach((month) => {
+      const formattedMonth = new Date(month).toLocaleString('default', {
+        month: 'long',
+        year: 'numeric',
+      });
+      monthlyTotals[formattedMonth] = items.totals[month];
     });
-    monthlyTotals[formattedMonth] = items.totals[month];
-  });
 
   // Prepare the data for the chart, ensuring every month is accounted for.
   const seriesData = allMonths.map((month) => monthlyTotals[month]);
