@@ -11,6 +11,9 @@ const Charts = () => {
   const MonthlyAverage = React.lazy(() => import('@components/MonthlyAverage'));
   const SavingsHistory = React.lazy(() => import('@components/SavingsHistory'));
   const DailyAverage = React.lazy(() => import('@components/DailyAverage'));
+  const MonthlyComparisonTrend = React.lazy(
+    () => import('@components/MonthlyComparisonTrend')
+  );
   const DailyAverageTrend = React.lazy(
     () => import('@components/DailyAverageTrend')
   );
@@ -59,6 +62,12 @@ const Charts = () => {
             <div className="charts-section">
               <Suspense fallback="">
                 <YearAverageTrend />
+              </Suspense>
+            </div>
+
+            <div className="charts-section">
+              <Suspense fallback="">
+                <MonthlyComparisonTrend />
               </Suspense>
             </div>
 

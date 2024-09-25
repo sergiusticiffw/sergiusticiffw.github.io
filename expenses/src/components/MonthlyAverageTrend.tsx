@@ -59,7 +59,7 @@ const MonthlyAverageTrend = () => {
 
   const monthlyAverageOptions = {
     chart: {
-      type: 'column',
+      type: 'line',
       zooming: {
         type: 'x',
       },
@@ -88,9 +88,6 @@ const MonthlyAverageTrend = () => {
     },
     credits: {
       enabled: false,
-    },
-    rangeSelector: {
-      selected: 4,
     },
     series: series,
   };

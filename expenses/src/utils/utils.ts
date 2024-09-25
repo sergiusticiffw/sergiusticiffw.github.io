@@ -31,11 +31,9 @@ export const formatDataForChart = (data: DataStructure) => {
     };
 
     for (const month of monthNames) {
-      if (data[year][`${month} ${year}`]) {
-        const monthValue = data[year][`${month} ${year}`];
-        // @ts-expect-error TBD
-        yearSeries.data.push([month, monthValue]);
-      }
+      const monthValue = data[year][`${month} ${year}`];
+      // @ts-expect-error TBD
+      yearSeries.data.push([month, monthValue]);
     }
 
     if (yearSeries.data.length > 0) {
