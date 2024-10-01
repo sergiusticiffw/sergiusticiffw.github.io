@@ -36,8 +36,10 @@ const MonthlyTotals = () => {
   };
 
   // Generate months between first and last transaction
-  const allMonths = generateAllMonths(firstDay, lastDay);
-
+  const allMonths = generateAllMonths(
+    new Date(firstDay.getUTCFullYear(), firstDay.getMonth(), 1),
+    lastDay
+  );
   // Now fill in the totals for the available months
   items.totals &&
     Object.keys(items.totals).forEach((month) => {
