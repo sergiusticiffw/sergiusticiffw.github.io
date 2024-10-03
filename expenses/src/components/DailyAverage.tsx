@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAuthState, useData } from '@context/context';
-import { formatNumber } from '@utils/utils';
+import { calculateDaysFrom, formatNumber } from '@utils/utils';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import { AuthState, DataState } from '@type/types';
 
@@ -12,13 +12,7 @@ const DailyAverage = () => {
   useEffect(() => {}, [data.raw, data.categoryTotals]);
 
   const firstDay = data.raw[data.raw.length - 1]?.dt;
-  const daysPassed = parseInt(
-    String(
-      (new Date().getTime() - new Date(firstDay as string).getTime()) /
-        86400000 +
-        1
-    )
-  );
+  const daysPassed = calculateDaysFrom(firstDay);
   const { sortedItems, requestSort, sortConfig } = useSortableData(
     Object.values(data.categoryTotals || [])
   );

@@ -92,7 +92,7 @@ const YearAverageTrend = () => {
         </tr>
         <tr>
           <td>Total Months</td>
-          <td>{getMonthsPassed(firstDay as string)} months</td>
+          <td>{getMonthsPassed(firstDay as string).toFixed(2)} months</td>
         </tr>
         </tbody>
       </table>

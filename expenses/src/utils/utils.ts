@@ -284,11 +284,11 @@ export const getCategory: { [key: string]: string } = categories.reduce(
   {}
 );
 
-export const getMonthsPassed = (firstDay: string) => {
+export const getMonthsPassed = (firstDay: string | number | Date): number => {
   const daysPassed = parseInt(
     String((new Date().getTime() - new Date(firstDay).getTime()) / 86400000 + 1)
   );
-  return daysPassed ? parseFloat(String(daysPassed / 30.42)).toFixed(2) : 0;
+  return daysPassed ? parseFloat(String(daysPassed / 30.42)) : 0;
 };
 
 export const transformToNumber = (value: string | number): number => {
@@ -318,9 +318,9 @@ export const formatMonth = (date: Date) => {
   );
 };
 
-export const calculateDaysFrom = (dateString: string | number | Date) => {
-  const givenDate = new Date(dateString); // Parse the input date string
-  const currentDate = new Date(); // Get the current date
+export const calculateDaysFrom = (firstDate: string | number | Date, dateString = null) => {
+  const givenDate = new Date(firstDate); // Parse the input date string
+  const currentDate = !dateString ? new Date() : new Date(dateString); // Get the current date
 
   // Calculate the difference in time (in milliseconds)
   const timeDifference = currentDate - givenDate;

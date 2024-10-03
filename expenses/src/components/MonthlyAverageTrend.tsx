@@ -3,7 +3,7 @@ import { useData } from '@context/context';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { DataState } from '@type/types';
-import { formatMonth } from '@utils/utils';
+import { calculateDaysFrom, formatMonth } from '@utils/utils';
 
 const MonthlyAverageTrend = () => {
   const { data } = useData() as DataState;
@@ -26,8 +26,7 @@ const MonthlyAverageTrend = () => {
         currentDate.getUTCMonth() + 1,
         0
       );
-      const daysPassed: number =
-        (lastDayOfMonth.getTime() - firstDay.getTime()) / 86400000 + 1;
+      const daysPassed: number = calculateDaysFrom(firstDay, lastDayOfMonth);
       const monthsPassed: number = daysPassed / 30.42;
       total = total + (totals[monthStr] || 0);
       filledMonths.push([
