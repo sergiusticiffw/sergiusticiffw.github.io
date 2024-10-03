@@ -88,7 +88,7 @@ const YearAverageTrend = () => {
         </tr>
         <tr>
           <td>Total Days</td>
-          <td>{calculateDaysFrom(firstDay)} days</td>
+          <td>{formatNumber(calculateDaysFrom(firstDay))} days</td>
         </tr>
         <tr>
           <td>Total Months</td>
