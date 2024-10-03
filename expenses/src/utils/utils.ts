@@ -318,7 +318,7 @@ export const formatMonth = (date: Date) => {
   );
 };
 
-export const calculateDaysFrom = (firstDate: string | number | Date, dateString = null) => {
+export const calculateDaysFrom = (firstDate: string | number | Date, dateString: string | number | Date | null = null) => {
   const givenDate = new Date(firstDate); // Parse the input date string
   const currentDate = !dateString ? new Date() : new Date(dateString); // Get the current date
 
