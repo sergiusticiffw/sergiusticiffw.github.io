@@ -3,6 +3,7 @@ import { useAuthState, useData } from '@context/context';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import {
+  calculateDaysFrom,
   formatDataForChart,
   formatNumber,
   getMonthsPassed,
@@ -69,32 +70,36 @@ const YearAverageTrend = () => {
       <span className="heading">Total spent per year:</span>
       <table className="daily-average">
         <tbody>
-          {Object.entries(totalPerYear).map((item, key) => {
-            return (
-              <tr key={key}>
-                <td>{item[0]}</td>
-                <td>
-                  {formatNumber(item[1])} {currency}
-                </td>
-              </tr>
-            );
-          })}
-          <tr>
-            <td>Total Spent</td>
-            <td>
-              {formatNumber(totalSpent)} {currency}
-            </td>
-          </tr>
-          <tr>
-            <td>Total Months</td>
-            <td>{getMonthsPassed(firstDay as string)} months</td>
-          </tr>
+        {Object.entries(totalPerYear).map((item, key) => {
+          return (
+            <tr key={key}>
+              <td>{item[0]}</td>
+              <td>
+                {formatNumber(item[1])} {currency}
+              </td>
+            </tr>
+          );
+        })}
+        <tr>
+          <td>Total Spent</td>
+          <td>
+            {formatNumber(totalSpent)} {currency}
+          </td>
+        </tr>
+        <tr>
+          <td>Total Days</td>
+          <td>{calculateDaysFrom(firstDay)} days</td>
+        </tr>
+        <tr>
+          <td>Total Months</td>
+          <td>{getMonthsPassed(firstDay as string)} months</td>
+        </tr>
         </tbody>
       </table>
       <span className="heading">Monthly</span>
       <table className="daily-average">
         <tbody>
-          <tr>
+        <tr>
             <td>Monthly Average</td>
             <td>
               {formatNumber(monthlyAverage)} {currency}

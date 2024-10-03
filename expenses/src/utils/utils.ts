@@ -317,3 +317,16 @@ export const formatMonth = (date: Date) => {
     { month: 'long', year: 'numeric' }
   );
 };
+
+export const calculateDaysFrom = (dateString: string | number | Date) => {
+  const givenDate = new Date(dateString); // Parse the input date string
+  const currentDate = new Date(); // Get the current date
+
+  // Calculate the difference in time (in milliseconds)
+  const timeDifference = currentDate - givenDate;
+
+  // Convert milliseconds to days (1 day = 24 * 60 * 60 * 1000 ms)
+  const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+  return daysDifference;
+}
