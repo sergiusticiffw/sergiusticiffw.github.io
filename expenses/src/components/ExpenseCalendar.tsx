@@ -261,6 +261,10 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
     isSwiping = false;
   };
 
+  const handleClearChangedItem = (id: string) => {
+    dataDispatch({ type: 'CLEAR_CHANGED_ITEM', id });
+  };
+
   if (events.length <= 0) {
     return (
       <div className="lds-ripple">
@@ -401,6 +405,8 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
           setShowDeleteModal={handleDelete}
           // @ts-expect-error
           items={selectedEvent?.data ? selectedEvent.data : []}
+          changedItems={data.changedItems}
+          handleClearChangedItem={handleClearChangedItem}
         />
       </Modal>
     </>

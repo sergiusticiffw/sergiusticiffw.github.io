@@ -34,6 +34,10 @@ const Home = () => {
 
   const [focusedItem, setFocusedItem] = useState({});
 
+  const handleClearChangedItem = (id: string) => {
+    dataDispatch({ type: 'CLEAR_CHANGED_ITEM', id });
+  };
+
   const handleEdit = (id: string) => {
     const item = items.groupedData[currentMonth].find(
       (item: TransactionOrIncomeItem) => item.id === id
@@ -304,6 +308,8 @@ const Home = () => {
                     handleEdit={handleEdit}
                     // @ts-expect-error
                     setShowDeleteModal={setShowDeleteModal}
+                    changedItems={data.changedItems}
+                    handleClearChangedItem={handleClearChangedItem}
                   />
                   <div className="pager-navigation">
                     <button

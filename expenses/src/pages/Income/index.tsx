@@ -72,6 +72,10 @@ const Income = () => {
     });
   };
 
+  const handleClearChangedItem = (id: string) => {
+    dataDispatch({ type: 'CLEAR_CHANGED_ITEM', id });
+  };
+
   return (
     <div className="incomes-page">
       <Modal
@@ -142,6 +146,8 @@ const Income = () => {
                   handleEdit={handleEdit}
                   // @ts-expect-error
                   setShowDeleteModal={setShowDeleteModal}
+                  changedItems={data.changedItems}
+                  handleClearChangedItem={handleClearChangedItem}
                 />
               ) : (
                 <p>No income records found.</p>

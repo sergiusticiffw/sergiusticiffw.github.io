@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash } from 'react-icons/fa';
@@ -11,6 +11,8 @@ interface TransactionsTableProps {
   isModal?: boolean;
   handleEdit: (id: string) => void;
   setShowDeleteModal: (id: string) => void;
+  changedItems?: any;
+  handleClearChangedItem?: any;
 }
 
 const TransactionsTable: React.FC<TransactionsTableProps> = ({
@@ -18,9 +20,9 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   handleEdit,
   isModal = false,
   setShowDeleteModal,
+  handleClearChangedItem,
+  changedItems,
 }) => {
-  const { sortedItems, requestSort, sortConfig } = useSortableData(items || []);
-
   const tableRef = useRef(null);
   const {
     handleTouchStart,
@@ -30,6 +32,28 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
     editVisible,
     extraRowStyle,
   } = useSwipeActions();
+
+  useEffect(() => {
+    Object.keys(changedItems).forEach((id) => {
+      const timer = setTimeout(() => {
+        handleClearChangedItem(id);
+      }, 2000);
+      return () => clearTimeout(timer);
+    });
+  }, [changedItems, handleClearChangedItem]);
+  const allItems = [...items, ...Object.values(changedItems)
+    .filter(item => item.type === 'removed' && item.data.type === 'transaction')
+    .map(item => item.data)
+  ].sort((a, b) => {
+    // First, compare by 'dt'
+    const dateComparison = new Date(b.dt).getTime() - new Date(a.dt).getTime();
+    if (dateComparison !== 0) {
+      return dateComparison;
+    }
+    // If 'dt' values are equal, compare by 'created'
+    return b.cr - a.cr;
+  });
+  const { sortedItems, requestSort, sortConfig } = useSortableData(allItems || []);
 
   return (
     <div className="table-wrapper">
@@ -50,9 +74,12 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
           </tr>
         </thead>
         <tbody ref={tableRef}>
-          {sortedItems.map((element) => (
+          {sortedItems.map((element) => {
+            const changeType = changedItems[element.id]?.type;
+            return (
             <tr
               key={element.id}
+              className={`transaction-item ${changeType || ''}`}
               data-id={element.id}
               onTouchStart={(e) => handleTouchStart(e, element.id, tableRef)}
               onTouchMove={(e) => handleTouchMove(e, tableRef)}
@@ -87,7 +114,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                 </button>
               </td>
             </tr>
-          ))}
+          )})}
         </tbody>
       </table>
       {deleteVisible && !isModal && (
