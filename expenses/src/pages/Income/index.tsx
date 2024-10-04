@@ -114,6 +114,7 @@ const Income = () => {
           values={focusedItem}
           onSuccess={() => {
             setShowEditModal(false);
+            setIsNewModal(false);
             fetchData(token, dataDispatch, dispatch);
           }}
         />
