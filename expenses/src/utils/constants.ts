@@ -205,7 +205,7 @@ export const currencies = {
 
 export const suggestions = {
   '': [],
-  1: ['haine', 'incaltaminte', 'pantaloni', 'tricouri'],
+  1: ['haine', 'incaltaminte', 'pantaloni', 'tricouri', 'Nelea', 'Leo'],
   2: [
     'happy hour',
     'benzinarie',
@@ -218,7 +218,7 @@ export const suggestions = {
   ],
   3: ['market', 'apa', 'lunch', 'inghetata', 'straus/glovo food'],
   4: ['flori'],
-  5: ['igiena/curatinie', 'scutece'],
+  5: ['igiena/curatinie', 'scutece', 'Leo'],
   6: ['apartment rent'],
   7: ['farmacie', 'stomatolog', 'pediatru', 'Nelea', 'Leo'],
   8: ['haircut', 'nails'],
@@ -232,7 +232,7 @@ export const suggestions = {
     'parcare',
   ],
   10: ['gaz', 'lumina', 'starnet', 'infocom', 'orange', 'infobon'],
-  11: [],
+  11: ['Romania'],
   12: ['Nelea', 'Leo', 'dadaca', 'jucarii'],
   13: [],
   14: ['vin', 'bere', 'whiskey', 'cognac', 'gin', 'cocktails'],
