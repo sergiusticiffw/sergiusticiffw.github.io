@@ -96,7 +96,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
               {!isModal ? <td>{element.dt.split('-')[2]}</td> : null}
               <td>{formatNumber(element.sum)}</td>
               <td>{getCategory[element.cat]}</td>
-              <td>{element.dsc}</td>
+              {!isModal ? <td>{element.dsc}</td> : null}
               <td className="desktop-only">
                 <button
                   onClick={() => handleEdit(element.id)}
