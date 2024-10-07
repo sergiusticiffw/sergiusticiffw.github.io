@@ -233,7 +233,7 @@ export const suggestions = {
   ],
   10: ['gaz', 'lumina', 'starnet', 'infocom', 'orange', 'infobon'],
   11: ['Romania'],
-  12: ['Nelea', 'Leo', 'dadaca', 'jucarii'],
+  12: ['Nelea', 'Leo', 'dadaca', 'jucarii', 'teren de joaca'],
   13: [],
   14: ['vin', 'bere', 'whiskey', 'cognac', 'gin', 'cocktails'],
 };
