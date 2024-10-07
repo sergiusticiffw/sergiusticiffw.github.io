@@ -220,7 +220,7 @@ export const suggestions = {
   4: ['flori'],
   5: ['igiena/curatinie', 'scutece', 'Leo'],
   6: ['apartment rent'],
-  7: ['farmacie', 'stomatolog', 'pediatru', 'Nelea', 'Leo'],
+  7: ['farmacie', 'stomatolog', 'pediatru', 'Nelea', 'Leo', 'sport'],
   8: ['haircut', 'nails'],
   9: [
     'benzina',
