@@ -5,13 +5,13 @@ import { AuthState, DataState } from '@type/types';
 import { formatDataForChart } from '@utils/utils';
 import { monthNames } from '@utils/constants';
 
-const MonthlyComparisonTrend = () => {
+const MonthlyComparisonIncomeTrend = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
-  const items =
-    data?.filtered?.totalsPerYearAndMonth || data?.totalsPerYearAndMonth;
 
-  const formattedData = formatDataForChart(items);
+  const formattedIncomeData = formatDataForChart(
+    data?.totalIncomePerYearAndMonth || {}
+  );
 
   const options = {
     chart: {
@@ -38,7 +38,7 @@ const MonthlyComparisonTrend = () => {
     tooltip: {
       shared: true,
     },
-    series: formattedData,
+    series: formattedIncomeData,
     plotOptions: {
       column: {
         borderWidth: 0,
@@ -49,4 +49,4 @@ const MonthlyComparisonTrend = () => {
   return <HighchartsReact highcharts={Highcharts} options={options} />;
 };
 
-export default MonthlyComparisonTrend;
+export default MonthlyComparisonIncomeTrend;

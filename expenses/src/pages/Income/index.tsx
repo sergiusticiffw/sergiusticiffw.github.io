@@ -10,10 +10,14 @@ import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import { MdMoreHoriz } from 'react-icons/md';
 import { FaPlus } from 'react-icons/fa';
 import { MdDelete } from 'react-icons/md';
+import MonthlyComparisonIncomeTrend from '@components/MonthlyComparisonIncomeTrend';
 
 const Income = () => {
   const YearIncomeAverageTrend = React.lazy(
     () => import('@components/YearIncomeAverageTrend')
+  );
+  const MonthlyComparisonIncomeTrend = React.lazy(
+    () => import('@components/MonthlyComparisonIncomeTrend')
   );
   const showNotification = useNotification();
   const { token } = useAuthState() as AuthState;
@@ -170,6 +174,9 @@ const Income = () => {
             <div className="charts-section">
               <Suspense fallback="">
                 <YearIncomeAverageTrend />
+              </Suspense>
+              <Suspense fallback="">
+                <MonthlyComparisonIncomeTrend />
               </Suspense>
             </div>
           ) : (
