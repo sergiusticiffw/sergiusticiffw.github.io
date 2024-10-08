@@ -68,7 +68,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
               Amount
             </th>
             <th>Category</th>
-            <th>Description</th>
+            {!isModal ? <th>Description</th> : null}
             <th className="desktop-only"></th>
             <th className="desktop-only"></th>
           </tr>
