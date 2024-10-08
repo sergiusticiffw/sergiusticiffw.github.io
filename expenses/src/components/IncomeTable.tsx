@@ -10,8 +10,8 @@ interface IncomeTableProps {
   items: TransactionOrIncomeItem[];
   handleEdit: (id: string) => void;
   setShowDeleteModal: (id: string) => void;
-  changedItems?: any
-  handleClearChangedItem?: any
+  changedItems?: any;
+  handleClearChangedItem?: any;
 }
 
 const IncomeTable: React.FC<IncomeTableProps> = ({
@@ -39,9 +39,11 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
       return () => clearTimeout(timer);
     });
   }, [changedItems, handleClearChangedItem]);
-  const allItems = [...items, ...Object.values(changedItems)
-    .filter(item => item.type === 'removed' && item.data.type === 'incomes')
-    .map(item => item.data)
+  const allItems = [
+    ...items,
+    ...Object.values(changedItems)
+      .filter((item) => item.type === 'removed' && item.data.type === 'incomes')
+      .map((item) => item.data),
   ].sort((a, b) => {
     // First, compare by 'dt'
     const dateComparison = new Date(b.dt).getTime() - new Date(a.dt).getTime();
@@ -51,7 +53,9 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
     // If 'dt' values are equal, compare by 'created'
     return b.cr - a.cr;
   });
-  const { sortedItems, requestSort, sortConfig } = useSortableData(allItems || []);
+  const { sortedItems, requestSort, sortConfig } = useSortableData(
+    allItems || []
+  );
 
   return (
     <div className="table-wrapper">
@@ -75,43 +79,44 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
           {sortedItems.map((element) => {
             const changeType = changedItems[element.id]?.type;
             return (
-            <tr
-              key={element.id}
-              className={`transaction-item ${changeType || ''}`}
-              data-id={element.id}
-              onTouchStart={(e) => handleTouchStart(e, element.id, tableRef)}
-              onTouchMove={(e) => handleTouchMove(e, tableRef)}
-              onTouchEnd={(e) =>
-                handleTouchEnd(
-                  e,
-                  tableRef,
-                  element.id,
-                  handleEdit,
-                  setShowDeleteModal
-                )
-              }
-            >
-              <td>{element.dt}</td>
-              <td>{formatNumber(element.sum)}</td>
-              <td>{element.dsc}</td>
-              <td className="desktop-only">
-                <button
-                  onClick={() => handleEdit(element.id)}
-                  className="btn-outline"
-                >
-                  <MdEdit />
-                </button>
-              </td>
-              <td className="desktop-only">
-                <button
-                  onClick={() => setShowDeleteModal(element.id)}
-                  className="btn-outline"
-                >
-                  <MdDelete />
-                </button>
-              </td>
-            </tr>
-          )})}
+              <tr
+                key={element.id}
+                className={`transaction-item ${changeType || ''}`}
+                data-id={element.id}
+                onTouchStart={(e) => handleTouchStart(e, element.id, tableRef)}
+                onTouchMove={(e) => handleTouchMove(e, tableRef)}
+                onTouchEnd={(e) =>
+                  handleTouchEnd(
+                    e,
+                    tableRef,
+                    element.id,
+                    handleEdit,
+                    setShowDeleteModal
+                  )
+                }
+              >
+                <td>{element.dt}</td>
+                <td>{formatNumber(element.sum)}</td>
+                <td>{element.dsc}</td>
+                <td className="desktop-only">
+                  <button
+                    onClick={() => handleEdit(element.id)}
+                    className="btn-outline"
+                  >
+                    <MdEdit />
+                  </button>
+                </td>
+                <td className="desktop-only">
+                  <button
+                    onClick={() => setShowDeleteModal(element.id)}
+                    className="btn-outline"
+                  >
+                    <MdDelete />
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {deleteVisible && (

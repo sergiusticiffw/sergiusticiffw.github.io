@@ -108,7 +108,7 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
         ...action,
         changedItems: {
           ...initialState.changedItems,
-          ...changedItems
+          ...changedItems,
         },
       };
 
@@ -117,7 +117,7 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
       delete newChangedItems[action.id];
       return {
         ...initialState,
-        changedItems: newChangedItems
+        changedItems: newChangedItems,
       };
 
     case 'FILTER_DATA':
@@ -225,9 +225,9 @@ const compareData = (oldData, newData) => {
   if (oldData.length === 0) {
     return changedItems;
   }
-  const oldMap = new Map(oldData.map(item => [item.id, item]));
-  const newMap = new Map(newData.map(item => [item.id, item]));
-  newData.forEach(item => {
+  const oldMap = new Map(oldData.map((item) => [item.id, item]));
+  const newMap = new Map(newData.map((item) => [item.id, item]));
+  newData.forEach((item) => {
     const oldItem = oldMap.get(item.id);
     if (!oldItem) {
       changedItems[item.id] = { type: 'new', data: item };
@@ -235,7 +235,7 @@ const compareData = (oldData, newData) => {
       changedItems[item.id] = { type: 'updated', data: item };
     }
   });
-  oldData.forEach(item => {
+  oldData.forEach((item) => {
     if (!newMap.has(item.id)) {
       changedItems[item.id] = { type: 'removed', data: item };
     }

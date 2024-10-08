@@ -41,9 +41,13 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
       return () => clearTimeout(timer);
     });
   }, [changedItems, handleClearChangedItem]);
-  const allItems = [...items, ...Object.values(changedItems)
-    .filter(item => item.type === 'removed' && item.data.type === 'transaction')
-    .map(item => item.data)
+  const allItems = [
+    ...items,
+    ...Object.values(changedItems)
+      .filter(
+        (item) => item.type === 'removed' && item.data.type === 'transaction'
+      )
+      .map((item) => item.data),
   ].sort((a, b) => {
     // First, compare by 'dt'
     const dateComparison = new Date(b.dt).getTime() - new Date(a.dt).getTime();
@@ -53,7 +57,9 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
     // If 'dt' values are equal, compare by 'created'
     return b.cr - a.cr;
   });
-  const { sortedItems, requestSort, sortConfig } = useSortableData(allItems || []);
+  const { sortedItems, requestSort, sortConfig } = useSortableData(
+    allItems || []
+  );
 
   return (
     <div className="table-wrapper">
@@ -77,44 +83,45 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
           {sortedItems.map((element) => {
             const changeType = changedItems[element.id]?.type;
             return (
-            <tr
-              key={element.id}
-              className={`transaction-item ${changeType || ''}`}
-              data-id={element.id}
-              onTouchStart={(e) => handleTouchStart(e, element.id, tableRef)}
-              onTouchMove={(e) => handleTouchMove(e, tableRef)}
-              onTouchEnd={(e) =>
-                handleTouchEnd(
-                  e,
-                  tableRef,
-                  element.id,
-                  handleEdit,
-                  setShowDeleteModal
-                )
-              }
-            >
-              {!isModal ? <td>{element.dt.split('-')[2]}</td> : null}
-              <td>{formatNumber(element.sum)}</td>
-              <td>{getCategory[element.cat]}</td>
-              {!isModal ? <td>{element.dsc}</td> : null}
-              <td className="desktop-only">
-                <button
-                  onClick={() => handleEdit(element.id)}
-                  className="btn-outline"
-                >
-                  <MdEdit />
-                </button>
-              </td>
-              <td className="desktop-only">
-                <button
-                  onClick={() => setShowDeleteModal(element.id)}
-                  className="btn-outline"
-                >
-                  <MdDelete />
-                </button>
-              </td>
-            </tr>
-          )})}
+              <tr
+                key={element.id}
+                className={`transaction-item ${changeType || ''}`}
+                data-id={element.id}
+                onTouchStart={(e) => handleTouchStart(e, element.id, tableRef)}
+                onTouchMove={(e) => handleTouchMove(e, tableRef)}
+                onTouchEnd={(e) =>
+                  handleTouchEnd(
+                    e,
+                    tableRef,
+                    element.id,
+                    handleEdit,
+                    setShowDeleteModal
+                  )
+                }
+              >
+                {!isModal ? <td>{element.dt.split('-')[2]}</td> : null}
+                <td>{formatNumber(element.sum)}</td>
+                <td>{getCategory[element.cat]}</td>
+                {!isModal ? <td>{element.dsc}</td> : null}
+                <td className="desktop-only">
+                  <button
+                    onClick={() => handleEdit(element.id)}
+                    className="btn-outline"
+                  >
+                    <MdEdit />
+                  </button>
+                </td>
+                <td className="desktop-only">
+                  <button
+                    onClick={() => setShowDeleteModal(element.id)}
+                    className="btn-outline"
+                  >
+                    <MdDelete />
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {deleteVisible && !isModal && (

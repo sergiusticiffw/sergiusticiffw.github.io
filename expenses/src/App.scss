@@ -275,11 +275,7 @@ body {
 
     &.edit {
       justify-content: right;
-      background: linear-gradient(
-        90deg,
-        var(--accent-color) 0%,
-        #7bd0c9 100%
-      );
+      background: linear-gradient(90deg, var(--accent-color) 0%, #7bd0c9 100%);
     }
 
     svg {
@@ -910,7 +906,7 @@ li.selected-suggestion {
 }
 .transaction-item.new::after,
 .transaction-item.updated::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -953,4 +949,3 @@ li.selected-suggestion {
     filter: blur(5px);
   }
 }
-

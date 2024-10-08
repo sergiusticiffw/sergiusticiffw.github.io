@@ -318,7 +318,10 @@ export const formatMonth = (date: Date) => {
   );
 };
 
-export const calculateDaysFrom = (firstDate: string | number | Date, dateString: string | number | Date | null = null) => {
+export const calculateDaysFrom = (
+  firstDate: string | number | Date,
+  dateString: string | number | Date | null = null
+) => {
   const givenDate = new Date(firstDate); // Parse the input date string
   const currentDate = !dateString ? new Date() : new Date(dateString); // Get the current date
 
@@ -329,4 +332,4 @@ export const calculateDaysFrom = (firstDate: string | number | Date, dateString:
   const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
 
   return daysDifference;
-}
+};
