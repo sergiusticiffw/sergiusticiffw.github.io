@@ -267,7 +267,7 @@ export const formatNumber = (value: unknown): string => {
     if (formattedValue.endsWith('.00')) {
       formattedValue = formattedValue.slice(0, -3);
     }
-    formattedValue = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    formattedValue = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
     return formattedValue;
   } else {
     // Handle non-numeric values or invalid input
