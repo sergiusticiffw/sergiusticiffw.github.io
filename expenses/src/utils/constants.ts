@@ -221,7 +221,7 @@ export const suggestions = {
   5: ['igiena/curatinie', 'scutece', 'Leo'],
   6: ['apartment rent'],
   7: ['farmacie', 'stomatolog', 'pediatru', 'Nelea', 'Leo', 'sport'],
-  8: ['haircut', 'nails'],
+  8: ['haircut', 'nails', 'Nelea'],
   9: [
     'benzina',
     'motorina',
