@@ -3,7 +3,7 @@ import { formatNumber } from '@utils/utils';
 
 const AmortizationScheduleTable = ({ amortizationSchedule }) => {
   return (
-    <div className="table-wrapper">
+    <div className="table-wrapper loan-table">
       <table className="expenses-table" cellSpacing="0" cellPadding="0">
         <thead>
           <tr>
