@@ -159,7 +159,7 @@ export const fetchData = (
           if (cat && categoryTotals[cat]) {
             const categoryKey = cat as keyof typeof categories;
             // @ts-expect-error
-            categoryTotals[categoryKey].name = categories[categoryKey].label;
+            categoryTotals[categoryKey].name = getCategory[cat];
             // @ts-expect-error
             categoryTotals[categoryKey].y = parseFloat(
               // @ts-expect-error
