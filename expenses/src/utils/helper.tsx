@@ -1,6 +1,6 @@
-import { FaCheckCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaExclamationCircle, FaExclamationTriangle, FaTimesCircle } from 'react-icons/fa';
 
-export const getFinancialStabilityIcon = (savingsRate) => {
+export const getFinancialStabilityIcon = (savingsRate: number) => {
   if (savingsRate > 20)
     return (
       <>
@@ -10,18 +10,18 @@ export const getFinancialStabilityIcon = (savingsRate) => {
   if (savingsRate > 10)
     return (
       <>
-        <FaCheckCircle color="yellow" />{' '}
+        <FaExclamationCircle color="yellow" />{' '}
       </>
     );
   if (savingsRate > 0)
     return (
       <>
-        <FaCheckCircle color="orange" />{' '}
+        <FaExclamationTriangle color="orange" />{' '}
       </>
     );
   return (
     <>
-      <FaCheckCircle color="red" />{' '}
+      <FaTimesCircle color="red" />{' '}
     </>
   );
 };
