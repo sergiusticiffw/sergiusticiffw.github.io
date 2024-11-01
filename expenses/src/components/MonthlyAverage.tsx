@@ -3,6 +3,7 @@ import { useAuthState, useData } from '@context/context';
 import { formatNumber, getMonthsPassed } from '@utils/utils';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import { AuthState, DataState } from '@type/types';
+import { getIconForCategory } from '@utils/helper';
 
 const MonthlyAverage = () => {
   const { data } = useData() as DataState;
@@ -16,6 +17,8 @@ const MonthlyAverage = () => {
   const { sortedItems, requestSort, sortConfig } = useSortableData(
     Object.values(data.categoryTotals || [])
   );
+
+  console.log(7, sortedItems);
 
   return (
     <>
@@ -35,7 +38,10 @@ const MonthlyAverage = () => {
         <tbody>
           {sortedItems.map((item, key) => (
             <tr key={key}>
-              <td>{item.name}</td>
+              <td>
+                {getIconForCategory(item.name)}
+                {item.name}
+              </td>
               <td>
                 {formatNumber(item.y / monthsPassed)} {currency} / month
               </td>

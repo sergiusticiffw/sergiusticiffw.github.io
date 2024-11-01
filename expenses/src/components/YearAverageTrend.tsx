@@ -67,6 +67,7 @@ const YearAverageTrend = () => {
     totalSpent / getMonthsPassed(firstDay as string);
   const totalIncomePerYear = data?.totalIncomePerYear || {};
   let sumIncome: number = 0;
+  const isFiltered = !!data.filtered_raw;
   return (
     <>
       <HighchartsReact highcharts={Highcharts} options={options} />
@@ -82,7 +83,8 @@ const YearAverageTrend = () => {
             return (
               <tr key={key}>
                 <td>
-                  {getFinancialStabilityIcon(savingsPercent)} {item[0]}
+                  {getFinancialStabilityIcon(savingsPercent, isFiltered)}{' '}
+                  {item[0]}
                 </td>
                 <td>
                   {formatNumber(item[1])} {currency}
@@ -92,7 +94,10 @@ const YearAverageTrend = () => {
           })}
           <tr>
             <td>
-              {getFinancialStabilityIcon((totalSpent / sumIncome - 1) * -100)}
+              {getFinancialStabilityIcon(
+                (totalSpent / sumIncome - 1) * -100,
+                isFiltered
+              )}
               Total Spent
             </td>
             <td>
