@@ -16,7 +16,7 @@ export const getFinancialStabilityIcon = (savingsRate) => {
   if (savingsRate > 0)
     return (
       <>
-        <FaCheckCircle color="blue" />{' '}
+        <FaCheckCircle color="orange" />{' '}
       </>
     );
   return (
