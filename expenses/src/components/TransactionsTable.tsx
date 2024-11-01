@@ -5,6 +5,7 @@ import { FaPen, FaTrash } from 'react-icons/fa';
 import { formatNumber, getCategory } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
 import { MdEdit, MdDelete } from 'react-icons/md';
+import { getIconForCategory } from '@utils/helper';
 
 interface TransactionsTableProps {
   items: TransactionOrIncomeItem[];
@@ -101,7 +102,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
               >
                 {!isModal ? <td>{element.dt.split('-')[2]}</td> : null}
                 <td>{formatNumber(element.sum)}</td>
-                <td>{getCategory[element.cat]}</td>
+                <td>{getIconForCategory(getCategory[element.cat])}{getCategory[element.cat]}</td>
                 {!isModal ? <td>{element.dsc}</td> : null}
                 <td className="desktop-only">
                   <button

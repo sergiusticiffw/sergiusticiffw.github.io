@@ -50,7 +50,7 @@ export const getFinancialStabilityIcon = (
   );
 };
 
-export const getIconForCategory = (category) => {
+export const getIconForCategory = (category: string) => {
   switch (category) {
     case 'Clothing':
       return (
