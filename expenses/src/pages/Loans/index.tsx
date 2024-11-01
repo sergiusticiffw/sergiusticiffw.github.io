@@ -157,64 +157,64 @@ const Loans = () => {
             <div className="table-wrapper">
               <table className="expenses-table" cellSpacing="0" cellPadding="0">
                 <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Principal</th>
-                  <th>Rate</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
-                  <th className="desktop-only"></th>
-                  <th className="desktop-only"></th>
-                </tr>
+                  <tr>
+                    <th>Title</th>
+                    <th>Principal</th>
+                    <th>Rate</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th className="desktop-only"></th>
+                    <th className="desktop-only"></th>
+                  </tr>
                 </thead>
                 <tbody ref={tableRef}>
-                {loans?.map((loan) => {
-                  return (
-                    <tr
-                      key={loan.id}
-                      data-id={loan.id}
-                      onTouchStart={(e) =>
-                        handleTouchStart(e, loan.id, tableRef)
-                      }
-                      onTouchMove={(e) => handleTouchMove(e, tableRef)}
-                      onTouchEnd={(e) =>
-                        handleTouchEnd(
-                          e,
-                          tableRef,
-                          loan.id,
-                          handleEdit,
-                          setShowDeleteModal,
-                        )
-                      }
-                    >
-                      <td>
-                        <Link to={`/expenses/loan/${loan.id}`}>
-                          {loan.title}
-                        </Link>
-                      </td>
-                      <td>{formatNumber(loan.fp)}</td>
-                      <td>{formatNumber(loan.fr)}</td>
-                      <td>{loan.sdt}</td>
-                      <td>{loan.edt}</td>
-                      <td className="desktop-only">
-                        <button
-                          onClick={() => handleEdit(loan.id)}
-                          className="btn-outline"
-                        >
-                          <MdEdit />
-                        </button>
-                      </td>
-                      <td className="desktop-only">
-                        <button
-                          onClick={() => setShowDeleteModal(loan.id)}
-                          className="btn-outline"
-                        >
-                          <MdDelete />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                  {loans?.map((loan) => {
+                    return (
+                      <tr
+                        key={loan.id}
+                        data-id={loan.id}
+                        onTouchStart={(e) =>
+                          handleTouchStart(e, loan.id, tableRef)
+                        }
+                        onTouchMove={(e) => handleTouchMove(e, tableRef)}
+                        onTouchEnd={(e) =>
+                          handleTouchEnd(
+                            e,
+                            tableRef,
+                            loan.id,
+                            handleEdit,
+                            setShowDeleteModal
+                          )
+                        }
+                      >
+                        <td>
+                          <Link to={`/expenses/loan/${loan.id}`}>
+                            {loan.title}
+                          </Link>
+                        </td>
+                        <td>{formatNumber(loan.fp)}</td>
+                        <td>{formatNumber(loan.fr)}</td>
+                        <td>{loan.sdt}</td>
+                        <td>{loan.edt}</td>
+                        <td className="desktop-only">
+                          <button
+                            onClick={() => handleEdit(loan.id)}
+                            className="btn-outline"
+                          >
+                            <MdEdit />
+                          </button>
+                        </td>
+                        <td className="desktop-only">
+                          <button
+                            onClick={() => setShowDeleteModal(loan.id)}
+                            className="btn-outline"
+                          >
+                            <MdDelete />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

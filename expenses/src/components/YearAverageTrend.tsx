@@ -10,6 +10,7 @@ import {
 } from '@utils/utils';
 import { monthNames } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
+import { getFinancialStabilityIcon } from '@utils/helper';
 
 const YearAverageTrend = () => {
   const { data } = useData() as DataState;
@@ -64,6 +65,8 @@ const YearAverageTrend = () => {
   const firstDay = data.raw[data.raw.length - 1]?.dt;
   const monthlyAverage: number =
     totalSpent / getMonthsPassed(firstDay as string);
+  const totalIncomePerYear = data?.totalIncomePerYear || {};
+  let sumIncome: number = 0;
   return (
     <>
       <HighchartsReact highcharts={Highcharts} options={options} />
@@ -71,9 +74,16 @@ const YearAverageTrend = () => {
       <table className="daily-average">
         <tbody>
           {Object.entries(totalPerYear).map((item, key) => {
+            const savingsPercent =
+              ((item[1] as number) / (totalIncomePerYear[item[0]] as number) -
+                1) *
+              -100;
+            sumIncome += parseFloat(totalIncomePerYear[item[0]] as string);
             return (
               <tr key={key}>
-                <td>{item[0]}</td>
+                <td>
+                  {getFinancialStabilityIcon(savingsPercent)} {item[0]}
+                </td>
                 <td>
                   {formatNumber(item[1])} {currency}
                 </td>
@@ -81,7 +91,10 @@ const YearAverageTrend = () => {
             );
           })}
           <tr>
-            <td>Total Spent</td>
+            <td>
+              {getFinancialStabilityIcon((totalSpent / sumIncome - 1) * -100)}
+              Total Spent
+            </td>
             <td>
               {formatNumber(totalSpent)} {currency}
             </td>

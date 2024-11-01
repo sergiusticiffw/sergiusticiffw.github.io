@@ -5,6 +5,7 @@ import HighchartsReact from 'highcharts-react-official';
 import { formatDataForChart, formatNumber } from '@utils/utils';
 import { monthNames } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
+import { getFinancialStabilityIcon } from '@utils/helper';
 
 const YearIncomeAverageTrend = () => {
   const { data } = useData() as DataState;
@@ -61,7 +62,11 @@ const YearIncomeAverageTrend = () => {
       />
       <span className="heading">Total income per year:</span>
       <div className="table-wrapper">
-        <table className="expenses-table" cellSpacing="0" cellPadding="0">
+        <table
+          className="expenses-table stable"
+          cellSpacing="0"
+          cellPadding="0"
+        >
           <thead>
             <tr>
               <th>Year</th>
@@ -81,7 +86,10 @@ const YearIncomeAverageTrend = () => {
               sumIncome += parseFloat(item[1] as string);
               return (
                 <tr key={key}>
-                  <td>{item[0]}</td>
+                  <td>
+                    {getFinancialStabilityIcon(savingsPercent)}
+                    {item[0]}
+                  </td>
                   <td>
                     {formatNumber(item[1])} {currency}
                   </td>
@@ -97,7 +105,10 @@ const YearIncomeAverageTrend = () => {
               );
             })}
             <tr>
-              <td>Total</td>
+              <td>
+                {getFinancialStabilityIcon((totalSpent / sumIncome - 1) * -100)}
+                Total
+              </td>
               <td>
                 {formatNumber(sumIncome)} {currency}
               </td>
