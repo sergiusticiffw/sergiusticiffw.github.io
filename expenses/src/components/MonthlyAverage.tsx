@@ -38,7 +38,7 @@ const MonthlyAverage = () => {
         <tbody>
           {sortedItems.map((item, key) => (
             <tr key={key}>
-              <td>
+              <td className='icon'>
                 {getIconForCategory(item.name)}
                 {item.name}
               </td>
