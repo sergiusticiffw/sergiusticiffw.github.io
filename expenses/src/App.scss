@@ -952,3 +952,14 @@ li.selected-suggestion {
     filter: blur(5px);
   }
 }
+
+.expenses-table td.icon {
+  display: flex;
+  align-items: center; /* Alignează vertical atât textul, cât și pictograma */
+  padding: 10px;
+}
+
+/* Optional: Adjust icon size to match text height */
+.expenses-table td.icon img, .expenses-table td.icon svg {
+  margin-right: 5px;
+}
