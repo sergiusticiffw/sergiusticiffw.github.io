@@ -82,7 +82,7 @@ const YearAverageTrend = () => {
             sumIncome += parseFloat(totalIncomePerYear[item[0]] as string);
             return (
               <tr key={key}>
-                <td>
+                <td className='icon'>
                   {getFinancialStabilityIcon(savingsPercent, isFiltered)}{' '}
                   {item[0]}
                 </td>
@@ -93,7 +93,7 @@ const YearAverageTrend = () => {
             );
           })}
           <tr>
-            <td>
+            <td className='icon'>
               {getFinancialStabilityIcon(
                 (totalSpent / sumIncome - 1) * -100,
                 isFiltered

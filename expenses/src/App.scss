@@ -952,3 +952,7 @@ li.selected-suggestion {
     filter: blur(5px);
   }
 }
+
+.expenses-table td.icon {
+  white-space: nowrap;
+}
