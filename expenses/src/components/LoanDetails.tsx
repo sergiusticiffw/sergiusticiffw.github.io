@@ -23,7 +23,7 @@ const LoanDetails = (props) => {
           {formatNumber(loan?.sum_of_interests + loan?.unpaid_interest)}
         </li>
         <li>Sum of installments: {formatNumber(sumInstallments)}</li>
-        <li>Days calculated: {loan?.days_calculated}</li>
+        <li>Days calculated: {formatNumber(loan?.days_calculated)}</li>
         <li>Actual end date: {loan?.actual_end_date}</li>
         <li>Latest payment date: {loan?.latest_payment_date}</li>
         <li>Sum of fees: {formatNumber(loan?.sum_of_fees)}</li>
