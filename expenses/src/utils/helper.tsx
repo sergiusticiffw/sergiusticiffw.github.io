@@ -3,21 +3,19 @@ import {
   FaExclamationCircle,
   FaExclamationTriangle,
   FaTimesCircle,
-} from 'react-icons/fa';
-import {
   FaTshirt,
-  FaFilm,
+  FaMusic,
   FaUtensils,
   FaGift,
-  FaWarehouse,
+  FaShoppingCart,
   FaHome,
-  FaUserMd,
+  FaHeartbeat,
   FaUser,
   FaCar,
-  FaPlug,
+  FaLightbulb,
   FaPlane,
-  FaUserFriends,
-  FaPiggyBank,
+  FaUsers,
+  FaChartLine,
 } from 'react-icons/fa';
 
 export const getFinancialStabilityIcon = (
@@ -53,84 +51,32 @@ export const getFinancialStabilityIcon = (
 export const getIconForCategory = (category: string) => {
   switch (category) {
     case 'Clothing':
-      return (
-        <>
-          <FaTshirt color="blue" />
-        </>
-      );
+      return <FaTshirt color="#4A90E2" />;
     case 'Entertainment':
-      return (
-        <>
-          <FaFilm color="orange" />
-        </>
-      );
+      return <FaMusic color="#F5A623" />;
     case 'Food':
-      return (
-        <>
-          <FaUtensils color="green" />
-        </>
-      );
+      return <FaUtensils color="#7ED321" />;
     case 'Gifts':
-      return (
-        <>
-          <FaGift color="red" />
-        </>
-      );
+      return <FaGift color="#D0021B" />;
     case 'Household Items/Supplies':
-      return (
-        <>
-          <FaWarehouse color="brown" />
-        </>
-      );
+      return <FaShoppingCart color="#9B9B9B" />;
     case 'Housing':
-      return (
-        <>
-          <FaHome color="purple" />
-        </>
-      );
+      return <FaHome color="#8B572A" />;
     case 'Medical / Healthcare':
-      return (
-        <>
-          <FaUserMd color="teal" />
-        </>
-      );
+      return <FaHeartbeat color="#50E3C2" />;
     case 'Personal':
-      return (
-        <>
-          <FaUser color="pink" />
-        </>
-      );
+      return <FaUser color="#BD10E0" />;
     case 'Transportation':
-      return (
-        <>
-          <FaCar color="yellow" />
-        </>
-      );
+      return <FaCar color="#F8E71C" />;
     case 'Utilities':
-      return (
-        <>
-          <FaPlug color="gray" />
-        </>
-      );
+      return <FaLightbulb color="#ADD8E6" />;
     case 'Travel':
-      return (
-        <>
-          <FaPlane color="lightblue" />
-        </>
-      );
+      return <FaPlane color="#417505" />;
     case 'Family':
-      return (
-        <>
-          <FaUserFriends color="coral" />
-        </>
-      );
+      return <FaUsers color="#FF7F50" />;
     case 'Investment':
-      return (
-        <>
-          <FaPiggyBank color="gold" />
-        </>
-      );
+      return <FaChartLine color="#FFD700" />;
     default:
-      return null; // Return null or a default icon if the category is not recognized
+      return null;
   }
 };
