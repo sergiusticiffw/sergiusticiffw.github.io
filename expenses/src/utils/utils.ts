@@ -258,21 +258,19 @@ export const fetchLoans = (token: string, dataDispatch: any, dispatch: any) => {
 };
 
 export const formatNumber = (value: unknown): string => {
-  // Try to parse the value as a floating-point number
-  const parsedValue = parseFloat(value as string);
-
-  // Check if the parsed value is a valid number
-  if (!isNaN(parsedValue)) {
-    let formattedValue = parsedValue.toFixed(2);
-    if (formattedValue.endsWith('.00')) {
-      formattedValue = formattedValue.slice(0, -3);
+  if (typeof value === 'number') {
+    // Handle numbers directly
+    return value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  } else if (typeof value === 'string') {
+    // Parse the string as a number
+    const parsedValue = parseFloat(value);
+    if (!isNaN(parsedValue)) {
+      return parsedValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     }
-    formattedValue = formattedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-    return formattedValue;
-  } else {
-    // Handle non-numeric values or invalid input
-    return '-';
   }
+
+  // Handle invalid input
+  return '-';
 };
 
 export const getCategory: { [key: string]: string } = categories.reduce(
