@@ -92,16 +92,12 @@ const YearIncomeAverageTrend = () => {
                       {item[0]}
                     </div>
                   </td>
-                  <td>
-                    {formatNumber(item[1])} {currency}
-                  </td>
-                  <td>
-                    {formatNumber(totalPerYear[item[0]])} {currency}
-                  </td>
+                  <td>{formatNumber(item[1])}</td>
+                  <td>{formatNumber(totalPerYear[item[0]])}</td>
                   <td>
                     {isFinite(savingsPercent)
-                      ? `${formatNumber(diff)} ${currency} (${formatNumber(savingsPercent)}%)`
-                      : `${formatNumber(diff)} ${currency}`}
+                      ? `${formatNumber(diff)} (${formatNumber(savingsPercent)}%)`
+                      : `${formatNumber(diff)}`}
                   </td>
                 </tr>
               );
@@ -115,14 +111,10 @@ const YearIncomeAverageTrend = () => {
                   Total
                 </div>
               </td>
+              <td>{formatNumber(sumIncome)}</td>
+              <td>{formatNumber(totalSpent)}</td>
               <td>
-                {formatNumber(sumIncome)} {currency}
-              </td>
-              <td>
-                {formatNumber(totalSpent)} {currency}
-              </td>
-              <td>
-                {formatNumber(sumDiff)} {currency} (
+                {formatNumber(sumDiff)} (
                 {formatNumber((totalSpent / sumIncome - 1) * -100)}
                 %)
               </td>

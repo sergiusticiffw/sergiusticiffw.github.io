@@ -1,11 +1,8 @@
 import React from 'react';
 import AmortizationScheduleTable from '@components/AmortizationScheduleTable';
 import { formatNumber } from '@utils/utils';
-import { useAuthState } from '@context/context';
-import { AuthState } from '@type/types';
 
 const LoanDetails = (props) => {
-  const { currency } = useAuthState() as AuthState;
   const loan = props?.loan ?? {};
   const amortizationSchedule = props?.amortizationSchedule ?? [];
 
@@ -23,21 +20,14 @@ const LoanDetails = (props) => {
       <ul className="loan-details">
         <li>
           Sum of interests:{' '}
-          {formatNumber(loan?.sum_of_interests + loan?.unpaid_interest)}{' '}
-          {currency}
+          {formatNumber(loan?.sum_of_interests + loan?.unpaid_interest)}
         </li>
-        <li>
-          Sum of installments: {formatNumber(sumInstallments)} {currency}
-        </li>
+        <li>Sum of installments: {formatNumber(sumInstallments)}</li>
         <li>Days calculated: {loan?.days_calculated}</li>
         <li>Actual end date: {loan?.actual_end_date}</li>
         <li>Latest payment date: {loan?.latest_payment_date}</li>
-        <li>
-          Sum of fees: {formatNumber(loan?.sum_of_fees)} {currency}
-        </li>
-        <li>
-          Cost of loan per day: {formatNumber(payPerDay)} {currency}
-        </li>
+        <li>Sum of fees: {formatNumber(loan?.sum_of_fees)}</li>
+        <li>Cost of loan per day: {formatNumber(payPerDay)}</li>
       </ul>
 
       <AmortizationScheduleTable amortizationSchedule={amortizationSchedule} />

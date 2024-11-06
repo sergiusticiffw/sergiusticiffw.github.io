@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react';
-import { useAuthState, useData } from '@context/context';
+import { useData } from '@context/context';
 import { formatNumber } from '@utils/utils';
-import { AuthState, DataState, TransactionOrIncomeItem } from '@type/types';
+import { DataState, TransactionOrIncomeItem } from '@type/types';
 
 const LastTwoMonthsAverage = () => {
   const { data } = useData() as DataState;
-  const { currency } = useAuthState() as AuthState;
 
   useEffect(() => {}, [data.raw]);
 
@@ -36,7 +35,7 @@ const LastTwoMonthsAverage = () => {
   return (
     <span>
       Average spending for the last 60 days:{' '}
-      {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} {currency} / day
+      {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} / day
     </span>
   );
 };

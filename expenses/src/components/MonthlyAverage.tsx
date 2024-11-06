@@ -1,12 +1,11 @@
 import React, { useEffect } from 'react';
-import { useAuthState, useData } from '@context/context';
+import { useData } from '@context/context';
 import { formatNumber, getMonthsPassed } from '@utils/utils';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
-import { AuthState, DataState } from '@type/types';
+import { DataState } from '@type/types';
 
 const MonthlyAverage = () => {
   const { data } = useData() as DataState;
-  const { currency } = useAuthState() as AuthState;
 
   // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data.raw, data.categoryTotals]);
@@ -38,9 +37,7 @@ const MonthlyAverage = () => {
           {sortedItems.map((item, key) => (
             <tr key={key}>
               <td>{item.name}</td>
-              <td>
-                {formatNumber(item.y / monthsPassed)} {currency} / month
-              </td>
+              <td>{formatNumber(item.y / monthsPassed)} / month</td>
             </tr>
           ))}
         </tbody>

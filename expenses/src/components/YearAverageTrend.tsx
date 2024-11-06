@@ -88,9 +88,7 @@ const YearAverageTrend = () => {
                     {item[0]}
                   </div>
                 </td>
-                <td>
-                  {formatNumber(item[1])} {currency}
-                </td>
+                <td>{formatNumber(item[1])}</td>
               </tr>
             );
           })}
@@ -104,9 +102,7 @@ const YearAverageTrend = () => {
                 Total Spent
               </div>
             </td>
-            <td>
-              {formatNumber(totalSpent)} {currency}
-            </td>
+            <td>{formatNumber(totalSpent)}</td>
           </tr>
           <tr>
             <td>Total Days</td>
@@ -123,9 +119,7 @@ const YearAverageTrend = () => {
         <tbody>
           <tr>
             <td>Monthly Average</td>
-            <td>
-              {formatNumber(monthlyAverage)} {currency}
-            </td>
+            <td>{formatNumber(monthlyAverage)}</td>
           </tr>
         </tbody>
       </table>

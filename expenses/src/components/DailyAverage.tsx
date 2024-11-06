@@ -1,12 +1,11 @@
 import React, { useEffect } from 'react';
-import { useAuthState, useData } from '@context/context';
+import { useData } from '@context/context';
 import { calculateDaysFrom, formatNumber } from '@utils/utils';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
-import { AuthState, DataState } from '@type/types';
+import { DataState } from '@type/types';
 
 const DailyAverage = () => {
   const { data } = useData() as DataState;
-  const { currency } = useAuthState() as AuthState;
 
   // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data.raw, data.categoryTotals]);
@@ -40,7 +39,7 @@ const DailyAverage = () => {
                 {formatNumber(
                   parseFloat(String(item.y / daysPassed)).toFixed(2)
                 )}{' '}
-                {currency} / day
+                / day
               </td>
             </tr>
           ))}
@@ -51,7 +50,6 @@ const DailyAverage = () => {
         {formatNumber(
           parseFloat(String(data.totalSpent / daysPassed)).toFixed(2)
         )}{' '}
-        {currency}
       </div>
     </>
   );
