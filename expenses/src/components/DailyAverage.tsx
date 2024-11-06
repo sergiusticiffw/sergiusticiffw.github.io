@@ -3,7 +3,6 @@ import { useAuthState, useData } from '@context/context';
 import { calculateDaysFrom, formatNumber } from '@utils/utils';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import { AuthState, DataState } from '@type/types';
-import { getIconForCategory } from '@utils/helper';
 
 const DailyAverage = () => {
   const { data } = useData() as DataState;
@@ -36,12 +35,7 @@ const DailyAverage = () => {
         <tbody>
           {sortedItems.map((item, key) => (
             <tr key={key}>
-              <td>
-                <div className="text-with-icon">
-                  {getIconForCategory(item.name)}
-                  {item.name}
-                </div>
-              </td>
+              <td>{item.name}</td>
               <td>
                 {formatNumber(
                   parseFloat(String(item.y / daysPassed)).toFixed(2)

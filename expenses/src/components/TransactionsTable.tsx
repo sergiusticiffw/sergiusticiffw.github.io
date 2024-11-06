@@ -103,10 +103,8 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                 {!isModal ? <td>{element.dt.split('-')[2]}</td> : null}
                 <td>{formatNumber(element.sum)}</td>
                 <td>
-                  <div className="text-with-icon">
-                    {getIconForCategory(getCategory[element.cat])}
-                    {getCategory[element.cat]}
-                  </div>
+                  {getIconForCategory(getCategory[element.cat])}
+                  {/*{getCategory[element.cat]}*/}
                 </td>
                 {!isModal ? <td>{element.dsc}</td> : null}
                 <td className="desktop-only">

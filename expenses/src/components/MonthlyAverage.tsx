@@ -3,7 +3,6 @@ import { useAuthState, useData } from '@context/context';
 import { formatNumber, getMonthsPassed } from '@utils/utils';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import { AuthState, DataState } from '@type/types';
-import { getIconForCategory } from '@utils/helper';
 
 const MonthlyAverage = () => {
   const { data } = useData() as DataState;
@@ -38,12 +37,7 @@ const MonthlyAverage = () => {
         <tbody>
           {sortedItems.map((item, key) => (
             <tr key={key}>
-              <td>
-                <div className="text-with-icon">
-                  {getIconForCategory(item.name)}
-                  <span>{item.name}</span>
-                </div>
-              </td>
+              <td>{item.name}</td>
               <td>
                 {formatNumber(item.y / monthsPassed)} {currency} / month
               </td>
