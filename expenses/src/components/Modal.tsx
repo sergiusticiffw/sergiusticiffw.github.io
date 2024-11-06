@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, ReactNode } from 'react';
-import { MdClose } from 'react-icons/md';
+import { FaTimesCircle } from 'react-icons/fa';
 
 interface ModalProps {
   show: boolean;
@@ -29,7 +29,7 @@ const Modal = ({ show, onClose, children }: ModalProps) => {
         <div className="modal-window">
           <div ref={ref} className="modal-content">
             <a href="/" onClick={onClose} title="Close" className="modal-close">
-              <MdClose />
+              <FaTimesCircle />
             </a>
             <div className="modal-body">{children}</div>
           </div>

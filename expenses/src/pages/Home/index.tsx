@@ -8,10 +8,15 @@ import TransactionsTable from '@components/TransactionsTable';
 import ExpenseCalendar from '@components/ExpenseCalendar';
 import Filters from '@components/Filters';
 import { monthNames, notificationType } from '@utils/constants';
-import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import {
+  FaArrowLeft,
+  FaArrowRight,
+  FaTable,
+  FaCalendar,
+  FaTrash,
+} from 'react-icons/fa';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import NumberDisplay from '@components/NumberDisplay';
-import { MdTableView, MdCalendarViewMonth, MdDelete } from 'react-icons/md';
 
 const Home = () => {
   const showNotification = useNotification();
@@ -178,7 +183,7 @@ const Home = () => {
               <span className="loader__element"></span>
             </div>
           ) : (
-            <MdDelete />
+            <FaTrash />
           )}
         </button>
       </Modal>
@@ -280,7 +285,7 @@ const Home = () => {
                     }
                     aria-label="Table View"
                   >
-                    <MdTableView />
+                    <FaTable />
                   </div>
                   <div
                     onClick={() => setActiveTab('calendar')}
@@ -291,7 +296,7 @@ const Home = () => {
                     }
                     aria-label="Calendar View"
                   >
-                    <MdCalendarViewMonth />
+                    <FaCalendar />
                   </div>
                 </div>
               </div>

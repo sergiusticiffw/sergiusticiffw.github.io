@@ -4,8 +4,7 @@ import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { AuthState, DataState, NodeData } from '@type/types';
 import { fetchRequest, addOneDay } from '@utils/utils';
 import { notificationType } from '@utils/constants';
-import { FaPlus } from 'react-icons/fa';
-import { MdEdit } from 'react-icons/md';
+import { FaPlus, FaPen } from 'react-icons/fa';
 
 interface LoanFormProps {
   formType: string;
@@ -197,7 +196,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           ) : formType === 'add' ? (
             <FaPlus />
           ) : (
-            <MdEdit />
+            <FaPen />
           )}
         </button>
       </form>

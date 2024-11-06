@@ -4,8 +4,7 @@ import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { AuthState, DataState, NodeData } from '@type/types';
 import { addOneDay, fetchRequest } from '@utils/utils';
 import { notificationType } from '@utils/constants';
-import { FaPlus } from 'react-icons/fa';
-import { MdEdit } from 'react-icons/md';
+import { FaPlus, FaPen } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 
 interface PaymentFormProps {
@@ -165,7 +164,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           ) : formType === 'add' ? (
             <FaPlus />
           ) : (
-            <MdEdit />
+            <FaPen />
           )}
         </button>
       </form>

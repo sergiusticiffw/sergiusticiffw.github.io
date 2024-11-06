@@ -4,7 +4,6 @@ import { FaPen, FaTrash } from 'react-icons/fa';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import { formatNumber } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
-import { MdEdit, MdDelete } from 'react-icons/md';
 
 interface IncomeTableProps {
   items: TransactionOrIncomeItem[];
@@ -103,7 +102,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                     onClick={() => handleEdit(element.id)}
                     className="btn-outline"
                   >
-                    <MdEdit />
+                    <FaPen />
                   </button>
                 </td>
                 <td className="desktop-only">
@@ -111,7 +110,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                     onClick={() => setShowDeleteModal(element.id)}
                     className="btn-outline"
                   >
-                    <MdDelete />
+                    <FaTrash />
                   </button>
                 </td>
               </tr>

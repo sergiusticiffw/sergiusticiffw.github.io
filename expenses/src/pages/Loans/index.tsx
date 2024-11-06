@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import Modal from '@components/Modal';
 import LoanForm from '@components/LoanForm';
 import useSwipeActions from '@hooks/useSwipeActions';
-import { MdDelete, MdEdit } from 'react-icons/md';
 import { AuthState } from '@type/types';
 import { deleteNode, fetchLoans } from '@utils/utils';
 import { notificationType } from '@utils/constants';
@@ -129,7 +128,7 @@ const Loans = () => {
                   <span className="loader__element"></span>
                 </div>
               ) : (
-                <MdDelete />
+                <FaTrash />
               )}
             </button>
           </Modal>
@@ -201,7 +200,7 @@ const Loans = () => {
                             onClick={() => handleEdit(loan.id)}
                             className="btn-outline"
                           >
-                            <MdEdit />
+                            <FaPen />
                           </button>
                         </td>
                         <td className="desktop-only">
@@ -209,7 +208,7 @@ const Loans = () => {
                             onClick={() => setShowDeleteModal(loan.id)}
                             className="btn-outline"
                           >
-                            <MdDelete />
+                            <FaTrash />
                           </button>
                         </td>
                       </tr>

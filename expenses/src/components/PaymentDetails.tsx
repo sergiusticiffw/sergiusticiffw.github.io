@@ -1,5 +1,4 @@
 import React, { useRef, useState } from 'react';
-import { MdDelete, MdEdit } from 'react-icons/md';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
 import { AuthState } from '@type/types';
@@ -107,7 +106,7 @@ const PaymentDetails = (props) => {
               <span className="loader__element"></span>
             </div>
           ) : (
-            <MdDelete />
+            <FaTrash />
           )}
         </button>
       </Modal>
@@ -179,7 +178,7 @@ const PaymentDetails = (props) => {
                         onClick={() => handleEdit(payment.id)}
                         className="btn-outline"
                       >
-                        <MdEdit />
+                        <FaPen />
                       </button>
                     </td>
                     <td className="desktop-only">
@@ -187,7 +186,7 @@ const PaymentDetails = (props) => {
                         onClick={() => setShowDeleteModal(payment.id)}
                         className="btn-outline"
                       >
-                        <MdDelete />
+                        <FaTrash />
                       </button>
                     </td>
                   </tr>

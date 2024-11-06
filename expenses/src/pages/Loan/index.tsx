@@ -13,7 +13,7 @@ import {
   transformToNumber,
   transformDateFormat,
 } from '@utils/utils';
-import { CiEdit } from 'react-icons/ci';
+import { FaPen } from 'react-icons/fa';
 
 const Loan = () => {
   const { id } = useParams();
@@ -92,7 +92,7 @@ const Loan = () => {
   return (
     <div>
       <h2>
-        {loan?.title} <CiEdit onClick={() => setShowEditModal(true)} />
+        {loan?.title} <FaPen onClick={() => setShowEditModal(true)} />
       </h2>
       <Modal
         show={showEditModal}

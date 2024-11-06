@@ -16,7 +16,7 @@ import { notificationType } from '@utils/constants';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { MdDelete } from 'react-icons/md';
+import { FaTrash } from 'react-icons/fa';
 import Month from '@components/Month';
 
 interface ExpenseCalendarProps {
@@ -358,7 +358,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
               <span className="loader__element"></span>
             </div>
           ) : (
-            <MdDelete />
+            <FaTrash />
           )}
         </button>
       </Modal>

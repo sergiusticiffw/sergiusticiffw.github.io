@@ -4,12 +4,11 @@ import { useNotification } from '@context/notification';
 import { logout } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
 import { currencies } from '@utils/constants';
-import { FaUserCircle } from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
 import { fetchRequest } from '@utils/utils';
 import { notificationType, themeList } from '@utils/constants';
 import { AuthState } from '@type/types';
 import { googleLogout } from '@react-oauth/google';
-import { MdLogout } from 'react-icons/md';
 
 const Profile = () => {
   const showNotification = useNotification();
@@ -148,7 +147,7 @@ const Profile = () => {
           onBlur={onBlur}
         />
         <button className="button logout" onClick={handleLogout}>
-          <MdLogout />
+          <FaSignOutAlt />
         </button>
       </div>
     </div>

@@ -7,10 +7,7 @@ import Modal from '@components/Modal';
 import IncomeTable from '@components/IncomeTable';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
-import { MdMoreHoriz } from 'react-icons/md';
-import { FaPlus } from 'react-icons/fa';
-import { MdDelete } from 'react-icons/md';
-import MonthlyComparisonIncomeTrend from '@components/MonthlyComparisonIncomeTrend';
+import { FaPlus, FaTrash, FaCaretDown } from 'react-icons/fa';
 
 const Income = () => {
   const YearIncomeAverageTrend = React.lazy(
@@ -101,7 +98,7 @@ const Income = () => {
               <span className="loader__element"></span>
             </div>
           ) : (
-            <MdDelete />
+            <FaTrash />
           )}
         </button>
       </Modal>
@@ -164,7 +161,7 @@ const Income = () => {
                     onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
                     className="btn-outline"
                   >
-                    <MdMoreHoriz />
+                    <FaCaretDown />
                   </button>
                 </div>
               )}
