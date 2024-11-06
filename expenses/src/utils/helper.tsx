@@ -55,79 +55,79 @@ export const getIconForCategory = (category: string) => {
     case 'Clothing':
       return (
         <>
-          <FaTshirt color="blue" />{' '}
+          <FaTshirt color="blue" />
         </>
       );
     case 'Entertainment':
       return (
         <>
-          <FaFilm color="orange" />{' '}
+          <FaFilm color="orange" />
         </>
       );
     case 'Food':
       return (
         <>
-          <FaUtensils color="green" />{' '}
+          <FaUtensils color="green" />
         </>
       );
     case 'Gifts':
       return (
         <>
-          <FaGift color="red" />{' '}
+          <FaGift color="red" />
         </>
       );
     case 'Household Items/Supplies':
       return (
         <>
-          <FaWarehouse color="brown" />{' '}
+          <FaWarehouse color="brown" />
         </>
       );
     case 'Housing':
       return (
         <>
-          <FaHome color="purple" />{' '}
+          <FaHome color="purple" />
         </>
       );
     case 'Medical / Healthcare':
       return (
         <>
-          <FaUserMd color="teal" />{' '}
+          <FaUserMd color="teal" />
         </>
       );
     case 'Personal':
       return (
         <>
-          <FaUser color="pink" />{' '}
+          <FaUser color="pink" />
         </>
       );
     case 'Transportation':
       return (
         <>
-          <FaCar color="yellow" />{' '}
+          <FaCar color="yellow" />
         </>
       );
     case 'Utilities':
       return (
         <>
-          <FaPlug color="gray" />{' '}
+          <FaPlug color="gray" />
         </>
       );
     case 'Travel':
       return (
         <>
-          <FaPlane color="lightblue" />{' '}
+          <FaPlane color="lightblue" />
         </>
       );
     case 'Family':
       return (
         <>
-          <FaUserFriends color="coral" />{' '}
+          <FaUserFriends color="coral" />
         </>
       );
     case 'Investment':
       return (
         <>
-          <FaPiggyBank color="gold" />{' '}
+          <FaPiggyBank color="gold" />
         </>
       );
     default:

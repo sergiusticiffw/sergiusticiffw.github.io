@@ -36,9 +36,11 @@ const DailyAverage = () => {
         <tbody>
           {sortedItems.map((item, key) => (
             <tr key={key}>
-              <td className='icon'>
-                {getIconForCategory(item.name)}
-                {item.name}
+              <td>
+                <div className="text-with-icon">
+                  {getIconForCategory(item.name)}
+                  {item.name}
+                </div>
               </td>
               <td>
                 {formatNumber(
