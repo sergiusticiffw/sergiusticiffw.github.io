@@ -7,7 +7,7 @@ import {
   FaMusic,
   FaUtensils,
   FaGift,
-  FaShoppingCart,
+  FaHouseUser,
   FaHome,
   FaHeartbeat,
   FaUser,
@@ -59,7 +59,7 @@ export const getIconForCategory = (category: string) => {
     case 'Gifts':
       return <FaGift color="#D0021B" />;
     case 'Household Items/Supplies':
-      return <FaShoppingCart color="#9B9B9B" />;
+      return <FaHouseUser color="#9B9B9B" />;
     case 'Housing':
       return <FaHome color="#8B572A" />;
     case 'Medical / Healthcare':
