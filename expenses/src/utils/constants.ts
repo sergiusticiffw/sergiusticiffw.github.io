@@ -217,7 +217,7 @@ export const suggestions = {
     'cinema',
   ],
   3: ['market', 'apa', 'lunch', 'inghetata', 'straus/glovo food'],
-  4: ['flori'],
+  4: ['flori', 'Nelea', 'zi de nastere'],
   5: ['igiena/curatinie', 'scutece', 'Leo'],
   6: ['apartment rent'],
   7: ['farmacie', 'stomatolog', 'pediatru', 'Nelea', 'Leo', 'sport'],
