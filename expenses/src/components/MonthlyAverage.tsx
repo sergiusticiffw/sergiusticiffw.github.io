@@ -16,8 +16,6 @@ const MonthlyAverage = () => {
     Object.values(data.categoryTotals || [])
   );
 
-  console.log(7, sortedItems);
-
   return (
     <>
       <span className="heading">Monthly average per category</span>
