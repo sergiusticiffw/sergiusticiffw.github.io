@@ -58,7 +58,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
 
   return (
     <div className="table-wrapper">
-      <div className="month-badge">Incomes</div>
+      <div className="income-header">Incomes</div>
       <table className="expenses-table" cellSpacing="0" cellPadding="0">
         <thead>
           <tr>
