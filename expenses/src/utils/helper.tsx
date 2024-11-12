@@ -23,12 +23,9 @@ export const getFinancialStabilityIcon = (
   isFiltered = false
 ) => {
   if (isFiltered) return null;
-  if (savingsRate > 20)
-    return <FaCheckCircle color="green" />;
-  if (savingsRate > 10)
-    return <FaExclamationCircle color="yellow" />;
-  if (savingsRate > 0)
-    return <FaExclamationTriangle color="orange" />;
+  if (savingsRate > 20) return <FaCheckCircle color="green" />;
+  if (savingsRate > 10) return <FaExclamationCircle color="yellow" />;
+  if (savingsRate > 0) return <FaExclamationTriangle color="orange" />;
   return <FaTimesCircle color="red" />;
 };
 

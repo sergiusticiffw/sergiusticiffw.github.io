@@ -21,7 +21,7 @@ const handleErrors = (
   return response.json();
 };
 
-export const formatDataForChart = (data: DataStructure) => {
+export const formatDataForChart = (data: DataStructure, secondSet = false) => {
   const seriesData = [];
 
   for (const year in data) {
@@ -32,8 +32,15 @@ export const formatDataForChart = (data: DataStructure) => {
 
     for (const month of monthNames) {
       const monthValue = data[year][`${month} ${year}`];
-      // @ts-expect-error TBD
-      yearSeries.data.push([month, monthValue]);
+      if (secondSet) {
+        // @ts-ignore
+        const monthValueSpent = secondSet[year][`${month} ${year}`];
+        // @ts-expect-error TBD
+        yearSeries.data.push([month, monthValue - monthValueSpent]);
+      } else {
+        // @ts-expect-error TBD
+        yearSeries.data.push([month, monthValue]);
+      }
     }
 
     if (yearSeries.data.length > 0) {
@@ -260,12 +267,18 @@ export const fetchLoans = (token: string, dataDispatch: any, dispatch: any) => {
 export const formatNumber = (value: unknown): string => {
   if (typeof value === 'number') {
     // Handle numbers directly
-    return value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    return value.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
   } else if (typeof value === 'string') {
     // Parse the string as a number
     const parsedValue = parseFloat(value);
     if (!isNaN(parsedValue)) {
-      return parsedValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      return parsedValue.toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      });
     }
   }
 

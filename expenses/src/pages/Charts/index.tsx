@@ -3,6 +3,7 @@ import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { fetchData } from '@utils/utils';
 import Filters from '@components/Filters';
 import { AuthState } from '@type/types';
+import MonthlySavingsTrend from '@components/MonthlySavingsTrend';
 
 const Charts = () => {
   const AllTimeSpendings = React.lazy(
@@ -27,6 +28,9 @@ const Charts = () => {
     () => import('@components/MonthlyAverageTrend')
   );
   const MonthlyTotals = React.lazy(() => import('@components/MonthlyTotals'));
+  const MonthlySavingsTrend = React.lazy(
+    () => import('@components/MonthlySavingsTrend')
+  );
 
   const { data, dataDispatch } = useData();
   const noData = data.groupedData === null;
@@ -91,6 +95,14 @@ const Charts = () => {
               <div className="charts-section">
                 <Suspense fallback="">
                   <SavingsHistory />
+                </Suspense>
+              </div>
+            )}
+
+            {!data.filtered && (
+              <div className="charts-section">
+                <Suspense fallback="">
+                  <MonthlySavingsTrend />
                 </Suspense>
               </div>
             )}
