@@ -303,20 +303,27 @@ input {
 .add-transaction {
   width: 80%;
   margin: 0 auto;
-  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 .add-transaction input,
 .add-transaction textarea,
 .add-transaction select {
   background: var(--bg-color);
-  border: none;
   min-height: 40px;
   width: 100%;
   margin-bottom: 20px;
-  border-bottom: 1px solid #6d7781;
   font-weight: bold;
   transition: all 0.3s ease-in-out;
   color: #ccc;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
 }
 .add-transaction input:focus,
 .add-transaction textarea:focus {
@@ -958,4 +965,12 @@ li.selected-suggestion {
   align-items: center;
   justify-content: center;
   gap: 5px;
+}
+
+.add-transaction button {
+  padding: 0.8rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
 }
