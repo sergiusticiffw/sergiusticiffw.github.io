@@ -338,6 +338,12 @@ input {
 .add-transaction input[type='date']::-webkit-calendar-picker-indicator {
   filter: invert(1);
 }
+.add-transaction button {
+  padding: 0.8rem 1rem;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
 .button {
   font-weight: bold;
   border: none;
@@ -959,11 +965,4 @@ li.selected-suggestion {
   align-items: center;
   justify-content: center;
   gap: 5px;
-}
-
-.add-transaction button {
-  padding: 0.8rem 1rem;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
 }
