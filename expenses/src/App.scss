@@ -319,6 +319,9 @@ input {
   color: #ccc;
   border: 1px solid #ddd;
 }
+.add-transaction select {
+  width: 100%;
+}
 .add-transaction input:focus,
 .add-transaction textarea:focus {
   outline: none;
