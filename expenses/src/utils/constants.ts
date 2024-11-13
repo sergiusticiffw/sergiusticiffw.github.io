@@ -213,8 +213,6 @@ export const suggestions = {
     'restaurant',
     'ingetata',
     'parc',
-    'wiskey + cola',
-    'cinema',
   ],
   3: ['market', 'apa', 'lunch', 'inghetata', 'straus/glovo food'],
   4: ['flori', 'Nelea', 'zi de nastere'],

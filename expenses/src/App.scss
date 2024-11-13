@@ -299,7 +299,7 @@ input {
 }
 
 .add-transaction {
-  width: 80%;
+  width: 90%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -317,7 +317,6 @@ input {
   font-weight: bold;
   transition: all 0.3s ease-in-out;
   color: #ccc;
-  padding: 0.3rem 1rem;
   border: 1px solid #ddd;
 }
 .add-transaction input:focus,
@@ -467,8 +466,7 @@ button:hover {
   transition: all 0.3s;
 }
 .modal-window > div {
-  max-width: 700px;
-  width: 70%;
+  width: 75%;
   position: absolute;
   top: 50%;
   left: 50%;
