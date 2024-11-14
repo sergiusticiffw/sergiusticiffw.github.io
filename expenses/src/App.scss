@@ -811,6 +811,7 @@ li.selected-suggestion {
   justify-content: space-around;
 
   > div {
+    width: 150px;
     height: 150px;
     border: 5px solid var(--accent-color);
     border-radius: 50%;
@@ -886,7 +887,6 @@ li.selected-suggestion {
     }
   }
 }
-
 
 @keyframes riseUp {
   0% {
