@@ -11,7 +11,6 @@ import PaymentForm from '@components/PaymentForm';
 import { useLoan } from '@context/loan';
 
 const PaymentDetails = (props) => {
-  const { currency } = useAuthState() as AuthState;
   const payments = props?.payments ?? [];
   const loan = props?.loan ?? {};
   const tableRef = useRef(null);
@@ -137,7 +136,7 @@ const PaymentDetails = (props) => {
           {totalPaidAmount > 0 && (
             <>
               <div>
-                Amount Paid to Date: {formatNumber(totalPaidAmount)} {currency}
+                Amount Paid to Date: {formatNumber(totalPaidAmount)}
               </div>
               <br />
             </>
