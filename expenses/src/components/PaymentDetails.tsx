@@ -135,9 +135,7 @@ const PaymentDetails = (props) => {
           <h2>Payments</h2>
           {totalPaidAmount > 0 && (
             <>
-              <div>
-                Amount Paid to Date: {formatNumber(totalPaidAmount)}
-              </div>
+              <div>Amount Paid to Date: {formatNumber(totalPaidAmount)}</div>
               <br />
             </>
           )}

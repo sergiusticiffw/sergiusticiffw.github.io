@@ -3,7 +3,9 @@ import { FaTimesCircle } from 'react-icons/fa';
 
 interface ModalProps {
   show: boolean;
-  onClose: (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => void;
+  onClose: (
+    event?: React.MouseEvent<HTMLAnchorElement, MouseEvent> | KeyboardEvent
+  ) => void;
   children: ReactNode;
 }
 
@@ -17,9 +19,19 @@ const Modal = ({ show, onClose, children }: ModalProps) => {
         );
       }
     };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (show && e.key === 'Escape') {
+        onClose(e);
+      }
+    };
+
     document.addEventListener('mousedown', checkIfClickedOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.removeEventListener('mousedown', checkIfClickedOutside);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [show, onClose]);
 
