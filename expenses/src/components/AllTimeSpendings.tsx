@@ -22,6 +22,7 @@ const AllTimeSpendings = () => {
     },
     title: {
       text: "All Time Spending's",
+      verticalAlign: 'middle'
     },
     tooltip: {
       pointFormat: '{point.y} {series.name} ({point.percentage:.2f})%',
@@ -29,7 +30,10 @@ const AllTimeSpendings = () => {
     plotOptions: {
       pie: {
         allowPointSelect: true,
-        borderWidth: 0,
+        innerSize: '70%',
+        dataLabels: {
+          enabled: false
+        }
       },
     },
     series: [
