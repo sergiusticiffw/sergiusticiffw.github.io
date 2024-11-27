@@ -38,35 +38,6 @@ Highcharts.theme = {
 };
 
 Highcharts.setOptions(Highcharts.theme);
-// Radialize the colors
-Highcharts.setOptions({
-  colors:
-    (Highcharts.getOptions().colors || []).map(
-      (
-        color:
-          | string
-          | Highcharts.GradientColorObject
-          | Highcharts.PatternObject
-      ) => {
-        return {
-          radialGradient: {
-            cx: 0.5,
-            cy: 0.3,
-            r: 0.7,
-          },
-          stops: [
-            [0, color],
-            [
-              1,
-              Highcharts.color(color as string)
-                .brighten(-0.25)
-                .get('rgb'),
-            ], // darken
-          ] as Highcharts.GradientColorObject['stops'],
-        };
-      }
-    ) ?? [],
-});
 Highcharts.setOptions({
   plotOptions: {
     series: {
