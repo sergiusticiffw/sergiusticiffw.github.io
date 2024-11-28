@@ -38,7 +38,16 @@ Highcharts.theme = {
 };
 
 Highcharts.setOptions(Highcharts.theme);
+Highstock.setOptions(Highcharts.theme);
 Highcharts.setOptions({
+  plotOptions: {
+    series: {
+      animation: false,
+      boostThreshold: 4000,
+    },
+  },
+});
+Highstock.setOptions({
   plotOptions: {
     series: {
       animation: false,
