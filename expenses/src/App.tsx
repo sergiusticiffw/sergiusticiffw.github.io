@@ -10,15 +10,19 @@ import Navbar from '@components/Navbar';
 import Highcharts from 'highcharts';
 import Highstock from 'highcharts/highstock';
 import Boost from 'highcharts/modules/boost';
-import DarkUnica from 'highcharts/themes/dark-unica';
+import SeriesLabel from 'highcharts/modules/series-label';
+import BrandDark from 'highcharts/themes/brand-dark';
 import NoData from 'highcharts/modules/no-data-to-display';
 
 Boost(Highcharts);
-DarkUnica(Highcharts);
+BrandDark(Highcharts);
 NoData(Highcharts);
 Boost(Highstock);
-DarkUnica(Highstock);
 NoData(Highstock);
+BrandDark(Highstock);
+
+SeriesLabel(Highcharts);
+SeriesLabel(Highstock);
 
 const bgColors: Record<string, string> = {
   'carrot-orange': '#102433',
