@@ -22,7 +22,6 @@ NoData(Highstock);
 BrandDark(Highstock);
 
 SeriesLabel(Highcharts);
-SeriesLabel(Highstock);
 
 const bgColors: Record<string, string> = {
   'carrot-orange': '#102433',
