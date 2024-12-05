@@ -27,19 +27,12 @@ Highcharts.theme = {
       fontSize: '15px',
     },
   },
-};
-if (useChartsBackgroundColor != 'true') {
-  Highcharts.theme = {
+  ...(useChartsBackgroundColor !== 'true' && {
     chart: {
       backgroundColor: theme ? bgColors[theme] : '#282a36',
     },
-    tooltip: {
-      style: {
-        fontSize: '15px',
-      },
-    },
-  };
-}
+  }),
+};
 
 Highcharts.setOptions(Highcharts.theme);
 Highstock.setOptions(Highcharts.theme);
