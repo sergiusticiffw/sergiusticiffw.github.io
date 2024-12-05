@@ -9,19 +9,10 @@ import routes from '@config/routes';
 import Navbar from '@components/Navbar';
 import Highcharts from 'highcharts';
 import Highstock from 'highcharts/highstock';
-import Boost from 'highcharts/modules/boost';
-import SeriesLabel from 'highcharts/modules/series-label';
 import BrandDark from 'highcharts/themes/brand-dark';
-import NoData from 'highcharts/modules/no-data-to-display';
 
-Boost(Highcharts);
-BrandDark(Highcharts);
-NoData(Highcharts);
-Boost(Highstock);
-NoData(Highstock);
-BrandDark(Highstock);
-
-SeriesLabel(Highcharts);
+Highcharts.setOptions(BrandDark.theme);
+Highstock.setOptions(BrandDark.theme);
 
 const bgColors: Record<string, string> = {
   'carrot-orange': '#102433',
@@ -40,8 +31,8 @@ Highcharts.theme = {
   },
 };
 
-Highcharts.setOptions(Highcharts.theme);
-Highstock.setOptions(Highcharts.theme);
+// Highcharts.setOptions(Highcharts.theme);
+// Highstock.setOptions(Highcharts.theme);
 Highcharts.setOptions({
   plotOptions: {
     series: {
