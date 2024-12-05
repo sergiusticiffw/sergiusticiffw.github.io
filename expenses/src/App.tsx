@@ -21,9 +21,9 @@ const bgColors: Record<string, string> = {
 const theme = localStorage.getItem('theme') || 'blue-pink-gradient';
 
 Highcharts.theme = {
-  chart: {
-    backgroundColor: theme ? bgColors[theme] : '#282a36',
-  },
+  // chart: {
+  //   backgroundColor: theme ? bgColors[theme] : '#282a36',
+  // },
   tooltip: {
     style: {
       fontSize: '15px',
@@ -31,8 +31,8 @@ Highcharts.theme = {
   },
 };
 
-// Highcharts.setOptions(Highcharts.theme);
-// Highstock.setOptions(Highcharts.theme);
+Highcharts.setOptions(Highcharts.theme);
+Highstock.setOptions(Highcharts.theme);
 Highcharts.setOptions({
   plotOptions: {
     series: {
