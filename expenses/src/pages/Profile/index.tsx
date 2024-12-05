@@ -14,12 +14,13 @@ const Profile = () => {
   const showNotification = useNotification();
   const dispatch = useAuthDispatch();
   const { dataDispatch } = useData();
-  const { userDetails, token, currency, weeklyBudget, monthlyBudget } =
+  const { userDetails, token, currency, weeklyBudget, monthlyBudget, useChartsBackgroundColor } =
     useAuthState() as AuthState;
   let { theme } = useAuthState() as AuthState;
   const [state, setState] = useState({
     weeklyBudget: weeklyBudget,
     monthlyBudget: monthlyBudget,
+    useChartsBackgroundColor: useChartsBackgroundColor,
   });
   theme = themeList[theme as keyof typeof themeList]
     ? theme
@@ -92,6 +93,21 @@ const Profile = () => {
     });
   };
 
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = event.target;
+    setState({
+      ...state,
+      [name]: checked,
+    });
+    // Persist to localStorage
+    localStorage.setItem(name, JSON.stringify(checked));
+    dispatch &&
+      dispatch({
+        type: 'UPDATE_USER',
+        payload: { [name]: checked },
+      });
+  };
+
   const sortedCurrencies = Object.entries(currencies).sort((a, b) => {
     return a[1] < b[1] ? -1 : 1;
   });
@@ -146,6 +162,16 @@ const Profile = () => {
           onChange={handleInputChange}
           onBlur={onBlur}
         />
+        <label htmlFor="useChartsBackgroundColor">
+          Use Charts Background Color
+          <input
+            type="checkbox"
+            name="useChartsBackgroundColor"
+            id="useChartsBackgroundColor"
+            checked={state.useChartsBackgroundColor}
+            onChange={handleCheckboxChange}
+          />
+        </label>
         <button className="button logout" onClick={handleLogout}>
           <FaSignOutAlt />
         </button>

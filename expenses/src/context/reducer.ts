@@ -27,6 +27,10 @@ const monthlyBudget = localStorage.getItem('monthlyBudget')
   ? JSON.parse(localStorage.getItem('monthlyBudget')!)
   : '';
 
+const useChartsBackgroundColor = localStorage.getItem('useChartsBackgroundColor')
+  ? JSON.parse(localStorage.getItem('useChartsBackgroundColor')!)
+  : '';
+
 export const initialState = {
   userDetails: '' || user,
   token: '' || token,
@@ -37,6 +41,7 @@ export const initialState = {
   theme: theme || 'blue-pink-gradient',
   weeklyBudget,
   monthlyBudget,
+  useChartsBackgroundColor,
 };
 
 export const initialData = {

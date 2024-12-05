@@ -19,17 +19,27 @@ const bgColors: Record<string, string> = {
   inchworm: '#201f1e',
 };
 const theme = localStorage.getItem('theme') || 'blue-pink-gradient';
+const useChartsBackgroundColor = localStorage.getItem('useChartsBackgroundColor');
 
 Highcharts.theme = {
-  // chart: {
-  //   backgroundColor: theme ? bgColors[theme] : '#282a36',
-  // },
   tooltip: {
     style: {
       fontSize: '15px',
     },
   },
 };
+if (useChartsBackgroundColor != 'true') {
+  Highcharts.theme = {
+    chart: {
+      backgroundColor: theme ? bgColors[theme] : '#282a36',
+    },
+    tooltip: {
+      style: {
+        fontSize: '15px',
+      },
+    },
+  };
+}
 
 Highcharts.setOptions(Highcharts.theme);
 Highstock.setOptions(Highcharts.theme);

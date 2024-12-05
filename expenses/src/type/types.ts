@@ -45,6 +45,7 @@ export interface AuthState {
   loading: boolean;
   errorMessage: null | any;
   userDetails: string | any;
+  useChartsBackgroundColor: string | any;
 }
 
 export interface DataItems {
