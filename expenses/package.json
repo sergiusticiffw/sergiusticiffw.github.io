@@ -12,8 +12,8 @@
     "crypto-js": "^4.2.0",
     "highcharts": "^12.0.2",
     "highcharts-react-official": "^3.2.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-icons": "^5.0.1",
     "react-router-dom": "^7.0.1",
     "sass": "^1.69.7"
@@ -24,11 +24,11 @@
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
-    "@types/react-dom": "^18.2.22",
+    "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.2.1",
     "prettier": "^3.2.5",
     "typescript": "^5.4.2",
-    "vite": "^6.0.0",
+    "vite": "^6.0.3",
     "vite-plugin-pwa": "^0.21.0",
     "vite-tsconfig-paths": "^5.0.1"
   },
