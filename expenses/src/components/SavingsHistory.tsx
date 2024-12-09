@@ -85,10 +85,6 @@ const SavingsHistory = () => {
       type: 'datetime',
       crosshair: true,
     },
-    tooltip: {
-      valueSuffix: '%',
-      xDateFormat: '%e %b %Y',
-    },
     credits: {
       enabled: false,
     },

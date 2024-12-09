@@ -117,11 +117,6 @@ const DailyAverageTrend = () => {
       type: 'datetime',
       crosshair: true,
     },
-    tooltip: {
-      xDateFormat: '%e %b %Y',
-      shared: true,
-      split: true,
-    },
     credits: {
       enabled: false,
     },

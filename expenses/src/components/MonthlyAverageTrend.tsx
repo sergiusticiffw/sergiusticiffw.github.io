@@ -80,11 +80,6 @@ const MonthlyAverageTrend = () => {
       type: 'datetime',
       crosshair: true,
     },
-    tooltip: {
-      xDateFormat: '%B %Y',
-      shared: true,
-      split: true,
-    },
     credits: {
       enabled: false,
     },
