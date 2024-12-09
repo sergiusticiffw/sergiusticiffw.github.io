@@ -19,7 +19,9 @@ const bgColors: Record<string, string> = {
   inchworm: '#201f1e',
 };
 const theme = localStorage.getItem('theme') || 'blue-pink-gradient';
-const useChartsBackgroundColor = localStorage.getItem('useChartsBackgroundColor');
+const useChartsBackgroundColor = localStorage.getItem(
+  'useChartsBackgroundColor'
+);
 
 Highcharts.theme = {
   tooltip: {

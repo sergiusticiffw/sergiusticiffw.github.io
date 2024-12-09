@@ -14,8 +14,14 @@ const Profile = () => {
   const showNotification = useNotification();
   const dispatch = useAuthDispatch();
   const { dataDispatch } = useData();
-  const { userDetails, token, currency, weeklyBudget, monthlyBudget, useChartsBackgroundColor } =
-    useAuthState() as AuthState;
+  const {
+    userDetails,
+    token,
+    currency,
+    weeklyBudget,
+    monthlyBudget,
+    useChartsBackgroundColor,
+  } = useAuthState() as AuthState;
   let { theme } = useAuthState() as AuthState;
   const [state, setState] = useState({
     weeklyBudget: weeklyBudget,

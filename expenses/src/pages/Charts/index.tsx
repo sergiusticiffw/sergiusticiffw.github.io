@@ -4,34 +4,18 @@ import { fetchData } from '@utils/utils';
 import Filters from '@components/Filters';
 import { AuthState } from '@type/types';
 import MonthlySavingsTrend from '@components/MonthlySavingsTrend';
+import MonthlyTotals from '@components/MonthlyTotals';
+import YearAverageTrend from '@components/YearAverageTrend';
+import MonthlyComparisonTrend from '@components/MonthlyComparisonTrend';
+import AllTimeSpendings from '@components/AllTimeSpendings';
+import MonthlyAverage from '@components/MonthlyAverage';
+import SavingsHistory from '@components/SavingsHistory';
+import MonthlyAverageTrend from '@components/MonthlyAverageTrend';
+import DailyAverage from '@components/DailyAverage';
+import DailyAverageTrend from '@components/DailyAverageTrend';
+import LastTwoMonthsAverage from '@components/LastTwoMonthsAverage';
 
 const Charts = () => {
-  const AllTimeSpendings = React.lazy(
-    () => import('@components/AllTimeSpendings')
-  );
-  const MonthlyAverage = React.lazy(() => import('@components/MonthlyAverage'));
-  const SavingsHistory = React.lazy(() => import('@components/SavingsHistory'));
-  const DailyAverage = React.lazy(() => import('@components/DailyAverage'));
-  const MonthlyComparisonTrend = React.lazy(
-    () => import('@components/MonthlyComparisonTrend')
-  );
-  const DailyAverageTrend = React.lazy(
-    () => import('@components/DailyAverageTrend')
-  );
-  const LastTwoMonthsAverage = React.lazy(
-    () => import('@components/LastTwoMonthsAverage')
-  );
-  const YearAverageTrend = React.lazy(
-    () => import('@components/YearAverageTrend')
-  );
-  const MonthlyAverageTrend = React.lazy(
-    () => import('@components/MonthlyAverageTrend')
-  );
-  const MonthlyTotals = React.lazy(() => import('@components/MonthlyTotals'));
-  const MonthlySavingsTrend = React.lazy(
-    () => import('@components/MonthlySavingsTrend')
-  );
-
   const { data, dataDispatch } = useData();
   const noData = data.groupedData === null;
   const noEntries = Object.keys(data.raw).length === 0;
@@ -58,9 +42,7 @@ const Charts = () => {
         !noEntries && (
           <div className="charts-page">
             <div className="charts-section">
-              <Suspense fallback="">
-                <MonthlyTotals />
-              </Suspense>
+              <MonthlyTotals />
             </div>
 
             <div className="charts-section">

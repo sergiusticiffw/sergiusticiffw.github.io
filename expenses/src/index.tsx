@@ -8,7 +8,9 @@ import { registerSW } from 'virtual:pwa-register';
 registerSW({ immediate: true, scope: '/expenses/' });
 
 // Create the root and render the app
-const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
 
 root.render(
   <React.StrictMode>

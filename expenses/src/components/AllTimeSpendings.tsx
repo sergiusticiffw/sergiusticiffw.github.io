@@ -22,7 +22,7 @@ const AllTimeSpendings = () => {
     },
     title: {
       text: "All Time Spending's",
-      verticalAlign: 'middle'
+      verticalAlign: 'middle',
     },
     tooltip: {
       pointFormat: '{point.y} {series.name} ({point.percentage:.2f})%',
@@ -32,8 +32,8 @@ const AllTimeSpendings = () => {
         allowPointSelect: true,
         innerSize: '70%',
         dataLabels: {
-          enabled: false
-        }
+          enabled: false,
+        },
       },
     },
     series: [

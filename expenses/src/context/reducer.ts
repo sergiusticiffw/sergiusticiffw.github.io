@@ -27,7 +27,9 @@ const monthlyBudget = localStorage.getItem('monthlyBudget')
   ? JSON.parse(localStorage.getItem('monthlyBudget')!)
   : '';
 
-const useChartsBackgroundColor = localStorage.getItem('useChartsBackgroundColor')
+const useChartsBackgroundColor = localStorage.getItem(
+  'useChartsBackgroundColor'
+)
   ? JSON.parse(localStorage.getItem('useChartsBackgroundColor')!)
   : '';
 
