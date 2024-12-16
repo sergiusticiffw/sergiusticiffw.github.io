@@ -11,6 +11,7 @@ import Modal from '@components/Modal';
 import TransactionsTable from '@components/TransactionsTable';
 import { AuthState, TransactionOrIncomeItem, DataState } from '@type/types';
 import TransactionForm from '@components/TransactionForm';
+import MostExpensiveProductDisplay from '@components/MostExpensiveProductDisplay';
 import { deleteNode, fetchData, formatNumber } from '@utils/utils';
 import { notificationType, colorMap } from '@utils/constants';
 import FullCalendar from '@fullcalendar/react';
@@ -31,9 +32,6 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   currentMonth,
 }) => {
   const { theme } = useAuthState() as AuthState;
-  const MostExpensiveProductDisplay = React.lazy(
-    () => import('@components/MostExpensiveProductDisplay')
-  );
   const { data, dataDispatch } = useData() as DataState;
   const items = data.filtered_raw || data.raw;
   const showNotification = useNotification();
@@ -337,9 +335,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
         </div>
       )}
       <div className="charts-section">
-        <Suspense fallback="">
-          <MostExpensiveProductDisplay />
-        </Suspense>
+        <MostExpensiveProductDisplay />
       </div>
       <Modal
         show={showDeleteModal}

@@ -5,17 +5,13 @@ import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import Modal from '@components/Modal';
 import IncomeTable from '@components/IncomeTable';
+import YearIncomeAverageTrend from '@components/YearIncomeAverageTrend';
+import MonthlyComparisonIncomeTrend from '@components/MonthlyComparisonIncomeTrend';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import { FaPlus, FaTrash, FaCaretDown } from 'react-icons/fa';
 
 const Income = () => {
-  const YearIncomeAverageTrend = React.lazy(
-    () => import('@components/YearIncomeAverageTrend')
-  );
-  const MonthlyComparisonIncomeTrend = React.lazy(
-    () => import('@components/MonthlyComparisonIncomeTrend')
-  );
   const showNotification = useNotification();
   const { token } = useAuthState() as AuthState;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -169,12 +165,8 @@ const Income = () => {
           )}
           {data.incomeData?.length ? (
             <div className="charts-section">
-              <Suspense fallback="">
-                <YearIncomeAverageTrend />
-              </Suspense>
-              <Suspense fallback="">
-                <MonthlyComparisonIncomeTrend />
-              </Suspense>
+              <YearIncomeAverageTrend />
+              <MonthlyComparisonIncomeTrend />
             </div>
           ) : (
             ''
