@@ -98,11 +98,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       }
     );
   };
-  const today: Date = new Date();
-  const offset = today.getTimezoneOffset();
-  const maxDay = new Date(today.getTime() - offset * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
 
   return (
     <div>
@@ -121,7 +116,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           placeholder="Event date"
           type="date"
           name="field_date"
-          max={maxDay}
           min={addOneDay(startDate)}
           value={formState.field_date}
           onChange={handleChange}
