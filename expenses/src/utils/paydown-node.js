@@ -1072,8 +1072,7 @@ function getNumberOfMonths(first_date, second_date) {
   );
   return (
     (date_2.getFullYear() - date_1.getFullYear()) * 12 +
-    (date_2.getMonth() - date_1.getMonth()) +
-    1
+    (date_2.getMonth() - date_1.getMonth())
   );
 }
 
