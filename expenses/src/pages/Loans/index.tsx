@@ -187,7 +187,10 @@ const Loans = () => {
                         }
                       >
                         <td>
-                          <Link to={`/expenses/loan/${loan.id}`}>
+                          <Link
+                            to={`/expenses/loan/${loan.id}`}
+                            style={{ color: 'white', textDecoration: 'none' }}
+                          >
                             {loan.title}
                           </Link>
                         </td>
