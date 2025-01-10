@@ -217,7 +217,13 @@ export const suggestions = {
   3: ['market', 'apa', 'lunch', 'inghetata', 'straus/glovo food'],
   4: ['flori', 'Nelea', 'zi de nastere'],
   5: ['igiena/curatinie', 'scutece', 'Leo'],
-  6: ['apartment rent'],
+  6: [
+    'house',
+    'rata la jakala/ffw',
+    'rata la ipoteca',
+    'rata la cred de consum',
+    'apartment rent'
+  ],
   7: ['farmacie', 'stomatolog', 'pediatru', 'Nelea', 'Leo', 'sport'],
   8: ['haircut', 'nails', 'Nelea'],
   9: [
@@ -232,7 +238,7 @@ export const suggestions = {
   10: ['gaz', 'lumina', 'starnet', 'infocom', 'orange', 'infobon'],
   11: ['Romania'],
   12: ['Nelea', 'Leo', 'dadaca', 'jucarii', 'teren de joaca'],
-  13: ['rata la jakala/ffw', 'rata la ipoteca', 'rata la cred de consum', 'house'],
+  13: [],
   14: ['vin', 'bere', 'whiskey', 'cognac', 'gin', 'cocktails'],
 };
 
