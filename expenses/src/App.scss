@@ -969,3 +969,47 @@ li.selected-suggestion {
   justify-content: center;
   gap: 5px;
 }
+
+.table-wrapper-loan {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+}
+
+.table-wrapper-loan .table-fixed {
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.table-wrapper-loan .table-scrollable {
+  flex: 1 1 auto;
+  overflow-x: auto;
+}
+
+.table-wrapper-loan .expenses-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table-wrapper-loan .expenses-table th,
+.table-wrapper-loan .expenses-table td {
+  //border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.table-wrapper-loan .expenses-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.table-wrapper-loan .table-fixed th,
+.table-wrapper-loan .table-fixed td {
+  min-width: 80px;
+}
+
+.table-wrapper-loan .table-scrollable th,
+.table-wrapper-loan .table-scrollable td {
+  min-width: 120px;
+}

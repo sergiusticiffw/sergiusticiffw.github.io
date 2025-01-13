@@ -222,7 +222,7 @@ export const suggestions = {
     'rata la jakala/ffw',
     'rata la ipoteca',
     'rata la cred de consum',
-    'apartment rent'
+    'apartment rent',
   ],
   7: ['farmacie', 'stomatolog', 'pediatru', 'Nelea', 'Leo', 'sport'],
   8: ['haircut', 'nails', 'Nelea'],
