@@ -13,7 +13,15 @@ export default function Paydown() {
 
     let lastPaymentDate;
     if (events_array) {
-      lastPaymentDate = events_array[0]?.date;
+      const filteredEvents = events_array.filter(event => event.pay_installment !== undefined);
+      // Helper to parse date strings into Date objects
+      const parseDate = dateStr => {
+        const [day, month, year] = dateStr.split('.').map(Number);
+        return new Date(year, month - 1, day); // Month is 0-based in JS Date
+      };
+      const sortedByDate = filteredEvents.sort((a, b) => parseDate(b.date) - parseDate(a.date));
+      const lastEventByDate = sortedByDate[0];
+      lastPaymentDate = lastEventByDate ? lastEventByDate.date : null;
       local_array = events_array.slice();
     }
 
@@ -517,6 +525,11 @@ function _Paydown() {
     this.sum_of_fees = this.initial_fee;
 
     for (index = 0; index < this.event_array.length; index++) {
+      if (this.event_array[index].hasOwnProperty('recurring_amount')) {
+        // recurring payment amount changes
+        if(this.current_recurring_payment === null) { throw new Error('Can\'t do recurring_amount: initial recurring data missing or invalid!') }
+        this.current_recurring_payment = this.event_array[index].recurring_amount
+      }
       if (this.event_array[index].hasOwnProperty('pay_single_fee')) {
         this.sum_of_fees += this.event_array[index].pay_single_fee;
         this.current_single_fee = this.event_array[index].pay_single_fee;
@@ -742,6 +755,12 @@ function _Paydown() {
         throw new Error(
           'this.check_and_add_event: invalid rate in event ' + event.date
         );
+      }
+    }
+
+    if (event.hasOwnProperty('recurring_amount')) {
+      if( !number_is_valid(event.recurring_amount) ) {
+        throw new Error('this.check_and_add_event: invalid recurring_amount in event ' + event.date)
       }
     }
 

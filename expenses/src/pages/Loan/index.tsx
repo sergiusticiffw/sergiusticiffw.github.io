@@ -52,6 +52,7 @@ const Loan = () => {
         ...(item.fr ? { rate: transformToNumber(item.fr) } : {}),
         ...(item.fpi ? { pay_installment: transformToNumber(item.fpi) } : {}),
         ...(item.fpsf ? { pay_single_fee: transformToNumber(item.fpsf) } : {}),
+        ...(item.fnra ? { recurring_amount: transformToNumber(item.fnra) } : {}),
       };
     }) || [];
 
@@ -71,9 +72,6 @@ const Loan = () => {
           recurring: {
             first_payment_date: transformDateFormat(loan.pdt),
             ...(loan.frpd ? { payment_day: transformToNumber(loan.frpd) } : {}),
-            ...(loan.frpp
-              ? { payment_period: transformToNumber(loan.frpp) }
-              : {}),
           },
         }
       : {}),

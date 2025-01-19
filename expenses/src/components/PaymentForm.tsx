@@ -16,6 +16,7 @@ interface PaymentFormProps {
     field_rate?: number;
     field_pay_installment?: number;
     field_pay_single_fee?: number;
+    field_new_recurring_amount?: number;
   };
   onSuccess: () => void;
   startDate?: string;
@@ -38,6 +39,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     field_rate: '',
     field_pay_installment: '',
     field_pay_single_fee: '',
+    field_new_recurring_amount: '',
     field_loan_reference: id,
   };
   const [formState, setFormState] = useState(
@@ -62,6 +64,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       field_rate: [formState.field_rate],
       field_pay_installment: [formState.field_pay_installment],
       field_pay_single_fee: [formState.field_pay_single_fee],
+      // field_new_recurring_amount: [formState.field_new_recurring_amount],
       field_loan_reference: [id],
     };
     const fetchOptions = {
@@ -134,6 +137,15 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           type="number"
           name="field_pay_installment"
           value={formState.field_pay_installment}
+          onChange={handleChange}
+          min={0}
+          step={0.01}
+        />
+        <input
+          placeholder="New recurring amount"
+          type="number"
+          name="field_new_recurring_amount"
+          value={formState.field_new_recurring_amount}
           onChange={handleChange}
           min={0}
           step={0.01}

@@ -27,6 +27,7 @@ const PaymentDetails = (props) => {
     field_rate: '',
     field_pay_installment: '',
     field_pay_single_fee: '',
+    field_new_recurring_amount: '',
   });
 
   const {
@@ -47,6 +48,7 @@ const PaymentDetails = (props) => {
       field_rate: item.fr,
       field_pay_installment: item.fpi,
       field_pay_single_fee: item.fpsf,
+      field_new_recurring_amount: item.fnra,
     });
     setShowEditModal(true);
   };
