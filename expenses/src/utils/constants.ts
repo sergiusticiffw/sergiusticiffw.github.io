@@ -224,7 +224,7 @@ export const suggestions = {
     'rata la cred de consum',
     'apartment rent',
   ],
-  7: ['farmacie', 'stomatolog', 'pediatru', 'Nelea', 'Leo', 'sport'],
+  7: ['farmacie', 'stomatolog', 'pediatru', 'Nelea', 'Leo', 'sport', 'asigurare'],
   8: ['haircut', 'nails', 'Nelea'],
   9: [
     'benzina',

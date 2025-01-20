@@ -433,6 +433,7 @@ function _Paydown() {
       this.round(period_interest),
       this.round(this.current_principal),
       this.round(fee),
+      this.event_array[index].was_payed,
     ]);
     return true;
   };
@@ -775,6 +776,7 @@ function _Paydown() {
             event.date
         );
       } else {
+        event.was_payed = true;
         event.pay_recurring = true;
       }
     }

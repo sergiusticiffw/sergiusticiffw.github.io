@@ -14,7 +14,7 @@ const AmortizationScheduleTable = ({ amortizationSchedule }) => {
           </thead>
           <tbody>
             {amortizationSchedule?.map((element) => (
-              <tr key={element[0]} data-id={element[0]}>
+              <tr key={element[0]} data-id={element[0]} className={element[7] ? 'was-payed' : null}>
                 <td>{element[0]}</td>
                 <td>{formatNumber(element[1])}</td>
               </tr>
@@ -35,7 +35,7 @@ const AmortizationScheduleTable = ({ amortizationSchedule }) => {
           </thead>
           <tbody>
             {amortizationSchedule?.map((element) => (
-              <tr key={element[0]} data-id={element[0]}>
+              <tr key={element[0]} data-id={element[0]} className={element[7] ? 'was-payed' : null}>
                 <td>{formatNumber(element[2])}</td>
                 <td>{formatNumber(element[3])}</td>
                 <td>{formatNumber(element[4])}</td>
