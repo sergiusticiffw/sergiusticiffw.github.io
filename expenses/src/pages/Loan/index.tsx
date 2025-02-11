@@ -53,7 +53,9 @@ const Loan = () => {
         ...(item.fr ? { rate: transformToNumber(item.fr) } : {}),
         ...(item.fpi ? { pay_installment: transformToNumber(item.fpi) } : {}),
         ...(item.fpsf ? { pay_single_fee: transformToNumber(item.fpsf) } : {}),
-        ...(item.fnra ? { recurring_amount: transformToNumber(item.fnra) } : {}),
+        ...(item.fnra
+          ? { recurring_amount: transformToNumber(item.fnra) }
+          : {}),
       };
     }) || [];
 
@@ -81,12 +83,13 @@ const Loan = () => {
   const amortizationSchedule = [];
   let paydown;
   const calculator = new Paydown();
+  let errorMessage;
 
   try {
     paydown = calculator.calculate(loanData, payments, amortizationSchedule);
   } catch (err) {
     console.log(err);
-    return <Notification message={err?.message} type='error' />;
+    errorMessage = err?.message;
   }
 
   return (
@@ -122,6 +125,9 @@ const Loan = () => {
       </Modal>
 
       <PaymentDetails loan={loan} payments={filteredData?.data || []} />
+      {errorMessage ? (
+        <Notification message={errorMessage} type="error" />
+      ) : null}
       <LoanDetails loan={paydown} amortizationSchedule={amortizationSchedule} />
     </div>
   );
