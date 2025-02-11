@@ -14,6 +14,7 @@ import {
   transformDateFormat,
 } from '@utils/utils';
 import { FaPen } from 'react-icons/fa';
+import Notification from '@components/Notification';
 
 const Loan = () => {
   const { id } = useParams();
@@ -85,6 +86,7 @@ const Loan = () => {
     paydown = calculator.calculate(loanData, payments, amortizationSchedule);
   } catch (err) {
     console.log(err);
+    return <Notification message={err?.message} type='error' />;
   }
 
   return (
