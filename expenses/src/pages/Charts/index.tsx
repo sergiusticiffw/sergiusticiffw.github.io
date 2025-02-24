@@ -1,6 +1,7 @@
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { fetchData } from '@utils/utils';
+import { availableCharts } from '@utils/constants';
 import Filters from '@components/Filters';
 import { AuthState } from '@type/types';
 import MonthlySavingsTrend from '@components/MonthlySavingsTrend';
@@ -15,6 +16,20 @@ import DailyAverage from '@components/DailyAverage';
 import DailyAverageTrend from '@components/DailyAverageTrend';
 import LastTwoMonthsAverage from '@components/LastTwoMonthsAverage';
 
+const componentMap = {
+  MonthlyTotals,
+  YearAverageTrend,
+  MonthlyComparisonTrend,
+  AllTimeSpendings,
+  MonthlyAverage,
+  SavingsHistory,
+  MonthlySavingsTrend,
+  MonthlyAverageTrend,
+  DailyAverage,
+  DailyAverageTrend,
+  LastTwoMonthsAverage,
+};
+
 const Charts = () => {
   const { data, dataDispatch } = useData();
   const noData = data.groupedData === null;
@@ -23,11 +38,19 @@ const Charts = () => {
   const loading = data.loading;
   const dispatch = useAuthDispatch();
 
+  const [visibleCharts, setVisibleCharts] = useState<string[]>([]);
+
   useEffect(() => {
     if (noData) {
       fetchData(token, dataDispatch, dispatch);
     }
   }, [data, dataDispatch, noData, token, dispatch]);
+
+  useEffect(() => {
+    const storedCharts =
+      JSON.parse(localStorage.getItem('visibleCharts')) || availableCharts;
+    setVisibleCharts(storedCharts);
+  }, []);
 
   return (
     <div>
@@ -41,81 +64,16 @@ const Charts = () => {
       ) : (
         !noEntries && (
           <div className="charts-page">
-            <div className="charts-section">
-              <MonthlyTotals />
-            </div>
-
-            <div className="charts-section">
-              <Suspense fallback="">
-                <YearAverageTrend />
-              </Suspense>
-            </div>
-
-            <div className="charts-section">
-              <Suspense fallback="">
-                <MonthlyComparisonTrend />
-              </Suspense>
-            </div>
-
-            {!data.filtered && (
-              <div className="charts-section">
-                <Suspense fallback="">
-                  <AllTimeSpendings />
-                </Suspense>
-              </div>
-            )}
-
-            {!data.filtered && (
-              <div className="charts-section">
-                <Suspense fallback="">
-                  <MonthlyAverage />
-                </Suspense>
-              </div>
-            )}
-
-            {!data.filtered && (
-              <div className="charts-section">
-                <Suspense fallback="">
-                  <SavingsHistory />
-                </Suspense>
-              </div>
-            )}
-
-            {!data.filtered && (
-              <div className="charts-section">
-                <Suspense fallback="">
-                  <MonthlySavingsTrend />
-                </Suspense>
-              </div>
-            )}
-
-            <div className="charts-section">
-              <Suspense fallback="">
-                <MonthlyAverageTrend />
-              </Suspense>
-            </div>
-
-            {!data.filtered && (
-              <div className="charts-section">
-                <Suspense fallback="">
-                  <DailyAverage />
-                </Suspense>
-              </div>
-            )}
-
-            <div className="charts-section">
-              <Suspense fallback="">
-                <DailyAverageTrend />
-              </Suspense>
-            </div>
-
-            {!data.filtered && (
-              <div className="charts-section">
-                <Suspense fallback="">
-                  <LastTwoMonthsAverage />
-                </Suspense>
-              </div>
-            )}
+            {visibleCharts.map((chartKey) => {
+              const ChartComponent = componentMap[chartKey];
+              return ChartComponent ? (
+                <div key={chartKey} className="charts-section">
+                  <Suspense fallback="">
+                    <ChartComponent />
+                  </Suspense>
+                </div>
+              ) : null;
+            })}
           </div>
         )
       )}

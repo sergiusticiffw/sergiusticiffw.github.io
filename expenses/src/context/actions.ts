@@ -1,5 +1,4 @@
 import { LoginPayload, UserData } from '@type/types';
-import AES from 'crypto-js/aes';
 
 const ROOT_URL = 'https://dev-expenses-api.pantheonsite.io';
 
@@ -20,11 +19,7 @@ export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
 
     if (data.current_user) {
       dispatch({ type: 'LOGIN_SUCCESS', payload: data });
-      const encryptedData = AES.encrypt(
-        JSON.stringify(data),
-        import.meta.env.VITE_CRYPT_KEY
-      ).toString();
-      localStorage.setItem('currentUser', encryptedData);
+      localStorage.setItem('currentUser', JSON.stringify(data));
       return data;
     }
 
@@ -37,6 +32,6 @@ export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
 export const logout = async (dispatch: any, dataDispatch: any) => {
   await dispatch({ type: 'LOGOUT' });
   await dataDispatch({ type: 'REMOVE_DATA' });
-  await localStorage.removeItem('currentUser');
-  await localStorage.removeItem('token');
+  localStorage.removeItem('currentUser');
+  localStorage.removeItem('token');
 };

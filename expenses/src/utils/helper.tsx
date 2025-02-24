@@ -15,7 +15,7 @@ import {
   FaPlane,
   FaUsers,
   FaChartLine,
-  FaTools
+  FaTools,
 } from 'react-icons/fa';
 
 export const getFinancialStabilityIcon = (

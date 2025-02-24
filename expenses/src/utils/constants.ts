@@ -315,3 +315,17 @@ export const colorMap = {
     textColor: '#333333', // Dark gray for better readability on soft green
   },
 };
+
+export const availableCharts = [
+  'MonthlyTotals',
+  'YearAverageTrend',
+  'MonthlyComparisonTrend',
+  'AllTimeSpendings',
+  'MonthlyAverage',
+  'SavingsHistory',
+  'MonthlySavingsTrend',
+  'MonthlyAverageTrend',
+  'DailyAverage',
+  'DailyAverageTrend',
+  'LastTwoMonthsAverage',
+];

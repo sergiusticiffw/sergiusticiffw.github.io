@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '../../context';
 import { useNotification } from '@context/notification';
 import { logout } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
-import { currencies } from '@utils/constants';
 import { FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
 import { fetchRequest } from '@utils/utils';
-import { notificationType, themeList } from '@utils/constants';
+import {
+  notificationType,
+  themeList,
+  availableCharts,
+  currencies,
+} from '@utils/constants';
 import { AuthState } from '@type/types';
 import { googleLogout } from '@react-oauth/google';
 
@@ -27,6 +31,8 @@ const Profile = () => {
     weeklyBudget: weeklyBudget,
     monthlyBudget: monthlyBudget,
     useChartsBackgroundColor: useChartsBackgroundColor,
+    visibleCharts:
+      JSON.parse(localStorage.getItem('visibleCharts')) || availableCharts,
   });
   theme = themeList[theme as keyof typeof themeList]
     ? theme
@@ -119,6 +125,25 @@ const Profile = () => {
   });
   const [blink, setBlink] = useState(false);
 
+  useEffect(() => {
+    localStorage.setItem('visibleCharts', JSON.stringify(state.visibleCharts));
+  }, [state.visibleCharts]);
+
+  const handleChartVisibilityChange = (event) => {
+    const { name, checked } = event.target;
+    setState((prevState) => {
+      let updatedCharts;
+      if (checked) {
+        updatedCharts = [...prevState.visibleCharts, name]; // Append at the end
+      } else {
+        updatedCharts = prevState.visibleCharts.filter(
+          (chart) => chart !== name
+        ); // Remove but keep order
+      }
+      return { ...prevState, visibleCharts: updatedCharts };
+    });
+  };
+
   return (
     <div className="user-page">
       <div className={blink ? 'user-avatar saved' : 'user-avatar'}>
@@ -178,6 +203,18 @@ const Profile = () => {
             onChange={handleCheckboxChange}
           />
         </label>
+        <h4>Charts Visibility</h4>
+        {availableCharts.map((chart) => (
+          <label key={chart}>
+            <input
+              type="checkbox"
+              name={chart}
+              checked={state.visibleCharts.includes(chart)}
+              onChange={handleChartVisibilityChange}
+            />
+            {chart}
+          </label>
+        ))}
         <button className="button logout" onClick={handleLogout}>
           <FaSignOutAlt />
         </button>
