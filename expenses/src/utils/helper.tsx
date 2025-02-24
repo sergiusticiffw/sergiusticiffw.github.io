@@ -7,7 +7,6 @@ import {
   FaMusic,
   FaUtensils,
   FaGift,
-  FaHouseUser,
   FaHome,
   FaHeartbeat,
   FaUser,
@@ -16,6 +15,7 @@ import {
   FaPlane,
   FaUsers,
   FaChartLine,
+  FaTools
 } from 'react-icons/fa';
 
 export const getFinancialStabilityIcon = (
@@ -40,7 +40,7 @@ export const getIconForCategory = (category: string) => {
     case 'Gifts':
       return <FaGift color="#D0021B" />;
     case 'Household Items/Supplies':
-      return <FaHouseUser color="#9B9B9B" />;
+      return <FaTools color="#9B9B9B" />;
     case 'Housing':
       return <FaHome color="#8B572A" />;
     case 'Medical / Healthcare':
