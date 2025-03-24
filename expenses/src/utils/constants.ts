@@ -243,7 +243,7 @@ export const suggestions = {
     'taxi',
     'parcare',
   ],
-  10: ['gaz', 'lumina', 'apa canal', 'orange', 'block'],
+  10: ['gaz', 'lumina', 'apa canal', 'orange', 'bloc'],
   11: ['Romania'],
   12: ['Nelea', 'Leo', 'dadaca', 'jucarii', 'teren de joaca'],
   13: [],
