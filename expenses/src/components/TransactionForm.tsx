@@ -94,12 +94,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     );
   };
 
-  const today: Date = new Date();
-  const offset = today.getTimezoneOffset();
-  const maxDay = new Date(today.getTime() - offset * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
-
   const [suggestionData, setSuggestionData] = useState<string[]>(
     suggestions[formState.field_category as keyof typeof suggestions]
   );
@@ -136,7 +130,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           required
           placeholder="Date"
           type="date"
-          max={maxDay}
           name="field_date"
           value={formState.field_date}
           onChange={handleChange}

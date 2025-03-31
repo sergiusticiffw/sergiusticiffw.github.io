@@ -89,12 +89,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
     );
   };
 
-  const today: Date = new Date();
-  const offset = today.getTimezoneOffset();
-  const maxDay = new Date(today.getTime() - offset * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
-
   return (
     <div>
       <h2>{formType === 'add' ? 'Add income' : 'Edit income'}</h2>
@@ -113,7 +107,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
           required
           placeholder="Date"
           type="date"
-          max={maxDay}
           name="field_date"
           value={formState.field_date}
           onChange={handleChange}
