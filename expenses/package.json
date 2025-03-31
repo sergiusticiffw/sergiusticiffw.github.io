@@ -27,7 +27,7 @@
     "prettier": "^3.2.5",
     "typescript": "^5.4.2",
     "vite": "^6.0.3",
-    "vite-plugin-pwa": "^0.21.0",
+    "vite-plugin-pwa": "^1.0.0",
     "vite-tsconfig-paths": "^5.0.1"
   },
   "prettier": {
