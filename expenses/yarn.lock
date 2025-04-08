@@ -2034,9 +2034,9 @@ highcharts-react-official@^3.2.1:
   integrity sha512-hyQTX7ezCxl7JqumaWiGsroGWalzh24GedQIgO3vJbkGOZ6ySRAltIYjfxhrq4HszJOySZegotEF7v+haQ75UA==
 
 highcharts@^12.0.2:
-  version "12.1.2"
-  resolved "https://registry.yarnpkg.com/highcharts/-/highcharts-12.1.2.tgz#826114935b3ffb6b99dc906da00f137667a67fbb"
-  integrity sha512-paZ72q1um0zZT1sS+O/3JfXVSOLPmZ0zlo8SgRc0rEplPFPQUPc4VpkgQS8IUTueeOBgIWwVpAWyC9tBYbQ0kg==
+  version "12.2.0"
+  resolved "https://registry.yarnpkg.com/highcharts/-/highcharts-12.2.0.tgz#264633af7e815f0f6291c0d570b1da12e323e9de"
+  integrity sha512-UUN+osTP3aeGc4KmoMuWAjzpKif8GYHFozzYI4O8h1ILGof25M/ZGBpXLvgqf1z0LVh7N9eG7i0HnzMfjcR4nA==
 
 idb@^7.0.1:
   version "7.1.1"
@@ -2534,16 +2534,16 @@ react-refresh@^0.14.2:
   integrity sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA==
 
 react-router-dom@^7.0.1:
-  version "7.4.1"
-  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-7.4.1.tgz#fd913abb488364859c343881ecb7b7bc84b902f2"
-  integrity sha512-L3/4tig0Lvs6m6THK0HRV4eHUdpx0dlJasgCxXKnavwhh4tKYgpuZk75HRYNoRKDyDWi9QgzGXsQ1oQSBlWpAA==
+  version "7.5.0"
+  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-7.5.0.tgz#03201901e7114681d828dd67885b5034af477174"
+  integrity sha512-fFhGFCULy4vIseTtH5PNcY/VvDJK5gvOWcwJVHQp8JQcWVr85ENhJ3UpuF/zP1tQOIFYNRJHzXtyhU1Bdgw0RA==
   dependencies:
-    react-router "7.4.1"
+    react-router "7.5.0"
 
-react-router@7.4.1:
-  version "7.4.1"
-  resolved "https://registry.yarnpkg.com/react-router/-/react-router-7.4.1.tgz#0e6af1eefb8370d2cd79c961b87708afdb50fe64"
-  integrity sha512-Vmizn9ZNzxfh3cumddqv3kLOKvc7AskUT0dC1prTabhiEi0U4A33LmkDOJ79tXaeSqCqMBXBU/ySX88W85+EUg==
+react-router@7.5.0:
+  version "7.5.0"
+  resolved "https://registry.yarnpkg.com/react-router/-/react-router-7.5.0.tgz#649568e7e3b4133dee1dcf333d8a3a37b1967f58"
+  integrity sha512-estOHrRlDMKdlQa6Mj32gIks4J+AxNsYoE0DbTTxiMy2mPzZuWSDU+N85/r1IlNR7kGfznF3VCUlvc5IUO+B9g==
   dependencies:
     "@types/cookie" "^0.6.0"
     cookie "^1.0.1"
@@ -3041,9 +3041,9 @@ typed-array-length@^1.0.7:
     reflect.getprototypeof "^1.0.6"
 
 typescript@^5.4.2:
-  version "5.8.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.8.2.tgz#8170b3702f74b79db2e5a96207c15e65807999e4"
-  integrity sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==
+  version "5.8.3"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.8.3.tgz#92f8a3e5e3cf497356f4178c34cd65a7f5e8440e"
+  integrity sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==
 
 unbox-primitive@^1.1.0:
   version "1.1.0"
