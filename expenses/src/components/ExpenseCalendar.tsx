@@ -3,7 +3,6 @@ import React, {
   useEffect,
   useRef,
   useCallback,
-  Suspense,
 } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
@@ -178,27 +177,6 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
     }
   }, [date]);
 
-  const handleNextButtonClick = () => {
-    setCurrentMonthIndex(currentMonthIndex - 1);
-    // @ts-expect-error
-    const calendarApi = calendarRef.current.getApi();
-    calendarApi.next();
-  };
-
-  const handlePrevButtonClick = () => {
-    setCurrentMonthIndex(currentMonthIndex + 1);
-    // @ts-expect-error
-    const calendarApi = calendarRef.current.getApi();
-    calendarApi.prev();
-  };
-
-  const handleTodayButtonClick = () => {
-    setCurrentMonthIndex(0);
-    // @ts-expect-error
-    const calendarApi = calendarRef.current.getApi();
-    calendarApi.gotoDate(new Date());
-  };
-
   const handleDatesSet = (dateInfo: any) => {
     const startDate = new Date(dateInfo.startStr);
     const endDate = new Date(dateInfo.endStr);
@@ -298,35 +276,44 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
             eventTextColor={colorMap[theme].textColor}
             eventContent={renderEventContent}
             headerToolbar={{
-              left: '',
+              left: 'customPrev customNext customToday',
               center: '',
-              right: '',
+              right: ''
             }}
             datesSet={handleDatesSet}
+            customButtons={{
+              customPrev: {
+                text: 'Previous',
+                click: () => {
+                  if (!prevDisabled) {
+                    setCurrentMonthIndex(currentMonthIndex + 1);
+                    // @ts-expect-error
+                    calendarRef.current.getApi().prev();
+                  }
+                },
+              },
+              customNext: {
+                text: 'Next',
+                click: () => {
+                  if (!nextDisabled) {
+                    setCurrentMonthIndex(currentMonthIndex - 1);
+                    // @ts-expect-error
+                    calendarRef.current.getApi().next();
+                  }
+                },
+              },
+              customToday: {
+                text: 'Today',
+                click: () => {
+                  if (!todayDisabled) {
+                    setCurrentMonthIndex(0);
+                    // @ts-expect-error
+                    calendarRef.current.getApi().gotoDate(new Date());
+                  }
+                },
+              },
+            }}
           />
-        </div>
-        <div>
-          <button
-            disabled={prevDisabled}
-            className="button prev-btn desktop-only"
-            onClick={handlePrevButtonClick}
-          >
-            Previous
-          </button>
-          <button
-            disabled={nextDisabled}
-            className="button next-btn desktop-only"
-            onClick={handleNextButtonClick}
-          >
-            Next
-          </button>
-          <button
-            disabled={todayDisabled}
-            className="button today-btn desktop-only"
-            onClick={handleTodayButtonClick}
-          >
-            Today
-          </button>
         </div>
       </div>
       {!data.filtered && (
