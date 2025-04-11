@@ -3,7 +3,7 @@ import { useAuthDispatch, useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
 import { AuthState } from '@type/types';
 import useSwipeActions from '@hooks/useSwipeActions';
-import { FaPen, FaTrash } from 'react-icons/fa';
+import { FaPen, FaTrash, FaCaretDown } from 'react-icons/fa';
 import { deleteNode, fetchLoans, formatNumber } from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import Modal from '@components/Modal';
@@ -29,6 +29,7 @@ const PaymentDetails = (props) => {
     field_pay_single_fee: '',
     field_new_recurring_amount: '',
   });
+  const [nrOfItemsToShow, setNrOfItemsToShow] = useState(4);
 
   const {
     handleTouchStart,
@@ -151,7 +152,7 @@ const PaymentDetails = (props) => {
               </tr>
             </thead>
             <tbody ref={tableRef}>
-              {payments?.map((payment) => {
+              {payments?.slice(0, nrOfItemsToShow)?.map((payment) => {
                 return (
                   <tr
                     key={payment.id}
@@ -193,6 +194,17 @@ const PaymentDetails = (props) => {
               })}
             </tbody>
           </table>
+
+          {payments?.length > nrOfItemsToShow && (
+            <div className="load-more">
+              <button
+                onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 4)}
+                className="btn-outline"
+              >
+                <FaCaretDown />
+              </button>
+            </div>
+          )}
 
           {deleteVisible && (
             <div style={{ ...extraRowStyle }}>
