@@ -16,7 +16,6 @@ const LoanDetails = (props) => {
   const payPerDay = sumInstallments / loan?.days_calculated;
 
   const sumOfInterest = loan?.sum_of_interests + loan?.unpaid_interest;
-  console.log(9, props.loanData.start_date);
   return (
     <>
       <LoanCostBreakdown
