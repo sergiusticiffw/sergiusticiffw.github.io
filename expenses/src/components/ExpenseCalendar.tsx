@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-} from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import Modal from '@components/Modal';
@@ -278,7 +273,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
             headerToolbar={{
               left: 'customPrev customNext customToday',
               center: '',
-              right: ''
+              right: '',
             }}
             datesSet={handleDatesSet}
             customButtons={{

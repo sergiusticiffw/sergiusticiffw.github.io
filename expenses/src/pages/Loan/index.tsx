@@ -128,7 +128,11 @@ const Loan = () => {
       {errorMessage ? (
         <Notification message={errorMessage} type="error" />
       ) : null}
-      <LoanDetails loan={paydown} amortizationSchedule={amortizationSchedule} />
+      <LoanDetails
+        loanData={loanData}
+        loan={paydown}
+        amortizationSchedule={amortizationSchedule}
+      />
     </div>
   );
 };
