@@ -16,6 +16,7 @@ const LoanDetails = (props) => {
   const payPerDay = sumInstallments / loan?.days_calculated;
 
   const sumOfInterest = loan?.sum_of_interests + loan?.unpaid_interest;
+  console.log(9, props.loanData.start_date);
   return (
     <>
       <LoanCostBreakdown
@@ -46,6 +47,10 @@ const LoanDetails = (props) => {
             <td>{formatNumber(loan?.days_calculated)}</td>
           </tr>
           <tr>
+            <td>Start Date</td>
+            <td>{props.loanData.start_date}</td>
+          </tr>
+          <tr>
             <td>Actual end date</td>
             <td>{loan?.actual_end_date}</td>
           </tr>
@@ -59,7 +64,11 @@ const LoanDetails = (props) => {
           </tr>
           <tr>
             <td>Interest cost as % of total installments</td>
-            <td>{formatNumber((sumOfInterest / sumInstallments) * 100)}</td>
+            <td>
+              {formatNumber(
+                ((sumOfInterest + loan?.sum_of_fees) / sumInstallments) * 100
+              )}
+            </td>
           </tr>
           <tr>
             <td>Cost of loan per day</td>
