@@ -17,7 +17,7 @@ const LoanDetails = (props) => {
 
   const sumOfInterest = loan?.sum_of_interests + loan?.unpaid_interest;
   return (
-    <>
+    <div className="charts-page">
       <LoanCostBreakdown
         data={{
           principal: props.loanData.principal,
@@ -79,7 +79,7 @@ const LoanDetails = (props) => {
       <br />
 
       <AmortizationScheduleTable amortizationSchedule={amortizationSchedule} />
-    </>
+    </div>
   );
 };
 
