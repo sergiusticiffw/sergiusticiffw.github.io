@@ -1,6 +1,6 @@
 import React from 'react';
 import AmortizationScheduleTable from '@components/AmortizationScheduleTable';
-import { formatNumber } from '@utils/utils';
+import { calculateDaysFrom, formatNumber } from '@utils/utils';
 import { LoanCostBreakdown } from '@components/LoanCharts';
 
 const LoanDetails = (props) => {
@@ -16,6 +16,9 @@ const LoanDetails = (props) => {
   const payPerDay = sumInstallments / loan?.days_calculated;
 
   const sumOfInterest = loan?.sum_of_interests + loan?.unpaid_interest;
+
+  const [day, month, year] = props.loanData.start_date.split('.');
+  const formatted = `${year}-${month}-${day}`;
   return (
     <div className="charts-page">
       <LoanCostBreakdown
@@ -46,8 +49,20 @@ const LoanDetails = (props) => {
             <td>{formatNumber(loan?.days_calculated)}</td>
           </tr>
           <tr>
+            <td>Days Remaining</td>
+            <td>
+              {formatNumber(
+                loan?.days_calculated - calculateDaysFrom(formatted)
+              )}
+            </td>
+          </tr>
+          <tr>
             <td>Start Date</td>
             <td>{props.loanData.start_date}</td>
+          </tr>
+          <tr>
+            <td>Days Passed</td>
+            <td>{formatNumber(calculateDaysFrom(formatted))}</td>
           </tr>
           <tr>
             <td>Actual end date</td>
