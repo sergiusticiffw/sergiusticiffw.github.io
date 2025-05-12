@@ -2035,9 +2035,9 @@ idb@^7.0.1:
   integrity sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==
 
 immutable@^5.0.2:
-  version "5.1.1"
-  resolved "https://registry.yarnpkg.com/immutable/-/immutable-5.1.1.tgz#d4cb552686f34b076b3dcf23c4384c04424d8354"
-  integrity sha512-3jatXi9ObIsPGr3N5hGw/vWWcTkq6hUYhpQz4k0wLC+owqWi/LiugIw9x0EdNZ2yGedKN/HzePiBvaJRXa0Ujg==
+  version "5.1.2"
+  resolved "https://registry.yarnpkg.com/immutable/-/immutable-5.1.2.tgz#e8169476414505e5a4fa650107b65e1227d16d4b"
+  integrity sha512-qHKXW1q6liAk1Oys6umoaZbDRqjcjgSrbnrifHsfsttza7zcvRAsL7mMV6xWcyhwQy7Xj5v4hhbr6b+iDYwlmQ==
 
 inflight@^1.0.4:
   version "1.0.6"
@@ -2525,20 +2525,19 @@ react-refresh@^0.17.0:
   integrity sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==
 
 react-router-dom@^7.0.1:
-  version "7.5.3"
-  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-7.5.3.tgz#496e9f6d90f731703c7772668b41747028e0a2d5"
-  integrity sha512-cK0jSaTyW4jV9SRKAItMIQfWZ/D6WEZafgHuuCb9g+SjhLolY78qc+De4w/Cz9ybjvLzShAmaIMEXt8iF1Cm+A==
+  version "7.6.0"
+  resolved "https://registry.yarnpkg.com/react-router-dom/-/react-router-dom-7.6.0.tgz#eadcede43856dc714fa3572a946fd7502775c017"
+  integrity sha512-DYgm6RDEuKdopSyGOWZGtDfSm7Aofb8CCzgkliTjtu/eDuB0gcsv6qdFhhi8HdtmA+KHkt5MfZ5K2PdzjugYsA==
   dependencies:
-    react-router "7.5.3"
+    react-router "7.6.0"
 
-react-router@7.5.3:
-  version "7.5.3"
-  resolved "https://registry.yarnpkg.com/react-router/-/react-router-7.5.3.tgz#9e5420832af8c3690740c1797d4fa54613fea06d"
-  integrity sha512-3iUDM4/fZCQ89SXlDa+Ph3MevBrozBAI655OAfWQlTm9nBR0IKlrmNwFow5lPHttbwvITZfkeeeZFP6zt3F7pw==
+react-router@7.6.0:
+  version "7.6.0"
+  resolved "https://registry.yarnpkg.com/react-router/-/react-router-7.6.0.tgz#e2d0872d7bea8df79465a8bba9a20c87c32ce995"
+  integrity sha512-GGufuHIVCJDbnIAXP3P9Sxzq3UUsddG3rrI3ut1q6m0FI6vxVBF3JoPQ38+W/blslLH4a5Yutp8drkEpXoddGQ==
   dependencies:
     cookie "^1.0.1"
     set-cookie-parser "^2.6.0"
-    turbo-stream "2.4.0"
 
 react@^19.0.0:
   version "19.1.0"
@@ -2708,9 +2707,9 @@ safe-regex-test@^1.1.0:
     is-regex "^1.2.1"
 
 sass@^1.69.7:
-  version "1.87.0"
-  resolved "https://registry.yarnpkg.com/sass/-/sass-1.87.0.tgz#8cceb36fa63fb48a8d5d7f2f4c13b49c524b723e"
-  integrity sha512-d0NoFH4v6SjEK7BoX810Jsrhj7IQSYHAHLi/iSpgqKc7LaIDshFRlSg5LOymf9FqQhxEHs2W5ZQXlvy0KD45Uw==
+  version "1.88.0"
+  resolved "https://registry.yarnpkg.com/sass/-/sass-1.88.0.tgz#cd1495749bebd9e4aca86e93ee60b3904a107789"
+  integrity sha512-sF6TWQqjFvr4JILXzG4ucGOLELkESHL+I5QJhh7CNaE+Yge0SI+ehCatsXhJ7ymU1hAFcIS3/PBpjdIbXoyVbg==
   dependencies:
     chokidar "^4.0.0"
     immutable "^5.0.2"
@@ -2982,11 +2981,6 @@ tsconfck@^3.0.3:
   version "3.1.4"
   resolved "https://registry.yarnpkg.com/tsconfck/-/tsconfck-3.1.4.tgz#de01a15334962e2feb526824339b51be26712229"
   integrity sha512-kdqWFGVJqe+KGYvlSO9NIaWn9jT1Ny4oKVzAJsKii5eoE9snzTJzL4+MMVOMn+fikWGFmKEylcXL710V/kIPJQ==
-
-turbo-stream@2.4.0:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/turbo-stream/-/turbo-stream-2.4.0.tgz#1e4fca6725e90fa14ac4adb782f2d3759a5695f0"
-  integrity sha512-FHncC10WpBd2eOmGwpmQsWLDoK4cqsA/UT/GqNoaKOQnT8uzhtCbg3EoUDMvqpOSAI0S26mr0rkjzbOO6S3v1g==
 
 type-fest@^0.16.0:
   version "0.16.0"
