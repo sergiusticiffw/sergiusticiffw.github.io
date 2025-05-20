@@ -2,7 +2,6 @@ import React from 'react';
 import { formatNumber } from '@utils/utils';
 
 const AmortizationScheduleTable = ({ amortizationSchedule }) => {
-  console.log(99, amortizationSchedule)
   return (
     <div className="table-wrapper-loan">
       <div className="table-fixed">
