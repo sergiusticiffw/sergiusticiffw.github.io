@@ -347,7 +347,8 @@ function _Paydown() {
     reduction,
     date,
     period_interest,
-    fee = 0
+    fee = 0,
+    num_days
   ) {
     var installment;
     // this.current_principal should be negative or zero here:
@@ -364,6 +365,8 @@ function _Paydown() {
       this.round(period_interest),
       0,
       this.round(fee),
+      null,
+      num_days
     ]);
     this.current_principal = 0;
     this.latest_payment_date = date;
@@ -417,12 +420,19 @@ function _Paydown() {
     this.latest_calculated_interest_date = this.event_array[index].date;
     this.latest_payment_date = this.event_array[index].date;
 
+    const num_days = calculate_day_count(
+      start_date,
+      end_date,
+      false
+    );
+
     if (this.current_principal <= 0) {
       this.handle_last_payment(
         reduction,
         this.event_array[index].date,
         period_interest,
-        fee
+        fee,
+        num_days
       );
       return false;
     }
@@ -438,6 +448,7 @@ function _Paydown() {
       this.round(this.current_principal),
       this.round(fee),
       this.event_array[index].was_payed,
+      this.event_array[index].num_days = num_days,
     ]);
     return true;
   };

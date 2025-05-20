@@ -2,6 +2,7 @@ import React from 'react';
 import { formatNumber } from '@utils/utils';
 
 const AmortizationScheduleTable = ({ amortizationSchedule }) => {
+  console.log(99, amortizationSchedule)
   return (
     <div className="table-wrapper-loan">
       <div className="table-fixed">
@@ -30,6 +31,7 @@ const AmortizationScheduleTable = ({ amortizationSchedule }) => {
         <table className="expenses-table" cellSpacing="0" cellPadding="0">
           <thead>
             <tr>
+              <th>Days</th>
               <th>Installment</th>
               <th>Reduction</th>
               <th>Interest</th>
@@ -44,6 +46,7 @@ const AmortizationScheduleTable = ({ amortizationSchedule }) => {
                 data-id={element[0]}
                 className={element[7] ? 'was-payed' : null}
               >
+                <td>{formatNumber(element[8])}</td>
                 <td>{formatNumber(element[2])}</td>
                 <td>{formatNumber(element[3])}</td>
                 <td>{formatNumber(element[4])}</td>
