@@ -629,6 +629,12 @@ function _Paydown() {
             this.event_array[index].date
           );
           this.sum_of_interests += final_interest;
+          const num_days = calculate_day_count(
+            date_obj
+              .set_current(this.latest_calculated_interest_date)
+              .get_next(),
+            this.event_array[index].date
+          );
           this.log_payment([
             this.event_array[index].date,
             this.current_rate,
@@ -637,6 +643,8 @@ function _Paydown() {
             this.round(final_interest),
             this.round(this.current_principal),
             this.round(this.current_single_fee),
+            null,
+            num_days
           ]);
           this.latest_calculated_interest_date = this.init.end_date;
         } else {
