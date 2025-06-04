@@ -2,6 +2,7 @@ import React from 'react';
 import AmortizationScheduleTable from '@components/AmortizationScheduleTable';
 import { calculateDaysFrom, formatNumber } from '@utils/utils';
 import { LoanCostBreakdown } from '@components/LoanCharts';
+import { LoanProgress } from '@components/LoanProgress';
 
 const LoanDetails = (props) => {
   const loan = props?.loan ?? {};
@@ -91,6 +92,15 @@ const LoanDetails = (props) => {
         </tbody>
       </table>
 
+      <br />
+      <div className="charts-section">
+        <LoanProgress
+          data={{
+            amortizationSchedule,
+            sumInstallments,
+          }}
+        />
+      </div>
       <br />
 
       <AmortizationScheduleTable amortizationSchedule={amortizationSchedule} />
