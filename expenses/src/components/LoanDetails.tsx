@@ -7,6 +7,7 @@ import { LoanProgress } from '@components/LoanProgress';
 const LoanDetails = (props) => {
   const loan = props?.loan ?? {};
   const amortizationSchedule = props?.amortizationSchedule ?? [];
+  const totalPaidAmount = props?.totalPaidAmount;
 
   const sumInstallments =
     loan?.sum_of_installments +
@@ -96,7 +97,7 @@ const LoanDetails = (props) => {
       <div className="charts-section">
         <LoanProgress
           data={{
-            amortizationSchedule,
+            totalPaidAmount,
             sumInstallments,
           }}
         />

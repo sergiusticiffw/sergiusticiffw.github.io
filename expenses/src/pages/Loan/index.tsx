@@ -92,6 +92,10 @@ const Loan = () => {
     errorMessage = err?.message;
   }
 
+  const totalPaidAmount = filteredData?.data?.reduce((sum, item) => {
+    return sum + parseFloat(item.fpi || 0);
+  }, 0);
+
   return (
     <div>
       <h2>
@@ -124,7 +128,7 @@ const Loan = () => {
         />
       </Modal>
 
-      <PaymentDetails loan={loan} payments={filteredData?.data || []} />
+      <PaymentDetails loan={loan} payments={filteredData?.data || []} totalPaidAmount={totalPaidAmount} />
       {errorMessage ? (
         <Notification message={errorMessage} type="error" />
       ) : null}
@@ -132,6 +136,7 @@ const Loan = () => {
         loanData={loanData}
         loan={paydown}
         amortizationSchedule={amortizationSchedule}
+        totalPaidAmount={totalPaidAmount}
       />
     </div>
   );

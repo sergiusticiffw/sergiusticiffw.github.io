@@ -3,22 +3,16 @@ import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 
 export const LoanProgress = ({ data }) => {
-  const { sumInstallments, amortizationSchedule } = data;
+  const { sumInstallments, totalPaidAmount } = data;
 
-  const wasPayed = amortizationSchedule
-    .filter(row => row[7] === true)
-    .map(row => parseFloat(row[3]))
-    .filter(n => !isNaN(n))
-    .reduce((sum, val) => sum + val, 0);
-
-  const percentPaid = (wasPayed / sumInstallments) * 100;
+  const percentPaid = ((totalPaidAmount ?? 0) / sumInstallments) * 100;
   const percentRemaining = 100 - percentPaid;
 
   const options = {
     chart: {
       type: 'bar',
       backgroundColor: 'transparent',
-      height: 16,
+      height: 20,
       margin: [0, 0, 0, 0],
     },
     title: null,
@@ -39,6 +33,9 @@ export const LoanProgress = ({ data }) => {
         borderWidth: 0,
         groupPadding: 0,
         pointPadding: 0,
+        dataLabels: {
+          enabled: false,
+        },
       },
       bar: {
         borderRadius: 3,
@@ -60,6 +57,19 @@ export const LoanProgress = ({ data }) => {
         name: 'Paid',
         data: [percentPaid],
         color: '#4caf50',
+        dataLabels: {
+          enabled: true,
+          inside: true,
+          align: 'right',
+          style: {
+            fontWeight: 'bold',
+            color: 'white',
+            textOutline: 'none',
+          },
+          formatter: function () {
+            return `${Math.round(percentPaid)}%`;
+          },
+        },
       },
     ],
   };

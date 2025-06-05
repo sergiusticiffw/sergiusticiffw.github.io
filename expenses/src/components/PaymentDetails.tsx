@@ -13,6 +13,7 @@ import { useLoan } from '@context/loan';
 const PaymentDetails = (props) => {
   const payments = props?.payments ?? [];
   const loan = props?.loan ?? {};
+  const totalPaidAmount = props?.totalPaidAmount;
   const tableRef = useRef(null);
   const showNotification = useNotification();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -72,10 +73,6 @@ const PaymentDetails = (props) => {
       fetchLoans(token, dataDispatch, dispatch);
     });
   };
-
-  const totalPaidAmount = payments.reduce((sum, item) => {
-    return sum + parseFloat(item.fpi || 0);
-  }, 0);
 
   return (
     <div className="incomes-page">
