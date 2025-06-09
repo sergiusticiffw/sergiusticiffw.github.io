@@ -721,6 +721,7 @@ function _Paydown() {
             };
           }
           this.annual_summaries[endingYear].total_interest += final_interest;
+          this.annual_summaries[endingYear].total_principal += this.current_principal;
 
           this.log_payment([
             this.event_array[index].date,
