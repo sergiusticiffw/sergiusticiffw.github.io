@@ -8,6 +8,64 @@ const LoanDetails = (props) => {
   const loan = props?.loan ?? {};
   const amortizationSchedule = props?.amortizationSchedule ?? [];
   const totalPaidAmount = props?.totalPaidAmount;
+  const annualSummaries = loan.annual_summaries;
+
+  const processedAmortizationSchedule = [];
+  let currentYear = null;
+
+  amortizationSchedule.forEach((paymentRow, index) => {
+    const paymentDate = paymentRow[0];
+    const paymentYear = paymentDate.split('.')[2];
+
+    if (currentYear === null) {
+      currentYear = paymentYear;
+    }
+
+    if (
+      paymentYear !== currentYear ||
+      index === amortizationSchedule.length - 1
+    ) {
+      if (paymentYear !== currentYear) {
+        const summaryForPreviousYear = annualSummaries[currentYear];
+        if (summaryForPreviousYear) {
+          processedAmortizationSchedule.push({
+            type: 'annual_summary',
+            year: currentYear,
+            totalPrincipal: summaryForPreviousYear.total_principal,
+            totalInterest: summaryForPreviousYear.total_interest,
+            totalFees: summaryForPreviousYear.total_fees,
+            totalPaid:
+              summaryForPreviousYear.total_principal +
+              summaryForPreviousYear.total_interest +
+              summaryForPreviousYear.total_fees,
+          });
+        }
+        currentYear = paymentYear;
+      }
+    }
+    processedAmortizationSchedule.push(paymentRow);
+
+    if (
+      index === amortizationSchedule.length - 1 &&
+      processedAmortizationSchedule[processedAmortizationSchedule.length - 1]
+        .type !== 'annual_summary'
+    ) {
+      const summaryForCurrentYear = annualSummaries[currentYear];
+      if (summaryForCurrentYear) {
+        processedAmortizationSchedule.push({
+          type: 'annual_summary',
+          year: currentYear,
+          totalPrincipal: summaryForCurrentYear.total_principal,
+          totalInterest: summaryForCurrentYear.total_interest,
+          totalFees: summaryForCurrentYear.total_fees,
+          totalPaid:
+            summaryForCurrentYear.total_principal +
+            summaryForCurrentYear.total_interest +
+            summaryForCurrentYear.total_fees,
+        });
+      }
+    }
+  });
 
   const sumInstallments =
     loan?.sum_of_installments +
@@ -104,7 +162,9 @@ const LoanDetails = (props) => {
       </div>
       <br />
 
-      <AmortizationScheduleTable amortizationSchedule={amortizationSchedule} />
+      <AmortizationScheduleTable
+        amortizationSchedule={processedAmortizationSchedule}
+      />
     </div>
   );
 };

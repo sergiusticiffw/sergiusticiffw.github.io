@@ -39,7 +39,8 @@ export default function Paydown() {
       actual_end_date,
       latest_payment_date,
       final_interest,
-      fees;
+      fees,
+      annual_summaries; // Declare annual_summaries here
 
     try {
       [
@@ -50,6 +51,7 @@ export default function Paydown() {
         latest_payment_date,
         final_interest,
         fees,
+        annual_summaries, // Capture annual_summaries here
       ] = paydown.calculate_to_date(
         payments_array,
         debug_array,
@@ -71,6 +73,18 @@ export default function Paydown() {
         remaining_principal = func_round(remaining_principal);
         final_interest = func_round(final_interest);
         fees = func_round(fees);
+        // Round values in annual_summaries
+        for (const year in annual_summaries) {
+          annual_summaries[year].total_principal = func_round(
+            annual_summaries[year].total_principal
+          );
+          annual_summaries[year].total_interest = func_round(
+            annual_summaries[year].total_interest
+          );
+          annual_summaries[year].total_fees = func_round(
+            annual_summaries[year].total_fees
+          );
+        }
       } else {
         sum_of_installments = interests + reductions - final_interest;
       }
@@ -82,6 +96,18 @@ export default function Paydown() {
       remaining_principal = func_round(remaining_principal);
       final_interest = func_round(final_interest);
       fees = func_round(fees);
+      // Round values in annual_summaries
+      for (const year in annual_summaries) {
+        annual_summaries[year].total_principal = func_round(
+          annual_summaries[year].total_principal
+        );
+        annual_summaries[year].total_interest = func_round(
+          annual_summaries[year].total_interest
+        );
+        annual_summaries[year].total_fees = func_round(
+          annual_summaries[year].total_fees
+        );
+      }
     }
 
     return {
@@ -94,6 +120,7 @@ export default function Paydown() {
       latest_payment_date: zero_fill_date(latest_payment_date),
       unpaid_interest: final_interest,
       sum_of_fees: fees,
+      annual_summaries: annual_summaries, // Add annual_summaries here
     };
   };
 }
@@ -122,6 +149,7 @@ function _Paydown() {
   this.current_single_fee = 0;
   this.recurring_payment_period = 1; // period in months
   this.rateHashMap = {};
+  this.annual_summaries = {}; // Initialize here
 
   this.round = function (input) {
     if (typeof input !== 'number' || isNaN(input)) {
@@ -357,6 +385,20 @@ function _Paydown() {
     installment = this.round(reduction + period_interest);
 
     this.sum_of_reductions += reduction;
+
+    // Add to annual summaries for the last payment
+    const year = date.split('.')[2];
+    if (!this.annual_summaries[year]) {
+      this.annual_summaries[year] = {
+        total_principal: 0,
+        total_interest: 0,
+        total_fees: 0,
+      };
+    }
+    this.annual_summaries[year].total_principal += reduction;
+    this.annual_summaries[year].total_interest += period_interest;
+    this.annual_summaries[year].total_fees += fee;
+
     this.log_payment([
       date,
       this.current_rate,
@@ -366,7 +408,7 @@ function _Paydown() {
       0,
       this.round(fee),
       null,
-      num_days
+      num_days,
     ]);
     this.current_principal = 0;
     this.latest_payment_date = date;
@@ -420,11 +462,7 @@ function _Paydown() {
     this.latest_calculated_interest_date = this.event_array[index].date;
     this.latest_payment_date = this.event_array[index].date;
 
-    const num_days = calculate_day_count(
-      start_date,
-      end_date,
-      false
-    );
+    const num_days = calculate_day_count(start_date, end_date, false);
 
     if (this.current_principal <= 0) {
       this.handle_last_payment(
@@ -437,6 +475,19 @@ function _Paydown() {
       return false;
     }
 
+    // Add to annual summaries
+    const year = this.event_array[index].date.split('.')[2];
+    if (!this.annual_summaries[year]) {
+      this.annual_summaries[year] = {
+        total_principal: 0,
+        total_interest: 0,
+        total_fees: 0,
+      };
+    }
+    this.annual_summaries[year].total_principal += reduction;
+    this.annual_summaries[year].total_interest += period_interest;
+    this.annual_summaries[year].total_fees += fee;
+
     this.sum_of_reductions += reduction;
 
     this.log_payment([
@@ -448,7 +499,7 @@ function _Paydown() {
       this.round(this.current_principal),
       this.round(fee),
       this.event_array[index].was_payed,
-      this.event_array[index].num_days = num_days,
+      (this.event_array[index].num_days = num_days),
     ]);
     return true;
   };
@@ -489,6 +540,7 @@ function _Paydown() {
     this.sum_of_interests = 0;
     this.sum_of_reductions = 0;
     this.g_p_i_sum_of_interests = 0;
+    this.annual_summaries = {}; // Reset annual summaries for a new calculation
 
     var date_obj = new _Days();
 
@@ -536,6 +588,17 @@ function _Paydown() {
       this.initial_fee,
     ]);
 
+    // Initialize annual summary for the start year with the initial fee
+    const startYear = this.init.start_date.split('.')[2];
+    if (!this.annual_summaries[startYear]) {
+      this.annual_summaries[startYear] = {
+        total_principal: 0,
+        total_interest: 0,
+        total_fees: 0,
+      };
+    }
+    this.annual_summaries[startYear].total_fees += this.initial_fee;
+
     this.current_principal = this.init.principal;
     this.current_rate = this.init.rate;
     this.sum_of_fees = this.initial_fee;
@@ -554,6 +617,18 @@ function _Paydown() {
       if (this.event_array[index].hasOwnProperty('pay_single_fee')) {
         this.sum_of_fees += this.event_array[index].pay_single_fee;
         this.current_single_fee = this.event_array[index].pay_single_fee;
+
+        // Add single fee to annual summaries
+        const feeYear = this.event_array[index].date.split('.')[2];
+        if (!this.annual_summaries[feeYear]) {
+          this.annual_summaries[feeYear] = {
+            total_principal: 0,
+            total_interest: 0,
+            total_fees: 0,
+          };
+        }
+        this.annual_summaries[feeYear].total_fees +=
+          this.event_array[index].pay_single_fee;
       } else {
         this.current_single_fee = 0;
       }
@@ -635,6 +710,18 @@ function _Paydown() {
               .get_next(),
             this.event_array[index].date
           );
+
+          // Add final interest to annual summaries for the ending year
+          const endingYear = this.event_array[index].date.split('.')[2];
+          if (!this.annual_summaries[endingYear]) {
+            this.annual_summaries[endingYear] = {
+              total_principal: 0,
+              total_interest: 0,
+              total_fees: 0,
+            };
+          }
+          this.annual_summaries[endingYear].total_interest += final_interest;
+
           this.log_payment([
             this.event_array[index].date,
             this.current_rate,
@@ -644,7 +731,7 @@ function _Paydown() {
             this.round(this.current_principal),
             this.round(this.current_single_fee),
             null,
-            num_days
+            num_days,
           ]);
           this.latest_calculated_interest_date = this.init.end_date;
         } else {
@@ -696,6 +783,7 @@ function _Paydown() {
       this.latest_payment_date,
       final_interest,
       this.sum_of_fees,
+      this.annual_summaries, // Return annual_summaries here
     ];
   };
 

@@ -1018,3 +1018,12 @@ li.selected-suggestion {
   background-color: #1e3a2f;
   color: #d4edda;
 }
+
+.annual-summary-row {
+  border-top: 2px solid #ccc; /* Stronger top border */
+  border-bottom: 2px solid #ccc; /* Stronger bottom border */
+}
+
+.annual-summary-row td:first-child {
+  text-align: center;
+}

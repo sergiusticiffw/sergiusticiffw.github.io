@@ -128,7 +128,11 @@ const Loan = () => {
         />
       </Modal>
 
-      <PaymentDetails loan={loan} payments={filteredData?.data || []} totalPaidAmount={totalPaidAmount} />
+      <PaymentDetails
+        loan={loan}
+        payments={filteredData?.data || []}
+        totalPaidAmount={totalPaidAmount}
+      />
       {errorMessage ? (
         <Notification message={errorMessage} type="error" />
       ) : null}
