@@ -79,6 +79,14 @@ const LoanDetails = (props) => {
 
   const [day, month, year] = props.loanData.start_date.split('.');
   const formatted = `${year}-${month}-${day}`;
+
+  const totalDays = loan?.days_calculated ?? 0;
+  const daysSince = calculateDaysFrom(formatted);
+  const daysPassed = daysSince > 0
+    ? Math.min(daysSince, totalDays)
+    : 0;
+  const daysRemaining = Math.max(totalDays - daysPassed, 0);
+
   return (
     <div className="charts-page">
       <LoanCostBreakdown
@@ -106,14 +114,12 @@ const LoanDetails = (props) => {
           </tr>
           <tr>
             <td>Days calculated</td>
-            <td>{formatNumber(loan?.days_calculated)}</td>
+            <td>{formatNumber(totalDays)}</td>
           </tr>
           <tr>
             <td>Days Remaining</td>
             <td>
-              {formatNumber(
-                loan?.days_calculated - calculateDaysFrom(formatted)
-              )}
+              {formatNumber(daysRemaining)}
             </td>
           </tr>
           <tr>
@@ -122,7 +128,7 @@ const LoanDetails = (props) => {
           </tr>
           <tr>
             <td>Days Passed</td>
-            <td>{formatNumber(calculateDaysFrom(formatted))}</td>
+            <td>{formatNumber(daysPassed)}</td>
           </tr>
           <tr>
             <td>Actual end date</td>
