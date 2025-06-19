@@ -9,7 +9,6 @@ const AmortizationScheduleTable = ({ amortizationSchedule }) => {
           <thead>
             <tr>
               <th>Date</th>
-              <th>Rate</th>
             </tr>
           </thead>
           <tbody>
@@ -22,7 +21,6 @@ const AmortizationScheduleTable = ({ amortizationSchedule }) => {
                     className="annual-summary-row"
                   >
                     <td>Total {element.year}</td> {/* Display "Total YYYY" */}
-                    <td>-</td> {/* Rate column, N/A for summary */}
                   </tr>
                 );
               }
@@ -35,7 +33,6 @@ const AmortizationScheduleTable = ({ amortizationSchedule }) => {
                   className={element[7] ? 'was-payed' : null}
                 >
                   <td>{element[0]}</td>
-                  <td>{formatNumber(element[1])}</td>
                 </tr>
               );
             })}
@@ -46,6 +43,7 @@ const AmortizationScheduleTable = ({ amortizationSchedule }) => {
         <table className="expenses-table" cellSpacing="0" cellPadding="0">
           <thead>
             <tr>
+              <th>Rate</th>
               <th>Days</th>
               <th>Installment</th>
               <th>Reduction</th>
@@ -64,6 +62,7 @@ const AmortizationScheduleTable = ({ amortizationSchedule }) => {
                     className="annual-summary-row annual-summary-total"
                   >
                     <td>-</td> {/* Days column, N/A for summary */}
+                    <td>-</td> {/* Days column, N/A for summary */}
                     <td>{formatNumber(element.totalPaid)}</td>{' '}
                     {/* Total Paid for the year */}
                     <td>{formatNumber(element.totalPrincipal)}</td>
@@ -81,6 +80,7 @@ const AmortizationScheduleTable = ({ amortizationSchedule }) => {
                   data-id={element[0]}
                   className={element[7] ? 'was-payed' : null}
                 >
+                  <td>{formatNumber(element[1])}</td>
                   <td>{formatNumber(element[8])}</td>
                   <td>{formatNumber(element[2])}</td>
                   <td>{formatNumber(element[3])}</td>
