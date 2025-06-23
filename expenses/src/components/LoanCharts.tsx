@@ -24,6 +24,9 @@ export const LoanCostBreakdown = ({ data }) => {
         text: currency,
       },
     },
+    tooltip: {
+      valueDecimals: 2,
+    },
     series: [
       {
         name: 'Total',
