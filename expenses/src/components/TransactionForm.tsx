@@ -149,7 +149,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         <textarea
           placeholder="Description"
           name="field_description"
-          rows={5}
+          rows={3}
           value={formState.field_description}
           onChange={handleChange}
         />

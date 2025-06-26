@@ -313,9 +313,11 @@ input {
 .add-transaction textarea,
 .add-transaction select {
   background: var(--bg-color);
+  border: none;
   min-height: 40px;
-  width: initial;
+  width: 100%;
   margin-bottom: 20px;
+  border-bottom: 1px solid #6d7781;
   font-weight: bold;
   transition: all 0.3s ease-in-out;
   color: #ccc;
