@@ -114,7 +114,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
         <textarea
           placeholder="Description"
           name="field_description"
-          rows={3}
+          rows={5}
           value={formState.field_description}
           onChange={handleChange}
         />

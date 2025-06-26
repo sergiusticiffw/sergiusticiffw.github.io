@@ -308,8 +308,6 @@ input {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  padding: 0.8rem;
-  border: 1px solid #ddd;
 }
 .add-transaction input,
 .add-transaction textarea,
@@ -321,8 +319,6 @@ input {
   font-weight: bold;
   transition: all 0.3s ease-in-out;
   color: #ccc;
-  border: 1px solid #ddd;
-  padding: 8px;
 }
 .add-transaction input:focus,
 .add-transaction textarea:focus {
