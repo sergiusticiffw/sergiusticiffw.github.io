@@ -26,7 +26,7 @@ const AmortizationTable = ({ amortizationSchedule }) => {
   useEffect(() => {
     const handleScroll = () => {
       const rect = theadRef.current?.getBoundingClientRect();
-      const shouldShow = rect && rect.bottom <= 0;
+      const shouldShow = rect && rect.bottom <= 50;
       setShowStickyHeader(shouldShow);
 
       if (shouldShow && scrollContainerRef.current && stickyScrollRef.current) {
