@@ -3,6 +3,7 @@ import AmortizationScheduleTable from '@components/AmortizationScheduleTable';
 import { calculateDaysFrom, formatNumber } from '@utils/utils';
 import { LoanCostBreakdown } from '@components/LoanCharts';
 import { LoanProgress } from '@components/LoanProgress';
+import AmortizationTable from '@components/AmortizationTable';
 
 const LoanDetails = (props) => {
   const loan = props?.loan ?? {};
@@ -82,9 +83,7 @@ const LoanDetails = (props) => {
 
   const totalDays = loan?.days_calculated ?? 0;
   const daysSince = calculateDaysFrom(formatted);
-  const daysPassed = daysSince > 0
-    ? Math.min(daysSince, totalDays)
-    : 0;
+  const daysPassed = daysSince > 0 ? Math.min(daysSince, totalDays) : 0;
   const daysRemaining = Math.max(totalDays - daysPassed, 0);
 
   return (
@@ -118,9 +117,7 @@ const LoanDetails = (props) => {
           </tr>
           <tr>
             <td>Days Remaining</td>
-            <td>
-              {formatNumber(daysRemaining)}
-            </td>
+            <td>{formatNumber(daysRemaining)}</td>
           </tr>
           <tr>
             <td>Start Date</td>
@@ -168,9 +165,11 @@ const LoanDetails = (props) => {
       </div>
       <br />
 
-      <AmortizationScheduleTable
-        amortizationSchedule={processedAmortizationSchedule}
-      />
+      <AmortizationTable amortizationSchedule={processedAmortizationSchedule} />
+
+      {/*<AmortizationScheduleTable*/}
+      {/*  amortizationSchedule={processedAmortizationSchedule}*/}
+      {/*/>*/}
     </div>
   );
 };

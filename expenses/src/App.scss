@@ -968,19 +968,60 @@ li.selected-suggestion {
 }
 
 .table-wrapper-loan {
-  display: flex;
-  width: 100%;
-  overflow: hidden;
+  position: relative;
 }
 
-.table-wrapper-loan .table-fixed {
-  flex: 0 0 auto;
-  overflow: hidden;
-}
-
-.table-wrapper-loan .table-scrollable {
-  flex: 1 1 auto;
+/* Main table wrapper */
+.table-wrapper-loan .horizontal-scroll-wrapper {
   overflow-x: auto;
+}
+
+.table-wrapper-loan .amortization-table th,
+.table-wrapper-loan .amortization-table td {
+  white-space: nowrap;
+}
+
+/* Sticky first column */
+.table-wrapper-loan .sticky-col {
+  position: sticky;
+  left: 0;
+  background-color: #2b2b2b;
+  z-index: 3;
+  box-shadow: 2px 0 2px -1px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+/* Sticky cloned header wrapper */
+.table-wrapper-loan .cloned-thead-wrapper {
+  position: fixed;
+  background-color: #1e1e1e;
+  top: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  z-index: 5;
+  border-bottom: 1px solid #ccc;
+  padding-right: 25px;
+}
+
+/* Cloned header table */
+.table-wrapper-loan .cloned-thead-wrapper table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.table-wrapper-loan .cloned-thead-wrapper th {
+  white-space: nowrap;
+}
+
+/* Sticky first column in cloned header */
+.table-wrapper-loan .cloned-thead-wrapper .sticky-col {
+  /*padding-right: 25px;*/
+  padding-left: 25px;
+  position: sticky;
+  left: 0;
+  z-index: 6;
+  box-shadow: 2px 0 2px -1px rgba(0, 0, 0, 0.1);
 }
 
 .table-wrapper-loan .expenses-table {
@@ -990,25 +1031,8 @@ li.selected-suggestion {
 
 .table-wrapper-loan .expenses-table th,
 .table-wrapper-loan .expenses-table td {
-  //border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
-}
-
-.table-wrapper-loan .expenses-table th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
-.table-wrapper-loan .table-fixed th,
-.table-wrapper-loan .table-fixed td {
-  min-width: 80px;
-}
-
-.table-wrapper-loan .table-scrollable th,
-.table-wrapper-loan .table-scrollable td {
-  min-width: 120px;
 }
 
 .table-wrapper-loan .expenses-table .was-payed {
@@ -1016,11 +1040,15 @@ li.selected-suggestion {
   color: #d4edda;
 }
 
-.annual-summary-row {
+.table-wrapper-loan .annual-summary-row {
   border-top: 2px solid #ccc; /* Stronger top border */
   border-bottom: 2px solid #ccc; /* Stronger bottom border */
 }
 
-.annual-summary-row td:first-child {
+.table-wrapper-loan .annual-summary-row td:first-child {
   text-align: center;
+}
+
+.table-wrapper-loan .expenses-table th .first-header-cell {
+  z-index: 10;
 }
