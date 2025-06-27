@@ -993,6 +993,7 @@ li.selected-suggestion {
 
 /* Sticky cloned header wrapper */
 .table-wrapper-loan .cloned-thead-wrapper {
+  padding: 16px 0 16px 0;
   position: fixed;
   background-color: #1e1e1e;
   top: 0;
@@ -1016,7 +1017,6 @@ li.selected-suggestion {
 
 /* Sticky first column in cloned header */
 .table-wrapper-loan .cloned-thead-wrapper .sticky-col {
-  /*padding-right: 25px;*/
   padding-left: 25px;
   position: sticky;
   left: 0;
