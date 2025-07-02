@@ -16,13 +16,8 @@ export default function Paydown() {
       const filteredEvents = events_array.filter(
         (event) => event.pay_installment !== undefined
       );
-      // Helper to parse date strings into Date objects
-      const parseDate = (dateStr) => {
-        const [day, month, year] = dateStr.split('.').map(Number);
-        return new Date(year, month - 1, day); // Month is 0-based in JS Date
-      };
       const sortedByDate = filteredEvents.sort(
-        (a, b) => parseDate(b.date) - parseDate(a.date)
+        (a, b) => paydown.parseDate(b.date) - paydown.parseDate(a.date)
       );
       const lastEventByDate = sortedByDate[0];
       lastPaymentDate = lastEventByDate ? lastEventByDate.date : null;
@@ -150,6 +145,12 @@ function _Paydown() {
   this.recurring_payment_period = 1; // period in months
   this.rateHashMap = {};
   this.annual_summaries = {}; // Initialize here
+
+  // Helper to parse date strings into Date objects
+  this.parseDate = (dateStr) => {
+    const [day, month, year] = dateStr.split('.').map(Number);
+    return new Date(year, month - 1, day); // Month is 0-based in JS Date
+  };
 
   this.round = function (input) {
     if (typeof input !== 'number' || isNaN(input)) {
@@ -721,7 +722,8 @@ function _Paydown() {
             };
           }
           this.annual_summaries[endingYear].total_interest += final_interest;
-          this.annual_summaries[endingYear].total_principal += this.current_principal;
+          this.annual_summaries[endingYear].total_principal +=
+            this.current_principal;
 
           this.log_payment([
             this.event_array[index].date,
@@ -913,10 +915,31 @@ function _Paydown() {
     this.event_array.push(Object.assign({}, event));
   };
 
+  this.moveToNextMondayIfWeekend = function (date) {
+    const day = date.getDay(); // 0 = Sunday, 6 = Saturday
+
+    if (day === 6) {
+      date.setDate(date.getDate() + 2); // Saturday → Monday
+    } else if (day === 0) {
+      date.setDate(date.getDate() + 1); // Sunday → Monday
+    }
+
+    return (
+      zero_fill(date.getDate()) +
+      '.' +
+      zero_fill(date.getMonth() + 1) +
+      '.' +
+      date.getFullYear()
+    );
+  };
+
   this.add_event = function (event) {
     if (!event.hasOwnProperty('date')) {
       throw new Error('this.add_event: date missing from event');
     }
+
+    const date = this.parseDate(event.date);
+    event.date = this.moveToNextMondayIfWeekend(date);
 
     this.event_array.push(Object.assign({}, event));
   };
