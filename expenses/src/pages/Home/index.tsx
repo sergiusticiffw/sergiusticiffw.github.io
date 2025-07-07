@@ -302,6 +302,8 @@ const Home = () => {
               </div>
               {activeTab === 'calendar' ? (
                 <ExpenseCalendar
+                  items={items.groupedData[currentMonth]}
+                  months={months}
                   setCurrentMonthIndex={handleMonthChange}
                   currentMonthIndex={currentMonthIndex}
                   currentMonth={currentMonth}

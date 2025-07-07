@@ -24,10 +24,11 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   setCurrentMonthIndex,
   currentMonthIndex,
   currentMonth,
+  items,
+  months,
 }) => {
   const { theme } = useAuthState() as AuthState;
   const { data, dataDispatch } = useData() as DataState;
-  const items = data.filtered_raw || data.raw;
   const showNotification = useNotification();
   const { token } = useAuthState() as AuthState;
 
@@ -159,10 +160,6 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   );
 
   const calendarRef = useRef(null);
-  const transactions = data.filtered || data;
-  const months = transactions.groupedData
-    ? Object.keys(transactions.groupedData)
-    : [];
   const date = new Date(`01 ${months[currentMonthIndex]}`);
 
   useEffect(() => {
@@ -236,15 +233,6 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   const handleClearChangedItem = (id: string) => {
     dataDispatch({ type: 'CLEAR_CHANGED_ITEM', id });
   };
-
-  if (events.length <= 0) {
-    return (
-      <div className="lds-ripple">
-        <div></div>
-        <div></div>
-      </div>
-    );
-  }
 
   return (
     <>
