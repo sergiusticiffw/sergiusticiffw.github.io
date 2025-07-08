@@ -39,6 +39,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
 
     field_rec_first_payment_date: null,
     field_recurring_payment_day: '',
+    field_loan_status: true,
   };
 
   const [formState, setFormState] = useState(
@@ -48,10 +49,10 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
   const { token } = useAuthState() as AuthState;
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
+    const { name, type, checked, value } = event.target;
     setFormState({
       ...formState,
-      [event.target.name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     });
   };
 
@@ -71,6 +72,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
       field_initial_fee: [formState.field_initial_fee],
       field_rec_first_payment_date: [formState.field_rec_first_payment_date],
       field_recurring_payment_day: [formState.field_recurring_payment_day],
+      field_loan_status: [formState.field_loan_status],
     };
 
     const fetchOptions = {
@@ -185,6 +187,17 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           min={1}
           max={31}
         />
+
+        <label htmlFor="field_loan_status">
+          Is loan active
+          <input
+            type="checkbox"
+            name="field_loan_status"
+            id="field_loan_status"
+            checked={formState.field_loan_status}
+            onChange={handleChange}
+          />
+        </label>
 
         <button type="submit" disabled={isSubmitting} className="button w-100">
           {isSubmitting ? (

@@ -14,7 +14,8 @@ export default function Paydown() {
     let lastPaymentDate;
     if (events_array) {
       const filteredEvents = events_array.filter(
-        (event) => event.pay_installment !== undefined
+        (event) =>
+          event.pay_installment !== undefined && !event.isSimulatedPayment
       );
       const sortedByDate = filteredEvents.sort(
         (a, b) => paydown.parseDate(b.date) - paydown.parseDate(a.date)

@@ -41,6 +41,7 @@ const Loans = () => {
     field_rec_first_payment_date: null,
     field_recurring_payment_day: '',
     field_recurring_payment_fee: '',
+    field_loan_status: 1,
   });
 
   const {
@@ -65,6 +66,7 @@ const Loans = () => {
       field_rec_first_payment_date: item.pdt,
       field_recurring_payment_day: item.frpd,
       field_recurring_payment_fee: item.frpf,
+      field_loan_status: Number(item.fls),
     });
     setShowEditModal(true);
   };
@@ -167,56 +169,133 @@ const Loans = () => {
                   </tr>
                 </thead>
                 <tbody ref={tableRef}>
-                  {loans?.map((loan) => {
-                    return (
-                      <tr
-                        key={loan.id}
-                        data-id={loan.id}
-                        onTouchStart={(e) =>
-                          handleTouchStart(e, loan.id, tableRef)
-                        }
-                        onTouchMove={(e) => handleTouchMove(e, tableRef)}
-                        onTouchEnd={(e) =>
-                          handleTouchEnd(
-                            e,
-                            tableRef,
-                            loan.id,
-                            handleEdit,
-                            setShowDeleteModal
-                          )
-                        }
-                      >
-                        <td>
-                          <Link
-                            to={`/expenses/loan/${loan.id}`}
-                            style={{ color: 'white', textDecoration: 'none' }}
-                          >
-                            {loan.title}
-                          </Link>
-                        </td>
-                        <td>{formatNumber(loan.fp)}</td>
-                        <td>{formatNumber(loan.fr)}</td>
-                        <td>{loan.sdt}</td>
-                        <td>{loan.edt}</td>
-                        <td className="desktop-only">
-                          <button
-                            onClick={() => handleEdit(loan.id)}
-                            className="btn-outline"
-                          >
-                            <FaPen />
-                          </button>
-                        </td>
-                        <td className="desktop-only">
-                          <button
-                            onClick={() => setShowDeleteModal(loan.id)}
-                            className="btn-outline"
-                          >
-                            <FaTrash />
-                          </button>
+                  {/** In Progress Section */}
+                  {loans?.some((loan) => Number(loan.fls)) && (
+                    <>
+                      <tr>
+                        <td colSpan={7}>
+                          <strong>🟢 In Progress</strong>
                         </td>
                       </tr>
-                    );
-                  })}
+                      {loans
+                        .filter((loan) => Number(loan.fls))
+                        .map((loan) => (
+                          <tr
+                            key={loan.id}
+                            data-id={loan.id}
+                            onTouchStart={(e) =>
+                              handleTouchStart(e, loan.id, tableRef)
+                            }
+                            onTouchMove={(e) => handleTouchMove(e, tableRef)}
+                            onTouchEnd={(e) =>
+                              handleTouchEnd(
+                                e,
+                                tableRef,
+                                loan.id,
+                                handleEdit,
+                                setShowDeleteModal
+                              )
+                            }
+                          >
+                            <td>
+                              <Link
+                                to={`/expenses/loan/${loan.id}`}
+                                style={{
+                                  color: 'white',
+                                  textDecoration: 'none',
+                                }}
+                              >
+                                {loan.title}
+                              </Link>
+                            </td>
+                            <td>{formatNumber(loan.fp)}</td>
+                            <td>{formatNumber(loan.fr)}</td>
+                            <td>{loan.sdt}</td>
+                            <td>{loan.edt}</td>
+                            <td className="desktop-only">
+                              <button
+                                onClick={() => handleEdit(loan.id)}
+                                className="btn-outline"
+                              >
+                                <FaPen />
+                              </button>
+                            </td>
+                            <td className="desktop-only">
+                              <button
+                                onClick={() => setShowDeleteModal(loan.id)}
+                                className="btn-outline"
+                              >
+                                <FaTrash />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </>
+                  )}
+
+                  {/** Completed Section */}
+                  {loans?.some((loan) => !Number(loan.fls)) && (
+                    <>
+                      <tr>
+                        <td colSpan={7}>
+                          <strong>🔴 Completed</strong>
+                        </td>
+                      </tr>
+                      {loans
+                        .filter((loan) => !Number(loan.fls))
+                        .map((loan) => (
+                          <tr
+                            key={loan.id}
+                            data-id={loan.id}
+                            onTouchStart={(e) =>
+                              handleTouchStart(e, loan.id, tableRef)
+                            }
+                            onTouchMove={(e) => handleTouchMove(e, tableRef)}
+                            onTouchEnd={(e) =>
+                              handleTouchEnd(
+                                e,
+                                tableRef,
+                                loan.id,
+                                handleEdit,
+                                setShowDeleteModal
+                              )
+                            }
+                          >
+                            <td>
+                              <Link
+                                to={`/expenses/loan/${loan.id}`}
+                                style={{
+                                  color: 'white',
+                                  textDecoration: 'none',
+                                }}
+                              >
+                                {loan.title}
+                              </Link>
+                            </td>
+                            <td>{formatNumber(loan.fp)}</td>
+                            <td>{formatNumber(loan.fr)}</td>
+                            <td>{loan.sdt}</td>
+                            <td>{loan.edt}</td>
+                            <td className="desktop-only">
+                              <button
+                                onClick={() => handleEdit(loan.id)}
+                                className="btn-outline"
+                              >
+                                <FaPen />
+                              </button>
+                            </td>
+                            <td className="desktop-only">
+                              <button
+                                onClick={() => setShowDeleteModal(loan.id)}
+                                className="btn-outline"
+                              >
+                                <FaTrash />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </>
+                  )}
                 </tbody>
               </table>
             </div>

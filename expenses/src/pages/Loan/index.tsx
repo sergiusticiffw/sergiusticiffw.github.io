@@ -49,6 +49,7 @@ const Loan = () => {
   const payments =
     filteredData?.data?.map((item) => {
       return {
+        isSimulatedPayment: Number(item.fisp),
         date: transformDateFormat(item.fdt),
         ...(item.fr ? { rate: transformToNumber(item.fr) } : {}),
         ...(item.fpi ? { pay_installment: transformToNumber(item.fpi) } : {}),
@@ -120,6 +121,7 @@ const Loan = () => {
             field_initial_fee: loan.fif,
             field_rec_first_payment_date: loan.pdt,
             field_recurring_payment_day: loan.frpd,
+            field_loan_status: Number(loan.fls),
           }}
           onSuccess={() => {
             setShowEditModal(false);

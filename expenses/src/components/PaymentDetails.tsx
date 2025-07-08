@@ -29,6 +29,7 @@ const PaymentDetails = (props) => {
     field_pay_installment: '',
     field_pay_single_fee: '',
     field_new_recurring_amount: '',
+    field_is_simulated_payment: false,
   });
   const [nrOfItemsToShow, setNrOfItemsToShow] = useState(4);
 
@@ -51,6 +52,7 @@ const PaymentDetails = (props) => {
       field_pay_installment: item.fpi,
       field_pay_single_fee: item.fpsf,
       field_new_recurring_amount: item.fnra,
+      field_is_simulated_payment: Number(item.fisp),
     });
     setShowEditModal(true);
   };

@@ -41,16 +41,17 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     field_pay_single_fee: '',
     field_new_recurring_amount: '',
     field_loan_reference: id,
+    field_is_simulated_payment: 0,
   };
   const [formState, setFormState] = useState(
     formType === 'add' ? initialState : values
   );
   const { token } = useAuthState() as AuthState;
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
+    const { name, type, checked, value } = event.target;
     setFormState({
       ...formState,
-      [event.target.name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     });
   };
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,6 +66,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       field_pay_installment: [formState.field_pay_installment],
       field_pay_single_fee: [formState.field_pay_single_fee],
       field_new_recurring_amount: [formState.field_new_recurring_amount],
+      field_is_simulated_payment: [formState.field_is_simulated_payment],
       field_loan_reference: [id],
     };
     const fetchOptions = {
@@ -159,6 +161,17 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           min={0}
           step={0.01}
         />
+
+        <label htmlFor="field_is_simulated_payment">
+          Simulated payment (debug loan)
+          <input
+            type="checkbox"
+            name="field_is_simulated_payment"
+            id="field_is_simulated_payment"
+            checked={formState.field_is_simulated_payment}
+            onChange={handleChange}
+          />
+        </label>
 
         <button type="submit" disabled={isSubmitting} className="button w-100">
           {isSubmitting ? (
