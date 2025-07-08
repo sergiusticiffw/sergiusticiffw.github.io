@@ -174,7 +174,7 @@ const Loans = () => {
                     <>
                       <tr>
                         <td colSpan={7}>
-                          <strong>🟢 In Progress</strong>
+                          <strong>🟡 In Progress</strong>
                         </td>
                       </tr>
                       {loans
@@ -238,7 +238,7 @@ const Loans = () => {
                     <>
                       <tr>
                         <td colSpan={7}>
-                          <strong>🔴 Completed</strong>
+                          <strong>🟢 Completed</strong>
                         </td>
                       </tr>
                       {loans
