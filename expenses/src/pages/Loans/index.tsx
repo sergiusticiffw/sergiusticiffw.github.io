@@ -41,7 +41,7 @@ const Loans = () => {
     field_rec_first_payment_date: null,
     field_recurring_payment_day: '',
     field_recurring_payment_fee: '',
-    field_loan_status: 1,
+    field_loan_status: 'draft',
   });
 
   const {
@@ -66,7 +66,7 @@ const Loans = () => {
       field_rec_first_payment_date: item.pdt,
       field_recurring_payment_day: item.frpd,
       field_recurring_payment_fee: item.frpf,
-      field_loan_status: Number(item.fls),
+      field_loan_status: item.fls,
     });
     setShowEditModal(true);
   };
@@ -170,7 +170,7 @@ const Loans = () => {
                 </thead>
                 <tbody ref={tableRef}>
                   {/** In Progress Section */}
-                  {loans?.some((loan) => Number(loan.fls)) && (
+                  {loans?.some((loan) => loan.fls == 'in_progress') && (
                     <>
                       <tr>
                         <td colSpan={7}>
@@ -178,7 +178,71 @@ const Loans = () => {
                         </td>
                       </tr>
                       {loans
-                        .filter((loan) => Number(loan.fls))
+                        .filter((loan) => loan.fls == 'in_progress')
+                        .map((loan) => (
+                          <tr
+                            key={loan.id}
+                            data-id={loan.id}
+                            onTouchStart={(e) =>
+                              handleTouchStart(e, loan.id, tableRef)
+                            }
+                            onTouchMove={(e) => handleTouchMove(e, tableRef)}
+                            onTouchEnd={(e) =>
+                              handleTouchEnd(
+                                e,
+                                tableRef,
+                                loan.id,
+                                handleEdit,
+                                setShowDeleteModal
+                              )
+                            }
+                          >
+                            <td>
+                              <Link
+                                to={`/expenses/loan/${loan.id}`}
+                                style={{
+                                  color: 'white',
+                                  textDecoration: 'none',
+                                }}
+                              >
+                                {loan.title}
+                              </Link>
+                            </td>
+                            <td>{formatNumber(loan.fp)}</td>
+                            <td>{formatNumber(loan.fr)}</td>
+                            <td>{loan.sdt}</td>
+                            <td>{loan.edt}</td>
+                            <td className="desktop-only">
+                              <button
+                                onClick={() => handleEdit(loan.id)}
+                                className="btn-outline"
+                              >
+                                <FaPen />
+                              </button>
+                            </td>
+                            <td className="desktop-only">
+                              <button
+                                onClick={() => setShowDeleteModal(loan.id)}
+                                className="btn-outline"
+                              >
+                                <FaTrash />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </>
+                  )}
+
+                  {/** Draft Section */}
+                  {loans?.some((loan) => loan.fls == 'draft') && (
+                    <>
+                      <tr>
+                        <td colSpan={7}>
+                          <strong>🔵 Draft</strong>
+                        </td>
+                      </tr>
+                      {loans
+                        .filter((loan) => loan.fls == 'draft')
                         .map((loan) => (
                           <tr
                             key={loan.id}
@@ -234,7 +298,7 @@ const Loans = () => {
                   )}
 
                   {/** Completed Section */}
-                  {loans?.some((loan) => !Number(loan.fls)) && (
+                  {loans?.some((loan) => loan.fls == 'completed') && (
                     <>
                       <tr>
                         <td colSpan={7}>
@@ -242,7 +306,7 @@ const Loans = () => {
                         </td>
                       </tr>
                       {loans
-                        .filter((loan) => !Number(loan.fls))
+                        .filter((loan) => loan.fls == 'completed')
                         .map((loan) => (
                           <tr
                             key={loan.id}

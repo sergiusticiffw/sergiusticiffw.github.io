@@ -3,7 +3,7 @@ import { useNotification } from '@context/notification';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { AuthState, DataState, NodeData } from '@type/types';
 import { fetchRequest, addOneDay } from '@utils/utils';
-import { notificationType } from '@utils/constants';
+import { categories, notificationType } from '@utils/constants';
 import { FaPlus, FaPen } from 'react-icons/fa';
 
 interface LoanFormProps {
@@ -39,7 +39,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
 
     field_rec_first_payment_date: null,
     field_recurring_payment_day: '',
-    field_loan_status: true,
+    field_loan_status: 'draft',
   };
 
   const [formState, setFormState] = useState(
@@ -74,6 +74,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
       field_recurring_payment_day: [formState.field_recurring_payment_day],
       field_loan_status: [formState.field_loan_status],
     };
+    console.log(99, node);
 
     const fetchOptions = {
       method: formType === 'add' ? 'POST' : 'PATCH',
@@ -111,6 +112,12 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
       }
     );
   };
+
+  const options = [
+    { value: 'draft', label: 'Draft' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'completed', label: 'Completed' },
+  ];
 
   return (
     <div>
@@ -188,16 +195,18 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           max={31}
         />
 
-        <label htmlFor="field_loan_status">
-          Is loan active
-          <input
-            type="checkbox"
-            name="field_loan_status"
-            id="field_loan_status"
-            checked={formState.field_loan_status}
-            onChange={handleChange}
-          />
-        </label>
+        <select
+          required
+          name="field_loan_status"
+          value={formState.field_loan_status}
+          onChange={handleChange}
+        >
+          {options.map((item, id) => (
+            <option key={id} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </select>
 
         <button type="submit" disabled={isSubmitting} className="button w-100">
           {isSubmitting ? (

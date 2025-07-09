@@ -121,7 +121,7 @@ const Loan = () => {
             field_initial_fee: loan.fif,
             field_rec_first_payment_date: loan.pdt,
             field_recurring_payment_day: loan.frpd,
-            field_loan_status: Number(loan.fls),
+            field_loan_status: loan.fls,
           }}
           onSuccess={() => {
             setShowEditModal(false);
