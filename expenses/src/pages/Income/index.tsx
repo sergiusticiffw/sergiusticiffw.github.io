@@ -166,7 +166,7 @@ const Income = () => {
           {data.incomeData?.length ? (
             <div className="charts-section">
               <YearIncomeAverageTrend />
-              <MonthlyComparisonIncomeTrend />
+              {/*<MonthlyComparisonIncomeTrend />*/}
             </div>
           ) : (
             ''
