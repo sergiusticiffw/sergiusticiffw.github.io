@@ -68,6 +68,9 @@ const YearAverageTrend = () => {
   const totalIncomePerYear = data?.totalIncomePerYear || {};
   let sumIncome: number = 0;
   const isFiltered = !!data.filtered_raw;
+  const itms = Object.values(data.filtered_raw || data.raw).filter(
+    (item) => item.type === 'transaction'
+  );
   return (
     <>
       <HighchartsReact highcharts={Highcharts} options={options} />
@@ -111,6 +114,10 @@ const YearAverageTrend = () => {
           <tr>
             <td>Total Months</td>
             <td>{getMonthsPassed(firstDay as string).toFixed(2)} months</td>
+          </tr>
+          <tr>
+            <td>Total Items</td>
+            <td>{formatNumber(itms.length + 1)} items</td>
           </tr>
         </tbody>
       </table>
