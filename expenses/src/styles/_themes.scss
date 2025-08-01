@@ -1,17 +1,18 @@
-@import 'variables';
+@use 'variables' as *;
+@use 'sass:map';
 
 // Theme generation
 @each $class, $colors in $color-map {
   .#{$class} {
-    --accent-color: #{map-get($colors, accent-color)};
-    --secondary-color: #{map-get($colors, secondary-color)};
-    --bg-color: #{map-get($colors, bg-color)};
-    --text-color: #{map-get($colors, text-color)};
-    --accent-gradient-color: #{map-get($colors, accent-gradient-color)};
+    --accent-color: #{map.get($colors, accent-color)};
+    --secondary-color: #{map.get($colors, secondary-color)};
+    --bg-color: #{map.get($colors, bg-color)};
+    --text-color: #{map.get($colors, text-color)};
+    --accent-gradient-color: #{map.get($colors, accent-gradient-color)};
   }
   
   body:has(.#{$class}) {
-    background: #{map-get($colors, bg-color)};
+    background: #{map.get($colors, bg-color)};
   }
 }
 

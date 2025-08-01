@@ -1,21 +1,21 @@
 // Import base styles and variables
-@import 'styles/variables';
-@import 'styles/themes';
-@import 'styles/base';
+@use 'styles/variables' as *;
+@use 'styles/themes' as *;
+@use 'styles/base' as *;
 
 // Import component styles
-@import 'components/Navbar/Navbar';
-@import 'components/TransactionsTable/TransactionsTable';
-@import 'components/TransactionForm/TransactionForm';
-@import 'components/Modal/Modal';
-@import 'components/Filters/Filters';
-@import 'components/Charts/Charts';
-@import 'components/Calendar/Calendar';
-@import 'components/Profile/Profile';
-@import 'components/Notification/Notification';
-@import 'components/Loan/Loan';
-@import 'components/Home/Home';
-@import 'components/DailyAverage/DailyAverage';
-@import 'components/Suggestions/Suggestions';
-@import 'components/Income/Income';
-@import 'components/Common/Common';
+@use 'components/Navbar/Navbar' as *;
+@use 'components/TransactionsTable/TransactionsTable' as *;
+@use 'components/TransactionForm/TransactionForm' as *;
+@use 'components/Modal/Modal' as *;
+@use 'components/Filters/Filters' as *;
+@use 'components/Charts/Charts' as *;
+@use 'components/Calendar/Calendar' as *;
+@use 'components/Profile/Profile' as *;
+@use 'components/Notification/Notification' as *;
+@use 'components/Loan/Loan' as *;
+@use 'components/Home/Home' as *;
+@use 'components/DailyAverage/DailyAverage' as *;
+@use 'components/Suggestions/Suggestions' as *;
+@use 'components/Income/Income' as *;
+@use 'components/Common/Common' as *;
