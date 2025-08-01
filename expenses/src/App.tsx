@@ -4,79 +4,68 @@ import { NotificationProvider } from '@context/notification';
 import { LoanProvider } from '@context/loan';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { AppRoute } from '@components/Common';
-import React from 'react';
+import React, { Suspense, useMemo } from 'react';
 import routes from '@config/routes';
 import Navbar from '@components/Navbar';
-import Highcharts from 'highcharts';
-import Highstock from 'highcharts/highstock';
-import BrandDark from 'highcharts/themes/brand-dark';
+import { useHighcharts } from '@hooks/useHighcharts';
 
-Highcharts.setOptions(BrandDark.theme);
-Highstock.setOptions(BrandDark.theme);
-
-const bgColors: Record<string, string> = {
-  'carrot-orange': '#102433',
-  inchworm: '#201f1e',
-};
-const theme = localStorage.getItem('theme') || 'blue-pink-gradient';
-const useChartsBackgroundColor = localStorage.getItem(
-  'useChartsBackgroundColor'
+// Loading component for Suspense fallback
+const LoadingFallback = () => (
+  <div className="loading-container">
+    <div className="loader">
+      <span className="loader__element"></span>
+      <span className="loader__element"></span>
+      <span className="loader__element"></span>
+    </div>
+  </div>
 );
 
-Highcharts.theme = {
-  tooltip: {
-    style: {
-      fontSize: '15px',
-    },
-  },
-  ...(useChartsBackgroundColor !== 'true' && {
-    chart: {
-      backgroundColor: theme ? bgColors[theme] : '#282a36',
-    },
-  }),
-};
-
-Highcharts.setOptions(Highcharts.theme);
-Highstock.setOptions(Highcharts.theme);
-Highcharts.setOptions({
-  plotOptions: {
-    series: {
-      animation: false,
-      boostThreshold: 4000,
-    },
-  },
-});
-Highstock.setOptions({
-  plotOptions: {
-    series: {
-      animation: false,
-      boostThreshold: 4000,
-    },
-  },
-});
+// Error boundary component
+const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
+  <div className="error-container">
+    <h2>Something went wrong</h2>
+    <p>{error.message}</p>
+    <button onClick={resetErrorBoundary} className="button">
+      Try again
+    </button>
+  </div>
+);
 
 const App = () => {
+  // Configure Highcharts
+  useHighcharts();
+
+  // Memoize routes to prevent unnecessary re-renders
+  const appRoutes = useMemo(() => 
+    routes.map((route) => (
+      <Route
+        key={route.path}
+        path={route.path}
+        element={
+          <AppRoute
+            component={route.component}
+            isPrivate={route.isPrivate}
+          />
+        }
+      />
+    )), []
+  );
+
   return (
     <AuthProvider>
       <NotificationProvider>
         <LoanProvider>
           <Router>
-            <Navbar />
-
-            <Routes>
-              {routes.map((route) => (
-                <Route
-                  key={route.path}
-                  path={route.path}
-                  element={
-                    <AppRoute
-                      component={route.component}
-                      isPrivate={route.isPrivate}
-                    />
-                  }
-                />
-              ))}
-            </Routes>
+            <div className="app-container">
+              <Navbar />
+              <main className="main-content">
+                <Suspense fallback={<LoadingFallback />}>
+                  <Routes>
+                    {appRoutes}
+                  </Routes>
+                </Suspense>
+              </main>
+            </div>
           </Router>
         </LoanProvider>
       </NotificationProvider>

@@ -19,3 +19,53 @@
 @use 'components/Suggestions/Suggestions' as *;
 @use 'components/Income/Income' as *;
 @use 'components/Common/Common' as *;
+
+// App-specific styles
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding-bottom: 100px; // Space for navbar
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+  padding: $spacing-xl;
+  
+  h2 {
+    color: var(--accent-color);
+    margin-bottom: $spacing-md;
+  }
+  
+  p {
+    margin-bottom: $spacing-lg;
+    color: var(--text-color);
+  }
+  
+  .button {
+    padding: $spacing-sm $spacing-lg;
+    border-radius: $border-radius-md;
+    transition: all $transition-normal;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  }
+}
