@@ -26,7 +26,9 @@ interface AmortizationTableProps {
   amortizationSchedule: (PaymentLog | AnnualSummary)[];
 }
 
-const AmortizationTable: React.FC<AmortizationTableProps> = ({ amortizationSchedule }) => {
+const AmortizationTable: React.FC<AmortizationTableProps> = ({
+  amortizationSchedule,
+}) => {
   const tableRef = useRef<HTMLTableElement>(null);
   const theadRef = useRef<HTMLTableSectionElement>(null);
   const stickyHeaderRef = useRef<HTMLTableElement>(null);
@@ -64,7 +66,10 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({ amortizationSched
       syncColumnWidths();
     };
 
-    const syncScroll = (source: HTMLElement | null, target: HTMLElement | null) => {
+    const syncScroll = (
+      source: HTMLElement | null,
+      target: HTMLElement | null
+    ) => {
       if (target && source) {
         target.scrollLeft = source.scrollLeft;
       }
@@ -184,7 +189,9 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({ amortizationSched
             </tr>
           </thead>
           <tbody>
-            {amortizationSchedule?.map((element, index) => renderRow(element, index))}
+            {amortizationSchedule?.map((element, index) =>
+              renderRow(element, index)
+            )}
           </tbody>
         </table>
       </div>
