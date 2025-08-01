@@ -5,6 +5,7 @@ import { AuthState, DataState, NodeData } from '@type/types';
 import { fetchRequest, addOneDay } from '@utils/utils';
 import { categories, notificationType } from '@utils/constants';
 import { FaPlus, FaPen } from 'react-icons/fa';
+import './LoanForm.scss';
 
 interface LoanFormProps {
   formType: string;
@@ -121,107 +122,158 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
   ];
 
   return (
-    <div>
-      <h2>{formType === 'add' ? 'Add loan' : 'Edit loan'}</h2>
-      <form className="add-transaction" onSubmit={handleSubmit}>
-        <input
-          required
-          placeholder="Title"
-          type="text"
-          name="title"
-          value={formState.title}
-          onChange={handleChange}
-        />
-        <input
-          required
-          placeholder="Principal"
-          type="number"
-          name="field_principal"
-          value={formState.field_principal}
-          onChange={handleChange}
-          min={0}
-          step={0.01}
-        />
-        <input
-          required
-          placeholder="Start Date"
-          type="date"
-          name="field_start_date"
-          value={formState.field_start_date}
-          onChange={handleChange}
-        />
-        <input
-          required
-          placeholder="End Date"
-          type="date"
-          name="field_end_date"
-          value={formState.field_end_date}
-          onChange={handleChange}
-        />
-        <input
-          required
-          placeholder="Rate"
-          type="number"
-          name="field_rate"
-          value={formState.field_rate}
-          onChange={handleChange}
-          min={0}
-          step={0.01}
-        />
-        <input
-          placeholder="Initial fee"
-          type="number"
-          name="field_initial_fee"
-          value={formState.field_initial_fee}
-          onChange={handleChange}
-        />
-        <input
-          required
-          placeholder="1st recurring payment date"
-          type="date"
-          max={formState.field_end_date}
-          min={addOneDay(formState.field_start_date)}
-          name="field_rec_first_payment_date"
-          value={formState.field_rec_first_payment_date}
-          onChange={handleChange}
-        />
-        <input
-          required
-          placeholder="Recurring payment day"
-          type="number"
-          name="field_recurring_payment_day"
-          value={formState.field_recurring_payment_day}
-          onChange={handleChange}
-          min={1}
-          max={31}
-        />
+    <div className="loan-form-container">
+      <div className="form-header">
+        <h2>{formType === 'add' ? 'Add New Loan' : 'Edit Loan'}</h2>
+      </div>
+      
+      <form className="loan-form" onSubmit={handleSubmit}>
+        {/* Basic Information */}
+        <div className="form-group required">
+          <label>Loan Title</label>
+          <input
+            required
+            placeholder="Enter loan title"
+            type="text"
+            name="title"
+            value={formState.title}
+            onChange={handleChange}
+          />
+        </div>
 
-        <select
-          required
-          name="field_loan_status"
-          value={formState.field_loan_status}
-          onChange={handleChange}
-        >
-          {options.map((item, id) => (
-            <option key={id} value={item.value}>
-              {item.label}
-            </option>
-          ))}
-        </select>
+        <div className="form-row">
+          <div className="form-group required">
+            <label>Principal Amount</label>
+            <input
+              required
+              placeholder="0.00"
+              type="number"
+              name="field_principal"
+              value={formState.field_principal}
+              onChange={handleChange}
+              min={0}
+              step={0.01}
+            />
+          </div>
+          
+          <div className="form-group required">
+            <label>Interest Rate (%)</label>
+            <input
+              required
+              placeholder="0.00"
+              type="number"
+              name="field_rate"
+              value={formState.field_rate}
+              onChange={handleChange}
+              min={0}
+              step={0.01}
+            />
+          </div>
+        </div>
 
-        <button type="submit" disabled={isSubmitting} className="button w-100">
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : formType === 'add' ? (
-            <FaPlus />
-          ) : (
-            <FaPen />
-          )}
-        </button>
+        <div className="form-row">
+          <div className="form-group required">
+            <label>Start Date</label>
+            <input
+              required
+              type="date"
+              name="field_start_date"
+              value={formState.field_start_date}
+              onChange={handleChange}
+            />
+          </div>
+          
+          <div className="form-group required">
+            <label>End Date</label>
+            <input
+              required
+              type="date"
+              name="field_end_date"
+              value={formState.field_end_date}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Initial Fee (Optional)</label>
+          <input
+            placeholder="0.00"
+            type="number"
+            name="field_initial_fee"
+            value={formState.field_initial_fee}
+            onChange={handleChange}
+            min={0}
+            step={0.01}
+          />
+        </div>
+
+        <div className="form-row">
+          <div className="form-group required">
+            <label>First Payment Date</label>
+            <input
+              required
+              type="date"
+              max={formState.field_end_date}
+              min={addOneDay(formState.field_start_date)}
+              name="field_rec_first_payment_date"
+              value={formState.field_rec_first_payment_date}
+              onChange={handleChange}
+            />
+          </div>
+          
+          <div className="form-group required">
+            <label>Payment Day of Month</label>
+            <input
+              required
+              placeholder="1-31"
+              type="number"
+              name="field_recurring_payment_day"
+              value={formState.field_recurring_payment_day}
+              onChange={handleChange}
+              min={1}
+              max={31}
+            />
+          </div>
+        </div>
+
+        <div className="form-group required">
+          <label>Loan Status</label>
+          <select
+            required
+            name="field_loan_status"
+            value={formState.field_loan_status}
+            onChange={handleChange}
+          >
+            {options.map((item, id) => (
+              <option key={id} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-actions">
+          <button type="submit" disabled={isSubmitting} className="btn-submit">
+            {isSubmitting ? (
+              <div className="loader">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            ) : formType === 'add' ? (
+              <>
+                <FaPlus />
+                Add Loan
+              </>
+            ) : (
+              <>
+                <FaPen />
+                Update Loan
+              </>
+            )}
+          </button>
+        </div>
       </form>
     </div>
   );

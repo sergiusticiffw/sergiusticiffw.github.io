@@ -81,6 +81,27 @@ export const deleteNode = (nid: string, token: string, callback: any) => {
   });
 };
 
+export const deleteLoan = (nid: string, token: string, dataDispatch: any, dispatch: any, onSuccess: () => void) => {
+  const fetchOptions = {
+    method: 'DELETE',
+    headers: new Headers({
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'JWT-Authorization': 'Bearer ' + token,
+    }),
+  };
+  
+  fetchRequest(
+    `https://dev-expenses-api.pantheonsite.io/node/${nid}?_format=json`,
+    fetchOptions,
+    dataDispatch,
+    dispatch,
+    (data: any) => {
+      onSuccess();
+    }
+  );
+};
+
 export const fetchData = (
   token: string,
   dataDispatch: any,

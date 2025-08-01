@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useLoan } from '@context/loan';
 import { AuthState } from '@type/types';
-import { fetchLoans, formatNumber } from '@utils/utils';
+import { fetchLoans, formatNumber, deleteLoan } from '@utils/utils';
+import { useNotification } from '@context/notification';
+import { notificationType } from '@utils/constants';
 import {
   FaHandHoldingUsd,
   FaPlus,
@@ -12,6 +14,10 @@ import {
   FaCalendarAlt,
   FaMoneyBillWave,
   FaExternalLinkAlt,
+  FaSort,
+  FaSortUp,
+  FaSortDown,
+  FaFilter,
 } from 'react-icons/fa';
 import Modal from '@components/Modal/Modal';
 import LoanForm from '@components/Loan/LoanForm';
@@ -22,11 +28,15 @@ const Loans: React.FC = () => {
   const { data, dataDispatch } = useLoan();
   const { token } = useAuthState() as AuthState;
   const dispatch = useAuthDispatch();
+  const showNotification = useNotification();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [focusedItem, setFocusedItem] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sortBy, setSortBy] = useState<'status' | 'title' | 'principal' | 'date'>('status');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const { loans, loading } = data;
 
@@ -57,6 +67,36 @@ const Loans: React.FC = () => {
     setShowDeleteModal(true);
   };
 
+  const handleConfirmDelete = () => {
+    setIsSubmitting(true);
+    deleteLoan(
+      focusedItem.id,
+      token,
+      dataDispatch,
+      dispatch,
+      () => {
+        setIsSubmitting(false);
+        setShowDeleteModal(false);
+        showNotification('Loan deleted successfully!', notificationType.SUCCESS);
+        fetchLoans(token, dataDispatch, dispatch);
+      }
+    );
+  };
+
+  const handleSort = (field: 'status' | 'title' | 'principal' | 'date') => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const getSortIcon = (field: 'status' | 'title' | 'principal' | 'date') => {
+    if (sortBy !== field) return <FaSort />;
+    return sortOrder === 'asc' ? <FaSortUp /> : <FaSortDown />;
+  };
+
   const getLoanStatus = (loan: any) => {
     if (loan.fls === 'completed') return 'completed';
     if (loan.fls === 'in_progress') return 'active';
@@ -75,6 +115,50 @@ const Loans: React.FC = () => {
         return 'Unknown';
     }
   };
+
+  // Filter and sort loans
+  const filteredAndSortedLoans = useMemo(() => {
+    if (!loans) return [];
+    
+    let filtered = loans;
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = loans.filter((loan: any) => getLoanStatus(loan) === statusFilter);
+    }
+    
+    // Apply sorting
+    filtered.sort((a: any, b: any) => {
+      let aValue: any, bValue: any;
+      
+      switch (sortBy) {
+        case 'status':
+          aValue = getLoanStatus(a);
+          bValue = getLoanStatus(b);
+          break;
+        case 'title':
+          aValue = a.title?.toLowerCase() || '';
+          bValue = b.title?.toLowerCase() || '';
+          break;
+        case 'principal':
+          aValue = parseFloat(a.fp || '0');
+          bValue = parseFloat(b.fp || '0');
+          break;
+        case 'date':
+          aValue = new Date(a.sdt || '');
+          bValue = new Date(b.sdt || '');
+          break;
+        default:
+          return 0;
+      }
+      
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+    
+    return filtered;
+  }, [loans, sortBy, sortOrder, statusFilter]);
 
   const totalLoans = loans?.length || 0;
   const activeLoans =
@@ -145,16 +229,93 @@ const Loans: React.FC = () => {
         </div>
       </div>
 
+      {/* Filters and Sorting Section */}
+      <div className="loans-filters">
+        <div className="filter-group">
+          <label className="filter-label">
+            <FaFilter />
+            Filter by Status:
+          </label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="filter-select"
+          >
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+        
+        <div className="sort-group">
+          <span className="sort-label">Sort by:</span>
+          <button
+            onClick={() => handleSort('status')}
+            className={`sort-btn ${sortBy === 'status' ? 'active' : ''}`}
+            title="Sort by Status"
+          >
+            Status {getSortIcon('status')}
+          </button>
+          <button
+            onClick={() => handleSort('title')}
+            className={`sort-btn ${sortBy === 'title' ? 'active' : ''}`}
+            title="Sort by Title"
+          >
+            Title {getSortIcon('title')}
+          </button>
+          <button
+            onClick={() => handleSort('principal')}
+            className={`sort-btn ${sortBy === 'principal' ? 'active' : ''}`}
+            title="Sort by Principal"
+          >
+            Principal {getSortIcon('principal')}
+          </button>
+          <button
+            onClick={() => handleSort('date')}
+            className={`sort-btn ${sortBy === 'date' ? 'active' : ''}`}
+            title="Sort by Start Date"
+          >
+            Date {getSortIcon('date')}
+          </button>
+        </div>
+      </div>
+
       {/* Loans Grid */}
       <div className="loans-grid">
-        {loans?.map((loan: any) => {
-          const status = getLoanStatus(loan);
+        {filteredAndSortedLoans.length === 0 ? (
+          <div className="no-loans">
+            <div className="no-loans-icon">
+              <FaHandHoldingUsd />
+            </div>
+            <h3>No loans found</h3>
+            <p>
+              {statusFilter !== 'all' 
+                ? `No loans with "${statusFilter}" status found.` 
+                : 'No loans available. Add your first loan to get started!'}
+            </p>
+            {statusFilter !== 'all' && (
+              <button 
+                onClick={() => setStatusFilter('all')} 
+                className="action-btn"
+              >
+                Show All Loans
+              </button>
+            )}
+          </div>
+        ) : (
+          filteredAndSortedLoans.map((loan: any) => {
+            const status = getLoanStatus(loan);
 
-          return (
-            <div key={loan.id} className="loan-card">
+            return (
+              <div key={loan.id} className="loan-card">
               <div className="loan-header">
                 <h3 className="loan-title">
-                  <Link to={`/expenses/loan/${loan.id}`} className="loan-link">
+                  <Link 
+                    to={`/expenses/loan/${loan.id}`} 
+                    className="loan-link"
+                    title={loan.title}
+                  >
                     {loan.title}
                     <FaExternalLinkAlt className="link-icon" />
                   </Link>
@@ -203,7 +364,8 @@ const Loans: React.FC = () => {
               </div>
             </div>
           );
-        })}
+        })
+        )}
       </div>
 
       {/* Add Loan Modal */}
@@ -260,34 +422,22 @@ const Loans: React.FC = () => {
           setShowDeleteModal(false);
         }}
       >
-        <div className="delete-confirmation">
-          <h3>Delete Loan</h3>
-          <p>
-            Are you sure you want to delete "{focusedItem.title}"? This action
-            cannot be undone.
-          </p>
-          <div className="modal-actions">
-            <button
-              onClick={() => {
-                // Handle delete logic here
-                setShowDeleteModal(false);
-                fetchLoans(token, dataDispatch, dispatch);
-              }}
-              className="button danger"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <div className="loader">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              ) : (
-                <FaTrash />
-              )}
-            </button>
-          </div>
-        </div>
+        <h3>Are you sure you want to delete this loan?</h3>
+        <button
+          onClick={handleConfirmDelete}
+          className="button wide"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <div className="loader">
+              <span className="loader__element"></span>
+              <span className="loader__element"></span>
+              <span className="loader__element"></span>
+            </div>
+          ) : (
+            <FaTrash />
+          )}
+        </button>
       </Modal>
     </div>
   );

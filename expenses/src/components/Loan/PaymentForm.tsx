@@ -4,8 +4,9 @@ import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { AuthState, DataState, NodeData } from '@type/types';
 import { addOneDay, fetchRequest } from '@utils/utils';
 import { notificationType } from '@utils/constants';
-import { FaPlus, FaPen } from 'react-icons/fa';
+import { FaPlus, FaPen, FaMoneyBillWave, FaCalendarAlt, FaPercentage, FaDollarSign } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
+import './PaymentForm.scss';
 
 interface PaymentFormProps {
   formType: string;
@@ -118,65 +119,94 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   };
 
   return (
-    <div>
-      <h2>{formType === 'add' ? 'Add Payment' : 'Edit Payment'}</h2>
-      <form className="add-transaction" onSubmit={handleSubmit}>
-        <input
-          required
-          placeholder="Title"
-          type="text"
-          name="title"
-          value={formState.title || ''}
-          onChange={handleChange}
-        />
-        <input
-          required
-          placeholder="Event date"
-          type="date"
-          name="field_date"
-          min={addOneDay(startDate)}
-          value={formState.field_date || ''}
-          onChange={handleChange}
-        />
-        <input
-          placeholder="New interest rate"
-          type="number"
-          name="field_rate"
-          value={formState.field_rate || ''}
-          onChange={handleChange}
-          min={0}
-          step={0.01}
-        />
-        <input
-          placeholder="Installment payment"
-          type="number"
-          name="field_pay_installment"
-          value={formState.field_pay_installment || ''}
-          onChange={handleChange}
-          min={0}
-          step={0.01}
-        />
-        <input
-          placeholder="New recurring amount"
-          type="number"
-          name="field_new_recurring_amount"
-          value={formState.field_new_recurring_amount || ''}
-          onChange={handleChange}
-          min={0}
-          step={0.01}
-        />
-        <input
-          placeholder="Individual fee"
-          type="number"
-          name="field_pay_single_fee"
-          value={formState.field_pay_single_fee || ''}
-          onChange={handleChange}
-          min={0}
-          step={0.01}
-        />
+    <div className="payment-form-container">
+      <div className="form-header">
+        <h2>{formType === 'add' ? 'Add New Payment' : 'Edit Payment'}</h2>
+      </div>
+      
+      <form className="payment-form" onSubmit={handleSubmit}>
+        {/* Basic Information */}
+        <div className="form-group required">
+          <label>Payment Title</label>
+          <input
+            required
+            placeholder="Enter payment title"
+            type="text"
+            name="title"
+            value={formState.title || ''}
+            onChange={handleChange}
+          />
+        </div>
 
-        <label htmlFor="field_is_simulated_payment" className="checkbox-label">
-          Simulated payment (debug loan)
+        <div className="form-group required">
+          <label>Payment Date</label>
+          <input
+            required
+            type="date"
+            name="field_date"
+            min={addOneDay(startDate)}
+            value={formState.field_date || ''}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>New Interest Rate (%)</label>
+            <input
+              placeholder="0.00"
+              type="number"
+              name="field_rate"
+              value={formState.field_rate || ''}
+              onChange={handleChange}
+              min={0}
+              step={0.01}
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Installment Payment</label>
+            <input
+              placeholder="0.00"
+              type="number"
+              name="field_pay_installment"
+              value={formState.field_pay_installment || ''}
+              onChange={handleChange}
+              min={0}
+              step={0.01}
+            />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>New Recurring Amount</label>
+            <input
+              placeholder="0.00"
+              type="number"
+              name="field_new_recurring_amount"
+              value={formState.field_new_recurring_amount || ''}
+              onChange={handleChange}
+              min={0}
+              step={0.01}
+            />
+          </div>
+          
+          <div className="form-group">
+            <label>Individual Fee</label>
+            <input
+              placeholder="0.00"
+              type="number"
+              name="field_pay_single_fee"
+              value={formState.field_pay_single_fee || ''}
+              onChange={handleChange}
+              min={0}
+              step={0.01}
+            />
+          </div>
+        </div>
+
+        <div className="checkbox-group">
           <input
             type="checkbox"
             name="field_is_simulated_payment"
@@ -184,21 +214,32 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             checked={formState.field_is_simulated_payment || false}
             onChange={handleChange}
           />
-        </label>
+          <label htmlFor="field_is_simulated_payment">
+            Simulated payment (debug loan)
+          </label>
+        </div>
 
-        <button type="submit" disabled={isSubmitting} className="button w-100">
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : formType === 'add' ? (
-            <FaPlus />
-          ) : (
-            <FaPen />
-          )}
-        </button>
+        <div className="form-actions">
+          <button type="submit" disabled={isSubmitting} className="btn-submit">
+            {isSubmitting ? (
+              <div className="loader">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            ) : formType === 'add' ? (
+              <>
+                <FaPlus />
+                Add Payment
+              </>
+            ) : (
+              <>
+                <FaPen />
+                Update Payment
+              </>
+            )}
+          </button>
+        </div>
       </form>
     </div>
   );

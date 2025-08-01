@@ -18,26 +18,24 @@ interface ExpenseCalendarProps {
   currentMonthIndex: number;
   currentMonth: string;
   setCurrentMonthIndex: (newMonthIndex: number) => void;
-  items?: TransactionOrIncomeItem[];
-  months?: string[];
 }
 
 const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   setCurrentMonthIndex,
   currentMonthIndex,
   currentMonth,
-  items = [],
-  months = [],
+  items,
+  months,
 }) => {
   const { theme } = useAuthState() as AuthState;
   const { data, dataDispatch } = useData() as DataState;
   const showNotification = useNotification();
   const { token } = useAuthState() as AuthState;
 
-  const [events, setEvents] = useState<any[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [focusedItem, setFocusedItem] = useState<any>({});
+  const [focusedItem, setFocusedItem] = useState({});
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const dispatch = useAuthDispatch();
@@ -47,6 +45,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   const [prevDisabled, setPrevDisabled] = useState(false);
 
   const handleEdit = (id: string) => {
+    // @ts-expect-error
     const item = selectedEvent?.data?.find(
       (item: TransactionOrIncomeItem) => item.id === id
     );
@@ -63,13 +62,16 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
 
   const groupByDate = useCallback((transactions: TransactionOrIncomeItem[]) => {
     const groupedTransactions = (transactions ?? []).reduce(
-      (acc: any, transaction) => {
+      (acc, transaction) => {
         const { type, dt: date, sum } = transaction;
         if (type === 'transaction') {
           const parsedSum = parseFloat(sum);
+          // @ts-expect-error
           if (!acc[date]) {
+            // @ts-expect-error
             acc[date] = parsedSum;
           } else {
+            // @ts-expect-error
             acc[date] += parsedSum;
           }
         }
@@ -80,6 +82,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
 
     return Object.keys(groupedTransactions).map((date) => ({
       date,
+      // @ts-expect-error
       sum: groupedTransactions[date],
     }));
   }, []);
@@ -99,6 +102,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
       start: new Date(expense.date),
       end: new Date(expense.date),
     }));
+    // @ts-expect-error
     setEvents(formattedEvents);
   }, [items]);
 
@@ -111,6 +115,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
       day: 'numeric',
     });
     setSelectedEvent({
+      // @ts-expect-error
       title: formattedDate,
       data: selectedItems,
     });
@@ -154,16 +159,13 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
     []
   );
 
-  const calendarRef = useRef<any>(null);
+  const calendarRef = useRef(null);
   const date = new Date(`01 ${months[currentMonthIndex]}`);
 
   useEffect(() => {
     if (calendarRef.current) {
-      try {
-        calendarRef.current.getApi().gotoDate(date);
-      } catch (error) {
-        console.error('Error navigating to date:', error);
-      }
+      // @ts-expect-error
+      calendarRef.current.getApi().gotoDate(date);
     }
   }, [date]);
 
@@ -215,23 +217,13 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
         if (deltaX > 0) {
           if (prevDisabled) return;
           setCurrentMonthIndex(currentMonthIndex + 1);
-          if (calendarRef.current) {
-            try {
-              calendarRef.current.getApi().prev();
-            } catch (error) {
-              console.error('Error navigating:', error);
-            }
-          }
+          // @ts-expect-error
+          calendarRef.current.getApi().prev();
         } else {
           if (nextDisabled) return;
           setCurrentMonthIndex(currentMonthIndex - 1);
-          if (calendarRef.current) {
-            try {
-              calendarRef.current.getApi().next();
-            } catch (error) {
-              console.error('Error navigating:', error);
-            }
-          }
+          // @ts-expect-error
+          calendarRef.current.getApi().next();
         }
       }
     }
@@ -278,13 +270,8 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
                 click: () => {
                   if (!prevDisabled) {
                     setCurrentMonthIndex(currentMonthIndex + 1);
-                    if (calendarRef.current) {
-                      try {
-                        calendarRef.current.getApi().prev();
-                      } catch (error) {
-                        console.error('Error navigating:', error);
-                      }
-                    }
+                    // @ts-expect-error
+                    calendarRef.current.getApi().prev();
                   }
                 },
               },
@@ -293,13 +280,8 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
                 click: () => {
                   if (!nextDisabled) {
                     setCurrentMonthIndex(currentMonthIndex - 1);
-                    if (calendarRef.current) {
-                      try {
-                        calendarRef.current.getApi().next();
-                      } catch (error) {
-                        console.error('Error navigating:', error);
-                      }
-                    }
+                    // @ts-expect-error
+                    calendarRef.current.getApi().next();
                   }
                 },
               },
@@ -308,13 +290,8 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
                 click: () => {
                   if (!todayDisabled) {
                     setCurrentMonthIndex(0);
-                    if (calendarRef.current) {
-                      try {
-                        calendarRef.current.getApi().gotoDate(new Date());
-                      } catch (error) {
-                        console.error('Error navigating:', error);
-                      }
-                    }
+                    // @ts-expect-error
+                    calendarRef.current.getApi().gotoDate(new Date());
                   }
                 },
               },
@@ -339,7 +316,8 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
       >
         <h3>Are you sure you want to delete the transaction?</h3>
         <button
-          onClick={() => handleDelete(idToRemove, token)}
+          // @ts-expect-error
+          onClick={() => handleDelete(showDeleteModal, token)}
           className="button wide"
         >
           {isSubmitting ? (
@@ -384,12 +362,17 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
         }}
       >
         <span className="heading">
-          {selectedEvent?.title}
+          {
+            // @ts-expect-error
+            selectedEvent?.title
+          }
         </span>
         <TransactionsTable
           isModal={true}
           handleEdit={handleEdit}
-          setShowDeleteModal={(id: string) => handleDelete(id, token)}
+          // @ts-expect-error
+          setShowDeleteModal={handleDelete}
+          // @ts-expect-error
           items={selectedEvent?.data ? selectedEvent.data : []}
           changedItems={data.changedItems}
           handleClearChangedItem={handleClearChangedItem}

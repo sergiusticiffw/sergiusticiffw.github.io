@@ -23,7 +23,7 @@ import { AuthState } from '@type/types';
 import { googleLogout } from '@react-oauth/google';
 import './Profile.scss';
 
-const Profile: React.FC = () => {
+const Profile = () => {
   const showNotification = useNotification();
   const dispatch = useAuthDispatch();
   const { dataDispatch } = useData();
@@ -41,13 +41,12 @@ const Profile: React.FC = () => {
     monthlyBudget: monthlyBudget,
     useChartsBackgroundColor: useChartsBackgroundColor,
     visibleCharts:
-      JSON.parse(localStorage.getItem('visibleCharts') || '[]') || availableCharts,
+      JSON.parse(localStorage.getItem('visibleCharts')) || availableCharts,
   });
   theme = themeList[theme as keyof typeof themeList]
     ? theme
     : 'blue-pink-gradient';
   const navigate = useNavigate();
-  
   const handleLogout = (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
@@ -154,7 +153,7 @@ const Profile: React.FC = () => {
     localStorage.setItem('visibleCharts', JSON.stringify(state.visibleCharts));
   }, [state.visibleCharts]);
 
-  const handleChartVisibilityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChartVisibilityChange = (event) => {
     const { name, checked } = event.target;
     setState((prevState) => {
       let updatedCharts;
