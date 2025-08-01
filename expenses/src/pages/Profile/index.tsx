@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '../../context';
 import { useNotification } from '@context/notification';
+import { useHighchartsContext } from '@context/highcharts';
 import { logout } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
 import { FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
@@ -105,14 +106,27 @@ const Profile = () => {
     });
   };
 
+  const { setUseChartsBackgroundColor } = useHighchartsContext();
+
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target;
     setState({
       ...state,
       [name]: checked,
     });
-    // Persist to localStorage
-    localStorage.setItem(name, JSON.stringify(checked));
+    
+    // Handle Highcharts background color setting
+    if (name === 'useChartsBackgroundColor') {
+      setUseChartsBackgroundColor(checked);
+      // Dispatch custom event for immediate update
+      window.dispatchEvent(new CustomEvent('localStorageChange', {
+        detail: { key: name, value: checked }
+      }));
+    } else {
+      // Persist to localStorage for other settings
+      localStorage.setItem(name, JSON.stringify(checked));
+    }
+    
     dispatch &&
       dispatch({
         type: 'UPDATE_USER',

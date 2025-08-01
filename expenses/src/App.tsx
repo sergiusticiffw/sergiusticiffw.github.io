@@ -2,12 +2,12 @@ import './App.scss';
 import { AuthProvider } from '@context/context';
 import { NotificationProvider } from '@context/notification';
 import { LoanProvider } from '@context/loan';
+import { HighchartsProvider } from '@context/highcharts';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { AppRoute } from '@components/Common';
 import React, { Suspense, useMemo } from 'react';
 import routes from '@config/routes';
 import Navbar from '@components/Navbar';
-import { useHighcharts } from '@hooks/useHighcharts';
 
 // Loading component for Suspense fallback
 const LoadingFallback = () => (
@@ -32,9 +32,6 @@ const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetError
 );
 
 const App = () => {
-  // Configure Highcharts
-  useHighcharts();
-
   // Memoize routes to prevent unnecessary re-renders
   const appRoutes = useMemo(() => 
     routes.map((route) => (
@@ -55,18 +52,20 @@ const App = () => {
     <AuthProvider>
       <NotificationProvider>
         <LoanProvider>
-          <Router>
-            <div className="app-container">
-              <Navbar />
-              <main className="main-content">
-                <Suspense fallback={<LoadingFallback />}>
-                  <Routes>
-                    {appRoutes}
-                  </Routes>
-                </Suspense>
-              </main>
-            </div>
-          </Router>
+          <HighchartsProvider>
+            <Router>
+              <div className="app-container">
+                <Navbar />
+                <main className="main-content">
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Routes>
+                      {appRoutes}
+                    </Routes>
+                  </Suspense>
+                </main>
+              </div>
+            </Router>
+          </HighchartsProvider>
         </LoanProvider>
       </NotificationProvider>
     </AuthProvider>
