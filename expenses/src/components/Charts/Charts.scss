@@ -58,30 +58,15 @@
 .amortization-schedule {
   margin: 0 !important;
   padding: 0 !important;
-  width: 100% !important;
-  
-  .charts-page {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-  }
-  
-  .charts-section {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-  }
-  
-  .table-wrapper {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-  }
   
   .expenses-table {
     margin: 0 !important;
     padding: 0 !important;
-    width: 100% !important;
+    
+    th,
+    td {
+      padding: 8px !important;
+    }
     
     // Ensure table header remains visible
     thead {
@@ -101,6 +86,11 @@
           position: sticky !important;
           top: 0 !important;
           z-index: 10 !important;
+          
+          &.sticky-col {
+            left: 0 !important;
+            z-index: 11 !important;
+          }
         }
       }
     }
@@ -114,11 +104,28 @@
           background-color: var(--secondary-color) !important;
         }
         
+        // Restore paid row styling
+        &.was-payed {
+          background-color: #1e3a2f !important;
+          color: #d4edda !important;
+          
+          td {
+            background-color: #1e3a2f !important;
+            color: #d4edda !important;
+          }
+        }
+        
         td {
           background-color: inherit !important;
           border: none !important;
           padding: 8px !important;
           color: #fff !important;
+          
+          &.sticky-col {
+            left: 0 !important;
+            z-index: 3 !important;
+            background-color: inherit !important;
+          }
         }
       }
     }
