@@ -1,0 +1,74 @@
+@import '../../styles/variables';
+
+.add-transaction {
+  width: 90%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  
+  input,
+  textarea,
+  select {
+    background: var(--bg-color);
+    border: none;
+    min-height: 40px;
+    width: 100%;
+    margin-bottom: $spacing-lg;
+    border-bottom: 1px solid #6d7781;
+    font-weight: bold;
+    transition: all $transition-normal ease-in-out;
+    color: #ccc;
+    
+    &:focus {
+      outline: none;
+      border-bottom: 1px solid var(--accent-color);
+    }
+    
+    &::placeholder {
+      color: #ccc;
+      font-weight: bold;
+    }
+    
+    &[type='submit'] {
+      border: none;
+      background: var(--accent-color);
+      color: #282a36;
+      
+      &:hover {
+        cursor: pointer;
+      }
+    }
+    
+    &[type='date']::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+    }
+  }
+  
+  button {
+    padding: 0.8rem 1rem;
+    border: none;
+    font-size: $font-size-md;
+    cursor: pointer;
+  }
+}
+
+.button {
+  font-weight: bold;
+  border: none;
+  min-height: 40px;
+  background: var(--accent-color);
+  color: #282a36;
+  
+  &.wide {
+    width: 80%;
+  }
+  
+  &.w-100 {
+    width: 100%;
+  }
+  
+  &:hover {
+    cursor: pointer;
+  }
+} 

@@ -5,7 +5,7 @@ import { deleteNode, fetchData, formatNumber } from '@utils/utils';
 import Modal from '@components/Modal';
 import TransactionForm from '@components/TransactionForm';
 import TransactionsTable from '@components/TransactionsTable';
-import ExpenseCalendar from '@components/ExpenseCalendar';
+import { ExpenseCalendar } from '@components/Calendar';
 import Filters from '@components/Filters';
 import { monthNames, notificationType } from '@utils/constants';
 import {
@@ -16,7 +16,7 @@ import {
   FaTrash,
 } from 'react-icons/fa';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
-import NumberDisplay from '@components/NumberDisplay';
+import { NumberDisplay } from '@components/Home';
 
 const Home = () => {
   const showNotification = useNotification();

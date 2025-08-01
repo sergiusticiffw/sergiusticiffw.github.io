@@ -1,9 +1,9 @@
 import React from 'react';
-import AmortizationScheduleTable from '@components/AmortizationScheduleTable';
+import AmortizationScheduleTable from '@components/Loan/AmortizationScheduleTable';
 import { calculateDaysFrom, formatNumber } from '@utils/utils';
-import { LoanCostBreakdown } from '@components/LoanCharts';
-import { LoanProgress } from '@components/LoanProgress';
-import AmortizationTable from '@components/AmortizationTable';
+import { LoanCostBreakdown } from '@components/Loan/LoanCharts';
+import { LoanProgress } from '@components/Loan/LoanProgress';
+import AmortizationTable from '@components/Loan/AmortizationTable';
 
 const LoanDetails = (props) => {
   const loan = props?.loan ?? {};

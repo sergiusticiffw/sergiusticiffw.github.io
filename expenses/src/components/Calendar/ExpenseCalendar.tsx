@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
-import Modal from '@components/Modal';
-import TransactionsTable from '@components/TransactionsTable';
+import Modal from '@components/Modal/Modal';
+import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
 import { AuthState, TransactionOrIncomeItem, DataState } from '@type/types';
-import TransactionForm from '@components/TransactionForm';
-import MostExpensiveProductDisplay from '@components/MostExpensiveProductDisplay';
+import TransactionForm from '@components/TransactionForm/TransactionForm';
+import MostExpensiveProductDisplay from '@components/Home/MostExpensiveProductDisplay';
 import { deleteNode, fetchData, formatNumber } from '@utils/utils';
 import { notificationType, colorMap } from '@utils/constants';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { FaTrash } from 'react-icons/fa';
-import Month from '@components/Month';
+import Month from '@components/Home/Month';
 
 interface ExpenseCalendarProps {
   currentMonthIndex: number;

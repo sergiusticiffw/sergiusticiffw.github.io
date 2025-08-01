@@ -1,5 +1,5 @@
 import React from 'react';
-import TransactionForm from '@components/TransactionForm';
+import TransactionForm from '@components/TransactionForm/TransactionForm';
 import { fetchData } from '@utils/utils';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { AuthState, DataState } from '@type/types';

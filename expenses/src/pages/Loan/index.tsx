@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import LoanDetails from '@components/LoanDetails';
-import LoanForm from '@components/LoanForm';
+import LoanDetails from '@components/Loan/LoanDetails';
+import LoanForm from '@components/Loan/LoanForm';
 import Paydown from '@utils/paydown-node';
-import Modal from '@components/Modal';
+import Modal from '@components/Modal/Modal';
 import { useParams } from 'react-router-dom';
-import PaymentDetails from '@components/PaymentDetails';
+import PaymentDetails from '@components/Loan/PaymentDetails';
 import { useLoan } from '@context/loan';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { AuthState } from '@type/types';
@@ -14,7 +14,7 @@ import {
   transformDateFormat,
 } from '@utils/utils';
 import { FaPen } from 'react-icons/fa';
-import Notification from '@components/Notification';
+import Notification from '@components/Notification/Notification';
 
 const Loan = () => {
   const { id } = useParams();

@@ -1,0 +1,98 @@
+@import '../../styles/variables';
+
+.loan-details {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  
+  li {
+    flex: 1 1 100%;
+    padding: $spacing-sm;
+    box-sizing: border-box;
+  }
+}
+
+.table-wrapper-loan {
+  position: relative;
+  
+  .horizontal-scroll-wrapper {
+    overflow-x: auto;
+  }
+  
+  .amortization-table {
+    th,
+    td {
+      white-space: nowrap;
+    }
+  }
+  
+  .sticky-col {
+    position: sticky;
+    left: 0;
+    background-color: #2b2b2b;
+    z-index: 3;
+    box-shadow: 2px 0 2px -1px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+  }
+  
+  .cloned-thead-wrapper {
+    padding: 16px 0;
+    position: fixed;
+    background-color: #1e1e1e;
+    top: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    z-index: 5;
+    border-bottom: 1px solid #ccc;
+    padding-right: $spacing-xl;
+    
+    table {
+      width: max-content;
+      min-width: 100%;
+    }
+    
+    th {
+      white-space: nowrap;
+    }
+    
+    .sticky-col {
+      padding-left: $spacing-xl;
+      position: sticky;
+      left: 0;
+      z-index: 6;
+      box-shadow: 2px 0 2px -1px rgba(0, 0, 0, 0.1);
+    }
+  }
+  
+  .expenses-table {
+    border-collapse: collapse;
+    width: 100%;
+    
+    th,
+    td {
+      padding: 8px;
+      text-align: center;
+    }
+    
+    .was-payed {
+      background-color: #1e3a2f;
+      color: #d4edda;
+    }
+    
+    .annual-summary-row {
+      border-top: 2px solid #ccc;
+      border-bottom: 2px solid #ccc;
+      
+      td:first-child {
+        text-align: center;
+      }
+    }
+    
+    th .first-header-cell {
+      z-index: 10;
+    }
+  }
+} 

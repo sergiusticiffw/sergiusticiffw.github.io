@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Modal from '@components/Modal';
-import LoanForm from '@components/LoanForm';
+import Modal from '@components/Modal/Modal';
+import LoanForm from '@components/Loan/LoanForm';
 import useSwipeActions from '@hooks/useSwipeActions';
 import { AuthState } from '@type/types';
 import { deleteNode, fetchLoans } from '@utils/utils';

@@ -1,0 +1,51 @@
+@import '../../styles/variables';
+
+.modal-window {
+  position: fixed;
+  background: rgb(62, 63, 74, 0.35);
+  backdrop-filter: blur(10px);
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: $z-index-modal;
+  transition: all $transition-normal;
+  
+  > div {
+    width: 75%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 2em;
+    background: var(--bg-color);
+  }
+}
+
+.modal-content {
+  position: relative;
+  width: 80%;
+  max-width: 600px;
+  max-height: 80%;
+  background: white;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding: $spacing-sm;
+  flex-grow: 1;
+}
+
+.modal-close {
+  color: #ccc;
+  line-height: 50px;
+  font-size: 80%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 70px;
+  text-decoration: none;
+} 

@@ -1,0 +1,19 @@
+@import '../../styles/variables';
+
+.notification {
+  position: fixed;
+  bottom: 55px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  padding: $spacing-sm;
+  z-index: $z-index-notification;
+  
+  &.success {
+    background-color: var(--accent-color);
+  }
+  
+  &.error {
+    background-color: #f13636;
+  }
+} 

@@ -1,0 +1,24 @@
+@import '../../styles/variables';
+
+ul.suggestions {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  
+  li {
+    display: inline-block;
+    padding: $spacing-xs $spacing-sm;
+    margin: $spacing-xs;
+    background: var(--secondary-color);
+    animation: bubble-up 0.3s;
+    
+    &:hover {
+      cursor: pointer;
+      background: #323440;
+    }
+    
+    &.selected-suggestion {
+      border: 1px solid var(--accent-color);
+    }
+  }
+} 

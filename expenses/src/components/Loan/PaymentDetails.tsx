@@ -6,8 +6,8 @@ import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash, FaCaretDown } from 'react-icons/fa';
 import { deleteNode, fetchLoans, formatNumber } from '@utils/utils';
 import { notificationType } from '@utils/constants';
-import Modal from '@components/Modal';
-import PaymentForm from '@components/PaymentForm';
+import Modal from '@components/Modal/Modal';
+import PaymentForm from '@components/Loan/PaymentForm';
 import { useLoan } from '@context/loan';
 
 const PaymentDetails = (props) => {

@@ -2,19 +2,19 @@ import React, { Suspense, useEffect, useState } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { fetchData } from '@utils/utils';
 import { availableCharts } from '@utils/constants';
-import Filters from '@components/Filters';
+import Filters from '@components/Filters/Filters';
 import { AuthState } from '@type/types';
-import MonthlySavingsTrend from '@components/MonthlySavingsTrend';
-import MonthlyTotals from '@components/MonthlyTotals';
-import YearAverageTrend from '@components/YearAverageTrend';
-import MonthlyComparisonTrend from '@components/MonthlyComparisonTrend';
-import AllTimeSpendings from '@components/AllTimeSpendings';
-import MonthlyAverage from '@components/MonthlyAverage';
-import SavingsHistory from '@components/SavingsHistory';
-import MonthlyAverageTrend from '@components/MonthlyAverageTrend';
-import DailyAverage from '@components/DailyAverage';
-import DailyAverageTrend from '@components/DailyAverageTrend';
-import LastTwoMonthsAverage from '@components/LastTwoMonthsAverage';
+import MonthlySavingsTrend from '@components/Charts/MonthlySavingsTrend';
+import MonthlyTotals from '@components/Charts/MonthlyTotals';
+import YearAverageTrend from '@components/Charts/YearAverageTrend';
+import MonthlyComparisonTrend from '@components/Charts/MonthlyComparisonTrend';
+import AllTimeSpendings from '@components/Home/AllTimeSpendings';
+import MonthlyAverage from '@components/Home/MonthlyAverage';
+import SavingsHistory from '@components/Charts/SavingsHistory';
+import MonthlyAverageTrend from '@components/Charts/MonthlyAverageTrend';
+import DailyAverage from '@components/DailyAverage/DailyAverage';
+import DailyAverageTrend from '@components/Charts/DailyAverageTrend';
+import LastTwoMonthsAverage from '@components/Home/LastTwoMonthsAverage';
 
 const componentMap = {
   MonthlyTotals,
