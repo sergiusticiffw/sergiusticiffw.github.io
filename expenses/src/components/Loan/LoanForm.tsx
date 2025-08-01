@@ -3,7 +3,7 @@ import { useNotification } from '@context/notification';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { AuthState, DataState, NodeData } from '@type/types';
 import { fetchRequest, addOneDay } from '@utils/utils';
-import { categories, notificationType } from '@utils/constants';
+import { notificationType } from '@utils/constants';
 import { FaPlus, FaPen } from 'react-icons/fa';
 import './LoanForm.scss';
 
@@ -76,7 +76,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
       field_recurring_payment_day: [formState.field_recurring_payment_day],
       field_loan_status: [formState.field_loan_status],
     };
-    console.log(99, node);
+
 
     const fetchOptions = {
       method: formType === 'add' ? 'POST' : 'PATCH',

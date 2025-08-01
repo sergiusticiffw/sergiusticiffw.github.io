@@ -4,6 +4,13 @@ import { notificationType, themeList } from '@utils/constants';
 import { useAuthState } from '@context/context';
 import { AuthState } from '@type/types';
 
+interface NotificationItem {
+  id: string;
+  message: string;
+  type: string;
+  timestamp: number;
+}
+
 interface NotificationContextProps {
   children: ReactNode;
 }
@@ -17,7 +24,8 @@ export const useNotification = () => useContext(NotificationContext);
 export const NotificationProvider = ({
   children,
 }: NotificationContextProps) => {
-  const [notification, setNotification] = useState({ message: '', type: '' });
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  
   let { theme } = useAuthState() as AuthState;
   theme = themeList[theme as keyof typeof themeList]
     ? theme
@@ -26,29 +34,56 @@ export const NotificationProvider = ({
     theme === 'blue-pink-gradient' ? 'has-gradient-accent' : '';
 
   const showNotification = (message: string, type: string) => {
-    setNotification({ message, type });
-    let timeout = 2000;
+    const id = Math.random().toString(36).substr(2, 9);
+    const newNotification: NotificationItem = {
+      id,
+      message,
+      type,
+      timestamp: Date.now(),
+    };
+    
+    setNotifications(prev => [...prev, newNotification]);
+    
+    let timeout = 4000; // Default 4 seconds
     if (type === notificationType.ERROR) {
-      // increase it to have time to read ))
-      timeout = 4000;
+      timeout = 6000; // 6 seconds for errors
+    } else if (type === 'success') {
+      timeout = 3000; // 3 seconds for success
+    } else if (type === 'warning') {
+      timeout = 5000; // 5 seconds for warnings
     }
 
-    // Clear the notification after a certain duration (e.g., 3 seconds)
+    // Auto-remove notification after timeout
     setTimeout(() => {
-      setNotification({ message: '', type: '' });
+      removeNotification(id);
     }, timeout);
+  };
+
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
   };
 
   return (
     <div className={`${theme} ${gradientClass}`}>
       <NotificationContext.Provider value={showNotification}>
         {children}
-        {notification && (
-          <Notification
-            message={notification!.message}
-            type={notification!.type}
-          />
-        )}
+        {notifications.map((notification, index) => (
+          <div
+            key={notification.id}
+            style={{
+              position: 'fixed',
+              top: `${20 + (index * 100)}px`,
+              right: '20px',
+              zIndex: 9999 + index,
+            }}
+          >
+            <Notification
+              message={notification.message}
+              type={notification.type}
+              onClose={() => removeNotification(notification.id)}
+            />
+          </div>
+        ))}
       </NotificationContext.Provider>
     </div>
   );

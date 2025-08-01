@@ -4,7 +4,7 @@ import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { AuthState, DataState, NodeData } from '@type/types';
 import { addOneDay, fetchRequest } from '@utils/utils';
 import { notificationType } from '@utils/constants';
-import { FaPlus, FaPen, FaMoneyBillWave, FaCalendarAlt, FaPercentage, FaDollarSign } from 'react-icons/fa';
+import { FaPlus, FaPen } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import './PaymentForm.scss';
 
@@ -21,7 +21,6 @@ interface PaymentFormProps {
   };
   onSuccess: () => void;
   startDate?: string;
-  endDate?: string;
 }
 const PaymentForm: React.FC<PaymentFormProps> = ({
   formType,
@@ -30,10 +29,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   startDate,
 }) => {
   const { id } = useParams();
-
   const showNotification = useNotification();
   const dispatch = useAuthDispatch();
   const { dataDispatch } = useData() as DataState;
+  
   const initialState = {
     field_date: new Date().toISOString().slice(0, 10),
     title: '',
@@ -45,7 +44,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     field_is_simulated_payment: false,
   };
   
-  // Ensure all values are properly initialized to prevent null values
   const initialValues = {
     title: values.title || '',
     field_date: values.field_date || new Date().toISOString().slice(0, 10),
@@ -61,6 +59,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     formType === 'add' ? initialState : initialValues
   );
   const { token } = useAuthState() as AuthState;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, checked, value } = event.target;
     setFormState({
@@ -68,7 +68,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       [name]: type === 'checkbox' ? checked : value,
     });
   };
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);

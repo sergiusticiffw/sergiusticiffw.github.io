@@ -11,8 +11,6 @@ import {
   FaPen,
   FaTrash,
   FaChartLine,
-  FaCalendarAlt,
-  FaMoneyBillWave,
   FaExternalLinkAlt,
   FaSort,
   FaSortUp,

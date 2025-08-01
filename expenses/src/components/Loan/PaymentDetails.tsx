@@ -3,7 +3,15 @@ import { useAuthDispatch, useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
 import { AuthState } from '@type/types';
 import useSwipeActions from '@hooks/useSwipeActions';
-import { FaPen, FaTrash, FaCaretDown, FaMoneyBillWave, FaCalendarAlt, FaChartLine, FaPlus } from 'react-icons/fa';
+import {
+  FaPen,
+  FaTrash,
+  FaCaretDown,
+  FaMoneyBillWave,
+  FaCalendarAlt,
+  FaChartLine,
+  FaPlus,
+} from 'react-icons/fa';
 import { deleteNode, fetchLoans, formatNumber } from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import Modal from '@components/Modal/Modal';
@@ -14,10 +22,8 @@ import './PaymentDetails.scss';
 const PaymentDetails = (props) => {
   const payments = props?.payments ?? [];
   const loan = props?.loan ?? {};
-  const totalPaidAmount = props?.totalPaidAmount ?? 0;
   const tableRef = useRef(null);
   const showNotification = useNotification();
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isNewModal, setIsNewModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,9 +91,11 @@ const PaymentDetails = (props) => {
 
   // Calculate payment statistics
   const totalPayments = payments.length;
-  const totalAmount = payments.reduce((sum, payment) => sum + parseFloat(payment.fpi || 0), 0);
+  const totalAmount = payments.reduce(
+    (sum, payment) => sum + parseFloat(payment.fpi || 0),
+    0
+  );
   const averagePayment = totalPayments > 0 ? totalAmount / totalPayments : 0;
-  const lastPayment = payments[0]; // Assuming payments are sorted by date desc
 
   return (
     <div className="payment-history">
@@ -102,7 +110,7 @@ const PaymentDetails = (props) => {
             <div className="stat-label">Total Paid</div>
           </div>
         </div>
-        
+
         <div className="stat-card">
           <div className="stat-icon">
             <FaChartLine />
@@ -112,7 +120,7 @@ const PaymentDetails = (props) => {
             <div className="stat-label">Payments</div>
           </div>
         </div>
-        
+
         <div className="stat-card">
           <div className="stat-icon">
             <FaCalendarAlt />
@@ -189,19 +197,22 @@ const PaymentDetails = (props) => {
           <div className="table-header">
             <h3>Payment History</h3>
             <div className="table-subtitle">
-              Showing {Math.min(nrOfItemsToShow, payments.length)} of {payments.length} payments
+              Showing {Math.min(nrOfItemsToShow, payments.length)} of{' '}
+              {payments.length} payments
             </div>
           </div>
-          
+
           <div className="table-wrapper">
-            <table className="expenses-table payment-table" cellSpacing="0" cellPadding="0">
+            <table
+              className="expenses-table payment-table"
+              cellSpacing="0"
+              cellPadding="0"
+            >
               <thead>
                 <tr>
                   <th>Date</th>
                   <th>Title</th>
                   <th>Installment</th>
-                  <th>Rate</th>
-                  <th>Fee</th>
                   <th className="desktop-only">Actions</th>
                 </tr>
               </thead>
@@ -229,24 +240,28 @@ const PaymentDetails = (props) => {
                     >
                       <td className="payment-date">
                         <div className="date-content">
-                          <div className="date-day">{new Date(payment.fdt).getDate()}</div>
-                          <div className="date-month">{new Date(payment.fdt).toLocaleDateString('en-US', { month: 'short' })}</div>
+                          <div className="date-day">
+                            {new Date(payment.fdt).getDate()}
+                          </div>
+                          <div className="date-month">
+                            {new Date(payment.fdt).toLocaleDateString('en-US', {
+                              month: 'short',
+                            })}
+                          </div>
                         </div>
                       </td>
                       <td className="payment-title">
                         <div className="title-content">
                           <div className="title-text">{payment.title}</div>
-                          {isSimulated && <span className="simulated-badge">Simulated</span>}
+                          {isSimulated && (
+                            <span className="simulated-badge">Simulated</span>
+                          )}
                         </div>
                       </td>
                       <td className="payment-amount">
-                        <div className="amount-value">{formatNumber(payment.fpi)}</div>
-                      </td>
-                      <td className="payment-rate">
-                        <div className="rate-value">{formatNumber(payment.fr)}%</div>
-                      </td>
-                      <td className="payment-fee">
-                        <div className="fee-value">{formatNumber(payment.fpsf)}</div>
+                        <div className="amount-value">
+                          {formatNumber(payment.fpi)}
+                        </div>
                       </td>
                       <td className="desktop-only payment-actions-cell">
                         <div className="action-buttons">
@@ -279,7 +294,9 @@ const PaymentDetails = (props) => {
                   className="load-more-btn"
                 >
                   <FaCaretDown />
-                  <span>Load More ({payments.length - nrOfItemsToShow} remaining)</span>
+                  <span>
+                    Load More ({payments.length - nrOfItemsToShow} remaining)
+                  </span>
                 </button>
               </div>
             )}

@@ -1,6 +1,9 @@
 @use '../../styles/variables' as *;
 
 .payment-history {
+  margin: 0;
+  padding: 0;
+  
   .payment-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -58,6 +61,7 @@
 
   .payment-actions {
     margin-bottom: 2rem;
+    margin-top: 0;
 
     .add-payment-btn {
       background: linear-gradient(135deg, var(--accent-color), var(--accent-gradient-color));
@@ -86,8 +90,12 @@
   }
 
   .payment-table-container {
+    width: 100%;
+    margin: 0;
+    padding: 0;
     .table-header {
       margin-bottom: 1.5rem;
+      margin-top: 0;
 
       h3 {
         font-size: 1.5rem;
