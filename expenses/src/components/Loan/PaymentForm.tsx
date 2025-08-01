@@ -41,10 +41,23 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     field_pay_single_fee: '',
     field_new_recurring_amount: '',
     field_loan_reference: id,
-    field_is_simulated_payment: 0,
+    field_is_simulated_payment: false,
   };
+  
+  // Ensure all values are properly initialized to prevent null values
+  const initialValues = {
+    title: values.title || '',
+    field_date: values.field_date || new Date().toISOString().slice(0, 10),
+    field_rate: values.field_rate || '',
+    field_pay_installment: values.field_pay_installment || '',
+    field_pay_single_fee: values.field_pay_single_fee || '',
+    field_new_recurring_amount: values.field_new_recurring_amount || '',
+    field_loan_reference: id,
+    field_is_simulated_payment: values.field_is_simulated_payment || false,
+  };
+  
   const [formState, setFormState] = useState(
-    formType === 'add' ? initialState : values
+    formType === 'add' ? initialState : initialValues
   );
   const { token } = useAuthState() as AuthState;
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,7 +79,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       field_pay_installment: [formState.field_pay_installment],
       field_pay_single_fee: [formState.field_pay_single_fee],
       field_new_recurring_amount: [formState.field_new_recurring_amount],
-      field_is_simulated_payment: [formState.field_is_simulated_payment],
+      field_is_simulated_payment: [formState.field_is_simulated_payment ? 1 : 0],
       field_loan_reference: [id],
     };
     const fetchOptions = {
@@ -113,7 +126,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           placeholder="Title"
           type="text"
           name="title"
-          value={formState.title}
+          value={formState.title || ''}
           onChange={handleChange}
         />
         <input
@@ -122,14 +135,14 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           type="date"
           name="field_date"
           min={addOneDay(startDate)}
-          value={formState.field_date}
+          value={formState.field_date || ''}
           onChange={handleChange}
         />
         <input
           placeholder="New interest rate"
           type="number"
           name="field_rate"
-          value={formState.field_rate}
+          value={formState.field_rate || ''}
           onChange={handleChange}
           min={0}
           step={0.01}
@@ -138,7 +151,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           placeholder="Installment payment"
           type="number"
           name="field_pay_installment"
-          value={formState.field_pay_installment}
+          value={formState.field_pay_installment || ''}
           onChange={handleChange}
           min={0}
           step={0.01}
@@ -147,7 +160,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           placeholder="New recurring amount"
           type="number"
           name="field_new_recurring_amount"
-          value={formState.field_new_recurring_amount}
+          value={formState.field_new_recurring_amount || ''}
           onChange={handleChange}
           min={0}
           step={0.01}
@@ -156,19 +169,19 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           placeholder="Individual fee"
           type="number"
           name="field_pay_single_fee"
-          value={formState.field_pay_single_fee}
+          value={formState.field_pay_single_fee || ''}
           onChange={handleChange}
           min={0}
           step={0.01}
         />
 
-        <label htmlFor="field_is_simulated_payment">
+        <label htmlFor="field_is_simulated_payment" className="checkbox-label">
           Simulated payment (debug loan)
           <input
             type="checkbox"
             name="field_is_simulated_payment"
             id="field_is_simulated_payment"
-            checked={formState.field_is_simulated_payment}
+            checked={formState.field_is_simulated_payment || false}
             onChange={handleChange}
           />
         </label>

@@ -1,12 +1,37 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { formatNumber } from '@utils/utils';
 
-const AmortizationTable = ({ amortizationSchedule }) => {
-  const tableRef = useRef(null);
-  const theadRef = useRef(null);
-  const stickyHeaderRef = useRef(null);
-  const scrollContainerRef = useRef(null);
-  const stickyScrollRef = useRef(null);
+interface PaymentLog {
+  date: string;
+  rate: number | string;
+  installment: number | string;
+  reduction: number | string;
+  interest: number | string;
+  principal: number | string;
+  fee: number | string;
+  was_payed?: boolean | null;
+  num_days?: number | null;
+}
+
+interface AnnualSummary {
+  type: 'annual_summary';
+  year: string;
+  totalPrincipal: number;
+  totalInterest: number;
+  totalFees: number;
+  totalPaid: number;
+}
+
+interface AmortizationTableProps {
+  amortizationSchedule: (PaymentLog | AnnualSummary)[];
+}
+
+const AmortizationTable: React.FC<AmortizationTableProps> = ({ amortizationSchedule }) => {
+  const tableRef = useRef<HTMLTableElement>(null);
+  const theadRef = useRef<HTMLTableSectionElement>(null);
+  const stickyHeaderRef = useRef<HTMLTableElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const stickyScrollRef = useRef<HTMLDivElement>(null);
 
   const [showStickyHeader, setShowStickyHeader] = useState(false);
 
@@ -39,8 +64,8 @@ const AmortizationTable = ({ amortizationSchedule }) => {
       syncColumnWidths();
     };
 
-    const syncScroll = (source, target) => {
-      if (target) {
+    const syncScroll = (source: HTMLElement | null, target: HTMLElement | null) => {
+      if (target && source) {
         target.scrollLeft = source.scrollLeft;
       }
     };
@@ -77,6 +102,46 @@ const AmortizationTable = ({ amortizationSchedule }) => {
       syncColumnWidths();
     }
   }, [showStickyHeader]);
+
+  const renderRow = (element: PaymentLog | AnnualSummary, index: number) => {
+    // Check if this is an annual summary row
+    if ('type' in element && element.type === 'annual_summary') {
+      return (
+        <tr
+          key={`summary-scroll-${element.year}`}
+          className="annual-summary-row annual-summary-total"
+        >
+          <td className="sticky-col">Total {element.year}</td>
+          <td>-</td>
+          <td>-</td>
+          <td>{formatNumber(element.totalPaid)}</td>
+          <td>{formatNumber(element.totalPrincipal)}</td>
+          <td>{formatNumber(element.totalInterest)}</td>
+          <td>-</td>
+          <td>{formatNumber(element.totalFees)}</td>
+        </tr>
+      );
+    }
+
+    // Regular payment row (PaymentLog object)
+    const payment = element as PaymentLog;
+    return (
+      <tr
+        key={payment.date + '-' + index}
+        data-id={payment.date}
+        className={payment.was_payed ? 'was-payed' : undefined}
+      >
+        <td className="sticky-col">{payment.date}</td>
+        <td>{formatNumber(payment.rate)}</td>
+        <td>{formatNumber(payment.num_days)}</td>
+        <td>{formatNumber(payment.installment)}</td>
+        <td>{formatNumber(payment.reduction)}</td>
+        <td>{formatNumber(payment.interest)}</td>
+        <td>{formatNumber(payment.principal)}</td>
+        <td>{formatNumber(payment.fee)}</td>
+      </tr>
+    );
+  };
 
   return (
     <div className="table-wrapper-loan">
@@ -119,45 +184,7 @@ const AmortizationTable = ({ amortizationSchedule }) => {
             </tr>
           </thead>
           <tbody>
-            {amortizationSchedule?.map((element, index) => {
-              // Check if this is an annual summary row
-              if (element.type === 'annual_summary') {
-                return (
-                  <tr
-                    key={`summary-scroll-${element.year}`}
-                    className="annual-summary-row annual-summary-total"
-                  >
-                    <td className="sticky-col">Total {element.year}</td>
-                    <td>-</td> {/* Days column, N/A for summary */}
-                    <td>-</td> {/* Days column, N/A for summary */}
-                    <td>{formatNumber(element.totalPaid)}</td>{' '}
-                    {/* Total Paid for the year */}
-                    <td>{formatNumber(element.totalPrincipal)}</td>
-                    <td>{formatNumber(element.totalInterest)}</td>
-                    <td>-</td> {/* Principal remaining, N/A for summary */}
-                    <td>{formatNumber(element.totalFees)}</td>
-                  </tr>
-                );
-              }
-
-              // Regular payment row
-              return (
-                <tr
-                  key={element[0] + '-' + index} // Use index as well if dates can repeat for uniqueness
-                  data-id={element[0]}
-                  className={element[7] ? 'was-payed' : null}
-                >
-                  <td className="sticky-col">{element[0]}</td>
-                  <td>{formatNumber(element[1])}</td>
-                  <td>{formatNumber(element[8])}</td>
-                  <td>{formatNumber(element[2])}</td>
-                  <td>{formatNumber(element[3])}</td>
-                  <td>{formatNumber(element[4])}</td>
-                  <td>{formatNumber(element[5])}</td>
-                  <td>{formatNumber(element[6])}</td>
-                </tr>
-              );
-            })}
+            {amortizationSchedule?.map((element, index) => renderRow(element, index))}
           </tbody>
         </table>
       </div>

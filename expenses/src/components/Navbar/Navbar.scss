@@ -5,86 +5,67 @@
   left: 0;
   right: 0;
   bottom: 0;
-  transition: all $transition-normal ease-in-out;
-  z-index: $z-index-fixed;
+  transition: all 0.3s ease-in-out;
+  z-index: 99;
   touch-action: none;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   box-shadow: inset 0 0 0 200px rgba(255, 255, 255, 0.08);
-  
-  &.closed {
-    height: 50px;
+}
+.navbar.closed {
+  height: 50px;
+}
+.navbar.open {
+  height: 300px;
+}
+.navbar ul {
+  margin: 0;
+  list-style-type: none;
+  padding: 0;
+  height: 50px;
+}
+.navbar ul li {
+  height: 100%;
+  /*line-height: 50px;*/
+  float: left;
+  width: 33.3333%;
+  transition: all 0.3s ease-in-out;
+}
+.navbar.open ul li {
+  width: 100%;
+}
+@media only screen and (min-width: 600px) {
+  .navbar ul li:first-child:nth-last-child(4),
+  .navbar ul li:first-child:nth-last-child(4) ~ li {
+    width: 25%;
   }
-  
-  &.open {
-    height: 300px;
+  .navbar ul li:first-child:nth-last-child(5),
+  .navbar ul li:first-child:nth-last-child(5) ~ li {
+    width: 20%;
   }
-  
-  ul {
-    margin: 0;
-    list-style-type: none;
-    padding: 0;
-    height: 50px;
-    
-    li {
-      height: 100%;
-      float: left;
-      width: 33.3333%;
-      transition: all $transition-normal ease-in-out;
-      
-      a {
-        color: #607d8b;
-        font-size: 35px;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        
-        svg {
-          margin: 0 auto;
-        }
-        
-        &:focus,
-        &.active {
-          color: var(--accent-color);
-        }
-      }
-    }
+  .navbar ul li {
+    width: 16%;
   }
-  
-  &.open ul li {
-    width: 100%;
+  .expenses-table td {
+    min-width: 100px;
   }
 }
-
-// Responsive design
-@media only screen and (min-width: $breakpoint-sm) {
-  .navbar {
-    ul {
-      li {
-        &:first-child:nth-last-child(4),
-        &:first-child:nth-last-child(4) ~ li {
-          width: 25%;
-        }
-        
-        &:first-child:nth-last-child(5),
-        &:first-child:nth-last-child(5) ~ li {
-          width: 20%;
-        }
-        
-        width: 16%;
-      }
-    }
+.navbar ul li a {
+  color: #607d8b;
+  font-size: 35px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.navbar ul li a svg {
+  margin: 0 auto;
+}
+.navbar ul li a:focus,
+.navbar ul li a.active {
+  color: var(--accent-color);
+}
+@media only screen and (max-width: 600px) {
+  .navbar ul li a {
+    font-size: 30px;
   }
 }
-
-@media only screen and (max-width: $breakpoint-sm) {
-  .navbar {
-    ul {
-      li {
-        a {
-          font-size: 30px;
-        }
-      }
-    }
-  }
-} 

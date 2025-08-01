@@ -4,7 +4,14 @@ import { useNotification } from '@context/notification';
 import { useHighchartsContext } from '@context/highcharts';
 import { logout } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
+import {
+  FaUserCircle,
+  FaSignOutAlt,
+  FaCog,
+  FaChartBar,
+  FaPalette,
+  FaCoins,
+} from 'react-icons/fa';
 import { fetchRequest } from '@utils/utils';
 import {
   notificationType,
@@ -14,6 +21,7 @@ import {
 } from '@utils/constants';
 import { AuthState } from '@type/types';
 import { googleLogout } from '@react-oauth/google';
+import './Profile.scss';
 
 const Profile = () => {
   const showNotification = useNotification();
@@ -114,19 +122,21 @@ const Profile = () => {
       ...state,
       [name]: checked,
     });
-    
+
     // Handle Highcharts background color setting
     if (name === 'useChartsBackgroundColor') {
       setUseChartsBackgroundColor(checked);
       // Dispatch custom event for immediate update
-      window.dispatchEvent(new CustomEvent('localStorageChange', {
-        detail: { key: name, value: checked }
-      }));
+      window.dispatchEvent(
+        new CustomEvent('localStorageChange', {
+          detail: { key: name, value: checked },
+        })
+      );
     } else {
       // Persist to localStorage for other settings
       localStorage.setItem(name, JSON.stringify(checked));
     }
-    
+
     dispatch &&
       dispatch({
         type: 'UPDATE_USER',
@@ -159,78 +169,136 @@ const Profile = () => {
   };
 
   return (
-    <div className="user-page">
-      <div className={blink ? 'user-avatar saved' : 'user-avatar'}>
-        <FaUserCircle />
+    <div className="profile-container">
+      {/* Profile Header */}
+      <div className="profile-header">
+        <div className="avatar">
+          <FaUserCircle />
+        </div>
+        <div className="user-name">{userDetails.current_user.name}</div>
+        <div className="user-subtitle">Profile Settings</div>
       </div>
-      <h3>{userDetails.current_user.name}</h3>
-      <div className="user-settings">
-        <select
-          value={currency}
-          className="currency"
-          name="currency"
-          onChange={handleChange}
-        >
-          {sortedCurrencies.map(([id, currency]) => (
-            <option key={id} value={id}>
-              {currency}
-            </option>
-          ))}
-        </select>
-        <select
-          value={theme}
-          className="theme"
-          name="theme"
-          onChange={handleThemeChange}
-        >
-          {Object.entries(themeList).map(([id, name]) => (
-            <option key={id} value={id}>
-              {name}
-            </option>
-          ))}
-        </select>
-        <input
-          required
-          placeholder="Week Budget"
-          type="number"
-          name="weeklyBudget"
-          value={state.weeklyBudget}
-          onChange={handleInputChange}
-          onBlur={onBlur}
-        />
-        <input
-          required
-          placeholder="Month Budget"
-          type="number"
-          name="monthlyBudget"
-          value={state.monthlyBudget}
-          onChange={handleInputChange}
-          onBlur={onBlur}
-        />
-        <label htmlFor="useChartsBackgroundColor">
-          Use Charts Background Color
+
+      {/* Settings Grid */}
+      <div className="settings-grid">
+        {/* General Settings Card */}
+        <div className="settings-card">
+          <div className="card-header">
+            <FaCog />
+            <h3>General Settings</h3>
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="currency">Currency</label>
+            <select
+              id="currency"
+              value={currency}
+              name="currency"
+              onChange={handleChange}
+            >
+              {sortedCurrencies.map(([id, currency]) => (
+                <option key={id} value={id}>
+                  {currency}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="theme">Theme</label>
+            <select
+              id="theme"
+              value={theme}
+              name="theme"
+              onChange={handleThemeChange}
+            >
+              {Object.entries(themeList).map(([id, name]) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Budget Settings Card */}
+        <div className="settings-card">
+          <div className="card-header">
+            <FaCoins />
+            <h3>Budget Settings</h3>
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="weeklyBudget">Weekly Budget</label>
+            <input
+              id="weeklyBudget"
+              required
+              placeholder="Enter weekly budget"
+              type="number"
+              name="weeklyBudget"
+              value={state.weeklyBudget || ''}
+              onChange={handleInputChange}
+              onBlur={onBlur}
+            />
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="monthlyBudget">Monthly Budget</label>
+            <input
+              id="monthlyBudget"
+              required
+              placeholder="Enter monthly budget"
+              type="number"
+              name="monthlyBudget"
+              value={state.monthlyBudget || ''}
+              onChange={handleInputChange}
+              onBlur={onBlur}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Settings Section */}
+      <div className="charts-section-profile">
+        <div className="section-header">
+          <FaChartBar />
+          <h3>Charts Settings</h3>
+        </div>
+
+        <div className="checkbox-item">
           <input
             type="checkbox"
             name="useChartsBackgroundColor"
             id="useChartsBackgroundColor"
-            checked={state.useChartsBackgroundColor}
+            checked={state.useChartsBackgroundColor || false}
             onChange={handleCheckboxChange}
           />
-        </label>
-        <h4>Charts Visibility</h4>
-        {availableCharts.map((chart) => (
-          <label key={chart}>
-            <input
-              type="checkbox"
-              name={chart}
-              checked={state.visibleCharts.includes(chart)}
-              onChange={handleChartVisibilityChange}
-            />
-            {chart}
+          <label htmlFor="useChartsBackgroundColor">
+            Use Charts Background Color
           </label>
-        ))}
-        <button className="button logout" onClick={handleLogout}>
+        </div>
+
+        <h4>Charts Visibility</h4>
+        <div className="charts-grid">
+          {availableCharts.map((chart) => (
+            <div key={chart} className="checkbox-item">
+              <input
+                type="checkbox"
+                name={chart}
+                checked={state.visibleCharts.includes(chart)}
+                onChange={handleChartVisibilityChange}
+              />
+              <label htmlFor={chart}>{chart}</label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Logout Section */}
+      <div className="logout-section">
+        <button className="logout-btn" onClick={handleLogout}>
           <FaSignOutAlt />
+          Sign Out
         </button>
       </div>
     </div>

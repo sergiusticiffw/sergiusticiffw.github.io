@@ -1,22 +1,82 @@
 import React from 'react';
-import AmortizationScheduleTable from '@components/Loan/AmortizationScheduleTable';
+
 import { calculateDaysFrom, formatNumber } from '@utils/utils';
 import { LoanCostBreakdown } from '@components/Loan/LoanCharts';
 import { LoanProgress } from '@components/Loan/LoanProgress';
 import AmortizationTable from '@components/Loan/AmortizationTable';
 
-const LoanDetails = (props) => {
+interface LoanDetailsProps {
+  loan?: any;
+  loanData: {
+    principal: number;
+    start_date: string;
+  };
+  amortizationSchedule?: any[];
+  totalPaidAmount?: number;
+}
+
+const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
   const loan = props?.loan ?? {};
   const amortizationSchedule = props?.amortizationSchedule ?? [];
   const totalPaidAmount = props?.totalPaidAmount;
-  const annualSummaries = loan.annual_summaries;
+  const annualSummaries = loan?.annual_summaries ?? {};
+
+  // Early return if no valid data
+  if (!amortizationSchedule || amortizationSchedule.length === 0) {
+    return (
+      <div className="charts-page">
+        <p>No amortization schedule data available.</p>
+        <p>
+          Debug info: amortizationSchedule length ={' '}
+          {amortizationSchedule?.length || 0}
+        </p>
+      </div>
+    );
+  }
 
   const processedAmortizationSchedule = [];
   let currentYear = null;
 
   amortizationSchedule.forEach((paymentRow, index) => {
-    const paymentDate = paymentRow[0];
-    const paymentYear = paymentDate.split('.')[2];
+    // Handle different data structures
+    let paymentDate: string;
+    let paymentYear: string;
+
+    if (Array.isArray(paymentRow)) {
+      // Array format: [date, rate, installment, reduction, interest, principal, fee, ...]
+      if (!paymentRow[0]) {
+        console.warn('Invalid payment row found (missing date):', paymentRow);
+        return;
+      }
+      paymentDate = paymentRow[0];
+    } else if (typeof paymentRow === 'object' && paymentRow !== null) {
+      // Object format: { date, rate, installment, ... }
+      if (!paymentRow.date) {
+        console.warn(
+          'Invalid payment row found (missing date property):',
+          paymentRow
+        );
+        return;
+      }
+      paymentDate = paymentRow.date;
+    } else {
+      console.warn('Invalid payment row format:', paymentRow);
+      return;
+    }
+
+    // Skip if paymentDate is not a string
+    if (typeof paymentDate !== 'string') {
+      console.warn('Invalid payment date found:', paymentDate);
+      return;
+    }
+
+    const dateParts = paymentDate.split('.');
+    if (dateParts.length < 3) {
+      console.warn('Invalid date format found:', paymentDate);
+      return;
+    }
+
+    paymentYear = dateParts[2];
 
     if (currentYear === null) {
       currentYear = paymentYear;
@@ -78,7 +138,9 @@ const LoanDetails = (props) => {
 
   const sumOfInterest = loan?.sum_of_interests + loan?.unpaid_interest;
 
-  const [day, month, year] = props.loanData.start_date.split('.');
+  const startDateParts = props.loanData.start_date?.split('.') || [];
+  const [day, month, year] =
+    startDateParts.length >= 3 ? startDateParts : ['01', '01', '2024'];
   const formatted = `${year}-${month}-${day}`;
 
   const totalDays = loan?.days_calculated ?? 0;
@@ -166,10 +228,6 @@ const LoanDetails = (props) => {
       <br />
 
       <AmortizationTable amortizationSchedule={processedAmortizationSchedule} />
-
-      {/*<AmortizationScheduleTable*/}
-      {/*  amortizationSchedule={processedAmortizationSchedule}*/}
-      {/*/>*/}
     </div>
   );
 };

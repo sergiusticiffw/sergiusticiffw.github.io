@@ -29,7 +29,9 @@
 
 .main-content {
   flex: 1;
-  padding-bottom: 100px; // Space for navbar
+  padding-bottom: 70px; // Space for navbar
+  overflow-y: auto; // Allow scrolling when needed
+  min-height: calc(100vh - 70px); // Minimum height minus navbar
 }
 
 .loading-container {
@@ -60,7 +62,7 @@
   
   .button {
     padding: $spacing-sm $spacing-lg;
-    border-radius: $border-radius-md;
+    border-radius: 0 !important;
     transition: all $transition-normal;
     
     &:hover {

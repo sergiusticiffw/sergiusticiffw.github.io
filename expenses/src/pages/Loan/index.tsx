@@ -83,13 +83,12 @@ const Loan = () => {
 
   const amortizationSchedule = [];
   let paydown;
-  const calculator = new Paydown();
+  const calculator = Paydown();
   let errorMessage;
 
   try {
     paydown = calculator.calculate(loanData, payments, amortizationSchedule);
   } catch (err) {
-    console.log(err);
     errorMessage = err?.message;
   }
 
