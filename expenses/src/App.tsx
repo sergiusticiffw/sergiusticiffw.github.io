@@ -10,7 +10,7 @@ import routes from '@config/routes';
 import Navbar from '@components/Navbar';
 
 // Loading component for Suspense fallback
-const LoadingFallback = () => (
+const LoadingFallback: React.FC = () => (
   <div className="loading-container">
     <div className="loader">
       <span className="loader__element"></span>
@@ -21,7 +21,7 @@ const LoadingFallback = () => (
 );
 
 // Error boundary component
-const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
+const ErrorFallback: React.FC<{ error: Error; resetErrorBoundary: () => void }> = ({ error, resetErrorBoundary }) => (
   <div className="error-container">
     <h2>Something went wrong</h2>
     <p>{error.message}</p>
@@ -31,7 +31,7 @@ const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetError
   </div>
 );
 
-const App = () => {
+const App: React.FC = () => {
   // Memoize routes to prevent unnecessary re-renders
   const appRoutes = useMemo(() => 
     routes.map((route) => (

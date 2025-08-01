@@ -22,7 +22,8 @@
     "build": "vite build && mv dist home"
   },
   "devDependencies": {
-    "@types/react-dom": "^19.0.0",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^4.2.1",
     "prettier": "^3.2.5",
     "typescript": "^5.4.2",

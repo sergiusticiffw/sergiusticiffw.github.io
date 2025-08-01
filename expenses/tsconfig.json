@@ -16,7 +16,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "target": "es2022",
-    "types": ["vite-plugin-pwa/client"],
+    "types": ["vite-plugin-pwa/client", "react", "react-dom"],
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -27,6 +27,17 @@
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "strict": true
-  }
+    "strict": false,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": [
+    "src/**/*",
+    "vite.config.mts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

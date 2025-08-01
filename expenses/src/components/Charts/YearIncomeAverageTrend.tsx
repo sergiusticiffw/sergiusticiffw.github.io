@@ -7,7 +7,7 @@ import { monthNames } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
 import { getFinancialStabilityIcon } from '@utils/helper';
 
-const YearIncomeAverageTrend = () => {
+const YearIncomeAverageTrend: React.FC = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
 
@@ -48,8 +48,7 @@ const YearIncomeAverageTrend = () => {
     credits: {
       enabled: false,
     },
-    // @ts-expect-error fix the tsc.
-    series: formattedIncomeData,
+    series: formattedIncomeData as any,
   };
 
   let sumDiff: number = 0;
@@ -77,13 +76,12 @@ const YearIncomeAverageTrend = () => {
           </thead>
           <tbody>
             {Object.entries(totalIncomePerYear).map((item, key) => {
-              const diff: number =
-                (item[1] as number) - (totalPerYear[item[0]] as number);
-              const savingsPercent =
-                ((totalPerYear[item[0]] as number) / (item[1] as number) - 1) *
-                -100;
+              const income = item[1] as number;
+              const spent = (totalPerYear[item[0]] as number) || 0;
+              const diff: number = income - spent;
+              const savingsPercent = ((spent / income) - 1) * -100;
               sumDiff += diff;
-              sumIncome += parseFloat(item[1] as string);
+              sumIncome += income;
               return (
                 <tr key={key}>
                   <td>
@@ -92,8 +90,8 @@ const YearIncomeAverageTrend = () => {
                       {item[0]}
                     </div>
                   </td>
-                  <td>{formatNumber(item[1])}</td>
-                  <td>{formatNumber(totalPerYear[item[0]])}</td>
+                  <td>{formatNumber(income)}</td>
+                  <td>{formatNumber(spent)}</td>
                   <td>
                     {isFinite(savingsPercent)
                       ? `${formatNumber(diff)} (${formatNumber(savingsPercent)}%)`

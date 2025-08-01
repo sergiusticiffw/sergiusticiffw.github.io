@@ -133,7 +133,7 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({ amortizationSched
       >
         <td className="sticky-col">{payment.date}</td>
         <td>{formatNumber(payment.rate)}</td>
-        <td>{formatNumber(payment.num_days)}</td>
+        <td>{formatNumber(payment.num_days || 0)}</td>
         <td>{formatNumber(payment.installment)}</td>
         <td>{formatNumber(payment.reduction)}</td>
         <td>{formatNumber(payment.interest)}</td>

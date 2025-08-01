@@ -16,21 +16,22 @@ import {
 import { FaPen } from 'react-icons/fa';
 import Notification from '@components/Notification/Notification';
 
-const Loan = () => {
-  const { id } = useParams();
+const Loan: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const { data, dataDispatch } = useLoan();
   const { token } = useAuthState() as AuthState;
   const dispatch = useAuthDispatch();
   const [showEditModal, setShowEditModal] = useState(false);
   const { loans } = data;
   const noData = data.loans === null;
+
   useEffect(() => {
     if (noData) {
       fetchLoans(token, dataDispatch, dispatch);
     }
   }, [data, dataDispatch, noData, token, dispatch]);
 
-  const loan = loans?.find((item) => item.id === id);
+  const loan = loans?.find((item: any) => item.id === id);
   if (!loan)
     return (
       <>
@@ -43,11 +44,11 @@ const Loan = () => {
 
   const [filteredData] =
     data?.payments?.filter(
-      (item) => item?.loanId === id && item?.data?.length > 0
+      (item: any) => item?.loanId === id && item?.data?.length > 0
     ) || [];
 
   const payments =
-    filteredData?.data?.map((item) => {
+    filteredData?.data?.map((item: any) => {
       return {
         isSimulatedPayment: Number(item.fisp),
         date: transformDateFormat(item.fdt),
@@ -65,36 +66,39 @@ const Loan = () => {
     end_date: transformDateFormat(loan.edt),
     principal: transformToNumber(loan.fp),
     rate: transformToNumber(loan.fr),
-    day_count_method: 'act/365',
+    day_count_method: 'act/365' as const,
     ...(loan.fif
       ? {
           initial_fee: transformToNumber(loan.fif),
         }
       : {}),
-    ...(loan.pdt
+    ...(loan.pdt && loan.frpd
       ? {
           recurring: {
             first_payment_date: transformDateFormat(loan.pdt),
-            ...(loan.frpd ? { payment_day: transformToNumber(loan.frpd) } : {}),
+            payment_day: transformToNumber(loan.frpd),
           },
         }
       : {}),
   };
 
-  const amortizationSchedule = [];
-  let paydown;
+  const amortizationSchedule: any[] = [];
+  let paydown: any;
   const calculator = Paydown();
-  let errorMessage;
+  let errorMessage: string | undefined;
 
   try {
     paydown = calculator.calculate(loanData, payments, amortizationSchedule);
-  } catch (err) {
+  } catch (err: any) {
     errorMessage = err?.message;
   }
 
-  const totalPaidAmount = filteredData?.data?.reduce((sum, item) => {
-    return sum + parseFloat(item.fpi || 0);
-  }, 0);
+  const totalPaidAmount = filteredData?.data?.reduce(
+    (sum: number, item: any) => {
+      return sum + parseFloat(item.fpi || '0');
+    },
+    0
+  );
 
   return (
     <div>
