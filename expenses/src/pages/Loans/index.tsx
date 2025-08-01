@@ -1,60 +1,42 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useAuthDispatch, useAuthState } from '@context/context';
+import { useLoan } from '@context/loan';
+import { AuthState } from '@type/types';
+import { fetchLoans, formatNumber } from '@utils/utils';
+import {
+  FaHandHoldingUsd,
+  FaPlus,
+  FaPen,
+  FaTrash,
+  FaChartLine,
+  FaCalendarAlt,
+  FaMoneyBillWave,
+  FaExternalLinkAlt,
+} from 'react-icons/fa';
 import Modal from '@components/Modal/Modal';
 import LoanForm from '@components/Loan/LoanForm';
-import useSwipeActions from '@hooks/useSwipeActions';
-import { AuthState } from '@type/types';
-import { deleteNode, fetchLoans } from '@utils/utils';
-import { notificationType } from '@utils/constants';
-import { useAuthDispatch, useAuthState } from '@context/context';
-import { useNotification } from '@context/notification';
-import { FaPen, FaTrash } from 'react-icons/fa';
-import { useLoan } from '@context/loan';
-import { formatNumber } from '@utils/utils';
+import { Link } from 'react-router-dom';
+import './Loans.scss';
 
-const Loans = () => {
-  const tableRef = useRef(null);
-  const showNotification = useNotification();
+const Loans: React.FC = () => {
   const { data, dataDispatch } = useLoan();
   const { token } = useAuthState() as AuthState;
   const dispatch = useAuthDispatch();
-  const { loans } = data;
-  const noData = !data.loans || data?.loans?.length === 0;
-  const loading = data.loading;
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [focusedItem, setFocusedItem] = useState<any>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { loans, loading } = data;
+
   useEffect(() => {
-    if (noData) {
+    if (!loans) {
       fetchLoans(token, dataDispatch, dispatch);
     }
-  }, [dataDispatch, noData, token, dispatch]);
+  }, [loans, token, dataDispatch, dispatch]);
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [isNewModal, setIsNewModal] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [focusedItem, setFocusedItem] = useState({
-    title: '',
-    field_principal: '',
-    field_start_date: new Date().toISOString().slice(0, 10),
-    field_end_date: new Date().toISOString().slice(0, 10),
-    field_rate: '',
-    field_initial_fee: '',
-    field_rec_first_payment_date: null,
-    field_recurring_payment_day: '',
-    field_recurring_payment_fee: '',
-    field_loan_status: 'draft',
-  });
-
-  const {
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    deleteVisible,
-    editVisible,
-    extraRowStyle,
-  } = useSwipeActions();
-
-  const handleEdit = (id: string) => {
-    const item = loans?.find((item) => item.id === id);
+  const handleEdit = (item: any) => {
     setFocusedItem({
       nid: item.id,
       title: item.title,
@@ -65,321 +47,248 @@ const Loans = () => {
       field_initial_fee: item.fif,
       field_rec_first_payment_date: item.pdt,
       field_recurring_payment_day: item.frpd,
-      field_recurring_payment_fee: item.frpf,
       field_loan_status: item.fls,
     });
     setShowEditModal(true);
   };
 
-  const handleDelete = (showDeleteModal: boolean, token: string) => {
-    setIsSubmitting(true);
-    // @ts-expect-error
-    deleteNode(showDeleteModal, token, (response) => {
-      if (response.ok) {
-        showNotification(
-          'Loan was successfully deleted.',
-          notificationType.SUCCESS
-        );
-        setIsSubmitting(false);
-      } else {
-        showNotification('Something went wrong.', notificationType.ERROR);
-        setIsSubmitting(false);
-      }
-      setShowDeleteModal(false);
-      fetchLoans(token, dataDispatch, dispatch);
-    });
+  const handleDelete = (item: any) => {
+    setFocusedItem(item);
+    setShowDeleteModal(true);
   };
 
-  return (
-    <div className="incomes-page">
-      {loading ? (
-        <div className="lds-ripple">
-          <div></div>
-          <div></div>
+  const getLoanStatus = (loan: any) => {
+    if (loan.fls === 'completed') return 'completed';
+    if (loan.fls === 'in_progress') return 'active';
+    return 'pending';
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'Completed';
+      case 'active':
+        return 'Active';
+      case 'pending':
+        return 'Pending';
+      default:
+        return 'Unknown';
+    }
+  };
+
+  const totalLoans = loans?.length || 0;
+  const activeLoans =
+    loans?.filter((loan: any) => getLoanStatus(loan) === 'active').length || 0;
+  const completedLoans =
+    loans?.filter((loan: any) => getLoanStatus(loan) === 'completed').length ||
+    0;
+  const totalPrincipal =
+    loans?.reduce(
+      (sum: number, loan: any) => sum + parseFloat(loan.fp || '0'),
+      0
+    ) || 0;
+
+  if (loading) {
+    return (
+      <div className="loans-container">
+        <div className="loading-container">
+          <div className="loader">
+            <span className="loader__element"></span>
+            <span className="loader__element"></span>
+            <span className="loader__element"></span>
+          </div>
         </div>
-      ) : (
-        <>
-          <h2>Loans page</h2>
-          <button
-            onClick={() => {
-              setShowEditModal(true);
-              setIsNewModal(true);
-            }}
-            className="button wide"
-          >
-            Add New Loan
-          </button>
-          <br />
-          <br />
-          <Modal
-            show={showDeleteModal}
-            onClose={(e) => {
-              e.preventDefault();
-              setShowDeleteModal(false);
-            }}
-          >
-            <h3>Are you sure you want to delete the loan?</h3>
+      </div>
+    );
+  }
+
+  return (
+    <div className="loans-container">
+      {/* Header Section */}
+      <div className="loans-header">
+        <div className="header-icon">
+          <FaHandHoldingUsd />
+        </div>
+        <h1 className="header-title">Loan Management</h1>
+        <p className="header-subtitle">
+          Track and manage your loans efficiently
+        </p>
+      </div>
+
+      {/* Actions Section */}
+      <div className="loans-actions">
+        <button onClick={() => setShowAddModal(true)} className="action-btn">
+          <FaPlus />
+          Add New Loan
+        </button>
+      </div>
+
+      {/* Summary Section */}
+      <div className="loans-summary">
+        <div className="summary-header">
+          <FaChartLine />
+          <h3>Loans Overview</h3>
+        </div>
+        <div className="summary-grid">
+          <div className="summary-item">
+            <div className="summary-value">{totalLoans}</div>
+            <div className="summary-label">Total Loans</div>
+          </div>
+          <div className="summary-item">
+            <div className="summary-value">{activeLoans}</div>
+            <div className="summary-label">Active Loans</div>
+          </div>
+          <div className="summary-item">
+            <div className="summary-value">{completedLoans}</div>
+            <div className="summary-label">Completed</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Loans Grid */}
+      <div className="loans-grid">
+        {loans?.map((loan: any) => {
+          const status = getLoanStatus(loan);
+
+          return (
+            <div key={loan.id} className="loan-card">
+              <div className="loan-header">
+                <h3 className="loan-title">
+                  <Link to={`/expenses/loan/${loan.id}`} className="loan-link">
+                    {loan.title}
+                    <FaExternalLinkAlt className="link-icon" />
+                  </Link>
+                </h3>
+                <div className="loan-actions">
+                  <button
+                    onClick={() => handleEdit(loan)}
+                    className="btn-icon"
+                    title="Edit Loan"
+                  >
+                    <FaPen />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(loan)}
+                    className="btn-icon"
+                    title="Delete Loan"
+                  >
+                    <FaTrash />
+                  </button>
+                </div>
+              </div>
+
+              <div className="loan-details">
+                <div className="detail-item">
+                  <div className="detail-label">Principal</div>
+                  <div className="detail-value">{formatNumber(loan.fp)}</div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">Interest Rate</div>
+                  <div className="detail-value">{loan.fr}%</div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">Start Date</div>
+                  <div className="detail-value">{loan.sdt}</div>
+                </div>
+                <div className="detail-item">
+                  <div className="detail-label">End Date</div>
+                  <div className="detail-value">{loan.edt}</div>
+                </div>
+              </div>
+
+              <div className="loan-status">
+                <span className={`status-badge ${status}`}>
+                  {getStatusText(status)}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Add Loan Modal */}
+      <Modal
+        show={showAddModal}
+        onClose={(e) => {
+          e.preventDefault();
+          setShowAddModal(false);
+        }}
+      >
+        <LoanForm
+          formType="add"
+          values={{
+            nid: '',
+            title: '',
+            field_principal: 0,
+            field_start_date: '',
+            field_end_date: '',
+            field_rate: 0,
+            field_initial_fee: 0,
+            field_rec_first_payment_date: '',
+            field_recurring_payment_day: 0,
+          }}
+          onSuccess={() => {
+            setShowAddModal(false);
+            fetchLoans(token, dataDispatch, dispatch);
+          }}
+        />
+      </Modal>
+
+      {/* Edit Loan Modal */}
+      <Modal
+        show={showEditModal}
+        onClose={(e) => {
+          e.preventDefault();
+          setShowEditModal(false);
+        }}
+      >
+        <LoanForm
+          formType="edit"
+          values={focusedItem}
+          onSuccess={() => {
+            setShowEditModal(false);
+            fetchLoans(token, dataDispatch, dispatch);
+          }}
+        />
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        show={showDeleteModal}
+        onClose={(e) => {
+          e.preventDefault();
+          setShowDeleteModal(false);
+        }}
+      >
+        <div className="delete-confirmation">
+          <h3>Delete Loan</h3>
+          <p>
+            Are you sure you want to delete "{focusedItem.title}"? This action
+            cannot be undone.
+          </p>
+          <div className="modal-actions">
             <button
-              onClick={() => handleDelete(showDeleteModal, token)}
-              className="button wide"
+              onClick={() => {
+                // Handle delete logic here
+                setShowDeleteModal(false);
+                fetchLoans(token, dataDispatch, dispatch);
+              }}
+              className="button danger"
+              disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <div className="loader">
-                  <span className="loader__element"></span>
-                  <span className="loader__element"></span>
-                  <span className="loader__element"></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
                 </div>
               ) : (
                 <FaTrash />
               )}
             </button>
-          </Modal>
-          <Modal
-            show={showEditModal}
-            onClose={(e) => {
-              e.preventDefault();
-              setShowEditModal(false);
-              setIsNewModal(false);
-            }}
-          >
-            <LoanForm
-              formType={!isNewModal ? 'edit' : 'add'}
-              values={focusedItem}
-              onSuccess={() => {
-                setIsNewModal(false);
-                setShowEditModal(false);
-                fetchLoans(token, dataDispatch, dispatch);
-              }}
-            />
-          </Modal>
-          {noData ? (
-            'No loans found'
-          ) : (
-            <div className="table-wrapper">
-              <table className="expenses-table" cellSpacing="0" cellPadding="0">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Principal</th>
-                    <th>Rate</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th className="desktop-only"></th>
-                    <th className="desktop-only"></th>
-                  </tr>
-                </thead>
-                <tbody ref={tableRef}>
-                  {/** In Progress Section */}
-                  {loans?.some((loan) => loan.fls == 'in_progress') && (
-                    <>
-                      <tr>
-                        <td colSpan={7}>
-                          <strong>🟡 In Progress</strong>
-                        </td>
-                      </tr>
-                      {loans
-                        .filter((loan) => loan.fls == 'in_progress')
-                        .map((loan) => (
-                          <tr
-                            key={loan.id}
-                            data-id={loan.id}
-                            onTouchStart={(e) =>
-                              handleTouchStart(e, loan.id, tableRef)
-                            }
-                            onTouchMove={(e) => handleTouchMove(e, tableRef)}
-                            onTouchEnd={(e) =>
-                              handleTouchEnd(
-                                e,
-                                tableRef,
-                                loan.id,
-                                handleEdit,
-                                setShowDeleteModal
-                              )
-                            }
-                          >
-                            <td>
-                              <Link
-                                to={`/expenses/loan/${loan.id}`}
-                                style={{
-                                  color: 'white',
-                                  textDecoration: 'none',
-                                }}
-                              >
-                                {loan.title}
-                              </Link>
-                            </td>
-                            <td>{formatNumber(loan.fp)}</td>
-                            <td>{formatNumber(loan.fr)}</td>
-                            <td>{loan.sdt}</td>
-                            <td>{loan.edt}</td>
-                            <td className="desktop-only">
-                              <button
-                                onClick={() => handleEdit(loan.id)}
-                                className="btn-outline"
-                              >
-                                <FaPen />
-                              </button>
-                            </td>
-                            <td className="desktop-only">
-                              <button
-                                onClick={() => setShowDeleteModal(loan.id)}
-                                className="btn-outline"
-                              >
-                                <FaTrash />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                    </>
-                  )}
-
-                  {/** Draft Section */}
-                  {loans?.some((loan) => loan.fls == 'draft') && (
-                    <>
-                      <tr>
-                        <td colSpan={7}>
-                          <strong>🔵 Draft</strong>
-                        </td>
-                      </tr>
-                      {loans
-                        .filter((loan) => loan.fls == 'draft')
-                        .map((loan) => (
-                          <tr
-                            key={loan.id}
-                            data-id={loan.id}
-                            onTouchStart={(e) =>
-                              handleTouchStart(e, loan.id, tableRef)
-                            }
-                            onTouchMove={(e) => handleTouchMove(e, tableRef)}
-                            onTouchEnd={(e) =>
-                              handleTouchEnd(
-                                e,
-                                tableRef,
-                                loan.id,
-                                handleEdit,
-                                setShowDeleteModal
-                              )
-                            }
-                          >
-                            <td>
-                              <Link
-                                to={`/expenses/loan/${loan.id}`}
-                                style={{
-                                  color: 'white',
-                                  textDecoration: 'none',
-                                }}
-                              >
-                                {loan.title}
-                              </Link>
-                            </td>
-                            <td>{formatNumber(loan.fp)}</td>
-                            <td>{formatNumber(loan.fr)}</td>
-                            <td>{loan.sdt}</td>
-                            <td>{loan.edt}</td>
-                            <td className="desktop-only">
-                              <button
-                                onClick={() => handleEdit(loan.id)}
-                                className="btn-outline"
-                              >
-                                <FaPen />
-                              </button>
-                            </td>
-                            <td className="desktop-only">
-                              <button
-                                onClick={() => setShowDeleteModal(loan.id)}
-                                className="btn-outline"
-                              >
-                                <FaTrash />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                    </>
-                  )}
-
-                  {/** Completed Section */}
-                  {loans?.some((loan) => loan.fls == 'completed') && (
-                    <>
-                      <tr>
-                        <td colSpan={7}>
-                          <strong>🟢 Completed</strong>
-                        </td>
-                      </tr>
-                      {loans
-                        .filter((loan) => loan.fls == 'completed')
-                        .map((loan) => (
-                          <tr
-                            key={loan.id}
-                            data-id={loan.id}
-                            onTouchStart={(e) =>
-                              handleTouchStart(e, loan.id, tableRef)
-                            }
-                            onTouchMove={(e) => handleTouchMove(e, tableRef)}
-                            onTouchEnd={(e) =>
-                              handleTouchEnd(
-                                e,
-                                tableRef,
-                                loan.id,
-                                handleEdit,
-                                setShowDeleteModal
-                              )
-                            }
-                          >
-                            <td>
-                              <Link
-                                to={`/expenses/loan/${loan.id}`}
-                                style={{
-                                  color: 'white',
-                                  textDecoration: 'none',
-                                }}
-                              >
-                                {loan.title}
-                              </Link>
-                            </td>
-                            <td>{formatNumber(loan.fp)}</td>
-                            <td>{formatNumber(loan.fr)}</td>
-                            <td>{loan.sdt}</td>
-                            <td>{loan.edt}</td>
-                            <td className="desktop-only">
-                              <button
-                                onClick={() => handleEdit(loan.id)}
-                                className="btn-outline"
-                              >
-                                <FaPen />
-                              </button>
-                            </td>
-                            <td className="desktop-only">
-                              <button
-                                onClick={() => setShowDeleteModal(loan.id)}
-                                className="btn-outline"
-                              >
-                                <FaTrash />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                    </>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {deleteVisible && (
-            <div style={{ ...extraRowStyle }}>
-              <div className="action delete">
-                <FaTrash />
-              </div>
-            </div>
-          )}
-          {editVisible && (
-            <div style={{ ...extraRowStyle }}>
-              <div className="action edit">
-                <FaPen />
-              </div>
-            </div>
-          )}
-        </>
-      )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

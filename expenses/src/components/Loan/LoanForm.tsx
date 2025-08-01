@@ -16,10 +16,10 @@ interface LoanFormProps {
     field_end_date: string;
     field_rate: number;
     field_initial_fee?: number;
-
     field_recurring_payment_method?: string;
     field_rec_first_payment_date?: string;
     field_recurring_payment_day?: number;
+    field_loan_status?: string;
   };
   onSuccess: () => void;
 }
@@ -48,8 +48,9 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
 
   const { token } = useAuthState() as AuthState;
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, type, checked, value } = event.target;
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, type, value } = event.target;
+    const checked = (event.target as HTMLInputElement).checked;
     setFormState({
       ...formState,
       [name]: type === 'checkbox' ? checked : value,

@@ -3,7 +3,7 @@ import { useAuthDispatch, useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
 import { AuthState } from '@type/types';
 import useSwipeActions from '@hooks/useSwipeActions';
-import { FaPen, FaTrash, FaCaretDown } from 'react-icons/fa';
+import { FaPen, FaTrash, FaCaretDown, FaMoneyBillWave } from 'react-icons/fa';
 import { deleteNode, fetchLoans, formatNumber } from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import Modal from '@components/Modal/Modal';
@@ -13,7 +13,6 @@ import { useLoan } from '@context/loan';
 const PaymentDetails = (props) => {
   const payments = props?.payments ?? [];
   const loan = props?.loan ?? {};
-  const totalPaidAmount = props?.totalPaidAmount;
   const tableRef = useRef(null);
   const showNotification = useNotification();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -134,13 +133,7 @@ const PaymentDetails = (props) => {
 
       {payments.length ? (
         <div className="table-wrapper">
-          <h2>Payments</h2>
-          {totalPaidAmount > 0 && (
-            <>
-              <div>Amount Paid to Date: {formatNumber(totalPaidAmount)}</div>
-              <br />
-            </>
-          )}
+          <div className="income-header">Payment History</div>
           <table className="expenses-table" cellSpacing="0" cellPadding="0">
             <thead>
               <tr>
@@ -155,6 +148,7 @@ const PaymentDetails = (props) => {
                 return (
                   <tr
                     key={payment.id}
+                    className="transaction-item"
                     data-id={payment.id}
                     onTouchStart={(e) =>
                       handleTouchStart(e, payment.id, tableRef)

@@ -95,4 +95,54 @@
       z-index: 10;
     }
   }
+  
+  // Remove padding for amortization schedule
+  .amortization-schedule & {
+    .expenses-table {
+      th,
+      td {
+        padding: 0 !important;
+      }
+      
+      // Ensure table header remains visible
+      thead {
+        background-color: var(--secondary-color) !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+        
+        tr {
+          background-color: var(--secondary-color) !important;
+          
+          th {
+            background-color: var(--secondary-color) !important;
+            color: #fff !important;
+            padding: 8px !important;
+            border: none !important;
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 10 !important;
+          }
+        }
+      }
+      
+      // Ensure table body remains visible
+      tbody {
+        tr {
+          background-color: var(--bg-color) !important;
+          
+          &:nth-of-type(even) {
+            background-color: var(--secondary-color) !important;
+          }
+          
+          td {
+            background-color: inherit !important;
+            border: none !important;
+            padding: 8px !important;
+            color: #fff !important;
+          }
+        }
+      }
+    }
+  }
 } 

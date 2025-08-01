@@ -53,3 +53,97 @@
     }
   }
 } 
+
+// Amortization Schedule specific styles - no margins
+.amortization-schedule {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  
+  .charts-page {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  
+  .charts-section {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  
+  .table-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  
+  .expenses-table {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    
+    // Ensure table header remains visible
+    thead {
+      background-color: var(--secondary-color) !important;
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 10 !important;
+      
+      tr {
+        background-color: var(--secondary-color) !important;
+        
+        th {
+          background-color: var(--secondary-color) !important;
+          color: #fff !important;
+          padding: 8px !important;
+          border: none !important;
+          position: sticky !important;
+          top: 0 !important;
+          z-index: 10 !important;
+        }
+      }
+    }
+    
+    // Ensure table body remains visible
+    tbody {
+      tr {
+        background-color: var(--bg-color) !important;
+        
+        &:nth-of-type(even) {
+          background-color: var(--secondary-color) !important;
+        }
+        
+        td {
+          background-color: inherit !important;
+          border: none !important;
+          padding: 8px !important;
+          color: #fff !important;
+        }
+      }
+    }
+  }
+  
+  // Remove any spacing between elements
+  > * {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  
+  // Remove spacing from chart components
+  .highcharts-container,
+  .highcharts-root,
+  svg {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  
+  // Remove any container padding
+  .table-wrapper-loan {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+} 

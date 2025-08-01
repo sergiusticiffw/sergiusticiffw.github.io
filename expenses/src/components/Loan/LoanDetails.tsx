@@ -1,8 +1,6 @@
 import React from 'react';
 
-import { calculateDaysFrom, formatNumber } from '@utils/utils';
 import { LoanCostBreakdown } from '@components/Loan/LoanCharts';
-import { LoanProgress } from '@components/Loan/LoanProgress';
 import AmortizationTable from '@components/Loan/AmortizationTable';
 
 interface LoanDetailsProps {
@@ -18,7 +16,6 @@ interface LoanDetailsProps {
 const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
   const loan = props?.loan ?? {};
   const amortizationSchedule = props?.amortizationSchedule ?? [];
-  const totalPaidAmount = props?.totalPaidAmount;
   const annualSummaries = loan?.annual_summaries ?? {};
 
   // Early return if no valid data
@@ -134,22 +131,10 @@ const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
     loan?.unpaid_interest +
     loan?.sum_of_fees;
 
-  const payPerDay = sumInstallments / loan?.days_calculated;
-
   const sumOfInterest = loan?.sum_of_interests + loan?.unpaid_interest;
 
-  const startDateParts = props.loanData.start_date?.split('.') || [];
-  const [day, month, year] =
-    startDateParts.length >= 3 ? startDateParts : ['01', '01', '2024'];
-  const formatted = `${year}-${month}-${day}`;
-
-  const totalDays = loan?.days_calculated ?? 0;
-  const daysSince = calculateDaysFrom(formatted);
-  const daysPassed = daysSince > 0 ? Math.min(daysSince, totalDays) : 0;
-  const daysRemaining = Math.max(totalDays - daysPassed, 0);
-
   return (
-    <div className="charts-page">
+    <div className="charts-page amortization-schedule">
       <LoanCostBreakdown
         data={{
           principal: props.loanData.principal,
@@ -157,74 +142,6 @@ const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
           sumInstallments,
         }}
       />
-      <br />
-
-      <table className="daily-average">
-        <tbody>
-          <tr>
-            <td>Principal</td>
-            <td>{formatNumber(props.loanData.principal)}</td>
-          </tr>
-          <tr>
-            <td>Sum of interests</td>
-            <td>{formatNumber(sumOfInterest)}</td>
-          </tr>
-          <tr>
-            <td>Sum of installments</td>
-            <td>{formatNumber(sumInstallments)}</td>
-          </tr>
-          <tr>
-            <td>Days calculated</td>
-            <td>{formatNumber(totalDays)}</td>
-          </tr>
-          <tr>
-            <td>Days Remaining</td>
-            <td>{formatNumber(daysRemaining)}</td>
-          </tr>
-          <tr>
-            <td>Start Date</td>
-            <td>{props.loanData.start_date}</td>
-          </tr>
-          <tr>
-            <td>Days Passed</td>
-            <td>{formatNumber(daysPassed)}</td>
-          </tr>
-          <tr>
-            <td>Actual end date</td>
-            <td>{loan?.actual_end_date}</td>
-          </tr>
-          <tr>
-            <td>Latest payment date</td>
-            <td>{loan?.latest_payment_date}</td>
-          </tr>
-          <tr>
-            <td>Sum of fees</td>
-            <td>{formatNumber(loan?.sum_of_fees)}</td>
-          </tr>
-          <tr>
-            <td>Interest cost as % of total installments</td>
-            <td>
-              {formatNumber(
-                ((sumOfInterest + loan?.sum_of_fees) / sumInstallments) * 100
-              )}
-            </td>
-          </tr>
-          <tr>
-            <td>Cost of loan per day</td>
-            <td>{formatNumber(payPerDay)}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <br />
-      <div className="charts-section">
-        <LoanProgress
-          data={{
-            totalPaidAmount,
-            sumInstallments,
-          }}
-        />
-      </div>
       <br />
 
       <AmortizationTable amortizationSchedule={processedAmortizationSchedule} />
