@@ -43,11 +43,11 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   }, [changedItems, handleClearChangedItem]);
   const allItems = [
     ...items,
-    ...Object.values(changedItems)
-      .filter(
-        (item) => item.type === 'removed' && item.data.type === 'transaction'
-      )
-      .map((item) => item.data),
+          ...Object.values(changedItems)
+        .filter(
+          (item: any) => item.type === 'removed' && item.data.type === 'transaction'
+        )
+        .map((item: any) => item.data),
   ].sort((a, b) => {
     // First, compare by 'dt'
     const dateComparison = new Date(b.dt).getTime() - new Date(a.dt).getTime();

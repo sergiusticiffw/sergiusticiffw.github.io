@@ -213,10 +213,14 @@ const Income = () => {
           setShowDeleteModal(false);
         }}
       >
-        <h3>Are you sure you want to delete the income?</h3>
+        <h3>Are you sure you want to delete this income record?</h3>
+        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
+          This action cannot be undone.
+        </p>
         <button
           onClick={() => handleDelete(showDeleteModal, token)}
-          className="button wide"
+          className="button danger wide"
+          disabled={isSubmitting}
         >
           {isSubmitting ? (
             <div className="loader">
@@ -225,7 +229,10 @@ const Income = () => {
               <span className="loader__element"></span>
             </div>
           ) : (
-            <FaTrash />
+            <>
+              <FaTrash />
+              Delete
+            </>
           )}
         </button>
       </Modal>

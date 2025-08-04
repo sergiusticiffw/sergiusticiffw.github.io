@@ -31,8 +31,8 @@ const useChartsBackgroundColor = localStorage.getItem(
   : '';
 
 export const initialState = {
-  userDetails: '' || user,
-  token: '' || token,
+  userDetails: user || '',
+  token: token || '',
   loading: false,
   errorMessage: null,
   userIsLoggedIn: !!user,

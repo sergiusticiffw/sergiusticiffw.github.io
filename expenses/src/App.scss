@@ -2,6 +2,7 @@
 @use 'styles/variables' as *;
 @use 'styles/themes' as *;
 @use 'styles/base' as *;
+@use 'styles/mixins' as *;
 
 // Import component styles
 @use 'components/Navbar/Navbar' as *;
@@ -17,6 +18,8 @@
 @use 'components/Home/Home' as *;
 @use 'components/DailyAverage/DailyAverage' as *;
 @use 'components/Suggestions/Suggestions' as *;
+@use 'components/Income/IncomeForm' as *;
+@use 'components/Income/IncomeTable' as *;
 @use 'components/Income/Income' as *;
 @use 'components/Common/Common' as *;
 

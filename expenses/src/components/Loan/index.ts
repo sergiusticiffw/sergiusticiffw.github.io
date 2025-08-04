@@ -4,5 +4,4 @@ export { default as AmortizationTable } from './AmortizationTable';
 
 export { default as PaymentForm } from './PaymentForm';
 export { default as PaymentDetails } from './PaymentDetails';
-export { default as LoanProgress } from './LoanProgress';
-export { default as LoanCharts } from './LoanCharts'; 
+export { LoanCostBreakdown } from './LoanCharts'; 

@@ -43,8 +43,8 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   const allItems = [
     ...items,
     ...Object.values(changedItems)
-      .filter((item) => item.type === 'removed' && item.data.type === 'incomes')
-      .map((item) => item.data),
+      .filter((item: any) => item.type === 'removed' && item.data.type === 'incomes')
+      .map((item: any) => item.data),
   ].sort((a, b) => {
     // First, compare by 'dt'
     const dateComparison = new Date(b.dt).getTime() - new Date(a.dt).getTime();

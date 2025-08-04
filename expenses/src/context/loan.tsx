@@ -7,7 +7,7 @@ interface LoanContextProps {
 
 export const LoanContext = createContext({
   data: { ...initialLoanData },
-  dataDispatch: () => {},
+  dataDispatch: (action: any) => {},
 });
 
 export const useLoan = () => useContext(LoanContext);

@@ -56,7 +56,7 @@ export interface DataItems {
   filtered?: any;
   incomeData?: any;
   incomeTotals?: Record<string, number> | null;
-  categoryTotals?: Record<string, { name: string; y: number }> | never[];
+  categoryTotals?: Record<string, { name: string; y: number }> | any[];
   loading: boolean;
   totalIncomePerYearAndMonth?: DataStructure;
   totalSpent: number;

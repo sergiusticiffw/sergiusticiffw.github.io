@@ -1,51 +1,168 @@
 @use '../../styles/variables' as *;
+@use '../../styles/mixins' as *;
 
 .modal-window {
   position: fixed;
-  background: rgb(62, 63, 74, 0.35);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
   z-index: $z-index-modal;
   transition: all $transition-normal;
-  
-  > div {
-    width: 75%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 2em;
-    background: var(--bg-color);
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-md;
 }
 
 .modal-content {
+  @include modern-card();
   position: relative;
-  width: 80%;
-  max-width: 600px;
-  max-height: 80%;
-  background: white;
+  width: 100%;
+  max-width: 500px;
+  max-height: 80vh;
+  background: var(--bg-color);
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  padding: 0;
 }
 
 .modal-body {
   overflow-y: auto;
-  padding: $spacing-sm;
+  padding: $spacing-xl;
   flex-grow: 1;
+  
+  h3 {
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: $spacing-lg;
+    text-align: center;
+    @include text-shadow();
+  }
+  
+  // Modal button styles
+  .button {
+    @include gradient-button();
+    width: 100%;
+    margin-top: $spacing-md;
+    
+    &.wide {
+      width: 100%;
+    }
+    
+    &.danger {
+      background: linear-gradient(145deg, #dc3545, #c82333);
+      
+      &:hover {
+        background: linear-gradient(145deg, #c82333, #dc3545);
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+      }
+    }
+    
+    &.cancel {
+      background: linear-gradient(145deg, #6c757d, #5a6268);
+      
+      &:hover {
+        background: linear-gradient(145deg, #5a6268, #6c757d);
+        box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+      }
+    }
+  }
+  
+  // Button group for multiple buttons
+  .button-group {
+    display: flex;
+    gap: $spacing-md;
+    margin-top: $spacing-lg;
+    
+    .button {
+      flex: 1;
+      margin-top: 0;
+    }
+  }
+  
+  // Loading state for buttons
+  .loader {
+    @include loading-dots();
+    
+    .loader__element {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      animation: loader-bounce 1.4s ease-in-out infinite both;
+      
+      &:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+      
+      &:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+    }
+  }
 }
 
 .modal-close {
-  color: #ccc;
-  line-height: 50px;
-  font-size: 80%;
   position: absolute;
-  right: 0;
-  top: 0;
-  width: 70px;
+  top: $spacing-md;
+  right: $spacing-md;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.5rem;
   text-decoration: none;
+  z-index: 10;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+}
+
+// Animations
+@keyframes loader-bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+// Responsive design
+@media (max-width: $breakpoint-sm) {
+  .modal-window {
+    padding: $spacing-sm;
+  }
+  
+  .modal-content {
+    max-width: 100%;
+    max-height: 90vh;
+  }
+  
+  .modal-body {
+    padding: $spacing-lg;
+    
+    h3 {
+      font-size: 1.2rem;
+    }
+    
+    .button-group {
+      flex-direction: column;
+      gap: $spacing-sm;
+    }
+  }
 } 

@@ -1,4 +1,268 @@
 @use '../../styles/variables' as *;
+@use '../../styles/mixins' as *;
 
-// Common component styles can be added here
-// Currently using shared styles from other components 
+// Common form field styles
+.form-input,
+.form-textarea,
+.form-select {
+  @include form-input();
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+}
+
+.form-select {
+  cursor: pointer;
+  
+  option {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 0.5rem;
+  }
+}
+
+// Button styles
+.btn {
+  @include gradient-button();
+  border-radius: 0 !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  font-family: inherit;
+  
+  &.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    min-height: 36px;
+  }
+  
+  &.btn-md {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.95rem;
+    min-height: 46px;
+  }
+  
+  &.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    min-height: 56px;
+  }
+  
+  &.btn-full {
+    width: 100%;
+  }
+  
+  &.btn-secondary {
+    background: linear-gradient(145deg, #6c757d, #5a6268);
+    
+    &:hover {
+      background: linear-gradient(145deg, #5a6268, #6c757d);
+    }
+  }
+  
+  &.btn-danger {
+    background: linear-gradient(145deg, #dc3545, #c82333);
+    
+    &:hover {
+      background: linear-gradient(145deg, #c82333, #dc3545);
+    }
+  }
+  
+  &.btn-success {
+    background: linear-gradient(145deg, #28a745, #218838);
+    
+    &:hover {
+      background: linear-gradient(145deg, #218838, #28a745);
+    }
+  }
+  
+  &.btn-outline {
+    background: transparent;
+    border: 2px solid var(--accent-color);
+    color: var(--accent-color);
+    
+    &:hover {
+      background: var(--accent-color);
+      color: #fff;
+    }
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .loader {
+    @include loading-dots();
+  }
+}
+
+// Common container styles
+.container {
+  @include responsive-container();
+}
+
+.container-sm {
+  @include responsive-container(600px);
+}
+
+.container-md {
+  @include responsive-container(800px);
+}
+
+.container-lg {
+  @include responsive-container(1200px);
+}
+
+// Common section styles
+.section {
+  @include modern-card();
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.section-header {
+  @include section-header();
+}
+
+// Common card styles
+.card {
+  @include modern-card();
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  
+  h3 {
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+    @include text-shadow();
+  }
+}
+
+.card-body {
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+}
+
+.card-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+// Common grid styles
+.grid {
+  display: grid;
+  gap: 1.5rem;
+  
+  &.grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  
+  &.grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  &.grid-4 {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+// Common flex styles
+.flex {
+  display: flex;
+  
+  &.flex-center {
+    align-items: center;
+    justify-content: center;
+  }
+  
+  &.flex-between {
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  &.flex-column {
+    flex-direction: column;
+  }
+  
+  &.flex-wrap {
+    flex-wrap: wrap;
+  }
+}
+
+// Common spacing utilities
+.mt-1 { margin-top: $spacing-xs; }
+.mt-2 { margin-top: $spacing-sm; }
+.mt-3 { margin-top: $spacing-md; }
+.mt-4 { margin-top: $spacing-lg; }
+.mt-5 { margin-top: $spacing-xl; }
+
+.mb-1 { margin-bottom: $spacing-xs; }
+.mb-2 { margin-bottom: $spacing-sm; }
+.mb-3 { margin-bottom: $spacing-md; }
+.mb-4 { margin-bottom: $spacing-lg; }
+.mb-5 { margin-bottom: $spacing-xl; }
+
+.p-1 { padding: $spacing-xs; }
+.p-2 { padding: $spacing-sm; }
+.p-3 { padding: $spacing-md; }
+.p-4 { padding: $spacing-lg; }
+.p-5 { padding: $spacing-xl; }
+
+// Common text utilities
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.text-primary { color: var(--accent-color); }
+.text-secondary { color: rgba(255, 255, 255, 0.7); }
+.text-success { color: #28a745; }
+.text-danger { color: #dc3545; }
+.text-warning { color: #ffc107; }
+
+.text-sm { font-size: 0.85rem; }
+.text-md { font-size: 1rem; }
+.text-lg { font-size: 1.2rem; }
+.text-xl { font-size: 1.5rem; }
+
+.font-bold { font-weight: 700; }
+.font-normal { font-weight: 400; }
+
+// Responsive utilities
+@media (max-width: $breakpoint-sm) {
+  .grid {
+    &.grid-2,
+    &.grid-3,
+    &.grid-4 {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .flex {
+    &.flex-column-sm {
+      flex-direction: column;
+    }
+  }
+} 
