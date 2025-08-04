@@ -120,7 +120,7 @@ const Income = () => {
       </div>
 
       {/* Actions Section */}
-      <div className="income-actions">
+      <div className="btns-actions">
         <button
           onClick={() => {
             setShowEditModal(true);

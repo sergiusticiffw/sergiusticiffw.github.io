@@ -296,35 +296,6 @@
   }
 }
 
-.payment-actions {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  
-  .action-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 2rem;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
-    border: 2px solid rgba(255, 255, 255, 0.15);
-    border-radius: 0 !important;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    
-    svg {
-      font-size: 1.2rem;
-      color: var(--accent-color);
-    }
-  }
-}
-
 .loan-charts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -458,17 +429,6 @@
   
   .loan-charts {
     grid-template-columns: 1fr;
-  }
-  
-  .payment-actions {
-    flex-direction: column;
-    align-items: center;
-    
-    .action-btn {
-      width: 100%;
-      max-width: 300px;
-      justify-content: center;
-    }
   }
 }
 

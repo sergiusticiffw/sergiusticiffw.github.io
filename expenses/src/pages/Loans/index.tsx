@@ -32,7 +32,9 @@ const Loans: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [focusedItem, setFocusedItem] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sortBy, setSortBy] = useState<'status' | 'title' | 'principal' | 'date'>('status');
+  const [sortBy, setSortBy] = useState<
+    'status' | 'title' | 'principal' | 'date'
+  >('status');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -67,18 +69,12 @@ const Loans: React.FC = () => {
 
   const handleConfirmDelete = () => {
     setIsSubmitting(true);
-    deleteLoan(
-      focusedItem.id,
-      token,
-      dataDispatch,
-      dispatch,
-      () => {
-        setIsSubmitting(false);
-        setShowDeleteModal(false);
-        showNotification('Loan deleted successfully!', notificationType.SUCCESS);
-        fetchLoans(token, dataDispatch, dispatch);
-      }
-    );
+    deleteLoan(focusedItem.id, token, dataDispatch, dispatch, () => {
+      setIsSubmitting(false);
+      setShowDeleteModal(false);
+      showNotification('Loan deleted successfully!', notificationType.SUCCESS);
+      fetchLoans(token, dataDispatch, dispatch);
+    });
   };
 
   const handleSort = (field: 'status' | 'title' | 'principal' | 'date') => {
@@ -117,18 +113,20 @@ const Loans: React.FC = () => {
   // Filter and sort loans
   const filteredAndSortedLoans = useMemo(() => {
     if (!loans) return [];
-    
+
     let filtered = loans;
-    
+
     // Apply status filter
     if (statusFilter !== 'all') {
-      filtered = loans.filter((loan: any) => getLoanStatus(loan) === statusFilter);
+      filtered = loans.filter(
+        (loan: any) => getLoanStatus(loan) === statusFilter
+      );
     }
-    
+
     // Apply sorting
     filtered.sort((a: any, b: any) => {
       let aValue: any, bValue: any;
-      
+
       switch (sortBy) {
         case 'status':
           aValue = getLoanStatus(a);
@@ -149,12 +147,12 @@ const Loans: React.FC = () => {
         default:
           return 0;
       }
-      
+
       if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
-    
+
     return filtered;
   }, [loans, sortBy, sortOrder, statusFilter]);
 
@@ -198,7 +196,7 @@ const Loans: React.FC = () => {
       </div>
 
       {/* Actions Section */}
-      <div className="loans-actions">
+      <div className="btns-actions">
         <button onClick={() => setShowAddModal(true)} className="action-btn">
           <FaPlus />
           Add New Loan
@@ -245,7 +243,7 @@ const Loans: React.FC = () => {
             <option value="pending">Pending</option>
           </select>
         </div>
-        
+
         <div className="sort-group">
           <span className="sort-label">Sort by:</span>
           <button
@@ -288,13 +286,13 @@ const Loans: React.FC = () => {
             </div>
             <h3>No loans found</h3>
             <p>
-              {statusFilter !== 'all' 
-                ? `No loans with "${statusFilter}" status found.` 
+              {statusFilter !== 'all'
+                ? `No loans with "${statusFilter}" status found.`
                 : 'No loans available. Add your first loan to get started!'}
             </p>
             {statusFilter !== 'all' && (
-              <button 
-                onClick={() => setStatusFilter('all')} 
+              <button
+                onClick={() => setStatusFilter('all')}
                 className="action-btn"
               >
                 Show All Loans
@@ -307,62 +305,62 @@ const Loans: React.FC = () => {
 
             return (
               <div key={loan.id} className="loan-card">
-              <div className="loan-header">
-                <h3 className="loan-title">
-                  <Link 
-                    to={`/expenses/loan/${loan.id}`} 
-                    className="loan-link"
-                    title={loan.title}
-                  >
-                    {loan.title}
-                    <FaExternalLinkAlt className="link-icon" />
-                  </Link>
-                </h3>
-                <div className="loan-actions">
-                  <button
-                    onClick={() => handleEdit(loan)}
-                    className="btn-icon"
-                    title="Edit Loan"
-                  >
-                    <FaPen />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(loan)}
-                    className="btn-icon"
-                    title="Delete Loan"
-                  >
-                    <FaTrash />
-                  </button>
+                <div className="loan-header">
+                  <h3 className="loan-title">
+                    <Link
+                      to={`/expenses/loan/${loan.id}`}
+                      className="loan-link"
+                      title={loan.title}
+                    >
+                      {loan.title}
+                      <FaExternalLinkAlt className="link-icon" />
+                    </Link>
+                  </h3>
+                  <div className="loan-actions">
+                    <button
+                      onClick={() => handleEdit(loan)}
+                      className="btn-icon"
+                      title="Edit Loan"
+                    >
+                      <FaPen />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(loan)}
+                      className="btn-icon"
+                      title="Delete Loan"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="loan-details">
-                <div className="detail-item">
-                  <div className="detail-label">Principal</div>
-                  <div className="detail-value">{formatNumber(loan.fp)}</div>
+                <div className="loan-details">
+                  <div className="detail-item">
+                    <div className="detail-label">Principal</div>
+                    <div className="detail-value">{formatNumber(loan.fp)}</div>
+                  </div>
+                  <div className="detail-item">
+                    <div className="detail-label">Interest Rate</div>
+                    <div className="detail-value">{loan.fr}%</div>
+                  </div>
+                  <div className="detail-item">
+                    <div className="detail-label">Start Date</div>
+                    <div className="detail-value">{loan.sdt}</div>
+                  </div>
+                  <div className="detail-item">
+                    <div className="detail-label">End Date</div>
+                    <div className="detail-value">{loan.edt}</div>
+                  </div>
                 </div>
-                <div className="detail-item">
-                  <div className="detail-label">Interest Rate</div>
-                  <div className="detail-value">{loan.fr}%</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">Start Date</div>
-                  <div className="detail-value">{loan.sdt}</div>
-                </div>
-                <div className="detail-item">
-                  <div className="detail-label">End Date</div>
-                  <div className="detail-value">{loan.edt}</div>
-                </div>
-              </div>
 
-              <div className="loan-status">
-                <span className={`status-badge ${status}`}>
-                  {getStatusText(status)}
-                </span>
+                <div className="loan-status">
+                  <span className={`status-badge ${status}`}>
+                    {getStatusText(status)}
+                  </span>
+                </div>
               </div>
-            </div>
-          );
-        })
+            );
+          })
         )}
       </div>
 

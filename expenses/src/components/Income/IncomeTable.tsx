@@ -117,7 +117,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                   </td>
                   <td className="income-amount">
                     <div className="amount-value">
-                      ${formatNumber(element.sum)}
+                      {formatNumber(element.sum)}
                     </div>
                   </td>
                   <td className="income-description">

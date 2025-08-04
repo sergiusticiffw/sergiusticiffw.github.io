@@ -190,3 +190,42 @@ input[type="checkbox"] {
 table tr {
   z-index: 10;
 }
+
+.btns-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+
+  .action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0 !important;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    width: 100%;
+    max-width: 1200px;
+
+    &:hover {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.1));
+      border-color: var(--accent-color);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(100, 181, 246, 0.3);
+    }
+
+    svg {
+      font-size: 1.2rem;
+      color: var(--accent-color);
+    }
+  }
+}

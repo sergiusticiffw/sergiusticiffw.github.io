@@ -182,7 +182,7 @@ const Loan: React.FC = () => {
       )}
 
       {/* Payment Actions */}
-      <div className="payment-actions">
+      <div className="btns-actions">
         <button
           onClick={() => setShowAddPaymentModal(true)}
           className="action-btn"
