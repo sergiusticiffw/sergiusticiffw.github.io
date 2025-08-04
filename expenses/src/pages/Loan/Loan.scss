@@ -78,13 +78,6 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
         
-        &:hover {
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.1));
-          border-color: var(--accent-color);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(100, 181, 246, 0.3);
-        }
-        
         svg {
           font-size: 1rem;
           color: var(--accent-color);
@@ -167,6 +160,25 @@
     padding-bottom: 1rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     
+    &.accordion-header {
+      cursor: pointer;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+      
+      .header-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      
+      .accordion-icon {
+        color: var(--accent-color);
+        font-size: 1.2rem;
+        transition: transform 0.3s ease;
+        display: none; // Hidden on desktop
+      }
+    }
+    
     svg {
       color: var(--accent-color);
       font-size: 1.5rem;
@@ -188,6 +200,23 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 1.5rem;
+  
+  &.accordion-content {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    
+    &.collapsed {
+      max-height: 0;
+      opacity: 0;
+      margin-bottom: 0;
+      padding: 0;
+    }
+    
+    &.expanded {
+      max-height: 2000px;
+      opacity: 1;
+    }
+  }
   
   .detail-item {
     padding: 1rem;
@@ -288,13 +317,6 @@
     text-decoration: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    
-    &:hover {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.1));
-      border-color: var(--accent-color);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(100, 181, 246, 0.3);
-    }
     
     svg {
       font-size: 1.2rem;
@@ -407,6 +429,31 @@
   
   .loan-details-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .loan-section {
+    .section-header.accordion-header {
+      cursor: pointer;
+      padding: 1rem;
+      margin: -1rem -1rem 1rem -1rem;
+      border-radius: 8px;
+      
+      .accordion-icon {
+        display: block;
+      }
+    }
+    
+    .loan-details-grid.accordion-content {
+      &.collapsed {
+        display: none;
+      }
+      
+      &.expanded {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
   }
   
   .loan-charts {

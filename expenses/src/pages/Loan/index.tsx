@@ -22,6 +22,8 @@ import {
   FaChartLine,
   FaCalendarAlt,
   FaMoneyBillWave,
+  FaChevronDown,
+  FaChevronUp,
 } from 'react-icons/fa';
 import Notification from '@components/Notification/Notification';
 import './Loan.scss';
@@ -34,6 +36,7 @@ const Loan: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [isLoanInfoExpanded, setIsLoanInfoExpanded] = useState(false);
   const { loans } = data;
   const noData = data.loans === null;
 
@@ -193,12 +196,17 @@ const Loan: React.FC = () => {
       <div className="loan-sections">
         {/* Loan Details Section */}
         <div className="loan-section">
-          <div className="section-header">
-            <FaHandHoldingUsd />
-            <h3>Loan Information</h3>
+          <div className="section-header accordion-header" onClick={() => setIsLoanInfoExpanded(!isLoanInfoExpanded)}>
+            <div className="header-content">
+              <FaHandHoldingUsd />
+              <h3>Loan Information</h3>
+            </div>
+            <div className="accordion-icon">
+              {isLoanInfoExpanded ? <FaChevronUp /> : <FaChevronDown />}
+            </div>
           </div>
 
-          <div className="loan-details-grid">
+          <div className={`loan-details-grid accordion-content ${isLoanInfoExpanded ? 'expanded' : 'collapsed'}`}>
             <div className="detail-item">
               <div className="detail-label">Principal Amount</div>
               <div className="detail-value">{formatNumber(totalPrincipal)}</div>
