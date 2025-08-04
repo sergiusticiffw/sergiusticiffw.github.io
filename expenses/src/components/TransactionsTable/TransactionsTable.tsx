@@ -62,85 +62,107 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   );
 
   return (
-    <div className="table-wrapper">
-      <table className="expenses-table" cellSpacing="0" cellPadding="0">
-        <thead>
-          <tr>
-            {!isModal ? <th>Date</th> : null}
-            <th
-              onClick={() => requestSort('sum')}
-              className={`sortable ${getClassNamesFor(sortConfig, 'sum')}`}
-            >
-              Amount
-            </th>
-            <th>Category</th>
-            {!isModal ? <th>Description</th> : null}
-            <th className="desktop-only"></th>
-            <th className="desktop-only"></th>
-          </tr>
-        </thead>
-        <tbody ref={tableRef}>
-          {sortedItems.map((element) => {
-            const changeType = changedItems[element.id]?.type;
-            return (
-              <tr
-                key={element.id}
-                className={`transaction-item ${changeType || ''}`}
-                data-id={element.id}
-                onTouchStart={(e) => handleTouchStart(e, element.id, tableRef)}
-                onTouchMove={(e) => handleTouchMove(e, tableRef)}
-                onTouchEnd={(e) =>
-                  handleTouchEnd(
-                    e,
-                    tableRef,
-                    element.id,
-                    handleEdit,
-                    setShowDeleteModal
-                  )
-                }
+    <div className="income-table-container">
+      <div className="table-wrapper">
+        <table className="income-table" cellSpacing="0" cellPadding="0">
+          <thead>
+            <tr>
+              {!isModal ? <th>Date</th> : null}
+              <th
+                onClick={() => requestSort('sum')}
+                className={`sortable ${getClassNamesFor(sortConfig, 'sum')}`}
               >
-                {!isModal ? <td>{element.dt.split('-')[2]}</td> : null}
-                <td>{formatNumber(element.sum)}</td>
-                <td>
-                  {getIconForCategory(getCategory[element.cat])}
-                  {/*{getCategory[element.cat]}*/}
-                </td>
-                {!isModal ? <td>{element.dsc}</td> : null}
-                <td className="desktop-only">
-                  <button
-                    onClick={() => handleEdit(element.id)}
-                    className="btn-outline"
-                  >
-                    <FaPen />
-                  </button>
-                </td>
-                <td className="desktop-only">
-                  <button
-                    onClick={() => setShowDeleteModal(element.id)}
-                    className="btn-outline"
-                  >
-                    <FaTrash />
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      {deleteVisible && !isModal && (
-        <div style={{ ...extraRowStyle }}>
-          <div className="row-action delete">
-            <FaTrash />
+                Amount
+              </th>
+              <th>Category</th>
+              {!isModal ? <th>Description</th> : null}
+              <th className="desktop-only"></th>
+              <th className="desktop-only"></th>
+            </tr>
+          </thead>
+          <tbody ref={tableRef}>
+            {sortedItems.map((element) => {
+              const changeType = changedItems[element.id]?.type;
+              return (
+                <tr
+                  key={element.id}
+                  className={`transaction-item ${changeType || ''}`}
+                  data-id={element.id}
+                  onTouchStart={(e) =>
+                    handleTouchStart(e, element.id, tableRef)
+                  }
+                  onTouchMove={(e) => handleTouchMove(e, tableRef)}
+                  onTouchEnd={(e) =>
+                    handleTouchEnd(
+                      e,
+                      tableRef,
+                      element.id,
+                      handleEdit,
+                      setShowDeleteModal
+                    )
+                  }
+                >
+                  {!isModal ? (
+                    <td className="income-date">
+                      <div className="date-content">
+                        <div className="date-day">
+                          {new Date(element.dt).getDate()}
+                        </div>
+                        <div className="date-month">
+                          {new Date(element.dt).toLocaleDateString('en-US', {
+                            month: 'short',
+                          })}
+                        </div>
+                      </div>
+                    </td>
+                  ) : null}
+                  <td className="income-amount">
+                    <div className="amount-value">
+                      {formatNumber(element.sum)}
+                    </div>
+                  </td>
+                  <td>{getIconForCategory(getCategory[element.cat])}</td>
+                  {!isModal ? (
+                    <td className="income-description">
+                      <div className="description-text">{element.dsc}</div>
+                    </td>
+                  ) : null}
+                  <td className="desktop-only">
+                    <button
+                      onClick={() => handleEdit(element.id)}
+                      className="btn-outline"
+                    >
+                      <FaPen />
+                    </button>
+                  </td>
+                  <td className="desktop-only">
+                    <button
+                      onClick={() => setShowDeleteModal(element.id)}
+                      className="btn-outline"
+                    >
+                      <FaTrash />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {deleteVisible && !isModal && (
+          <div style={{ ...extraRowStyle }}>
+            <div className="row-action delete">
+              <FaTrash />
+            </div>
           </div>
-        </div>
-      )}
-      {editVisible && !isModal && (
-        <div style={{ ...extraRowStyle }}>
-          <div className="row-action edit">
-            <FaPen />
+        )}
+        {editVisible && !isModal && (
+          <div style={{ ...extraRowStyle }}>
+            <div className="row-action edit">
+              <FaPen />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

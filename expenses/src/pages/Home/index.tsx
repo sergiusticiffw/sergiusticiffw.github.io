@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fa';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import { NumberDisplay } from '@components/Home';
+import './Home.scss';
 
 const Home = () => {
   const showNotification = useNotification();
