@@ -196,7 +196,10 @@ const Loan: React.FC = () => {
       <div className="loan-sections">
         {/* Loan Details Section */}
         <div className="loan-section">
-          <div className="section-header accordion-header" onClick={() => setIsLoanInfoExpanded(!isLoanInfoExpanded)}>
+          <div
+            className="section-header accordion-header"
+            onClick={() => setIsLoanInfoExpanded(!isLoanInfoExpanded)}
+          >
             <div className="header-content">
               <FaHandHoldingUsd />
               <h3>Loan Information</h3>
@@ -206,7 +209,9 @@ const Loan: React.FC = () => {
             </div>
           </div>
 
-          <div className={`loan-details-grid accordion-content ${isLoanInfoExpanded ? 'expanded' : 'collapsed'}`}>
+          <div
+            className={`loan-details-grid accordion-content ${isLoanInfoExpanded ? 'expanded' : 'collapsed'}`}
+          >
             <div className="detail-item">
               <div className="detail-label">Principal Amount</div>
               <div className="detail-value">{formatNumber(totalPrincipal)}</div>
@@ -234,14 +239,6 @@ const Loan: React.FC = () => {
             <div className="detail-item">
               <div className="detail-label">Days Passed</div>
               <div className="detail-value">{daysPassed}</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Actual End Date</div>
-              <div className="detail-value">{paydown?.actual_end_date}</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Latest Payment Date</div>
-              <div className="detail-value">{paydown?.latest_payment_date}</div>
             </div>
             <div className="detail-item">
               <div className="detail-label">Interest Cost %</div>
@@ -273,6 +270,14 @@ const Loan: React.FC = () => {
                 <div className="detail-value">{loan.pdt}</div>
               </div>
             )}
+            <div className="detail-item">
+              <div className="detail-label">Actual End Date</div>
+              <div className="detail-value">{paydown?.actual_end_date}</div>
+            </div>
+            <div className="detail-item">
+              <div className="detail-label">Latest Payment Date</div>
+              <div className="detail-value">{paydown?.latest_payment_date}</div>
+            </div>
           </div>
         </div>
 

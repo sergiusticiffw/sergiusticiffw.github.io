@@ -310,15 +310,6 @@
         transition: all 0.3s ease;
         width: 100%;
         
-        &:hover {
-          color: var(--accent-color);
-          transform: translateY(-1px);
-          
-          .link-icon {
-            transform: translateX(2px);
-          }
-        }
-        
                 .link-icon {
           font-size: 0.8rem;
           color: var(--accent-color);
@@ -351,13 +342,6 @@
         cursor: pointer;
         transition: all 0.3s ease;
         position: relative;
-        
-        &:hover {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: var(--accent-color);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
         
         &:active {
           transform: translateY(0);
