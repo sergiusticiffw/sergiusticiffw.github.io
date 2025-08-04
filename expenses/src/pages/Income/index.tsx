@@ -5,8 +5,7 @@ import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import Modal from '@components/Modal/Modal';
 import IncomeTable from '@components/Income/IncomeTable';
-import YearIncomeAverageTrend from '@components/Charts/YearIncomeAverageTrend';
-import MonthlyComparisonIncomeTrend from '@components/Charts/MonthlyComparisonIncomeTrend';
+import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import {
@@ -15,8 +14,6 @@ import {
   FaCaretDown,
   FaMoneyBillWave,
   FaChartLine,
-  FaCalendarAlt,
-  FaDollarSign,
 } from 'react-icons/fa';
 import './Income.scss';
 
@@ -203,9 +200,8 @@ const Income = () => {
 
       {/* Charts Section */}
       {data.incomeData?.length ? (
-        <div className="charts-section">
+        <div>
           <YearIncomeAverageTrend />
-          {/*<MonthlyComparisonIncomeTrend />*/}
         </div>
       ) : null}
 
