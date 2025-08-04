@@ -120,14 +120,14 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
       </table>
       {deleteVisible && (
         <div style={{ ...extraRowStyle }}>
-          <div className="action delete">
+          <div className="row-action delete">
             <FaTrash />
           </div>
         </div>
       )}
       {editVisible && (
         <div style={{ ...extraRowStyle }}>
-          <div className="action edit">
+          <div className="row-action edit">
             <FaPen />
           </div>
         </div>

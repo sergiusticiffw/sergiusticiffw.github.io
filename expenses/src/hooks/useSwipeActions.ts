@@ -54,7 +54,7 @@ const useSwipeActions = (): SwipeActions => {
         const rect = trElement.getBoundingClientRect();
         setExtraRowStyle({
           position: 'fixed',
-          zIndex: '-1',
+          zIndex: '1',
           top: `${rect.top}px`,
           width: `${rect.width}px`,
           height: `${rect.height}px`,

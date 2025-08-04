@@ -3,7 +3,7 @@
 .payment-history {
   margin: 0;
   padding: 0;
-  
+
   .payment-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -358,4 +358,4 @@
       }
     }
   }
-} 
+}

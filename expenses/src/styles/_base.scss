@@ -44,6 +44,41 @@ input[type="checkbox"] {
   border-radius: 0 !important;
 }
 
+.row-action {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  box-shadow:
+          inset 2px 5px 15px -5px rgba(0, 0, 0, 0.5),
+          inset 2px -5px 15px -5px rgba(0, 0, 0, 0.5);
+  transition: all $transition-fast ease-in-out;
+
+  &.delete {
+    justify-content: left;
+    background: linear-gradient(
+                    90deg,
+                    rgba(255, 107, 250, 1) 0%,
+                    var(--accent-color) 100%
+    );
+  }
+
+  &.edit {
+    justify-content: right;
+    background: linear-gradient(90deg, var(--accent-color) 0%, #7bd0c9 100%);
+  }
+
+  svg {
+    padding: 0 $spacing-lg;
+    transition: all $transition-normal ease-in-out;
+
+    body.action-active & {
+      fill: var(--bg-color);
+    }
+  }
+}
+
 // Animations
 @keyframes fadeIn {
   0% {
@@ -150,4 +185,8 @@ input[type="checkbox"] {
     height: 100px;
     opacity: 0;
   }
-} 
+}
+
+table tr {
+  z-index: 10;
+}
