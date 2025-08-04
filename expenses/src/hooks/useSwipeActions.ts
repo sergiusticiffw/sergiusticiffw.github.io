@@ -86,7 +86,7 @@ const useSwipeActions = (): SwipeActions => {
         const trWidth = trElement.getBoundingClientRect().width;
         const absDiff = Math.abs(e.touches[0].clientX - (startX ?? 0));
         const diffPercentage = (absDiff / trWidth) * 100;
-        if (diffPercentage > 20) {
+        if (diffPercentage > 40) {
           const body = document.querySelector('body');
           if (body) {
             body.classList.add('action-active');
@@ -125,7 +125,7 @@ const useSwipeActions = (): SwipeActions => {
         const diff = Math.abs(endX - startX);
         const trWidth = trElement.getBoundingClientRect().width;
         const diffPercentage = (diff / trWidth) * 100;
-        if (diffPercentage > 20) {
+        if (diffPercentage > 40) {
           if (endX > startX) {
             setShowDeleteModal(id);
           } else {
