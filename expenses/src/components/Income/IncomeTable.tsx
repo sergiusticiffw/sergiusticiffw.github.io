@@ -4,6 +4,7 @@ import { FaPen, FaTrash } from 'react-icons/fa';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import { formatNumber } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
+import './IncomeTable.scss';
 
 interface IncomeTableProps {
   items: TransactionOrIncomeItem[];
@@ -38,6 +39,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
       return () => clearTimeout(timer);
     });
   }, [changedItems, handleClearChangedItem]);
+
   const allItems = [
     ...items,
     ...Object.values(changedItems)
@@ -52,86 +54,114 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
     // If 'dt' values are equal, compare by 'created'
     return b.cr - a.cr;
   });
+
   const { sortedItems, requestSort, sortConfig } = useSortableData(
     allItems || []
   );
 
   return (
-    <div className="table-wrapper">
-      <div className="income-header">Incomes</div>
-      <table className="expenses-table" cellSpacing="0" cellPadding="0">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th
-              onClick={() => requestSort('sum')}
-              className={`sortable ${getClassNamesFor(sortConfig, 'sum')}`}
-            >
-              Amount
-            </th>
-            <th>Description</th>
-            <th className="desktop-only"></th>
-            <th className="desktop-only"></th>
-          </tr>
-        </thead>
-        <tbody ref={tableRef}>
-          {sortedItems.map((element) => {
-            const changeType = changedItems[element.id]?.type;
-            return (
-              <tr
-                key={element.id}
-                className={`transaction-item ${changeType || ''}`}
-                data-id={element.id}
-                onTouchStart={(e) => handleTouchStart(e, element.id, tableRef)}
-                onTouchMove={(e) => handleTouchMove(e, tableRef)}
-                onTouchEnd={(e) =>
-                  handleTouchEnd(
-                    e,
-                    tableRef,
-                    element.id,
-                    handleEdit,
-                    setShowDeleteModal
-                  )
-                }
+    <div className="income-table-container">
+      <div className="table-header">
+        <h3>Income Records</h3>
+        <p className="table-subtitle">Manage and track your income sources</p>
+      </div>
+
+      <div className="table-wrapper">
+        <table className="income-table" cellSpacing="0" cellPadding="0">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th
+                onClick={() => requestSort('sum')}
+                className={`sortable ${getClassNamesFor(sortConfig, 'sum')}`}
               >
-                <td>{element.dt}</td>
-                <td>{formatNumber(element.sum)}</td>
-                <td>{element.dsc}</td>
-                <td className="desktop-only">
-                  <button
-                    onClick={() => handleEdit(element.id)}
-                    className="btn-outline"
-                  >
-                    <FaPen />
-                  </button>
-                </td>
-                <td className="desktop-only">
-                  <button
-                    onClick={() => setShowDeleteModal(element.id)}
-                    className="btn-outline"
-                  >
-                    <FaTrash />
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      {deleteVisible && (
-        <div style={{ ...extraRowStyle }}>
-          <div className="row-action delete">
-            <FaTrash />
+                Amount
+              </th>
+              <th>Description</th>
+              <th className="desktop-only">Actions</th>
+            </tr>
+          </thead>
+          <tbody ref={tableRef}>
+            {sortedItems.map((element) => {
+              const changeType = changedItems[element.id]?.type;
+              return (
+                <tr
+                  key={element.id}
+                  className={`transaction-item ${changeType || ''}`}
+                  data-id={element.id}
+                  onTouchStart={(e) =>
+                    handleTouchStart(e, element.id, tableRef)
+                  }
+                  onTouchMove={(e) => handleTouchMove(e, tableRef)}
+                  onTouchEnd={(e) =>
+                    handleTouchEnd(
+                      e,
+                      tableRef,
+                      element.id,
+                      handleEdit,
+                      setShowDeleteModal
+                    )
+                  }
+                >
+                  <td className="income-date">
+                    <div className="date-content">
+                      <div className="date-day">
+                        {new Date(element.dt).getDate()}
+                      </div>
+                      <div className="date-month">
+                        {new Date(element.dt).toLocaleDateString('en-US', {
+                          month: 'short',
+                        })}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="income-amount">
+                    <div className="amount-value">
+                      ${formatNumber(element.sum)}
+                    </div>
+                  </td>
+                  <td className="income-description">
+                    <div className="description-text">{element.dsc}</div>
+                  </td>
+                  <td className="desktop-only income-actions-cell">
+                    <div className="action-buttons">
+                      <button
+                        onClick={() => handleEdit(element.id)}
+                        className="btn-edit"
+                        title="Edit Income"
+                      >
+                        <FaPen />
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteModal(element.id)}
+                        className="btn-delete"
+                        title="Delete Income"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {deleteVisible && (
+          <div style={{ ...extraRowStyle }}>
+            <div className="row-action delete">
+              <FaTrash />
+            </div>
           </div>
-        </div>
-      )}
-      {editVisible && (
-        <div style={{ ...extraRowStyle }}>
-          <div className="row-action edit">
-            <FaPen />
+        )}
+        {editVisible && (
+          <div style={{ ...extraRowStyle }}>
+            <div className="row-action edit">
+              <FaPen />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

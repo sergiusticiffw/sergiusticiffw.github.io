@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import IncomeForm from '@components/Income/IncomeForm';
-import { deleteNode, fetchData } from '@utils/utils';
+import { deleteNode, fetchData, formatNumber } from '@utils/utils';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import Modal from '@components/Modal/Modal';
@@ -9,7 +9,16 @@ import YearIncomeAverageTrend from '@components/Charts/YearIncomeAverageTrend';
 import MonthlyComparisonIncomeTrend from '@components/Charts/MonthlyComparisonIncomeTrend';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
-import { FaPlus, FaTrash, FaCaretDown } from 'react-icons/fa';
+import {
+  FaPlus,
+  FaTrash,
+  FaCaretDown,
+  FaMoneyBillWave,
+  FaChartLine,
+  FaCalendarAlt,
+  FaDollarSign,
+} from 'react-icons/fa';
+import './Income.scss';
 
 const Income = () => {
   const showNotification = useNotification();
@@ -73,8 +82,134 @@ const Income = () => {
     dataDispatch({ type: 'CLEAR_CHANGED_ITEM', id });
   };
 
+  // Calculate income statistics
+  const totalIncome =
+    data.incomeData?.reduce(
+      (sum: number, item: TransactionOrIncomeItem) =>
+        sum + parseFloat(item.sum || '0'),
+      0
+    ) || 0;
+  const totalRecords = data.incomeData?.length || 0;
+  const averageIncome = totalRecords > 0 ? totalIncome / totalRecords : 0;
+
+  if (loading) {
+    return (
+      <div className="income-container">
+        <div className="loading-container">
+          <div className="loader">
+            <span className="loader__element"></span>
+            <span className="loader__element"></span>
+            <span className="loader__element"></span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="incomes-page">
+    <div className="income-container">
+      {/* Header Section */}
+      <div className="income-header">
+        <div className="header-icon">
+          <FaMoneyBillWave />
+        </div>
+        <h1 className="header-title">Income Management</h1>
+        <p className="header-subtitle">
+          Track and manage your income sources efficiently
+        </p>
+      </div>
+
+      {/* Actions Section */}
+      <div className="income-actions">
+        <button
+          onClick={() => {
+            setShowEditModal(true);
+            setIsNewModal(true);
+          }}
+          className="action-btn"
+        >
+          <FaPlus />
+          Add New Income
+        </button>
+      </div>
+
+      {/* Summary Section */}
+      <div className="income-summary">
+        <div className="summary-header">
+          <FaChartLine />
+          <h3>Income Overview</h3>
+        </div>
+        <div className="summary-grid">
+          <div className="summary-item">
+            <div className="summary-value">{formatNumber(totalRecords)}</div>
+            <div className="summary-label">Total Records</div>
+          </div>
+          <div className="summary-item">
+            <div className="summary-value">{formatNumber(totalIncome)}</div>
+            <div className="summary-label">Total Income</div>
+          </div>
+          <div className="summary-item">
+            <div className="summary-value">{formatNumber(averageIncome)}</div>
+            <div className="summary-label">Average Income</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Income Table Section */}
+      <div className="income-table-section">
+        {noData ? (
+          <div className="no-income">
+            <div className="no-income-icon">
+              <FaMoneyBillWave />
+            </div>
+            <h3>No Income Data</h3>
+            <p>Start by adding your first income record</p>
+          </div>
+        ) : (
+          <>
+            {data.incomeData && data.incomeData.length ? (
+              <IncomeTable
+                items={data.incomeData.slice(0, nrOfItemsToShow)}
+                handleEdit={handleEdit}
+                // @ts-expect-error
+                setShowDeleteModal={setShowDeleteModal}
+                changedItems={data.changedItems}
+                handleClearChangedItem={handleClearChangedItem}
+              />
+            ) : (
+              <div className="no-income">
+                <div className="no-income-icon">
+                  <FaMoneyBillWave />
+                </div>
+                <h3>No Income Records</h3>
+                <p>No income records found. Add your first income entry.</p>
+              </div>
+            )}
+
+            {data.incomeData?.length > nrOfItemsToShow && (
+              <div className="load-more">
+                <button
+                  onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
+                  className="load-more-btn"
+                >
+                  <FaCaretDown />
+                  Load More
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Charts Section */}
+      {data.incomeData?.length ? (
+        <div className="charts-section">
+          <YearIncomeAverageTrend />
+          {/*<MonthlyComparisonIncomeTrend />*/}
+        </div>
+      ) : null}
+
+      {/* Modals */}
       <Modal
         show={showDeleteModal}
         onClose={(e) => {
@@ -98,6 +233,7 @@ const Income = () => {
           )}
         </button>
       </Modal>
+
       <Modal
         show={showEditModal}
         onClose={(e) => {
@@ -116,63 +252,6 @@ const Income = () => {
           }}
         />
       </Modal>
-      {loading ? (
-        <div className="lds-ripple">
-          <div></div>
-          <div></div>
-        </div>
-      ) : (
-        <>
-          <h2>Incomes</h2>
-          {noData ? (
-            ''
-          ) : (
-            <div>
-              <button
-                onClick={() => {
-                  setShowEditModal(true);
-                  setIsNewModal(true);
-                }}
-                className="button wide"
-              >
-                <FaPlus />
-              </button>
-
-              {data.incomeData && data.incomeData.length ? (
-                <IncomeTable
-                  items={data.incomeData.slice(0, nrOfItemsToShow)}
-                  handleEdit={handleEdit}
-                  // @ts-expect-error
-                  setShowDeleteModal={setShowDeleteModal}
-                  changedItems={data.changedItems}
-                  handleClearChangedItem={handleClearChangedItem}
-                />
-              ) : (
-                <p>No income records found.</p>
-              )}
-
-              {data.incomeData?.length > nrOfItemsToShow && (
-                <div className="load-more">
-                  <button
-                    onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
-                    className="btn-outline"
-                  >
-                    <FaCaretDown />
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-          {data.incomeData?.length ? (
-            <div className="charts-section">
-              <YearIncomeAverageTrend />
-              {/*<MonthlyComparisonIncomeTrend />*/}
-            </div>
-          ) : (
-            ''
-          )}
-        </>
-      )}
     </div>
   );
 };
