@@ -1,6 +1,6 @@
 @use '../../styles/variables' as *;
 
-.transaction-form-container {
+.income-form-container {
   padding: 1rem;
   max-width: 500px;
   margin: 0 auto;
@@ -19,7 +19,7 @@
   }
 }
 
-.transaction-form {
+.income-form {
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 0 !important;
@@ -83,16 +83,6 @@
       font-family: inherit;
     }
     
-    select {
-      cursor: pointer;
-      
-      option {
-        background: #1a1a1a;
-        color: #fff;
-        padding: 0.5rem;
-      }
-    }
-    
     input[type='date'] {
       position: relative;
       
@@ -139,44 +129,6 @@
     &.required label::after {
       content: ' *';
       color: #f44336;
-    }
-    
-    // Suggestions styling
-    .suggestions {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      
-      li {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 16px;
-        padding: 0.4rem 0.8rem;
-        color: #fff;
-        font-size: 0.8rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        user-select: none;
-        
-        &:hover {
-          background: rgba(255, 255, 255, 0.2);
-          border-color: rgba(255, 255, 255, 0.3);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-        
-        &.selected-suggestion {
-          background: linear-gradient(135deg, var(--accent-color), #64b5f6);
-          border-color: var(--accent-color);
-          color: #fff;
-          box-shadow: 0 4px 12px rgba(100, 181, 246, 0.3);
-          transform: translateY(-1px);
-        }
-      }
     }
   }
   
@@ -248,33 +200,24 @@
 }
 
 @media (max-width: $breakpoint-md) {
-  .transaction-form-container {
+  .income-form-container {
     padding: 1rem;
     
-    .transaction-form {
+    .income-form {
       padding: 1.5rem;
     }
   }
 }
 
 @media (max-width: $breakpoint-sm) {
-  .transaction-form-container {
+  .income-form-container {
     padding: 0.5rem;
     
-    .transaction-form {
+    .income-form {
       padding: 1rem;
       
       .form-actions {
         flex-direction: column;
-      }
-      
-      .form-group .suggestions {
-        gap: 0.25rem;
-        
-        li {
-          padding: 0.4rem 0.8rem;
-          font-size: 0.8rem;
-        }
       }
     }
   }

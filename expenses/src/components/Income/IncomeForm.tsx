@@ -5,6 +5,7 @@ import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
 import { AuthState, DataState, NodeData } from '@type/types';
 import { FaPlus, FaPen } from 'react-icons/fa';
+import './IncomeForm.scss';
 
 interface IncomeFormProps {
   formType: string;
@@ -90,47 +91,67 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   };
 
   return (
-    <div>
-      <h2>{formType === 'add' ? 'Add income' : 'Edit income'}</h2>
-      <form className="add-transaction" onSubmit={handleSubmit}>
-        <input
-          required
-          placeholder="Amount"
-          type="number"
-          name="field_amount"
-          value={formState.field_amount}
-          onChange={handleChange}
-          min={0}
-          step={0.01}
-        />
-        <input
-          required
-          placeholder="Date"
-          type="date"
-          name="field_date"
-          value={formState.field_date}
-          onChange={handleChange}
-        />
-        <textarea
-          placeholder="Description"
-          name="field_description"
-          rows={3}
-          value={formState.field_description}
-          onChange={handleChange}
-        />
-        <button type="submit" disabled={isSubmitting} className="button w-100">
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : formType === 'add' ? (
-            <FaPlus />
-          ) : (
-            <FaPen />
-          )}
-        </button>
+    <div className="income-form-container">
+      <div className="form-header">
+        <h2>{formType === 'add' ? 'Add Income' : 'Edit Income'}</h2>
+      </div>
+      <form className="income-form" onSubmit={handleSubmit}>
+        <div className="form-group required">
+          <label htmlFor="field_amount">Amount</label>
+          <input
+            id="field_amount"
+            required
+            placeholder="Enter amount..."
+            type="number"
+            name="field_amount"
+            value={formState.field_amount}
+            onChange={handleChange}
+            step="0.01"
+            min="0"
+          />
+        </div>
+        
+        <div className="form-group required">
+          <label htmlFor="field_date">Date</label>
+          <input
+            id="field_date"
+            required
+            type="date"
+            name="field_date"
+            value={formState.field_date}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="form-group required">
+          <label htmlFor="field_description">Description</label>
+          <textarea
+            id="field_description"
+            required
+            placeholder="Enter description..."
+            name="field_description"
+            value={formState.field_description}
+            onChange={handleChange}
+            rows={3}
+          />
+        </div>
+        
+        <div className="form-actions">
+          <button type="submit" className="btn-submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <div className="loader">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            ) : (
+              <>
+                {formType === 'add' ? <FaPlus /> : <FaPen />}
+                {formType === 'add' ? 'Add Income' : 'Update Income'}
+              </>
+            )}
+          </button>
+        </div>
       </form>
     </div>
   );

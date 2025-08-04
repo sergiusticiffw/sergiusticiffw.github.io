@@ -6,6 +6,7 @@ import { categories, suggestions } from '@utils/constants';
 import { notificationType } from '@utils/constants';
 import { AuthState, DataState, NodeData } from '@type/types';
 import { FaPlus, FaPen } from 'react-icons/fa';
+import './TransactionForm.scss';
 
 interface TransactionFormProps {
   formType: 'add' | 'edit';
@@ -113,78 +114,107 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     setSelectedIndices([...selectedIndices, index]);
   };
   return (
-    <div>
-      <h2>{formType === 'add' ? 'Add transaction' : 'Edit transaction'}</h2>
-      <form className="add-transaction" onSubmit={handleSubmit}>
-        <input
-          required
-          placeholder="Amount"
-          type="number"
-          name="field_amount"
-          value={formState.field_amount}
-          onChange={handleChange}
-          min={0}
-          step={0.01}
-        />
-        <input
-          required
-          placeholder="Date"
-          type="date"
-          name="field_date"
-          value={formState.field_date}
-          onChange={handleChange}
-        />
-        <select
-          required
-          name="field_category"
-          value={formState.field_category}
-          onChange={handleChange}
-        >
-          {categories.map((category, id) => (
-            <option key={id} value={category.value}>
-              {category.label}
-            </option>
-          ))}
-        </select>
-        <textarea
-          placeholder="Description"
-          name="field_description"
-          rows={3}
-          value={formState.field_description}
-          onChange={handleChange}
-        />
-        {suggestionData.length ? (
-          <ul className="suggestions">
-            {suggestionData.map((suggestion, index) => (
-              <li
-                key={`${index}-${suggestion}`}
-                onClick={() => {
-                  handleSuggestionClick(suggestion, `${index}-${suggestion}`);
-                }}
-                className={
-                  selectedIndices.includes(`${index}-${suggestion}`)
-                    ? 'selected-suggestion'
-                    : ''
-                }
-              >
-                {suggestion}
-              </li>
+    <div className="transaction-form-container">
+      <div className="form-header">
+        <h2>{formType === 'add' ? 'Add Transaction' : 'Edit Transaction'}</h2>
+      </div>
+      <form className="transaction-form" onSubmit={handleSubmit}>
+        <div className="form-group required">
+          <label htmlFor="field_amount">Amount</label>
+          <input
+            id="field_amount"
+            required
+            placeholder="Enter amount..."
+            type="number"
+            name="field_amount"
+            value={formState.field_amount}
+            onChange={handleChange}
+            min={0}
+            step={0.01}
+          />
+        </div>
+        
+        <div className="form-group required">
+          <label htmlFor="field_date">Date</label>
+          <input
+            id="field_date"
+            required
+            type="date"
+            name="field_date"
+            value={formState.field_date}
+            onChange={handleChange}
+          />
+        </div>
+        
+        <div className="form-group required">
+          <label htmlFor="field_category">Category</label>
+          <select
+            id="field_category"
+            required
+            name="field_category"
+            value={formState.field_category}
+            onChange={handleChange}
+          >
+            <option value="">Select a category...</option>
+            {categories.map((category, id) => (
+              <option key={id} value={category.value}>
+                {category.label}
+              </option>
             ))}
-          </ul>
+          </select>
+        </div>
+        
+        <div className="form-group">
+          <label htmlFor="field_description">Description</label>
+          <textarea
+            id="field_description"
+            placeholder="Enter description..."
+            name="field_description"
+            rows={3}
+            value={formState.field_description}
+            onChange={handleChange}
+          />
+        </div>
+        
+        {suggestionData.length ? (
+          <div className="form-group">
+            <label>Suggestions</label>
+            <ul className="suggestions">
+              {suggestionData.map((suggestion, index) => (
+                <li
+                  key={`${index}-${suggestion}`}
+                  onClick={() => {
+                    handleSuggestionClick(suggestion, `${index}-${suggestion}`);
+                  }}
+                  className={
+                    selectedIndices.includes(`${index}-${suggestion}`)
+                      ? 'selected-suggestion'
+                      : ''
+                  }
+                >
+                  {suggestion}
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : null}
-        <button type="submit" disabled={isSubmitting} className="button w-100">
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : formType === 'add' ? (
-            <FaPlus />
-          ) : (
-            <FaPen />
-          )}
-        </button>
+        
+        <div className="form-actions">
+          <button type="submit" className="btn-submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <div className="loader">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            ) : (
+              <>
+                {formType === 'add' ? <FaPlus /> : <FaPen />}
+                {formType === 'add' ? 'Add Transaction' : 'Update Transaction'}
+              </>
+            )}
+          </button>
+        </div>
       </form>
     </div>
   );
