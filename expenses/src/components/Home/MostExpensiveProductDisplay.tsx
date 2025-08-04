@@ -41,18 +41,18 @@ const MostExpensiveProductDisplay = () => {
       <span className="heading">The most expensive item</span>
       <div className="most-expensive-table-container">
         <div className="table-row">
-          <span className="label">Date:</span> {formattedDate}
+          <span className="label">Date</span> {formattedDate}
         </div>
         <div className="table-row">
-          <span className="label">Amount:</span>{' '}
+          <span className="label">Amount</span>{' '}
           {formatNumber(transactionWithMaxSum?.sum)} {currency}
         </div>
         <div className="table-row">
-          <span className="label">Category:</span>{' '}
+          <span className="label">Category</span>{' '}
           {getCategory[transactionWithMaxSum.cat as string]}
         </div>
         <div className="table-row">
-          <span className="label">Description:</span>{' '}
+          <span className="label">Description</span>{' '}
           {transactionWithMaxSum?.dsc}
         </div>
       </div>

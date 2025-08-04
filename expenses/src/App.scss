@@ -29,7 +29,7 @@
 
 .main-content {
   flex: 1;
-  padding-bottom: 70px; // Space for navbar
+  padding-bottom: 95px; // Space for navbar
   overflow-y: auto; // Allow scrolling when needed
   min-height: calc(100vh - 70px); // Minimum height minus navbar
 }
