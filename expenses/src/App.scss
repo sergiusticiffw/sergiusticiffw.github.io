@@ -23,6 +23,9 @@
 @use 'components/Income/Income' as *;
 @use 'components/Common/Common' as *;
 
+// Import page styles
+@use 'pages/AddTransaction/AddTransaction' as *;
+
 // App-specific styles
 .app-container {
   min-height: 100vh;

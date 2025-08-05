@@ -1,0 +1,10 @@
+@use '../../styles/variables' as *;
+
+.add-transaction-page {
+  padding: $spacing-lg;
+  
+  // Responsive design
+  @media only screen and (max-width: $breakpoint-sm) {
+    padding: $spacing-md;
+  }
+} 
