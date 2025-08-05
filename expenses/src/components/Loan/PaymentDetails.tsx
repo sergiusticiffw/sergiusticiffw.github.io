@@ -135,13 +135,13 @@ const PaymentDetails = (props) => {
       </div>
 
       {/* Add Payment Button */}
-      <div className="payment-actions">
+      <div className="btns-actions">
         <button
           onClick={() => {
             setShowEditModal(true);
             setIsNewModal(true);
           }}
-          className="add-payment-btn"
+          className="action-btn"
         >
           <FaPlus />
           <span>Add New Payment</span>
