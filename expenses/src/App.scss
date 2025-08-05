@@ -32,9 +32,14 @@
 
 .main-content {
   flex: 1;
-  padding-bottom: 95px; // Space for navbar
+  padding-bottom: 95px; // Space for navbar - default for Home page
   overflow-y: auto; // Allow scrolling when needed
   min-height: calc(100vh - 70px); // Minimum height minus navbar
+  
+  // Reduced padding for non-Home pages
+  &:not(:has(.month-stats)) {
+    padding-bottom: 60px; // Reduced space for other pages
+  }
 }
 
 .loading-container {

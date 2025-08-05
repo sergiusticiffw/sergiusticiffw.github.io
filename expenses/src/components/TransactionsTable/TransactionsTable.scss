@@ -1,9 +1,7 @@
 @use '../../styles/variables' as *;
 
-.table-wrapper {
-  overflow: hidden;
-  margin-top: $spacing-xxl;
-  padding: 0 $spacing-md;
+.table-container {
+  overflow-x: auto;
   
   &.loan-table {
     overflow-x: auto;
@@ -13,7 +11,7 @@
 .expenses-table {
   width: 100%;
   text-align: left;
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-sm; // Reduced from $spacing-lg to minimize extra space
   
   thead tr {
     background-color: var(--secondary-color);

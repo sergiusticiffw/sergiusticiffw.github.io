@@ -54,7 +54,7 @@ const Filters = () => {
       });
       prevFilterState.current = state;
     }
-  }, [state]);
+  }, [state, dataDispatch]);
 
   useLayoutEffect(() => {
     if (showTextFilter && textInputRef.current) {
@@ -75,14 +75,14 @@ const Filters = () => {
         <input
           ref={textInputRef}
           type="text"
-          value={data.textFilter}
+          value={state.textFilter}
           name="textFilter"
           onChange={handleTextFilterChange}
           placeholder="Filter by text"
         />
       )}
       <select
-        value={data.category}
+        value={state.category}
         name="category"
         onChange={handleCategoryChange}
       >
