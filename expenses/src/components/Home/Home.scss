@@ -132,23 +132,6 @@
   text-align: center;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   position: relative;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 3px;
-    background: linear-gradient(90deg, 
-      var(--accent-color), 
-      #64b5f6, 
-      var(--accent-color)
-    );
-    border-radius: 2px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
 }
 
 .month-badge {

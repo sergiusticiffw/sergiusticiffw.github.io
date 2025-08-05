@@ -43,11 +43,12 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   }, [changedItems, handleClearChangedItem]);
   const allItems = [
     ...items,
-          ...Object.values(changedItems)
-        .filter(
-          (item: any) => item.type === 'removed' && item.data.type === 'transaction'
-        )
-        .map((item: any) => item.data),
+    ...Object.values(changedItems)
+      .filter(
+        (item: any) =>
+          item.type === 'removed' && item.data.type === 'transaction'
+      )
+      .map((item: any) => item.data),
   ].sort((a, b) => {
     // First, compare by 'dt'
     const dateComparison = new Date(b.dt).getTime() - new Date(a.dt).getTime();
@@ -76,8 +77,7 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
               </th>
               <th>Category</th>
               {!isModal ? <th>Description</th> : null}
-              <th className="desktop-only"></th>
-              <th className="desktop-only"></th>
+              <th className="desktop-only">Actions</th>
             </tr>
           </thead>
           <tbody ref={tableRef}>
@@ -127,21 +127,23 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                       <div className="description-text">{element.dsc}</div>
                     </td>
                   ) : null}
-                  <td className="desktop-only">
-                    <button
-                      onClick={() => handleEdit(element.id)}
-                      className="btn-outline"
-                    >
-                      <FaPen />
-                    </button>
-                  </td>
-                  <td className="desktop-only">
-                    <button
-                      onClick={() => setShowDeleteModal(element.id)}
-                      className="btn-outline"
-                    >
-                      <FaTrash />
-                    </button>
+                  <td className="desktop-only income-actions-cell">
+                    <div className="action-buttons">
+                      <button
+                        onClick={() => handleEdit(element.id)}
+                        className="btn-edit"
+                        title="Edit Income"
+                      >
+                        <FaPen />
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteModal(element.id)}
+                        className="btn-delete"
+                        title="Delete Income"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
