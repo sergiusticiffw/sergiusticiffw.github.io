@@ -103,10 +103,6 @@
           transition: all 0.3s ease;
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
-          &:hover {
-            background: rgba(255, 255, 255, 0.05);
-          }
-
           &.simulated-payment {
             background: rgba(255, 193, 7, 0.1);
             border-left: 4px solid #ffc107;
