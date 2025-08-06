@@ -157,9 +157,13 @@ const PaymentDetails = (props) => {
         }}
       >
         <h3>Are you sure you want to delete this payment?</h3>
+        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
+          This action cannot be undone.
+        </p>
         <button
           onClick={() => handleDelete(deleteModalId as string, token)}
-          className="button wide"
+          className="button danger wide"
+          disabled={isSubmitting}
         >
           {isSubmitting ? (
             <div className="loader">
@@ -168,7 +172,10 @@ const PaymentDetails = (props) => {
               <span className="loader__element"></span>
             </div>
           ) : (
-            <FaTrash />
+            <>
+              <FaTrash />
+              Delete
+            </>
           )}
         </button>
       </Modal>

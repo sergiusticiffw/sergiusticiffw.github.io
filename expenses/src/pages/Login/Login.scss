@@ -1,0 +1,90 @@
+@use '../../styles/variables' as *;
+@use '../../styles/mixins' as *;
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: $spacing-xl;
+  text-align: center;
+  
+  h4 {
+    color: #ffffff !important; // Force white color for visibility
+    font-size: $font-size-lg;
+    margin-bottom: $spacing-xl;
+    max-width: 500px;
+    line-height: 1.6;
+    font-weight: 500;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8); // Stronger shadow for better contrast
+    background: rgba(0, 0, 0, 0.3); // Semi-transparent background for better readability
+    padding: $spacing-md;
+    border-radius: $border-radius-md;
+    backdrop-filter: blur(10px);
+  }
+  
+  p {
+    color: #ff6b6b !important; // Use a bright red color for error messages
+    margin-bottom: $spacing-lg;
+    font-size: $font-size-md;
+    font-weight: 500;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.3);
+    padding: $spacing-sm;
+    border-radius: $border-radius-sm;
+    backdrop-filter: blur(10px);
+  }
+  
+  .login-button {
+    @include gradient-button();
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-sm;
+    padding: $spacing-lg $spacing-xl;
+    font-size: $font-size-lg;
+    font-weight: 600;
+    min-width: 200px;
+    min-height: 56px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    svg {
+      font-size: 1.2em;
+    }
+  }
+  
+  // Responsive design
+  @media only screen and (max-width: $breakpoint-sm) {
+    padding: $spacing-lg;
+    
+    h4 {
+      font-size: $font-size-md;
+      margin-bottom: $spacing-lg;
+    }
+    
+    .login-button {
+      padding: $spacing-md $spacing-lg;
+      font-size: $font-size-md;
+      min-width: 180px;
+      min-height: 48px;
+    }
+  }
+} 

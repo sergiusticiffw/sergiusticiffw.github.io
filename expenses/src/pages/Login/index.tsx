@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthState } from '@type/types';
 import { useGoogleLogin, TokenResponse } from '@react-oauth/google';
 import { FaSignInAlt } from 'react-icons/fa';
+import './Login.scss';
 
 const Login = () => {
   const dispatch = useAuthDispatch();
@@ -35,7 +36,7 @@ const Login = () => {
   };
 
   return (
-    <div>
+    <div className="login-container">
       <h4>Please login using Google in order to access app functionality.</h4>
       {errorMessage ? <p>We have some errors: {errorMessage}</p> : null}
       <button
@@ -45,10 +46,11 @@ const Login = () => {
           onError: failedResponseGoogle,
           onNonOAuthError: failedResponseGoogle,
         })}
-        className="button wide"
+        className="login-button"
         disabled={loading}
       >
         <FaSignInAlt />
+        {loading ? 'Signing in...' : 'Sign in with Google'}
       </button>
     </div>
   );
