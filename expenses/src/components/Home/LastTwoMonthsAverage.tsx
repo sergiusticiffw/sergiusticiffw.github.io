@@ -1,10 +1,13 @@
 import React, { useEffect } from 'react';
-import { useData } from '@context/context';
+import { useAuthState, useData } from '@context/context';
 import { formatNumber } from '@utils/utils';
-import { DataState, TransactionOrIncomeItem } from '@type/types';
+import { DataState, TransactionOrIncomeItem, AuthState } from '@type/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp, Calendar } from 'lucide-react';
 
 const LastTwoMonthsAverage = () => {
   const { data } = useData() as DataState;
+  const { currency } = useAuthState() as AuthState;
 
   useEffect(() => {}, [data.raw]);
 
@@ -32,11 +35,30 @@ const LastTwoMonthsAverage = () => {
     ? 60
     : timeDiff / (1000 * 3600 * 24);
 
+  const averagePerDay = lastTwoMonthsTotal / Math.ceil(daysDiff);
+  
   return (
-    <span>
-      Average spending for the last 60 days:{' '}
-      {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} / day
-    </span>
+    <Card className="border-border/50 shadow-lg">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-primary" />
+          Last 60 Days Average
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-primary/10 rounded-lg flex items-center justify-center">
+              <Calendar className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-sm text-muted-foreground">Average Spending Per Day</span>
+          </div>
+          <span className="text-sm font-medium text-foreground">
+            {formatNumber(averagePerDay)} {currency} / day
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

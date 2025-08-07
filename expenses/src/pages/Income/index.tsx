@@ -3,19 +3,24 @@ import IncomeForm from '@components/Income/IncomeForm';
 import { deleteNode, fetchData, formatNumber } from '@utils/utils';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
-import Modal from '@components/Modal/Modal';
 import IncomeTable from '@components/Income/IncomeTable';
 import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import {
-  FaPlus,
-  FaTrash,
-  FaCaretDown,
-  FaMoneyBillWave,
-  FaChartLine,
-} from 'react-icons/fa';
-import './Income.scss';
+  Plus,
+  Trash2,
+  ChevronDown,
+  DollarSign,
+  TrendingUp,
+  Calendar,
+  FileText,
+  Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 const Income = () => {
   const showNotification = useNotification();
@@ -91,170 +96,250 @@ const Income = () => {
 
   if (loading) {
     return (
-      <div className="income-container">
-        <div className="loading-container">
-          <div className="loader">
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-          </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>Loading income data...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="income-container">
+    <div className="space-y-8">
       {/* Header Section */}
-      <div className="income-header">
-        <div className="header-icon">
-          <FaMoneyBillWave />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/25">
+              <DollarSign className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
+                Income Management
+              </h1>
+              <p className="text-muted-foreground">Track and manage your income sources efficiently</p>
+            </div>
+          </div>
         </div>
-        <h1 className="header-title">Income Management</h1>
-        <p className="header-subtitle">
-          Track and manage your income sources efficiently
-        </p>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button 
+              onClick={() => {
+                setShowEditModal(true);
+                setIsNewModal(true);
+              }}
+              className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/25 transition-all duration-200 hover:scale-105 w-full sm:w-auto"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Income
+            </Button>
+          </DialogTrigger>
+        </Dialog>
       </div>
 
-      {/* Actions Section */}
-      <div className="btns-actions">
-        <button
-          onClick={() => {
-            setShowEditModal(true);
-            setIsNewModal(true);
-          }}
-          className="action-btn"
-        >
-          <FaPlus />
-          Add New Income
-        </button>
-      </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/20 hover:shadow-lg hover:shadow-green-500/10 transition-all duration-300 group">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Records</CardTitle>
+              <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <FileText className="w-4 h-4 text-green-500" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-foreground">
+              {formatNumber(totalRecords)}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Summary Section */}
-      <div className="income-summary">
-        <div className="summary-header">
-          <FaChartLine />
-          <h3>Income Overview</h3>
-        </div>
-        <div className="summary-grid">
-          <div className="summary-item">
-            <div className="summary-value">{formatNumber(totalRecords)}</div>
-            <div className="summary-label">Total Records</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-value">{formatNumber(totalIncome)}</div>
-            <div className="summary-label">Total Income</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-value">{formatNumber(averageIncome)}</div>
-            <div className="summary-label">Average Income</div>
-          </div>
-        </div>
+        <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 group">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Income</CardTitle>
+              <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <DollarSign className="w-4 h-4 text-blue-500" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-foreground">
+              {formatNumber(totalIncome)}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/20 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300 group">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Average Income</CardTitle>
+              <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                <TrendingUp className="w-4 h-4 text-purple-500" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-foreground">
+              {formatNumber(averageIncome)}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Income Table Section */}
-      <div className="income-table-section">
-        {noData ? (
-          <div className="no-income">
-            <div className="no-income-icon">
-              <FaMoneyBillWave />
+      {noData ? (
+        <Card className="border-border/50 shadow-lg">
+          <CardContent className="text-center py-16">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <DollarSign className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3>No Income Data</h3>
-            <p>Start by adding your first income record</p>
-          </div>
-        ) : (
-          <>
-            {data.incomeData && data.incomeData.length ? (
-              <IncomeTable
-                items={data.incomeData.slice(0, nrOfItemsToShow)}
-                handleEdit={handleEdit}
-                // @ts-expect-error
-                setShowDeleteModal={setShowDeleteModal}
-                changedItems={data.changedItems}
-                handleClearChangedItem={handleClearChangedItem}
-              />
-            ) : (
-              <div className="no-income">
-                <div className="no-income-icon">
-                  <FaMoneyBillWave />
+            <h3 className="text-lg font-semibold text-foreground mb-2">No Income Data</h3>
+            <p className="text-muted-foreground mb-4">Start by adding your first income record</p>
+            <Button 
+              onClick={() => {
+                setShowEditModal(true);
+                setIsNewModal(true);
+              }}
+              className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add First Income
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {data.incomeData && data.incomeData.length ? (
+            <Card className="border-border/50 shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-primary" />
+                  Income Records
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <IncomeTable
+                  items={data.incomeData.slice(0, nrOfItemsToShow)}
+                  handleEdit={handleEdit}
+                  // @ts-expect-error
+                  setShowDeleteModal={setShowDeleteModal}
+                  changedItems={data.changedItems}
+                  handleClearChangedItem={handleClearChangedItem}
+                />
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-border/50 shadow-lg">
+              <CardContent className="text-center py-16">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <DollarSign className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3>No Income Records</h3>
-                <p>No income records found. Add your first income entry.</p>
-              </div>
-            )}
-
-            {data.incomeData?.length > nrOfItemsToShow && (
-              <div className="load-more">
-                <button
-                  onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
-                  className="load-more-btn"
+                <h3 className="text-lg font-semibold text-foreground mb-2">No Income Records</h3>
+                <p className="text-muted-foreground mb-4">No income records found. Add your first income entry.</p>
+                <Button 
+                  onClick={() => {
+                    setShowEditModal(true);
+                    setIsNewModal(true);
+                  }}
+                  className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
                 >
-                  <FaCaretDown />
-                  Load More
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Income
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {data.incomeData?.length > nrOfItemsToShow && (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
+                className="mt-4"
+              >
+                <ChevronDown className="w-4 h-4 mr-2" />
+                Load More
+              </Button>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Charts Section */}
       {data.incomeData?.length ? (
-        <div>
-          <YearIncomeAverageTrend />
-        </div>
+        <YearIncomeAverageTrend />
       ) : null}
 
       {/* Modals */}
-      <Modal
-        show={showDeleteModal}
-        onClose={(e) => {
-          e.preventDefault();
-          setShowDeleteModal(false);
-        }}
-      >
-        <h3>Are you sure you want to delete this income record?</h3>
-        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
-          This action cannot be undone.
-        </p>
-        <button
-          onClick={() => handleDelete(showDeleteModal, token)}
-          className="button danger wide"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : (
-            <>
-              <FaTrash />
-              Delete
-            </>
-          )}
-        </button>
-      </Modal>
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground">
+              Delete Income Record
+            </DialogTitle>
+            <DialogDescription className="text-center text-muted-foreground">
+              Are you sure you want to delete this income record? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleDelete(showDeleteModal, token)}
+              disabled={isSubmitting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  Deleting...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </div>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <Modal
-        show={showEditModal}
-        onClose={(e) => {
-          e.preventDefault();
+      <Dialog open={showEditModal} onOpenChange={(open) => {
+        if (!open) {
           setShowEditModal(false);
           setIsNewModal(false);
-        }}
-      >
-        <IncomeForm
-          formType={!isNewModal ? 'edit' : 'add'}
-          values={focusedItem}
-          onSuccess={() => {
-            setShowEditModal(false);
-            setIsNewModal(false);
-            fetchData(token, dataDispatch, dispatch);
-          }}
-        />
-      </Modal>
+        }
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground">
+              {!isNewModal ? 'Edit Income Record' : 'Add Income Record'}
+            </DialogTitle>
+            <DialogDescription>
+              {!isNewModal ? 'Update the details for this income record.' : 'Enter the details for your new income record.'}
+            </DialogDescription>
+          </DialogHeader>
+          <IncomeForm
+            formType={!isNewModal ? 'edit' : 'add'}
+            values={focusedItem}
+            onSuccess={() => {
+              setShowEditModal(false);
+              setIsNewModal(false);
+              fetchData(token, dataDispatch, dispatch);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

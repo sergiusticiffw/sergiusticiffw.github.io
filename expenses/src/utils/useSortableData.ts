@@ -15,9 +15,18 @@ export const useSortableData = (
     const sortableItems = [...items];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+        
+        // Handle date sorting
+        if (sortConfig.key === 'dt') {
+          aValue = new Date(aValue).getTime();
+          bValue = new Date(bValue).getTime();
+        }
+        
         return sortConfig.direction === 'ascending'
-          ? a[sortConfig.key] - b[sortConfig.key]
-          : b[sortConfig.key] - a[sortConfig.key];
+          ? aValue - bValue
+          : bValue - aValue;
       });
     }
     return sortableItems;

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
-import Modal from '@components/Modal/Modal';
 import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
 import { AuthState, TransactionOrIncomeItem, DataState } from '@type/types';
 import TransactionForm from '@components/TransactionForm/TransactionForm';
@@ -11,8 +10,23 @@ import { notificationType, colorMap } from '@utils/constants';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { FaTrash } from 'react-icons/fa';
+import {
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+} from 'lucide-react';
 import Month from '@components/Home/Month';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 interface ExpenseCalendarProps {
   currentMonthIndex: number;
@@ -236,155 +250,212 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
 
   return (
     <>
-      <div className="calendar-container">
-        <div
-          className="full-calendar-container"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <FullCalendar
-            firstDay={1}
-            ref={calendarRef}
-            initialDate={date}
-            plugins={[interactionPlugin, dayGridPlugin]}
-            initialView="dayGridMonth"
-            editable={false}
-            showNonCurrentDates={false}
-            fixedWeekCount={false}
-            selectable={true}
-            eventClick={handleEventSelect}
-            events={events}
-            eventColor={colorMap[theme].accentColor}
-            eventTextColor={colorMap[theme].textColor}
-            eventContent={renderEventContent}
-            headerToolbar={{
-              left: 'customPrev customNext customToday',
-              center: '',
-              right: '',
-            }}
-            datesSet={handleDatesSet}
-            customButtons={{
-              customPrev: {
-                text: 'Previous',
-                click: () => {
+      <Card className="border-border/50 shadow-lg">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            {/* Navigation Controls */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
                   if (!prevDisabled) {
                     setCurrentMonthIndex(currentMonthIndex + 1);
                     // @ts-expect-error
                     calendarRef.current.getApi().prev();
                   }
-                },
-              },
-              customNext: {
-                text: 'Next',
-                click: () => {
-                  if (!nextDisabled) {
-                    setCurrentMonthIndex(currentMonthIndex - 1);
-                    // @ts-expect-error
-                    calendarRef.current.getApi().next();
-                  }
-                },
-              },
-              customToday: {
-                text: 'Today',
-                click: () => {
+                }}
+                disabled={prevDisabled}
+                className="hover:bg-background transition-all duration-200"
+              >
+                <ChevronLeft className="w-4 h-4 mr-2" />
+                Previous
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
                   if (!todayDisabled) {
                     setCurrentMonthIndex(0);
                     // @ts-expect-error
                     calendarRef.current.getApi().gotoDate(new Date());
                   }
-                },
-              },
+                }}
+                disabled={todayDisabled}
+                className="hover:bg-background transition-all duration-200"
+              >
+                Today
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (!nextDisabled) {
+                    setCurrentMonthIndex(currentMonthIndex - 1);
+                    // @ts-expect-error
+                    calendarRef.current.getApi().next();
+                  }
+                }}
+                disabled={nextDisabled}
+                className="hover:bg-background transition-all duration-200"
+              >
+                Next
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          <div
+            className="full-calendar-container"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <FullCalendar
+              firstDay={1}
+              ref={calendarRef}
+              initialDate={date}
+              plugins={[interactionPlugin, dayGridPlugin]}
+              initialView="dayGridMonth"
+              editable={false}
+              showNonCurrentDates={false}
+              fixedWeekCount={false}
+              selectable={true}
+              eventClick={handleEventSelect}
+              events={events}
+              eventColor={colorMap[theme].accentColor}
+              eventTextColor={colorMap[theme].textColor}
+              eventContent={renderEventContent}
+              headerToolbar={false}
+              datesSet={handleDatesSet}
+              height="auto"
+              dayCellClassNames="hover:bg-muted/30 transition-colors duration-200"
+              dayHeaderClassNames="font-semibold text-foreground bg-transparent"
+              moreLinkClassNames="text-primary hover:text-primary/80 transition-colors"
+            />
+          </div>
+        </CardContent>
+      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        {!data.filtered && (
+          <div className="w-full h-full">
+            <Month month={currentMonth} />
+          </div>
+        )}
+
+        <Card className="border-border/50 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-foreground">
+              Most Expensive Items
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MostExpensiveProductDisplay />
+          </CardContent>
+        </Card>
+      </div>
+      <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground">
+              Delete Transaction
+            </DialogTitle>
+            <DialogDescription className="text-center text-muted-foreground">
+              Are you sure you want to delete this transaction? This action
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              // @ts-expect-error
+              onClick={() => handleDelete(showDeleteModal, token)}
+              disabled={isSubmitting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  Deleting...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </div>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground">
+              Edit Transaction
+            </DialogTitle>
+            <DialogDescription>
+              Update the details for this transaction.
+            </DialogDescription>
+          </DialogHeader>
+          <TransactionForm
+            formType="edit"
+            values={focusedItem}
+            onSuccess={() => {
+              setShowEditModal(false);
+              fetchData(
+                token,
+                dataDispatch,
+                dispatch,
+                data.category,
+                data.textFilter
+              );
             }}
           />
-        </div>
-      </div>
-      {!data.filtered && (
-        <div className="charts-section">
-          <Month month={currentMonth} />
-        </div>
-      )}
-      <div className="charts-section">
-        <MostExpensiveProductDisplay />
-      </div>
-      <Modal
-        show={showDeleteModal}
-        onClose={(e) => {
-          e.preventDefault();
-          setShowDeleteModal(false);
-        }}
-      >
-        <h3>Are you sure you want to delete the transaction?</h3>
-        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
-          This action cannot be undone.
-        </p>
-        <button
-          // @ts-expect-error
-          onClick={() => handleDelete(showDeleteModal, token)}
-          className="button danger wide"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : (
-            <>
-              <FaTrash />
-              Delete
-            </>
-          )}
-        </button>
-      </Modal>
-      <Modal
-        show={showEditModal}
-        onClose={(e) => {
-          e.preventDefault();
-          setShowEditModal(false);
-        }}
-      >
-        <TransactionForm
-          formType="edit"
-          values={focusedItem}
-          onSuccess={() => {
-            setShowEditModal(false);
-            fetchData(
-              token,
-              dataDispatch,
-              dispatch,
-              data.category,
-              data.textFilter
-            );
-          }}
-        />
-      </Modal>
-      <Modal
-        show={showModal}
-        onClose={(e) => {
-          e.preventDefault();
-          setShowModal(false);
-          setSelectedEvent(null);
-        }}
-      >
-        <span className="heading">
-          {
-            // @ts-expect-error
-            selectedEvent?.title
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={showModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowModal(false);
+            setSelectedEvent(null);
           }
-        </span>
-        <TransactionsTable
-          isModal={true}
-          handleEdit={handleEdit}
-          // @ts-expect-error
-          setShowDeleteModal={handleDelete}
-          // @ts-expect-error
-          items={selectedEvent?.data ? selectedEvent.data : []}
-          changedItems={data.changedItems}
-          handleClearChangedItem={handleClearChangedItem}
-        />
-      </Modal>
+        }}
+      >
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground">
+              {
+                // @ts-expect-error
+                selectedEvent?.title
+              }
+            </DialogTitle>
+            <DialogDescription>Transactions for this date</DialogDescription>
+          </DialogHeader>
+          <TransactionsTable
+            isModal={true}
+            handleEdit={handleEdit}
+            // @ts-expect-error
+            setShowDeleteModal={handleDelete}
+            // @ts-expect-error
+            items={selectedEvent?.data ? selectedEvent.data : []}
+            changedItems={data.changedItems}
+            handleClearChangedItem={handleClearChangedItem}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
