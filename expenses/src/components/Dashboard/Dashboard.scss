@@ -1,0 +1,296 @@
+@use 'styles/variables' as *;
+
+.dashboard-container {
+  padding: $spacing-xl;
+  max-width: 1400px;
+  margin: 0 auto;
+  
+  @media (max-width: $breakpoint-md) {
+    padding: $spacing-md;
+  }
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: $spacing-xxxl;
+  
+  .dashboard-title {
+    font-size: $font-size-display;
+    font-weight: $font-weight-bold;
+    background: var(--accent-gradient-color);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: $spacing-sm;
+    
+    @media (max-width: $breakpoint-md) {
+      font-size: $font-size-xxxl;
+    }
+  }
+  
+  .dashboard-subtitle {
+    font-size: $font-size-lg;
+    color: var(--text-color);
+    opacity: 0.8;
+    font-weight: $font-weight-light;
+  }
+}
+
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: $spacing-lg;
+  margin-bottom: $spacing-xxxl;
+  
+  @media (max-width: $breakpoint-sm) {
+    grid-template-columns: 1fr;
+    gap: $spacing-md;
+  }
+}
+
+.dashboard-stat-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 160px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: inherit;
+    opacity: 0.1;
+    z-index: -1;
+  }
+  
+  .stat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $spacing-md;
+    
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: $border-radius-full;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      font-size: $font-size-xl;
+      color: white;
+    }
+    
+    .stat-change {
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-sm;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      
+      &.positive {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+      }
+      
+      &.negative {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+      }
+      
+      .change-icon {
+        font-size: $font-size-xs;
+      }
+    }
+  }
+  
+  .stat-content {
+    .stat-title {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-medium;
+      color: var(--text-color);
+      opacity: 0.8;
+      margin-bottom: $spacing-xs;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .stat-value {
+      font-size: $font-size-xxxl;
+      font-weight: $font-weight-bold;
+      color: var(--text-color);
+      margin: 0;
+      
+      @media (max-width: $breakpoint-md) {
+        font-size: $font-size-xxl;
+      }
+    }
+  }
+}
+
+.dashboard-actions {
+  margin-bottom: $spacing-xxxl;
+  
+  .actions-title {
+    font-size: $font-size-xxl;
+    font-weight: $font-weight-semibold;
+    color: var(--text-color);
+    margin-bottom: $spacing-lg;
+    text-align: center;
+  }
+  
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: $spacing-md;
+    
+    @media (max-width: $breakpoint-sm) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
+.quick-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-lg;
+  border-radius: $border-radius-lg;
+  font-weight: $font-weight-medium;
+  color: white;
+  text-decoration: none;
+  transition: all $transition-normal;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+  }
+  
+  .action-icon {
+    font-size: $font-size-xxl;
+    margin-bottom: $spacing-xs;
+  }
+  
+  .action-title {
+    font-size: $font-size-sm;
+    text-align: center;
+  }
+}
+
+.dashboard-charts {
+  .chart-section {
+    padding: $spacing-xl;
+    
+    .chart-title {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-semibold;
+      color: var(--text-color);
+      margin-bottom: $spacing-lg;
+      text-align: center;
+    }
+    
+    .chart-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      color: var(--text-color);
+      opacity: 0.6;
+      
+      .chart-icon {
+        font-size: $font-size-xxxl;
+        margin-bottom: $spacing-md;
+        opacity: 0.5;
+      }
+      
+      p {
+        font-size: $font-size-lg;
+        margin: 0;
+      }
+    }
+  }
+}
+
+// Gradient overrides for glass cards
+.glass-card.gradient-primary {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.glass-card.gradient-success {
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+  border-color: rgba(79, 172, 254, 0.3);
+}
+
+.glass-card.gradient-danger {
+  background: linear-gradient(135deg, rgba(250, 112, 154, 0.1) 0%, rgba(254, 225, 64, 0.1) 100%);
+  border-color: rgba(250, 112, 154, 0.3);
+}
+
+.glass-card.gradient-warning {
+  background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+  border-color: rgba(67, 233, 123, 0.3);
+}
+
+// Button gradient overrides
+.glass-button.gradient-primary {
+  background: $primary-gradient;
+  border: none;
+}
+
+.glass-button.gradient-success {
+  background: $success-gradient;
+  border: none;
+}
+
+.glass-button.gradient-danger {
+  background: $danger-gradient;
+  border: none;
+}
+
+.glass-button.gradient-warning {
+  background: $warning-gradient;
+  border: none;
+}
+
+// Responsive adjustments
+@media (max-width: $breakpoint-lg) {
+  .dashboard-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .dashboard-container {
+    padding: $spacing-sm;
+  }
+  
+  .dashboard-header {
+    margin-bottom: $spacing-xxl;
+  }
+  
+  .dashboard-stats-grid {
+    gap: $spacing-sm;
+  }
+  
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+}

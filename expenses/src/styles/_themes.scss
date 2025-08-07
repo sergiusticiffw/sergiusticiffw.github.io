@@ -1,7 +1,7 @@
 @use 'variables' as *;
 @use 'sass:map';
 
-// Theme generation
+// Theme generation with glassmorphism support
 @each $class, $colors in $color-map {
   .#{$class} {
     --accent-color: #{map.get($colors, accent-color)};
@@ -9,6 +9,8 @@
     --bg-color: #{map.get($colors, bg-color)};
     --text-color: #{map.get($colors, text-color)};
     --accent-gradient-color: #{map.get($colors, accent-gradient-color)};
+    --glass-bg: #{map.get($colors, glass-bg)};
+    --glass-border: #{map.get($colors, glass-border)};
   }
   
   body:has(.#{$class}) {
@@ -16,21 +18,35 @@
   }
 }
 
-// Global theme utilities
+// Global theme utilities with enhanced glassmorphism
 .has-gradient-accent {
   .button {
     background: var(--accent-gradient-color);
     color: var(--bg-color);
+    border: none;
+    box-shadow: $shadow-lg;
+    transition: all $transition-normal;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-xl;
+    }
   }
   
   .month-badge,
   .income-header {
     background: var(--accent-gradient-color);
     color: var(--bg-color);
+    border: none;
+    box-shadow: $shadow-md;
   }
   
   .month-stats > div {
     border: none;
+    background: var(--glass-bg);
+    backdrop-filter: $glass-backdrop;
+    border: $glass-border-width solid var(--glass-border);
+    box-shadow: $glass-shadow;
     
     &:before {
       content: '';
@@ -42,6 +58,7 @@
       z-index: -1;
       margin: -5px;
       background: var(--accent-gradient-color);
+      border-radius: inherit;
       
       @media only screen and (max-width: $breakpoint-sm) {
         margin: -4px;
@@ -55,5 +72,116 @@
         margin: -4px;
       }
     }
+  }
+}
+
+// Glassmorphism utility classes
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: $glass-backdrop;
+  border: $glass-border-width solid var(--glass-border);
+  box-shadow: $glass-shadow;
+}
+
+.glass-card {
+  @extend .glass;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+  transition: all $transition-normal;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.5);
+  }
+}
+
+.glass-button {
+  @extend .glass;
+  border-radius: $border-radius-md;
+  padding: $spacing-sm $spacing-lg;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-normal;
+  font-weight: $font-weight-medium;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px 0 rgba(31, 38, 135, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Modern gradient utilities
+.gradient-primary {
+  background: $primary-gradient;
+}
+
+.gradient-secondary {
+  background: $secondary-gradient;
+}
+
+.gradient-success {
+  background: $success-gradient;
+}
+
+.gradient-warning {
+  background: $warning-gradient;
+}
+
+.gradient-danger {
+  background: $danger-gradient;
+}
+
+// Enhanced animation utilities
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 } 
