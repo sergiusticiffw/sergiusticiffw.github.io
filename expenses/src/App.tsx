@@ -8,6 +8,7 @@ import { AppRoute } from '@components/Common';
 import React, { Suspense, useMemo } from 'react';
 import routes from '@config/routes';
 import Navbar from '@components/Navbar';
+import ThemeSelector from '@components/Common/ThemeSelector';
 
 // Loading component for Suspense fallback
 const LoadingFallback: React.FC = () => (
@@ -54,7 +55,8 @@ const App: React.FC = () => {
         <LoanProvider>
           <HighchartsProvider>
             <Router>
-              <div className="app-container">
+              <div className="app-container cosmic-glass has-gradient-accent">
+                <ThemeSelector />
                 <Navbar />
                 <main className="main-content">
                   <Suspense fallback={<LoadingFallback />}>

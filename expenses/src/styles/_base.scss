@@ -1,9 +1,15 @@
 @use 'variables' as *;
 
-// Base HTML and body styles
+// Base HTML and body styles with enhanced smooth scrolling
 html {
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
     env(safe-area-inset-bottom) env(safe-area-inset-left);
+  scroll-behavior: smooth;
+  font-size: 16px;
+  
+  @media (prefers-reduced-motion: reduce) {
+    scroll-behavior: auto;
+  }
 }
 
 body {
@@ -11,71 +17,157 @@ body {
   height: 100%;
   text-align: center;
   margin: 0;
-  color: #fff;
-  background: #282a36;
+  color: var(--text-color, #fff);
+  background: var(--bg-color, #282a36);
   overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  transition: all $transition-normal;
 }
 
-// Form elements
+// Enhanced form elements with modern glassmorphism
 select,
 label,
 input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #fff;
-  border-radius: 0 !important;
+  color: var(--text-color, #fff);
+  border-radius: $border-radius-md !important;
+  background: var(--glass-bg, rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.18));
+  padding: $spacing-sm $spacing-md;
+  transition: all $transition-normal;
+  font-size: $font-size-md;
 
   &::placeholder {
-    color: #fff;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 20px var(--glow-color, rgba(255, 255, 255, 0.1));
+    transform: translateY(-1px);
+  }
+  
+  &:hover {
+    border-color: var(--accent-color);
+    background: var(--glass-bg, rgba(255, 255, 255, 0.08));
   }
 }
 
-// Button styles
+// Enhanced button styles with modern effects
 button {
   cursor: pointer;
-  border-radius: 0 !important;
+  border-radius: $border-radius-md !important;
+  border: none;
+  background: var(--glass-bg, rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--text-color, #fff);
+  padding: $spacing-sm $spacing-lg;
+  font-size: $font-size-md;
+  font-weight: 500;
+  transition: all $transition-normal;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(255, 255, 255, 0.1) 50%, 
+      transparent 100%);
+    transition: left $transition-fast;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 8px 25px rgba(0, 0, 0, 0.2),
+      0 0 20px var(--glow-color, rgba(255, 255, 255, 0.1));
+    background: var(--accent-color);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
 }
 
-// Checkbox styles
+// Enhanced checkbox styles
 input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  border-radius: 0 !important;
+  width: 18px;
+  height: 18px;
+  border-radius: $border-radius-sm !important;
+  appearance: none;
+  background: var(--glass-bg, rgba(255, 255, 255, 0.05));
+  border: 2px solid var(--glass-border, rgba(255, 255, 255, 0.18));
+  cursor: pointer;
+  transition: all $transition-normal;
+  
+  &:checked {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    
+    &::after {
+      content: '✓';
+      color: var(--bg-color, #000);
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+  }
+  
+  &:hover {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 10px var(--glow-color, rgba(255, 255, 255, 0.1));
+  }
 }
 
+// Enhanced row action styles
 .row-action {
   font-size: 20px;
   display: flex;
   align-items: center;
-  width: 100%;
-  height: 100%;
-  box-shadow:
-          inset 2px 5px 15px -5px rgba(0, 0, 0, 0.5),
-          inset 2px -5px 15px -5px rgba(0, 0, 0, 0.5);
-  transition: all $transition-fast ease-in-out;
-
-  &.delete {
-    justify-content: left;
-    background: linear-gradient(
-                    90deg,
-                    rgba(255, 107, 250, 1) 0%,
-                    var(--accent-color) 100%
-    );
-  }
-
-  &.edit {
-    justify-content: right;
-    background: linear-gradient(90deg, var(--accent-color) 0%, #7bd0c9 100%);
-  }
-
-  svg {
-    padding: 0 $spacing-lg;
-    transition: all $transition-normal ease-in-out;
-
-    body.action-active & {
-      fill: var(--bg-color);
-    }
+  justify-content: center;
+  padding: $spacing-sm;
+  border-radius: $border-radius-md;
+  background: var(--glass-bg, rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.18));
+  transition: all $transition-normal;
+  cursor: pointer;
+  
+  &:hover {
+    transform: scale(1.1);
+    background: var(--accent-color);
+    box-shadow: 0 0 15px var(--glow-color, rgba(255, 255, 255, 0.2));
   }
 }
 

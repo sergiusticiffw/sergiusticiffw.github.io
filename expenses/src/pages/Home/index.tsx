@@ -164,7 +164,7 @@ const Home = () => {
   };
 
   return (
-    <div>
+    <div className="dashboard-container page-transition">
       <Modal
         show={showDeleteModal}
         onClose={(e) => {
@@ -172,29 +172,32 @@ const Home = () => {
           setShowDeleteModal(false);
         }}
       >
-        <h3>Are you sure you want to delete this transaction?</h3>
-        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
-          This action cannot be undone.
-        </p>
-        <button
-          onClick={() => handleDelete(showDeleteModal, token)}
-          className="button danger wide"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : (
-            <>
-              <FaTrash />
-              Delete
-            </>
-          )}
-        </button>
+        <div className="glass-card">
+          <h3 className="gradient-text">Are you sure you want to delete this transaction?</h3>
+          <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
+            This action cannot be undone.
+          </p>
+          <button
+            onClick={() => handleDelete(showDeleteModal, token)}
+            className="button danger wide glow-effect"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <div className="loader">
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+              </div>
+            ) : (
+              <>
+                <FaTrash />
+                Delete Transaction
+              </>
+            )}
+          </button>
+        </div>
       </Modal>
+      
       <Modal
         show={showEditModal}
         onClose={(e) => {
@@ -202,36 +205,48 @@ const Home = () => {
           setShowEditModal(false);
         }}
       >
-        <TransactionForm
-          formType="edit"
-          values={focusedItem}
-          onSuccess={() => {
-            setShowEditModal(false);
-            fetchData(
-              token,
-              dataDispatch,
-              dispatch,
-              data.category,
-              data.textFilter
-            );
-          }}
-        />
+        <div className="glass-card">
+          <TransactionForm
+            formType="edit"
+            values={focusedItem}
+            onSuccess={() => {
+              setShowEditModal(false);
+              fetchData(
+                token,
+                dataDispatch,
+                dispatch,
+                data.category,
+                data.textFilter
+              );
+            }}
+          />
+        </div>
       </Modal>
-      <h2>{currentMonth || 'Expenses'}</h2>
-      <Filters />
+      
+      <h2 className="gradient-text">{currentMonth || 'Financial Overview'}</h2>
+      
+      <div className="glass-card">
+        <Filters />
+      </div>
+      
       {loading ? (
-        <div className="lds-ripple">
-          <div></div>
-          <div></div>
+        <div className="loading-container">
+          <div className="loader">
+            <span className="loader__element"></span>
+            <span className="loader__element"></span>
+            <span className="loader__element"></span>
+          </div>
         </div>
       ) : noData ? (
-        ''
+        <div className="glass-card">
+          <p>No financial data found. Start by adding your first transaction!</p>
+        </div>
       ) : (
         <div>
           {Object.keys(items.groupedData).length ? (
             <>
               <div className="month-stats">
-                <div>
+                <div className="glass-card floating">
                   <div
                     className="stats-container has-budget"
                     // @ts-expect-error TBC
@@ -246,8 +261,9 @@ const Home = () => {
                     )}
                   </div>
                 </div>
+                
                 {income > 0 && (
-                  <div>
+                  <div className="glass-card floating">
                     <div className="stats-container">
                       <h3>Income</h3>
                       <div className="stat-value">
@@ -256,8 +272,9 @@ const Home = () => {
                     </div>
                   </div>
                 )}
+                
                 {income > 0 && (
-                  <div>
+                  <div className="glass-card floating">
                     <div className="stats-container">
                       <h3>Profit</h3>
                       <div className="stat-value">
@@ -266,8 +283,9 @@ const Home = () => {
                     </div>
                   </div>
                 )}
+                
                 {isWeekBudget ? (
-                  <div>
+                  <div className="glass-card floating">
                     <div
                       className="stats-container has-budget"
                       style={{
@@ -275,7 +293,7 @@ const Home = () => {
                         '--budget-progress': `${weekPercentage}%`,
                       }}
                     >
-                      <h3>Week budget</h3>
+                      <h3>Week Budget</h3>
                       <div className="stat-value">
                         <NumberDisplay number={totalSumForCategory} />
                       </div>
@@ -284,6 +302,7 @@ const Home = () => {
                   </div>
                 ) : null}
               </div>
+              
               <div className="tab-buttons">
                 <div className="tabs-titles">
                   <div
@@ -308,24 +327,30 @@ const Home = () => {
                   </div>
                 </div>
               </div>
+              
               {activeTab === 'calendar' ? (
-                <ExpenseCalendar
-                  items={items.groupedData[currentMonth]}
-                  months={months}
-                  setCurrentMonthIndex={handleMonthChange}
-                  currentMonthIndex={currentMonthIndex}
-                  currentMonth={currentMonth}
-                />
+                <div className="glass-card">
+                  <ExpenseCalendar
+                    items={items.groupedData[currentMonth]}
+                    months={months}
+                    setCurrentMonthIndex={handleMonthChange}
+                    currentMonthIndex={currentMonthIndex}
+                    currentMonth={currentMonth}
+                  />
+                </div>
               ) : (
                 <>
-                  <TransactionsTable
-                    items={items.groupedData[currentMonth]}
-                    handleEdit={handleEdit}
-                    // @ts-expect-error
-                    setShowDeleteModal={setShowDeleteModal}
-                    changedItems={data.changedItems}
-                    handleClearChangedItem={handleClearChangedItem}
-                  />
+                  <div className="glass-card">
+                    <TransactionsTable
+                      items={items.groupedData[currentMonth]}
+                      handleEdit={handleEdit}
+                      // @ts-expect-error
+                      setShowDeleteModal={setShowDeleteModal}
+                      changedItems={data.changedItems}
+                      handleClearChangedItem={handleClearChangedItem}
+                    />
+                  </div>
+                  
                   <div className="pager-navigation">
                     <button
                       disabled={!months[currentMonthIndex + 1]}
@@ -348,7 +373,9 @@ const Home = () => {
               )}
             </>
           ) : (
-            <p>No transaction records found.</p>
+            <div className="glass-card">
+              <p>No transaction records found for this period.</p>
+            </div>
           )}
         </div>
       )}

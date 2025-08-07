@@ -16,6 +16,9 @@ import {
   FaSortUp,
   FaSortDown,
   FaFilter,
+  FaMoneyBillWave,
+  FaPercentage,
+  FaCalendarAlt,
 } from 'react-icons/fa';
 import Modal from '@components/Modal/Modal';
 import LoanForm from '@components/Loan/LoanForm';
@@ -170,7 +173,7 @@ const Loans: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="loans-container">
+      <div className="loans-container page-transition">
         <div className="loading-container">
           <div className="loader">
             <span className="loader__element"></span>
@@ -183,50 +186,84 @@ const Loans: React.FC = () => {
   }
 
   return (
-    <div className="loans-container">
-      {/* Header Section */}
-      <div className="loans-header">
-        <div className="header-icon">
-          <FaHandHoldingUsd />
+    <div className="loans-container page-transition">
+      {/* Enhanced Header Section */}
+      <div className="loans-header glass-card floating">
+        <div className="header-content">
+          <div className="header-icon glow-effect">
+            <FaHandHoldingUsd />
+          </div>
+          <div className="header-text">
+            <h1 className="header-title gradient-text">Loan Management</h1>
+            <p className="header-subtitle">
+              Track and manage your loans with advanced insights
+            </p>
+          </div>
         </div>
-        <h1 className="header-title">Loan Management</h1>
-        <p className="header-subtitle">
-          Track and manage your loans efficiently
-        </p>
+        
+        <div className="header-actions">
+          <button 
+            onClick={() => setShowAddModal(true)} 
+            className="action-btn glow-effect"
+          >
+            <FaPlus />
+            Add New Loan
+          </button>
+        </div>
       </div>
 
-      {/* Actions Section */}
-      <div className="btns-actions">
-        <button onClick={() => setShowAddModal(true)} className="action-btn">
-          <FaPlus />
-          Add New Loan
-        </button>
-      </div>
-
-      {/* Summary Section */}
-      <div className="loans-summary">
+      {/* Enhanced Summary Section */}
+      <div className="loans-summary glass-card">
         <div className="summary-header">
-          <FaChartLine />
-          <h3>Loans Overview</h3>
+          <FaChartLine className="summary-icon" />
+          <h3 className="gradient-text">Portfolio Overview</h3>
         </div>
+        
         <div className="summary-grid">
-          <div className="summary-item">
-            <div className="summary-value">{totalLoans}</div>
-            <div className="summary-label">Total Loans</div>
+          <div className="summary-item glass-morphism glow-border">
+            <div className="summary-icon-wrapper">
+              <FaHandHoldingUsd />
+            </div>
+            <div className="summary-content">
+              <div className="summary-value gradient-text">{totalLoans}</div>
+              <div className="summary-label">Total Loans</div>
+            </div>
           </div>
-          <div className="summary-item">
-            <div className="summary-value">{activeLoans}</div>
-            <div className="summary-label">Active Loans</div>
+          
+          <div className="summary-item glass-morphism glow-border">
+            <div className="summary-icon-wrapper active">
+              <FaMoneyBillWave />
+            </div>
+            <div className="summary-content">
+              <div className="summary-value gradient-text">{activeLoans}</div>
+              <div className="summary-label">Active Loans</div>
+            </div>
           </div>
-          <div className="summary-item">
-            <div className="summary-value">{completedLoans}</div>
-            <div className="summary-label">Completed</div>
+          
+          <div className="summary-item glass-morphism glow-border">
+            <div className="summary-icon-wrapper completed">
+              <FaChartLine />
+            </div>
+            <div className="summary-content">
+              <div className="summary-value gradient-text">{completedLoans}</div>
+              <div className="summary-label">Completed</div>
+            </div>
+          </div>
+          
+          <div className="summary-item glass-morphism glow-border">
+            <div className="summary-icon-wrapper total">
+              <FaPercentage />
+            </div>
+            <div className="summary-content">
+              <div className="summary-value gradient-text">{formatNumber(totalPrincipal)}</div>
+              <div className="summary-label">Total Principal</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Filters and Sorting Section */}
-      <div className="loans-filters">
+      {/* Enhanced Filters Section */}
+      <div className="loans-filters glass-card">
         <div className="filter-group">
           <label className="filter-label">
             <FaFilter />
@@ -235,7 +272,7 @@ const Loans: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="filter-select"
+            className="filter-select glass-morphism"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active</option>
@@ -246,45 +283,47 @@ const Loans: React.FC = () => {
 
         <div className="sort-group">
           <span className="sort-label">Sort by:</span>
-          <button
-            onClick={() => handleSort('status')}
-            className={`sort-btn ${sortBy === 'status' ? 'active' : ''}`}
-            title="Sort by Status"
-          >
-            Status {getSortIcon('status')}
-          </button>
-          <button
-            onClick={() => handleSort('title')}
-            className={`sort-btn ${sortBy === 'title' ? 'active' : ''}`}
-            title="Sort by Title"
-          >
-            Title {getSortIcon('title')}
-          </button>
-          <button
-            onClick={() => handleSort('principal')}
-            className={`sort-btn ${sortBy === 'principal' ? 'active' : ''}`}
-            title="Sort by Principal"
-          >
-            Principal {getSortIcon('principal')}
-          </button>
-          <button
-            onClick={() => handleSort('date')}
-            className={`sort-btn ${sortBy === 'date' ? 'active' : ''}`}
-            title="Sort by Start Date"
-          >
-            Date {getSortIcon('date')}
-          </button>
+          <div className="sort-buttons">
+            <button
+              onClick={() => handleSort('status')}
+              className={`sort-btn glass-morphism ${sortBy === 'status' ? 'active' : ''}`}
+              title="Sort by Status"
+            >
+              Status {getSortIcon('status')}
+            </button>
+            <button
+              onClick={() => handleSort('title')}
+              className={`sort-btn glass-morphism ${sortBy === 'title' ? 'active' : ''}`}
+              title="Sort by Title"
+            >
+              Title {getSortIcon('title')}
+            </button>
+            <button
+              onClick={() => handleSort('principal')}
+              className={`sort-btn glass-morphism ${sortBy === 'principal' ? 'active' : ''}`}
+              title="Sort by Principal"
+            >
+              Principal {getSortIcon('principal')}
+            </button>
+            <button
+              onClick={() => handleSort('date')}
+              className={`sort-btn glass-morphism ${sortBy === 'date' ? 'active' : ''}`}
+              title="Sort by Start Date"
+            >
+              Date {getSortIcon('date')}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Loans Grid */}
+      {/* Enhanced Loans Grid */}
       <div className="loans-grid">
         {filteredAndSortedLoans.length === 0 ? (
-          <div className="no-loans">
-            <div className="no-loans-icon">
+          <div className="no-loans glass-card">
+            <div className="no-loans-icon glow-effect">
               <FaHandHoldingUsd />
             </div>
-            <h3>No loans found</h3>
+            <h3 className="gradient-text">No loans found</h3>
             <p>
               {statusFilter !== 'all'
                 ? `No loans with "${statusFilter}" status found.`
@@ -293,7 +332,7 @@ const Loans: React.FC = () => {
             {statusFilter !== 'all' && (
               <button
                 onClick={() => setStatusFilter('all')}
-                className="action-btn"
+                className="action-btn glow-effect"
               >
                 Show All Loans
               </button>
@@ -304,12 +343,12 @@ const Loans: React.FC = () => {
             const status = getLoanStatus(loan);
 
             return (
-              <div key={loan.id} className="loan-card">
+              <div key={loan.id} className="loan-card glass-morphism glow-border">
                 <div className="loan-header">
                   <h3 className="loan-title">
                     <Link
                       to={`/expenses/loan/${loan.id}`}
-                      className="loan-link"
+                      className="loan-link gradient-text"
                       title={loan.title}
                     >
                       {loan.title}
@@ -319,14 +358,14 @@ const Loans: React.FC = () => {
                   <div className="loan-actions">
                     <button
                       onClick={() => handleEdit(loan)}
-                      className="btn-icon"
+                      className="btn-icon glass-morphism glow-effect"
                       title="Edit Loan"
                     >
                       <FaPen />
                     </button>
                     <button
                       onClick={() => handleDelete(loan)}
-                      className="btn-icon"
+                      className="btn-icon glass-morphism glow-effect danger"
                       title="Delete Loan"
                     >
                       <FaTrash />
@@ -336,25 +375,38 @@ const Loans: React.FC = () => {
 
                 <div className="loan-details">
                   <div className="detail-item">
-                    <div className="detail-label">Principal</div>
-                    <div className="detail-value">{formatNumber(loan.fp)}</div>
+                    <div className="detail-icon">
+                      <FaMoneyBillWave />
+                    </div>
+                    <div className="detail-content">
+                      <div className="detail-label">Principal</div>
+                      <div className="detail-value gradient-text">{formatNumber(loan.fp)}</div>
+                    </div>
                   </div>
+                  
                   <div className="detail-item">
-                    <div className="detail-label">Interest Rate</div>
-                    <div className="detail-value">{loan.fr}%</div>
+                    <div className="detail-icon">
+                      <FaPercentage />
+                    </div>
+                    <div className="detail-content">
+                      <div className="detail-label">Interest Rate</div>
+                      <div className="detail-value gradient-text">{loan.fr}%</div>
+                    </div>
                   </div>
+                  
                   <div className="detail-item">
-                    <div className="detail-label">Start Date</div>
-                    <div className="detail-value">{loan.sdt}</div>
-                  </div>
-                  <div className="detail-item">
-                    <div className="detail-label">End Date</div>
-                    <div className="detail-value">{loan.edt}</div>
+                    <div className="detail-icon">
+                      <FaCalendarAlt />
+                    </div>
+                    <div className="detail-content">
+                      <div className="detail-label">Duration</div>
+                      <div className="detail-value">{loan.sdt} - {loan.edt}</div>
+                    </div>
                   </div>
                 </div>
 
                 <div className="loan-status">
-                  <span className={`status-badge ${status}`}>
+                  <span className={`status-badge glass-morphism ${status}`}>
                     {getStatusText(status)}
                   </span>
                 </div>
@@ -364,7 +416,7 @@ const Loans: React.FC = () => {
         )}
       </div>
 
-      {/* Add Loan Modal */}
+      {/* Enhanced Modals */}
       <Modal
         show={showAddModal}
         onClose={(e) => {
@@ -372,27 +424,29 @@ const Loans: React.FC = () => {
           setShowAddModal(false);
         }}
       >
-        <LoanForm
-          formType="add"
-          values={{
-            nid: '',
-            title: '',
-            field_principal: 0,
-            field_start_date: '',
-            field_end_date: '',
-            field_rate: 0,
-            field_initial_fee: 0,
-            field_rec_first_payment_date: '',
-            field_recurring_payment_day: 0,
-          }}
-          onSuccess={() => {
-            setShowAddModal(false);
-            fetchLoans(token, dataDispatch, dispatch);
-          }}
-        />
+        <div className="glass-card">
+          <h3 className="gradient-text">Add New Loan</h3>
+          <LoanForm
+            formType="add"
+            values={{
+              nid: '',
+              title: '',
+              field_principal: 0,
+              field_start_date: '',
+              field_end_date: '',
+              field_rate: 0,
+              field_initial_fee: 0,
+              field_rec_first_payment_date: '',
+              field_recurring_payment_day: 0,
+            }}
+            onSuccess={() => {
+              setShowAddModal(false);
+              fetchLoans(token, dataDispatch, dispatch);
+            }}
+          />
+        </div>
       </Modal>
 
-      {/* Edit Loan Modal */}
       <Modal
         show={showEditModal}
         onClose={(e) => {
@@ -400,17 +454,19 @@ const Loans: React.FC = () => {
           setShowEditModal(false);
         }}
       >
-        <LoanForm
-          formType="edit"
-          values={focusedItem}
-          onSuccess={() => {
-            setShowEditModal(false);
-            fetchLoans(token, dataDispatch, dispatch);
-          }}
-        />
+        <div className="glass-card">
+          <h3 className="gradient-text">Edit Loan</h3>
+          <LoanForm
+            formType="edit"
+            values={focusedItem}
+            onSuccess={() => {
+              setShowEditModal(false);
+              fetchLoans(token, dataDispatch, dispatch);
+            }}
+          />
+        </div>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
       <Modal
         show={showDeleteModal}
         onClose={(e) => {
@@ -418,28 +474,30 @@ const Loans: React.FC = () => {
           setShowDeleteModal(false);
         }}
       >
-        <h3>Are you sure you want to delete this loan?</h3>
-        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
-          This action cannot be undone and will also delete all associated payments.
-        </p>
-        <button
-          onClick={handleConfirmDelete}
-          className="button danger wide"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : (
-            <>
-              <FaTrash />
-              Delete
-            </>
-          )}
-        </button>
+        <div className="glass-card">
+          <h3 className="gradient-text">Confirm Deletion</h3>
+          <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
+            Are you sure you want to delete this loan? This action cannot be undone and will also delete all associated payments.
+          </p>
+          <button
+            onClick={handleConfirmDelete}
+            className="button danger wide glow-effect"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <div className="loader">
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+              </div>
+            ) : (
+              <>
+                <FaTrash />
+                Delete Loan
+              </>
+            )}
+          </button>
+        </div>
       </Modal>
     </div>
   );

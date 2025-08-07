@@ -2,8 +2,9 @@
 $white: #fff;
 $dark: #000;
 
-// Theme color map
+// Modern glassmorphism and gradient themes
 $color-map: (
+  // Original themes (keeping for backward compatibility)
   bondi-blue: (
     accent-color: #00a8ad,
     secondary-color: #3e3f4a,
@@ -74,6 +75,62 @@ $color-map: (
     secondary-color: #374151,
     bg-color: #111827,
     text-color: $white,
+  ),
+  
+  // NEW MODERN THEMES WITH GLASSMORPHISM
+  cosmic-glass: (
+    accent-color: #8b5cf6,
+    secondary-color: rgba(139, 92, 246, 0.1),
+    bg-color: #0f0f23,
+    text-color: $white,
+    accent-gradient-color: linear-gradient(135deg, #667eea 0%, #764ba2 100%),
+    glass-bg: rgba(255, 255, 255, 0.05),
+    glass-border: rgba(255, 255, 255, 0.18),
+    glow-color: rgba(139, 92, 246, 0.4),
+  ),
+  
+  aurora-glass: (
+    accent-color: #06ffa5,
+    secondary-color: rgba(6, 255, 165, 0.1),
+    bg-color: #001122,
+    text-color: $white,
+    accent-gradient-color: linear-gradient(135deg, #06ffa5 0%, #00d4ff 50%, #7c3aed 100%),
+    glass-bg: rgba(255, 255, 255, 0.08),
+    glass-border: rgba(6, 255, 165, 0.2),
+    glow-color: rgba(6, 255, 165, 0.3),
+  ),
+  
+  sunset-glass: (
+    accent-color: #ff6b6b,
+    secondary-color: rgba(255, 107, 107, 0.1),
+    bg-color: #1a0e2e,
+    text-color: $white,
+    accent-gradient-color: linear-gradient(135deg, #ff6b6b 0%, #feca57 50%, #ff9ff3 100%),
+    glass-bg: rgba(255, 255, 255, 0.06),
+    glass-border: rgba(255, 107, 107, 0.15),
+    glow-color: rgba(255, 107, 107, 0.4),
+  ),
+  
+  ocean-glass: (
+    accent-color: #00d4ff,
+    secondary-color: rgba(0, 212, 255, 0.1),
+    bg-color: #0a1628,
+    text-color: $white,
+    accent-gradient-color: linear-gradient(135deg, #667eea 0%, #00d4ff 100%),
+    glass-bg: rgba(255, 255, 255, 0.07),
+    glass-border: rgba(0, 212, 255, 0.2),
+    glow-color: rgba(0, 212, 255, 0.35),
+  ),
+  
+  forest-glass: (
+    accent-color: #4ecdc4,
+    secondary-color: rgba(78, 205, 196, 0.1),
+    bg-color: #0d1b1e,
+    text-color: $white,
+    accent-gradient-color: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%),
+    glass-bg: rgba(255, 255, 255, 0.05),
+    glass-border: rgba(78, 205, 196, 0.18),
+    glow-color: rgba(78, 205, 196, 0.3),
   ),
 );
 

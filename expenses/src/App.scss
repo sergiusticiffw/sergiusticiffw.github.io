@@ -22,37 +22,86 @@
 @use 'components/Income/IncomeTable' as *;
 @use 'components/Income/Income' as *;
 @use 'components/Common/Common' as *;
+@use 'components/Common/ThemeSelector' as *;
 
 // Import page styles
 @use 'pages/AddTransaction/AddTransaction' as *;
 @use 'pages/Login/Login' as *;
 
-// App-specific styles
+// Enhanced App-specific styles with glassmorphism
 .app-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
 }
 
 .main-content {
   flex: 1;
-  padding-bottom: 95px; // Space for navbar - default for Home page
-  overflow-y: auto; // Allow scrolling when needed
-  min-height: calc(100vh - 70px); // Minimum height minus navbar
+  padding: $spacing-lg;
+  padding-bottom: 120px; // Enhanced space for navbar
+  overflow-y: auto;
+  min-height: calc(100vh - 70px);
+  position: relative;
+  
+  // Enhanced glassmorphism background
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 80%, var(--accent-color)12 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, var(--accent-color)08 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, var(--accent-color)05 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+    animation: backgroundFloat 30s ease-in-out infinite;
+  }
   
   // Reduced padding for non-Home pages
   &:not(:has(.month-stats)) {
-    padding-bottom: 60px; // Reduced space for other pages
+    padding-bottom: 80px;
+  }
+  
+  // Enhanced content container
+  > * {
+    position: relative;
+    z-index: 1;
   }
 }
 
+// Enhanced loading container with modern spinner
 .loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 50vh;
+  
+  .loader {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    
+    &__element {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: var(--accent-color);
+      border-radius: 50%;
+      animation: modernSpinner 1.2s linear infinite;
+      
+      &:nth-child(1) { animation-delay: 0s; }
+      &:nth-child(2) { animation-delay: -0.4s; }
+      &:nth-child(3) { animation-delay: -0.8s; }
+    }
+  }
 }
 
+// Enhanced error container with glassmorphism
 .error-container {
   display: flex;
   flex-direction: column;
@@ -62,24 +111,158 @@
   text-align: center;
   padding: $spacing-xl;
   
+  // Glassmorphism background
+  background: var(--glass-bg, rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.18));
+  border-radius: $border-radius-xl;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+  
   h2 {
     color: var(--accent-color);
     margin-bottom: $spacing-md;
+    font-size: $font-size-xxl;
+    font-weight: 600;
+    background: var(--accent-gradient-color, var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   
   p {
     margin-bottom: $spacing-lg;
     color: var(--text-color);
+    opacity: 0.8;
+    line-height: 1.6;
   }
   
   .button {
-    padding: $spacing-sm $spacing-lg;
-    border-radius: 0 !important;
+    padding: $spacing-md $spacing-xl;
+    border-radius: $border-radius-lg !important;
+    background: var(--accent-gradient-color, var(--accent-color));
+    color: var(--bg-color);
+    font-weight: 600;
     transition: all $transition-normal;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.2) 50%, 
+        transparent 100%);
+      transition: left $transition-fast;
+    }
     
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transform: translateY(-3px);
+      box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.25),
+        0 0 20px var(--glow-color, rgba(255, 255, 255, 0.2));
+      
+      &::before {
+        left: 100%;
+      }
     }
+  }
+}
+
+// Modern page transitions
+.page-transition {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+// Enhanced typography
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: $spacing-md;
+  color: var(--text-color);
+  
+  &.gradient-text {
+    background: var(--accent-gradient-color, var(--accent-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+// Utility classes for glassmorphism effects
+.glass-card {
+  @extend .glass-morphism;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  
+  &.floating {
+    animation: float 6s ease-in-out infinite;
+  }
+}
+
+.glow-border {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    padding: 2px;
+    background: var(--accent-gradient-color, var(--accent-color));
+    border-radius: inherit;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    opacity: 0;
+    transition: opacity $transition-normal;
+  }
+  
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
+// Enhanced animations
+@keyframes modernSpinner {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes backgroundFloat {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  33% {
+    transform: translateX(30px) translateY(-30px);
+  }
+  66% {
+    transform: translateX(-20px) translateY(20px);
   }
 }
