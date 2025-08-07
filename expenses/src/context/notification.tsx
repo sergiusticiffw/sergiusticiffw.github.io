@@ -1,8 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import Notification from '@components/Notification/Notification';
-import { notificationType, themeList } from '@utils/constants';
-import { useAuthState } from '@context/context';
-import { AuthState } from '@type/types';
+import { notificationType } from '@utils/constants';
 
 interface NotificationItem {
   id: string;
@@ -25,13 +23,6 @@ export const NotificationProvider = ({
   children,
 }: NotificationContextProps) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  
-  let { theme } = useAuthState() as AuthState;
-  theme = themeList[theme as keyof typeof themeList]
-    ? theme
-    : 'blue-pink-gradient';
-  const gradientClass =
-    theme === 'blue-pink-gradient' ? 'has-gradient-accent' : '';
 
   const showNotification = (message: string, type: string) => {
     const id = Math.random().toString(36).substr(2, 9);
@@ -64,17 +55,19 @@ export const NotificationProvider = ({
   };
 
   return (
-    <div className={`${theme} ${gradientClass}`}>
+    <>
       <NotificationContext.Provider value={showNotification}>
         {children}
+      </NotificationContext.Provider>
+      
+      {/* Notification Container */}
+      <div className="fixed top-4 right-4 z-[9999] space-y-3 pointer-events-none">
         {notifications.map((notification, index) => (
           <div
             key={notification.id}
+            className="pointer-events-auto animate-in slide-in-from-right-full duration-300"
             style={{
-              position: 'fixed',
-              top: `${20 + (index * 100)}px`,
-              right: '20px',
-              zIndex: 9999 + index,
+              animationDelay: `${index * 100}ms`,
             }}
           >
             <Notification
@@ -84,7 +77,7 @@ export const NotificationProvider = ({
             />
           </div>
         ))}
-      </NotificationContext.Provider>
-    </div>
+      </div>
+    </>
   );
 };

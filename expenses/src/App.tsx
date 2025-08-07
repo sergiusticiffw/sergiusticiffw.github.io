@@ -1,11 +1,11 @@
-import './App.scss';
+
 import { AuthProvider } from '@context/context';
 import { NotificationProvider } from '@context/notification';
 import { LoanProvider } from '@context/loan';
 import { HighchartsProvider } from '@context/highcharts';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { AppRoute } from '@components/Common';
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useMemo, useEffect } from 'react';
 import routes from '@config/routes';
 import Navbar from '@components/Navbar';
 
@@ -32,6 +32,11 @@ const ErrorFallback: React.FC<{ error: Error; resetErrorBoundary: () => void }> 
 );
 
 const App: React.FC = () => {
+  // Force dark mode on mount
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+  }, []);
+
   // Memoize routes to prevent unnecessary re-renders
   const appRoutes = useMemo(() => 
     routes.map((route) => (
@@ -54,9 +59,9 @@ const App: React.FC = () => {
         <LoanProvider>
           <HighchartsProvider>
             <Router>
-              <div className="app-container">
-                <Navbar />
-                <main className="main-content">
+                              <div className="min-h-screen flex bg-background dark">
+                  <Navbar />
+                  <main className="flex-1 ml-0 md:ml-72 overflow-y-auto min-h-screen p-4">
                   <Suspense fallback={<LoadingFallback />}>
                     <Routes>
                       {appRoutes}

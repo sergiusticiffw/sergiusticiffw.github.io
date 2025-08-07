@@ -6,6 +6,8 @@ import { formatDataForChart, formatNumber } from '@utils/utils';
 import { monthNames } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
 import { getFinancialStabilityIcon } from '@utils/helper';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DollarSign, TrendingUp, Calendar } from 'lucide-react';
 
 const YearIncomeAverageTrend: React.FC = () => {
   const { data } = useData() as DataState;
@@ -22,6 +24,8 @@ const YearIncomeAverageTrend: React.FC = () => {
   const yearIncomeAverageOptions: Highcharts.Options = {
     chart: {
       type: 'line',
+      backgroundColor: 'transparent',
+      height: 500,
       zooming: {
         type: 'x',
       },
@@ -30,20 +34,50 @@ const YearIncomeAverageTrend: React.FC = () => {
       useGPUTranslations: true,
     },
     title: {
-      text: 'Years in review',
+      text: 'Years in Review',
+      style: {
+        color: '#F9FAFB',
+        fontSize: '18px',
+        fontWeight: '600',
+      },
     },
     xAxis: {
       type: 'category',
       categories: monthNames,
-      crosshair: true,
+      crosshair: {
+        color: '#6B7280',
+        width: 1,
+      },
+      labels: {
+        style: {
+          color: '#F9FAFB',
+        },
+      },
+      gridLineColor: '#374151',
     },
     yAxis: {
       title: {
         text: currency,
+        style: {
+          color: '#F9FAFB',
+          fontSize: '14px',
+        },
       },
+      labels: {
+        style: {
+          color: '#F9FAFB',
+        },
+      },
+      gridLineColor: '#374151',
     },
     tooltip: {
       shared: true,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      borderColor: '#374151',
+      borderRadius: 8,
+      style: {
+        color: '#F9FAFB',
+      },
     },
     credits: {
       enabled: false,
@@ -59,68 +93,82 @@ const YearIncomeAverageTrend: React.FC = () => {
         highcharts={Highcharts}
         options={yearIncomeAverageOptions}
       />
-      <div className="income-table-container">
-        <div className="table-header">
-          <h3>Total income per year</h3>
-        </div>
-
-        <div className="table-wrapper">
-          <table className="income-table" cellSpacing="0" cellPadding="0">
-            <thead>
-              <tr>
-                <th>Year</th>
-                <th>Income</th>
-                <th>Spent</th>
-                <th>Savings</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(totalIncomePerYear).map((item, key) => {
-                const income = item[1] as number;
-                const spent = (totalPerYear[item[0]] as number) || 0;
-                const diff: number = income - spent;
-                const savingsPercent = (spent / income - 1) * -100;
-                sumDiff += diff;
-                sumIncome += income;
-                return (
-                  <tr key={key}>
-                    <td>
-                      <div className="text-with-icon">
-                        {getFinancialStabilityIcon(savingsPercent)}
-                        {item[0]}
-                      </div>
-                    </td>
-                    <td>{formatNumber(income)}</td>
-                    <td>{formatNumber(spent)}</td>
-                    <td>
-                      {isFinite(savingsPercent)
-                        ? `${formatNumber(diff)} (${formatNumber(savingsPercent)}%)`
-                        : `${formatNumber(diff)}`}
-                    </td>
-                  </tr>
-                );
-              })}
-              <tr>
-                <td>
-                  <div className="text-with-icon">
-                    {getFinancialStabilityIcon(
-                      (totalSpent / sumIncome - 1) * -100
-                    )}
-                    Total
+      
+      {/* Total Income Per Year */}
+      <Card className="mt-6 border-border/50 shadow-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-primary" />
+            Total Income Per Year
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          {/* Table Header */}
+          <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg border border-border/50 mb-2">
+            <span className="text-sm font-semibold text-muted-foreground">Year</span>
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-sm font-semibold text-muted-foreground">Income</span>
+              <span className="text-sm font-semibold text-muted-foreground">Spent</span>
+              <span className="text-sm font-semibold text-muted-foreground">Savings</span>
+            </div>
+          </div>
+          
+          {Object.entries(totalIncomePerYear).map((item, key) => {
+            const income = item[1] as number;
+            const spent = (totalPerYear[item[0]] as number) || 0;
+            const diff: number = income - spent;
+            const savingsPercent = (spent / income - 1) * -100;
+            sumDiff += diff;
+            sumIncome += income;
+            return (
+              <div key={key} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-primary/10 rounded-lg flex items-center justify-center">
+                    {getFinancialStabilityIcon(savingsPercent)}
                   </div>
-                </td>
-                <td>{formatNumber(sumIncome)}</td>
-                <td>{formatNumber(totalSpent)}</td>
-                <td>
-                  {formatNumber(sumDiff)} (
-                  {formatNumber((totalSpent / sumIncome - 1) * -100)}
-                  %)
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  <span className="text-sm text-muted-foreground">{item[0]}</span>
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="font-medium text-foreground">
+                    {formatNumber(income)}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {formatNumber(spent)}
+                  </span>
+                  <span className="font-medium text-foreground">
+                    {isFinite(savingsPercent)
+                      ? `${formatNumber(diff)} (${formatNumber(savingsPercent)}%)`
+                      : `${formatNumber(diff)}`}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+          
+          {/* Total Row */}
+          <div className="flex items-center justify-between p-2 bg-muted/30 rounded-lg border border-border/50">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-muted rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <span className="text-sm text-muted-foreground">Total</span>
+            </div>
+            <div className="flex items-center gap-4 text-sm">
+              <span className="font-medium text-foreground">
+                {formatNumber(sumIncome)}
+              </span>
+              <span className="text-muted-foreground">
+                {formatNumber(totalSpent)}
+              </span>
+              <span className="font-medium text-foreground">
+                {formatNumber(sumDiff)} (
+                {formatNumber((totalSpent / sumIncome - 1) * -100)}
+                %)
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 };

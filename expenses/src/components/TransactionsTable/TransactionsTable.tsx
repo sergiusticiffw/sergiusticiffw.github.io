@@ -1,14 +1,24 @@
 import React, { useEffect, useRef } from 'react';
-import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
+import { useSortableData } from '@utils/useSortableData';
 import useSwipeActions from '@hooks/useSwipeActions';
-import { FaPen, FaTrash } from 'react-icons/fa';
+import { Edit, Trash2, ArrowUpDown } from 'lucide-react';
 import { formatNumber, getCategory } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
 import { getIconForCategory } from '@utils/helper';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface TransactionsTableProps {
   items: TransactionOrIncomeItem[];
-  isModal?: boolean;
   handleEdit: (id: string) => void;
   setShowDeleteModal: (id: string) => void;
   changedItems?: any;
@@ -18,7 +28,6 @@ interface TransactionsTableProps {
 const TransactionsTable: React.FC<TransactionsTableProps> = ({
   items,
   handleEdit,
-  isModal = false,
   setShowDeleteModal,
   handleClearChangedItem,
   changedItems,
@@ -63,30 +72,51 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   );
 
   return (
-    <div className="income-table-container">
-      <div className="table-wrapper">
-        <table className="income-table" cellSpacing="0" cellPadding="0">
-          <thead>
-            <tr>
-              {!isModal ? <th>Date</th> : null}
-              <th
-                onClick={() => requestSort('sum')}
-                className={`sortable ${getClassNamesFor(sortConfig, 'sum')}`}
+    <div className="rounded-lg border border-border/50 overflow-hidden bg-card">
+      {/* Desktop Table */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead
+                className="font-semibold text-foreground cursor-pointer hover:bg-muted/70 transition-colors select-none"
+                onClick={() => requestSort('dt')}
               >
-                Amount
-              </th>
-              <th>Category</th>
-              {!isModal ? <th>Description</th> : null}
-              <th className="desktop-only">Actions</th>
-            </tr>
-          </thead>
-          <tbody ref={tableRef}>
+                <div className="flex items-center gap-2 group">
+                  <span>Date</span>
+                  <ArrowUpDown className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                </div>
+              </TableHead>
+              <TableHead
+                className="font-semibold text-foreground cursor-pointer hover:bg-muted/70 transition-colors select-none"
+                onClick={() => requestSort('sum')}
+              >
+                <div className="flex items-center gap-2 group">
+                  <span>Amount</span>
+                  <ArrowUpDown className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                </div>
+              </TableHead>
+              <TableHead className="font-semibold text-foreground">
+                Category
+              </TableHead>
+              <TableHead className="font-semibold text-foreground">
+                Description
+              </TableHead>
+              <TableHead className="font-semibold text-foreground text-right">
+                <span className="hidden md:inline">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody ref={tableRef}>
             {sortedItems.map((element) => {
               const changeType = changedItems[element.id]?.type;
               return (
-                <tr
+                <TableRow
                   key={element.id}
-                  className={`transaction-item ${changeType || ''}`}
+                  className={cn(
+                    'group hover:bg-muted/50 transition-all duration-200 border-b border-border/50',
+                    changeType && 'animate-pulse bg-muted/30'
+                  )}
                   data-id={element.id}
                   onTouchStart={(e) =>
                     handleTouchStart(e, element.id, tableRef)
@@ -102,69 +132,178 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                     )
                   }
                 >
-                  {!isModal ? (
-                    <td className="income-date">
-                      <div className="date-content">
-                        <div className="date-day">
-                          {new Date(element.dt).getDate()}
-                        </div>
-                        <div className="date-month">
-                          {new Date(element.dt).toLocaleDateString('en-US', {
-                            month: 'short',
-                          })}
-                        </div>
-                      </div>
-                    </td>
-                  ) : null}
-                  <td className="income-amount">
-                    <div className="amount-value">
+                  <TableCell>
+                    <div className="text-2xl font-bold text-foreground text-center">
+                      {new Date(element.dt).getDate()}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-semibold text-foreground">
                       {formatNumber(element.sum)}
                     </div>
-                  </td>
-                  <td>{getIconForCategory(getCategory[element.cat])}</td>
-                  {!isModal ? (
-                    <td className="income-description">
-                      <div className="description-text">{element.dsc}</div>
-                    </td>
-                  ) : null}
-                  <td className="desktop-only income-actions-cell">
-                    <div className="action-buttons">
-                      <button
-                        onClick={() => handleEdit(element.id)}
-                        className="btn-edit"
-                        title="Edit Income"
-                      >
-                        <FaPen />
-                      </button>
-                      <button
-                        onClick={() => setShowDeleteModal(element.id)}
-                        className="btn-delete"
-                        title="Delete Income"
-                      >
-                        <FaTrash />
-                      </button>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                        {getIconForCategory(getCategory[element.cat])}
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {getCategory[element.cat]}
+                      </Badge>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-muted-foreground max-w-xs truncate">
+                      {element.dsc}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="hidden md:flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(element.id)}
+                        className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary transition-colors"
+                        title="Edit Transaction"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowDeleteModal(element.id)}
+                        className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        title="Delete Transaction"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
-        {deleteVisible && !isModal && (
-          <div style={{ ...extraRowStyle }}>
-            <div className="row-action delete">
-              <FaTrash />
-            </div>
-          </div>
-        )}
-        {editVisible && !isModal && (
-          <div style={{ ...extraRowStyle }}>
-            <div className="row-action edit">
-              <FaPen />
-            </div>
-          </div>
-        )}
+          </TableBody>
+        </Table>
       </div>
+
+      {/* Mobile Card Layout */}
+              <div className="md:hidden space-y-3 p-4 pb-8">
+        {/* Mobile Sort Controls */}
+        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border/50 mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              Sort by:
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => requestSort('dt')}
+              className={cn(
+                'text-xs h-8 px-3 transition-all duration-200',
+                sortConfig?.key === 'dt' ? 'shadow-md' : 'hover:bg-muted/50'
+              )}
+            >
+              Date
+              <ArrowUpDown className="w-3 h-3 ml-1" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => requestSort('sum')}
+              className={cn(
+                'text-xs h-8 px-3 transition-all duration-200',
+                sortConfig?.key === 'sum' ? 'shadow-md' : 'hover:bg-muted/50'
+              )}
+            >
+              Amount
+              <ArrowUpDown className="w-3 h-3 ml-1" />
+            </Button>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {sortedItems.length} items
+          </div>
+        </div>
+
+        {sortedItems.map((element) => {
+          const changeType = changedItems[element.id]?.type;
+          return (
+            <div
+              key={element.id}
+              className={cn(
+                'bg-card border border-border rounded-lg p-4 space-y-3 transition-all duration-200 hover:shadow-md hover:border-border/70',
+                changeType && 'animate-pulse bg-muted/30'
+              )}
+              data-id={element.id}
+              onTouchStart={(e) => handleTouchStart(e, element.id, tableRef)}
+              onTouchMove={(e) => handleTouchMove(e, tableRef)}
+              onTouchEnd={(e) =>
+                handleTouchEnd(
+                  e,
+                  tableRef,
+                  element.id,
+                  handleEdit,
+                  setShowDeleteModal
+                )
+              }
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
+                    {getIconForCategory(getCategory[element.cat])}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-foreground text-lg">
+                      {formatNumber(element.sum)}
+                    </div>
+                    <div className="text-sm text-muted-foreground font-medium">
+                      {getCategory[element.cat]}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-2">
+                <div className="text-xl font-bold text-foreground text-right">
+                  {new Date(element.dt).getDate()}
+                </div>
+                {element.dsc && (
+                  <div className="text-sm bg-muted/30 p-2 rounded-md">
+                    <span className="text-foreground font-medium">
+                      {element.dsc}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Swipe Actions */}
+      {deleteVisible && (
+        <div
+          className="fixed inset-0 pointer-events-none z-50"
+          style={{ ...extraRowStyle }}
+        >
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-destructive text-destructive-foreground rounded-lg p-4 shadow-lg flex items-center gap-2">
+            <Trash2 className="w-5 h-5" />
+            <span className="text-sm font-medium">Delete</span>
+          </div>
+        </div>
+      )}
+      {editVisible && (
+        <div
+          className="fixed inset-0 pointer-events-none z-50"
+          style={{ ...extraRowStyle }}
+        >
+          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-primary text-primary-foreground rounded-lg p-4 shadow-lg flex items-center gap-2">
+            <Edit className="w-5 h-5" />
+            <span className="text-sm font-medium">Edit</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

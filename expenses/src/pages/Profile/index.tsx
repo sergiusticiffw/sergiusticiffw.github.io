@@ -5,13 +5,16 @@ import { useHighchartsContext } from '@context/highcharts';
 import { logout } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
 import {
-  FaUserCircle,
-  FaSignOutAlt,
-  FaCog,
-  FaChartBar,
-  FaPalette,
-  FaCoins,
-} from 'react-icons/fa';
+  User,
+  LogOut,
+  Settings,
+  BarChart3,
+  Palette,
+  Coins,
+  CheckCircle,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import { fetchRequest } from '@utils/utils';
 import {
   notificationType,
@@ -21,7 +24,12 @@ import {
 } from '@utils/constants';
 import { AuthState } from '@type/types';
 import { googleLogout } from '@react-oauth/google';
-import './Profile.scss';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 const Profile = () => {
   const showNotification = useNotification();
@@ -47,6 +55,7 @@ const Profile = () => {
     ? theme
     : 'blue-pink-gradient';
   const navigate = useNavigate();
+  
   const handleLogout = (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
@@ -56,7 +65,7 @@ const Profile = () => {
     navigate('/expenses/login'); //navigate to logout page on logout
   };
 
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (value: string) => {
     const fetchOptions = {
       method: 'PATCH',
       headers: new Headers({
@@ -64,7 +73,7 @@ const Profile = () => {
         'Content-Type': 'application/json',
         'JWT-Authorization': 'Bearer ' + token,
       }),
-      body: JSON.stringify({ field_currency: [event.target.value] }),
+      body: JSON.stringify({ field_currency: [value] }),
     };
     const url = `https://dev-expenses-api.pantheonsite.io/user/${userDetails.current_user.uid}?_format=json`;
     fetchRequest(url, fetchOptions, dataDispatch, dispatch, (data: any) => {
@@ -87,12 +96,12 @@ const Profile = () => {
     });
   };
 
-  const handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    localStorage.setItem('theme', JSON.stringify(event.target.value));
+  const handleThemeChange = (value: string) => {
+    localStorage.setItem('theme', JSON.stringify(value));
     dispatch &&
       dispatch({
         type: 'UPDATE_USER',
-        payload: { theme: event.target.value },
+        payload: { theme: value },
       });
   };
 
@@ -153,7 +162,7 @@ const Profile = () => {
     localStorage.setItem('visibleCharts', JSON.stringify(state.visibleCharts));
   }, [state.visibleCharts]);
 
-  const handleChartVisibilityChange = (event) => {
+  const handleChartVisibilityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target;
     setState((prevState) => {
       let updatedCharts;
@@ -169,138 +178,196 @@ const Profile = () => {
   };
 
   return (
-    <div className="profile-container">
+    <div className="min-h-screen bg-background p-4 space-y-6">
       {/* Profile Header */}
-      <div className="profile-header">
-        <div className="avatar">
-          <FaUserCircle />
-        </div>
-        <div className="user-name">{userDetails.current_user.name}</div>
-        <div className="user-subtitle">Profile Settings</div>
-      </div>
+      <Card className="border-border/50 shadow-lg bg-gradient-to-br from-primary/10 via-primary/5 to-background">
+        <CardContent className="pt-8 pb-8">
+          <div className="text-center space-y-4">
+            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg shadow-primary/25 border-4 border-background">
+              <User className="w-12 h-12 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                {userDetails.current_user.name}
+              </h1>
+              <p className="text-muted-foreground mt-1">Profile Settings</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Settings Grid */}
-      <div className="settings-grid">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* General Settings Card */}
-        <div className="settings-card">
-          <div className="card-header">
-            <FaCog />
-            <h3>General Settings</h3>
-          </div>
+        <Card className="border-border/50 shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Settings className="w-5 h-5 text-primary" />
+              General Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currency" className="text-sm font-medium text-muted-foreground">
+                Currency
+              </Label>
+              <Select value={currency} onValueChange={handleChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortedCurrencies.map(([id, currencyName]) => (
+                    <SelectItem key={id} value={id}>
+                      {currencyName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="form-field">
-            <label htmlFor="currency">Currency</label>
-            <select
-              id="currency"
-              value={currency}
-              name="currency"
-              onChange={handleChange}
-            >
-              {sortedCurrencies.map(([id, currency]) => (
-                <option key={id} value={id}>
-                  {currency}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="theme">Theme</label>
-            <select
-              id="theme"
-              value={theme}
-              name="theme"
-              onChange={handleThemeChange}
-            >
-              {Object.entries(themeList).map(([id, name]) => (
-                <option key={id} value={id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="theme" className="text-sm font-medium text-muted-foreground">
+                Theme
+              </Label>
+              <Select value={theme} onValueChange={handleThemeChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select theme" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(themeList).map(([id, name]) => (
+                    <SelectItem key={id} value={id}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Budget Settings Card */}
-        <div className="settings-card">
-          <div className="card-header">
-            <FaCoins />
-            <h3>Budget Settings</h3>
-          </div>
+        <Card className="border-border/50 shadow-lg">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <Coins className="w-5 h-5 text-primary" />
+              Budget Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="weeklyBudget" className="text-sm font-medium text-muted-foreground">
+                Weekly Budget
+              </Label>
+              <Input
+                id="weeklyBudget"
+                placeholder="Enter weekly budget"
+                type="number"
+                name="weeklyBudget"
+                value={state.weeklyBudget || ''}
+                onChange={handleInputChange}
+                onBlur={onBlur}
+                className="border-border/50 focus:border-primary"
+              />
+            </div>
 
-          <div className="form-field">
-            <label htmlFor="weeklyBudget">Weekly Budget</label>
-            <input
-              id="weeklyBudget"
-              required
-              placeholder="Enter weekly budget"
-              type="number"
-              name="weeklyBudget"
-              value={state.weeklyBudget || ''}
-              onChange={handleInputChange}
-              onBlur={onBlur}
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="monthlyBudget">Monthly Budget</label>
-            <input
-              id="monthlyBudget"
-              required
-              placeholder="Enter monthly budget"
-              type="number"
-              name="monthlyBudget"
-              value={state.monthlyBudget || ''}
-              onChange={handleInputChange}
-              onBlur={onBlur}
-            />
-          </div>
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="monthlyBudget" className="text-sm font-medium text-muted-foreground">
+                Monthly Budget
+              </Label>
+              <Input
+                id="monthlyBudget"
+                placeholder="Enter monthly budget"
+                type="number"
+                name="monthlyBudget"
+                value={state.monthlyBudget || ''}
+                onChange={handleInputChange}
+                onBlur={onBlur}
+                className="border-border/50 focus:border-primary"
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Charts Settings Section */}
-      <div className="charts-section-profile">
-        <div className="section-header">
-          <FaChartBar />
-          <h3>Charts Settings</h3>
-        </div>
+      <Card className="border-border/50 shadow-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-primary" />
+            Charts Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              name="useChartsBackgroundColor"
+              id="useChartsBackgroundColor"
+              checked={state.useChartsBackgroundColor || false}
+              onChange={handleCheckboxChange}
+              className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
+            />
+            <Label htmlFor="useChartsBackgroundColor" className="text-sm text-muted-foreground">
+              Use Charts Background Color
+            </Label>
+          </div>
 
-        <div className="checkbox-item">
-          <input
-            type="checkbox"
-            name="useChartsBackgroundColor"
-            id="useChartsBackgroundColor"
-            checked={state.useChartsBackgroundColor || false}
-            onChange={handleCheckboxChange}
-          />
-          <label htmlFor="useChartsBackgroundColor">
-            Use Charts Background Color
-          </label>
-        </div>
+          <div className="border-t border-border/50 my-4" />
 
-        <h4>Charts Visibility</h4>
-        <div className="charts-grid">
-          {availableCharts.map((chart) => (
-            <div key={chart} className="checkbox-item">
-              <input
-                type="checkbox"
-                name={chart}
-                checked={state.visibleCharts.includes(chart)}
-                onChange={handleChartVisibilityChange}
-              />
-              <label htmlFor={chart}>{chart}</label>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Palette className="w-4 h-4 text-muted-foreground" />
+              <h4 className="text-sm font-semibold text-foreground">Charts Visibility</h4>
             </div>
-          ))}
-        </div>
-      </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {availableCharts.map((chart) => (
+                <div key={chart} className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg border border-border/50">
+                  <input
+                    type="checkbox"
+                    name={chart}
+                    id={chart}
+                    checked={state.visibleCharts.includes(chart)}
+                    onChange={handleChartVisibilityChange}
+                    className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
+                  />
+                  <Label htmlFor={chart} className="text-sm text-muted-foreground cursor-pointer">
+                    {chart}
+                  </Label>
+                  {state.visibleCharts.includes(chart) ? (
+                    <Eye className="w-4 h-4 text-green-500 ml-auto" />
+                  ) : (
+                    <EyeOff className="w-4 h-4 text-muted-foreground ml-auto" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Logout Section */}
-      <div className="logout-section">
-        <button className="logout-btn" onClick={handleLogout}>
-          <FaSignOutAlt />
-          Sign Out
-        </button>
-      </div>
+      <Card className="border-destructive/50 bg-destructive/5">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center gap-2">
+              <LogOut className="w-5 h-5 text-destructive" />
+              <h3 className="text-lg font-semibold text-foreground">Sign Out</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to sign out? You'll need to log in again to access your account.
+            </p>
+            <Button
+              onClick={handleLogout}
+              variant="destructive"
+              className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/25 transition-all duration-200 hover:scale-[1.02] font-semibold"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

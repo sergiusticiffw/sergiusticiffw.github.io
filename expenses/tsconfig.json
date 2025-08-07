@@ -10,7 +10,10 @@
       "@config/*": ["src/config/*"],
       "@pages/*": ["src/pages/*"],
       "@components/*": ["src/components/*"],
-      "@context/*": ["src/context/*"]
+      "@context/*": ["src/context/*"],
+      "@/*": ["./src/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/components/*": ["./src/components/*"]
     },
     "lib": ["dom", "dom.iterable", "esnext"],
     "module": "esnext",

@@ -2,6 +2,11 @@ import React, { useEffect } from 'react';
 import { useAuthState, useData } from '@context/context';
 import { AuthState, DataState, TransactionOrIncomeItem } from '@type/types';
 import { formatNumber, getCategory } from '@utils/utils';
+import { getIconForCategory } from '@utils/helper';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp, Calendar, DollarSign, Tag, FileText } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const MostExpensiveProductDisplay = () => {
   // All time section
@@ -26,7 +31,11 @@ const MostExpensiveProductDisplay = () => {
   }
 
   if (!transactionWithMaxSum) {
-    return null;
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">No transactions found</p>
+      </div>
+    );
   }
 
   const date = new Date(transactionWithMaxSum.dt);
@@ -37,26 +46,29 @@ const MostExpensiveProductDisplay = () => {
   });
 
   return (
-    <>
-      <span className="heading">The most expensive item</span>
-      <div className="most-expensive-table-container">
-        <div className="table-row">
-          <span className="label">Date</span> {formattedDate}
-        </div>
-        <div className="table-row">
-          <span className="label">Amount</span>{' '}
+    <div className="space-y-3">
+      <div className="text-center">
+        <p className="text-sm text-muted-foreground mb-1">Most Expensive</p>
+        <p className="text-2xl font-bold text-foreground">
           {formatNumber(transactionWithMaxSum?.sum)} {currency}
-        </div>
-        <div className="table-row">
-          <span className="label">Category</span>{' '}
-          {getCategory[transactionWithMaxSum.cat as string]}
-        </div>
-        <div className="table-row">
-          <span className="label">Description</span>{' '}
-          {transactionWithMaxSum?.dsc}
-        </div>
+        </p>
       </div>
-    </>
+      
+      <div className="flex items-center justify-center gap-2">
+        <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+          {getIconForCategory(getCategory[transactionWithMaxSum.cat as string])}
+        </div>
+        <Badge variant="secondary" className="text-xs">
+          {getCategory[transactionWithMaxSum.cat as string]}
+        </Badge>
+      </div>
+      
+      {transactionWithMaxSum?.dsc && (
+        <div className="text-center px-2">
+          <p className="text-sm text-muted-foreground break-words leading-relaxed">{transactionWithMaxSum?.dsc}</p>
+        </div>
+      )}
+    </div>
   );
 };
 

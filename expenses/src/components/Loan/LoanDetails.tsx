@@ -1,7 +1,16 @@
 import React from 'react';
-
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  BarChart3,
+  PieChart,
+  DollarSign,
+  Calendar,
+  TrendingUp,
+  FileText,
+} from 'lucide-react';
 import { LoanCostBreakdown } from '@components/Loan/LoanCharts';
 import AmortizationTable from '@components/Loan/AmortizationTable';
+import { formatNumber } from '@utils/utils';
 
 interface LoanDetailsProps {
   loan?: any;
@@ -11,6 +20,7 @@ interface LoanDetailsProps {
   };
   amortizationSchedule?: any[];
   totalPaidAmount?: number;
+  paydownResult?: any;
 }
 
 const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
@@ -21,13 +31,21 @@ const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
   // Early return if no valid data
   if (!amortizationSchedule || amortizationSchedule.length === 0) {
     return (
-      <div className="charts-page">
-        <p>No amortization schedule data available.</p>
-        <p>
-          Debug info: amortizationSchedule length ={' '}
-          {amortizationSchedule?.length || 0}
-        </p>
-      </div>
+      <Card className="border-border/50 shadow-lg">
+        <CardContent className="text-center py-16">
+          <div className="space-y-4">
+            <BarChart3 className="w-12 h-12 text-muted-foreground mx-auto" />
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                No Amortization Data
+              </h3>
+              <p className="text-muted-foreground">
+                No amortization schedule data available for this loan.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -79,72 +97,75 @@ const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
       currentYear = paymentYear;
     }
 
-    if (
-      paymentYear !== currentYear ||
-      index === amortizationSchedule.length - 1
-    ) {
-      if (paymentYear !== currentYear) {
-        const summaryForPreviousYear = annualSummaries[currentYear];
-        if (summaryForPreviousYear) {
-          processedAmortizationSchedule.push({
-            type: 'annual_summary',
-            year: currentYear,
-            totalPrincipal: summaryForPreviousYear.total_principal,
-            totalInterest: summaryForPreviousYear.total_interest,
-            totalFees: summaryForPreviousYear.total_fees,
-            totalPaid:
-              summaryForPreviousYear.total_principal +
-              summaryForPreviousYear.total_interest +
-              summaryForPreviousYear.total_fees,
-          });
-        }
-        currentYear = paymentYear;
-      }
-    }
-    processedAmortizationSchedule.push(paymentRow);
-
-    if (
-      index === amortizationSchedule.length - 1 &&
-      processedAmortizationSchedule[processedAmortizationSchedule.length - 1]
-        .type !== 'annual_summary'
-    ) {
-      const summaryForCurrentYear = annualSummaries[currentYear];
-      if (summaryForCurrentYear) {
+    // Add annual summary if year changes
+    if (currentYear !== paymentYear) {
+      const yearSummary = annualSummaries[currentYear];
+      if (yearSummary) {
         processedAmortizationSchedule.push({
           type: 'annual_summary',
           year: currentYear,
-          totalPrincipal: summaryForCurrentYear.total_principal,
-          totalInterest: summaryForCurrentYear.total_interest,
-          totalFees: summaryForCurrentYear.total_fees,
-          totalPaid:
-            summaryForCurrentYear.total_principal +
-            summaryForCurrentYear.total_interest +
-            summaryForCurrentYear.total_fees,
+          totalPaid: yearSummary.total_paid || 0,
+          totalPrincipal: yearSummary.total_principal || 0,
+          totalInterest: yearSummary.total_interest || 0,
+          totalFees: yearSummary.total_fees || 0,
         });
       }
+      currentYear = paymentYear;
+    }
+
+    // Add the payment row
+    if (Array.isArray(paymentRow)) {
+      processedAmortizationSchedule.push({
+        date: paymentRow[0],
+        rate: paymentRow[1],
+        num_days: paymentRow[2],
+        installment: paymentRow[3],
+        reduction: paymentRow[4],
+        interest: paymentRow[5],
+        principal: paymentRow[6],
+        fee: paymentRow[7],
+        was_payed: paymentRow[8],
+      });
+    } else {
+      processedAmortizationSchedule.push(paymentRow);
     }
   });
 
-  const sumInstallments =
-    loan?.sum_of_installments +
-    loan?.remaining_principal +
-    loan?.unpaid_interest +
-    loan?.sum_of_fees;
+  // Add final year summary
+  if (currentYear && annualSummaries[currentYear]) {
+    const yearSummary = annualSummaries[currentYear];
+    processedAmortizationSchedule.push({
+      type: 'annual_summary',
+      year: currentYear,
+      totalPaid: yearSummary.total_paid || 0,
+      totalPrincipal: yearSummary.total_principal || 0,
+      totalInterest: yearSummary.total_interest || 0,
+      totalFees: yearSummary.total_fees || 0,
+    });
+  }
 
-  const sumOfInterest = loan?.sum_of_interests + loan?.unpaid_interest;
+  const sumOfInterest = props.paydownResult?.sum_of_interests || 0;
+  const sumInstallments = props.paydownResult?.sum_of_installments || 0;
 
   return (
-    <div className="charts-page amortization-schedule">
-      <LoanCostBreakdown
-        data={{
-          principal: props.loanData.principal,
-          sumOfInterest,
-          sumInstallments,
-        }}
-      />
-      <br />
+    <div className="space-y-6">
+      {/* Loan Cost Breakdown Chart */}
+      <div>
+        <LoanCostBreakdown
+          data={{
+            principal: props.loanData.principal,
+            sumOfInterest,
+            sumInstallments,
+          }}
+        />
+      </div>
 
-      <AmortizationTable amortizationSchedule={processedAmortizationSchedule} />
+      {/* Amortization Table */}
+      <div>
+        <AmortizationTable
+          amortizationSchedule={processedAmortizationSchedule}
+        />
+      </div>
     </div>
   );
 };

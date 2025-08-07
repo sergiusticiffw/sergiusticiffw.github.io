@@ -1,28 +1,27 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
 import { AuthState } from '@type/types';
-import useSwipeActions from '@hooks/useSwipeActions';
-import {
-  FaPen,
-  FaTrash,
-  FaCaretDown,
-  FaMoneyBillWave,
-  FaCalendarAlt,
-  FaChartLine,
-  FaPlus,
-} from 'react-icons/fa';
-import { deleteNode, fetchLoans, formatNumber } from '@utils/utils';
+import { deleteNode, fetchLoans } from '@utils/utils';
 import { notificationType } from '@utils/constants';
-import Modal from '@components/Modal/Modal';
 import PaymentForm from '@components/Loan/PaymentForm';
+import PaymentsTable from '@components/Loan/PaymentsTable';
 import { useLoan } from '@context/loan';
-import './PaymentDetails.scss';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Plus, DollarSign, Trash2, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const PaymentDetails = (props) => {
   const payments = props?.payments ?? [];
   const loan = props?.loan ?? {};
-  const tableRef = useRef(null);
   const showNotification = useNotification();
   const [showEditModal, setShowEditModal] = useState(false);
   const [isNewModal, setIsNewModal] = useState(false);
@@ -40,34 +39,26 @@ const PaymentDetails = (props) => {
     field_new_recurring_amount: undefined as number | undefined,
     field_is_simulated_payment: false,
   });
-  const [nrOfItemsToShow, setNrOfItemsToShow] = useState(6);
   const [deleteModalId, setDeleteModalId] = useState<string | false>(false);
 
-  const {
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    deleteVisible,
-    editVisible,
-    extraRowStyle,
-  } = useSwipeActions();
-
-  const handleEdit = (nid: string) => {
-    const item = payments?.find((item) => item.id === nid);
+  const handleEdit = (payment: any) => {
     setFocusedItem({
-      nid: item.id,
-      title: item.title,
-      field_date: item.fdt,
-      field_rate: item.fr ? Number(item.fr) : undefined,
-      field_pay_installment: item.fpi ? Number(item.fpi) : undefined,
-      field_pay_single_fee: item.fpsf ? Number(item.fpsf) : undefined,
-      field_new_recurring_amount: item.fnra ? Number(item.fnra) : undefined,
-      field_is_simulated_payment: Boolean(Number(item.fisp)),
+      nid: payment.id,
+      title: payment.title,
+      field_date: payment.fdt,
+      field_rate: payment.fr ? Number(payment.fr) : undefined,
+      field_pay_installment: payment.fpi ? Number(payment.fpi) : undefined,
+      field_pay_single_fee: payment.fpsf ? Number(payment.fpsf) : undefined,
+      field_new_recurring_amount: payment.fnra
+        ? Number(payment.fnra)
+        : undefined,
+      field_is_simulated_payment: Boolean(Number(payment.fisp)),
     });
     setShowEditModal(true);
+    setIsNewModal(false);
   };
 
-  const handleDelete = (paymentId: string, token: string) => {
+  const handleDelete = (paymentId: string) => {
     setIsSubmitting(true);
     deleteNode(paymentId, token, (response) => {
       if (response.ok) {
@@ -85,255 +76,136 @@ const PaymentDetails = (props) => {
     });
   };
 
-  const handleDeleteClick = (paymentId: string) => {
-    setDeleteModalId(paymentId);
+  const handleDeleteClick = (payment: any) => {
+    setDeleteModalId(payment.id);
   };
 
-  // Calculate payment statistics
-  const totalPayments = payments.length;
-  const totalPaymentsInstallment = payments?.filter((item) => item.fpi)?.length;
-  const totalAmount = payments.reduce(
-    (sum, payment) => sum + parseFloat(payment.fpi || 0),
-    0
-  );
-  const averagePayment =
-    totalPayments > 0 ? totalAmount / totalPaymentsInstallment : 0;
-
   return (
-    <div className="payment-history">
-      {/* Payment Statistics Cards */}
-      <div className="payment-stats">
-        <div className="stat-card">
-          <div className="stat-icon">
-            <FaMoneyBillWave />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{formatNumber(totalAmount)}</div>
-            <div className="stat-label">Total Paid</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <FaChartLine />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{totalPayments}</div>
-            <div className="stat-label">Payments</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <FaCalendarAlt />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{formatNumber(averagePayment)}</div>
-            <div className="stat-label">Average</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Add Payment Button */}
-      <div className="btns-actions">
-        <button
-          onClick={() => {
-            setShowEditModal(true);
-            setIsNewModal(true);
-          }}
-          className="action-btn"
-        >
-          <FaPlus />
-          <span>Add New Payment</span>
-        </button>
-      </div>
-
+    <div className="space-y-6">
       {/* Modals */}
-      <Modal
-        show={!!deleteModalId}
-        onClose={(e) => {
-          e.preventDefault();
-          setDeleteModalId(false);
-        }}
+      <Dialog
+        open={!!deleteModalId}
+        onOpenChange={() => setDeleteModalId(false)}
       >
-        <h3>Are you sure you want to delete this payment?</h3>
-        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
-          This action cannot be undone.
-        </p>
-        <button
-          onClick={() => handleDelete(deleteModalId as string, token)}
-          className="button danger wide"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : (
-            <>
-              <FaTrash />
-              Delete
-            </>
-          )}
-        </button>
-      </Modal>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground">
+              Delete Payment
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <Button
+              onClick={() => handleDelete(deleteModalId as string)}
+              variant="destructive"
+              size="lg"
+              disabled={isSubmitting}
+              className="w-full"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Deleting...</span>
+                </div>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Payment
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      <Modal
-        show={showEditModal}
-        onClose={(e) => {
-          e.preventDefault();
-          setShowEditModal(false);
-          setIsNewModal(false);
+      <Dialog
+        open={showEditModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowEditModal(false);
+            setIsNewModal(false);
+          }
         }}
       >
-        <PaymentForm
-          formType={!isNewModal ? 'edit' : 'add'}
-          values={focusedItem}
-          startDate={loan.sdt}
-          onSuccess={() => {
-            setIsNewModal(false);
-            setShowEditModal(false);
-            fetchLoans(token, dataDispatch, dispatch);
-          }}
-        />
-      </Modal>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground">
+              {!isNewModal ? 'Edit Payment' : 'Add New Payment'}
+            </DialogTitle>
+            <DialogDescription>
+              {!isNewModal
+                ? 'Update the payment details.'
+                : 'Add a new payment to this loan.'}
+            </DialogDescription>
+          </DialogHeader>
+          <PaymentForm
+            formType={!isNewModal ? 'edit' : 'add'}
+            values={focusedItem}
+            startDate={loan.sdt}
+            onSuccess={() => {
+              setIsNewModal(false);
+              setShowEditModal(false);
+              fetchLoans(token, dataDispatch, dispatch);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Payment History Table */}
-      {payments.length ? (
-        <div className="payment-table-container">
-          <div className="table-header">
-            <h3>Payment History</h3>
-            <div className="table-subtitle">
-              Showing {Math.min(nrOfItemsToShow, payments.length)} of{' '}
-              {payments.length} payments
-            </div>
-          </div>
-
-          <div className="table-wrapper">
-            <table
-              className="expenses-table payment-table"
-              cellSpacing="0"
-              cellPadding="0"
-            >
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Title</th>
-                  <th>Installment</th>
-                  <th className="desktop-only">Actions</th>
-                </tr>
-              </thead>
-              <tbody ref={tableRef}>
-                {payments?.slice(0, nrOfItemsToShow)?.map((payment, index) => {
-                  const isSimulated = Number(payment.fisp) === 1;
-                  return (
-                    <tr
-                      key={payment.id}
-                      className={`transaction-item ${isSimulated ? 'simulated-payment' : ''}`}
-                      data-id={payment.id}
-                      onTouchStart={(e) =>
-                        handleTouchStart(e, payment.id, tableRef)
-                      }
-                      onTouchMove={(e) => handleTouchMove(e, tableRef)}
-                      onTouchEnd={(e) =>
-                        handleTouchEnd(
-                          e,
-                          tableRef,
-                          payment.id,
-                          handleEdit,
-                          handleDeleteClick
-                        )
-                      }
-                    >
-                      <td className="payment-date">
-                        <div className="date-content">
-                          <div className="date-day">
-                            {new Date(payment.fdt).getDate()}
-                          </div>
-                          <div className="date-month">
-                            {new Date(payment.fdt).toLocaleDateString('en-US', {
-                              month: 'short',
-                            })}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="payment-title">
-                        <div className="title-content">
-                          <div className="title-text">{payment.title}</div>
-                          {isSimulated && (
-                            <span className="simulated-badge">Simulated</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="payment-amount">
-                        <div className="amount-value">
-                          {formatNumber(payment.fpi)}
-                        </div>
-                      </td>
-                      <td className="desktop-only payment-actions-cell">
-                        <div className="action-buttons">
-                          <button
-                            onClick={() => handleEdit(payment.id)}
-                            className="btn-edit"
-                            title="Edit Payment"
-                          >
-                            <FaPen />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(payment.id)}
-                            className="btn-delete"
-                            title="Delete Payment"
-                          >
-                            <FaTrash />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
-            {payments?.length > nrOfItemsToShow && (
-              <div className="load-more">
-                <button
-                  onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 6)}
-                  className="load-more-btn"
-                >
-                  <FaCaretDown />
-                  <span>
-                    Load More ({payments.length - nrOfItemsToShow} remaining)
-                  </span>
-                </button>
-              </div>
-            )}
-
-            {deleteVisible && (
-              <div style={{ ...extraRowStyle }}>
-                <div className="row-action delete">
-                  <FaTrash />
-                </div>
-              </div>
-            )}
-            {editVisible && (
-              <div style={{ ...extraRowStyle }}>
-                <div className="row-action edit">
-                  <FaPen />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+      {payments.length > 0 ? (
+        <Card className="border-border/50 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-foreground">
+              Payment History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PaymentsTable
+              payments={payments}
+              onEdit={handleEdit}
+              onDelete={handleDeleteClick}
+            />
+          </CardContent>
+        </Card>
       ) : (
-        <div className="no-payments">
-          <div className="no-payments-icon">
-            <FaMoneyBillWave />
-          </div>
-          <h3>No Payments Yet</h3>
-          <p>Start by adding your first payment to track your loan progress.</p>
-        </div>
+        <Card className="border-border/50 shadow-lg">
+          <CardContent className="text-center py-16">
+            <div className="space-y-4">
+              <DollarSign className="w-12 h-12 text-muted-foreground mx-auto" />
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  No Payments Yet
+                </h3>
+                <p className="text-muted-foreground">
+                  Start by adding your first payment to track your loan
+                  progress.
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  setShowEditModal(true);
+                  setIsNewModal(true);
+                  setFocusedItem({
+                    nid: '',
+                    title: '',
+                    field_date: new Date().toISOString().slice(0, 10),
+                    field_rate: undefined,
+                    field_pay_installment: undefined,
+                    field_pay_single_fee: undefined,
+                    field_new_recurring_amount: undefined,
+                    field_is_simulated_payment: false,
+                  });
+                }}
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-medium"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add First Payment
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

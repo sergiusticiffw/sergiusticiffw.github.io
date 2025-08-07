@@ -1,5 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { formatNumber } from '@utils/utils';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp, Calendar, DollarSign, FileText, CheckCircle } from 'lucide-react';
 
 interface PaymentLog {
   date: string;
@@ -30,172 +40,239 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
   amortizationSchedule,
 }) => {
   const tableRef = useRef<HTMLTableElement>(null);
-  const theadRef = useRef<HTMLTableSectionElement>(null);
-  const stickyHeaderRef = useRef<HTMLTableElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const stickyScrollRef = useRef<HTMLDivElement>(null);
-
+  const stickyHeaderRef = useRef<HTMLDivElement>(null);
   const [showStickyHeader, setShowStickyHeader] = useState(false);
 
-  const syncColumnWidths = () => {
-    if (!theadRef.current || !stickyHeaderRef.current) return;
-    const originalThs = theadRef.current.querySelectorAll('th');
-
-    const cloneThs = stickyHeaderRef.current.querySelectorAll('th');
-
-    if (originalThs.length !== cloneThs.length) return;
-
-    for (let i = 0; i < originalThs.length; i++) {
-      cloneThs[i].style.width = `${originalThs[i].offsetWidth}px`;
+  // Horizontal scroll synchronization with requestAnimationFrame
+  const syncScroll = useCallback(() => {
+    if (scrollContainerRef.current && stickyHeaderRef.current) {
+      const scrollLeft = scrollContainerRef.current.scrollLeft;
+      stickyHeaderRef.current.scrollLeft = scrollLeft;
     }
-  };
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const rect = theadRef.current?.getBoundingClientRect();
-      const shouldShow = rect && rect.bottom <= 50;
-      setShowStickyHeader(shouldShow);
-
-      if (shouldShow && scrollContainerRef.current && stickyScrollRef.current) {
-        stickyScrollRef.current.scrollLeft =
-          scrollContainerRef.current.scrollLeft;
-      }
-    };
-
-    const handleResize = () => {
-      syncColumnWidths();
-    };
-
-    const syncScroll = (
-      source: HTMLElement | null,
-      target: HTMLElement | null
-    ) => {
-      if (target && source) {
-        target.scrollLeft = source.scrollLeft;
-      }
-    };
-
-    const handleMainScroll = () => {
-      syncScroll(scrollContainerRef.current, stickyScrollRef.current);
-    };
-
-    const handleStickyScroll = () => {
-      syncScroll(stickyScrollRef.current, scrollContainerRef.current);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleResize);
-    scrollContainerRef.current?.addEventListener('scroll', handleMainScroll);
-    stickyScrollRef.current?.addEventListener('scroll', handleStickyScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
-      scrollContainerRef.current?.removeEventListener(
-        'scroll',
-        handleMainScroll
-      );
-      stickyScrollRef.current?.removeEventListener(
-        'scroll',
-        handleStickyScroll
-      );
-    };
   }, []);
 
   useEffect(() => {
-    if (showStickyHeader) {
-      syncColumnWidths();
+    const handleScroll = () => {
+      if (tableRef.current) {
+        const rect = tableRef.current.getBoundingClientRect();
+        // Show sticky header when the table header is scrolled out of view
+        const shouldShow = rect.top < 0;
+        setShowStickyHeader(shouldShow);
+      }
+    };
+
+    // Use passive: true for better performance
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Initial check
+    handleScroll();
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  // Separate effect for horizontal scroll synchronization
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    
+    if (scrollContainer) {
+      const handleHorizontalScroll = () => {
+        requestAnimationFrame(syncScroll);
+      };
+
+      scrollContainer.addEventListener('scroll', handleHorizontalScroll, { passive: true });
+      
+      return () => {
+        scrollContainer.removeEventListener('scroll', handleHorizontalScroll);
+      };
     }
-  }, [showStickyHeader]);
+  }, [syncScroll]);
 
   const renderRow = (element: PaymentLog | AnnualSummary, index: number) => {
     // Check if this is an annual summary row
     if ('type' in element && element.type === 'annual_summary') {
       return (
-        <tr
-          key={`summary-scroll-${element.year}`}
-          className="annual-summary-row annual-summary-total"
+        <TableRow
+          key={`summary-${element.year}`}
+          className="bg-muted/50 border-t-2 border-primary/20"
         >
-          <td className="sticky-col">Total {element.year}</td>
-          <td>-</td>
-          <td>-</td>
-          <td>{formatNumber(element.totalPaid)}</td>
-          <td>{formatNumber(element.totalPrincipal)}</td>
-          <td>{formatNumber(element.totalInterest)}</td>
-          <td>-</td>
-          <td>{formatNumber(element.totalFees)}</td>
-        </tr>
+          <TableCell className="font-semibold text-primary sticky left-0 bg-muted/50 z-10 border-r border-border/50">
+            Total {element.year}
+          </TableCell>
+          <TableCell className="text-muted-foreground">-</TableCell>
+          <TableCell className="text-muted-foreground">-</TableCell>
+          <TableCell className="font-semibold">
+            {formatNumber(element.totalPaid)}
+          </TableCell>
+          <TableCell className="font-semibold">
+            {formatNumber(element.totalPrincipal)}
+          </TableCell>
+          <TableCell className="font-semibold">
+            {formatNumber(element.totalInterest)}
+          </TableCell>
+          <TableCell className="text-muted-foreground">-</TableCell>
+          <TableCell className="font-semibold">
+            {formatNumber(element.totalFees)}
+          </TableCell>
+        </TableRow>
       );
     }
 
     // Regular payment row (PaymentLog object)
     const payment = element as PaymentLog;
+    const isPaid = payment.was_payed;
+    
     return (
-      <tr
+      <TableRow
         key={payment.date + '-' + index}
-        data-id={payment.date}
-        className={payment.was_payed ? 'was-payed' : undefined}
+        className={`${
+          isPaid 
+            ? 'bg-green-500/10 border-l-4 border-l-green-500 hover:bg-green-500/15' 
+            : 'hover:bg-muted/30'
+        } transition-colors duration-200`}
       >
-        <td className="sticky-col">{payment.date}</td>
-        <td>{formatNumber(payment.rate)}</td>
-        <td>{formatNumber(payment.num_days || 0)}</td>
-        <td>{formatNumber(payment.installment)}</td>
-        <td>{formatNumber(payment.reduction)}</td>
-        <td>{formatNumber(payment.interest)}</td>
-        <td>{formatNumber(payment.principal)}</td>
-        <td>{formatNumber(payment.fee)}</td>
-      </tr>
+        <TableCell className={`font-medium sticky left-0 z-10 border-r border-border/50 ${
+          isPaid ? 'bg-green-500/10' : 'bg-card'
+        }`}>
+          <div className="flex items-center gap-2">
+            {isPaid && <CheckCircle className="w-4 h-4 text-green-500" />}
+            {payment.date}
+          </div>
+        </TableCell>
+        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+          {formatNumber(payment.rate)}
+        </TableCell>
+        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+          {formatNumber(payment.num_days || 0)}
+        </TableCell>
+        <TableCell className={`font-medium ${isPaid ? 'text-green-700 dark:text-green-400' : ''}`}>
+          {formatNumber(payment.installment)}
+        </TableCell>
+        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+          {formatNumber(payment.reduction)}
+        </TableCell>
+        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+          {formatNumber(payment.interest)}
+        </TableCell>
+        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+          {formatNumber(payment.principal)}
+        </TableCell>
+        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+          {formatNumber(payment.fee)}
+        </TableCell>
+      </TableRow>
     );
   };
 
+  if (!amortizationSchedule || amortizationSchedule.length === 0) {
+    return (
+      <Card className="border-border/50 shadow-lg">
+        <CardContent className="text-center py-16">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            No Amortization Data
+          </h3>
+          <p className="text-muted-foreground">
+            Amortization schedule will appear here once loan data is available
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="table-wrapper-loan">
-      {showStickyHeader && (
-        <div className="cloned-thead-wrapper" ref={stickyScrollRef}>
-          <table ref={stickyHeaderRef} cellSpacing="0" cellPadding="0">
-            <thead>
-              <tr>
-                <th className="sticky-col">Date</th>
-                <th>Rate</th>
-                <th>Days</th>
-                <th>Installment</th>
-                <th>Reduction</th>
-                <th>Interest</th>
-                <th>Principal</th>
-                <th>Fee</th>
-              </tr>
-            </thead>
-          </table>
+    <Card className="border-border/50 shadow-lg">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-primary" />
+          Amortization Schedule
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="rounded-lg border border-border/50 overflow-hidden bg-card">
+          {/* Sticky Header - Always visible when table is scrolled */}
+          {showStickyHeader && (
+            <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border/50 shadow-lg">
+              <div className="overflow-x-auto" ref={stickyHeaderRef}>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="font-semibold text-foreground sticky left-0 bg-muted/50 z-50 border-r border-border/50 min-w-[120px]">
+                        Date
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground min-w-[80px]">
+                        Rate
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground min-w-[80px]">
+                        Days
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground min-w-[120px]">
+                        Installment
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground min-w-[120px]">
+                        Reduction
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground min-w-[100px]">
+                        Interest
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground min-w-[100px]">
+                        Principal
+                      </TableHead>
+                      <TableHead className="font-semibold text-foreground min-w-[80px]">
+                        Fee
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                </Table>
+              </div>
+            </div>
+          )}
+          
+          {/* Main Table */}
+          <div className="overflow-x-auto" ref={scrollContainerRef}>
+            <Table ref={tableRef}>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="font-semibold text-foreground sticky left-0 bg-muted/50 z-10 border-r border-border/50 min-w-[120px]">
+                    Date
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground min-w-[80px]">
+                    Rate
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground min-w-[80px]">
+                    Days
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground min-w-[120px]">
+                    Installment
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground min-w-[120px]">
+                    Reduction
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground min-w-[100px]">
+                    Interest
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground min-w-[100px]">
+                    Principal
+                  </TableHead>
+                  <TableHead className="font-semibold text-foreground min-w-[80px]">
+                    Fee
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {amortizationSchedule.map((element, index) =>
+                  renderRow(element, index)
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
-      )}
-      {/* Main scrollable table */}
-      <div className="horizontal-scroll-wrapper" ref={scrollContainerRef}>
-        <table
-          ref={tableRef}
-          className="amortization-table expenses-table"
-          cellSpacing="0"
-          cellPadding="0"
-        >
-          <thead ref={theadRef}>
-            <tr>
-              <th className="sticky-col first-header-cell">Date</th>
-              <th>Rate</th>
-              <th>Days</th>
-              <th>Installment</th>
-              <th>Reduction</th>
-              <th>Interest</th>
-              <th>Principal</th>
-              <th>Fee</th>
-            </tr>
-          </thead>
-          <tbody>
-            {amortizationSchedule?.map((element, index) =>
-              renderRow(element, index)
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
