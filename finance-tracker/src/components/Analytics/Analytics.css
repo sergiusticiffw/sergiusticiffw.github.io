@@ -1,0 +1,15 @@
+.analytics {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.analytics h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.analytics p {
+  color: var(--text-secondary);
+}
