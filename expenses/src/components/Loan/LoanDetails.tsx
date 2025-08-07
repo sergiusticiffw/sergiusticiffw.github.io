@@ -26,7 +26,7 @@ interface LoanDetailsProps {
 const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
   const loan = props?.loan ?? {};
   const amortizationSchedule = props?.amortizationSchedule ?? [];
-  const annualSummaries = loan?.annual_summaries ?? {};
+  const annualSummaries = props?.paydownResult?.annual_summaries ?? {};
 
   // Early return if no valid data
   if (!amortizationSchedule || amortizationSchedule.length === 0) {
@@ -104,7 +104,10 @@ const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
         processedAmortizationSchedule.push({
           type: 'annual_summary',
           year: currentYear,
-          totalPaid: yearSummary.total_paid || 0,
+          totalPaid:
+            yearSummary.total_principal +
+            yearSummary.total_interest +
+            yearSummary.total_fees,
           totalPrincipal: yearSummary.total_principal || 0,
           totalInterest: yearSummary.total_interest || 0,
           totalFees: yearSummary.total_fees || 0,

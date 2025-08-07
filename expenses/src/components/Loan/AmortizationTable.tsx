@@ -9,7 +9,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Calendar, DollarSign, FileText, CheckCircle } from 'lucide-react';
+import {
+  TrendingUp,
+  Calendar,
+  DollarSign,
+  FileText,
+  CheckCircle,
+} from 'lucide-react';
 
 interface PaymentLog {
   date: string;
@@ -64,10 +70,10 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
 
     // Use passive: true for better performance
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
+
     // Initial check
     handleScroll();
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
@@ -76,14 +82,16 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
   // Separate effect for horizontal scroll synchronization
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
-    
+
     if (scrollContainer) {
       const handleHorizontalScroll = () => {
         requestAnimationFrame(syncScroll);
       };
 
-      scrollContainer.addEventListener('scroll', handleHorizontalScroll, { passive: true });
-      
+      scrollContainer.addEventListener('scroll', handleHorizontalScroll, {
+        passive: true,
+      });
+
       return () => {
         scrollContainer.removeEventListener('scroll', handleHorizontalScroll);
       };
@@ -98,22 +106,25 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
           key={`summary-${element.year}`}
           className="bg-muted/50 border-t-2 border-primary/20"
         >
-          <TableCell className="font-semibold text-primary sticky left-0 bg-muted/50 z-10 border-r border-border/50">
-            Total {element.year}
+          <TableCell
+            className="font-semibold text-primary sticky left-0 bg-blue-100 dark:bg-blue-900 border-r border-blue-200 dark:border-blue-800 py-2 px-3 shadow-[1px_0_2px_rgba(0,0,0,0.05)]"
+            style={{ position: 'sticky', left: 0 }}
+          >
+            <span className="text-primary font-semibold">Total {element.year}</span>
           </TableCell>
-          <TableCell className="text-muted-foreground">-</TableCell>
-          <TableCell className="text-muted-foreground">-</TableCell>
-          <TableCell className="font-semibold">
+          <TableCell className="text-muted-foreground py-2 px-3">-</TableCell>
+          <TableCell className="text-muted-foreground py-2 px-3">-</TableCell>
+          <TableCell className="font-semibold py-2 px-3">
             {formatNumber(element.totalPaid)}
           </TableCell>
-          <TableCell className="font-semibold">
+          <TableCell className="font-semibold py-2 px-3">
             {formatNumber(element.totalPrincipal)}
           </TableCell>
-          <TableCell className="font-semibold">
+          <TableCell className="font-semibold py-2 px-3">
             {formatNumber(element.totalInterest)}
           </TableCell>
-          <TableCell className="text-muted-foreground">-</TableCell>
-          <TableCell className="font-semibold">
+          <TableCell className="text-muted-foreground py-2 px-3">-</TableCell>
+          <TableCell className="font-semibold py-2 px-3">
             {formatNumber(element.totalFees)}
           </TableCell>
         </TableRow>
@@ -123,43 +134,62 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
     // Regular payment row (PaymentLog object)
     const payment = element as PaymentLog;
     const isPaid = payment.was_payed;
-    
+
     return (
       <TableRow
         key={payment.date + '-' + index}
         className={`${
-          isPaid 
-            ? 'bg-green-500/10 border-l-4 border-l-green-500 hover:bg-green-500/15' 
+          isPaid
+            ? 'bg-green-500/10 border-l-4 border-l-green-500 hover:bg-green-500/15'
             : 'hover:bg-muted/30'
         } transition-colors duration-200`}
       >
-        <TableCell className={`font-medium sticky left-0 z-10 border-r border-border/50 ${
-          isPaid ? 'bg-green-500/10' : 'bg-card'
-        }`}>
+        <TableCell
+          className={`font-medium sticky left-0 border-r border-blue-200 dark:border-blue-800 py-2 px-3 shadow-[1px_0_2px_rgba(0,0,0,0.05)] ${
+            isPaid
+              ? 'bg-blue-100 dark:bg-blue-900'
+              : 'bg-blue-50 dark:bg-blue-950'
+          }`}
+          style={{ position: 'sticky', left: 0 }}
+        >
           <div className="flex items-center gap-2">
             {isPaid && <CheckCircle className="w-4 h-4 text-green-500" />}
-            {payment.date}
+            <span className="text-foreground font-medium">{payment.date}</span>
           </div>
         </TableCell>
-        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+        <TableCell
+          className={`py-2 px-3 ${isPaid ? 'text-green-700 dark:text-green-400' : ''}`}
+        >
           {formatNumber(payment.rate)}
         </TableCell>
-        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+        <TableCell
+          className={`py-2 px-3 ${isPaid ? 'text-green-700 dark:text-green-400' : ''}`}
+        >
           {formatNumber(payment.num_days || 0)}
         </TableCell>
-        <TableCell className={`font-medium ${isPaid ? 'text-green-700 dark:text-green-400' : ''}`}>
+        <TableCell
+          className={`font-medium py-2 px-3 ${isPaid ? 'text-green-700 dark:text-green-400' : ''}`}
+        >
           {formatNumber(payment.installment)}
         </TableCell>
-        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+        <TableCell
+          className={`py-2 px-3 ${isPaid ? 'text-green-700 dark:text-green-400' : ''}`}
+        >
           {formatNumber(payment.reduction)}
         </TableCell>
-        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+        <TableCell
+          className={`py-2 px-3 ${isPaid ? 'text-green-700 dark:text-green-400' : ''}`}
+        >
           {formatNumber(payment.interest)}
         </TableCell>
-        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+        <TableCell
+          className={`py-2 px-3 ${isPaid ? 'text-green-700 dark:text-green-400' : ''}`}
+        >
           {formatNumber(payment.principal)}
         </TableCell>
-        <TableCell className={isPaid ? 'text-green-700 dark:text-green-400' : ''}>
+        <TableCell
+          className={`py-2 px-3 ${isPaid ? 'text-green-700 dark:text-green-400' : ''}`}
+        >
           {formatNumber(payment.fee)}
         </TableCell>
       </TableRow>
@@ -186,13 +216,13 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
 
   return (
     <Card className="border-border/50 shadow-lg">
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" />
           Amortization Schedule
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <div className="rounded-lg border border-border/50 overflow-hidden bg-card">
           {/* Sticky Header - Always visible when table is scrolled */}
           {showStickyHeader && (
@@ -201,28 +231,31 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50">
-                      <TableHead className="font-semibold text-foreground sticky left-0 bg-muted/50 z-50 border-r border-border/50 min-w-[120px]">
+                      <TableHead
+                        className="font-semibold text-foreground sticky left-0 bg-blue-200 dark:bg-blue-800 border-r border-blue-300 dark:border-blue-700 min-w-[100px] py-2 px-3 shadow-[1px_0_2px_rgba(0,0,0,0.05)]"
+                        style={{ position: 'sticky', left: 0 }}
+                      >
                         Date
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground min-w-[80px]">
+                      <TableHead className="font-semibold text-foreground min-w-[70px] py-2 px-3">
                         Rate
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground min-w-[80px]">
+                      <TableHead className="font-semibold text-foreground min-w-[70px] py-2 px-3">
                         Days
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground min-w-[120px]">
+                      <TableHead className="font-semibold text-foreground min-w-[100px] py-2 px-3">
                         Installment
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground min-w-[120px]">
+                      <TableHead className="font-semibold text-foreground min-w-[100px] py-2 px-3">
                         Reduction
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground min-w-[100px]">
+                      <TableHead className="font-semibold text-foreground min-w-[80px] py-2 px-3">
                         Interest
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground min-w-[100px]">
+                      <TableHead className="font-semibold text-foreground min-w-[80px] py-2 px-3">
                         Principal
                       </TableHead>
-                      <TableHead className="font-semibold text-foreground min-w-[80px]">
+                      <TableHead className="font-semibold text-foreground min-w-[70px] py-2 px-3">
                         Fee
                       </TableHead>
                     </TableRow>
@@ -231,34 +264,37 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
               </div>
             </div>
           )}
-          
+
           {/* Main Table */}
           <div className="overflow-x-auto" ref={scrollContainerRef}>
             <Table ref={tableRef}>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold text-foreground sticky left-0 bg-muted/50 z-10 border-r border-border/50 min-w-[120px]">
+                  <TableHead
+                    className="font-semibold text-foreground sticky left-0 bg-blue-200 dark:bg-blue-800 border-r border-blue-300 dark:border-blue-700 min-w-[100px] py-2 px-3 shadow-[1px_0_2px_rgba(0,0,0,0.05)]"
+                    style={{ position: 'sticky', left: 0 }}
+                  >
                     Date
                   </TableHead>
-                  <TableHead className="font-semibold text-foreground min-w-[80px]">
+                  <TableHead className="font-semibold text-foreground min-w-[70px] py-2 px-3">
                     Rate
                   </TableHead>
-                  <TableHead className="font-semibold text-foreground min-w-[80px]">
+                  <TableHead className="font-semibold text-foreground min-w-[70px] py-2 px-3">
                     Days
                   </TableHead>
-                  <TableHead className="font-semibold text-foreground min-w-[120px]">
+                  <TableHead className="font-semibold text-foreground min-w-[100px] py-2 px-3">
                     Installment
                   </TableHead>
-                  <TableHead className="font-semibold text-foreground min-w-[120px]">
+                  <TableHead className="font-semibold text-foreground min-w-[100px] py-2 px-3">
                     Reduction
                   </TableHead>
-                  <TableHead className="font-semibold text-foreground min-w-[100px]">
+                  <TableHead className="font-semibold text-foreground min-w-[80px] py-2 px-3">
                     Interest
                   </TableHead>
-                  <TableHead className="font-semibold text-foreground min-w-[100px]">
+                  <TableHead className="font-semibold text-foreground min-w-[80px] py-2 px-3">
                     Principal
                   </TableHead>
-                  <TableHead className="font-semibold text-foreground min-w-[80px]">
+                  <TableHead className="font-semibold text-foreground min-w-[70px] py-2 px-3">
                     Fee
                   </TableHead>
                 </TableRow>
