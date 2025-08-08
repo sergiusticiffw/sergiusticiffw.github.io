@@ -1,122 +1,33 @@
 @use '../../styles/variables' as *;
 
 .most-expensive-table-container {
-  background: linear-gradient(135deg, 
-    rgba(100, 181, 246, 0.15), 
-    rgba(156, 39, 176, 0.15), 
-    rgba(255, 255, 255, 0.08)
-  );
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 24px;
-  padding: 2.5rem;
-  margin: 2rem 0;
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, 
-      transparent 30%, 
-      rgba(255, 255, 255, 0.03) 50%, 
-      transparent 70%
-    );
-    animation: shimmer 4s ease-in-out infinite;
-    pointer-events: none;
-  }
-  
-  &::after {
-    content: '💰';
-    position: absolute;
-    top: -15px;
-    right: -15px;
-    font-size: 4rem;
-    opacity: 0.1;
-    transform: rotate(15deg);
-    pointer-events: none;
-  }
+  border: 1px solid var(--secondary-color);
+  border-radius: $border-radius-lg;
+  padding: $spacing-xl;
+  margin: $spacing-xl 0;
   
   .table-row {
     display: flex;
     align-items: center;
-    margin-bottom: 1.5rem;
-    padding: 1rem 1.5rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
+    margin-bottom: $spacing-md;
+    padding: $spacing-md;
+    border-radius: $border-radius-md;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 1;
-    
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-      transform: translateX(5px);
-      box-shadow: 
-        0 5px 15px rgba(0, 0, 0, 0.2),
-        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-    }
     
     &:last-child {
       margin-bottom: 0;
     }
     
     .label {
-      font-weight: 700;
+      font-weight: 600;
       color: var(--accent-color);
       min-width: 120px;
-      font-size: 1rem;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-      position: relative;
+      font-size: $font-size-sm;
       
       &::after {
         content: ':';
-        margin-right: 1rem;
+        margin-right: $spacing-md;
         color: rgba(255, 255, 255, 0.6);
-      }
-    }
-    
-    // Special styling for amount row
-    &:nth-child(2) {
-      background: linear-gradient(135deg, 
-        rgba(100, 181, 246, 0.2), 
-        rgba(156, 39, 176, 0.15)
-      );
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      
-      .label {
-        color: #64b5f6;
-        font-size: 1.1rem;
-      }
-      
-      &:hover {
-        background: linear-gradient(135deg, 
-          rgba(100, 181, 246, 0.25), 
-          rgba(156, 39, 176, 0.2)
-        );
-        transform: translateX(5px) scale(1.02);
-      }
-    }
-    
-    // Special styling for category row
-    &:nth-child(3) {
-      .label {
-        color: #9c27b0;
-      }
-    }
-    
-    // Special styling for description row
-    &:nth-child(4) {
-      .label {
-        color: #ff9800;
       }
     }
   }
@@ -124,14 +35,23 @@
 
 // Heading styling for most expensive item
 .heading {
-  display: block;
-  color: #fff;
-  font-size: 1.8rem;
-  font-weight: 800;
-  margin: 2.5rem 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: $spacing-xl 0 $spacing-md 0;
   text-align: center;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -$spacing-sm;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 2px;
+    background: var(--accent-color);
+  }
 }
 
 .month-badge {
@@ -273,33 +193,23 @@
 // Mobile responsive for most expensive item
 @media (max-width: $breakpoint-md) {
   .most-expensive-table-container {
-    padding: 1.5rem;
-    margin: 1.5rem 0;
-    
-    &::after {
-      font-size: 3rem;
-      top: -10px;
-      right: -10px;
-    }
+    padding: $spacing-lg;
+    margin: $spacing-lg 0;
     
     .table-row {
-      padding: 0.75rem 1rem;
-      margin-bottom: 1rem;
+      padding: $spacing-sm $spacing-md;
+      margin-bottom: $spacing-sm;
       
       .label {
         min-width: 80px;
-        font-size: 0.9rem;
-      }
-      
-      &:nth-child(2) .label {
-        font-size: 1rem;
+        font-size: $font-size-xs;
       }
     }
   }
   
   .heading {
-    font-size: 1.4rem;
-    margin: 2rem 0 1rem 0;
+    font-size: 1.3rem;
+    margin: $spacing-lg 0 $spacing-sm 0;
     
     &::after {
       width: 60px;
