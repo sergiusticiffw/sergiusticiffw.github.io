@@ -217,7 +217,10 @@ const Home = () => {
           }}
         />
       </Modal>
+      
+      {/* Simple Header */}
       <h2>{currentMonth || 'Expenses'}</h2>
+      
       <Filters />
       {loading ? (
         <div className="lds-ripple">

@@ -101,39 +101,6 @@ const PaymentDetails = (props) => {
 
   return (
     <div className="payment-history">
-      {/* Payment Statistics Cards */}
-      <div className="payment-stats">
-        <div className="stat-card">
-          <div className="stat-icon">
-            <FaMoneyBillWave />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{formatNumber(totalAmount)}</div>
-            <div className="stat-label">Total Paid</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <FaChartLine />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{totalPayments}</div>
-            <div className="stat-label">Payments</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <FaCalendarAlt />
-          </div>
-          <div className="stat-content">
-            <div className="stat-value">{formatNumber(averagePayment)}</div>
-            <div className="stat-label">Average</div>
-          </div>
-        </div>
-      </div>
-
       {/* Add Payment Button */}
       <div className="btns-actions">
         <button
@@ -157,7 +124,13 @@ const PaymentDetails = (props) => {
         }}
       >
         <h3>Are you sure you want to delete this payment?</h3>
-        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
+        <p
+          style={{
+            textAlign: 'center',
+            color: 'rgba(255, 255, 255, 0.7)',
+            marginBottom: '1.5rem',
+          }}
+        >
           This action cannot be undone.
         </p>
         <button

@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useLoan } from '@context/loan';
 import { AuthState } from '@type/types';
 import { fetchLoans, formatNumber, deleteLoan } from '@utils/utils';
 import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
+import useSwipeActions from '@hooks/useSwipeActions';
 import {
   FaHandHoldingUsd,
   FaPlus,
@@ -33,10 +34,20 @@ const Loans: React.FC = () => {
   const [focusedItem, setFocusedItem] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sortBy, setSortBy] = useState<
-    'status' | 'title' | 'principal' | 'date'
+    'status' | 'title' | 'principal'
   >('status');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const tableRef = useRef(null);
+
+  const {
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    deleteVisible,
+    editVisible,
+    extraRowStyle,
+  } = useSwipeActions();
 
   const { loans, loading } = data;
 
@@ -46,7 +57,8 @@ const Loans: React.FC = () => {
     }
   }, [loans, token, dataDispatch, dispatch]);
 
-  const handleEdit = (item: any) => {
+  const handleEdit = (id: string) => {
+    const item = loans?.find((loan: any) => loan.id === id);
     setFocusedItem({
       nid: item.id,
       title: item.title,
@@ -62,7 +74,8 @@ const Loans: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const handleDelete = (item: any) => {
+  const handleDelete = (id: string) => {
+    const item = loans?.find((loan: any) => loan.id === id);
     setFocusedItem(item);
     setShowDeleteModal(true);
   };
@@ -77,7 +90,7 @@ const Loans: React.FC = () => {
     });
   };
 
-  const handleSort = (field: 'status' | 'title' | 'principal' | 'date') => {
+  const handleSort = (field: 'status' | 'title' | 'principal') => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -86,7 +99,7 @@ const Loans: React.FC = () => {
     }
   };
 
-  const getSortIcon = (field: 'status' | 'title' | 'principal' | 'date') => {
+  const getSortIcon = (field: 'status' | 'title' | 'principal') => {
     if (sortBy !== field) return <FaSort />;
     return sortOrder === 'asc' ? <FaSortUp /> : <FaSortDown />;
   };
@@ -140,10 +153,6 @@ const Loans: React.FC = () => {
           aValue = parseFloat(a.fp || '0');
           bValue = parseFloat(b.fp || '0');
           break;
-        case 'date':
-          aValue = new Date(a.sdt || '');
-          bValue = new Date(b.sdt || '');
-          break;
         default:
           return 0;
       }
@@ -162,11 +171,6 @@ const Loans: React.FC = () => {
   const completedLoans =
     loans?.filter((loan: any) => getLoanStatus(loan) === 'completed').length ||
     0;
-  const totalPrincipal =
-    loans?.reduce(
-      (sum: number, loan: any) => sum + parseFloat(loan.fp || '0'),
-      0
-    ) || 0;
 
   if (loading) {
     return (
@@ -184,18 +188,12 @@ const Loans: React.FC = () => {
 
   return (
     <div className="loans-container">
-      {/* Header Section */}
+      {/* Simple Header */}
       <div className="loans-header">
-        <div className="header-icon">
-          <FaHandHoldingUsd />
-        </div>
-        <h1 className="header-title">Loan Management</h1>
-        <p className="header-subtitle">
-          Track and manage your loans efficiently
-        </p>
+        <h1>Loans</h1>
       </div>
 
-      {/* Actions Section */}
+      {/* Add Loan Button */}
       <div className="btns-actions">
         <button onClick={() => setShowAddModal(true)} className="action-btn">
           <FaPlus />
@@ -203,87 +201,27 @@ const Loans: React.FC = () => {
         </button>
       </div>
 
-      {/* Summary Section */}
-      <div className="loans-summary">
-        <div className="summary-header">
-          <FaChartLine />
-          <h3>Loans Overview</h3>
+      {/* Simple Stats */}
+      <div className="loans-stats">
+        <div className="stat-item">
+          <span className="stat-value">{formatNumber(totalLoans)}</span>
+          <span className="stat-label">Total</span>
         </div>
-        <div className="summary-grid">
-          <div className="summary-item">
-            <div className="summary-value">{totalLoans}</div>
-            <div className="summary-label">Total Loans</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-value">{activeLoans}</div>
-            <div className="summary-label">Active Loans</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-value">{completedLoans}</div>
-            <div className="summary-label">Completed</div>
-          </div>
+        <div className="stat-item">
+          <span className="stat-value">{formatNumber(activeLoans)}</span>
+          <span className="stat-label">Active</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-value">{formatNumber(completedLoans)}</span>
+          <span className="stat-label">Completed</span>
         </div>
       </div>
 
-      {/* Filters and Sorting Section */}
-      <div className="loans-filters">
-        <div className="filter-group">
-          <label className="filter-label">
-            <FaFilter />
-            Filter by Status:
-          </label>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-            <option value="pending">Pending</option>
-          </select>
-        </div>
-
-        <div className="sort-group">
-          <span className="sort-label">Sort by:</span>
-          <button
-            onClick={() => handleSort('status')}
-            className={`sort-btn ${sortBy === 'status' ? 'active' : ''}`}
-            title="Sort by Status"
-          >
-            Status {getSortIcon('status')}
-          </button>
-          <button
-            onClick={() => handleSort('title')}
-            className={`sort-btn ${sortBy === 'title' ? 'active' : ''}`}
-            title="Sort by Title"
-          >
-            Title {getSortIcon('title')}
-          </button>
-          <button
-            onClick={() => handleSort('principal')}
-            className={`sort-btn ${sortBy === 'principal' ? 'active' : ''}`}
-            title="Sort by Principal"
-          >
-            Principal {getSortIcon('principal')}
-          </button>
-          <button
-            onClick={() => handleSort('date')}
-            className={`sort-btn ${sortBy === 'date' ? 'active' : ''}`}
-            title="Sort by Start Date"
-          >
-            Date {getSortIcon('date')}
-          </button>
-        </div>
-      </div>
-
-      {/* Loans Grid */}
-      <div className="loans-grid">
+      {/* Loans Table Section */}
+      <div className="loans-table-section">
         {filteredAndSortedLoans.length === 0 ? (
           <div className="no-loans">
-            <div className="no-loans-icon">
-              <FaHandHoldingUsd />
-            </div>
+            <FaHandHoldingUsd />
             <h3>No loans found</h3>
             <p>
               {statusFilter !== 'all'
@@ -300,67 +238,136 @@ const Loans: React.FC = () => {
             )}
           </div>
         ) : (
-          filteredAndSortedLoans.map((loan: any) => {
-            const status = getLoanStatus(loan);
+          <>
+            <div className="loans-filter">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
 
-            return (
-              <div key={loan.id} className="loan-card">
-                <div className="loan-header">
-                  <h3 className="loan-title">
-                    <Link
-                      to={`/expenses/loan/${loan.id}`}
-                      className="loan-link"
-                      title={loan.title}
-                    >
-                      {loan.title}
-                      <FaExternalLinkAlt className="link-icon" />
-                    </Link>
-                  </h3>
-                  <div className="loan-actions">
-                    <button
-                      onClick={() => handleEdit(loan)}
-                      className="btn-icon"
-                      title="Edit Loan"
-                    >
-                      <FaPen />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(loan)}
-                      className="btn-icon"
-                      title="Delete Loan"
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="loan-details">
-                  <div className="detail-item">
-                    <div className="detail-label">Principal</div>
-                    <div className="detail-value">{formatNumber(loan.fp)}</div>
-                  </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Interest Rate</div>
-                    <div className="detail-value">{loan.fr}%</div>
-                  </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Start Date</div>
-                    <div className="detail-value">{loan.sdt}</div>
-                  </div>
-                  <div className="detail-item">
-                    <div className="detail-label">End Date</div>
-                    <div className="detail-value">{loan.edt}</div>
-                  </div>
-                </div>
-
-                <div className="loan-status">
-                  <span className={`status-badge ${status}`}>
-                    {getStatusText(status)}
-                  </span>
-                </div>
+            <div className="loans-table-container">
+              <div className="table-header">
+                <h3>Loan Records</h3>
+                <p className="table-subtitle">Manage and track your loans</p>
               </div>
-            );
-          })
+
+              <div className="table-wrapper">
+                <table className="loans-table" cellSpacing="0" cellPadding="0" ref={tableRef}>
+                  <thead>
+                    <tr>
+                      <th
+                        onClick={() => handleSort('title')}
+                        className={`sortable ${sortBy === 'title' ? (sortOrder === 'asc' ? 'asc' : 'desc') : ''}`}
+                      >
+                        Title
+                      </th>
+                      <th
+                        onClick={() => handleSort('principal')}
+                        className={`sortable ${sortBy === 'principal' ? (sortOrder === 'asc' ? 'asc' : 'desc') : ''}`}
+                      >
+                        Principal
+                      </th>
+                      <th
+                        onClick={() => handleSort('status')}
+                        className={`sortable ${sortBy === 'status' ? (sortOrder === 'asc' ? 'asc' : 'desc') : ''}`}
+                      >
+                        Status
+                      </th>
+                      <th className="desktop-only">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAndSortedLoans.map((loan: any) => {
+                      const status = getLoanStatus(loan);
+                      return (
+                        <tr
+                          key={loan.id}
+                          className="loan-item"
+                          data-id={loan.id}
+                          onTouchStart={(e) =>
+                            handleTouchStart(e, loan.id, tableRef)
+                          }
+                          onTouchMove={(e) => handleTouchMove(e, tableRef)}
+                          onTouchEnd={(e) =>
+                            handleTouchEnd(
+                              e,
+                              tableRef,
+                              loan.id,
+                              handleEdit,
+                              handleDelete
+                            )
+                          }
+                        >
+                          <td className="loan-title">
+                            <div className="title-content">
+                              <div className="title-text">
+                                <Link to={`/expenses/loan/${loan.id}`} className="loan-link">
+                                  {loan.title}
+                                </Link>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="loan-principal">
+                            <div className="principal-value">
+                              {formatNumber(parseFloat(loan.fp || '0'))}
+                            </div>
+                          </td>
+                          <td className="loan-status">
+                            <div className="status-content">
+                              <span className={`status-badge ${status}`}>
+                                {getStatusText(status)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="desktop-only loan-actions-cell">
+                            <div className="action-buttons">
+                              <button
+                                onClick={() => handleEdit(loan.id)}
+                                className="btn-edit"
+                                title="Edit Loan"
+                              >
+                                <FaPen />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(loan.id)}
+                                className="btn-delete"
+                                title="Delete Loan"
+                              >
+                                <FaTrash />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {deleteVisible && (
+                  <div style={{ ...extraRowStyle }}>
+                    <div className="row-action delete">
+                      <FaTrash />
+                    </div>
+                  </div>
+                )}
+
+                {editVisible && (
+                  <div style={{ ...extraRowStyle }}>
+                    <div className="row-action edit">
+                      <FaPen />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
         )}
       </div>
 
@@ -446,3 +453,4 @@ const Loans: React.FC = () => {
 };
 
 export default Loans;
+

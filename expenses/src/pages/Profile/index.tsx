@@ -170,20 +170,16 @@ const Profile = () => {
 
   return (
     <div className="profile-container">
-      {/* Profile Header */}
+      {/* Simple Header */}
       <div className="profile-header">
-        <div className="avatar">
-          <FaUserCircle />
-        </div>
-        <div className="user-name">{userDetails.current_user.name}</div>
-        <div className="user-subtitle">Profile Settings</div>
+        <h1>Profile</h1>
       </div>
 
-      {/* Settings Grid */}
-      <div className="settings-grid">
-        {/* General Settings Card */}
-        <div className="settings-card">
-          <div className="card-header">
+      {/* Settings Sections */}
+      <div className="profile-sections">
+        {/* General Settings Section */}
+        <div className="profile-section">
+          <div className="section-header">
             <FaCog />
             <h3>General Settings</h3>
           </div>
@@ -221,9 +217,9 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Budget Settings Card */}
-        <div className="settings-card">
-          <div className="card-header">
+        {/* Budget Settings Section */}
+        <div className="profile-section">
+          <div className="section-header">
             <FaCoins />
             <h3>Budget Settings</h3>
           </div>
@@ -256,50 +252,59 @@ const Profile = () => {
             />
           </div>
         </div>
-      </div>
 
-      {/* Charts Settings Section */}
-      <div className="charts-section-profile">
-        <div className="section-header">
-          <FaChartBar />
-          <h3>Charts Settings</h3>
+        {/* Charts Settings Section */}
+        <div className="profile-section">
+          <div className="section-header">
+            <FaChartBar />
+            <h3>Charts Settings</h3>
+          </div>
+
+          <div className="checkbox-item">
+            <input
+              type="checkbox"
+              name="useChartsBackgroundColor"
+              id="useChartsBackgroundColor"
+              checked={state.useChartsBackgroundColor || false}
+              onChange={handleCheckboxChange}
+            />
+            <label htmlFor="useChartsBackgroundColor">
+              Use Charts Background Color
+            </label>
+          </div>
+
+          <h4>Charts Visibility</h4>
+          <div className="charts-grid">
+            {availableCharts.map((chart) => (
+              <div key={chart} className="checkbox-item">
+                <input
+                  type="checkbox"
+                  name={chart}
+                  checked={state.visibleCharts.includes(chart)}
+                  onChange={handleChartVisibilityChange}
+                />
+                <label htmlFor={chart}>{chart}</label>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="checkbox-item">
-          <input
-            type="checkbox"
-            name="useChartsBackgroundColor"
-            id="useChartsBackgroundColor"
-            checked={state.useChartsBackgroundColor || false}
-            onChange={handleCheckboxChange}
-          />
-          <label htmlFor="useChartsBackgroundColor">
-            Use Charts Background Color
-          </label>
-        </div>
+        {/* Logout Section */}
+        <div className="profile-section">
+          <div className="section-header">
+            <FaSignOutAlt />
+            <h3>Account</h3>
+          </div>
+          
+          <div className="user-info">
+            <div className="user-name">{userDetails.current_user.name}</div>
+          </div>
 
-        <h4>Charts Visibility</h4>
-        <div className="charts-grid">
-          {availableCharts.map((chart) => (
-            <div key={chart} className="checkbox-item">
-              <input
-                type="checkbox"
-                name={chart}
-                checked={state.visibleCharts.includes(chart)}
-                onChange={handleChartVisibilityChange}
-              />
-              <label htmlFor={chart}>{chart}</label>
-            </div>
-          ))}
+          <button className="logout-btn" onClick={handleLogout}>
+            <FaSignOutAlt />
+            Sign Out
+          </button>
         </div>
-      </div>
-
-      {/* Logout Section */}
-      <div className="logout-section">
-        <button className="logout-btn" onClick={handleLogout}>
-          <FaSignOutAlt />
-          Sign Out
-        </button>
       </div>
     </div>
   );

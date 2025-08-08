@@ -155,34 +155,17 @@ const Loan: React.FC = () => {
 
   return (
     <div className="loan-container">
-      {/* Header Section */}
+      {/* Simple Header */}
       <div className="loan-header">
-        <div className="header-content">
-          <div className="header-info">
-            <h1 className="loan-title">{loan?.title}</h1>
-            <p className="loan-subtitle">Loan Details & Payment Tracking</p>
-          </div>
-          <div className="header-actions">
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="action-btn"
-            >
-              <FaPen />
-              Edit Loan
-            </button>
-          </div>
-        </div>
+        <h1>{loan?.title}</h1>
       </div>
-
-      {/* Error Message */}
-      {errorMessage && (
-        <div className="error-message">
-          <Notification message={errorMessage} type="error" />
-        </div>
-      )}
 
       {/* Payment Actions */}
       <div className="btns-actions">
+        <button onClick={() => setShowEditModal(true)} className="action-btn">
+          <FaPen />
+          Edit Loan
+        </button>
         <button
           onClick={() => setShowAddPaymentModal(true)}
           className="action-btn"
@@ -192,131 +175,40 @@ const Loan: React.FC = () => {
         </button>
       </div>
 
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="error-message">
+          <Notification message={errorMessage} type="error" />
+        </div>
+      )}
+
+      {/* Simple Stats */}
+      <div className="loan-stats">
+        <div className="stat-item">
+          <span className="stat-value">{formatNumber(totalPrincipal)}</span>
+          <span className="stat-label">Principal</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-value">{formatNumber(totalInstallments)}</span>
+          <span className="stat-label">Total</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-value">{formatNumber(totalPaidAmount)}</span>
+          <span className="stat-label">Paid</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-value">{formatNumber(remainingAmount)}</span>
+          <span className="stat-label">Remaining</span>
+        </div>
+      </div>
+
       {/* Loan Sections */}
       <div className="loan-sections">
-        {/* Loan Details Section */}
-        <div className="loan-section">
-          <div
-            className="section-header accordion-header"
-            onClick={() => setIsLoanInfoExpanded(!isLoanInfoExpanded)}
-          >
-            <div className="header-content">
-              <FaHandHoldingUsd />
-              <h3>Loan Information</h3>
-            </div>
-            <div className="accordion-icon">
-              {isLoanInfoExpanded ? <FaChevronUp /> : <FaChevronDown />}
-            </div>
-          </div>
-
-          <div
-            className={`loan-details-grid accordion-content ${isLoanInfoExpanded ? 'expanded' : 'collapsed'}`}
-          >
-            <div className="detail-item">
-              <div className="detail-label">Principal Amount</div>
-              <div className="detail-value">{formatNumber(totalPrincipal)}</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Interest Rate</div>
-              <div className="detail-value">{loan.fr}%</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Total Interests</div>
-              <div className="detail-value">{formatNumber(sumOfInterest)}</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Total Fees</div>
-              <div className="detail-value">{formatNumber(totalFees)}</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Days Calculated</div>
-              <div className="detail-value">{daysCalculated}</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Days Remaining</div>
-              <div className="detail-value">{daysRemaining}</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Days Passed</div>
-              <div className="detail-value">{daysPassed}</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Interest Cost %</div>
-              <div className="detail-value">
-                {formatNumber(interestCostPercentage)}%
-              </div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Cost per Day</div>
-              <div className="detail-value">{formatNumber(payPerDay)}</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Start Date</div>
-              <div className="detail-value">{loan.sdt}</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">End Date</div>
-              <div className="detail-value">{loan.edt}</div>
-            </div>
-            {loan.fif && (
-              <div className="detail-item">
-                <div className="detail-label">Initial Fee</div>
-                <div className="detail-value">{formatNumber(loan.fif)}</div>
-              </div>
-            )}
-            {loan.pdt && (
-              <div className="detail-item">
-                <div className="detail-label">First Payment Date</div>
-                <div className="detail-value">{loan.pdt}</div>
-              </div>
-            )}
-            <div className="detail-item">
-              <div className="detail-label">Actual End Date</div>
-              <div className="detail-value">{paydown?.actual_end_date}</div>
-            </div>
-            <div className="detail-item">
-              <div className="detail-label">Latest Payment Date</div>
-              <div className="detail-value">{paydown?.latest_payment_date}</div>
-            </div>
-          </div>
-        </div>
-
         {/* Progress Section */}
         <div className="loan-section loan-progress-section">
           <div className="section-header">
             <FaChartLine />
             <h3>Payment Progress</h3>
-          </div>
-
-          <div className="progress-overview">
-            <div className="progress-item">
-              <div className="progress-value">
-                {formatNumber(totalPrincipal)}
-              </div>
-              <div className="progress-label">Total Principal</div>
-            </div>
-            <div className="progress-item">
-              <div className="progress-value">
-                {formatNumber(totalInstallments)}
-              </div>
-              <div className="progress-label">Total Installments</div>
-            </div>
-            <div className="progress-item">
-              <div className="progress-value">
-                {formatNumber(totalPaidAmount)}
-              </div>
-              <div className="progress-label">Amount Paid</div>
-            </div>
-            <div className="progress-item">
-              <div className="progress-value">
-                {formatNumber(remainingAmount)}
-              </div>
-              <div className="progress-label">Remaining</div>
-            </div>
-            <div className="progress-item">
-              <div className="progress-value">{formatNumber(progress)}%</div>
-              <div className="progress-label">Progress</div>
-            </div>
           </div>
 
           <div className="progress-bar-container">

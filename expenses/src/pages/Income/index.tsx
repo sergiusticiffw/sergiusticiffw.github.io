@@ -13,7 +13,6 @@ import {
   FaTrash,
   FaCaretDown,
   FaMoneyBillWave,
-  FaChartLine,
 } from 'react-icons/fa';
 import './Income.scss';
 
@@ -105,18 +104,12 @@ const Income = () => {
 
   return (
     <div className="income-container">
-      {/* Header Section */}
+      {/* Simple Header */}
       <div className="income-header">
-        <div className="header-icon">
-          <FaMoneyBillWave />
-        </div>
-        <h1 className="header-title">Income Management</h1>
-        <p className="header-subtitle">
-          Track and manage your income sources efficiently
-        </p>
+        <h1>Income</h1>
       </div>
 
-      {/* Actions Section */}
+      {/* Add Income Button */}
       <div className="btns-actions">
         <button
           onClick={() => {
@@ -130,25 +123,19 @@ const Income = () => {
         </button>
       </div>
 
-      {/* Summary Section */}
-      <div className="income-summary">
-        <div className="summary-header">
-          <FaChartLine />
-          <h3>Income Overview</h3>
+      {/* Simple Stats */}
+      <div className="income-stats">
+        <div className="stat-item">
+          <span className="stat-value">{formatNumber(totalRecords)}</span>
+          <span className="stat-label">Records</span>
         </div>
-        <div className="summary-grid">
-          <div className="summary-item">
-            <div className="summary-value">{formatNumber(totalRecords)}</div>
-            <div className="summary-label">Total Records</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-value">{formatNumber(totalIncome)}</div>
-            <div className="summary-label">Total Income</div>
-          </div>
-          <div className="summary-item">
-            <div className="summary-value">{formatNumber(averageIncome)}</div>
-            <div className="summary-label">Average Income</div>
-          </div>
+        <div className="stat-item">
+          <span className="stat-value">{formatNumber(totalIncome)}</span>
+          <span className="stat-label">Total</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-value">{formatNumber(averageIncome)}</span>
+          <span className="stat-label">Average</span>
         </div>
       </div>
 
@@ -156,9 +143,7 @@ const Income = () => {
       <div className="income-table-section">
         {noData ? (
           <div className="no-income">
-            <div className="no-income-icon">
-              <FaMoneyBillWave />
-            </div>
+            <FaMoneyBillWave />
             <h3>No Income Data</h3>
             <p>Start by adding your first income record</p>
           </div>
@@ -175,9 +160,7 @@ const Income = () => {
               />
             ) : (
               <div className="no-income">
-                <div className="no-income-icon">
-                  <FaMoneyBillWave />
-                </div>
+                <FaMoneyBillWave />
                 <h3>No Income Records</h3>
                 <p>No income records found. Add your first income entry.</p>
               </div>
