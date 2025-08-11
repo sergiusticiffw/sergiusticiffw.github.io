@@ -1,6 +1,11 @@
 import React, { Suspense, useEffect, useState, useMemo } from 'react';
 import IncomeForm from '@components/Income/IncomeForm';
-import { deleteNode, fetchData, formatNumber } from '@utils/utils';
+import {
+  deleteNode,
+  fetchData,
+  formatNumber,
+  getMonthsPassed,
+} from '@utils/utils';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import Modal from '@components/Modal/Modal';
@@ -9,12 +14,7 @@ import IncomeFilters from '@components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
-import {
-  FaPlus,
-  FaTrash,
-  FaCaretDown,
-  FaMoneyBillWave,
-} from 'react-icons/fa';
+import { FaPlus, FaTrash, FaCaretDown, FaMoneyBillWave } from 'react-icons/fa';
 import './Income.scss';
 
 const Income = () => {
@@ -53,7 +53,10 @@ const Income = () => {
 
     return data.incomeData.filter((item: TransactionOrIncomeItem) => {
       // Text filter
-      if (filters.textFilter && !item.dsc.toLowerCase().includes(filters.textFilter.toLowerCase())) {
+      if (
+        filters.textFilter &&
+        !item.dsc.toLowerCase().includes(filters.textFilter.toLowerCase())
+      ) {
         return false;
       }
 
@@ -61,12 +64,12 @@ const Income = () => {
       if (filters.selectedMonth) {
         const itemDate = new Date(item.dt);
         const selectedDate = new Date(filters.selectedMonth + '-01'); // Add day to make it a valid date
-        
+
         const itemYear = itemDate.getFullYear();
         const itemMonth = itemDate.getMonth();
         const selectedYear = selectedDate.getFullYear();
         const selectedMonth = selectedDate.getMonth();
-        
+
         if (itemYear !== selectedYear || itemMonth !== selectedMonth) {
           return false;
         }
@@ -128,7 +131,9 @@ const Income = () => {
       0
     ) || 0;
   const totalRecords = filteredIncomeData?.length || 0;
-  const averageIncome = totalRecords > 0 ? totalIncome / totalRecords : 0;
+  const firstDay = data.raw[data.raw.length - 1]?.dt;
+  const months = getMonthsPassed(firstDay as string).toFixed(2);
+  const averageIncome = totalIncome / months;
 
   if (loading) {
     return (
@@ -246,7 +251,13 @@ const Income = () => {
         }}
       >
         <h3>Are you sure you want to delete this income record?</h3>
-        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
+        <p
+          style={{
+            textAlign: 'center',
+            color: 'rgba(255, 255, 255, 0.7)',
+            marginBottom: '1.5rem',
+          }}
+        >
           This action cannot be undone.
         </p>
         <button

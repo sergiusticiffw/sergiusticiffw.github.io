@@ -28,6 +28,11 @@
   display: flex;
   justify-content: center;
 }
+.fc .fc-col-header,
+.fc-theme-standard th {
+  background-color: var(--calendar-header-bg) !important;
+  color: var(--calendar-header-text) !important;
+}
 
 .tabs-titles {
   list-style-type: none;

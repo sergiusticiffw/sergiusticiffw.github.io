@@ -263,6 +263,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
               center: '',
               right: '',
             }}
+            height="auto"
             datesSet={handleDatesSet}
             customButtons={{
               customPrev: {
@@ -315,7 +316,13 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
         }}
       >
         <h3>Are you sure you want to delete the transaction?</h3>
-        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
+        <p
+          style={{
+            textAlign: 'center',
+            color: 'rgba(255, 255, 255, 0.7)',
+            marginBottom: '1.5rem',
+          }}
+        >
           This action cannot be undone.
         </p>
         <button
