@@ -183,10 +183,12 @@ const Income = () => {
           <span className="stat-value">{formatNumber(totalIncome)}</span>
           <span className="stat-label">Total</span>
         </div>
-        <div className="stat-item">
-          <span className="stat-value">{formatNumber(averageIncome)}</span>
-          <span className="stat-label">Average</span>
-        </div>
+        {!filters.textFilter && !filters.selectedMonth && (
+          <div className="stat-item">
+            <span className="stat-value">{formatNumber(averageIncome)}</span>
+            <span className="stat-label">Average</span>
+          </div>
+        )}
       </div>
 
       {/* Income Table Section */}
