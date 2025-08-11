@@ -84,7 +84,14 @@ const Income = () => {
     selectedMonth: string;
   }) => {
     setFilters(newFilters);
-    setNrOfItemsToShow(20); // Reset pagination when filters change
+    // Only reset pagination if filters actually changed
+    const hasFilterChanged = 
+      newFilters.textFilter !== filters.textFilter || 
+      newFilters.selectedMonth !== filters.selectedMonth;
+    
+    if (hasFilterChanged) {
+      setNrOfItemsToShow(20);
+    }
   };
 
   const handleEdit = (id: string) => {
@@ -132,7 +139,7 @@ const Income = () => {
     ) || 0;
   const totalRecords = filteredIncomeData?.length || 0;
   const firstDay = data.raw[data.raw.length - 1]?.dt;
-  const months = getMonthsPassed(firstDay as string).toFixed(2);
+  const months = firstDay ? parseFloat(getMonthsPassed(firstDay as string).toFixed(2)) : 1;
   const averageIncome = totalIncome / months;
 
   if (loading) {
