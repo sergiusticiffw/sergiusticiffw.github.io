@@ -35,23 +35,11 @@
 
 // Heading styling for most expensive item
 .heading {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-color);
-  margin: $spacing-xl 0 $spacing-md 0;
+  font-size: $font-size-lg;
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-bottom: $spacing-lg;
   text-align: center;
-  position: relative;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -$spacing-sm;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 2px;
-    background: var(--accent-color);
-  }
 }
 
 .month-badge {

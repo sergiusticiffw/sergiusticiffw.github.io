@@ -33,9 +33,9 @@ const Loans: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [focusedItem, setFocusedItem] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sortBy, setSortBy] = useState<
-    'status' | 'title' | 'principal'
-  >('status');
+  const [sortBy, setSortBy] = useState<'status' | 'title' | 'principal'>(
+    'status'
+  );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const tableRef = useRef(null);
@@ -189,7 +189,7 @@ const Loans: React.FC = () => {
   return (
     <div className="loans-container">
       {/* Simple Header */}
-      <div className="loans-header">
+      <div className="income-header">
         <h1>Loans</h1>
       </div>
 
@@ -259,7 +259,12 @@ const Loans: React.FC = () => {
               </div>
 
               <div className="table-wrapper">
-                <table className="loans-table" cellSpacing="0" cellPadding="0" ref={tableRef}>
+                <table
+                  className="loans-table"
+                  cellSpacing="0"
+                  cellPadding="0"
+                  ref={tableRef}
+                >
                   <thead>
                     <tr>
                       <th
@@ -308,7 +313,10 @@ const Loans: React.FC = () => {
                           <td className="loan-title">
                             <div className="title-content">
                               <div className="title-text">
-                                <Link to={`/expenses/loan/${loan.id}`} className="loan-link">
+                                <Link
+                                  to={`/expenses/loan/${loan.id}`}
+                                  className="loan-link"
+                                >
                                   {loan.title}
                                 </Link>
                               </div>
@@ -426,8 +434,15 @@ const Loans: React.FC = () => {
         }}
       >
         <h3>Are you sure you want to delete this loan?</h3>
-        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
-          This action cannot be undone and will also delete all associated payments.
+        <p
+          style={{
+            textAlign: 'center',
+            color: 'rgba(255, 255, 255, 0.7)',
+            marginBottom: '1.5rem',
+          }}
+        >
+          This action cannot be undone and will also delete all associated
+          payments.
         </p>
         <button
           onClick={handleConfirmDelete}
@@ -453,4 +468,3 @@ const Loans: React.FC = () => {
 };
 
 export default Loans;
-

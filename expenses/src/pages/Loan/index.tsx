@@ -156,7 +156,7 @@ const Loan: React.FC = () => {
   return (
     <div className="loan-container">
       {/* Simple Header */}
-      <div className="loan-header">
+      <div className="income-header">
         <h1>{loan?.title}</h1>
       </div>
 
