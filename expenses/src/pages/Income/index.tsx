@@ -1,10 +1,11 @@
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState, useMemo } from 'react';
 import IncomeForm from '@components/Income/IncomeForm';
 import { deleteNode, fetchData, formatNumber } from '@utils/utils';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import Modal from '@components/Modal/Modal';
 import IncomeTable from '@components/Income/IncomeTable';
+import IncomeFilters from '@components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
@@ -28,6 +29,10 @@ const Income = () => {
   const dispatch = useAuthDispatch();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nrOfItemsToShow, setNrOfItemsToShow] = useState(20);
+  const [filters, setFilters] = useState({
+    textFilter: '',
+    selectedMonth: '',
+  });
 
   useEffect(() => {
     if (noData) {
@@ -41,6 +46,43 @@ const Income = () => {
     field_amount: '',
     field_description: '',
   });
+
+  // Filter income data based on current filters
+  const filteredIncomeData = useMemo(() => {
+    if (!data.incomeData) return [];
+
+    return data.incomeData.filter((item: TransactionOrIncomeItem) => {
+      // Text filter
+      if (filters.textFilter && !item.dsc.toLowerCase().includes(filters.textFilter.toLowerCase())) {
+        return false;
+      }
+
+      // Month filter
+      if (filters.selectedMonth) {
+        const itemDate = new Date(item.dt);
+        const selectedDate = new Date(filters.selectedMonth + '-01'); // Add day to make it a valid date
+        
+        const itemYear = itemDate.getFullYear();
+        const itemMonth = itemDate.getMonth();
+        const selectedYear = selectedDate.getFullYear();
+        const selectedMonth = selectedDate.getMonth();
+        
+        if (itemYear !== selectedYear || itemMonth !== selectedMonth) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [data.incomeData, filters]);
+
+  const handleFilterChange = (newFilters: {
+    textFilter: string;
+    selectedMonth: string;
+  }) => {
+    setFilters(newFilters);
+    setNrOfItemsToShow(20); // Reset pagination when filters change
+  };
 
   const handleEdit = (id: string) => {
     const item = data.incomeData.find(
@@ -78,14 +120,14 @@ const Income = () => {
     dataDispatch({ type: 'CLEAR_CHANGED_ITEM', id });
   };
 
-  // Calculate income statistics
+  // Calculate income statistics based on filtered data
   const totalIncome =
-    data.incomeData?.reduce(
+    filteredIncomeData?.reduce(
       (sum: number, item: TransactionOrIncomeItem) =>
         sum + parseFloat(item.sum || '0'),
       0
     ) || 0;
-  const totalRecords = data.incomeData?.length || 0;
+  const totalRecords = filteredIncomeData?.length || 0;
   const averageIncome = totalRecords > 0 ? totalIncome / totalRecords : 0;
 
   if (loading) {
@@ -123,6 +165,9 @@ const Income = () => {
         </button>
       </div>
 
+      {/* Filters */}
+      <IncomeFilters onFilterChange={handleFilterChange} />
+
       {/* Simple Stats */}
       <div className="income-stats">
         <div className="stat-item">
@@ -149,9 +194,9 @@ const Income = () => {
           </div>
         ) : (
           <>
-            {data.incomeData && data.incomeData.length ? (
+            {filteredIncomeData && filteredIncomeData.length ? (
               <IncomeTable
-                items={data.incomeData.slice(0, nrOfItemsToShow)}
+                items={filteredIncomeData.slice(0, nrOfItemsToShow)}
                 handleEdit={handleEdit}
                 // @ts-expect-error
                 setShowDeleteModal={setShowDeleteModal}
@@ -162,11 +207,15 @@ const Income = () => {
               <div className="no-income">
                 <FaMoneyBillWave />
                 <h3>No Income Records</h3>
-                <p>No income records found. Add your first income entry.</p>
+                <p>
+                  {filters.textFilter || filters.selectedMonth
+                    ? 'No income records match your current filters.'
+                    : 'No income records found. Add your first income entry.'}
+                </p>
               </div>
             )}
 
-            {data.incomeData?.length > nrOfItemsToShow && (
+            {filteredIncomeData?.length > nrOfItemsToShow && (
               <div className="load-more">
                 <button
                   onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}

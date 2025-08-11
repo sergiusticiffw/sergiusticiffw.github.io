@@ -1,0 +1,152 @@
+@use '../../styles/variables' as *;
+
+.income-filters {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+  padding: $spacing-lg;
+  border: 1px solid var(--secondary-color);
+  border-radius: $border-radius-lg;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+
+  .filter-group {
+    display: flex;
+    gap: $spacing-md;
+    flex-wrap: wrap;
+    width: 100%;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+    }
+  }
+
+  .filter-input {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+
+    .filter-icon {
+      position: absolute;
+      left: $spacing-md;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent-color);
+      opacity: 0.8;
+      font-size: 16px;
+      z-index: 2;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px 16px 16px 48px;
+      border: 2px solid var(--secondary-color);
+      border-radius: 8px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      min-height: 52px;
+      box-sizing: border-box;
+
+      &::placeholder {
+        color: var(--text-color);
+        opacity: 0.6;
+        font-weight: 400;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      &:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      &.text-filter {
+        min-width: 280px;
+      }
+
+      &.month-filter {
+        min-width: 180px;
+        
+        // Ensure month picker displays correctly
+        &::-webkit-datetime-edit {
+          color: var(--text-color);
+          font-weight: 500;
+        }
+        
+        &::-webkit-calendar-picker-indicator {
+          filter: invert(1);
+          cursor: pointer;
+          opacity: 0.8;
+          transition: opacity 0.2s ease;
+          width: 20px;
+          height: 20px;
+          
+          &:hover {
+            opacity: 1;
+          }
+        }
+        
+        // Firefox
+        &::-moz-calendar-picker-indicator {
+          filter: invert(1);
+          cursor: pointer;
+          opacity: 0.8;
+          transition: opacity 0.2s ease;
+          width: 20px;
+          height: 20px;
+          
+          &:hover {
+            opacity: 1;
+          }
+        }
+        
+        // Edge
+        &::-ms-clear,
+        &::-ms-expand {
+          display: none;
+        }
+      }
+    }
+  }
+
+  .clear-filters-btn {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    padding: 12px 20px;
+    border: 2px solid var(--accent-color);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--accent-color);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-self: flex-start;
+    min-height: 44px;
+
+    &:hover {
+      background: var(--accent-color);
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    svg {
+      font-size: 14px;
+    }
+  }
+}

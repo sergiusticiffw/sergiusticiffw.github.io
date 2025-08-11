@@ -113,6 +113,9 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                           month: 'short',
                         })}
                       </div>
+                      <div className="date-year">
+                        {new Date(element.dt).getFullYear()}
+                      </div>
                     </div>
                   </td>
                   <td className="income-amount">

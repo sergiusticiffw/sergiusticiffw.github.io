@@ -175,9 +175,8 @@ const PaymentDetails = (props) => {
 
       {/* Payment History Table */}
       {payments.length ? (
-        <div className="payment-table-container">
+        <div className="income-table-container">
           <div className="table-header">
-            <h3>Payment History</h3>
             <div className="table-subtitle">
               Showing {Math.min(nrOfItemsToShow, payments.length)} of{' '}
               {payments.length} payments
@@ -186,7 +185,7 @@ const PaymentDetails = (props) => {
 
           <div className="table-wrapper">
             <table
-              className="expenses-table payment-table"
+              className="income-table payment-table"
               cellSpacing="0"
               cellPadding="0"
             >
@@ -220,7 +219,7 @@ const PaymentDetails = (props) => {
                         )
                       }
                     >
-                      <td className="payment-date">
+                      <td className="income-date">
                         <div className="date-content">
                           <div className="date-day">
                             {new Date(payment.fdt).getDate()}
@@ -232,7 +231,7 @@ const PaymentDetails = (props) => {
                           </div>
                         </div>
                       </td>
-                      <td className="payment-title">
+                      <td className="income-description">
                         <div className="title-content">
                           <div className="title-text">{payment.title}</div>
                           {isSimulated && (
@@ -240,7 +239,7 @@ const PaymentDetails = (props) => {
                           )}
                         </div>
                       </td>
-                      <td className="payment-amount">
+                      <td className="income-amount">
                         <div className="amount-value">
                           {formatNumber(payment.fpi)}
                         </div>
