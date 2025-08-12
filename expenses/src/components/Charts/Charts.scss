@@ -26,6 +26,48 @@
   margin-top: $spacing-xl;
 }
 
+// Daily average table styling (for YearAverageTrend component)
+.daily-average {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+
+  th {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    vertical-align: middle;
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  tr {
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  .text-with-icon {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
 // Loading spinner
 .lds-ripple {
   display: inline-block;

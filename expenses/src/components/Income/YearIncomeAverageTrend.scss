@@ -1,6 +1,6 @@
 @use '../../styles/variables' as *;
 
-.daily-average-balanced {
+.year-income-average-balanced {
   margin: 0.75rem 0;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -14,7 +14,7 @@
   padding: 0.75rem 1rem;
   background: rgba(255, 255, 255, 0.08);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  
+
   h3 {
     margin: 0;
     font-size: 1.25rem;
@@ -28,7 +28,7 @@
 .balanced-table {
   width: 100%;
   border-collapse: collapse;
-  
+
   th {
     padding: 0.75rem 1rem;
     font-weight: 600;
@@ -37,77 +37,69 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    
+    text-align: center;
+
     &:first-child {
       text-align: left;
     }
-    
-    &:last-child {
-      text-align: right;
-    }
-    
-    &.sortable {
-      cursor: pointer;
-    }
   }
-  
+
   td {
     padding: 0.75rem 1rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     vertical-align: middle;
-    
+    text-align: center;
+
     &:first-child {
       text-align: left;
     }
-    
-    &:last-child {
-      text-align: right;
-    }
-    
-    &.category-cell {
-      .category-name {
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 1rem;
-        font-weight: 500;
-        display: block;
-        text-align: left;
-      }
-      
-      .category-percentage {
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.875rem;
-        font-weight: 400;
-        margin-top: 0.125rem;
-        display: block;
-        text-align: left;
+
+    &.year-cell {
+      .text-with-icon {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .year-name {
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 1rem;
+          font-weight: 500;
+        }
       }
     }
-    
+
     &.amount-cell {
       color: white;
       font-size: 1rem;
       font-weight: 600;
-      text-align: right;
     }
   }
-  
+
   tr {
     &:last-child td {
       border-bottom: none;
     }
-    
+
     &.total-row {
       background: rgba(255, 255, 255, 0.08);
       border-top: 2px solid rgba(255, 255, 255, 0.1);
-      
+
       .total-label {
-        color: white;
-        font-size: 1rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        .text-with-icon {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          span {
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+        }
       }
-      
+
       .total-amount {
         color: white;
         font-size: 1rem;
@@ -117,45 +109,44 @@
   }
 }
 
-// Responsive
 @media (max-width: $breakpoint-md) {
-  .daily-average-balanced {
+  .year-income-average-balanced {
     margin: 0.5rem 0;
   }
-  
+
   .section-header {
     padding: 0.5rem 0.75rem;
-    
     h3 {
       font-size: 1.125rem;
     }
   }
-  
+
   .balanced-table {
     th, td {
       padding: 0.5rem 0.75rem;
       font-size: 0.9rem;
     }
-    
-    td.category-cell {
-      .category-name {
-        font-size: 0.9rem;
-      }
-      
-      .category-percentage {
-        font-size: 0.8rem;
+
+    td.year-cell {
+      .text-with-icon {
+        .year-name {
+          font-size: 0.9rem;
+        }
       }
     }
-    
     td.amount-cell {
       font-size: 0.9rem;
     }
-    
+
     tr.total-row {
-      .total-label,
+      .total-label {
+        .text-with-icon span {
+          font-size: 0.9rem;
+        }
+      }
       .total-amount {
         font-size: 0.9rem;
       }
     }
   }
-} 
+}

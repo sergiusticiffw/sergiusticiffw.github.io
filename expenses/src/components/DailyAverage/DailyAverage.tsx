@@ -3,11 +3,11 @@ import { useData } from '@context/context';
 import { calculateDaysFrom, formatNumber } from '@utils/utils';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import { DataState } from '@type/types';
+import './DailyAverage.scss';
 
 const DailyAverage = () => {
   const { data } = useData() as DataState;
 
-  // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data.raw, data.categoryTotals]);
 
   const firstDay = data.raw[data.raw.length - 1]?.dt;
@@ -16,10 +16,15 @@ const DailyAverage = () => {
     Object.values(data.categoryTotals || [])
   );
 
+  const totalDaily = data.totalSpent / daysPassed;
+
   return (
-    <>
-      <span className="heading">Daily average per category</span>
-      <table className="daily-average">
+    <div className="daily-average-balanced">
+      <div className="section-header">
+        <h3>Daily Average Per Category</h3>
+      </div>
+      
+      <table className="balanced-table">
         <thead>
           <tr>
             <th>Category</th>
@@ -27,31 +32,36 @@ const DailyAverage = () => {
               onClick={() => requestSort('y')}
               className={`sortable ${getClassNamesFor(sortConfig, 'y')}`}
             >
-              Amount
+              Daily Average
             </th>
           </tr>
         </thead>
         <tbody>
-          {sortedItems.map((item, key) => (
-            <tr key={key}>
-              <td>{item.name}</td>
-              <td>
-                {formatNumber(
-                  parseFloat(String(item.y / daysPassed)).toFixed(2)
-                )}{' '}
-                / day
-              </td>
-            </tr>
-          ))}
+          {sortedItems.map((item, key) => {
+            const dailyAmount = parseFloat(String(item.y / daysPassed)).toFixed(2);
+            const percentage = ((item.y / data.totalSpent) * 100).toFixed(1);
+            
+            return (
+              <tr key={key}>
+                <td className="category-cell">
+                  <span className="category-name">{item.name}</span>
+                  <span className="category-percentage">({percentage}%)</span>
+                </td>
+                <td className="amount-cell">
+                  {formatNumber(parseFloat(dailyAmount))} / day
+                </td>
+              </tr>
+            );
+          })}
+          <tr className="total-row">
+            <td className="total-label">Total</td>
+            <td className="total-amount">
+              {formatNumber(parseFloat(totalDaily.toFixed(2)))} / day
+            </td>
+          </tr>
         </tbody>
       </table>
-      <div className="average-spending">
-        Average spending per day:{' '}
-        {formatNumber(
-          parseFloat(String(data.totalSpent / daysPassed)).toFixed(2)
-        )}{' '}
-      </div>
-    </>
+    </div>
   );
 };
 

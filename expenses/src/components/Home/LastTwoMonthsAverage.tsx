@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useData } from '@context/context';
 import { formatNumber } from '@utils/utils';
 import { DataState, TransactionOrIncomeItem } from '@type/types';
+import './LastTwoMonthsAverage.scss';
 
 const LastTwoMonthsAverage = () => {
   const { data } = useData() as DataState;
@@ -12,6 +13,7 @@ const LastTwoMonthsAverage = () => {
   let userHasMoreThanTwoMonths = false;
   let lastProcessedItem = {};
   const twoMonthsAgo = new Date().setDate(new Date().getDate() - 60);
+
   for (const item of data.raw) {
     if ((item as TransactionOrIncomeItem).type === 'incomes') {
       continue;
@@ -33,10 +35,14 @@ const LastTwoMonthsAverage = () => {
     : timeDiff / (1000 * 3600 * 24);
 
   return (
-    <span>
-      Average spending for the last 60 days:{' '}
-      {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} / day
-    </span>
+    <div className="last-two-months-average-balanced">
+      <div className="content">
+        <span>
+          Average spending for the last 60 days:{' '}
+          {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} / day
+        </span>
+      </div>
+    </div>
   );
 };
 

@@ -21,7 +21,9 @@
 @use 'components/Income/IncomeForm' as *;
 @use 'components/Income/IncomeTable' as *;
 @use 'components/Income/Income' as *;
+@use 'components/Income/YearIncomeAverageTrend' as *;
 @use 'components/Common/Common' as *;
+@use 'components/Home/LastTwoMonthsAverage' as *;
 
 // Import page styles
 @use 'pages/AddTransaction/AddTransaction' as *;
