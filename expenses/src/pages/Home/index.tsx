@@ -223,9 +223,12 @@ const Home = () => {
       
       <Filters />
       {loading ? (
-        <div className="lds-ripple">
-          <div></div>
-          <div></div>
+        <div className="loading-container">
+          <div className="loader">
+            <span className="loader__element"></span>
+            <span className="loader__element"></span>
+            <span className="loader__element"></span>
+          </div>
         </div>
       ) : noData ? (
         ''
