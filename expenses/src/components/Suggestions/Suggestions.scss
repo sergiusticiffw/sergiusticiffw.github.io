@@ -1,5 +1,14 @@
 @use '../../styles/variables' as *;
 
+@keyframes bubble-up {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 ul.suggestions {
   list-style: none;
   padding: 0;

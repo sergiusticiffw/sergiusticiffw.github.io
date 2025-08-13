@@ -89,15 +89,6 @@ input[type="checkbox"] {
   }
 }
 
-@keyframes bubble-up {
-  0% {
-    transform: scale(0);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
 @keyframes expandBorder {
   0% {
     opacity: 0;

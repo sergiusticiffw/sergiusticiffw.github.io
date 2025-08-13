@@ -57,9 +57,12 @@ const Charts = () => {
       <h2>Charts page</h2>
       <Filters />
       {loading ? (
-        <div className="lds-ripple">
-          <div></div>
-          <div></div>
+        <div className="loading-container">
+          <div className="loader">
+            <span className="loader__element"></span>
+            <span className="loader__element"></span>
+            <span className="loader__element"></span>
+          </div>
         </div>
       ) : (
         !noEntries && (
