@@ -79,6 +79,11 @@
           animation: highlight-removed forwards 1s ease-out;
         }
         
+        &.simulated-payment {
+          background: rgba(255, 193, 7, 0.1);
+          border-left: 4px solid #ffc107;
+        }
+        
         td {
           padding: 1rem;
           color: #fff;
@@ -127,6 +132,27 @@
     .description-text {
       font-weight: 500;
       color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .title-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      
+      .title-text {
+        font-weight: 500;
+      }
+      
+      .simulated-badge {
+        background: #ffc107;
+        color: #000;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        align-self: flex-start;
+      }
     }
   }
   
