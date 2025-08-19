@@ -244,7 +244,7 @@ const PaymentDetails = (props) => {
                           {formatNumber(payment.fpi)}
                         </div>
                       </td>
-                      <td className="desktop-only payment-actions-cell">
+                      <td className="desktop-only income-actions-cell">
                         <div className="action-buttons">
                           <button
                             onClick={() => handleEdit(payment.id)}
