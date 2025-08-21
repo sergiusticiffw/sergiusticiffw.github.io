@@ -30,7 +30,7 @@ const YearAverageTrend = () => {
   ]);
 
   const totalSpent = data.filtered?.totalSpent || data?.totalSpent;
-  
+
   // Get localized month names
   const monthNames = getMonthNames();
   const formattedData = formatDataForChart(items, false, monthNames);
@@ -64,8 +64,7 @@ const YearAverageTrend = () => {
     credits: {
       enabled: false,
     },
-    // @ts-expect-error fix the tsc.
-    series: formattedData,
+    series: formattedData as any,
   };
   const firstDay = data.raw[data.raw.length - 1]?.dt;
   const monthlyAverage: number =
@@ -114,15 +113,22 @@ const YearAverageTrend = () => {
           </tr>
           <tr>
             <td>{t('charts.totalDays')}</td>
-            <td>{formatNumber(calculateDaysFrom(firstDay))} {t('charts.days')}</td>
+            <td>
+              {formatNumber(calculateDaysFrom(firstDay))} {t('charts.days')}
+            </td>
           </tr>
           <tr>
             <td>{t('charts.totalMonths')}</td>
-            <td>{getMonthsPassed(firstDay as string).toFixed(2)} {t('charts.months')}</td>
+            <td>
+              {getMonthsPassed(firstDay as string).toFixed(2)}{' '}
+              {t('charts.months')}
+            </td>
           </tr>
           <tr>
             <td>{t('charts.totalItems')}</td>
-            <td>{formatNumber(itms.length + 1)} {t('charts.items')}</td>
+            <td>
+              {formatNumber(itms.length + 1)} {t('charts.items')}
+            </td>
           </tr>
         </tbody>
       </table>

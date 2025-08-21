@@ -96,7 +96,6 @@ const SavingsHistory = () => {
   return (
     <HighchartsReact
       highcharts={Highcharts}
-      constructorType={'stockChart'}
       options={savingsOptions}
     />
   );

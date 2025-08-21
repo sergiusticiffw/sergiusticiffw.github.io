@@ -11,7 +11,7 @@ import YearAverageTrend from '@components/Charts/YearAverageTrend';
 import MonthlyComparisonTrend from '@components/Charts/MonthlyComparisonTrend';
 import AllTimeSpendings from '@components/Home/AllTimeSpendings';
 import MonthlyAverage from '@components/Home/MonthlyAverage';
-import SavingsHistory from '@components/Charts/SavingsHistory';
+
 import MonthlyAverageTrend from '@components/Charts/MonthlyAverageTrend';
 import DailyAverage from '@components/DailyAverage/DailyAverage';
 import DailyAverageTrend from '@components/Charts/DailyAverageTrend';
@@ -23,7 +23,6 @@ const componentMap = {
   MonthlyComparisonTrend,
   AllTimeSpendings,
   MonthlyAverage,
-  SavingsHistory,
   MonthlySavingsTrend,
   MonthlyAverageTrend,
   DailyAverage,

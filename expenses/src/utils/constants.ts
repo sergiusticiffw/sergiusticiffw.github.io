@@ -415,7 +415,6 @@ export const availableCharts = [
   'MonthlyComparisonTrend',
   'AllTimeSpendings',
   'MonthlyAverage',
-  'SavingsHistory',
   'MonthlySavingsTrend',
   'MonthlyAverageTrend',
   'DailyAverage',

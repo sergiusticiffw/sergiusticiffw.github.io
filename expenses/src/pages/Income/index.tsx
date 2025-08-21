@@ -22,7 +22,7 @@ const Income = () => {
   const showNotification = useNotification();
   const { t } = useLocalization();
   const { token } = useAuthState() as AuthState;
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState<string | false>(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isNewModal, setIsNewModal] = useState(false);
   const { data, dataDispatch } = useData();
@@ -109,9 +109,9 @@ const Income = () => {
     setShowEditModal(true);
   };
 
-  const handleDelete = (showDeleteModal: boolean, token: string) => {
+  const handleDelete = (id: string, token: string) => {
     setIsSubmitting(true);
-    deleteNode(showDeleteModal, token, (response) => {
+    deleteNode(id, token, (response) => {
       if (response.ok) {
         showNotification(
           t('notification.incomeDeleted'),
@@ -179,7 +179,13 @@ const Income = () => {
       </div>
 
       {/* Filters */}
-      <IncomeFilters onFilterChange={handleFilterChange} />
+      <IncomeFilters
+        textFilter={filters.textFilter}
+        selectedMonth={filters.selectedMonth}
+        onTextFilterChange={(textFilter) => handleFilterChange({ ...filters, textFilter })}
+        onMonthFilterChange={(selectedMonth) => handleFilterChange({ ...filters, selectedMonth })}
+        onClearFilters={() => handleFilterChange({ textFilter: '', selectedMonth: '' })}
+      />
 
       {/* Simple Stats */}
       <div className="income-stats">
@@ -253,7 +259,7 @@ const Income = () => {
 
       {/* Modals */}
       <Modal
-        show={showDeleteModal}
+        show={!!showDeleteModal}
         onClose={(e) => {
           e.preventDefault();
           setShowDeleteModal(false);
@@ -270,7 +276,7 @@ const Income = () => {
           {t('modal.deleteMessage')}
         </p>
         <button
-          onClick={() => handleDelete(showDeleteModal, token)}
+          onClick={() => showDeleteModal && handleDelete(showDeleteModal, token)}
           className="button danger wide"
           disabled={isSubmitting}
         >
