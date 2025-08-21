@@ -12,7 +12,12 @@ const handleErrors = (
     fetch('https://dev-expenses-api.pantheonsite.io/jwt/token', options).then(
       (response) => {
         if (response.status === 403) {
-          logout(dispatch, dataDispatch);
+          // Add null checks before calling logout
+          if (dispatch && dataDispatch) {
+            logout(dispatch, dataDispatch);
+          } else {
+            console.error('Dispatch functions not available for logout');
+          }
         }
       }
     );
@@ -70,6 +75,12 @@ export const fetchRequest = (
   dispatch: any,
   callback: any
 ) => {
+  // Add null checks for dispatch functions
+  if (!dataDispatch || !dispatch) {
+    console.error('Dispatch functions not available for fetch request');
+    return;
+  }
+
   fetch(url, options)
     .then((response) => handleErrors(response, options, dataDispatch, dispatch))
     .then((response) => callback(response))
@@ -94,6 +105,12 @@ export const deleteNode = (nid: string, token: string, callback: any) => {
 };
 
 export const deleteLoan = (nid: string, token: string, dataDispatch: any, dispatch: any, onSuccess: () => void) => {
+  // Add null checks for dispatch functions
+  if (!dataDispatch || !dispatch) {
+    console.error('Dispatch functions not available for delete loan');
+    return;
+  }
+
   const fetchOptions = {
     method: 'DELETE',
     headers: new Headers({
@@ -260,6 +277,12 @@ export const fetchData = (
 };
 
 export const fetchLoans = (token: string, dataDispatch: any, dispatch: any) => {
+  // Add null checks for dispatch functions
+  if (!dataDispatch || !dispatch) {
+    console.error('Dispatch functions not available for fetch loans');
+    return;
+  }
+
   const fetchOptions = {
     method: 'GET',
     headers: new Headers({

@@ -164,7 +164,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             value={formState.field_category}
             onChange={handleChange}
           >
-            <option value="">{t('transactionForm.category')}</option>
             {localizedCategories.map((category, id) => (
               <option key={id} value={category.value}>
                 {category.label}

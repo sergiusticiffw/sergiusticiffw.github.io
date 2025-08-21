@@ -85,14 +85,22 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
         ? 'https://dev-expenses-api.pantheonsite.io/node?_format=json'
         : `https://dev-expenses-api.pantheonsite.io/node/${values.nid}?_format=json`;
 
-    fetchLoans(
-      url,
-      fetchOptions,
-      dispatch,
-      (data) => {
+    fetch(url, fetchOptions)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
         if (data.nid) {
           onSuccess();
-          showNotification(t('notification.loanAdded'), notificationType.SUCCESS);
+          showNotification(
+            formType === 'add' 
+              ? t('notification.loanAdded') 
+              : t('notification.loanUpdated'), 
+            notificationType.SUCCESS
+          );
           setIsSubmitting(false);
           setFormState(initialState);
         } else {
@@ -102,8 +110,15 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           );
           setIsSubmitting(false);
         }
-      }
-    );
+      })
+      .catch((error) => {
+        console.error('Loan operation failed:', error);
+        showNotification(
+          t('error.unknown'),
+          notificationType.ERROR
+        );
+        setIsSubmitting(false);
+      });
   };
 
   return (
