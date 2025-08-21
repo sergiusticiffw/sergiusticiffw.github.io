@@ -57,7 +57,12 @@
     }
     
     input[type='date'] {
-      position: relative;
+      cursor: pointer;
+      
+      // Ensure the date picker popup appears above other elements
+      &:focus {
+        z-index: 9999;
+      }
       
       &::-webkit-calendar-picker-indicator {
         filter: invert(1);
@@ -68,24 +73,34 @@
         margin: 0;
         width: 20px;
         height: 20px;
+        opacity: 1;
       }
       
       &::-webkit-datetime-edit {
         padding: 0;
+        cursor: pointer;
       }
       
       &::-webkit-datetime-edit-fields-wrapper {
         padding: 0;
+        cursor: pointer;
       }
       
       &::-webkit-datetime-edit-text {
         padding: 0 2px;
+        cursor: pointer;
       }
       
       &::-webkit-datetime-edit-month-field,
       &::-webkit-datetime-edit-day-field,
       &::-webkit-datetime-edit-year-field {
         padding: 0 2px;
+        cursor: pointer;
+      }
+      
+      // Ensure the date picker can appear
+      &::-webkit-calendar-picker-indicator:hover {
+        opacity: 0.8;
       }
     }
     

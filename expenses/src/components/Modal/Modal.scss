@@ -10,12 +10,16 @@
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: $z-index-modal;
+  z-index: 9999;
   transition: all $transition-normal;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: $spacing-md;
+  
+  // Ensure date pickers can appear above modal backdrop
+  // Note: :has() selector might not be supported in all browsers
+  // Alternative approach: always use high z-index for modals with forms
 }
 
 .modal-content {
@@ -25,16 +29,31 @@
   max-width: 500px;
   max-height: 80vh;
   background: var(--bg-color);
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   padding: 0;
+  
+  // Ensure date pickers can appear outside modal boundaries
+  &.form-modal {
+    overflow: visible;
+    
+    .modal-body {
+      overflow: visible;
+    }
+  }
 }
 
 .modal-body {
   overflow-y: auto;
+  overflow-x: visible;
   padding: $spacing-xl;
   flex-grow: 1;
+  
+  // Ensure date pickers work in modal body
+  &:has(input[type='date']) {
+    overflow: visible;
+  }
   
   h3 {
     color: #fff;
@@ -104,6 +123,32 @@
       &:nth-child(2) {
         animation-delay: -0.16s;
       }
+    }
+  }
+  
+  // Ensure date pickers work properly in modals
+  input[type='date'] {
+    position: relative;
+    
+    &:focus {
+      z-index: 999999;
+      position: relative;
+    }
+    
+    &::-webkit-calendar-picker-indicator {
+      z-index: 999999;
+      position: relative;
+    }
+    
+    // Force the date picker to appear above everything
+    &::-webkit-datetime-edit,
+    &::-webkit-datetime-edit-fields-wrapper,
+    &::-webkit-datetime-edit-text,
+    &::-webkit-datetime-edit-month-field,
+    &::-webkit-datetime-edit-day-field,
+    &::-webkit-datetime-edit-year-field {
+      position: relative;
+      z-index: 999999;
     }
   }
 }

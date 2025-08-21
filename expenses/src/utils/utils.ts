@@ -23,7 +23,18 @@ const handleErrors = (
     );
     return response.statusText;
   }
-  return response.json();
+  
+  // Check if response has content before trying to parse JSON
+  const contentType = response.headers.get('content-type');
+  const contentLength = response.headers.get('content-length');
+  
+  // If response is empty or doesn't have JSON content, return null
+  if (!contentType || !contentType.includes('application/json') || contentLength === '0') {
+    return null;
+  }
+  
+  // For successful responses, return the response object to be handled by the caller
+  return response;
 };
 
 export const formatDataForChart = (data: DataStructure, secondSet = false, localizedMonthNames?: string[]) => {
@@ -83,7 +94,36 @@ export const fetchRequest = (
 
   fetch(url, options)
     .then((response) => handleErrors(response, options, dataDispatch, dispatch))
-    .then((response) => callback(response))
+    .then((result) => {
+      // If handleErrors returned a string (error), pass it to callback
+      if (typeof result === 'string') {
+        return callback(result);
+      }
+      
+      // If handleErrors returned null (empty response), pass null to callback
+      if (result === null) {
+        return callback(null);
+      }
+      
+      // If handleErrors returned a response object, try to parse JSON
+      if (result instanceof Response) {
+        return result.text().then(text => {
+          if (!text || text.trim() === '') {
+            return callback(null);
+          }
+          try {
+            const data = JSON.parse(text);
+            return callback(data);
+          } catch (error) {
+            console.warn('Failed to parse JSON response:', error);
+            return callback(null);
+          }
+        });
+      }
+      
+      // For any other case, pass the result to callback
+      return callback(result);
+    })
     .catch((error) => console.log(error));
 };
 

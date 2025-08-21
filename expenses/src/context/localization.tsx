@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 
 export type Language = 'en' | 'ro';
 
@@ -8,7 +14,9 @@ interface LocalizationContextType {
   t: (key: string) => string;
 }
 
-const LocalizationContext = createContext<LocalizationContextType | undefined>(undefined);
+const LocalizationContext = createContext<LocalizationContextType | undefined>(
+  undefined
+);
 
 // Translation data
 const translations = {
@@ -98,7 +106,8 @@ const translations = {
     'income.monthlyIncome': 'Monthly Income',
     'income.yearlyIncome': 'Yearly Income',
     'income.noIncome': 'No income records found',
-    'income.noIncomeDesc': 'No income available. Add your first income to get started!',
+    'income.noIncomeDesc':
+      'No income available. Add your first income to get started!',
     'income.addFirstIncome': 'Add Your First Income',
     'income.incomeRecords': 'Income Records',
     'income.manageAndTrackIncome': 'Manage and track your income sources',
@@ -111,8 +120,6 @@ const translations = {
     'income.amount': 'Amount',
     'income.date': 'Date',
     'income.notes': 'Notes',
-
-
 
     // Profile Page
     'profile.title': 'Profile',
@@ -140,7 +147,8 @@ const translations = {
     'profile.signOut': 'Sign Out',
 
     // Login
-    'login.pleaseLogin': 'Please login using Google in order to access app functionality.',
+    'login.pleaseLogin':
+      'Please login using Google in order to access app functionality.',
     'login.errors': 'We have some errors',
     'login.signingIn': 'Signing in...',
     'login.signInWithGoogle': 'Sign in with Google',
@@ -297,7 +305,8 @@ const translations = {
     'loans.active': 'Active',
     'loans.pending': 'Pending',
     'loans.noLoans': 'No loans found',
-    'loans.noLoansDesc': 'No loans available. Add your first loan to get started!',
+    'loans.noLoansDesc':
+      'No loans available. Add your first loan to get started!',
     'loans.noLoansWithStatus': 'No loans with status',
     'loans.showAllLoans': 'Show All Loans',
     'loans.allStatuses': 'All Statuses',
@@ -321,10 +330,16 @@ const translations = {
 
     // Modals
     'modal.deleteTitle': 'Delete Confirmation',
-    'modal.deleteMessage': 'Are you sure you want to delete this item? This action cannot be undone.',
-    'modal.deleteTransaction': 'Are you sure you want to delete this transaction?',
+    'modal.deleteMessage':
+      'Are you sure you want to delete this item? This action cannot be undone.',
+    'modal.deleteTransaction':
+      'Are you sure you want to delete this transaction?',
     'modal.deleteIncome': 'Are you sure you want to delete this income?',
-    'modal.deleteLoan': 'Are you sure you want to delete this loan? This action cannot be undone and will also delete all associated payments.',
+    'modal.deleteLoan':
+      'Are you sure you want to delete this loan? This action cannot be undone and will also delete all associated payments.',
+    'modal.deleteLoanTitle': 'Are you sure you want to delete this loan?',
+    'modal.deleteLoanMessage':
+      'This action cannot be undone and will also delete all associated payments.',
     'modal.deletePayment': 'Are you sure you want to delete this payment?',
 
     // Errors
@@ -365,7 +380,8 @@ const translations = {
     'payment.editPayment': 'Edit Payment',
     'payment.deletePayment': 'Delete Payment',
     'payment.noPaymentsYet': 'No Payments Yet',
-    'payment.noPaymentsDesc': 'Start by adding your first payment to track your loan progress.',
+    'payment.noPaymentsDesc':
+      'Start by adding your first payment to track your loan progress.',
     'payment.showingPayments': 'Showing',
     'payment.of': 'of',
     'payment.payments': 'payments',
@@ -489,7 +505,8 @@ const translations = {
     'home.mostExpensiveItem': 'Cel mai scump articol',
     'home.dailyAveragePerCategory': 'Media Zilnică pe Categorie',
     'home.monthlyAveragePerCategory': 'Media Lunară pe Categorie',
-    'home.averageSpendingLast60Days': 'Cheltuielile medii pentru ultimele 60 de zile',
+    'home.averageSpendingLast60Days':
+      'Cheltuielile medii pentru ultimele 60 de zile',
     'home.day': 'zi',
     'home.month': 'lună',
 
@@ -502,9 +519,11 @@ const translations = {
     'income.monthlyIncome': 'Venit Lunar',
     'income.yearlyIncome': 'Venit Anual',
     'income.noIncome': 'Nu s-au găsit înregistrări de venit',
-    'income.noIncomeDesc': 'Nu sunt venituri disponibile. Adaugă primul tău venit pentru a începe!',
+    'income.noIncomeDesc':
+      'Nu sunt venituri disponibile. Adaugă primul tău venit pentru a începe!',
     'income.incomeRecords': 'Înregistrări de Venituri',
-    'income.manageAndTrackIncome': 'Gestionează și urmărește sursele tale de venit',
+    'income.manageAndTrackIncome':
+      'Gestionează și urmărește sursele tale de venit',
     'income.totalIncomePerYear': 'Total Venituri pe An',
     'income.year': 'An',
     'income.spent': 'Cheltuit',
@@ -515,8 +534,6 @@ const translations = {
     'income.amount': 'Suma',
     'income.date': 'Data',
     'income.notes': 'Note',
-
-
 
     // Profile Page
     'profile.title': 'Profil',
@@ -538,13 +555,15 @@ const translations = {
     'profile.monthlyBudget': 'Buget Lunar',
     'profile.enterMonthlyBudget': 'Introdu bugetul lunar',
     'profile.chartsSettings': 'Setări Grafice',
-    'profile.useChartsBackgroundColor': 'Folosește Culoarea de Fundal pentru Grafice',
+    'profile.useChartsBackgroundColor':
+      'Folosește Culoarea de Fundal pentru Grafice',
     'profile.chartsVisibility': 'Vizibilitatea Graficelor',
     'profile.account': 'Cont',
     'profile.signOut': 'Deconectare',
 
     // Login
-    'login.pleaseLogin': 'Te rog să te conectezi folosind Google pentru a accesa funcționalitatea aplicației.',
+    'login.pleaseLogin':
+      'Te rog să te conectezi folosind Google pentru a accesa funcționalitatea aplicației.',
     'login.errors': 'Avem câteva erori',
     'login.signingIn': 'Se conectează...',
     'login.signInWithGoogle': 'Conectare cu Google',
@@ -668,7 +687,8 @@ const translations = {
     'notification.warning': 'Avertisment',
     'notification.info': 'Informație',
     'notification.transactionAdded': 'Tranzacția a fost adăugată cu succes!',
-    'notification.transactionUpdated': 'Tranzacția a fost actualizată cu succes!',
+    'notification.transactionUpdated':
+      'Tranzacția a fost actualizată cu succes!',
     'notification.transactionDeleted': 'Tranzacția a fost ștearsă cu succes!',
     'notification.incomeAdded': 'Venitul a fost adăugat cu succes!',
     'notification.incomeUpdated': 'Venitul a fost actualizat cu succes!',
@@ -692,7 +712,8 @@ const translations = {
     'loan.loanCostBreakdown': 'Detalierea Costului Împrumutului',
     'loan.interests': 'Dobânzi',
     'loan.installments': 'Rate',
-    'loan.noAmortizationData': 'Nu sunt disponibile date pentru programul de amortizare.',
+    'loan.noAmortizationData':
+      'Nu sunt disponibile date pentru programul de amortizare.',
     'loan.debugInfo': 'Informații de debug',
 
     // Loans Page
@@ -701,7 +722,8 @@ const translations = {
     'loans.active': 'Activ',
     'loans.pending': 'În Așteptare',
     'loans.noLoans': 'Nu s-au găsit împrumuturi',
-    'loans.noLoansDesc': 'Nu sunt împrumuturi disponibile. Adaugă primul tău împrumut pentru a începe!',
+    'loans.noLoansDesc':
+      'Nu sunt împrumuturi disponibile. Adaugă primul tău împrumut pentru a începe!',
     'loans.noLoansWithStatus': 'Nu s-au găsit împrumuturi cu statusul',
     'loans.showAllLoans': 'Arată Toate Împrumuturile',
     'loans.allStatuses': 'Toate Statusurile',
@@ -715,20 +737,26 @@ const translations = {
     // Amortization
     'amortization.total': 'Total',
     'amortization.date': 'Data',
-    'amortization.rate': 'Rata',
+    'amortization.rate': 'Dobanda anuală',
     'amortization.days': 'Zile',
-    'amortization.installment': 'Rata',
-    'amortization.reduction': 'Reducere',
-    'amortization.interest': 'Dobândă',
-    'amortization.principal': 'Principal',
-    'amortization.fee': 'Taxa',
+    'amortization.installment': 'Plata lunară',
+    'amortization.reduction': 'Credit de plată',
+    'amortization.interest': 'Dobanda de plată',
+    'amortization.principal': 'Sold Credit',
+    'amortization.fee': 'Comision',
 
     // Modals
     'modal.deleteTitle': 'Confirmare Ștergere',
-    'modal.deleteMessage': 'Ești sigur că vrei să ștergi acest element? Această acțiune nu poate fi anulată.',
-    'modal.deleteTransaction': 'Ești sigur că vrei să ștergi această tranzacție?',
+    'modal.deleteMessage':
+      'Ești sigur că vrei să ștergi acest element? Această acțiune nu poate fi anulată.',
+    'modal.deleteTransaction':
+      'Ești sigur că vrei să ștergi această tranzacție?',
     'modal.deleteIncome': 'Ești sigur că vrei să ștergi acest venit?',
-    'modal.deleteLoan': 'Ești sigur că vrei să ștergi acest împrumut? Această acțiune nu poate fi anulată și va șterge și toate plățile asociate.',
+    'modal.deleteLoan':
+      'Ești sigur că vrei să ștergi acest împrumut? Această acțiune nu poate fi anulată și va șterge și toate plățile asociate.',
+    'modal.deleteLoanTitle': 'Ești sigur că vrei să ștergi acest împrumut?',
+    'modal.deleteLoanMessage':
+      'Această acțiune nu poate fi anulată și va șterge și toate plățile asociate.',
     'modal.deletePayment': 'Ești sigur că vrei să ștergi această plată?',
 
     // Errors
@@ -736,7 +764,8 @@ const translations = {
     'error.unauthorized': 'Neautorizat. Te rog să te conectezi din nou.',
     'error.server': 'Eroare de server. Te rog să încerci din nou mai târziu.',
     'error.unknown': 'A apărut o eroare necunoscută.',
-    'error.validation': 'Te rog să verifici datele introduse și să încerci din nou.',
+    'error.validation':
+      'Te rog să verifici datele introduse și să încerci din nou.',
 
     // Transaction Form
     'transactionForm.title': 'Adaugă Tranzacție',
@@ -769,7 +798,8 @@ const translations = {
     'payment.editPayment': 'Editează Plata',
     'payment.deletePayment': 'Șterge Plata',
     'payment.noPaymentsYet': 'Încă Nu Sunt Plăți',
-    'payment.noPaymentsDesc': 'Începe prin adăugarea primei tale plăți pentru a urmări progresul împrumutului.',
+    'payment.noPaymentsDesc':
+      'Începe prin adăugarea primei tale plăți pentru a urmări progresul împrumutului.',
     'payment.showingPayments': 'Se afișează',
     'payment.of': 'din',
     'payment.payments': 'plăți',
@@ -818,14 +848,17 @@ const translations = {
     // Suggestions Component
     'suggestions.title': 'Sugestii',
     'suggestions.noSuggestions': 'Nu sunt sugestii disponibile',
-    'suggestions.selectCategory': 'Selectează o categorie pentru a vedea sugestiile',
+    'suggestions.selectCategory':
+      'Selectează o categorie pentru a vedea sugestiile',
   },
 };
 
 export const useLocalization = () => {
   const context = useContext(LocalizationContext);
   if (context === undefined) {
-    throw new Error('useLocalization must be used within a LocalizationProvider');
+    throw new Error(
+      'useLocalization must be used within a LocalizationProvider'
+    );
   }
   return context;
 };
@@ -834,11 +867,15 @@ interface LocalizationProviderProps {
   children: ReactNode;
 }
 
-export const LocalizationProvider: React.FC<LocalizationProviderProps> = ({ children }) => {
+export const LocalizationProvider: React.FC<LocalizationProviderProps> = ({
+  children,
+}) => {
   const [language, setLanguageState] = useState<Language>(() => {
     // Get language from localStorage or default to English
     const savedLanguage = localStorage.getItem('language') as Language;
-    return savedLanguage && ['en', 'ro'].includes(savedLanguage) ? savedLanguage : 'en';
+    return savedLanguage && ['en', 'ro'].includes(savedLanguage)
+      ? savedLanguage
+      : 'en';
   });
 
   const setLanguage = (lang: Language) => {

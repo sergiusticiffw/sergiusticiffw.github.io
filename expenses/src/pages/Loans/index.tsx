@@ -435,7 +435,7 @@ const Loans: React.FC = () => {
           setShowDeleteModal(false);
         }}
       >
-        <h3>Are you sure you want to delete this loan?</h3>
+        <h3>{t('modal.deleteLoanTitle')}</h3>
         <p
           style={{
             textAlign: 'center',
@@ -443,8 +443,7 @@ const Loans: React.FC = () => {
             marginBottom: '1.5rem',
           }}
         >
-          This action cannot be undone and will also delete all associated
-          payments.
+          {t('modal.deleteLoanMessage')}
         </p>
         <button
           onClick={handleConfirmDelete}
@@ -460,7 +459,7 @@ const Loans: React.FC = () => {
           ) : (
             <>
               <FaTrash />
-              Delete
+              {t('common.delete')}
             </>
           )}
         </button>
