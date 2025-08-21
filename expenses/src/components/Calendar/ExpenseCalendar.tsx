@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
+import { useLocalization } from '@context/localization';
 import Modal from '@components/Modal/Modal';
 import TransactionsTable from '@components/TransactionsTable/TransactionsTable';
 import { AuthState, TransactionOrIncomeItem, DataState } from '@type/types';
@@ -18,6 +19,8 @@ interface ExpenseCalendarProps {
   currentMonthIndex: number;
   currentMonth: string;
   setCurrentMonthIndex: (newMonthIndex: number) => void;
+  items: TransactionOrIncomeItem[];
+  months: string[];
 }
 
 const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
@@ -30,6 +33,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   const { theme } = useAuthState() as AuthState;
   const { data, dataDispatch } = useData() as DataState;
   const showNotification = useNotification();
+  const { t } = useLocalization();
   const { token } = useAuthState() as AuthState;
 
   const [events, setEvents] = useState([]);
@@ -137,7 +141,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
           );
           setIsSubmitting(false);
         } else {
-          showNotification('Something went wrong.', notificationType.ERROR);
+          showNotification(t('error.unknown'), notificationType.ERROR);
           setIsSubmitting(false);
         }
         setShowDeleteModal(false);
@@ -160,12 +164,34 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
   );
 
   const calendarRef = useRef(null);
-  const date = new Date(`01 ${months[currentMonthIndex]}`);
+  
+  // Create a safe date - fallback to current date if month is invalid
+  const getSafeDate = () => {
+    if (months && months[currentMonthIndex]) {
+      try {
+        const date = new Date(`01 ${months[currentMonthIndex]}`);
+        // Check if the date is valid
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+      } catch (error) {
+        console.warn('Invalid date created from month string:', months[currentMonthIndex]);
+      }
+    }
+    // Fallback to current date
+    return new Date();
+  };
+  
+  const date = getSafeDate();
 
   useEffect(() => {
-    if (calendarRef.current) {
-      // @ts-expect-error
-      calendarRef.current.getApi().gotoDate(date);
+    if (calendarRef.current && date) {
+      try {
+        // @ts-expect-error
+        calendarRef.current.getApi().gotoDate(date);
+      } catch (error) {
+        console.warn('Failed to set calendar date:', error);
+      }
     }
   }, [date]);
 
@@ -267,7 +293,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
             datesSet={handleDatesSet}
             customButtons={{
               customPrev: {
-                text: 'Previous',
+                text: t('calendar.previous'),
                 click: () => {
                   if (!prevDisabled) {
                     setCurrentMonthIndex(currentMonthIndex + 1);
@@ -277,7 +303,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
                 },
               },
               customNext: {
-                text: 'Next',
+                text: t('calendar.next'),
                 click: () => {
                   if (!nextDisabled) {
                     setCurrentMonthIndex(currentMonthIndex - 1);
@@ -287,7 +313,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
                 },
               },
               customToday: {
-                text: 'Today',
+                text: t('calendar.today'),
                 click: () => {
                   if (!todayDisabled) {
                     setCurrentMonthIndex(0);
@@ -315,7 +341,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
           setShowDeleteModal(false);
         }}
       >
-        <h3>Are you sure you want to delete the transaction?</h3>
+        <h3>{t('modal.deleteTransaction')}</h3>
         <p
           style={{
             textAlign: 'center',
@@ -323,7 +349,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
             marginBottom: '1.5rem',
           }}
         >
-          This action cannot be undone.
+          {t('modal.deleteMessage')}
         </p>
         <button
           // @ts-expect-error
@@ -340,7 +366,7 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
           ) : (
             <>
               <FaTrash />
-              Delete
+              {t('common.delete')}
             </>
           )}
         </button>

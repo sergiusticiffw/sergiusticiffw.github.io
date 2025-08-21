@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
+import { useLocalization } from '@context/localization';
 import { deleteNode, fetchData, formatNumber } from '@utils/utils';
 import Modal from '@components/Modal';
 import TransactionForm from '@components/TransactionForm';
@@ -21,8 +22,9 @@ import './Home.scss';
 
 const Home = () => {
   const showNotification = useNotification();
+  const { t } = useLocalization();
   const { token } = useAuthState() as AuthState;
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState<string | false>(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const { data, dataDispatch } = useData();
   const noData = data.groupedData === null;
@@ -58,18 +60,17 @@ const Home = () => {
     setShowEditModal(true);
   };
 
-  const handleDelete = (showDeleteModal: boolean, token: string) => {
+  const handleDelete = (id: string, token: string) => {
     setIsSubmitting(true);
-    // @ts-expect-error
-    deleteNode(showDeleteModal, token, (response: Response) => {
+    deleteNode(id, token, (response: Response) => {
       if (response.ok) {
         showNotification(
-          'Transaction was successfully deleted.',
+          t('notification.transactionDeleted'),
           notificationType.SUCCESS
         );
         setIsSubmitting(false);
       } else {
-        showNotification('Something went wrong.', notificationType.ERROR);
+        showNotification(t('error.unknown'), notificationType.ERROR);
         setIsSubmitting(false);
       }
       setShowDeleteModal(false);
@@ -85,21 +86,14 @@ const Home = () => {
 
   const months = items.groupedData ? Object.keys(items.groupedData) : [];
   const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
-  const currentMonth = months[currentMonthIndex]
-    ? months[currentMonthIndex]
-    : months[0];
+  const currentMonth = months[currentMonthIndex] || months[0] || '';
 
+  // Only set initial month index when data first loads
   useEffect(() => {
-    if (data?.filtered) {
-      const index = Object.keys(months).find(
-        // @ts-expect-error
-        (key: string) => months[key] === currentMonth
-      );
-      setCurrentMonthIndex(parseInt(index as string));
-    } else {
+    if (months.length > 0 && currentMonthIndex === 0) {
       setCurrentMonthIndex(0);
     }
-  }, [data.filtered]);
+  }, [months.length]);
 
   // Get today's date
   const today = new Date();
@@ -166,18 +160,18 @@ const Home = () => {
   return (
     <div>
       <Modal
-        show={showDeleteModal}
+        show={!!showDeleteModal}
         onClose={(e) => {
           e.preventDefault();
           setShowDeleteModal(false);
         }}
       >
-        <h3>Are you sure you want to delete this transaction?</h3>
+        <h3>{t('modal.deleteTransaction')}</h3>
         <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
-          This action cannot be undone.
+          {t('modal.deleteMessage')}
         </p>
         <button
-          onClick={() => handleDelete(showDeleteModal, token)}
+          onClick={() => showDeleteModal && handleDelete(showDeleteModal, token)}
           className="button danger wide"
           disabled={isSubmitting}
         >
@@ -190,11 +184,12 @@ const Home = () => {
           ) : (
             <>
               <FaTrash />
-              Delete
+              {t('common.delete')}
             </>
           )}
         </button>
       </Modal>
+      
       <Modal
         show={showEditModal}
         onClose={(e) => {
@@ -219,7 +214,7 @@ const Home = () => {
       </Modal>
       
       {/* Simple Header */}
-      <h2>{currentMonth || 'Expenses'}</h2>
+      <h2>{currentMonth || t('home.title')}</h2>
       
       <Filters />
       {loading ? (
@@ -240,10 +235,9 @@ const Home = () => {
                 <div>
                   <div
                     className="stats-container has-budget"
-                    // @ts-expect-error TBC
-                    style={{ '--budget-progress': `${monthPercentage}%` }}
+                    style={{ '--budget-progress': `${monthPercentage}%` } as React.CSSProperties}
                   >
-                    <h3>Spent</h3>
+                    <h3>{t('common.total')}</h3>
                     <div className="stat-value">
                       <NumberDisplay number={total} />
                     </div>
@@ -255,7 +249,7 @@ const Home = () => {
                 {income > 0 && (
                   <div>
                     <div className="stats-container">
-                      <h3>Income</h3>
+                      <h3>{t('nav.income')}</h3>
                       <div className="stat-value">
                         <NumberDisplay number={income} />
                       </div>
@@ -277,9 +271,8 @@ const Home = () => {
                     <div
                       className="stats-container has-budget"
                       style={{
-                        // @ts-expect-error TBC
                         '--budget-progress': `${weekPercentage}%`,
-                      }}
+                      } as React.CSSProperties}
                     >
                       <h3>Week budget</h3>
                       <div className="stat-value">
@@ -297,7 +290,7 @@ const Home = () => {
                     className={
                       activeTab === 'table' ? 'tab-title active' : 'tab-title'
                     }
-                    aria-label="Table View"
+                    aria-label={t('common.actions')}
                   >
                     <FaTable />
                   </div>
@@ -308,7 +301,7 @@ const Home = () => {
                         ? 'tab-title active'
                         : 'tab-title'
                     }
-                    aria-label="Calendar View"
+                    aria-label={t('common.date')}
                   >
                     <FaCalendar />
                   </div>
@@ -327,25 +320,20 @@ const Home = () => {
                   <TransactionsTable
                     items={items.groupedData[currentMonth]}
                     handleEdit={handleEdit}
-                    // @ts-expect-error
-                    setShowDeleteModal={setShowDeleteModal}
+                    setShowDeleteModal={(id: string) => setShowDeleteModal(id)}
                     changedItems={data.changedItems}
                     handleClearChangedItem={handleClearChangedItem}
                   />
                   <div className="pager-navigation">
                     <button
-                      disabled={!months[currentMonthIndex + 1]}
-                      onClick={() =>
-                        setCurrentMonthIndex(currentMonthIndex + 1)
-                      }
+                      disabled={currentMonthIndex >= months.length - 1}
+                      onClick={() => setCurrentMonthIndex(currentMonthIndex + 1)}
                     >
                       <FaArrowLeft />
                     </button>
                     <button
-                      disabled={!months[currentMonthIndex - 1]}
-                      onClick={() =>
-                        setCurrentMonthIndex(currentMonthIndex - 1)
-                      }
+                      disabled={currentMonthIndex <= 0}
+                      onClick={() => setCurrentMonthIndex(currentMonthIndex - 1)}
                     >
                       <FaArrowRight />
                     </button>
@@ -354,7 +342,7 @@ const Home = () => {
               )}
             </>
           ) : (
-            <p>No transaction records found.</p>
+            <p>{t('home.noData')}</p>
           )}
         </div>
       )}

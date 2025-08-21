@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
+import { useLocalization } from '@context/localization';
 import { loginUser } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
 import { AuthState } from '@type/types';
@@ -10,6 +11,7 @@ import './Login.scss';
 const Login = () => {
   const dispatch = useAuthDispatch();
   const navigate = useNavigate();
+  const { t } = useLocalization();
   const { loading, errorMessage, userIsLoggedIn } = useAuthState() as AuthState;
 
   if (userIsLoggedIn) {
@@ -37,8 +39,8 @@ const Login = () => {
 
   return (
     <div className="login-container">
-      <h4>Please login using Google in order to access app functionality.</h4>
-      {errorMessage ? <p>We have some errors: {errorMessage}</p> : null}
+      <h4>{t('login.pleaseLogin')}</h4>
+      {errorMessage ? <p>{t('login.errors')}: {errorMessage}</p> : null}
       <button
         // @ts-expect-error
         onClick={useGoogleLogin({
@@ -50,7 +52,7 @@ const Login = () => {
         disabled={loading}
       >
         <FaSignInAlt />
-        {loading ? 'Signing in...' : 'Sign in with Google'}
+        {loading ? t('login.signingIn') : t('login.signInWithGoogle')}
       </button>
     </div>
   );

@@ -1,14 +1,16 @@
 import React, { useEffect } from 'react';
 import { useAuthState, useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import { categories } from '@utils/constants';
+import { getCategories } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
 import { formatNumber } from '@utils/utils';
 
 const LastMonth = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
+  const { t } = useLocalization();
 
   // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data.raw, currency]);
@@ -16,6 +18,10 @@ const LastMonth = () => {
   const oneMonthAgo = new Date().setDate(new Date().getDate() - 30);
   const lastMonthTotals = {};
   let totalSpending = 0;
+  
+  // Get localized categories
+  const localizedCategories = getCategories();
+  
   for (const item of data.raw) {
     if (item.type === 'incomes') {
       continue;
@@ -23,7 +29,7 @@ const LastMonth = () => {
     const itemDate = new Date(item.dt);
     if (itemDate > new Date(oneMonthAgo)) {
       // @ts-expect-error
-      const category = categories.find(
+      const category = localizedCategories.find(
         (element) => element.value === item.cat
       ).label;
       // @ts-expect-error
@@ -45,7 +51,7 @@ const LastMonth = () => {
       type: 'pie',
     },
     title: {
-      text: 'Last 30 days spendings',
+      text: t('charts.last30DaysSpendings'),
     },
     tooltip: {
       pointFormat: '{point.y} {series.name} ({point.percentage:.2f})%',

@@ -6,6 +6,7 @@ import {
   useData,
 } from './context';
 import { NotificationProvider, useNotification } from '@context/notification';
+import { LocalizationProvider, useLocalization } from '@context/localization';
 
 export {
   AuthProvider,
@@ -16,4 +17,6 @@ export {
   logout,
   useNotification,
   NotificationProvider,
+  LocalizationProvider,
+  useLocalization,
 };

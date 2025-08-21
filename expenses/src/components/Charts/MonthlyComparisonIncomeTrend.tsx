@@ -1,16 +1,22 @@
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { useAuthState, useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import { AuthState, DataState } from '@type/types';
 import { formatDataForChart } from '@utils/utils';
-import { monthNames } from '@utils/constants';
+import { getMonthNames } from '@utils/constants';
 
 const MonthlyComparisonIncomeTrend = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
+  const { t } = useLocalization();
 
+  // Get localized month names
+  const monthNames = getMonthNames();
   const formattedIncomeData = formatDataForChart(
-    data?.totalIncomePerYearAndMonth || {}
+    data?.totalIncomePerYearAndMonth || {},
+    false,
+    monthNames
   );
 
   const options = {
@@ -21,7 +27,7 @@ const MonthlyComparisonIncomeTrend = () => {
       },
     },
     title: {
-      text: 'Monthly Comparison Across Years',
+      text: t('charts.monthlyComparisonAcrossYears'),
     },
     xAxis: {
       categories: monthNames,

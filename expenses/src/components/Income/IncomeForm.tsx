@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { fetchRequest } from '@utils/utils';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
+import { useLocalization } from '@context/localization';
 import { notificationType } from '@utils/constants';
 import { AuthState, DataState, NodeData } from '@type/types';
 import { FaPlus, FaPen } from 'react-icons/fa';
@@ -24,6 +25,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   onSuccess,
 }) => {
   const showNotification = useNotification();
+  const { t } = useLocalization();
   const dispatch = useAuthDispatch();
   const { dataDispatch } = useData() as DataState;
   const initialState = {
@@ -76,12 +78,12 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
       (data: NodeData) => {
         if (data.nid) {
           onSuccess();
-          showNotification('Success!', notificationType.SUCCESS);
+          showNotification(t('notification.incomeAdded'), notificationType.SUCCESS);
           setIsSubmitting(false);
           setFormState(initialState);
         } else {
           showNotification(
-            'Something went wrong, please contact Sergiu S :)',
+            t('error.unknown'),
             notificationType.ERROR
           );
           setIsSubmitting(false);
@@ -93,15 +95,15 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   return (
     <div className="income-form-container">
       <div className="form-header">
-        <h2>{formType === 'add' ? 'Add Income' : 'Edit Income'}</h2>
+        <h2>{formType === 'add' ? t('incomeForm.addIncome') : t('incomeForm.editIncome')}</h2>
       </div>
       <form className="income-form" onSubmit={handleSubmit}>
         <div className="form-group required">
-          <label htmlFor="field_amount">Amount</label>
+          <label htmlFor="field_amount">{t('incomeForm.amount')}</label>
           <input
             id="field_amount"
             required
-            placeholder="Enter amount..."
+            placeholder={t('incomeForm.enterAmount')}
             type="number"
             name="field_amount"
             value={formState.field_amount}
@@ -112,7 +114,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
         </div>
         
         <div className="form-group required">
-          <label htmlFor="field_date">Date</label>
+          <label htmlFor="field_date">{t('incomeForm.date')}</label>
           <input
             id="field_date"
             required
@@ -124,11 +126,11 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
         </div>
         
         <div className="form-group required">
-          <label htmlFor="field_description">Description</label>
+          <label htmlFor="field_description">{t('incomeForm.description')}</label>
           <textarea
             id="field_description"
             required
-            placeholder="Enter description..."
+            placeholder={t('incomeForm.enterDescription')}
             name="field_description"
             value={formState.field_description}
             onChange={handleChange}
@@ -147,7 +149,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             ) : (
               <>
                 {formType === 'add' ? <FaPlus /> : <FaPen />}
-                {formType === 'add' ? 'Add Income' : 'Update Income'}
+                {formType === 'add' ? t('incomeForm.addIncome') : t('incomeForm.updateIncome')}
               </>
             )}
           </button>

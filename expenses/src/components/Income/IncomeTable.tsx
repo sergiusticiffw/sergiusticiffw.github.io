@@ -5,6 +5,7 @@ import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import { formatNumber } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
 import './IncomeTable.scss';
+import { useLocalization } from '@context/localization';
 
 interface IncomeTableProps {
   items: TransactionOrIncomeItem[];
@@ -30,6 +31,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
     editVisible,
     extraRowStyle,
   } = useSwipeActions();
+  const { t } = useLocalization();
 
   useEffect(() => {
     Object.keys(changedItems).forEach((id) => {
@@ -61,24 +63,24 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
 
   return (
     <div className="income-table-container">
-      <div className="table-header">
-        <h3>Income Records</h3>
-        <p className="table-subtitle">Manage and track your income sources</p>
-      </div>
+              <div className="table-header">
+          <h3>{t('income.incomeRecords')}</h3>
+          <p className="table-subtitle">{t('income.manageAndTrackIncome')}</p>
+        </div>
 
       <div className="table-wrapper">
         <table className="income-table" cellSpacing="0" cellPadding="0">
           <thead>
             <tr>
-              <th>Date</th>
-              <th
-                onClick={() => requestSort('sum')}
-                className={`sortable ${getClassNamesFor(sortConfig, 'sum')}`}
-              >
-                Amount
-              </th>
-              <th>Description</th>
-              <th className="desktop-only">Actions</th>
+                              <th>{t('common.date')}</th>
+                <th
+                  onClick={() => requestSort('sum')}
+                  className={`sortable ${getClassNamesFor(sortConfig, 'sum')}`}
+                >
+                  {t('common.amount')}
+                </th>
+                <th>{t('common.description')}</th>
+                <th className="desktop-only">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody ref={tableRef}>
@@ -131,14 +133,14 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                       <button
                         onClick={() => handleEdit(element.id)}
                         className="btn-edit"
-                        title="Edit Income"
+                        title={t('common.edit')}
                       >
                         <FaPen />
                       </button>
                       <button
                         onClick={() => setShowDeleteModal(element.id)}
                         className="btn-delete"
-                        title="Delete Income"
+                        title={t('common.delete')}
                       >
                         <FaTrash />
                       </button>

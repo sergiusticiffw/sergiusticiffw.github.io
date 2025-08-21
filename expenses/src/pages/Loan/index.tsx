@@ -27,6 +27,7 @@ import {
 } from 'react-icons/fa';
 import Notification from '@components/Notification/Notification';
 import './Loan.scss';
+import { useLocalization } from '@context/localization';
 
 const Loan: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +40,7 @@ const Loan: React.FC = () => {
   const [isLoanInfoExpanded, setIsLoanInfoExpanded] = useState(false);
   const { loans } = data;
   const noData = data.loans === null;
+  const { t } = useLocalization();
 
   useEffect(() => {
     if (noData) {
@@ -164,14 +166,14 @@ const Loan: React.FC = () => {
       <div className="btns-actions">
         <button onClick={() => setShowEditModal(true)} className="action-btn">
           <FaPen />
-          Edit Loan
+          {t('loan.editLoan')}
         </button>
         <button
           onClick={() => setShowAddPaymentModal(true)}
           className="action-btn"
         >
           <FaMoneyBillWave />
-          Add Payment
+          {t('loan.addPayment')}
         </button>
       </div>
 
@@ -186,19 +188,19 @@ const Loan: React.FC = () => {
       <div className="loan-stats">
         <div className="stat-item">
           <span className="stat-value">{formatNumber(totalPrincipal)}</span>
-          <span className="stat-label">Principal</span>
+          <span className="stat-label">{t('loan.principal')}</span>
         </div>
         <div className="stat-item">
           <span className="stat-value">{formatNumber(totalInstallments)}</span>
-          <span className="stat-label">Total</span>
+          <span className="stat-label">{t('common.total')}</span>
         </div>
         <div className="stat-item">
           <span className="stat-value">{formatNumber(totalPaidAmount)}</span>
-          <span className="stat-label">Paid</span>
+          <span className="stat-label">{t('loan.paid')}</span>
         </div>
         <div className="stat-item">
           <span className="stat-value">{formatNumber(remainingAmount)}</span>
-          <span className="stat-label">Remaining</span>
+          <span className="stat-label">{t('loan.remaining')}</span>
         </div>
       </div>
 
@@ -208,12 +210,12 @@ const Loan: React.FC = () => {
         <div className="loan-section loan-progress-section">
           <div className="section-header">
             <FaChartLine />
-            <h3>Payment Progress</h3>
+            <h3>{t('loan.paymentProgress')}</h3>
           </div>
 
           <div className="progress-bar-container">
             <div className="progress-label">
-              <span>Payment Progress</span>
+              <span>{t('loan.paymentProgress')}</span>
               <span>{formatNumber(progress)}%</span>
             </div>
             <div className="progress-bar">
@@ -229,7 +231,7 @@ const Loan: React.FC = () => {
         <div className="loan-section">
           <div className="section-header">
             <FaMoneyBillWave />
-            <h3>Payment History</h3>
+            <h3>{t('loan.paymentHistory')}</h3>
           </div>
           <PaymentDetails
             loan={loan}
@@ -242,7 +244,7 @@ const Loan: React.FC = () => {
         <div className="loan-section">
           <div className="section-header">
             <FaChartLine />
-            <h3>Amortization Schedule</h3>
+            <h3>{t('loan.amortizationSchedule')}</h3>
           </div>
           <LoanDetails
             loanData={loanData}

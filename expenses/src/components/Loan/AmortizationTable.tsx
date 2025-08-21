@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useLocalization } from '@context/localization';
 import { formatNumber } from '@utils/utils';
 
 interface PaymentLog {
@@ -29,6 +30,7 @@ interface AmortizationTableProps {
 const AmortizationTable: React.FC<AmortizationTableProps> = ({
   amortizationSchedule,
 }) => {
+  const { t } = useLocalization();
   const tableRef = useRef<HTMLTableElement>(null);
   const theadRef = useRef<HTMLTableSectionElement>(null);
   const stickyHeaderRef = useRef<HTMLTableElement>(null);
@@ -116,7 +118,7 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
           key={`summary-scroll-${element.year}`}
           className="annual-summary-row annual-summary-total"
         >
-          <td className="sticky-col">Total {element.year}</td>
+          <td className="sticky-col">{t('amortization.total')} {element.year}</td>
           <td>-</td>
           <td>-</td>
           <td>{formatNumber(element.totalPaid)}</td>
@@ -155,14 +157,14 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
           <table ref={stickyHeaderRef} cellSpacing="0" cellPadding="0">
             <thead>
               <tr>
-                <th className="sticky-col">Date</th>
-                <th>Rate</th>
-                <th>Days</th>
-                <th>Installment</th>
-                <th>Reduction</th>
-                <th>Interest</th>
-                <th>Principal</th>
-                <th>Fee</th>
+                <th className="sticky-col">{t('amortization.date')}</th>
+                <th>{t('amortization.rate')}</th>
+                <th>{t('amortization.days')}</th>
+                <th>{t('amortization.installment')}</th>
+                <th>{t('amortization.reduction')}</th>
+                <th>{t('amortization.interest')}</th>
+                <th>{t('amortization.principal')}</th>
+                <th>{t('amortization.fee')}</th>
               </tr>
             </thead>
           </table>
@@ -178,14 +180,14 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
         >
           <thead ref={theadRef}>
             <tr>
-              <th className="sticky-col first-header-cell">Date</th>
-              <th>Rate</th>
-              <th>Days</th>
-              <th>Installment</th>
-              <th>Reduction</th>
-              <th>Interest</th>
-              <th>Principal</th>
-              <th>Fee</th>
+              <th className="sticky-col first-header-cell">{t('amortization.date')}</th>
+              <th>{t('amortization.rate')}</th>
+              <th>{t('amortization.days')}</th>
+              <th>{t('amortization.installment')}</th>
+              <th>{t('amortization.reduction')}</th>
+              <th>{t('amortization.interest')}</th>
+              <th>{t('amortization.principal')}</th>
+              <th>{t('amortization.fee')}</th>
             </tr>
           </thead>
           <tbody>

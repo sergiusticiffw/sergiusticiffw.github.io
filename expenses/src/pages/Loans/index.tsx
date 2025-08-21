@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useLoan } from '@context/loan';
+import { useLocalization } from '@context/localization';
 import { AuthState } from '@type/types';
 import { fetchLoans, formatNumber, deleteLoan } from '@utils/utils';
 import { useNotification } from '@context/notification';
@@ -26,6 +27,7 @@ import './Loans.scss';
 const Loans: React.FC = () => {
   const { data, dataDispatch } = useLoan();
   const { token } = useAuthState() as AuthState;
+  const { t } = useLocalization();
   const dispatch = useAuthDispatch();
   const showNotification = useNotification();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -85,7 +87,7 @@ const Loans: React.FC = () => {
     deleteLoan(focusedItem.id, token, dataDispatch, dispatch, () => {
       setIsSubmitting(false);
       setShowDeleteModal(false);
-      showNotification('Loan deleted successfully!', notificationType.SUCCESS);
+      showNotification(t('notification.loanDeleted'), notificationType.SUCCESS);
       fetchLoans(token, dataDispatch, dispatch);
     });
   };
@@ -113,13 +115,13 @@ const Loans: React.FC = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'Completed';
+        return t('common.completed');
       case 'active':
-        return 'Active';
+        return t('common.active');
       case 'pending':
-        return 'Pending';
+        return t('common.pending');
       default:
-        return 'Unknown';
+        return t('common.status');
     }
   };
 
@@ -190,14 +192,14 @@ const Loans: React.FC = () => {
     <div className="loans-container">
       {/* Simple Header */}
       <div className="income-header">
-        <h1>Loans</h1>
+        <h1>{t('loans.title')}</h1>
       </div>
 
       {/* Add Loan Button */}
       <div className="btns-actions">
         <button onClick={() => setShowAddModal(true)} className="action-btn">
           <FaPlus />
-          Add New Loan
+          {t('loans.addLoan')}
         </button>
       </div>
 
@@ -205,15 +207,15 @@ const Loans: React.FC = () => {
       <div className="loans-stats">
         <div className="stat-item">
           <span className="stat-value">{formatNumber(totalLoans)}</span>
-          <span className="stat-label">Total</span>
+          <span className="stat-label">{t('common.total')}</span>
         </div>
         <div className="stat-item">
           <span className="stat-value">{formatNumber(activeLoans)}</span>
-          <span className="stat-label">Active</span>
+          <span className="stat-label">{t('loans.active')}</span>
         </div>
         <div className="stat-item">
           <span className="stat-value">{formatNumber(completedLoans)}</span>
-          <span className="stat-label">Completed</span>
+          <span className="stat-label">{t('common.completed')}</span>
         </div>
       </div>
 
@@ -222,18 +224,18 @@ const Loans: React.FC = () => {
         {filteredAndSortedLoans.length === 0 ? (
           <div className="no-loans">
             <FaHandHoldingUsd />
-            <h3>No loans found</h3>
+            <h3>{t('loans.noLoans')}</h3>
             <p>
               {statusFilter !== 'all'
-                ? `No loans with "${statusFilter}" status found.`
-                : 'No loans available. Add your first loan to get started!'}
+                ? `${t('loans.noLoansWithStatus')} "${statusFilter}".`
+                : t('loans.noLoansDesc')}
             </p>
             {statusFilter !== 'all' && (
               <button
                 onClick={() => setStatusFilter('all')}
                 className="action-btn"
               >
-                Show All Loans
+                {t('loans.showAllLoans')}
               </button>
             )}
           </div>
@@ -245,17 +247,17 @@ const Loans: React.FC = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="filter-select"
               >
-                <option value="all">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="pending">Pending</option>
+                                    <option value="all">{t('loans.allStatuses')}</option>
+                <option value="active">{t('loans.active')}</option>
+                <option value="completed">{t('common.completed')}</option>
+                <option value="pending">{t('loans.pending')}</option>
               </select>
             </div>
 
             <div className="loans-table-container">
               <div className="table-header">
-                <h3>Loan Records</h3>
-                <p className="table-subtitle">Manage and track your loans</p>
+                <h3>{t('loans.loanRecords')}</h3>
+                <p className="table-subtitle">{t('loans.manageLoans')}</p>
               </div>
 
               <div className="table-wrapper">
@@ -271,21 +273,21 @@ const Loans: React.FC = () => {
                         onClick={() => handleSort('title')}
                         className={`sortable ${sortBy === 'title' ? (sortOrder === 'asc' ? 'asc' : 'desc') : ''}`}
                       >
-                        Title
+                        {t('loans.loanTitle')}
                       </th>
                       <th
                         onClick={() => handleSort('principal')}
                         className={`sortable ${sortBy === 'principal' ? (sortOrder === 'asc' ? 'asc' : 'desc') : ''}`}
                       >
-                        Principal
+                        {t('loans.principal')}
                       </th>
                       <th
                         onClick={() => handleSort('status')}
                         className={`sortable ${sortBy === 'status' ? (sortOrder === 'asc' ? 'asc' : 'desc') : ''}`}
                       >
-                        Status
+                        {t('loans.status')}
                       </th>
-                      <th className="desktop-only">Actions</th>
+                      <th className="desktop-only">{t('common.actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -339,14 +341,14 @@ const Loans: React.FC = () => {
                               <button
                                 onClick={() => handleEdit(loan.id)}
                                 className="btn-edit"
-                                title="Edit Loan"
+                                title={t('loan.editLoan')}
                               >
                                 <FaPen />
                               </button>
                               <button
                                 onClick={() => handleDelete(loan.id)}
                                 className="btn-delete"
-                                title="Delete Loan"
+                                title={t('loans.deleteLoan')}
                               >
                                 <FaTrash />
                               </button>

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { TransactionOrIncomeItem, Daily, DataState } from '@type/types';
 
 const DailyAverageTrend = () => {
   const { data } = useData() as DataState;
+  const { t } = useLocalization();
 
   const [items, setItems] = useState<TransactionOrIncomeItem[]>([]);
   const isFiltered = !!data.filtered_raw;
@@ -74,7 +76,7 @@ const DailyAverageTrend = () => {
 
   const series: Highcharts.SeriesOptionsType[] = [
     {
-      name: 'Daily expenses',
+      name: t('charts.dailyExpenses'),
       data: dailyExpenses,
       color: '#E91E63',
       type: 'line',
@@ -85,7 +87,7 @@ const DailyAverageTrend = () => {
   ];
   if (!isFiltered) {
     series.push({
-      name: 'Daily incomes',
+      name: t('charts.dailyIncomes'),
       data: dailyIncomes,
       color: '#4DD0E1',
       type: 'line',
@@ -106,12 +108,12 @@ const DailyAverageTrend = () => {
       useGPUTranslations: true,
     },
     title: {
-      text: 'Daily average trends',
+      text: t('charts.dailyAverageTrends'),
     },
     yAxis: {
-      title: {
-        text: 'Daily average',
-      },
+          title: {
+      text: t('charts.dailyAverage'),
+    },
     },
     xAxis: {
       type: 'datetime',

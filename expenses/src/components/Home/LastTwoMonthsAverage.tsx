@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import { formatNumber } from '@utils/utils';
 import { DataState, TransactionOrIncomeItem } from '@type/types';
 import './LastTwoMonthsAverage.scss';
 
 const LastTwoMonthsAverage = () => {
   const { data } = useData() as DataState;
+  const { t } = useLocalization();
 
   useEffect(() => {}, [data.raw]);
 
@@ -38,8 +40,8 @@ const LastTwoMonthsAverage = () => {
     <div className="last-two-months-average-balanced">
       <div className="content">
         <span>
-          Average spending for the last 60 days:{' '}
-          {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} / day
+          {t('home.averageSpendingLast60Days')}:{' '}
+          {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} / {t('home.day')}
         </span>
       </div>
     </div>

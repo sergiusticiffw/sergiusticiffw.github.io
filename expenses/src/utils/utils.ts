@@ -1,4 +1,4 @@
-import { categories, monthNames } from '@utils//constants';
+import { categories } from '@utils//constants';
 import { logout } from '@context/actions';
 import { DataStructure, ItemTotal, TransactionOrIncomeItem } from '@type/types';
 
@@ -21,8 +21,14 @@ const handleErrors = (
   return response.json();
 };
 
-export const formatDataForChart = (data: DataStructure, secondSet = false) => {
+export const formatDataForChart = (data: DataStructure, secondSet = false, localizedMonthNames?: string[]) => {
   const seriesData = [];
+
+  // English month names (used in data structure)
+  const englishMonthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
 
   for (const year in data) {
     const yearSeries = {
@@ -30,16 +36,22 @@ export const formatDataForChart = (data: DataStructure, secondSet = false) => {
       data: [],
     };
 
-    for (const month of monthNames) {
-      const monthValue = data[year][`${month} ${year}`];
+    // Use localized month names if provided, otherwise fall back to English
+    const monthsToUse = localizedMonthNames || englishMonthNames;
+
+    for (let i = 0; i < monthsToUse.length; i++) {
+      const displayMonth = monthsToUse[i];
+      const englishMonth = englishMonthNames[i];
+      const monthValue = data[year][`${englishMonth} ${year}`];
+      
       if (secondSet) {
         // @ts-ignore
-        const monthValueSpent = secondSet[year][`${month} ${year}`];
+        const monthValueSpent = secondSet[year][`${englishMonth} ${year}`];
         // @ts-expect-error TBD
-        yearSeries.data.push([month, monthValue - monthValueSpent]);
+        yearSeries.data.push([displayMonth, monthValue - monthValueSpent]);
       } else {
         // @ts-expect-error TBD
-        yearSeries.data.push([month, monthValue]);
+        yearSeries.data.push([displayMonth, monthValue]);
       }
     }
 
@@ -204,7 +216,12 @@ export const fetchData = (
           const { dt, cat } = item;
           const date = new Date(dt);
           const year = date.getFullYear();
-          const month = `${monthNames[date.getMonth()]} ${year}`;
+          // Use English month names for data processing (this is for internal use)
+          const englishMonthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+          ];
+          const month = `${englishMonthNames[date.getMonth()]} ${year}`;
 
           if (cat && !categoryTotals[cat]) {
             categoryTotals[cat] = {
@@ -286,9 +303,13 @@ export const fetchLoans = (token: string, dataDispatch: any, dispatch: any) => {
 };
 
 export const formatNumber = (value: unknown): string => {
+  // Get user's language preference from localStorage or default to 'en'
+  const language = localStorage.getItem('language') || 'en';
+  const locale = language === 'ro' ? 'ro-RO' : 'en-US';
+  
   if (typeof value === 'number') {
     // Handle numbers directly
-    return value.toLocaleString('en-US', {
+    return value.toLocaleString(locale, {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     });
@@ -296,7 +317,7 @@ export const formatNumber = (value: unknown): string => {
     // Parse the string as a number
     const parsedValue = parseFloat(value);
     if (!isNaN(parsedValue)) {
-      return parsedValue.toLocaleString('en-US', {
+      return parsedValue.toLocaleString(locale, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
       });
@@ -344,8 +365,12 @@ export const addOneDay = (dateStr: string) => {
 
 // Helper function to format month as "January 2024".
 export const formatMonth = (date: Date) => {
+  // Get user's language preference from localStorage or default to 'en'
+  const language = localStorage.getItem('language') || 'en';
+  const locale = language === 'ro' ? 'ro-RO' : 'en-US';
+  
   return new Date(date.getFullYear(), date.getMonth(), 1).toLocaleString(
-    'default',
+    locale,
     { month: 'long', year: 'numeric' }
   );
 };

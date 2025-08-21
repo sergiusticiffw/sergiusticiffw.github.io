@@ -1,12 +1,18 @@
 import React, { useEffect } from 'react';
 import { useAuthState, useData } from '@context/context';
+import { useLocalization } from '@context/localization';
+import { getCategories } from '@utils/constants';
 import { AuthState, DataState, TransactionOrIncomeItem } from '@type/types';
-import { formatNumber, getCategory } from '@utils/utils';
+import { formatNumber } from '@utils/utils';
 
 const MostExpensiveProductDisplay = () => {
   // All time section
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
+  const { t } = useLocalization();
+  
+  // Get localized categories
+  const localizedCategories = getCategories();
 
   const items = data.filtered_raw || data.raw;
 
@@ -30,7 +36,11 @@ const MostExpensiveProductDisplay = () => {
   }
 
   const date = new Date(transactionWithMaxSum.dt);
-  const formattedDate = date.toLocaleDateString('en-US', {
+  // Get user's language preference from localStorage or default to 'en'
+  const language = localStorage.getItem('language') || 'en';
+  const locale = language === 'ro' ? 'ro-RO' : 'en-US';
+  
+  const formattedDate = date.toLocaleDateString(locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -38,21 +48,21 @@ const MostExpensiveProductDisplay = () => {
 
   return (
     <>
-      <span className="heading">The most expensive item</span>
+      <span className="heading">{t('home.mostExpensiveItem')}</span>
       <div className="most-expensive-table-container">
         <div className="table-row">
-          <span className="label">Date</span> {formattedDate}
+          <span className="label">{t('common.date')}</span> {formattedDate}
         </div>
         <div className="table-row">
-          <span className="label">Amount</span>{' '}
+          <span className="label">{t('common.amount')}</span>{' '}
           {formatNumber(transactionWithMaxSum?.sum)} {currency}
         </div>
         <div className="table-row">
-          <span className="label">Category</span>{' '}
-          {getCategory[transactionWithMaxSum.cat as string]}
+          <span className="label">{t('common.category')}</span>{' '}
+          {localizedCategories.find(cat => cat.value === transactionWithMaxSum.cat)?.label || transactionWithMaxSum.cat}
         </div>
         <div className="table-row">
-          <span className="label">Description</span>{' '}
+          <span className="label">{t('common.description')}</span>{' '}
           {transactionWithMaxSum?.dsc}
         </div>
       </div>

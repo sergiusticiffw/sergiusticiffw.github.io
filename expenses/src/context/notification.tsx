@@ -26,7 +26,9 @@ export const NotificationProvider = ({
 }: NotificationContextProps) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   
-  let { theme } = useAuthState() as AuthState;
+  // Add null check for auth state
+  const authState = useAuthState() as AuthState | null;
+  let theme = authState?.theme || 'blue-pink-gradient';
   theme = themeList[theme as keyof typeof themeList]
     ? theme
     : 'blue-pink-gradient';

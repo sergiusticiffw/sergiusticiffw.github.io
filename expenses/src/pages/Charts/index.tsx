@@ -1,5 +1,6 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import { fetchData } from '@utils/utils';
 import { availableCharts } from '@utils/constants';
 import Filters from '@components/Filters/Filters';
@@ -32,6 +33,7 @@ const componentMap = {
 
 const Charts = () => {
   const { data, dataDispatch } = useData();
+  const { t } = useLocalization();
   const noData = data.groupedData === null;
   const noEntries = Object.keys(data.raw).length === 0;
   const { token } = useAuthState() as AuthState;
@@ -54,7 +56,7 @@ const Charts = () => {
 
   return (
     <div>
-      <h2>Charts page</h2>
+      <h2>{t('charts.title')}</h2>
       <Filters />
       {loading ? (
         <div className="loading-container">

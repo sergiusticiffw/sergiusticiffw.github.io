@@ -1,17 +1,21 @@
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { useAuthState, useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import { AuthState, DataState } from '@type/types';
 import { formatDataForChart } from '@utils/utils';
-import { monthNames } from '@utils/constants';
+import { getMonthNames } from '@utils/constants';
 
 const MonthlyComparisonTrend = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
+  const { t } = useLocalization();
   const items =
     data?.filtered?.totalsPerYearAndMonth || data?.totalsPerYearAndMonth;
 
-  const formattedData = formatDataForChart(items);
+  // Get localized month names
+  const monthNames = getMonthNames();
+  const formattedData = formatDataForChart(items, false, monthNames);
 
   const options = {
     chart: {
@@ -21,7 +25,7 @@ const MonthlyComparisonTrend = () => {
       },
     },
     title: {
-      text: 'Monthly Comparison Across Years',
+      text: t('charts.monthlyComparisonAcrossYears'),
     },
     xAxis: {
       categories: monthNames,

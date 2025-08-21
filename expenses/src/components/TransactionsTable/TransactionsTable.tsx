@@ -2,9 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import { getClassNamesFor, useSortableData } from '@utils/useSortableData';
 import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash } from 'react-icons/fa';
-import { formatNumber, getCategory } from '@utils/utils';
+import { formatNumber } from '@utils/utils';
+import { getCategories } from '@utils/constants';
 import { TransactionOrIncomeItem } from '@type/types';
 import { getIconForCategory } from '@utils/helper';
+import { useLocalization } from '@context/localization';
 
 interface TransactionsTableProps {
   items: TransactionOrIncomeItem[];
@@ -23,7 +25,11 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
   handleClearChangedItem,
   changedItems,
 }) => {
+  const { t } = useLocalization();
   const tableRef = useRef(null);
+
+  // Get localized categories
+  const localizedCategories = getCategories();
   const {
     handleTouchStart,
     handleTouchMove,
@@ -64,20 +70,25 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
   return (
     <div className="income-table-container">
+      <div className="table-header">
+        <p className="table-subtitle">
+          {t('common.showing')} {sortedItems.length} {t('common.transactions')}
+        </p>
+      </div>
       <div className="table-wrapper">
         <table className="income-table" cellSpacing="0" cellPadding="0">
           <thead>
             <tr>
-              {!isModal ? <th>Date</th> : null}
+              {!isModal ? <th>{t('common.date')}</th> : null}
               <th
                 onClick={() => requestSort('sum')}
                 className={`sortable ${getClassNamesFor(sortConfig, 'sum')}`}
               >
-                Amount
+                {t('common.amount')}
               </th>
-              <th>Category</th>
-              {!isModal ? <th>Description</th> : null}
-              <th className="desktop-only">Actions</th>
+              <th>{t('common.category')}</th>
+              {!isModal ? <th>{t('common.description')}</th> : null}
+              <th className="desktop-only">{t('common.actions')}</th>
             </tr>
           </thead>
           <tbody ref={tableRef}>
@@ -121,7 +132,13 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                       {formatNumber(element.sum)}
                     </div>
                   </td>
-                  <td>{getIconForCategory(getCategory[element.cat])}</td>
+                  <td>
+                    {getIconForCategory(
+                      localizedCategories.find(
+                        (cat) => cat.value === element.cat
+                      )?.label || element.cat
+                    )}
+                  </td>
                   {!isModal ? (
                     <td className="income-description">
                       <div className="description-text">{element.dsc}</div>
@@ -132,14 +149,14 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                       <button
                         onClick={() => handleEdit(element.id)}
                         className="btn-edit"
-                        title="Edit Income"
+                        title={t('common.edit')}
                       >
                         <FaPen />
                       </button>
                       <button
                         onClick={() => setShowDeleteModal(element.id)}
                         className="btn-delete"
-                        title="Delete Income"
+                        title={t('common.delete')}
                       >
                         <FaTrash />
                       </button>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '../../context';
 import { useNotification } from '@context/notification';
 import { useHighchartsContext } from '@context/highcharts';
+import { useLocalization } from '@context/localization';
 import { logout } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -11,6 +12,7 @@ import {
   FaChartBar,
   FaPalette,
   FaCoins,
+  FaGlobe,
 } from 'react-icons/fa';
 import { fetchRequest } from '@utils/utils';
 import {
@@ -25,6 +27,7 @@ import './Profile.scss';
 
 const Profile = () => {
   const showNotification = useNotification();
+  const { language, setLanguage, t } = useLocalization();
   const dispatch = useAuthDispatch();
   const { dataDispatch } = useData();
   const {
@@ -47,6 +50,13 @@ const Profile = () => {
     ? theme
     : 'blue-pink-gradient';
   const navigate = useNavigate();
+
+  const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLanguage = event.target.value as 'en' | 'ro';
+    setLanguage(newLanguage);
+    showNotification(t('notification.profileUpdated'), notificationType.SUCCESS);
+  };
+
   const handleLogout = (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
@@ -80,7 +90,7 @@ const Profile = () => {
         setTimeout(() => setBlink(false), 2000);
       } else {
         showNotification(
-          'Something went wrong, please contact Constantin :)',
+          t('error.unknown'),
           notificationType.ERROR
         );
       }
@@ -172,20 +182,42 @@ const Profile = () => {
     <div className="profile-container">
       {/* Simple Header */}
       <div className="profile-header">
-        <h1>Profile</h1>
+        <h1>{t('profile.title')}</h1>
+        <p>{t('profile.subtitle')}</p>
       </div>
 
       {/* Settings Sections */}
       <div className="profile-sections">
+        {/* Language Settings Section */}
+        <div className="profile-section">
+          <div className="section-header">
+            <FaGlobe />
+            <h3>{t('profile.language')}</h3>
+          </div>
+
+          <div className="form-field">
+            <label htmlFor="language">{t('profile.language')}</label>
+            <select
+              id="language"
+              value={language}
+              name="language"
+              onChange={handleLanguageChange}
+            >
+              <option value="en">{t('profile.english')}</option>
+              <option value="ro">{t('profile.romanian')}</option>
+            </select>
+          </div>
+        </div>
+
         {/* General Settings Section */}
         <div className="profile-section">
           <div className="section-header">
             <FaCog />
-            <h3>General Settings</h3>
+            <h3>{t('profile.personalInfo')}</h3>
           </div>
 
           <div className="form-field">
-            <label htmlFor="currency">Currency</label>
+            <label htmlFor="currency">{t('profile.currency')}</label>
             <select
               id="currency"
               value={currency}
@@ -201,7 +233,7 @@ const Profile = () => {
           </div>
 
           <div className="form-field">
-            <label htmlFor="theme">Theme</label>
+            <label htmlFor="theme">{t('profile.theme')}</label>
             <select
               id="theme"
               value={theme}
@@ -221,15 +253,15 @@ const Profile = () => {
         <div className="profile-section">
           <div className="section-header">
             <FaCoins />
-            <h3>Budget Settings</h3>
+            <h3>{t('profile.budgetSettings')}</h3>
           </div>
 
           <div className="form-field">
-            <label htmlFor="weeklyBudget">Weekly Budget</label>
+            <label htmlFor="weeklyBudget">{t('profile.weeklyBudget')}</label>
             <input
               id="weeklyBudget"
               required
-              placeholder="Enter weekly budget"
+              placeholder={t('profile.enterWeeklyBudget')}
               type="number"
               name="weeklyBudget"
               value={state.weeklyBudget || ''}
@@ -239,11 +271,11 @@ const Profile = () => {
           </div>
 
           <div className="form-field">
-            <label htmlFor="monthlyBudget">Monthly Budget</label>
+            <label htmlFor="monthlyBudget">{t('profile.monthlyBudget')}</label>
             <input
               id="monthlyBudget"
               required
-              placeholder="Enter monthly budget"
+              placeholder={t('profile.enterMonthlyBudget')}
               type="number"
               name="monthlyBudget"
               value={state.monthlyBudget || ''}
@@ -257,7 +289,7 @@ const Profile = () => {
         <div className="profile-section">
           <div className="section-header">
             <FaChartBar />
-            <h3>Charts Settings</h3>
+            <h3>{t('profile.chartsSettings')}</h3>
           </div>
 
           <div className="checkbox-item">
@@ -269,11 +301,11 @@ const Profile = () => {
               onChange={handleCheckboxChange}
             />
             <label htmlFor="useChartsBackgroundColor">
-              Use Charts Background Color
+              {t('profile.useChartsBackgroundColor')}
             </label>
           </div>
 
-          <h4>Charts Visibility</h4>
+          <h4>{t('profile.chartsVisibility')}</h4>
           <div className="charts-grid">
             {availableCharts.map((chart) => (
               <div key={chart} className="checkbox-item">
@@ -293,7 +325,7 @@ const Profile = () => {
         <div className="profile-section">
           <div className="section-header">
             <FaSignOutAlt />
-            <h3>Account</h3>
+            <h3>{t('profile.account')}</h3>
           </div>
           
           <div className="user-info">
@@ -302,7 +334,7 @@ const Profile = () => {
 
           <button className="logout-btn" onClick={handleLogout}>
             <FaSignOutAlt />
-            Sign Out
+            {t('profile.signOut')}
           </button>
         </div>
       </div>

@@ -1,42 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import { FaSearch, FaTimesCircle, FaCalendar } from 'react-icons/fa';
+import React from 'react';
+import { useLocalization } from '@context/localization';
+import { FaFilter, FaSearch } from 'react-icons/fa';
 import './IncomeFilters.scss';
 
 interface IncomeFiltersProps {
-  onFilterChange: (filters: {
-    textFilter: string;
-    selectedMonth: string;
-  }) => void;
+  textFilter: string;
+  selectedMonth: string;
+  onTextFilterChange: (value: string) => void;
+  onMonthFilterChange: (value: string) => void;
+  onClearFilters: () => void;
 }
 
-const IncomeFilters: React.FC<IncomeFiltersProps> = ({ onFilterChange }) => {
-  const [filters, setFilters] = useState({
-    textFilter: '',
-    selectedMonth: '',
-  });
+const IncomeFilters: React.FC<IncomeFiltersProps> = ({
+  textFilter,
+  selectedMonth,
+  onTextFilterChange,
+  onMonthFilterChange,
+  onClearFilters,
+}) => {
+  const { t } = useLocalization();
 
   const handleTextFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const textFilter = event.target.value;
-    setFilters(prev => ({ ...prev, textFilter }));
+    onTextFilterChange(textFilter);
   };
 
   const handleMonthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedMonth = event.target.value;
-    setFilters(prev => ({ ...prev, selectedMonth }));
+    onMonthFilterChange(selectedMonth);
   };
 
   const handleClearFilters = () => {
-    setFilters({
-      textFilter: '',
-      selectedMonth: '',
-    });
+    onClearFilters();
   };
 
-  useEffect(() => {
-    onFilterChange(filters);
-  }, [filters, onFilterChange]);
-
-  const hasActiveFilters = filters.textFilter || filters.selectedMonth;
+  const hasActiveFilters = textFilter || selectedMonth;
 
   return (
     <div className="income-filters">
@@ -45,28 +43,28 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({ onFilterChange }) => {
           <FaSearch className="filter-icon" />
           <input
             type="text"
-            value={filters.textFilter}
+            value={textFilter}
             onChange={handleTextFilterChange}
-            placeholder="Filter by description..."
+                         placeholder={t('filters.search')}
             className="text-filter"
           />
         </div>
         <div className="filter-input">
-          <FaCalendar className="filter-icon" />
+          <FaFilter className="filter-icon" />
           <input
             type="month"
-            value={filters.selectedMonth}
+            value={selectedMonth}
             onChange={handleMonthChange}
             className="month-filter"
-            placeholder="Select month"
+                         placeholder={t('filters.selectMonth')}
           />
         </div>
       </div>
 
       {hasActiveFilters && (
         <button onClick={handleClearFilters} className="clear-filters-btn">
-          <FaTimesCircle />
-          Clear Filters
+          <FaFilter />
+                     {t('filters.clear')}
         </button>
       )}
     </div>

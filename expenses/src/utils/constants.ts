@@ -1,3 +1,26 @@
+import { useLocalization } from '@context/localization';
+
+export const getCategories = () => {
+  const { t } = useLocalization();
+  return [
+    { value: '', label: t('common.category') },
+    { value: '2', label: t('category.entertainment') },
+    { value: '3', label: t('category.food') },
+    { value: '4', label: t('category.gifts') },
+    { value: '5', label: t('category.household') },
+    { value: '6', label: t('category.housing') },
+    { value: '7', label: t('category.health') },
+    { value: '9', label: t('category.transport') },
+    { value: '10', label: t('category.utilities') },
+    { value: '1', label: t('category.clothing') },
+    { value: '12', label: t('category.family') },
+    { value: '8', label: t('category.personal') },
+    { value: '11', label: t('category.travel') },
+    { value: '13', label: t('category.investment') },
+  ];
+};
+
+// Fallback categories for when localization is not available
 export const categories = [
   { value: '', label: 'Category' },
   { value: '2', label: 'Entertainment' },
@@ -15,6 +38,25 @@ export const categories = [
   { value: '13', label: 'Investment' },
 ];
 
+export const getMonthNames = () => {
+  const { t } = useLocalization();
+  return [
+    t('months.january'),
+    t('months.february'),
+    t('months.march'),
+    t('months.april'),
+    t('months.may'),
+    t('months.june'),
+    t('months.july'),
+    t('months.august'),
+    t('months.september'),
+    t('months.october'),
+    t('months.november'),
+    t('months.december'),
+  ];
+};
+
+// Fallback month names for when localization is not available
 export const monthNames = [
   'January',
   'February',
@@ -203,6 +245,57 @@ export const currencies = {
   ZWL: 'Zimbabwean Dollar',
 };
 
+export const getSuggestions = () => {
+  const { t } = useLocalization();
+  return {
+    '': [],
+    1: [t('suggestions.clothing.haine'), t('suggestions.clothing.incaltaminte'), t('suggestions.clothing.pantaloni'), t('suggestions.clothing.tricouri'), 'Nelea', 'Leo'],
+    2: [
+      t('suggestions.entertainment.happyHour'),
+      t('suggestions.entertainment.benzinarie'),
+      t('suggestions.entertainment.ceaiCafea'),
+      t('suggestions.entertainment.restaurant'),
+      t('suggestions.entertainment.ingetata'),
+      t('suggestions.entertainment.parc'),
+    ],
+    3: [t('suggestions.food.market'), t('suggestions.food.apa'), t('suggestions.food.lunch'), t('suggestions.food.inghetata'), t('suggestions.food.strausGlovo')],
+    4: [t('suggestions.gifts.flori'), 'Nelea', t('suggestions.gifts.ziDeNastere')],
+    5: [t('suggestions.household.igiena'), t('suggestions.household.scutece'), 'Leo'],
+    6: [
+      t('suggestions.housing.house'),
+      t('suggestions.housing.rataJakala'),
+      t('suggestions.housing.rataIpoteca'),
+      t('suggestions.housing.rataCredConsum'),
+      t('suggestions.housing.apartmentRent'),
+    ],
+    7: [
+      t('suggestions.health.farmacie'),
+      t('suggestions.health.stomatolog'),
+      t('suggestions.health.pediatru'),
+      'Nelea',
+      'Leo',
+      t('suggestions.health.sport'),
+      t('suggestions.health.asigurare'),
+    ],
+    8: [t('suggestions.personal.haircut'), t('suggestions.personal.nails'), 'Nelea'],
+    9: [
+      t('suggestions.transport.benzina'),
+      t('suggestions.transport.motorina'),
+      t('suggestions.transport.carService'),
+      t('suggestions.transport.lichidParbriz'),
+      t('suggestions.transport.carWash'),
+      t('suggestions.transport.taxi'),
+      t('suggestions.transport.parcare'),
+    ],
+    10: [t('suggestions.utilities.gaz'), t('suggestions.utilities.lumina'), 'orange', t('suggestions.utilities.bloc')],
+    11: ['Romania'],
+    12: ['Nelea', 'Leo', t('suggestions.family.gradinita'), t('suggestions.family.jucarii'), t('suggestions.family.terenJoaca')],
+    13: [],
+    14: [t('suggestions.alcohol.vin'), t('suggestions.alcohol.bere'), t('suggestions.alcohol.whiskey'), t('suggestions.alcohol.cognac'), t('suggestions.alcohol.gin'), t('suggestions.alcohol.cocktails')],
+  };
+};
+
+// Fallback suggestions for when localization is not available
 export const suggestions = {
   '': [],
   1: ['haine', 'incaltaminte', 'pantaloni', 'tricouri', 'Nelea', 'Leo'],

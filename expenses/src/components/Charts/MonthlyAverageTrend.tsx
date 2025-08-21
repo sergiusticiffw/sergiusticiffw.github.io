@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { DataState } from '@type/types';
@@ -7,6 +8,7 @@ import { calculateDaysFrom, formatMonth } from '@utils/utils';
 
 const MonthlyAverageTrend = () => {
   const { data } = useData() as DataState;
+  const { t } = useLocalization();
   useEffect(() => {}, [data.raw, data.filtered_raw]);
 
   const totals = data?.filtered?.totals || data?.totals;
@@ -49,7 +51,7 @@ const MonthlyAverageTrend = () => {
 
   const series = [
     {
-      name: 'Monthly average',
+      name: t('charts.monthlyAverage'),
       data: monthsData.slice(0, -1),
       pointIntervalUnit: 'month',
       pointStart: Date.UTC(firstDay.getUTCFullYear(), firstDay.getMonth(), 1),
@@ -67,13 +69,13 @@ const MonthlyAverageTrend = () => {
       useGPUTranslations: true,
     },
     title: {
-      text: 'Monthly Average Trends',
+      text: t('charts.monthlyAverageTrends'),
     },
     colors: ['#E91E63'],
     yAxis: {
       min: 0,
       title: {
-        text: 'Monthly average',
+        text: t('charts.monthlyAverage'),
       },
     },
     xAxis: {

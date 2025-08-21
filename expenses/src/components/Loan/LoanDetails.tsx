@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocalization } from '@context/localization';
 
 import { LoanCostBreakdown } from '@components/Loan/LoanCharts';
 import AmortizationTable from '@components/Loan/AmortizationTable';
@@ -14,6 +15,7 @@ interface LoanDetailsProps {
 }
 
 const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
+  const { t } = useLocalization();
   const loan = props?.loan ?? {};
   const amortizationSchedule = props?.amortizationSchedule ?? [];
   const annualSummaries = loan?.annual_summaries ?? {};
@@ -22,9 +24,9 @@ const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
   if (!amortizationSchedule || amortizationSchedule.length === 0) {
     return (
       <div className="charts-page">
-        <p>No amortization schedule data available.</p>
+        <p>{t('loan.noAmortizationData')}</p>
         <p>
-          Debug info: amortizationSchedule length ={' '}
+          {t('loan.debugInfo')}: amortizationSchedule length ={' '}
           {amortizationSchedule?.length || 0}
         </p>
       </div>

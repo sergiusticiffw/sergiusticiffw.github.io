@@ -1,8 +1,9 @@
 import React from 'react';
 import { useAuthState, useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
-import { categories } from '@utils/constants';
+import { getCategories } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 
 interface MonthProps {
@@ -12,17 +13,22 @@ interface MonthProps {
 const Month: React.FC<MonthProps> = ({ month }) => {
   const { data } = useData();
   const { currency } = useAuthState() as AuthState;
+  const { t } = useLocalization();
   const items: TransactionOrIncomeItem[] | undefined =
     data?.groupedData?.[month];
   if (!items) return null;
 
   const totals = {};
+  
+  // Get localized categories
+  const localizedCategories = getCategories();
+  
   for (const item of items) {
     if (item.type === 'incomes') {
       continue;
     }
     // @ts-expect-error
-    const category = categories.find(
+    const category = localizedCategories.find(
       (element) => element.value === item.cat
     ).label;
     // @ts-expect-error

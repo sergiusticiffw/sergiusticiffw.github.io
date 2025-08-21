@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useData } from '@context/context';
-import Highcharts from 'highcharts/highstock';
+import { useLocalization } from '@context/localization';
+import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { DataState, TransactionOrIncomeItem } from '@type/types';
 
@@ -10,6 +11,7 @@ interface SavingsData {
 
 const SavingsHistory = () => {
   const { data } = useData() as DataState;
+  const { t } = useLocalization();
   const [items, setItems] = useState<TransactionOrIncomeItem[]>([]);
 
   // Re-render the component only when dependencies are changed.
@@ -52,7 +54,7 @@ const SavingsHistory = () => {
 
   const series: Highcharts.SeriesOptionsType[] = [
     {
-      name: 'Savings',
+      name: t('charts.savings'),
       data: savingsArray,
       negativeColor: '#E91E63',
       type: 'line',
@@ -73,7 +75,7 @@ const SavingsHistory = () => {
       useGPUTranslations: true,
     },
     title: {
-      text: 'Savings history',
+      text: t('charts.savingsHistory'),
     },
     colors: ['#4DD0E1'],
     yAxis: {

@@ -1,11 +1,16 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { categories } from '@utils/constants';
+import { getCategories, categories } from '@utils/constants';
 import { useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import { FaSearch, FaTimesCircle } from 'react-icons/fa';
 import { DataState } from '@type/types';
 
 const Filters = () => {
   const { data, dataDispatch } = useData() as DataState;
+  const { t } = useLocalization();
+  
+  // Get localized categories
+  const localizedCategories = getCategories();
 
   const [state, setState] = useState({
     category: data.category ?? '',
@@ -78,7 +83,7 @@ const Filters = () => {
           value={state.textFilter}
           name="textFilter"
           onChange={handleTextFilterChange}
-          placeholder="Filter by text"
+          placeholder={t('filters.search')}
         />
       )}
       <select
@@ -86,14 +91,14 @@ const Filters = () => {
         name="category"
         onChange={handleCategoryChange}
       >
-        {categories.map((category, id) => (
+        {localizedCategories.map((category, id) => (
           <option key={id} value={category.value}>
             {category.label}
           </option>
         ))}
       </select>
       {(state.textFilter || state.category) && (
-        <button onClick={handleClearFilters} className="btn-outline">
+        <button onClick={handleClearFilters} className="btn-outline" title={t('filters.clear')}>
           <FaTimesCircle />
         </button>
       )}

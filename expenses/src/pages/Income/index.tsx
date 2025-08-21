@@ -8,6 +8,7 @@ import {
 } from '@utils/utils';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
+import { useLocalization } from '@context/localization';
 import Modal from '@components/Modal/Modal';
 import IncomeTable from '@components/Income/IncomeTable';
 import IncomeFilters from '@components/Income/IncomeFilters';
@@ -19,6 +20,7 @@ import './Income.scss';
 
 const Income = () => {
   const showNotification = useNotification();
+  const { t } = useLocalization();
   const { token } = useAuthState() as AuthState;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -109,16 +111,15 @@ const Income = () => {
 
   const handleDelete = (showDeleteModal: boolean, token: string) => {
     setIsSubmitting(true);
-    // @ts-expect-error
     deleteNode(showDeleteModal, token, (response) => {
       if (response.ok) {
         showNotification(
-          'Income was successfully deleted.',
+          t('notification.incomeDeleted'),
           notificationType.SUCCESS
         );
         setIsSubmitting(false);
       } else {
-        showNotification('Something went wrong.', notificationType.ERROR);
+        showNotification(t('error.unknown'), notificationType.ERROR);
         setIsSubmitting(false);
       }
       setShowDeleteModal(false);
@@ -160,7 +161,7 @@ const Income = () => {
     <div className="income-container">
       {/* Simple Header */}
       <div className="income-header">
-        <h1>Income</h1>
+        <h1>{t('income.title')}</h1>
       </div>
 
       {/* Add Income Button */}
@@ -173,7 +174,7 @@ const Income = () => {
           className="action-btn"
         >
           <FaPlus />
-          Add New Income
+          {t('income.addIncome')}
         </button>
       </div>
 
@@ -184,16 +185,16 @@ const Income = () => {
       <div className="income-stats">
         <div className="stat-item">
           <span className="stat-value">{formatNumber(totalRecords)}</span>
-          <span className="stat-label">Records</span>
+          <span className="stat-label">{t('common.total')}</span>
         </div>
         <div className="stat-item">
           <span className="stat-value">{formatNumber(totalIncome)}</span>
-          <span className="stat-label">Total</span>
+          <span className="stat-label">{t('income.totalIncome')}</span>
         </div>
         {!filters.textFilter && !filters.selectedMonth && (
           <div className="stat-item">
             <span className="stat-value">{formatNumber(averageIncome)}</span>
-            <span className="stat-label">Average</span>
+            <span className="stat-label">{t('income.averageIncome')}</span>
           </div>
         )}
       </div>
@@ -203,8 +204,8 @@ const Income = () => {
         {noData ? (
           <div className="no-income">
             <FaMoneyBillWave />
-            <h3>No Income Data</h3>
-            <p>Start by adding your first income record</p>
+            <h3>{t('income.noIncome')}</h3>
+            <p>{t('income.noIncomeDesc')}</p>
           </div>
         ) : (
           <>
@@ -212,7 +213,6 @@ const Income = () => {
               <IncomeTable
                 items={filteredIncomeData.slice(0, nrOfItemsToShow)}
                 handleEdit={handleEdit}
-                // @ts-expect-error
                 setShowDeleteModal={setShowDeleteModal}
                 changedItems={data.changedItems}
                 handleClearChangedItem={handleClearChangedItem}
@@ -220,11 +220,11 @@ const Income = () => {
             ) : (
               <div className="no-income">
                 <FaMoneyBillWave />
-                <h3>No Income Records</h3>
+                <h3>{t('income.noIncome')}</h3>
                 <p>
                   {filters.textFilter || filters.selectedMonth
-                    ? 'No income records match your current filters.'
-                    : 'No income records found. Add your first income entry.'}
+                    ? t('income.noIncomeDesc')
+                    : t('income.noIncomeDesc')}
                 </p>
               </div>
             )}
@@ -236,7 +236,7 @@ const Income = () => {
                   className="load-more-btn"
                 >
                   <FaCaretDown />
-                  Load More
+                  {t('common.loading')}
                 </button>
               </div>
             )}
@@ -259,7 +259,7 @@ const Income = () => {
           setShowDeleteModal(false);
         }}
       >
-        <h3>Are you sure you want to delete this income record?</h3>
+        <h3>{t('modal.deleteIncome')}</h3>
         <p
           style={{
             textAlign: 'center',
@@ -267,7 +267,7 @@ const Income = () => {
             marginBottom: '1.5rem',
           }}
         >
-          This action cannot be undone.
+          {t('modal.deleteMessage')}
         </p>
         <button
           onClick={() => handleDelete(showDeleteModal, token)}
@@ -283,7 +283,7 @@ const Income = () => {
           ) : (
             <>
               <FaTrash />
-              Delete
+              {t('common.delete')}
             </>
           )}
         </button>

@@ -1,34 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuthDispatch, useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
-import { useAuthDispatch, useAuthState, useData } from '@context/context';
-import { AuthState, DataState, NodeData } from '@type/types';
-import { fetchRequest, addOneDay } from '@utils/utils';
+import { useLocalization } from '@context/localization';
+import { AuthState } from '@type/types';
 import { notificationType } from '@utils/constants';
-import { FaPlus, FaPen } from 'react-icons/fa';
+import { fetchLoans } from '@utils/utils';
 import './LoanForm.scss';
 
 interface LoanFormProps {
-  formType: string;
-  values: {
-    nid: string;
-    title: string;
-    field_principal: number;
-    field_start_date: string;
-    field_end_date: string;
-    field_rate: number;
-    field_initial_fee?: number;
-    field_recurring_payment_method?: string;
-    field_rec_first_payment_date?: string;
-    field_recurring_payment_day?: number;
-    field_loan_status?: string;
-  };
-  onSuccess: () => void;
+  formType: 'add' | 'edit';
+  values?: any;
+  onSuccess?: () => void;
 }
 
 const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
   const showNotification = useNotification();
+  const { t } = useLocalization();
+  const { token } = useAuthState() as AuthState;
   const dispatch = useAuthDispatch();
-  const { dataDispatch } = useData() as DataState;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const options = [
+    { value: 'active', label: t('common.active') },
+    { value: 'pending', label: t('common.pending') },
+    { value: 'completed', label: t('common.completed') },
+  ];
 
   const initialState = {
     title: '',
@@ -47,8 +43,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
     formType === 'add' ? initialState : values
   );
 
-  const { token } = useAuthState() as AuthState;
-
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, type, value } = event.target;
     const checked = (event.target as HTMLInputElement).checked;
@@ -57,8 +51,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
       [name]: type === 'checkbox' ? checked : value,
     });
   };
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -93,20 +85,19 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
         ? 'https://dev-expenses-api.pantheonsite.io/node?_format=json'
         : `https://dev-expenses-api.pantheonsite.io/node/${values.nid}?_format=json`;
 
-    fetchRequest(
+    fetchLoans(
       url,
       fetchOptions,
-      dataDispatch,
       dispatch,
-      (data: NodeData) => {
+      (data) => {
         if (data.nid) {
           onSuccess();
-          showNotification('Success!', notificationType.SUCCESS);
+          showNotification(t('notification.loanAdded'), notificationType.SUCCESS);
           setIsSubmitting(false);
           setFormState(initialState);
         } else {
           showNotification(
-            'Something went wrong, please contact Sergiu S :)',
+            t('error.unknown'),
             notificationType.ERROR
           );
           setIsSubmitting(false);
@@ -115,25 +106,19 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
     );
   };
 
-  const options = [
-    { value: 'draft', label: 'Draft' },
-    { value: 'in_progress', label: 'In Progress' },
-    { value: 'completed', label: 'Completed' },
-  ];
-
   return (
     <div className="loan-form-container">
       <div className="form-header">
-        <h2>{formType === 'add' ? 'Add New Loan' : 'Edit Loan'}</h2>
+        <h2>{formType === 'add' ? t('loanForm.addLoan') : t('loanForm.editLoan')}</h2>
       </div>
       
       <form className="loan-form" onSubmit={handleSubmit}>
         {/* Basic Information */}
         <div className="form-group required">
-          <label>Loan Title</label>
+          <label>{t('loanForm.loanTitle')}</label>
           <input
             required
-            placeholder="Enter loan title"
+            placeholder={t('loanForm.enterLoanTitle')}
             type="text"
             name="title"
             value={formState.title}
@@ -143,10 +128,10 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
 
         <div className="form-row">
           <div className="form-group required">
-            <label>Principal Amount</label>
+            <label>{t('loanForm.principalAmount')}</label>
             <input
               required
-              placeholder="0.00"
+              placeholder={t('form.amountPlaceholder')}
               type="number"
               name="field_principal"
               value={formState.field_principal}
@@ -157,10 +142,10 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           </div>
           
           <div className="form-group required">
-            <label>Interest Rate (%)</label>
+            <label>{t('loanForm.interestRate')}</label>
             <input
               required
-              placeholder="0.00"
+              placeholder={t('form.amountPlaceholder')}
               type="number"
               name="field_rate"
               value={formState.field_rate}
@@ -173,7 +158,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
 
         <div className="form-row">
           <div className="form-group required">
-            <label>Start Date</label>
+            <label>{t('loanForm.startDate')}</label>
             <input
               required
               type="date"
@@ -184,7 +169,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           </div>
           
           <div className="form-group required">
-            <label>End Date</label>
+            <label>{t('loanForm.endDate')}</label>
             <input
               required
               type="date"
@@ -196,7 +181,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
         </div>
 
         <div className="form-group">
-          <label>Initial Fee (Optional)</label>
+          <label>{t('loanForm.initialFee')}</label>
           <input
             placeholder="0.00"
             type="number"
@@ -210,12 +195,12 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
 
         <div className="form-row">
           <div className="form-group required">
-            <label>First Payment Date</label>
+            <label>{t('loanForm.firstPaymentDate')}</label>
             <input
               required
               type="date"
               max={formState.field_end_date}
-              min={addOneDay(formState.field_start_date)}
+              min={new Date(formState.field_start_date).toISOString().slice(0, 10)}
               name="field_rec_first_payment_date"
               value={formState.field_rec_first_payment_date}
               onChange={handleChange}
@@ -223,7 +208,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
           </div>
           
           <div className="form-group required">
-            <label>Payment Day of Month</label>
+            <label>{t('loanForm.paymentDayOfMonth')}</label>
             <input
               required
               placeholder="1-31"
@@ -238,7 +223,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
         </div>
 
         <div className="form-group required">
-          <label>Loan Status</label>
+          <label>{t('loanForm.loanStatus')}</label>
           <select
             required
             name="field_loan_status"
@@ -263,13 +248,11 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
               </div>
             ) : formType === 'add' ? (
               <>
-                <FaPlus />
-                Add Loan
+                {t('loanForm.addLoan')}
               </>
             ) : (
               <>
-                <FaPen />
-                Update Loan
+                {t('loanForm.updateLoan')}
               </>
             )}
           </button>

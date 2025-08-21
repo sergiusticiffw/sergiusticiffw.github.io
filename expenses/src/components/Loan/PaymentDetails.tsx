@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
+import { useLocalization } from '@context/localization';
 import { AuthState } from '@type/types';
 import useSwipeActions from '@hooks/useSwipeActions';
 import {
@@ -24,6 +25,7 @@ const PaymentDetails = (props) => {
   const loan = props?.loan ?? {};
   const tableRef = useRef(null);
   const showNotification = useNotification();
+  const { t } = useLocalization();
   const [showEditModal, setShowEditModal] = useState(false);
   const [isNewModal, setIsNewModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,12 +74,12 @@ const PaymentDetails = (props) => {
     deleteNode(paymentId, token, (response) => {
       if (response.ok) {
         showNotification(
-          'Payment was successfully deleted.',
+          t('notification.paymentDeleted'),
           notificationType.SUCCESS
         );
         setIsSubmitting(false);
       } else {
-        showNotification('Something went wrong.', notificationType.ERROR);
+                  showNotification(t('error.unknown'), notificationType.ERROR);
         setIsSubmitting(false);
       }
       setDeleteModalId(false);
@@ -111,7 +113,7 @@ const PaymentDetails = (props) => {
           className="action-btn"
         >
           <FaPlus />
-          <span>Add New Payment</span>
+          <span>{t('payment.addNewPayment')}</span>
         </button>
       </div>
 
@@ -123,7 +125,7 @@ const PaymentDetails = (props) => {
           setDeleteModalId(false);
         }}
       >
-        <h3>Are you sure you want to delete this payment?</h3>
+                          <h3>{t('modal.deletePayment')}</h3>
         <p
           style={{
             textAlign: 'center',
@@ -131,7 +133,7 @@ const PaymentDetails = (props) => {
             marginBottom: '1.5rem',
           }}
         >
-          This action cannot be undone.
+          {t('modal.deleteMessage')}
         </p>
         <button
           onClick={() => handleDelete(deleteModalId as string, token)}
@@ -147,7 +149,7 @@ const PaymentDetails = (props) => {
           ) : (
             <>
               <FaTrash />
-              Delete
+              {t('common.delete')}
             </>
           )}
         </button>
@@ -178,8 +180,7 @@ const PaymentDetails = (props) => {
         <div className="income-table-container">
           <div className="table-header">
             <div className="table-subtitle">
-              Showing {Math.min(nrOfItemsToShow, payments.length)} of{' '}
-              {payments.length} payments
+              {t('payment.showingPayments')} {Math.min(nrOfItemsToShow, payments.length)} {t('payment.of')} {payments.length} {t('payment.payments')}
             </div>
           </div>
 
@@ -191,10 +192,10 @@ const PaymentDetails = (props) => {
             >
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Title</th>
-                  <th>Installment</th>
-                  <th className="desktop-only">Actions</th>
+                  <th>{t('common.date')}</th>
+                  <th>{t('payment.title')}</th>
+                  <th>{t('payment.installment')}</th>
+                  <th className="desktop-only">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody ref={tableRef}>
@@ -225,9 +226,10 @@ const PaymentDetails = (props) => {
                             {new Date(payment.fdt).getDate()}
                           </div>
                           <div className="date-month">
-                            {new Date(payment.fdt).toLocaleDateString('en-US', {
-                              month: 'short',
-                            })}
+                            {new Date(payment.fdt).toLocaleDateString(
+                              localStorage.getItem('language') === 'ro' ? 'ro-RO' : 'en-US', 
+                              { month: 'short' }
+                            )}
                           </div>
                         </div>
                       </td>
@@ -235,7 +237,7 @@ const PaymentDetails = (props) => {
                         <div className="title-content">
                           <div className="title-text">{payment.title}</div>
                           {isSimulated && (
-                            <span className="simulated-badge">Simulated</span>
+                            <span className="simulated-badge">{t('payment.simulated')}</span>
                           )}
                         </div>
                       </td>
@@ -249,14 +251,14 @@ const PaymentDetails = (props) => {
                           <button
                             onClick={() => handleEdit(payment.id)}
                             className="btn-edit"
-                            title="Edit Payment"
+                            title={t('payment.editPayment')}
                           >
                             <FaPen />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(payment.id)}
                             className="btn-delete"
-                            title="Delete Payment"
+                            title={t('payment.deletePayment')}
                           >
                             <FaTrash />
                           </button>
@@ -276,7 +278,7 @@ const PaymentDetails = (props) => {
                 >
                   <FaCaretDown />
                   <span>
-                    Load More ({payments.length - nrOfItemsToShow} remaining)
+                    {t('common.loadMore')} ({payments.length - nrOfItemsToShow} {t('common.remaining')})
                   </span>
                 </button>
               </div>
@@ -303,8 +305,8 @@ const PaymentDetails = (props) => {
           <div className="no-payments-icon">
             <FaMoneyBillWave />
           </div>
-          <h3>No Payments Yet</h3>
-          <p>Start by adding your first payment to track your loan progress.</p>
+          <h3>{t('payment.noPaymentsYet')}</h3>
+          <p>{t('payment.noPaymentsDesc')}</p>
         </div>
       )}
     </div>

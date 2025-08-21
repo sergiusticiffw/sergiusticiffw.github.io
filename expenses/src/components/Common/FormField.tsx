@@ -1,5 +1,6 @@
 import React from 'react';
-import { categories } from '@utils/constants';
+import { getCategories } from '@utils/constants';
+import { useLocalization } from '@context/localization';
 
 interface FormFieldProps {
   label: string;
@@ -110,13 +111,18 @@ export const DateField: React.FC<Omit<FormFieldProps, 'type' | 'options'> & { mi
 
 export const CategoryField: React.FC<Omit<FormFieldProps, 'type' | 'options'> & { 
   options?: Array<{ value: string; label: string }> 
-}> = (props) => (
-  <FormField 
-    {...props} 
-    type="select" 
-    options={props.options || categories.map(cat => ({ value: cat.value, label: cat.label }))}
-  />
-);
+}> = (props) => {
+  const { t } = useLocalization();
+  const localizedCategories = getCategories();
+  
+  return (
+    <FormField 
+      {...props} 
+      type="select" 
+      options={props.options || localizedCategories.map(cat => ({ value: cat.value, label: cat.label }))}
+    />
+  );
+};
 
 export const DescriptionField: React.FC<Omit<FormFieldProps, 'type' | 'options'> & { rows?: number }> = (props) => (
   <FormField {...props} type="textarea" rows={props.rows || 3} />

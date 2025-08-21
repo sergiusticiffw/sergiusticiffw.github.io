@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useAuthState, useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import {
@@ -8,13 +9,14 @@ import {
   formatNumber,
   getMonthsPassed,
 } from '@utils/utils';
-import { monthNames } from '@utils/constants';
+import { getMonthNames } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
 import { getFinancialStabilityIcon } from '@utils/helper';
 
 const YearAverageTrend = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
+  const { t } = useLocalization();
   const items =
     data?.filtered?.totalsPerYearAndMonth || data?.totalsPerYearAndMonth;
   const totalPerYear = data?.filtered?.totalPerYear || data?.totalPerYear;
@@ -28,7 +30,10 @@ const YearAverageTrend = () => {
   ]);
 
   const totalSpent = data.filtered?.totalSpent || data?.totalSpent;
-  const formattedData = formatDataForChart(items);
+  
+  // Get localized month names
+  const monthNames = getMonthNames();
+  const formattedData = formatDataForChart(items, false, monthNames);
 
   const options: Highcharts.Options = {
     chart: {
@@ -41,7 +46,7 @@ const YearAverageTrend = () => {
       useGPUTranslations: true,
     },
     title: {
-      text: 'Years in review',
+      text: t('charts.yearsInReview'),
     },
     xAxis: {
       type: 'category',
@@ -74,7 +79,7 @@ const YearAverageTrend = () => {
   return (
     <>
       <HighchartsReact highcharts={Highcharts} options={options} />
-      <span className="heading">Total spent per year:</span>
+      <span className="heading">{t('charts.totalSpentPerYear')}:</span>
       <table className="daily-average">
         <tbody>
           {Object.entries(totalPerYear).map((item, key) => {
@@ -102,30 +107,30 @@ const YearAverageTrend = () => {
                   (totalSpent / sumIncome - 1) * -100,
                   isFiltered
                 )}
-                Total Spent
+                {t('charts.totalSpent')}
               </div>
             </td>
             <td>{formatNumber(totalSpent)}</td>
           </tr>
           <tr>
-            <td>Total Days</td>
-            <td>{formatNumber(calculateDaysFrom(firstDay))} days</td>
+            <td>{t('charts.totalDays')}</td>
+            <td>{formatNumber(calculateDaysFrom(firstDay))} {t('charts.days')}</td>
           </tr>
           <tr>
-            <td>Total Months</td>
-            <td>{getMonthsPassed(firstDay as string).toFixed(2)} months</td>
+            <td>{t('charts.totalMonths')}</td>
+            <td>{getMonthsPassed(firstDay as string).toFixed(2)} {t('charts.months')}</td>
           </tr>
           <tr>
-            <td>Total Items</td>
-            <td>{formatNumber(itms.length + 1)} items</td>
+            <td>{t('charts.totalItems')}</td>
+            <td>{formatNumber(itms.length + 1)} {t('charts.items')}</td>
           </tr>
         </tbody>
       </table>
-      <span className="heading">Monthly</span>
+      <span className="heading">{t('charts.monthly')}</span>
       <table className="daily-average">
         <tbody>
           <tr>
-            <td>Monthly Average</td>
+            <td>{t('charts.monthlyAverage')}</td>
             <td>{formatNumber(monthlyAverage)}</td>
           </tr>
         </tbody>

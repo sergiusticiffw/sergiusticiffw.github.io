@@ -1,11 +1,13 @@
 import React from 'react';
 import { useAuthState } from '@context/context';
+import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { AuthState } from '@type/types';
 
 export const LoanCostBreakdown = ({ data }) => {
   const { currency } = useAuthState() as AuthState;
+  const { t } = useLocalization();
   const { principal, sumOfInterest, sumInstallments } = data;
 
   const options = {
@@ -13,10 +15,10 @@ export const LoanCostBreakdown = ({ data }) => {
       type: 'column',
     },
     title: {
-      text: 'Loan Cost Breakdown',
+      text: t('loan.loanCostBreakdown'),
     },
     xAxis: {
-      categories: ['Principal', 'Interests', 'Installments'],
+      categories: [t('loan.principal'), t('loan.interests'), t('loan.installments')],
     },
     yAxis: {
       min: 0,
@@ -29,7 +31,7 @@ export const LoanCostBreakdown = ({ data }) => {
     },
     series: [
       {
-        name: 'Total',
+        name: t('common.total'),
         colorByPoint: true,
         data: [principal, sumOfInterest, sumInstallments],
       },

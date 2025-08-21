@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNotification } from '@context/notification';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
+import { useNotification } from '@context/notification';
+import { useLocalization } from '@context/localization';
 import { AuthState, DataState, NodeData } from '@type/types';
 import { addOneDay, fetchRequest } from '@utils/utils';
 import { notificationType } from '@utils/constants';
@@ -9,16 +10,8 @@ import { useParams } from 'react-router-dom';
 import './PaymentForm.scss';
 
 interface PaymentFormProps {
-  formType: string;
-  values: {
-    nid: string;
-    title: string;
-    field_date: string;
-    field_rate?: number;
-    field_pay_installment?: number;
-    field_pay_single_fee?: number;
-    field_new_recurring_amount?: number;
-  };
+  formType: 'add' | 'edit';
+  values: any;
   onSuccess: () => void;
   startDate?: string;
 }
@@ -30,6 +23,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 }) => {
   const { id } = useParams();
   const showNotification = useNotification();
+  const { t } = useLocalization();
   const dispatch = useAuthDispatch();
   const { dataDispatch } = useData() as DataState;
   
@@ -103,12 +97,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       (data: NodeData) => {
         if (data.nid) {
           onSuccess();
-          showNotification('Success!', notificationType.SUCCESS);
+          showNotification(t('notification.paymentAdded'), notificationType.SUCCESS);
           setIsSubmitting(false);
           setFormState(initialState);
         } else {
           showNotification(
-            'Something went wrong, please contact Sergiu S :)',
+            t('error.unknown'),
             notificationType.ERROR
           );
           setIsSubmitting(false);
@@ -120,16 +114,16 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   return (
     <div className="payment-form-container">
       <div className="form-header">
-        <h2>{formType === 'add' ? 'Add New Payment' : 'Edit Payment'}</h2>
+        <h2>{formType === 'add' ? t('paymentForm.addPayment') : t('paymentForm.editPayment')}</h2>
       </div>
       
       <form className="payment-form" onSubmit={handleSubmit}>
         {/* Basic Information */}
         <div className="form-group required">
-          <label>Payment Title</label>
+          <label>{t('paymentForm.paymentTitle')}</label>
           <input
             required
-            placeholder="Enter payment title"
+            placeholder={t('paymentForm.enterPaymentTitle')}
             type="text"
             name="title"
             value={formState.title || ''}
@@ -138,7 +132,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         </div>
 
         <div className="form-group required">
-          <label>Payment Date</label>
+          <label>{t('paymentForm.paymentDate')}</label>
           <input
             required
             type="date"
@@ -151,9 +145,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
         <div className="form-row">
           <div className="form-group">
-            <label>New Interest Rate (%)</label>
+            <label>{t('paymentForm.newInterestRate')}</label>
             <input
-              placeholder="0.00"
+              placeholder={t('form.amountPlaceholder')}
               type="number"
               name="field_rate"
               value={formState.field_rate || ''}
@@ -164,9 +158,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           </div>
           
           <div className="form-group">
-            <label>Installment Payment</label>
+            <label>{t('paymentForm.installmentPayment')}</label>
             <input
-              placeholder="0.00"
+              placeholder={t('form.amountPlaceholder')}
               type="number"
               name="field_pay_installment"
               value={formState.field_pay_installment || ''}
@@ -179,9 +173,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
         <div className="form-row">
           <div className="form-group">
-            <label>New Recurring Amount</label>
+            <label>{t('paymentForm.newRecurringAmount')}</label>
             <input
-              placeholder="0.00"
+              placeholder={t('form.amountPlaceholder')}
               type="number"
               name="field_new_recurring_amount"
               value={formState.field_new_recurring_amount || ''}
@@ -192,9 +186,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           </div>
           
           <div className="form-group">
-            <label>Individual Fee</label>
+            <label>{t('paymentForm.individualFee')}</label>
             <input
-              placeholder="0.00"
+              placeholder={t('form.amountPlaceholder')}
               type="number"
               name="field_pay_single_fee"
               value={formState.field_pay_single_fee || ''}
@@ -214,7 +208,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             onChange={handleChange}
           />
           <label htmlFor="field_is_simulated_payment">
-            Simulated payment (debug loan)
+            {t('paymentForm.simulatedPayment')}
           </label>
         </div>
 
@@ -229,12 +223,12 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             ) : formType === 'add' ? (
               <>
                 <FaPlus />
-                Add Payment
+                {t('paymentForm.addPayment')}
               </>
             ) : (
               <>
                 <FaPen />
-                Update Payment
+                {t('paymentForm.updatePayment')}
               </>
             )}
           </button>

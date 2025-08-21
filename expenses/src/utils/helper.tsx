@@ -30,34 +30,61 @@ export const getFinancialStabilityIcon = (
 };
 
 export const getIconForCategory = (category: string) => {
-  switch (category) {
-    case 'Clothing':
-      return <FaTshirt color="#4A90E2" />;
-    case 'Entertainment':
-      return <FaMusic color="#F5A623" />;
-    case 'Food':
-      return <FaUtensils color="#7ED321" />;
-    case 'Gifts':
-      return <FaGift color="#D0021B" />;
-    case 'Household Items/Supplies':
-      return <FaTools color="#9B9B9B" />;
-    case 'Housing':
-      return <FaHome color="#8B572A" />;
-    case 'Medical / Healthcare':
-      return <FaHeartbeat color="#50E3C2" />;
-    case 'Personal':
-      return <FaUser color="#BD10E0" />;
-    case 'Transportation':
-      return <FaCar color="#F8E71C" />;
-    case 'Utilities':
-      return <FaLightbulb color="#ADD8E6" />;
-    case 'Travel':
-      return <FaPlane color="#417505" />;
-    case 'Family':
-      return <FaUsers color="#FF7F50" />;
-    case 'Investment':
-      return <FaChartLine color="#FFD700" />;
-    default:
-      return null;
+  // Handle both English and Romanian category names
+  const categoryLower = category.toLowerCase();
+  
+  // Check for English category names
+  if (categoryLower.includes('clothing') || categoryLower.includes('îmbrăcăminte')) {
+    return <FaTshirt color="#4A90E2" />;
   }
+  if (categoryLower.includes('entertainment') || categoryLower.includes('divertisment')) {
+    return <FaMusic color="#F5A623" />;
+  }
+  if (categoryLower.includes('food') || categoryLower.includes('mâncare')) {
+    return <FaUtensils color="#7ED321" />;
+  }
+  if (categoryLower.includes('gifts') || categoryLower.includes('cadouri')) {
+    return <FaGift color="#D0021B" />;
+  }
+  if (categoryLower.includes('household') || categoryLower.includes('articole casnice')) {
+    return <FaTools color="#9B9B9B" />;
+  }
+  if (categoryLower.includes('housing') || categoryLower.includes('locuință')) {
+    return <FaHome color="#8B572A" />;
+  }
+  if (categoryLower.includes('health') || categoryLower.includes('sănătate')) {
+    return <FaHeartbeat color="#50E3C2" />;
+  }
+  if (categoryLower.includes('personal')) {
+    return <FaUser color="#BD10E0" />;
+  }
+  if (categoryLower.includes('transport')) {
+    return <FaCar color="#F8E71C" />;
+  }
+  if (categoryLower.includes('utilities')) {
+    return <FaLightbulb color="#ADD8E6" />;
+  }
+  if (categoryLower.includes('travel') || categoryLower.includes('călătorii')) {
+    return <FaPlane color="#417505" />;
+  }
+  if (categoryLower.includes('family') || categoryLower.includes('familie')) {
+    return <FaUsers color="#FF7F50" />;
+  }
+  if (categoryLower.includes('investment') || categoryLower.includes('investiții')) {
+    return <FaChartLine color="#FFD700" />;
+  }
+  if (categoryLower.includes('education') || categoryLower.includes('educație')) {
+    return <FaChartLine color="#9370DB" />;
+  }
+  if (categoryLower.includes('bills') || categoryLower.includes('facturi')) {
+    return <FaLightbulb color="#FF6347" />;
+  }
+  if (categoryLower.includes('other') || categoryLower.includes('altele')) {
+    return <FaTools color="#808080" />;
+  }
+  if (categoryLower.includes('shopping') || categoryLower.includes('cumpărături')) {
+    return <FaGift color="#FF69B4" />;
+  }
+  
+  return null;
 };

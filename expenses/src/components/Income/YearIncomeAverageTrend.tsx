@@ -1,9 +1,10 @@
 import React from 'react';
 import { useAuthState, useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { formatDataForChart, formatNumber } from '@utils/utils';
-import { monthNames } from '@utils/constants';
+import { getMonthNames } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
 import { getFinancialStabilityIcon } from '@utils/helper';
 import './YearIncomeAverageTrend.scss';
@@ -11,13 +12,18 @@ import './YearIncomeAverageTrend.scss';
 const YearIncomeAverageTrend: React.FC = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
+  const { t } = useLocalization();
 
   const totalIncomePerYear = data?.totalIncomePerYear || {};
   const totalPerYear = data?.totalPerYear || {};
   const totalSpent = data?.totalSpent || 0;
 
+  // Get localized month names
+  const monthNames = getMonthNames();
   const formattedIncomeData = formatDataForChart(
-    data?.totalIncomePerYearAndMonth || {}
+    data?.totalIncomePerYearAndMonth || {},
+    false,
+    monthNames
   );
 
   const yearIncomeAverageOptions: Highcharts.Options = {
@@ -31,7 +37,7 @@ const YearIncomeAverageTrend: React.FC = () => {
       useGPUTranslations: true,
     },
     title: {
-      text: 'Years in review',
+      text: t('charts.yearsInReview'),
     },
     xAxis: {
       type: 'category',
@@ -62,16 +68,16 @@ const YearIncomeAverageTrend: React.FC = () => {
       />
       <div className="year-income-average-balanced">
         <div className="section-header">
-          <h3>Total Income Per Year</h3>
+          <h3>{t('income.totalIncomePerYear')}</h3>
         </div>
 
         <table className="balanced-table">
           <thead>
             <tr>
-              <th>Year</th>
-              <th>Income</th>
-              <th>Spent</th>
-              <th>Savings</th>
+              <th>{t('income.year')}</th>
+              <th>{t('common.income')}</th>
+              <th>{t('income.spent')}</th>
+              <th>{t('income.savings')}</th>
             </tr>
           </thead>
           <tbody>

@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { useAuthState, useData } from '@context/context';
+import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
-import { categories } from '@utils/constants';
+import { getCategories } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
 import { formatMonth } from '@utils/utils';
 
@@ -10,6 +11,7 @@ const MonthlyTotals = () => {
   const { data } = useData() as DataState;
   const items = data.filtered || data;
   const { currency } = useAuthState() as AuthState;
+  const { t } = useLocalization();
 
   // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data, currency]);
@@ -43,10 +45,7 @@ const MonthlyTotals = () => {
   // Now fill in the totals for the available months
   items.totals &&
     Object.keys(items.totals).forEach((month) => {
-      const formattedMonth = new Date(month).toLocaleString('default', {
-        month: 'long',
-        year: 'numeric',
-      });
+      const formattedMonth = formatMonth(new Date(month));
       monthlyTotals[formattedMonth] = items.totals[month];
     });
 
@@ -61,7 +60,7 @@ const MonthlyTotals = () => {
       },
     },
     title: {
-      text: 'Monthly Totals',
+      text: t('charts.monthlyTotals'),
     },
     yAxis: {
       min: 0,
@@ -86,15 +85,15 @@ const MonthlyTotals = () => {
     series: [
       {
         name: data.category
-          ? categories.find((element) => element.value === data.category)?.label
-          : 'Monthly totals',
+          ? getCategories().find((element) => element.value === data.category)?.label
+          : t('charts.monthlyTotals'),
         data: seriesData,
         colorByPoint: true,
         pointIntervalUnit: 'month',
         pointStart: Date.UTC(firstDay.getUTCFullYear(), firstDay.getMonth(), 1),
       },
       {
-        name: 'Income',
+        name: t('common.income'),
         pointIntervalUnit: 'month',
         pointStart: Date.UTC(firstDay.getUTCFullYear(), firstDay.getMonth(), 1),
         type: 'spline',
