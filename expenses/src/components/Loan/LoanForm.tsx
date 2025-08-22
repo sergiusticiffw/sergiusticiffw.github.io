@@ -21,8 +21,8 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const options = [
-    { value: 'active', label: t('common.active') },
-    { value: 'pending', label: t('common.pending') },
+    { value: 'in_progress', label: t('common.active') },
+    { value: 'draft', label: t('common.pending') },
     { value: 'completed', label: t('common.completed') },
   ];
 
@@ -43,7 +43,9 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
     formType === 'add' ? initialState : values
   );
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, type, value } = event.target;
     const checked = (event.target as HTMLInputElement).checked;
     setFormState({
@@ -68,7 +70,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
       field_recurring_payment_day: [formState.field_recurring_payment_day],
       field_loan_status: [formState.field_loan_status],
     };
-
 
     const fetchOptions = {
       method: formType === 'add' ? 'POST' : 'PATCH',
@@ -96,27 +97,21 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
         if (data.nid) {
           onSuccess();
           showNotification(
-            formType === 'add' 
-              ? t('notification.loanAdded') 
-              : t('notification.loanUpdated'), 
+            formType === 'add'
+              ? t('notification.loanAdded')
+              : t('notification.loanUpdated'),
             notificationType.SUCCESS
           );
           setIsSubmitting(false);
           setFormState(initialState);
         } else {
-          showNotification(
-            t('error.unknown'),
-            notificationType.ERROR
-          );
+          showNotification(t('error.unknown'), notificationType.ERROR);
           setIsSubmitting(false);
         }
       })
       .catch((error) => {
         console.error('Loan operation failed:', error);
-        showNotification(
-          t('error.unknown'),
-          notificationType.ERROR
-        );
+        showNotification(t('error.unknown'), notificationType.ERROR);
         setIsSubmitting(false);
       });
   };
@@ -124,9 +119,11 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
   return (
     <div className="loan-form-container">
       <div className="form-header">
-        <h2>{formType === 'add' ? t('loanForm.addLoan') : t('loanForm.editLoan')}</h2>
+        <h2>
+          {formType === 'add' ? t('loanForm.addLoan') : t('loanForm.editLoan')}
+        </h2>
       </div>
-      
+
       <form className="loan-form" onSubmit={handleSubmit}>
         {/* Basic Information */}
         <div className="form-group required">
@@ -155,7 +152,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
               step={0.01}
             />
           </div>
-          
+
           <div className="form-group required">
             <label>{t('loanForm.interestRate')}</label>
             <input
@@ -182,7 +179,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
               onChange={handleChange}
             />
           </div>
-          
+
           <div className="form-group required">
             <label>{t('loanForm.endDate')}</label>
             <input
@@ -215,13 +212,15 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
               required
               type="date"
               max={formState.field_end_date}
-              min={new Date(formState.field_start_date).toISOString().slice(0, 10)}
+              min={new Date(formState.field_start_date)
+                .toISOString()
+                .slice(0, 10)}
               name="field_rec_first_payment_date"
               value={formState.field_rec_first_payment_date}
               onChange={handleChange}
             />
           </div>
-          
+
           <div className="form-group required">
             <label>{t('loanForm.paymentDayOfMonth')}</label>
             <input
@@ -262,13 +261,9 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
                 <span></span>
               </div>
             ) : formType === 'add' ? (
-              <>
-                {t('loanForm.addLoan')}
-              </>
+              <>{t('loanForm.addLoan')}</>
             ) : (
-              <>
-                {t('loanForm.updateLoan')}
-              </>
+              <>{t('loanForm.updateLoan')}</>
             )}
           </button>
         </div>
