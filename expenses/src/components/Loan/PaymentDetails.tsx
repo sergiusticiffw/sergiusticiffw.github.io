@@ -79,7 +79,7 @@ const PaymentDetails = (props) => {
         );
         setIsSubmitting(false);
       } else {
-                  showNotification(t('error.unknown'), notificationType.ERROR);
+        showNotification(t('error.unknown'), notificationType.ERROR);
         setIsSubmitting(false);
       }
       setDeleteModalId(false);
@@ -125,7 +125,7 @@ const PaymentDetails = (props) => {
           setDeleteModalId(false);
         }}
       >
-                          <h3>{t('modal.deletePayment')}</h3>
+        <h3>{t('modal.deletePayment')}</h3>
         <p
           style={{
             textAlign: 'center',
@@ -179,9 +179,11 @@ const PaymentDetails = (props) => {
       {payments.length ? (
         <div className="income-table-container">
           <div className="table-header">
-            <div className="table-subtitle">
-              {t('payment.showingPayments')} {Math.min(nrOfItemsToShow, payments.length)} {t('payment.of')} {payments.length} {t('payment.payments')}
-            </div>
+            <p className="table-subtitle">
+              {t('payment.showingPayments')}{' '}
+              {Math.min(nrOfItemsToShow, payments.length)} {t('payment.of')}{' '}
+              {payments.length} {t('payment.payments')}
+            </p>
           </div>
 
           <div className="table-wrapper">
@@ -227,7 +229,9 @@ const PaymentDetails = (props) => {
                           </div>
                           <div className="date-month">
                             {new Date(payment.fdt).toLocaleDateString(
-                              localStorage.getItem('language') === 'ro' ? 'ro-RO' : 'en-US', 
+                              localStorage.getItem('language') === 'ro'
+                                ? 'ro-RO'
+                                : 'en-US',
                               { month: 'short' }
                             )}
                           </div>
@@ -237,7 +241,9 @@ const PaymentDetails = (props) => {
                         <div className="title-content">
                           <div className="title-text">{payment.title}</div>
                           {isSimulated && (
-                            <span className="simulated-badge">{t('payment.simulated')}</span>
+                            <span className="simulated-badge">
+                              {t('payment.simulated')}
+                            </span>
                           )}
                         </div>
                       </td>
@@ -278,7 +284,8 @@ const PaymentDetails = (props) => {
                 >
                   <FaCaretDown />
                   <span>
-                    {t('common.loadMore')} ({payments.length - nrOfItemsToShow} {t('common.remaining')})
+                    {t('common.loadMore')} ({payments.length - nrOfItemsToShow}{' '}
+                    {t('common.remaining')})
                   </span>
                 </button>
               </div>
