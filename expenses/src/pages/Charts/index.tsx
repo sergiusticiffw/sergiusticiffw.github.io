@@ -7,6 +7,7 @@ import Filters from '@components/Filters/Filters';
 import { AuthState } from '@type/types';
 import MonthlySavingsTrend from '@components/Charts/MonthlySavingsTrend';
 import MonthlyTotals from '@components/Charts/MonthlyTotals';
+import SavingsHistory from '@components/Charts/SavingsHistory';
 import YearAverageTrend from '@components/Charts/YearAverageTrend';
 import MonthlyComparisonTrend from '@components/Charts/MonthlyComparisonTrend';
 import AllTimeSpendings from '@components/Home/AllTimeSpendings';
@@ -28,6 +29,7 @@ const componentMap = {
   DailyAverage,
   DailyAverageTrend,
   LastTwoMonthsAverage,
+  SavingsHistory,
 };
 
 const Charts = () => {
