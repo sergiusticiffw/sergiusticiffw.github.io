@@ -10,21 +10,13 @@ import { useLoan } from '@context/loan';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { AuthState } from '@type/types';
 import {
-  fetchLoans,
-  transformToNumber,
-  transformDateFormat,
-  formatNumber,
   calculateDaysFrom,
+  fetchLoans,
+  formatNumber,
+  transformDateFormat,
+  transformToNumber,
 } from '@utils/utils';
-import {
-  FaPen,
-  FaHandHoldingUsd,
-  FaChartLine,
-  FaCalendarAlt,
-  FaMoneyBillWave,
-  FaChevronDown,
-  FaChevronUp,
-} from 'react-icons/fa';
+import { FaChartLine, FaMoneyBillWave, FaPen } from 'react-icons/fa';
 import Notification from '@components/Notification/Notification';
 import './Loan.scss';
 import { useLocalization } from '@context/localization';
@@ -36,8 +28,6 @@ const Loan: React.FC = () => {
   const dispatch = useAuthDispatch();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [isLoanInfoExpanded, setIsLoanInfoExpanded] = useState(false);
   const { loans } = data;
   const noData = data.loans === null;
   const { t } = useLocalization();
@@ -124,10 +114,8 @@ const Loan: React.FC = () => {
     if (!loan.fp || !paydown) return 0;
 
     const sumInstallments = paydown.sum_of_installments || 0;
-    const percentPaid = ((totalPaidAmount ?? 0) / sumInstallments) * 100;
-    const percentRemaining = 100 - percentPaid;
 
-    return percentPaid;
+    return ((totalPaidAmount ?? 0) / sumInstallments) * 100;
   };
 
   const progress = calculateProgress();
@@ -136,15 +124,7 @@ const Loan: React.FC = () => {
   const totalPrincipal = parseFloat(loan.fp || '0');
   const totalInstallments = paydown?.sum_of_installments || 0;
   const remainingAmount = totalInstallments - (totalPaidAmount ?? 0);
-  const totalInterests = paydown?.sum_of_interests || 0;
-  const totalFees = paydown?.sum_of_fees || 0;
   const daysCalculated = paydown?.days_calculated || 0;
-
-  // Calculate additional values from the daily-average table
-  const sumOfInterest = totalInterests + (paydown?.unpaid_interest || 0);
-  const payPerDay = totalInstallments / daysCalculated;
-  const interestCostPercentage =
-    ((sumOfInterest + totalFees) / totalInstallments) * 100;
 
   // Calculate days passed and remaining
   const startDateParts = loanData.start_date?.split('.') || [];
@@ -154,9 +134,8 @@ const Loan: React.FC = () => {
   const daysSince = calculateDaysFrom(formattedStartDate);
   const daysPassed = daysSince > 0 ? Math.min(daysSince, daysCalculated) : 0;
   const daysRemaining = Math.max(daysCalculated - daysPassed, 0);
-  
+
   // Calculate time-based metrics for progress section
-  const monthsRemaining = Math.ceil(daysRemaining / 30);
   const monthsPassed = Math.floor(daysPassed / 30);
   const totalMonths = Math.ceil(daysCalculated / 30);
 
@@ -231,14 +210,18 @@ const Loan: React.FC = () => {
                 ></div>
               </div>
             </div>
-            
+
             <div className="progress-details">
               <div className="progress-item">
                 <span className="progress-label">{t('loan.monthsPassed')}</span>
-                <span className="progress-value">{monthsPassed} / {totalMonths}</span>
+                <span className="progress-value">
+                  {monthsPassed} / {totalMonths}
+                </span>
               </div>
               <div className="progress-item">
-                <span className="progress-label">{t('loan.daysRemaining')}</span>
+                <span className="progress-label">
+                  {t('loan.daysRemaining')}
+                </span>
                 <span className="progress-value">{daysRemaining}</span>
               </div>
             </div>

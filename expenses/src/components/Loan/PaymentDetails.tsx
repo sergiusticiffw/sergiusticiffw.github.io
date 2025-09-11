@@ -91,16 +91,6 @@ const PaymentDetails = (props) => {
     setDeleteModalId(paymentId);
   };
 
-  // Calculate payment statistics
-  const totalPayments = payments.length;
-  const totalPaymentsInstallment = payments?.filter((item) => item.fpi)?.length;
-  const totalAmount = payments.reduce(
-    (sum, payment) => sum + parseFloat(payment.fpi || 0),
-    0
-  );
-  const averagePayment =
-    totalPayments > 0 ? totalAmount / totalPaymentsInstallment : 0;
-
   return (
     <div className="payment-history">
       {/* Add Payment Button */}
