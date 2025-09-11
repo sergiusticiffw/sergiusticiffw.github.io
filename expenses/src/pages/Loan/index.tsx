@@ -154,6 +154,11 @@ const Loan: React.FC = () => {
   const daysSince = calculateDaysFrom(formattedStartDate);
   const daysPassed = daysSince > 0 ? Math.min(daysSince, daysCalculated) : 0;
   const daysRemaining = Math.max(daysCalculated - daysPassed, 0);
+  
+  // Calculate time-based metrics for progress section
+  const monthsRemaining = Math.ceil(daysRemaining / 30);
+  const monthsPassed = Math.floor(daysPassed / 30);
+  const totalMonths = Math.ceil(daysCalculated / 30);
 
   return (
     <div className="loan-container">
@@ -213,16 +218,29 @@ const Loan: React.FC = () => {
             <h3>{t('loan.paymentProgress')}</h3>
           </div>
 
-          <div className="progress-bar-container">
-            <div className="progress-label">
-              <span>{t('loan.paymentProgress')}</span>
-              <span>{formatNumber(progress)}%</span>
+          <div className="progress-container">
+            <div className="progress-bar-container">
+              <div className="progress-label">
+                <span>{t('loan.paymentProgress')}</span>
+                <span>{formatNumber(progress)}%</span>
+              </div>
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
             </div>
-            <div className="progress-bar">
-              <div
-                className="progress-fill"
-                style={{ width: `${progress}%` }}
-              ></div>
+            
+            <div className="progress-details">
+              <div className="progress-item">
+                <span className="progress-label">{t('loan.monthsPassed')}</span>
+                <span className="progress-value">{monthsPassed} / {totalMonths}</span>
+              </div>
+              <div className="progress-item">
+                <span className="progress-label">{t('loan.daysRemaining')}</span>
+                <span className="progress-value">{daysRemaining}</span>
+              </div>
             </div>
           </div>
         </div>

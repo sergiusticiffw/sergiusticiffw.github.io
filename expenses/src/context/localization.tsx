@@ -298,6 +298,8 @@ const translations = {
     'loan.installments': 'Installments',
     'loan.noAmortizationData': 'No amortization schedule data available.',
     'loan.debugInfo': 'Debug info',
+    'loan.monthsPassed': 'Months Passed',
+    'loan.daysRemaining': 'Days Remaining',
 
     // Loans Page
     'loans.title': 'Loans',
@@ -715,6 +717,8 @@ const translations = {
     'loan.noAmortizationData':
       'Nu sunt disponibile date pentru programul de amortizare.',
     'loan.debugInfo': 'Informații de debug',
+    'loan.monthsPassed': 'Luni Trecute',
+    'loan.daysRemaining': 'Zile Rămase',
 
     // Loans Page
     'loans.title': 'Împrumuturi',
