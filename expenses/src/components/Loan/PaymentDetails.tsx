@@ -93,20 +93,6 @@ const PaymentDetails = (props) => {
 
   return (
     <div className="payment-history">
-      {/* Add Payment Button */}
-      <div className="btns-actions">
-        <button
-          onClick={() => {
-            setShowEditModal(true);
-            setIsNewModal(true);
-          }}
-          className="action-btn"
-        >
-          <FaPlus />
-          <span>{t('payment.addNewPayment')}</span>
-        </button>
-      </div>
-
       {/* Modals */}
       <Modal
         show={!!deleteModalId}

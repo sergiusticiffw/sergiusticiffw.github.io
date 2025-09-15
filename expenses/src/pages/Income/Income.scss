@@ -4,6 +4,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem;
+  padding-bottom: 120px; // Add bottom padding to account for FAB
   min-height: 100vh;
   background: var(--bg-color);
 }
@@ -234,5 +235,18 @@
         margin-bottom: 0;
       }
     }
+  }
+}
+
+// Responsive bottom padding for FAB clearance
+@media (max-width: 768px) {
+  .income-container {
+    padding-bottom: 110px; // Slightly less padding on tablet
+  }
+}
+
+@media (max-width: 480px) {
+  .income-container {
+    padding-bottom: 100px; // Even less padding on mobile
   }
 } 

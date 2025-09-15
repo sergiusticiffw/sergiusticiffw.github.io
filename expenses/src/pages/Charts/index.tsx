@@ -4,7 +4,10 @@ import { useLocalization } from '@context/localization';
 import { fetchData } from '@utils/utils';
 import { availableCharts } from '@utils/constants';
 import Filters from '@components/Filters/Filters';
+import Modal from '@components/Modal';
+import TransactionForm from '@components/TransactionForm';
 import { AuthState } from '@type/types';
+import { FaPlus } from 'react-icons/fa';
 import MonthlySavingsTrend from '@components/Charts/MonthlySavingsTrend';
 import MonthlyTotals from '@components/Charts/MonthlyTotals';
 import SavingsHistory from '@components/Charts/SavingsHistory';
@@ -42,6 +45,7 @@ const Charts = () => {
   const dispatch = useAuthDispatch();
 
   const [visibleCharts, setVisibleCharts] = useState<string[]>([]);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     if (noData) {
@@ -58,6 +62,8 @@ const Charts = () => {
   return (
     <div>
       <h2>{t('charts.title')}</h2>
+      
+      
       <Filters />
       {loading ? (
         <div className="loading-container">
@@ -83,6 +89,33 @@ const Charts = () => {
           </div>
         )
       )}
+      
+      {/* Add Transaction Modal */}
+      <Modal
+        show={showAddModal}
+        onClose={(e) => {
+          e.preventDefault();
+          setShowAddModal(false);
+        }}
+      >
+        <TransactionForm
+          formType="add"
+          values={{}}
+          onSuccess={() => {
+            setShowAddModal(false);
+            fetchData(token, dataDispatch, dispatch);
+          }}
+        />
+      </Modal>
+      
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setShowAddModal(true)}
+        className="fab"
+        title={t('transactionForm.addTransaction')}
+      >
+        <FaPlus />
+      </button>
     </div>
   );
 };

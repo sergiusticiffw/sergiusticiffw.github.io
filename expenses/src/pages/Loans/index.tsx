@@ -195,13 +195,6 @@ const Loans: React.FC = () => {
         <h1>{t('loans.title')}</h1>
       </div>
 
-      {/* Add Loan Button */}
-      <div className="btns-actions">
-        <button onClick={() => setShowAddModal(true)} className="action-btn">
-          <FaPlus />
-          {t('loans.addLoan')}
-        </button>
-      </div>
 
       {/* Simple Stats */}
       <div className="loans-stats">
@@ -464,6 +457,15 @@ const Loans: React.FC = () => {
           )}
         </button>
       </Modal>
+      
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setShowAddModal(true)}
+        className="fab"
+        title={t('loans.addLoan')}
+      >
+        <FaPlus />
+      </button>
     </div>
   );
 };

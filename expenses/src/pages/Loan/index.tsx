@@ -16,7 +16,7 @@ import {
   transformDateFormat,
   transformToNumber,
 } from '@utils/utils';
-import { FaChartLine, FaMoneyBillWave, FaPen } from 'react-icons/fa';
+import { FaChartLine, FaMoneyBillWave, FaPen, FaPlus } from 'react-icons/fa';
 import Notification from '@components/Notification/Notification';
 import './Loan.scss';
 import { useLocalization } from '@context/localization';
@@ -151,13 +151,6 @@ const Loan: React.FC = () => {
         <button onClick={() => setShowEditModal(true)} className="action-btn">
           <FaPen />
           {t('loan.editLoan')}
-        </button>
-        <button
-          onClick={() => setShowAddPaymentModal(true)}
-          className="action-btn"
-        >
-          <FaMoneyBillWave />
-          {t('loan.addPayment')}
         </button>
       </div>
 
@@ -310,6 +303,15 @@ const Loan: React.FC = () => {
           }}
         />
       </Modal>
+      
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setShowAddPaymentModal(true)}
+        className="fab"
+        title={t('loan.addPayment')}
+      >
+        <FaPlus />
+      </button>
     </div>
   );
 };

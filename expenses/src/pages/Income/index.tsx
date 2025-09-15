@@ -164,19 +164,6 @@ const Income = () => {
         <h1>{t('income.title')}</h1>
       </div>
 
-      {/* Add Income Button */}
-      <div className="btns-actions">
-        <button
-          onClick={() => {
-            setShowEditModal(true);
-            setIsNewModal(true);
-          }}
-          className="action-btn"
-        >
-          <FaPlus />
-          {t('income.addIncome')}
-        </button>
-      </div>
 
       {/* Filters */}
       <IncomeFilters
@@ -313,6 +300,18 @@ const Income = () => {
           }}
         />
       </Modal>
+      
+      {/* Floating Action Button */}
+      <button
+        onClick={() => {
+          setShowEditModal(true);
+          setIsNewModal(true);
+        }}
+        className="fab"
+        title={t('income.addIncome')}
+      >
+        <FaPlus />
+      </button>
     </div>
   );
 };

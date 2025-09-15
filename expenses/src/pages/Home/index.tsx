@@ -15,6 +15,7 @@ import {
   FaTable,
   FaCalendar,
   FaTrash,
+  FaPlus,
 } from 'react-icons/fa';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import { NumberDisplay } from '@components/Home';
@@ -26,6 +27,7 @@ const Home = () => {
   const { token } = useAuthState() as AuthState;
   const [showDeleteModal, setShowDeleteModal] = useState<string | false>(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const { data, dataDispatch } = useData();
   const noData = data.groupedData === null;
   const loading = data.loading;
@@ -158,7 +160,7 @@ const Home = () => {
   };
 
   return (
-    <div>
+    <div className="home">
       <Modal
         show={!!showDeleteModal}
         onClose={(e) => {
@@ -167,11 +169,19 @@ const Home = () => {
         }}
       >
         <h3>{t('modal.deleteTransaction')}</h3>
-        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
+        <p
+          style={{
+            textAlign: 'center',
+            color: 'rgba(255, 255, 255, 0.7)',
+            marginBottom: '1.5rem',
+          }}
+        >
           {t('modal.deleteMessage')}
         </p>
         <button
-          onClick={() => showDeleteModal && handleDelete(showDeleteModal, token)}
+          onClick={() =>
+            showDeleteModal && handleDelete(showDeleteModal, token)
+          }
           className="button danger wide"
           disabled={isSubmitting}
         >
@@ -189,7 +199,7 @@ const Home = () => {
           )}
         </button>
       </Modal>
-      
+
       <Modal
         show={showEditModal}
         onClose={(e) => {
@@ -212,10 +222,33 @@ const Home = () => {
           }}
         />
       </Modal>
-      
+
+      <Modal
+        show={showAddModal}
+        onClose={(e) => {
+          e.preventDefault();
+          setShowAddModal(false);
+        }}
+      >
+        <TransactionForm
+          formType="add"
+          values={{}}
+          onSuccess={() => {
+            setShowAddModal(false);
+            fetchData(
+              token,
+              dataDispatch,
+              dispatch,
+              data.category,
+              data.textFilter
+            );
+          }}
+        />
+      </Modal>
+
       {/* Simple Header */}
       <h2>{currentMonth || t('home.title')}</h2>
-      
+
       <Filters />
       {loading ? (
         <div className="loading-container">
@@ -235,7 +268,11 @@ const Home = () => {
                 <div>
                   <div
                     className="stats-container has-budget"
-                    style={{ '--budget-progress': `${monthPercentage}%` } as React.CSSProperties}
+                    style={
+                      {
+                        '--budget-progress': `${monthPercentage}%`,
+                      } as React.CSSProperties
+                    }
                   >
                     <h3>{t('common.total')}</h3>
                     <div className="stat-value">
@@ -270,9 +307,11 @@ const Home = () => {
                   <div>
                     <div
                       className="stats-container has-budget"
-                      style={{
-                        '--budget-progress': `${weekPercentage}%`,
-                      } as React.CSSProperties}
+                      style={
+                        {
+                          '--budget-progress': `${weekPercentage}%`,
+                        } as React.CSSProperties
+                      }
                     >
                       <h3>Week budget</h3>
                       <div className="stat-value">
@@ -327,13 +366,17 @@ const Home = () => {
                   <div className="pager-navigation">
                     <button
                       disabled={currentMonthIndex >= months.length - 1}
-                      onClick={() => setCurrentMonthIndex(currentMonthIndex + 1)}
+                      onClick={() =>
+                        setCurrentMonthIndex(currentMonthIndex + 1)
+                      }
                     >
                       <FaArrowLeft />
                     </button>
                     <button
                       disabled={currentMonthIndex <= 0}
-                      onClick={() => setCurrentMonthIndex(currentMonthIndex - 1)}
+                      onClick={() =>
+                        setCurrentMonthIndex(currentMonthIndex - 1)
+                      }
                     >
                       <FaArrowRight />
                     </button>
@@ -346,6 +389,15 @@ const Home = () => {
           )}
         </div>
       )}
+
+      {/* Floating Action Button */}
+      <button
+        onClick={() => setShowAddModal(true)}
+        className="home fab"
+        title={t('transactionForm.addTransaction')}
+      >
+        <FaPlus />
+      </button>
     </div>
   );
 };
