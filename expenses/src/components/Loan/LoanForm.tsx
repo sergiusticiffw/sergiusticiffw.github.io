@@ -5,6 +5,7 @@ import { useLocalization } from '@context/localization';
 import { AuthState } from '@type/types';
 import { notificationType } from '@utils/constants';
 import { fetchLoans } from '@utils/utils';
+import { FaCheck } from 'react-icons/fa';
 import './LoanForm.scss';
 
 interface LoanFormProps {
@@ -42,6 +43,54 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
   const [formState, setFormState] = useState(
     formType === 'add' ? initialState : values
   );
+
+  // Validation functions
+  const validateField = (name: string, value: string) => {
+    switch (name) {
+      case 'title':
+        return value && value.trim() !== '';
+      case 'field_principal':
+        if (!value) return false;
+        const principalValue = typeof value === 'string' ? value.trim() : String(value);
+        if (principalValue === '') return false;
+        const principalNum = parseFloat(principalValue);
+        return !isNaN(principalNum) && principalNum > 0;
+      case 'field_rate':
+        if (!value) return false;
+        const rateValue = typeof value === 'string' ? value.trim() : String(value);
+        if (rateValue === '') return false;
+        const rateNum = parseFloat(rateValue);
+        return !isNaN(rateNum) && rateNum >= 0;
+      case 'field_start_date':
+        return value && value.trim() !== '' && new Date(value) <= new Date();
+      case 'field_end_date':
+        return value && value.trim() !== '' && new Date(value) > new Date(formState.field_start_date);
+      case 'field_initial_fee':
+        // Optional field - show green only if has valid value >= 0
+        if (!value) return false;
+        const feeValue = typeof value === 'string' ? value.trim() : String(value);
+        if (feeValue === '') return false;
+        const feeNum = parseFloat(feeValue);
+        return !isNaN(feeNum) && feeNum >= 0;
+      case 'field_rec_first_payment_date':
+        return value && value.trim() !== '' && new Date(value) >= new Date(formState.field_start_date) && new Date(value) <= new Date(formState.field_end_date);
+      case 'field_recurring_payment_day':
+        if (!value) return false;
+        const dayValue = typeof value === 'string' ? value.trim() : String(value);
+        if (dayValue === '') return false;
+        const dayNum = parseInt(dayValue);
+        return !isNaN(dayNum) && dayNum >= 1 && dayNum <= 31;
+      case 'field_loan_status':
+        return value && value.trim() !== '';
+      default:
+        return true;
+    }
+  };
+
+  const getFieldValidation = (name: string) => {
+    const value = formState[name as keyof typeof formState];
+    return validateField(name, value);
+  };
 
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -128,128 +177,200 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
         {/* Basic Information */}
         <div className="form-group required">
           <label>{t('loanForm.loanTitle')}</label>
-          <input
-            required
-            placeholder={t('loanForm.enterLoanTitle')}
-            type="text"
-            name="title"
-            value={formState.title}
-            onChange={handleChange}
-          />
+          <div className="input-wrapper">
+            <input
+              required
+              placeholder={t('loanForm.enterLoanTitle')}
+              type="text"
+              name="title"
+              value={formState.title}
+              onChange={handleChange}
+              className={`form-input ${getFieldValidation('title') ? 'valid' : ''}`}
+            />
+            {getFieldValidation('title') && (
+              <div className="validation-icon valid">
+                <FaCheck />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="form-row">
           <div className="form-group required">
             <label>{t('loanForm.principalAmount')}</label>
-            <input
-              required
-              placeholder={t('form.amountPlaceholder')}
-              type="number"
-              name="field_principal"
-              value={formState.field_principal}
-              onChange={handleChange}
-              min={0}
-              step={0.01}
-            />
+            <div className="input-wrapper">
+              <input
+                required
+                placeholder="0.00"
+                type="number"
+                name="field_principal"
+                value={formState.field_principal}
+                onChange={handleChange}
+                min={0}
+                step={0.01}
+                className={`form-input ${getFieldValidation('field_principal') ? 'valid' : ''}`}
+              />
+              {getFieldValidation('field_principal') && (
+                <div className="validation-icon valid">
+                  <FaCheck />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="form-group required">
             <label>{t('loanForm.interestRate')}</label>
-            <input
-              required
-              placeholder={t('form.amountPlaceholder')}
-              type="number"
-              name="field_rate"
-              value={formState.field_rate}
-              onChange={handleChange}
-              min={0}
-              step={0.01}
-            />
+            <div className="input-wrapper">
+              <input
+                required
+                placeholder="0.00"
+                type="number"
+                name="field_rate"
+                value={formState.field_rate}
+                onChange={handleChange}
+                min={0}
+                step={0.01}
+                className={`form-input ${getFieldValidation('field_rate') ? 'valid' : ''}`}
+              />
+              {getFieldValidation('field_rate') && (
+                <div className="validation-icon valid">
+                  <FaCheck />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="form-row">
           <div className="form-group required">
             <label>{t('loanForm.startDate')}</label>
-            <input
-              required
-              type="date"
-              name="field_start_date"
-              value={formState.field_start_date}
-              onChange={handleChange}
-            />
+            <div className="input-wrapper">
+              <input
+                required
+                type="date"
+                name="field_start_date"
+                value={formState.field_start_date}
+                onChange={handleChange}
+                className={`form-input ${getFieldValidation('field_start_date') ? 'valid' : ''}`}
+              />
+              {getFieldValidation('field_start_date') && (
+                <div className="validation-icon valid">
+                  <FaCheck />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="form-group required">
             <label>{t('loanForm.endDate')}</label>
-            <input
-              required
-              type="date"
-              name="field_end_date"
-              value={formState.field_end_date}
-              onChange={handleChange}
-            />
+            <div className="input-wrapper">
+              <input
+                required
+                type="date"
+                name="field_end_date"
+                value={formState.field_end_date}
+                onChange={handleChange}
+                className={`form-input ${getFieldValidation('field_end_date') ? 'valid' : ''}`}
+              />
+              {getFieldValidation('field_end_date') && (
+                <div className="validation-icon valid">
+                  <FaCheck />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="form-group">
           <label>{t('loanForm.initialFee')}</label>
-          <input
-            placeholder="0.00"
-            type="number"
-            name="field_initial_fee"
-            value={formState.field_initial_fee}
-            onChange={handleChange}
-            min={0}
-            step={0.01}
-          />
+          <div className="input-wrapper">
+            <input
+              placeholder="0.00"
+              type="number"
+              name="field_initial_fee"
+              value={formState.field_initial_fee}
+              onChange={handleChange}
+              min={0}
+              step={0.01}
+              className={`form-input ${getFieldValidation('field_initial_fee') ? 'valid' : ''}`}
+            />
+            {getFieldValidation('field_initial_fee') && (
+              <div className="validation-icon valid">
+                <FaCheck />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="form-row">
           <div className="form-group required">
             <label>{t('loanForm.firstPaymentDate')}</label>
-            <input
-              required
-              type="date"
-              max={formState.field_end_date}
-              min={new Date(formState.field_start_date)
-                .toISOString()
-                .slice(0, 10)}
-              name="field_rec_first_payment_date"
-              value={formState.field_rec_first_payment_date}
-              onChange={handleChange}
-            />
+            <div className="input-wrapper">
+              <input
+                required
+                type="date"
+                max={formState.field_end_date}
+                min={new Date(formState.field_start_date)
+                  .toISOString()
+                  .slice(0, 10)}
+                name="field_rec_first_payment_date"
+                value={formState.field_rec_first_payment_date}
+                onChange={handleChange}
+                className={`form-input ${getFieldValidation('field_rec_first_payment_date') ? 'valid' : ''}`}
+              />
+              {getFieldValidation('field_rec_first_payment_date') && (
+                <div className="validation-icon valid">
+                  <FaCheck />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="form-group required">
             <label>{t('loanForm.paymentDayOfMonth')}</label>
-            <input
-              required
-              placeholder="1-31"
-              type="number"
-              name="field_recurring_payment_day"
-              value={formState.field_recurring_payment_day}
-              onChange={handleChange}
-              min={1}
-              max={31}
-            />
+            <div className="input-wrapper">
+              <input
+                required
+                placeholder="1-31"
+                type="number"
+                name="field_recurring_payment_day"
+                value={formState.field_recurring_payment_day}
+                onChange={handleChange}
+                min={1}
+                max={31}
+                className={`form-input ${getFieldValidation('field_recurring_payment_day') ? 'valid' : ''}`}
+              />
+              {getFieldValidation('field_recurring_payment_day') && (
+                <div className="validation-icon valid">
+                  <FaCheck />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="form-group required">
           <label>{t('loanForm.loanStatus')}</label>
-          <select
-            required
-            name="field_loan_status"
-            value={formState.field_loan_status}
-            onChange={handleChange}
-          >
-            {options.map((item, id) => (
-              <option key={id} value={item.value}>
-                {item.label}
-              </option>
-            ))}
-          </select>
+          <div className="input-wrapper">
+            <select
+              required
+              name="field_loan_status"
+              value={formState.field_loan_status}
+              onChange={handleChange}
+              className={`form-input ${getFieldValidation('field_loan_status') ? 'valid' : ''}`}
+            >
+              {options.map((item, id) => (
+                <option key={id} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+            {getFieldValidation('field_loan_status') && (
+              <div className="validation-icon valid">
+                <FaCheck />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="form-actions">
@@ -261,9 +382,13 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
                 <span></span>
               </div>
             ) : formType === 'add' ? (
-              <>{t('loanForm.addLoan')}</>
+              <>
+                <span>{t('loanForm.addLoan')}</span>
+              </>
             ) : (
-              <>{t('loanForm.updateLoan')}</>
+              <>
+                <span>{t('loanForm.updateLoan')}</span>
+              </>
             )}
           </button>
         </div>

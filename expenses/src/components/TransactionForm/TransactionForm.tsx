@@ -6,7 +6,7 @@ import { useLocalization } from '@context/localization';
 import { getCategories, getSuggestions, categories, suggestions } from '@utils/constants';
 import { notificationType } from '@utils/constants';
 import { AuthState, DataState, NodeData } from '@type/types';
-import { FaPlus, FaPen } from 'react-icons/fa';
+import { FaPlus, FaPen, FaCheck, FaTimes } from 'react-icons/fa';
 import './TransactionForm.scss';
 
 interface TransactionFormProps {
@@ -109,6 +109,27 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   );
   const [selectedIndices, setSelectedIndices] = useState<string[]>([]);
 
+  // Validation functions
+  const validateField = (name: string, value: string) => {
+    switch (name) {
+      case 'field_amount':
+        return value && value.trim() !== '' && !isNaN(parseFloat(value)) && parseFloat(value) > 0;
+      case 'field_date':
+        return value && value.trim() !== '' && new Date(value) <= new Date();
+      case 'field_category':
+        return value && value.trim() !== '';
+      case 'field_description':
+        return value && value.trim() !== '';
+      default:
+        return true;
+    }
+  };
+
+  const getFieldValidation = (name: string) => {
+    const value = formState[name as keyof typeof formState];
+    return validateField(name, value);
+  };
+
   const handleSuggestionClick = (suggestion: string, index: string) => {
     setFormState({
       ...formState,
@@ -124,64 +145,94 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   };
   return (
     <div className="transaction-form-container">
-      <div className="form-header">
-        <h2>{formType === 'add' ? t('transactionForm.title') : t('transactionForm.editTitle')}</h2>
-      </div>
       <form className="transaction-form" onSubmit={handleSubmit}>
         <div className="form-group required">
           <label htmlFor="field_amount">{t('transactionForm.amount')}</label>
-          <input
-            id="field_amount"
-            required
-            placeholder={t('transactionForm.amount')}
-            type="number"
-            name="field_amount"
-            value={formState.field_amount}
-            onChange={handleChange}
-            min={0}
-            step={0.01}
-          />
+          <div className="input-wrapper">
+            <input
+              id="field_amount"
+              required
+              placeholder="0.00"
+              type="number"
+              name="field_amount"
+              value={formState.field_amount}
+              onChange={handleChange}
+              min={0}
+              step={0.01}
+              className={`form-input ${getFieldValidation('field_amount') ? 'valid' : ''}`}
+            />
+            {getFieldValidation('field_amount') && (
+              <div className="validation-icon valid">
+                <FaCheck />
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="form-group required">
           <label htmlFor="field_date">{t('transactionForm.date')}</label>
-          <input
-            id="field_date"
-            required
-            type="date"
-            name="field_date"
-            value={formState.field_date}
-            onChange={handleChange}
-          />
+          <div className="input-wrapper">
+            <input
+              id="field_date"
+              required
+              type="date"
+              name="field_date"
+              value={formState.field_date}
+              onChange={handleChange}
+              className={`form-input ${getFieldValidation('field_date') ? 'valid' : ''}`}
+            />
+            {getFieldValidation('field_date') && (
+              <div className="validation-icon valid">
+                <FaCheck />
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="form-group required">
           <label htmlFor="field_category">{t('transactionForm.category')}</label>
-          <select
-            id="field_category"
-            required
-            name="field_category"
-            value={formState.field_category}
-            onChange={handleChange}
-          >
-            {localizedCategories.map((category, id) => (
-              <option key={id} value={category.value}>
-                {category.label}
-              </option>
-            ))}
-          </select>
+          <div className="input-wrapper">
+            <select
+              id="field_category"
+              required
+              name="field_category"
+              value={formState.field_category}
+              onChange={handleChange}
+              className={`form-input ${getFieldValidation('field_category') ? 'valid' : ''}`}
+            >
+              <option value="">Select a category...</option>
+              {localizedCategories.map((category, id) => (
+                <option key={id} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+            {getFieldValidation('field_category') && (
+              <div className="validation-icon valid">
+                <FaCheck />
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="form-group">
           <label htmlFor="field_description">{t('transactionForm.description')}</label>
-          <textarea
-            id="field_description"
-            placeholder={t('transactionForm.description')}
-            name="field_description"
-            rows={3}
-            value={formState.field_description}
-            onChange={handleChange}
-          />
+          <div className="input-wrapper">
+            <input
+              id="field_description"
+              placeholder={t('transactionForm.description')}
+              name="field_description"
+              type="text"
+              value={formState.field_description}
+              onChange={handleChange}
+              className={`form-input ${getFieldValidation('field_description') ? 'valid' : ''}`}
+            />
+            {getFieldValidation('field_description') && (
+              <div className="validation-icon valid">
+                <FaCheck />
+              </div>
+            )}
+          </div>
         </div>
         
         {suggestionData.length ? (
@@ -218,7 +269,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             ) : (
               <>
                 {formType === 'add' ? <FaPlus /> : <FaPen />}
-                {formType === 'add' ? t('transactionForm.title') : t('transactionForm.editTitle')}
+                <span>{formType === 'add' ? t('transactionForm.title') : t('transactionForm.editTitle')}</span>
               </>
             )}
           </button>

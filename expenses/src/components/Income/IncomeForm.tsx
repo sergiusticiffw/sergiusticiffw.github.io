@@ -5,7 +5,7 @@ import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
 import { notificationType } from '@utils/constants';
 import { AuthState, DataState, NodeData } from '@type/types';
-import { FaPlus, FaPen } from 'react-icons/fa';
+import { FaPlus, FaPen, FaCheck } from 'react-icons/fa';
 import './IncomeForm.scss';
 
 interface IncomeFormProps {
@@ -47,6 +47,26 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
     });
   };
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Validation functions
+  const validateField = (name: string, value: string) => {
+    switch (name) {
+      case 'field_amount':
+        return value && value.trim() !== '' && !isNaN(parseFloat(value)) && parseFloat(value) > 0;
+      case 'field_date':
+        return value && value.trim() !== '' && new Date(value) <= new Date();
+      case 'field_description':
+        return value && value.trim() !== '';
+      default:
+        return true;
+    }
+  };
+
+  const getFieldValidation = (name: string) => {
+    const value = formState[name as keyof typeof formState];
+    return validateField(name, value);
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -100,42 +120,66 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
       <form className="income-form" onSubmit={handleSubmit}>
         <div className="form-group required">
           <label htmlFor="field_amount">{t('incomeForm.amount')}</label>
-          <input
-            id="field_amount"
-            required
-            placeholder={t('incomeForm.enterAmount')}
-            type="number"
-            name="field_amount"
-            value={formState.field_amount}
-            onChange={handleChange}
-            step="0.01"
-            min="0"
-          />
+          <div className="input-wrapper">
+            <input
+              id="field_amount"
+              required
+              placeholder="0.00"
+              type="number"
+              name="field_amount"
+              value={formState.field_amount}
+              onChange={handleChange}
+              step="0.01"
+              min="0"
+              className={`form-input ${getFieldValidation('field_amount') ? 'valid' : ''}`}
+            />
+            {getFieldValidation('field_amount') && (
+              <div className="validation-icon valid">
+                <FaCheck />
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="form-group required">
           <label htmlFor="field_date">{t('incomeForm.date')}</label>
-          <input
-            id="field_date"
-            required
-            type="date"
-            name="field_date"
-            value={formState.field_date}
-            onChange={handleChange}
-          />
+          <div className="input-wrapper">
+            <input
+              id="field_date"
+              required
+              type="date"
+              name="field_date"
+              value={formState.field_date}
+              onChange={handleChange}
+              className={`form-input ${getFieldValidation('field_date') ? 'valid' : ''}`}
+            />
+            {getFieldValidation('field_date') && (
+              <div className="validation-icon valid">
+                <FaCheck />
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="form-group required">
           <label htmlFor="field_description">{t('incomeForm.description')}</label>
-          <textarea
-            id="field_description"
-            required
-            placeholder={t('incomeForm.enterDescription')}
-            name="field_description"
-            value={formState.field_description}
-            onChange={handleChange}
-            rows={3}
-          />
+          <div className="input-wrapper">
+            <input
+              id="field_description"
+              required
+              placeholder={t('incomeForm.enterDescription')}
+              type="text"
+              name="field_description"
+              value={formState.field_description}
+              onChange={handleChange}
+              className={`form-input ${getFieldValidation('field_description') ? 'valid' : ''}`}
+            />
+            {getFieldValidation('field_description') && (
+              <div className="validation-icon valid">
+                <FaCheck />
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="form-actions">
@@ -149,7 +193,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
             ) : (
               <>
                 {formType === 'add' ? <FaPlus /> : <FaPen />}
-                {formType === 'add' ? t('incomeForm.addIncome') : t('incomeForm.updateIncome')}
+                <span>{formType === 'add' ? t('incomeForm.addIncome') : t('incomeForm.updateIncome')}</span>
               </>
             )}
           </button>
