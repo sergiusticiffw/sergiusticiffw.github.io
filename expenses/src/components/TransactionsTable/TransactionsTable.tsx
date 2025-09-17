@@ -124,6 +124,9 @@ const TransactionsTable: React.FC<TransactionsTableProps> = ({
                             month: 'short',
                           })}
                         </div>
+                        <div className="date-year">
+                          {new Date(element.dt).getFullYear()}
+                        </div>
                       </div>
                     </td>
                   ) : null}

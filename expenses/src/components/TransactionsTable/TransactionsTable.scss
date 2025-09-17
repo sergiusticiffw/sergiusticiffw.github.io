@@ -87,6 +87,34 @@
   }
 }
 
+.income-date {
+  .date-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 60px;
+    
+    .date-day {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+    
+    .date-month {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+    }
+    
+    .date-year {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+  }
+}
+
 // Responsive design
 @media only screen and (min-width: $breakpoint-sm) {
   .expenses-table td {

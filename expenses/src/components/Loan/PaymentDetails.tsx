@@ -211,6 +211,9 @@ const PaymentDetails = (props) => {
                               { month: 'short' }
                             )}
                           </div>
+                          <div className="date-year">
+                            {new Date(payment.fdt).getFullYear()}
+                          </div>
                         </div>
                       </td>
                       <td className="income-description">
