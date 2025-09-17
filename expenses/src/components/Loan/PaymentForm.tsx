@@ -176,11 +176,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               onChange={handleChange}
               className={`form-input ${getFieldValidation('title') ? 'valid' : ''}`}
             />
-            {getFieldValidation('title') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
 
@@ -196,11 +191,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
               onChange={handleChange}
               className={`form-input ${getFieldValidation('field_date') ? 'valid' : ''}`}
             />
-            {getFieldValidation('field_date') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
 
@@ -218,11 +208,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                 step={0.01}
                 className={`form-input ${getFieldValidation('field_rate') ? 'valid' : ''}`}
               />
-              {getFieldValidation('field_rate') && (
-                <div className="validation-icon valid">
-                  <FaCheck />
-                </div>
-              )}
             </div>
           </div>
           
@@ -239,11 +224,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                 step={0.01}
                 className={`form-input ${getFieldValidation('field_pay_installment') ? 'valid' : ''}`}
               />
-              {getFieldValidation('field_pay_installment') && (
-                <div className="validation-icon valid">
-                  <FaCheck />
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -262,11 +242,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                 step={0.01}
                 className={`form-input ${getFieldValidation('field_new_recurring_amount') ? 'valid' : ''}`}
               />
-              {getFieldValidation('field_new_recurring_amount') && (
-                <div className="validation-icon valid">
-                  <FaCheck />
-                </div>
-              )}
             </div>
           </div>
           
@@ -283,11 +258,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
                 step={0.01}
                 className={`form-input ${getFieldValidation('field_pay_single_fee') ? 'valid' : ''}`}
               />
-              {getFieldValidation('field_pay_single_fee') && (
-                <div className="validation-icon valid">
-                  <FaCheck />
-                </div>
-              )}
             </div>
           </div>
         </div>

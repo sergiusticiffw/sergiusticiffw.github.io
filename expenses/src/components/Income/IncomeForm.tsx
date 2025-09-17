@@ -133,11 +133,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
               min="0"
               className={`form-input ${getFieldValidation('field_amount') ? 'valid' : ''}`}
             />
-            {getFieldValidation('field_amount') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
         
@@ -153,11 +148,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
               onChange={handleChange}
               className={`form-input ${getFieldValidation('field_date') ? 'valid' : ''}`}
             />
-            {getFieldValidation('field_date') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
         
@@ -174,11 +164,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
               onChange={handleChange}
               className={`form-input ${getFieldValidation('field_description') ? 'valid' : ''}`}
             />
-            {getFieldValidation('field_description') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
         

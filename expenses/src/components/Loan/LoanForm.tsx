@@ -187,11 +187,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
               onChange={handleChange}
               className={`form-input ${getFieldValidation('title') ? 'valid' : ''}`}
             />
-            {getFieldValidation('title') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
 
@@ -210,11 +205,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
                 step={0.01}
                 className={`form-input ${getFieldValidation('field_principal') ? 'valid' : ''}`}
               />
-              {getFieldValidation('field_principal') && (
-                <div className="validation-icon valid">
-                  <FaCheck />
-                </div>
-              )}
             </div>
           </div>
 
@@ -232,11 +222,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
                 step={0.01}
                 className={`form-input ${getFieldValidation('field_rate') ? 'valid' : ''}`}
               />
-              {getFieldValidation('field_rate') && (
-                <div className="validation-icon valid">
-                  <FaCheck />
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -253,11 +238,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
                 onChange={handleChange}
                 className={`form-input ${getFieldValidation('field_start_date') ? 'valid' : ''}`}
               />
-              {getFieldValidation('field_start_date') && (
-                <div className="validation-icon valid">
-                  <FaCheck />
-                </div>
-              )}
             </div>
           </div>
 
@@ -272,11 +252,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
                 onChange={handleChange}
                 className={`form-input ${getFieldValidation('field_end_date') ? 'valid' : ''}`}
               />
-              {getFieldValidation('field_end_date') && (
-                <div className="validation-icon valid">
-                  <FaCheck />
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -294,11 +269,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
               step={0.01}
               className={`form-input ${getFieldValidation('field_initial_fee') ? 'valid' : ''}`}
             />
-            {getFieldValidation('field_initial_fee') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
 
@@ -318,11 +288,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
                 onChange={handleChange}
                 className={`form-input ${getFieldValidation('field_rec_first_payment_date') ? 'valid' : ''}`}
               />
-              {getFieldValidation('field_rec_first_payment_date') && (
-                <div className="validation-icon valid">
-                  <FaCheck />
-                </div>
-              )}
             </div>
           </div>
 
@@ -340,11 +305,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
                 max={31}
                 className={`form-input ${getFieldValidation('field_recurring_payment_day') ? 'valid' : ''}`}
               />
-              {getFieldValidation('field_recurring_payment_day') && (
-                <div className="validation-icon valid">
-                  <FaCheck />
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -365,11 +325,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
                 </option>
               ))}
             </select>
-            {getFieldValidation('field_loan_status') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
 

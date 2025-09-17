@@ -161,11 +161,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               step={0.01}
               className={`form-input ${getFieldValidation('field_amount') ? 'valid' : ''}`}
             />
-            {getFieldValidation('field_amount') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
         
@@ -181,11 +176,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               onChange={handleChange}
               className={`form-input ${getFieldValidation('field_date') ? 'valid' : ''}`}
             />
-            {getFieldValidation('field_date') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
         
@@ -207,11 +197,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 </option>
               ))}
             </select>
-            {getFieldValidation('field_category') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
         
@@ -227,11 +212,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               onChange={handleChange}
               className={`form-input ${getFieldValidation('field_description') ? 'valid' : ''}`}
             />
-            {getFieldValidation('field_description') && (
-              <div className="validation-icon valid">
-                <FaCheck />
-              </div>
-            )}
           </div>
         </div>
         
