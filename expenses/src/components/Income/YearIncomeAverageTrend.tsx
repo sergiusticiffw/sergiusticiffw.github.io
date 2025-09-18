@@ -109,7 +109,7 @@ const YearIncomeAverageTrend: React.FC = () => {
                       <div className="amount-value spent-value">{formatNumber(spent)}</div>
                     </div>
                     <div className="table-cell savings-cell">
-                      <div className={`savings-content ${isPositive ? 'positive' : 'negative'}`}>
+                      <div className="savings-content">
                         <div className="savings-amount">{formatNumber(diff)}</div>
                         <div className="savings-percentage">
                           {isFinite(savingsPercent) ? `(${formatNumber(savingsPercent)}%)` : ''}
@@ -136,7 +136,7 @@ const YearIncomeAverageTrend: React.FC = () => {
                   <div className="amount-value spent-value total-amount">{formatNumber(totalSpent)}</div>
                 </div>
                 <div className="table-cell savings-cell">
-                  <div className={`savings-content total-savings ${sumDiff > 0 ? 'positive' : 'negative'}`}>
+                  <div className="savings-content">
                     <div className="savings-amount">{formatNumber(sumDiff)}</div>
                     <div className="savings-percentage">
                       ({formatNumber((totalSpent / sumIncome - 1) * -100)}%)
