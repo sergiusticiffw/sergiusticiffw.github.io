@@ -61,72 +61,94 @@ const YearIncomeAverageTrend: React.FC = () => {
   let sumDiff: number = 0;
   let sumIncome: number = 0;
   return (
-    <>
+    <div className="income-summary-container">
       <HighchartsReact
         highcharts={Highcharts}
         options={yearIncomeAverageOptions}
       />
-      <div className="year-income-average-balanced">
-        <div className="section-header">
-          <h3>{t('income.totalIncomePerYear')}</h3>
+      
+      <div className="income-summary-card">
+        <div className="card-header">
+          <h3 className="card-title">{t('income.totalIncomePerYear')}</h3>
+          <div className="card-subtitle">Annual income vs spending analysis</div>
         </div>
-
-        <table className="balanced-table">
-          <thead>
-            <tr>
-              <th>{t('income.year')}</th>
-              <th>{t('common.income')}</th>
-              <th>{t('income.spent')}</th>
-              <th>{t('income.savings')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(totalIncomePerYear).map((item, key) => {
-              const income = item[1] as number;
-              const spent = (totalPerYear[item[0]] as number) || 0;
-              const diff: number = income - spent;
-              const savingsPercent = (spent / income - 1) * -100;
-              sumDiff += diff;
-              sumIncome += income;
-              return (
-                <tr key={key}>
-                  <td className="year-cell">
-                    <div className="text-with-icon">
-                      {getFinancialStabilityIcon(savingsPercent)}
-                      <span className="year-name">{item[0]}</span>
+        
+        <div className="card-content">
+          <div className="income-table-wrapper">
+            <div className="table-header">
+              <div className="header-cell year-header">{t('income.year')}</div>
+              <div className="header-cell">{t('common.income')}</div>
+              <div className="header-cell">{t('income.spent')}</div>
+              <div className="header-cell">{t('income.savings')}</div>
+            </div>
+            
+            <div className="table-body">
+              {Object.entries(totalIncomePerYear).map((item, key) => {
+                const income = item[1] as number;
+                const spent = (totalPerYear[item[0]] as number) || 0;
+                const diff: number = income - spent;
+                const savingsPercent = (spent / income - 1) * -100;
+                sumDiff += diff;
+                sumIncome += income;
+                const isPositive = diff > 0;
+                
+                return (
+                  <div key={key} className="table-row">
+                    <div className="table-cell year-cell">
+                      <div className="year-content">
+                        <div className="year-icon">
+                          {getFinancialStabilityIcon(savingsPercent)}
+                        </div>
+                        <div className="year-label">{item[0]}</div>
+                      </div>
                     </div>
-                  </td>
-                  <td className="amount-cell">{formatNumber(income)}</td>
-                  <td className="amount-cell">{formatNumber(spent)}</td>
-                  <td className="amount-cell">
-                    {isFinite(savingsPercent)
-                      ? `${formatNumber(diff)} (${formatNumber(savingsPercent)}%)`
-                      : `${formatNumber(diff)}`}
-                  </td>
-                </tr>
-              );
-            })}
-            <tr className="total-row">
-              <td className="total-label">
-                <div className="text-with-icon">
-                  {getFinancialStabilityIcon(
-                    (totalSpent / sumIncome - 1) * -100
-                  )}
-                  <span>Total</span>
+                    <div className="table-cell income-cell">
+                      <div className="amount-value income-value">{formatNumber(income)}</div>
+                    </div>
+                    <div className="table-cell spent-cell">
+                      <div className="amount-value spent-value">{formatNumber(spent)}</div>
+                    </div>
+                    <div className="table-cell savings-cell">
+                      <div className={`savings-content ${isPositive ? 'positive' : 'negative'}`}>
+                        <div className="savings-amount">{formatNumber(diff)}</div>
+                        <div className="savings-percentage">
+                          {isFinite(savingsPercent) ? `(${formatNumber(savingsPercent)}%)` : ''}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              <div className="table-row total-row">
+                <div className="table-cell year-cell">
+                  <div className="year-content">
+                    <div className="year-icon">
+                      {getFinancialStabilityIcon((totalSpent / sumIncome - 1) * -100)}
+                    </div>
+                    <div className="year-label total-label">Total</div>
+                  </div>
                 </div>
-              </td>
-              <td className="total-amount">{formatNumber(sumIncome)}</td>
-              <td className="total-amount">{formatNumber(totalSpent)}</td>
-              <td className="total-amount">
-                {formatNumber(sumDiff)} (
-                {formatNumber((totalSpent / sumIncome - 1) * -100)}
-                %)
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                <div className="table-cell income-cell">
+                  <div className="amount-value income-value total-amount">{formatNumber(sumIncome)}</div>
+                </div>
+                <div className="table-cell spent-cell">
+                  <div className="amount-value spent-value total-amount">{formatNumber(totalSpent)}</div>
+                </div>
+                <div className="table-cell savings-cell">
+                  <div className={`savings-content total-savings ${sumDiff > 0 ? 'positive' : 'negative'}`}>
+                    <div className="savings-amount">{formatNumber(sumDiff)}</div>
+                    <div className="savings-percentage">
+                      ({formatNumber((totalSpent / sumIncome - 1) * -100)}%)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
