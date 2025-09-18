@@ -8,7 +8,7 @@ import { AuthState, TransactionOrIncomeItem, DataState } from '@type/types';
 import TransactionForm from '@components/TransactionForm/TransactionForm';
 import MostExpensiveProductDisplay from '@components/Home/MostExpensiveProductDisplay';
 import { deleteNode, fetchData, formatNumber } from '@utils/utils';
-import { notificationType, colorMap } from '@utils/constants';
+import { notificationType } from '@utils/constants';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -158,13 +158,32 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
 
   const renderEventContent = useCallback(
     (eventInfo: { event: { title: string } }) => {
-      return <>{formatNumber(eventInfo.event.title)}</>;
+      const amount = parseFloat(eventInfo.event.title);
+      const formattedAmount = formatNumber(amount);
+
+      // Determine color class based on amount
+      let colorClass = 'amount-low';
+      if (amount >= 3000) {
+        colorClass = 'amount-high';
+      } else if (amount >= 1000) {
+        colorClass = 'amount-medium';
+      }
+
+      return (
+        <div
+          className={`event-amount ${colorClass}`}
+          data-amount={amount}
+          title={`${formattedAmount} - Click to view details`}
+        >
+          {formattedAmount}
+        </div>
+      );
     },
     []
   );
 
   const calendarRef = useRef(null);
-  
+
   // Create a safe date - fallback to current date if month is invalid
   const getSafeDate = () => {
     if (months && months[currentMonthIndex]) {
@@ -175,13 +194,16 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
           return date;
         }
       } catch (error) {
-        console.warn('Invalid date created from month string:', months[currentMonthIndex]);
+        console.warn(
+          'Invalid date created from month string:',
+          months[currentMonthIndex]
+        );
       }
     }
     // Fallback to current date
     return new Date();
   };
-  
+
   const date = getSafeDate();
 
   useEffect(() => {
@@ -281,8 +303,6 @@ const ExpenseCalendar: React.FC<ExpenseCalendarProps> = ({
             selectable={true}
             eventClick={handleEventSelect}
             events={events}
-            eventColor={colorMap[theme].accentColor}
-            eventTextColor={colorMap[theme].textColor}
             eventContent={renderEventContent}
             headerToolbar={{
               left: 'customPrev customNext customToday',
