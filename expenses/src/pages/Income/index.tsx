@@ -87,10 +87,10 @@ const Income = () => {
   }) => {
     setFilters(newFilters);
     // Only reset pagination if filters actually changed
-    const hasFilterChanged = 
-      newFilters.textFilter !== filters.textFilter || 
+    const hasFilterChanged =
+      newFilters.textFilter !== filters.textFilter ||
       newFilters.selectedMonth !== filters.selectedMonth;
-    
+
     if (hasFilterChanged) {
       setNrOfItemsToShow(20);
     }
@@ -140,13 +140,15 @@ const Income = () => {
     ) || 0;
   const totalRecords = filteredIncomeData?.length || 0;
   const firstDay = data.raw[data.raw.length - 1]?.dt;
-  const months = firstDay ? parseFloat(getMonthsPassed(firstDay as string).toFixed(2)) : 1;
+  const months = firstDay
+    ? parseFloat(getMonthsPassed(firstDay as string).toFixed(2))
+    : 1;
   const averageIncome = totalIncome / months;
 
   if (loading) {
     return (
-      <div className="income-container">
-        <div className="loading-container">
+      <div className="income-page">
+        <div className="income-loading">
           <div className="loader">
             <span className="loader__element"></span>
             <span className="loader__element"></span>
@@ -158,20 +160,29 @@ const Income = () => {
   }
 
   return (
-    <div className="income-container">
-      {/* Simple Header */}
+    <div className="income-page">
+      {/* Header - exact same structure as Home1 */}
       <div className="income-header">
         <h1>{t('income.title')}</h1>
+        <p className="transaction-count">
+          {totalRecords}{' '}
+          {totalRecords === 1 ? 'income record' : 'income records'}
+        </p>
       </div>
-
 
       {/* Filters */}
       <IncomeFilters
         textFilter={filters.textFilter}
         selectedMonth={filters.selectedMonth}
-        onTextFilterChange={(textFilter) => handleFilterChange({ ...filters, textFilter })}
-        onMonthFilterChange={(selectedMonth) => handleFilterChange({ ...filters, selectedMonth })}
-        onClearFilters={() => handleFilterChange({ textFilter: '', selectedMonth: '' })}
+        onTextFilterChange={(textFilter) =>
+          handleFilterChange({ ...filters, textFilter })
+        }
+        onMonthFilterChange={(selectedMonth) =>
+          handleFilterChange({ ...filters, selectedMonth })
+        }
+        onClearFilters={() =>
+          handleFilterChange({ textFilter: '', selectedMonth: '' })
+        }
       />
 
       {/* Simple Stats */}
@@ -263,7 +274,9 @@ const Income = () => {
           {t('modal.deleteMessage')}
         </p>
         <button
-          onClick={() => showDeleteModal && handleDelete(showDeleteModal, token)}
+          onClick={() =>
+            showDeleteModal && handleDelete(showDeleteModal, token)
+          }
           className="button danger wide"
           disabled={isSubmitting}
         >
@@ -300,7 +313,7 @@ const Income = () => {
           }}
         />
       </Modal>
-      
+
       {/* Floating Action Button */}
       <button
         onClick={() => {

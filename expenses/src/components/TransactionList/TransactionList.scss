@@ -106,13 +106,14 @@
     border-radius: 16px;
     padding: 1rem;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
     z-index: 1;
     width: 100%;
+    min-height: fit-content;
     
     &:hover {
       background: rgba(255, 255, 255, 0.08);
@@ -177,9 +178,9 @@
         font-size: 1rem;
         font-weight: 500;
         color: #ffffff;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        line-height: 1.4;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
       }
     }
     

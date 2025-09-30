@@ -2,25 +2,31 @@
 
 // Minimal Income Summary Container
 .income-summary-container {
-  margin: 1rem 0;
+  margin: 1.5rem 0;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 // Minimal Income Summary Card
 .income-summary-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
   border-radius: 0;
+  padding: 0;
   
   .card-header {
-    background: rgba(255, 255, 255, 0.08);
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    padding: 0;
+    border-bottom: none;
+    margin-bottom: 1rem;
     
     .card-title {
-      font-size: 1.1rem;
+      font-size: 1.125rem;
       font-weight: 600;
-      color: white;
+      color: #ffffff;
       margin: 0;
+      letter-spacing: -0.3px;
     }
     
     .card-subtitle {
@@ -38,16 +44,18 @@
   .table-header {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
-    background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    border-bottom: none;
+    padding-bottom: 0.5rem;
     
     .header-cell {
-      padding: 0.75rem 1rem;
-      font-size: 0.85rem;
+      padding: 0;
+      font-size: 0.75rem;
       font-weight: 600;
-      color: rgba(255, 255, 255, 0.8);
+      color: rgba(255, 255, 255, 0.5);
       text-transform: uppercase;
       text-align: center;
+      letter-spacing: 0.8px;
       
       &.year-header {
         text-align: left;
@@ -60,18 +68,24 @@
       display: grid;
       grid-template-columns: 1fr 1fr 1fr 1fr;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      background: transparent !important;
+      
+      &:last-child {
+        border-bottom: none;
+      }
       
       &.total-row {
-        background: rgba(255, 255, 255, 0.05);
+        background: transparent !important;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         border-bottom: none;
       }
       
       .table-cell {
-        padding: 0.75rem 1rem;
+        padding: 0.625rem 0;
         display: flex;
         align-items: center;
         justify-content: center;
+        background: transparent !important;
         
         &.year-cell {
           justify-content: flex-start;
@@ -81,14 +95,19 @@
             align-items: center;
             gap: 0.5rem;
             
+            .year-icon {
+              font-size: 1rem;
+            }
+            
             .year-label {
-              font-size: 0.9rem;
+              font-size: 0.95rem;
               font-weight: 500;
               color: white;
               
               &.total-label {
-                font-weight: 600;
+                font-weight: 700;
                 text-transform: uppercase;
+                font-size: 0.9rem;
               }
             }
           }
@@ -96,13 +115,13 @@
         
         &.income-cell, &.spent-cell {
           .amount-value {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 500;
             color: white;
             text-align: center;
             
             &.total-amount {
-              font-weight: 600;
+              font-weight: 700;
             }
           }
         }
@@ -112,16 +131,15 @@
             text-align: center;
             
             .savings-amount {
-              font-size: 0.9rem;
+              font-size: 0.95rem;
               font-weight: 500;
-              margin-bottom: 0.1rem;
               color: white;
             }
             
             .savings-percentage {
               font-size: 0.8rem;
               font-weight: 400;
-              opacity: 0.7;
+              opacity: 0.6;
               color: white;
             }
           }
@@ -131,12 +149,10 @@
   }
 }
 
-// Minimal Responsive Design
-@media (max-width: 768px) {
+// Mobile
+@media (max-width: 640px) {
   .income-summary-card {
     .card-header {
-      padding: 0.75rem 1rem;
-      
       .card-title {
         font-size: 1rem;
       }
@@ -144,40 +160,45 @@
   }
   
   .income-table-wrapper {
-    .table-header .header-cell {
-      padding: 0.5rem 0.75rem;
-      font-size: 0.8rem;
+    .table-header {
+      padding-bottom: 0.375rem;
+      
+      .header-cell {
+        font-size: 0.7rem;
+      }
     }
     
-    .table-body .table-row .table-cell {
-      padding: 0.5rem 0.75rem;
-      font-size: 0.85rem;
-    }
-  }
-}
-
-@media (max-width: 480px) {
-  .income-summary-card {
-    .card-header {
-      padding: 0.5rem 0.75rem;
-      
-      .card-title {
-        font-size: 0.9rem;
+    .table-body .table-row {
+      .table-cell {
+        padding: 0.5rem 0;
+        
+        &.year-cell .year-content {
+          gap: 0.375rem;
+          
+          .year-icon {
+            font-size: 0.875rem;
+          }
+          
+          .year-label {
+            font-size: 0.85rem;
+          }
+        }
+        
+        &.income-cell .amount-value,
+        &.spent-cell .amount-value {
+          font-size: 0.85rem;
+        }
+        
+        &.savings-cell .savings-content {
+          .savings-amount {
+            font-size: 0.85rem;
+          }
+          
+          .savings-percentage {
+            font-size: 0.75rem;
+          }
+        }
       }
     }
   }
-  
-  .income-table-wrapper {
-    .table-header .header-cell {
-      padding: 0.4rem 0.5rem;
-      font-size: 0.75rem;
-    }
-    
-    .table-body .table-row .table-cell {
-      padding: 0.4rem 0.5rem;
-      font-size: 0.8rem;
-    }
-  }
 }
-
-

@@ -3,152 +3,108 @@
 .income-filters {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
-  margin-bottom: $spacing-lg;
-  padding: $spacing-lg;
-  border: 1px solid var(--secondary-color);
-  border-radius: $border-radius-lg;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+// Exact same as SearchBar component
+.search-bar-container {
+  display: flex;
+  align-items: center;
   background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-
-  .filter-group {
-    display: flex;
-    gap: $spacing-md;
-    flex-wrap: wrap;
-    width: 100%;
-
-    @media (max-width: 768px) {
-      flex-direction: column;
-    }
+  border-radius: 12px;
+  padding: 0 1rem;
+  transition: background 0.2s ease;
+  width: 100%;
+  gap: 0.5rem;
+  
+  &:focus-within {
+    background: rgba(255, 255, 255, 0.08);
   }
-
-  .filter-input {
-    position: relative;
+  
+  .search-icon {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1.125rem;
+    flex-shrink: 0;
+  }
+  
+  .search-input {
     flex: 1;
-    min-width: 200px;
-
-    .filter-icon {
-      position: absolute;
-      left: $spacing-md;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--accent-color);
-      opacity: 0.8;
-      font-size: 16px;
-      z-index: 2;
+    background: transparent;
+    border: none;
+    padding: 1rem 0;
+    color: #ffffff;
+    font-size: 0.95rem;
+    outline: none;
+    min-width: 0;
+    
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.4);
     }
-
-    input {
-      width: 100%;
-      padding: 16px 16px 16px 48px;
-      border: 2px solid var(--secondary-color);
-      border-radius: 8px;
-      background: var(--bg-color);
-      color: white;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      min-height: 52px;
-      box-sizing: border-box;
-
-      &::placeholder {
+    
+    &.month-input {
+      &::-webkit-datetime-edit {
         color: white;
-        opacity: 0.7;
-        font-weight: 400;
+        font-weight: 500;
       }
-
-      &:focus {
-        outline: none;
-        border-color: var(--accent-color);
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        background: rgba(255, 255, 255, 0.02);
-        color: white;
+      
+      &::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.2s ease;
+        width: 18px;
+        height: 18px;
+        
+        &:hover {
+          opacity: 1;
+        }
       }
-
-      &:hover {
-        border-color: rgba(255, 255, 255, 0.3);
-        background: rgba(255, 255, 255, 0.02);
-        color: white;
-      }
-
-      &.text-filter {
-        min-width: 280px;
-      }
-
-      &.month-filter {
-        min-width: 180px;
-        
-        // Ensure month picker displays correctly
-        &::-webkit-datetime-edit {
-          color: white;
-          font-weight: 500;
-        }
-        
-        &::-webkit-calendar-picker-indicator {
-          filter: invert(1);
-          cursor: pointer;
-          opacity: 0.8;
-          transition: opacity 0.2s ease;
-          width: 20px;
-          height: 20px;
-          
-          &:hover {
-            opacity: 1;
-          }
-        }
-        
-        // Firefox
-        &::-moz-calendar-picker-indicator {
-          filter: invert(1);
-          cursor: pointer;
-          opacity: 0.8;
-          transition: opacity 0.2s ease;
-          width: 20px;
-          height: 20px;
-          
-          &:hover {
-            opacity: 1;
-          }
-        }
-        
-        // Edge
-        &::-ms-clear,
-        &::-ms-expand {
-          display: none;
-        }
+      
+      &::-moz-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+        opacity: 0.6;
       }
     }
   }
-
-  .clear-filters-btn {
+  
+  .clear-btn {
+    background: transparent;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: $spacing-sm;
-    padding: 12px 20px;
-    border: 2px solid var(--accent-color);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--accent-color);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    align-self: flex-start;
-    min-height: 44px;
-
-    &:hover {
-      background: var(--accent-color);
-      color: white;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
-
+    justify-content: center;
+    flex-shrink: 0;
+    
     svg {
-      font-size: 14px;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 1rem;
+      transition: color 0.2s ease;
+    }
+    
+    &:hover svg {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+}
+
+// Mobile
+@media (max-width: 640px) {
+  .income-filters {
+    gap: 0.625rem;
+  }
+  
+  .search-bar-container {
+    .search-icon {
+      font-size: 1rem;
+    }
+    
+    .search-input {
+      font-size: 0.9rem;
+      padding: 0.875rem 0;
     }
   }
 }

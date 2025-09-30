@@ -1,103 +1,100 @@
 @use '../../styles/variables' as *;
 
-.income-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1.5rem;
-  padding-bottom: 120px; // Add bottom padding to account for FAB
+.income-page {
   min-height: 100vh;
-  background: var(--bg-color);
+  background: #1a1a1a;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  padding-top: 0;
+  padding-bottom: 100px;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  
+  * {
+    box-sizing: border-box;
+  }
 }
 
+// Loading
+.income-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+}
+
+// Header - exact same as home1-header
 .income-header {
+  text-align: center;
   margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1.5rem;
   
   h1 {
     font-size: 2rem;
     font-weight: 700;
-    color: #fff;
+    margin: 0 0 0.5rem 0;
+    color: #ffffff;
+  }
+  
+  .transaction-count {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.5);
     margin: 0;
   }
 }
 
 .btns-actions {
-  margin-bottom: 2rem;
-  
-  .action-btn {
-    width: 100%;
-    background: var(--accent-color);
-    border: none;
-    border-radius: 8px;
-    padding: 1rem 1.5rem;
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: none !important;
-    
-    &:hover {
-      background: var(--accent-color-hover, #4f46e5);
-      transform: none !important;
-      box-shadow: none !important;
-    }
-    
-    svg {
-      font-size: 0.9rem;
-    }
-  }
+  display: none; // Hidden - using FAB instead
 }
 
 .income-stats {
-  display: flex;
-  gap: 2rem;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  
-  .stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-    
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--accent-color);
-      margin-bottom: 0.25rem;
-    }
-    
-    .stat-label {
-      font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.7);
-      font-weight: 500;
-    }
-  }
+  display: none; // Can be enabled later if needed
 }
 
 .income-table-section {
   margin-bottom: 2rem;
 }
 
+// Income table styling - minimal
+.income-table-container {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  
+  .table-header {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .table-wrapper {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .income-table {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+    background: transparent !important;
+  }
+}
+
 .no-income {
   text-align: center;
   padding: 3rem 2rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: transparent;
+  border: none;
   
   svg {
     width: 48px;
     height: 48px;
-    color: var(--accent-color);
+    color: rgba(91, 141, 239, 0.6);
     margin-bottom: 1rem;
     opacity: 0.7;
   }
@@ -110,7 +107,7 @@
   }
   
   p {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
   }
 }
@@ -120,82 +117,52 @@
   margin-top: 1.5rem;
   
   .load-more-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.875rem 1.75rem;
     color: #fff;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    font-weight: 500;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    margin: 0 auto;
+    gap: 0.625rem;
+    transition: all 0.25s ease;
     
     &:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
     }
     
     svg {
-      font-size: 0.8rem;
+      font-size: 0.875rem;
     }
   }
 }
 
-// Remove margins and padding for Income Records table section
-.income-container:has(.income-table-container) {
-  .income-table-container {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: transparent !important;
-    border: none !important;
-    
-    .table-header {
-      width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-    
-    .table-wrapper {
-      width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-    
-    .income-table {
-      width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      border-radius: 0 !important;
-      border: none !important;
-    }
-  }
-}
-
-.loading-container {
+.loader {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 50vh;
+  gap: 0.5rem;
   
-  .loader {
-    display: flex;
-    gap: 0.5rem;
+  .loader__element {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #5B8DEF;
+    animation: loader-bounce 1.4s ease-in-out infinite both;
     
-    .loader__element {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--accent-color);
-      animation: loader-bounce 1.4s ease-in-out infinite both;
-      
-      &:nth-child(1) {
-        animation-delay: -0.32s;
-      }
-      
-      &:nth-child(2) {
-        animation-delay: -0.16s;
-      }
+    &:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+    
+    &:nth-child(2) {
+      animation-delay: -0.16s;
     }
   }
 }
@@ -211,42 +178,14 @@
 
 // Mobile responsive
 @media (max-width: $breakpoint-md) {
-  .income-container {
-    padding: 1rem;
+  .income-page {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
   }
   
   .income-header {
     h1 {
-      font-size: 1.75rem;
-    }
-  }
-  
-  .income-stats {
-    flex-direction: column;
-    gap: 1rem;
-    
-    .stat-item {
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
-      
-      .stat-value {
-        font-size: 1.25rem;
-        margin-bottom: 0;
-      }
+      font-size: 1.5rem;
     }
   }
 }
-
-// Responsive bottom padding for FAB clearance
-@media (max-width: 768px) {
-  .income-container {
-    padding-bottom: 110px; // Slightly less padding on tablet
-  }
-}
-
-@media (max-width: 480px) {
-  .income-container {
-    padding-bottom: 100px; // Even less padding on mobile
-  }
-} 
