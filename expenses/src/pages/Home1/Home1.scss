@@ -1,0 +1,313 @@
+@use '../../styles/variables' as *;
+
+.home1-page {
+  min-height: 100vh;
+  background: #1a1a1a;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  padding-top: 0;
+  padding-bottom: 100px;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  
+  * {
+    box-sizing: border-box;
+  }
+
+  // Loading
+  .home1-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+  }
+
+  .home1-no-data {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  // Header
+  .home1-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-top: 1.5rem;
+    
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      color: #ffffff;
+    }
+    
+    .transaction-count {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin: 0;
+    }
+  }
+
+  // Month Navigation - Sticky at Bottom Above Menu
+  .home1-month-navigation-sticky {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    z-index: 100;
+    background: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 0.75rem 1.5rem;
+    border-radius: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    
+    .nav-button-sticky {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 12px;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      svg {
+        color: #ffffff;
+        font-size: 1.25rem;
+      }
+      
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+      }
+      
+      &:active:not(:disabled) {
+        transform: scale(0.95);
+      }
+      
+      &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  // View Tabs
+  .home1-view-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    
+    .tab-button {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: none;
+      border-radius: 12px;
+      padding: 0.875rem 1rem;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      
+      svg {
+        font-size: 1.125rem;
+      }
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.8);
+      }
+      
+      &.active {
+        background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%);
+        color: #ffffff;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
+      }
+    }
+  }
+
+  // Search Bar Wrapper
+  .home1-search-wrapper {
+    margin-bottom: 1.5rem;
+  }
+
+  // Stats Grid - 3 Columns (1 when filtered)
+  .home1-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-rows: 1fr !important;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+    
+    &.filtered {
+      grid-template-columns: 1fr !important;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .home1-stat-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 1rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.625rem;
+      min-height: 100px;
+      transition: background 0.2s ease;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.07);
+      }
+      
+      .stat-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        svg {
+          font-size: 1.5rem;
+          color: rgba(255, 255, 255, 0.6);
+        }
+      }
+      
+      .stat-value {
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #ffffff;
+        text-align: center;
+        letter-spacing: -0.02em;
+      }
+      
+      .stat-label {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 400;
+        text-align: center;
+      }
+    }
+  }
+
+  // Transaction List Wrapper
+  .home1-transaction-wrapper {
+    // No extra padding - inherited from parent
+  }
+
+  // Calendar Wrapper
+  .home1-calendar-wrapper {
+    margin-bottom: 2rem;
+  }
+
+  // FAB
+  .home1-fab {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 16px rgba(91, 141, 239, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 6px 20px rgba(91, 141, 239, 0.5);
+    }
+
+    &:active {
+      transform: translateY(0) scale(0.98);
+      box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
+    }
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  // Responsive - ONLY for very small phones
+  @media (max-width: 360px) {
+    padding-bottom: 150px;
+    
+    .home1-header {
+      h1 {
+        font-size: 1.75rem;
+      }
+    }
+    
+    .home1-month-navigation-sticky {
+      bottom: 60px;
+      padding: 0.625rem 1.25rem;
+      
+      .nav-button-sticky {
+        width: 44px;
+        height: 44px;
+        
+        svg {
+          font-size: 1.125rem;
+        }
+      }
+    }
+    
+    .home1-stats-grid {
+      grid-template-columns: 1fr !important;
+      
+      .home1-stat-card {
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 1rem;
+        gap: 1rem;
+        
+        .stat-icon {
+          width: 44px;
+          height: 44px;
+          
+          svg {
+            font-size: 1.375rem;
+          }
+        }
+        
+        .stat-value {
+          font-size: 1.375rem;
+          text-align: left;
+        }
+        
+        .stat-label {
+          font-size: 0.8rem;
+          text-align: left;
+        }
+      }
+    }
+    
+    .home1-fab {
+      bottom: 80px;
+    }
+  }
+}

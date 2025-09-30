@@ -1,0 +1,240 @@
+.calendar-view-component {
+  width: 100%;
+  
+  // FullCalendar overrides
+  .fc {
+    background: transparent;
+    font-size: 0.85rem;
+    
+    // Remove borders
+    .fc-theme-standard td,
+    .fc-theme-standard th {
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    // Day headers (Mon, Tue, Wed...)
+    .fc-col-header {
+      background: rgba(0, 0, 0, 0.6);
+      
+      th {
+        background: rgba(0, 0, 0, 0.6);
+        color: #ffffff;
+        font-weight: 600;
+        padding: 0.75rem 0.25rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+      }
+    }
+    
+    // Day cells
+    .fc-daygrid-day {
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.05);
+      min-height: 60px;
+      
+      .fc-daygrid-day-number {
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 600;
+        font-size: 0.875rem;
+        padding: 0.25rem;
+      }
+    }
+    
+    // Event styling
+    .fc-event {
+      background: transparent;
+      border: none;
+      padding: 0.125rem;
+    }
+    
+    .fc-daygrid-event {
+      margin: 0.125rem;
+    }
+    
+    // Hide event time
+    .fc-event-time {
+      display: none;
+    }
+  }
+  
+  // Custom event styling
+  .calendar-event {
+    padding: 0.25rem 0.375rem;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.2;
+    
+    .event-amount {
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 0.125rem;
+    }
+    
+    .event-count {
+      font-size: 0.6rem;
+      opacity: 0.85;
+    }
+    
+    // Color ranges
+    &.amount-low {
+      background: rgba(34, 197, 94, 0.85);
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    &.amount-medium {
+      background: rgba(251, 191, 36, 0.85);
+      color: #000000;
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.2);
+    }
+    
+    &.amount-high {
+      background: rgba(239, 68, 68, 0.9);
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+  }
+  
+  // Day Modal
+  .day-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    
+    .day-modal-content {
+      background: rgba(26, 26, 26, 0.98);
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      
+      .day-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        
+        h3 {
+          margin: 0;
+          color: #ffffff;
+          font-size: 1.125rem;
+          font-weight: 600;
+        }
+        
+        .modal-close-btn {
+          background: transparent;
+          border: none;
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 1.5rem;
+          cursor: pointer;
+          padding: 0.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: color 0.2s ease;
+          
+          &:hover {
+            color: rgba(255, 255, 255, 0.9);
+          }
+        }
+      }
+      
+      .day-modal-total {
+        padding: 1rem 1.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.95rem;
+        
+        strong {
+          color: #ffffff;
+          font-size: 1.125rem;
+          margin-left: 0.5rem;
+        }
+      }
+      
+      .day-transactions-list {
+        padding: 1rem 1.5rem;
+        
+        // Use TransactionList component - it already has swipe
+        .transaction-list-component {
+          gap: 0.5rem;
+        }
+      }
+    }
+  }
+}
+
+// Mobile optimizations
+@media (max-width: 640px) {
+  .calendar-view-component {
+    .fc {
+      font-size: 0.75rem;
+      
+      .fc-col-header th {
+        padding: 0.5rem 0.125rem;
+        font-size: 0.65rem;
+      }
+      
+      .fc-daygrid-day {
+        min-height: 50px;
+        
+        .fc-daygrid-day-number {
+          font-size: 0.75rem;
+          padding: 0.125rem;
+        }
+      }
+    }
+    
+    .calendar-event {
+      padding: 0.2rem 0.3rem;
+      font-size: 0.6rem;
+      
+      .event-amount {
+        font-size: 0.65rem;
+      }
+      
+      .event-count {
+        font-size: 0.55rem;
+      }
+    }
+    
+    .day-modal-content {
+      max-width: 100%;
+      
+      .day-modal-header {
+        padding: 1rem;
+        
+        h3 {
+          font-size: 1rem;
+        }
+      }
+      
+      .day-modal-total {
+        padding: 0.875rem 1rem;
+        font-size: 0.875rem;
+        
+        strong {
+          font-size: 1rem;
+        }
+      }
+      
+      .day-transactions-list {
+        padding: 0.875rem 1rem;
+      }
+    }
+  }
+}
