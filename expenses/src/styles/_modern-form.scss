@@ -1,0 +1,298 @@
+@use './variables' as *;
+
+// Modern Form Styles - Shared across all forms
+// Used by: TransactionForm, IncomeForm, PaymentForm, LoanForm
+
+.modern-form-container {
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
+}
+
+.modern-form {
+  background: transparent;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    label {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+      margin-bottom: 0;
+    }
+    
+    &.required label::after {
+      content: ' *';
+      color: #ff6b6b;
+      font-weight: 600;
+    }
+    
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    .form-input,
+    .form-textarea {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #fff;
+      padding: 0.875rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      width: 100%;
+      min-height: 48px;
+      
+      &:focus {
+        outline: none;
+        border-color: #5B8DEF;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.15);
+      }
+      
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+        font-weight: 400;
+      }
+    }
+    
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    
+    select.form-input {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 0.875rem center;
+      background-size: 1rem;
+      padding-right: 2.5rem;
+      
+      option {
+        background: #1a1a1a;
+        color: #fff;
+        padding: 0.5rem;
+      }
+    }
+    
+    input[type='date'].form-input {
+      cursor: pointer;
+      
+      &::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        padding: 0;
+        margin: 0;
+        width: 18px;
+        height: 18px;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+      }
+      
+      &::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+      }
+    }
+    
+    input[type='number'].form-input {
+      &::-webkit-inner-spin-button,
+      &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+    }
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    align-items: start;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+  
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    margin: 0.5rem 0;
+    
+    label {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: normal;
+      cursor: pointer;
+      margin: 0;
+      flex: 1;
+    }
+    
+    input[type='checkbox'] {
+      width: 18px;
+      height: 18px;
+      min-height: auto;
+      margin: 0;
+      cursor: pointer;
+      accent-color: #5B8DEF;
+      flex-shrink: 0;
+    }
+  }
+  
+  .form-actions {
+    margin-top: 1rem;
+    
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      padding: 0.875rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      min-height: 48px;
+      box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
+      
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(91, 141, 239, 0.5);
+        background: linear-gradient(135deg, #4A7DDC 0%, #5B8DEF 100%);
+      }
+      
+      &:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
+      }
+      
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+      
+      svg {
+        font-size: 1rem;
+      }
+      
+      span {
+        font-weight: 600;
+      }
+      
+      .loader {
+        display: flex;
+        gap: 4px;
+        
+        span {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #fff;
+          animation: loading-dots 1.4s infinite ease-in-out both;
+          
+          &:nth-child(1) {
+            animation-delay: -0.32s;
+          }
+          
+          &:nth-child(2) {
+            animation-delay: -0.16s;
+          }
+          
+          &:nth-child(3) {
+            animation-delay: 0s;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes loading-dots {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .modern-form {
+    padding: 1.25rem;
+    gap: 1rem;
+    
+    .form-group {
+      .form-input,
+      .form-textarea {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        min-height: 44px;
+      }
+      
+      .form-textarea {
+        min-height: 70px;
+      }
+    }
+    
+    .form-actions .btn-submit {
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      min-height: 44px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .modern-form {
+    padding: 1rem;
+    
+    .form-group {
+      label {
+        font-size: 0.85rem;
+      }
+      
+      .form-input,
+      .form-textarea {
+        padding: 0.625rem;
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
