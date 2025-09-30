@@ -16,13 +16,6 @@ const token = localStorage.getItem('currentUser')
 const theme = localStorage.getItem('theme')
   ? JSON.parse(localStorage.getItem('theme')!)
   : '';
-const weeklyBudget = localStorage.getItem('weeklyBudget')
-  ? JSON.parse(localStorage.getItem('weeklyBudget')!)
-  : '';
-
-const monthlyBudget = localStorage.getItem('monthlyBudget')
-  ? JSON.parse(localStorage.getItem('monthlyBudget')!)
-  : '';
 
 const useChartsBackgroundColor = localStorage.getItem(
   'useChartsBackgroundColor'
@@ -38,8 +31,6 @@ export const initialState = {
   userIsLoggedIn: !!user,
   currency: user?.current_user?.currency || 'MDL',
   theme: theme || 'blue-pink-gradient',
-  weeklyBudget,
-  monthlyBudget,
   useChartsBackgroundColor,
 };
 

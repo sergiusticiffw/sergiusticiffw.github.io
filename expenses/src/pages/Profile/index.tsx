@@ -11,13 +11,11 @@ import {
   FaCog,
   FaChartBar,
   FaPalette,
-  FaCoins,
   FaGlobe,
 } from 'react-icons/fa';
 import { fetchRequest } from '@utils/utils';
 import {
   notificationType,
-  themeList,
   availableCharts,
   currencies,
 } from '@utils/constants';
@@ -34,21 +32,13 @@ const Profile = () => {
     userDetails,
     token,
     currency,
-    weeklyBudget,
-    monthlyBudget,
     useChartsBackgroundColor,
   } = useAuthState() as AuthState;
-  let { theme } = useAuthState() as AuthState;
   const [state, setState] = useState({
-    weeklyBudget: weeklyBudget,
-    monthlyBudget: monthlyBudget,
     useChartsBackgroundColor: useChartsBackgroundColor,
     visibleCharts:
       JSON.parse(localStorage.getItem('visibleCharts')) || availableCharts,
   });
-  theme = themeList[theme as keyof typeof themeList]
-    ? theme
-    : 'blue-pink-gradient';
   const navigate = useNavigate();
 
   const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -97,14 +87,6 @@ const Profile = () => {
     });
   };
 
-  const handleThemeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    localStorage.setItem('theme', JSON.stringify(event.target.value));
-    dispatch &&
-      dispatch({
-        type: 'UPDATE_USER',
-        payload: { theme: event.target.value },
-      });
-  };
 
   const onBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -232,57 +214,6 @@ const Profile = () => {
             </select>
           </div>
 
-          <div className="form-field">
-            <label htmlFor="theme">{t('profile.theme')}</label>
-            <select
-              id="theme"
-              value={theme}
-              name="theme"
-              onChange={handleThemeChange}
-            >
-              {Object.entries(themeList).map(([id, name]) => (
-                <option key={id} value={id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Budget Settings Section */}
-        <div className="profile-section">
-          <div className="section-header">
-            <FaCoins />
-            <h3>{t('profile.budgetSettings')}</h3>
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="weeklyBudget">{t('profile.weeklyBudget')}</label>
-            <input
-              id="weeklyBudget"
-              required
-              placeholder={t('profile.enterWeeklyBudget')}
-              type="number"
-              name="weeklyBudget"
-              value={state.weeklyBudget || ''}
-              onChange={handleInputChange}
-              onBlur={onBlur}
-            />
-          </div>
-
-          <div className="form-field">
-            <label htmlFor="monthlyBudget">{t('profile.monthlyBudget')}</label>
-            <input
-              id="monthlyBudget"
-              required
-              placeholder={t('profile.enterMonthlyBudget')}
-              type="number"
-              name="monthlyBudget"
-              value={state.monthlyBudget || ''}
-              onChange={handleInputChange}
-              onBlur={onBlur}
-            />
-          </div>
         </div>
 
         {/* Charts Settings Section */}

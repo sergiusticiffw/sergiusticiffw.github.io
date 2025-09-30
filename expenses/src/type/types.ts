@@ -39,8 +39,6 @@ export interface AuthState {
   value: any;
   theme: string;
   currency: string;
-  weeklyBudget: string;
-  monthlyBudget: string;
   userIsLoggedIn: boolean;
   loading: boolean;
   errorMessage: null | any;
