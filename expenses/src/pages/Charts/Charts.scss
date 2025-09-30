@@ -85,11 +85,20 @@
     // Remove borders from charts
     .spending-summary-container,
     .most-expensive-table-container,
-    .year-income-average-trend-container {
+    .year-income-average-trend-container,
+    .daily-average {
       border: none !important;
       padding: 0 !important;
       margin: 0 !important;
       background: transparent !important;
+    }
+
+    // Table headers minimal
+    .heading {
+      font-size: 1.125rem !important;
+      color: #ffffff !important;
+      margin: 1.5rem 0 1rem 0 !important;
+      text-transform: none !important;
     }
 
     // Highcharts container

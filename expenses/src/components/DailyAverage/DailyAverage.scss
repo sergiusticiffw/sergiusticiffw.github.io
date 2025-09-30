@@ -2,26 +2,27 @@
 
 .daily-average-balanced {
   margin: 0.75rem 0;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
   overflow: hidden;
 }
 
 .section-header {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0;
+  background: transparent;
+  border-bottom: none;
+  margin-bottom: 0.75rem;
   
   h3 {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: white;
+    color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
   }
 }
 
@@ -30,13 +31,13 @@
   border-collapse: collapse;
   
   th {
-    padding: 0.75rem 1rem;
+    padding: 0;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    letter-spacing: 0.8px;
+    border-bottom: none;
     
     &:first-child {
       text-align: left;
@@ -48,12 +49,16 @@
     
     &.sortable {
       cursor: pointer;
+      
+      &:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
     }
   }
   
   td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.625rem 0;
+    border-bottom: none;
     vertical-align: middle;
     
     &:first-child {
@@ -92,13 +97,15 @@
   }
   
   tr {
-    &:last-child td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    
+    &:last-child {
       border-bottom: none;
     }
     
     &.total-row {
-      background: rgba(255, 255, 255, 0.08);
-      border-top: 2px solid rgba(255, 255, 255, 0.1);
+      background: transparent;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
       
       .total-label {
         color: white;
