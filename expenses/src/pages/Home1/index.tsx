@@ -33,8 +33,8 @@ const Home1 = () => {
   const noData = data.groupedData === null;
   const loading = data.loading;
   const dispatch = useAuthDispatch();
-  const [searchText, setSearchText] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [searchText, setSearchText] = useState(data.textFilter ?? '');
+  const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
   const [showDeleteModal, setShowDeleteModal] = useState<string | false>(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -47,6 +47,15 @@ const Home1 = () => {
       fetchData(token, dataDispatch, dispatch);
     }
   }, [data, dataDispatch, token, noData, dispatch]);
+
+  // Update filters in context
+  useEffect(() => {
+    dataDispatch({
+      type: 'FILTER_DATA',
+      category: selectedCategory,
+      textFilter: searchText,
+    });
+  }, [searchText, selectedCategory, dataDispatch]);
 
   const items = data.filtered || data;
   const localizedCategories = getCategories();

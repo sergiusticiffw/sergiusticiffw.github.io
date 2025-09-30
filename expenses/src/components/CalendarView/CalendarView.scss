@@ -1,8 +1,19 @@
 .calendar-view-component {
   width: 100%;
+  position: relative;
+
+  .month-chart-wrapper {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+  }
   
   // FullCalendar overrides
   .fc {
+    position: relative;
+    z-index: 1;
+    touch-action: pan-y; // Allow vertical scrolling, detect horizontal swipe
     background: transparent;
     font-size: 0.85rem;
     
@@ -31,12 +42,14 @@
       background: transparent;
       border-color: rgba(255, 255, 255, 0.05);
       min-height: 60px;
+      pointer-events: auto;
       
       .fc-daygrid-day-number {
         color: rgba(255, 255, 255, 0.8);
         font-weight: 600;
         font-size: 0.875rem;
         padding: 0.25rem;
+        pointer-events: auto;
       }
     }
     
@@ -45,10 +58,12 @@
       background: transparent;
       border: none;
       padding: 0.125rem;
+      pointer-events: auto;
     }
     
     .fc-daygrid-event {
       margin: 0.125rem;
+      pointer-events: auto;
     }
     
     // Hide event time

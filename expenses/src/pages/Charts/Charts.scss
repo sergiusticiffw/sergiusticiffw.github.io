@@ -1,0 +1,110 @@
+@use '../../styles/variables' as *;
+
+.charts-page-wrapper {
+  min-height: 100vh;
+  background: #1a1a1a;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  padding-top: 0;
+  padding-bottom: 100px;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  
+  * {
+    box-sizing: border-box;
+  }
+
+  // Header
+  .charts-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-top: 1.5rem;
+    
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0;
+      color: #ffffff;
+    }
+  }
+
+  // Search wrapper
+  .charts-search-wrapper {
+    margin-bottom: 1.5rem;
+  }
+
+  // Loading
+  .charts-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+
+    .loader {
+      display: flex;
+      gap: 0.5rem;
+
+      &__element {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #5B8DEF;
+        animation: bounce 1.4s infinite ease-in-out both;
+
+        &:nth-child(1) {
+          animation-delay: -0.32s;
+        }
+
+        &:nth-child(2) {
+          animation-delay: -0.16s;
+        }
+      }
+    }
+  }
+
+  // Charts content
+  .charts-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .charts-section {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 16px;
+    padding: 1.5rem;
+    
+    // Override any existing chart styles if needed
+    > div {
+      background: transparent;
+    }
+  }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+// Mobile
+@media (max-width: 640px) {
+  .charts-page-wrapper {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+
+    .charts-header {
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+
+    .charts-section {
+      padding: 1rem;
+    }
+  }
+}

@@ -3,7 +3,8 @@ import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useLocalization } from '@context/localization';
 import { fetchData } from '@utils/utils';
 import { availableCharts } from '@utils/constants';
-import Filters from '@components/Filters/Filters';
+import { getCategories } from '@utils/constants';
+import SearchBar from '@components/SearchBar/SearchBar';
 import Modal from '@components/Modal';
 import TransactionForm from '@components/TransactionForm';
 import { AuthState } from '@type/types';
@@ -15,11 +16,11 @@ import YearAverageTrend from '@components/Charts/YearAverageTrend';
 import MonthlyComparisonTrend from '@components/Charts/MonthlyComparisonTrend';
 import AllTimeSpendings from '@components/Home/AllTimeSpendings';
 import MonthlyAverage from '@components/Home/MonthlyAverage';
-
 import MonthlyAverageTrend from '@components/Charts/MonthlyAverageTrend';
 import DailyAverage from '@components/DailyAverage/DailyAverage';
 import DailyAverageTrend from '@components/Charts/DailyAverageTrend';
 import LastTwoMonthsAverage from '@components/Home/LastTwoMonthsAverage';
+import './Charts.scss';
 
 const componentMap = {
   MonthlyTotals,
@@ -46,6 +47,10 @@ const Charts = () => {
 
   const [visibleCharts, setVisibleCharts] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [searchText, setSearchText] = useState(data.textFilter ?? '');
+  const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
+
+  const categoryLabels = getCategories();
 
   useEffect(() => {
     if (noData) {
@@ -59,14 +64,35 @@ const Charts = () => {
     setVisibleCharts(storedCharts);
   }, []);
 
+  // Update filters in context
+  useEffect(() => {
+    dataDispatch({
+      type: 'FILTER_DATA',
+      category: selectedCategory,
+      textFilter: searchText,
+    });
+  }, [searchText, selectedCategory, dataDispatch]);
+
   return (
-    <div>
-      <h2>{t('charts.title')}</h2>
-      
-      
-      <Filters />
+    <div className="charts-page-wrapper">
+      {/* Header */}
+      <div className="charts-header">
+        <h1>{t('charts.title')}</h1>
+      </div>
+
+      {/* Search Bar */}
+      <div className="charts-search-wrapper">
+        <SearchBar
+          searchValue={searchText}
+          categoryValue={selectedCategory}
+          categories={categoryLabels}
+          onSearchChange={setSearchText}
+          onCategoryChange={setSelectedCategory}
+        />
+      </div>
+
       {loading ? (
-        <div className="loading-container">
+        <div className="charts-loading">
           <div className="loader">
             <span className="loader__element"></span>
             <span className="loader__element"></span>
@@ -75,7 +101,7 @@ const Charts = () => {
         </div>
       ) : (
         !noEntries && (
-          <div className="charts-page">
+          <div className="charts-content">
             {visibleCharts.map((chartKey) => {
               const ChartComponent = componentMap[chartKey];
               return ChartComponent ? (

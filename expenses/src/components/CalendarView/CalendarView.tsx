@@ -5,6 +5,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { formatNumber } from '@utils/utils';
 import { FaTimes } from 'react-icons/fa';
 import TransactionList from '@components/TransactionList';
+import Month from '@components/Home/Month';
 import './CalendarView.scss';
 
 interface Transaction {
@@ -24,38 +25,51 @@ interface CalendarViewProps {
   onDelete?: (id: string) => void;
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ transactions, currentMonth, categoryLabels, onMonthChange, onEdit, onDelete }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({
+  transactions,
+  currentMonth,
+  categoryLabels,
+  onMonthChange,
+  onEdit,
+  onDelete,
+}) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showDayModal, setShowDayModal] = useState(false);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
-  const [touchStartY, setTouchStartY] = useState<number | null>(null);
   // Group transactions by date
-  const transactionsByDate = transactions.reduce((acc, transaction) => {
-    const date = transaction.dt;
-    if (!acc[date]) {
-      acc[date] = [];
-    }
-    acc[date].push(transaction);
-    return acc;
-  }, {} as Record<string, Transaction[]>);
+  const transactionsByDate = transactions.reduce(
+    (acc, transaction) => {
+      const date = transaction.dt;
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(transaction);
+      return acc;
+    },
+    {} as Record<string, Transaction[]>
+  );
 
   // Calculate total per day
-  const dailyTotals = Object.entries(transactionsByDate).map(([date, dayTransactions]) => {
-    const total = dayTransactions.reduce(
-      (sum, t) => sum + (typeof t.sum === 'string' ? parseFloat(t.sum) : t.sum),
-      0
-    );
-    return {
-      date,
-      total,
-      count: dayTransactions.length,
-    };
-  });
+  const dailyTotals = Object.entries(transactionsByDate).map(
+    ([date, dayTransactions]) => {
+      const total = dayTransactions.reduce(
+        (sum, t) =>
+          sum + (typeof t.sum === 'string' ? parseFloat(t.sum) : t.sum),
+        0
+      );
+      return {
+        date,
+        total,
+        count: dayTransactions.length,
+      };
+    }
+  );
 
   // Create events for calendar
   const events = dailyTotals.map(({ date, total, count }) => ({
+    id: date, // Add id for event click
     date,
     title: `${formatNumber(total)}`,
+    allDay: true,
     extendedProps: {
       total,
       count,
@@ -71,74 +85,106 @@ const CalendarView: React.FC<CalendarViewProps> = ({ transactions, currentMonth,
 
   // Get category label
   const getCategoryLabel = (catValue: string) => {
-    return categoryLabels.find((cat) => cat.value === catValue)?.label || catValue;
+    return (
+      categoryLabels.find((cat) => cat.value === catValue)?.label || catValue
+    );
   };
 
   // Get month index from name
   const getMonthIndex = (monthName: string) => {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                    'July', 'August', 'September', 'October', 'November', 'December'];
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
     return months.indexOf(monthName);
   };
 
-  // Handle day click
-  const handleDateClick = (arg: any) => {
-    const clickedDate = arg.dateStr;
-    const dayTransactions = transactionsByDate[clickedDate];
-    
-    if (dayTransactions && dayTransactions.length > 0) {
-      setSelectedDate(clickedDate);
-      setShowDayModal(true);
-    }
-  };
+  // Handle event click (when clicking on days with transactions)
+  const handleEventClick = (event: { event: { id?: string } }) => {
+    const clickedDate = event.event.id;
+    if (clickedDate) {
+      const dayTransactions = transactionsByDate[clickedDate];
 
-  // Handle swipe for month navigation
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.touches[0].clientX);
-    setTouchStartY(e.touches[0].clientY);
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX === null || touchStartY === null) return;
-    
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
-    const diffX = touchStartX - touchEndX;
-    const diffY = touchStartY - touchEndY;
-    
-    // Only trigger swipe if horizontal movement is greater than vertical
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 80) {
-      if (diffX > 0) {
-        // Swiped left - go to next month (newer)
-        onMonthChange('next');
-      } else {
-        // Swiped right - go to previous month (older)
-        onMonthChange('prev');
+      if (dayTransactions && dayTransactions.length > 0) {
+        setSelectedDate(clickedDate);
+        setShowDayModal(true);
       }
     }
-    
-    setTouchStartX(null);
-    setTouchStartY(null);
+  };
+
+  // Swipe navigation - copied from original calendar
+  let touchStartX = 0;
+  let touchEndX = 0;
+  let isSwiping = false;
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX = event.touches[0].clientX;
+  };
+
+  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    touchEndX = event.touches[0].clientX;
+    isSwiping = true;
+  };
+
+  const handleTouchEnd = () => {
+    if (isSwiping) {
+      const deltaX = touchEndX - touchStartX;
+      const thresholdPercentage = 0.25;
+      const containerWidth = window.innerWidth;
+      const threshold = containerWidth * thresholdPercentage;
+
+      if (Math.abs(deltaX) > threshold) {
+        if (deltaX > 0) {
+          // Swiped right - go to previous month (older)
+          onMonthChange('prev');
+        } else {
+          // Swiped left - go to next month (newer)
+          onMonthChange('next');
+        }
+      }
+    }
+    isSwiping = false;
   };
 
   // Get transactions for selected date
-  const selectedDayTransactions = selectedDate ? (transactionsByDate[selectedDate] || []) : [];
+  const selectedDayTransactions = selectedDate
+    ? transactionsByDate[selectedDate] || []
+    : [];
   const selectedDayTotal = selectedDayTransactions.reduce(
     (sum, t) => sum + (typeof t.sum === 'string' ? parseFloat(t.sum) : t.sum),
     0
   );
 
   return (
-    <div 
+    <div
       className="calendar-view-component"
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
       <FullCalendar
         key={currentMonth}
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
-        initialDate={currentMonth ? new Date(currentMonth.split(' ')[1], getMonthIndex(currentMonth.split(' ')[0]), 1) : new Date()}
+        initialDate={
+          currentMonth
+            ? new Date(
+                currentMonth.split(' ')[1],
+                getMonthIndex(currentMonth.split(' ')[0]),
+                1
+              )
+            : new Date()
+        }
         events={events}
         headerToolbar={{
           left: '',
@@ -146,12 +192,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({ transactions, currentMonth,
           right: '',
         }}
         height="auto"
-        dateClick={handleDateClick}
+        eventClick={handleEventClick}
         eventContent={(eventInfo) => {
           const amount = eventInfo.event.extendedProps.total;
           const count = eventInfo.event.extendedProps.count;
           const colorClass = getColorClass(amount);
-          
+
           return (
             <div className={`calendar-event ${colorClass}`}>
               <div className="event-amount">{eventInfo.event.title}</div>
@@ -163,36 +209,43 @@ const CalendarView: React.FC<CalendarViewProps> = ({ transactions, currentMonth,
         dayHeaderClassNames="calendar-day-header"
       />
 
+      {/* Month Chart */}
+      <div>
+        <Month month={currentMonth} />
+      </div>
+
       {/* Day Transactions Modal */}
       {showDayModal && selectedDate && (
-        <div 
-          className="day-modal-overlay" 
+        <div
+          className="day-modal-overlay"
           onClick={() => setShowDayModal(false)}
           onTouchStart={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
           onTouchEnd={(e) => e.stopPropagation()}
         >
-          <div 
-            className="day-modal-content" 
+          <div
+            className="day-modal-content"
             onClick={(e) => e.stopPropagation()}
             onTouchStart={(e) => e.stopPropagation()}
             onTouchMove={(e) => e.stopPropagation()}
             onTouchEnd={(e) => e.stopPropagation()}
           >
             <div className="day-modal-header">
-              <h3>{new Date(selectedDate).toLocaleDateString('en-US', { 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-              })}</h3>
-              <button 
-                className="modal-close-btn" 
+              <h3>
+                {new Date(selectedDate).toLocaleDateString('en-US', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </h3>
+              <button
+                className="modal-close-btn"
                 onClick={() => setShowDayModal(false)}
               >
                 <FaTimes />
               </button>
             </div>
-            
+
             <div className="day-modal-total">
               Total: <strong>{formatNumber(selectedDayTotal)}</strong>
             </div>
