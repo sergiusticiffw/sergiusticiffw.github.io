@@ -141,8 +141,8 @@ const Loan: React.FC = () => {
 
   return (
     <div className="loan-container">
-      {/* Simple Header */}
-      <div className="income-header">
+      {/* Header - same structure as Home1 */}
+      <div className="loan-header">
         <h1>{loan?.title}</h1>
       </div>
 
@@ -161,23 +161,31 @@ const Loan: React.FC = () => {
         </div>
       )}
 
-      {/* Simple Stats */}
-      <div className="loan-stats">
-        <div className="stat-item">
-          <span className="stat-value">{formatNumber(totalPrincipal)}</span>
-          <span className="stat-label">{t('loan.principal')}</span>
+      {/* Loan Stats */}
+      <div className="loan-stats-grid-2col">
+        <div className="loan-stat-item">
+          <span className="loan-stat-label">{t('loan.principal')}</span>
+          <span className="loan-stat-value">
+            {formatNumber(totalPrincipal)}
+          </span>
         </div>
-        <div className="stat-item">
-          <span className="stat-value">{formatNumber(totalInstallments)}</span>
-          <span className="stat-label">{t('common.total')}</span>
+        <div className="loan-stat-item">
+          <span className="loan-stat-label">{t('common.total')}</span>
+          <span className="loan-stat-value">
+            {formatNumber(totalInstallments)}
+          </span>
         </div>
-        <div className="stat-item">
-          <span className="stat-value">{formatNumber(totalPaidAmount)}</span>
-          <span className="stat-label">{t('loan.paid')}</span>
+        <div className="loan-stat-item">
+          <span className="loan-stat-label">{t('loan.paid')}</span>
+          <span className="loan-stat-value">
+            {formatNumber(totalPaidAmount)}
+          </span>
         </div>
-        <div className="stat-item">
-          <span className="stat-value">{formatNumber(remainingAmount)}</span>
-          <span className="stat-label">{t('loan.remaining')}</span>
+        <div className="loan-stat-item">
+          <span className="loan-stat-label">{t('loan.remaining')}</span>
+          <span className="loan-stat-value">
+            {formatNumber(remainingAmount)}
+          </span>
         </div>
       </div>
 
@@ -204,18 +212,20 @@ const Loan: React.FC = () => {
               </div>
             </div>
 
-            <div className="progress-details">
-              <div className="progress-item">
-                <span className="progress-label">{t('loan.monthsPassed')}</span>
-                <span className="progress-value">
+            <div className="loan-stats-grid-2col">
+              <div className="loan-stat-item">
+                <span className="loan-stat-label">
+                  {t('loan.monthsPassed')}
+                </span>
+                <span className="loan-stat-value">
                   {monthsPassed} / {totalMonths}
                 </span>
               </div>
-              <div className="progress-item">
-                <span className="progress-label">
+              <div className="loan-stat-item">
+                <span className="loan-stat-label">
                   {t('loan.daysRemaining')}
                 </span>
-                <span className="progress-value">{daysRemaining}</span>
+                <span className="loan-stat-value">{daysRemaining}</span>
               </div>
             </div>
           </div>
@@ -303,7 +313,7 @@ const Loan: React.FC = () => {
           }}
         />
       </Modal>
-      
+
       {/* Floating Action Button */}
       <button
         onClick={() => setShowAddPaymentModal(true)}

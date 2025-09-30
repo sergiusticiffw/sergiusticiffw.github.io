@@ -9,9 +9,9 @@ import {
   FaTrash,
   FaCaretDown,
   FaMoneyBillWave,
-  FaCalendarAlt,
-  FaChartLine,
-  FaPlus,
+  FaSort,
+  FaSortUp,
+  FaSortDown,
 } from 'react-icons/fa';
 import { deleteNode, fetchLoans, formatNumber } from '@utils/utils';
 import { notificationType } from '@utils/constants';
@@ -20,10 +20,13 @@ import PaymentForm from '@components/Loan/PaymentForm';
 import { useLoan } from '@context/loan';
 import './PaymentDetails.scss';
 
+type SortField = 'date' | 'amount' | null;
+type SortDirection = 'asc' | 'desc';
+
 const PaymentDetails = (props) => {
   const payments = props?.payments ?? [];
   const loan = props?.loan ?? {};
-  const tableRef = useRef(null);
+  const listRef = useRef<any>(null);
   const showNotification = useNotification();
   const { t } = useLocalization();
   const [showEditModal, setShowEditModal] = useState(false);
@@ -32,6 +35,20 @@ const PaymentDetails = (props) => {
   const { dataDispatch } = useLoan();
   const { token } = useAuthState() as AuthState;
   const dispatch = useAuthDispatch();
+  const [nrOfItemsToShow, setNrOfItemsToShow] = useState(10);
+  const [deleteModalId, setDeleteModalId] = useState<string | false>(false);
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const {
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    deleteVisible,
+    editVisible,
+    swipedItemId,
+  } = useSwipeActions();
+
   const [focusedItem, setFocusedItem] = useState({
     nid: '',
     title: '',
@@ -42,17 +59,6 @@ const PaymentDetails = (props) => {
     field_new_recurring_amount: undefined as number | undefined,
     field_is_simulated_payment: false,
   });
-  const [nrOfItemsToShow, setNrOfItemsToShow] = useState(6);
-  const [deleteModalId, setDeleteModalId] = useState<string | false>(false);
-
-  const {
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    deleteVisible,
-    editVisible,
-    extraRowStyle,
-  } = useSwipeActions();
 
   const handleEdit = (nid: string) => {
     const item = payments?.find((item) => item.id === nid);
@@ -91,9 +97,44 @@ const PaymentDetails = (props) => {
     setDeleteModalId(paymentId);
   };
 
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  // Sort payments
+  const sortedPayments = [...payments].sort((a, b) => {
+    if (!sortField) {
+      return new Date(b.fdt).getTime() - new Date(a.fdt).getTime();
+    }
+
+    if (sortField === 'date') {
+      const dateA = new Date(a.fdt).getTime();
+      const dateB = new Date(b.fdt).getTime();
+      return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+    }
+
+    if (sortField === 'amount') {
+      const amountA = parseFloat(a.fpi || '0');
+      const amountB = parseFloat(b.fpi || '0');
+      return sortDirection === 'asc' ? amountA - amountB : amountB - amountA;
+    }
+
+    return 0;
+  });
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return <FaSort />;
+    return sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />;
+  };
+
   return (
     <div className="payment-history">
-      {/* Modals */}
+      {/* Delete Modal */}
       <Modal
         show={!!deleteModalId}
         onClose={(e) => {
@@ -131,6 +172,7 @@ const PaymentDetails = (props) => {
         </button>
       </Modal>
 
+      {/* Edit Modal */}
       <Modal
         show={showEditModal}
         onClose={(e) => {
@@ -151,146 +193,133 @@ const PaymentDetails = (props) => {
         />
       </Modal>
 
-      {/* Payment History Table */}
+      {/* Payment List */}
       {payments.length ? (
-        <div className="income-table-container">
-          <div className="table-header">
-            <p className="table-subtitle">
-              {t('payment.showingPayments')}{' '}
-              {Math.min(nrOfItemsToShow, payments.length)} {t('payment.of')}{' '}
-              {payments.length} {t('payment.payments')}
+        <div className="payment-list-component" ref={listRef}>
+          {/* Header with count */}
+          <div className="payment-list-header">
+            <p className="payment-count">
+              {Math.min(nrOfItemsToShow, payments.length)} of {payments.length}{' '}
+              payments
             </p>
           </div>
 
-          <div className="table-wrapper">
-            <table
-              className="income-table payment-table"
-              cellSpacing="0"
-              cellPadding="0"
+          {/* Sort Controls */}
+          <div className="sort-controls">
+            <button
+              className={`sort-button ${sortField === 'date' ? 'active' : ''}`}
+              onClick={() => handleSort('date')}
             >
-              <thead>
-                <tr>
-                  <th>{t('common.date')}</th>
-                  <th>{t('payment.title')}</th>
-                  <th>{t('payment.installment')}</th>
-                  <th className="desktop-only">{t('common.actions')}</th>
-                </tr>
-              </thead>
-              <tbody ref={tableRef}>
-                {payments?.slice(0, nrOfItemsToShow)?.map((payment, index) => {
-                  const isSimulated = Number(payment.fisp) === 1;
-                  return (
-                    <tr
-                      key={payment.id}
-                      className={`transaction-item ${isSimulated ? 'simulated-payment' : ''}`}
-                      data-id={payment.id}
-                      onTouchStart={(e) =>
-                        handleTouchStart(e, payment.id, tableRef)
-                      }
-                      onTouchMove={(e) => handleTouchMove(e, tableRef)}
-                      onTouchEnd={(e) =>
-                        handleTouchEnd(
-                          e,
-                          tableRef,
-                          payment.id,
-                          handleEdit,
-                          handleDeleteClick
-                        )
-                      }
-                    >
-                      <td className="income-date">
-                        <div className="date-content">
-                          <div className="date-day">
-                            {new Date(payment.fdt).getDate()}
-                          </div>
-                          <div className="date-month">
-                            {new Date(payment.fdt).toLocaleDateString(
-                              localStorage.getItem('language') === 'ro'
-                                ? 'ro-RO'
-                                : 'en-US',
-                              { month: 'short' }
-                            )}
-                          </div>
-                          <div className="date-year">
-                            {new Date(payment.fdt).getFullYear()}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="income-description">
-                        <div className="title-content">
-                          <div className="title-text">{payment.title}</div>
-                          {isSimulated && (
-                            <span className="simulated-badge">
-                              {t('payment.simulated')}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="income-amount">
-                        <div className="amount-value">
-                          {formatNumber(payment.fpi)}
-                        </div>
-                      </td>
-                      <td className="desktop-only income-actions-cell">
-                        <div className="action-buttons">
-                          <button
-                            onClick={() => handleEdit(payment.id)}
-                            className="btn-edit"
-                            title={t('payment.editPayment')}
-                          >
-                            <FaPen />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(payment.id)}
-                            className="btn-delete"
-                            title={t('payment.deletePayment')}
-                          >
-                            <FaTrash />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
-            {payments?.length > nrOfItemsToShow && (
-              <div className="load-more">
-                <button
-                  onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 6)}
-                  className="load-more-btn"
-                >
-                  <FaCaretDown />
-                  <span>
-                    {t('common.loadMore')} ({payments.length - nrOfItemsToShow}{' '}
-                    {t('common.remaining')})
-                  </span>
-                </button>
-              </div>
-            )}
-
-            {deleteVisible && (
-              <div style={{ ...extraRowStyle }}>
-                <div className="row-action delete">
-                  <FaTrash />
-                </div>
-              </div>
-            )}
-            {editVisible && (
-              <div style={{ ...extraRowStyle }}>
-                <div className="row-action edit">
-                  <FaPen />
-                </div>
-              </div>
-            )}
+              Date {getSortIcon('date')}
+            </button>
+            <button
+              className={`sort-button ${sortField === 'amount' ? 'active' : ''}`}
+              onClick={() => handleSort('amount')}
+            >
+              Amount {getSortIcon('amount')}
+            </button>
           </div>
+
+          {/* Payment Items */}
+          <div className="payment-list-items">
+            {sortedPayments.slice(0, nrOfItemsToShow).map((payment) => {
+              const isSimulated = Number(payment.fisp) === 1;
+              const date = new Date(payment.fdt);
+              const day = date.getDate();
+              const month = date
+                .toLocaleDateString('en-US', { month: 'short' })
+                .toUpperCase();
+              const year = date.getFullYear();
+
+              const isThisItemSwiped = swipedItemId === payment.id;
+
+              return (
+                <div
+                  key={payment.id}
+                  className={`payment-item-wrapper ${isSimulated ? 'simulated' : ''}`}
+                >
+                  {/* Swipe Actions Background */}
+                  <div
+                    className={`swipe-actions-background ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}
+                  >
+                    {isThisItemSwiped && deleteVisible && (
+                      <div className="delete-action-bg">
+                        <FaTrash />
+                      </div>
+                    )}
+                    {isThisItemSwiped && editVisible && (
+                      <div className="edit-action-bg">
+                        <FaPen />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Payment Item */}
+                  <div
+                    data-id={payment.id}
+                    className="payment-list-item"
+                    onTouchStart={(e) =>
+                      handleTouchStart(e, payment.id, listRef)
+                    }
+                    onTouchMove={(e) => handleTouchMove(e, listRef)}
+                    onTouchEnd={(e) =>
+                      handleTouchEnd(
+                        e,
+                        listRef,
+                        payment.id,
+                        handleEdit,
+                        handleDeleteClick
+                      )
+                    }
+                  >
+                    {/* Date Box */}
+                    <div className="payment-date-box">
+                      <div className="date-day">{day}</div>
+                      <div className="date-month">{month}</div>
+                      <div className="date-year">{year}</div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="payment-content">
+                      <div className="payment-title">
+                        {payment.title}
+                        {isSimulated && (
+                          <span className="simulated-badge">
+                            {t('payment.simulated')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="payment-amount">
+                      {formatNumber(payment.fpi)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Load More */}
+          {payments.length > nrOfItemsToShow && (
+            <div className="load-more">
+              <button
+                onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
+                className="load-more-btn"
+              >
+                <FaCaretDown />
+                <span>
+                  {t('common.loadMore')} ({payments.length - nrOfItemsToShow}{' '}
+                  {t('common.remaining')})
+                </span>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="no-payments">
-          <div className="no-payments-icon">
-            <FaMoneyBillWave />
-          </div>
+          <FaMoneyBillWave />
           <h3>{t('payment.noPaymentsYet')}</h3>
           <p>{t('payment.noPaymentsDesc')}</p>
         </div>
