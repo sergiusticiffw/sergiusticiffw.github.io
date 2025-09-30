@@ -67,17 +67,34 @@
   .charts-content {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 2rem;
   }
 
   .charts-section {
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 16px;
-    padding: 1.5rem;
+    padding: 0;
+    border: none;
+    background: transparent;
     
     // Override any existing chart styles if needed
     > div {
       background: transparent;
+      border: none !important;
+      padding: 0 !important;
+    }
+
+    // Remove borders from charts
+    .spending-summary-container,
+    .most-expensive-table-container,
+    .year-income-average-trend-container {
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      background: transparent !important;
+    }
+
+    // Highcharts container
+    .highcharts-container {
+      border: none !important;
     }
   }
 }

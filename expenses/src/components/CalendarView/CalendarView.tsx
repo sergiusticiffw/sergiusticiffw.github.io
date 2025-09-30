@@ -6,6 +6,7 @@ import { formatNumber } from '@utils/utils';
 import { FaTimes } from 'react-icons/fa';
 import TransactionList from '@components/TransactionList';
 import Month from '@components/Home/Month';
+import MostExpensiveProductDisplay from '@components/Home/MostExpensiveProductDisplay';
 import './CalendarView.scss';
 
 interface Transaction {
@@ -210,8 +211,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       />
 
       {/* Month Chart */}
-      <div>
+      <div className="month-chart-wrapper">
         <Month month={currentMonth} />
+      </div>
+
+      {/* Most Expensive Item */}
+      <div className="most-expensive-wrapper">
+        <MostExpensiveProductDisplay />
       </div>
 
       {/* Day Transactions Modal */}

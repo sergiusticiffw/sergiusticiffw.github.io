@@ -2,11 +2,97 @@
   width: 100%;
   position: relative;
 
+  .most-expensive-wrapper {
+    margin-top: 1.5rem;
+
+    .heading {
+      display: block;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+
+    .most-expensive-table-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+
+      .table-row {
+        display: flex;
+        align-items: center;
+        padding: 0;
+        color: #ffffff;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        border: none !important;
+
+        .label {
+          font-weight: 600;
+          min-width: 100px;
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 0.875rem;
+          flex-shrink: 0;
+
+          &::after {
+            content: ':';
+            margin-left: 2px;
+            margin-right: 8px;
+          }
+        }
+      }
+    }
+  }
+
+  // Mobile optimization for most expensive
+  @media (max-width: 640px) {
+    .most-expensive-wrapper {
+      .heading {
+        font-size: 1.05rem;
+      }
+
+      .most-expensive-table-container {
+        gap: 0.625rem;
+
+        .table-row {
+          font-size: 0.9rem;
+
+          .label {
+            min-width: 85px;
+            font-size: 0.8rem;
+          }
+        }
+      }
+    }
+  }
+
   .month-chart-wrapper {
     margin-top: 1.5rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 16px;
+    padding: 0;
+
+    // Override Highcharts styles for larger chart on mobile
+    .highcharts-container {
+      width: 100% !important;
+    }
+
+    @media (max-width: 640px) {
+      .highcharts-container {
+        height: 350px !important;
+      }
+
+      svg {
+        height: 350px !important;
+      }
+
+      // Larger text in chart
+      text {
+        font-size: 13px !important;
+      }
+    }
   }
   
   // FullCalendar overrides
@@ -34,6 +120,11 @@
         padding: 0.75rem 0.25rem;
         font-size: 0.75rem;
         letter-spacing: 0.5px;
+
+        @media (max-width: 640px) {
+          padding: 0.5rem 0.15rem;
+          font-size: 0.65rem;
+        }
       }
     }
     
@@ -43,6 +134,10 @@
       border-color: rgba(255, 255, 255, 0.05);
       min-height: 60px;
       pointer-events: auto;
+
+      @media (max-width: 640px) {
+        min-height: 50px;
+      }
       
       .fc-daygrid-day-number {
         color: rgba(255, 255, 255, 0.8);
@@ -50,6 +145,11 @@
         font-size: 0.875rem;
         padding: 0.25rem;
         pointer-events: auto;
+
+        @media (max-width: 640px) {
+          font-size: 0.75rem;
+          padding: 0.15rem;
+        }
       }
     }
     
@@ -85,11 +185,24 @@
       font-size: 0.75rem;
       font-weight: 700;
       margin-bottom: 0.125rem;
+
+      @media (max-width: 640px) {
+        font-size: 0.65rem;
+      }
     }
     
     .event-count {
       font-size: 0.6rem;
       opacity: 0.85;
+
+      @media (max-width: 640px) {
+        font-size: 0.55rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      padding: 0.2rem 0.3rem;
+      border-radius: 4px;
     }
     
     // Color ranges
