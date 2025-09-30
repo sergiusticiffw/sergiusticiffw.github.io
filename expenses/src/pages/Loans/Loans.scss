@@ -1,420 +1,187 @@
 @use '../../styles/variables' as *;
 
-.loans-container {
-  padding: 1rem;
-  padding-bottom: 120px; // Add bottom padding to account for FAB
-  max-width: 1200px;
-  margin: 0 auto;
+.loans-page {
+  background: #1a1a1a;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  padding-top: 0;
+  padding-bottom: 80px;
+  max-width: 100vw;
+  width: 100%;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
+  
+  * {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+}
+
+// Loading
+.loans-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 0;
+}
+
+// Header - exact same as home1-header
+.loans-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-top: 1.5rem;
+  
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    color: #ffffff;
+  }
+  
+  .transaction-count {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
 }
 
 .btns-actions {
-  margin-bottom: 1.5rem;
-
-  .action-btn {
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: var(--accent-color);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-
-    &:hover {
-      background: var(--accent-hover);
-    }
-
-    &:active {
-      background: var(--accent-active);
-    }
-  }
+  display: none; // Hidden - using FAB instead
 }
 
 .loans-stats {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  
-  .stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-    
-    .stat-value {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--accent-color);
-      margin-bottom: 0.125rem;
-    }
-    
-    .stat-label {
-      font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.7);
-      font-weight: 500;
-    }
-  }
+  display: none; // Can be enabled later if needed
 }
 
+// Filter - same as SearchBar style
 .loans-filter {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 0 1rem;
   margin-bottom: 1.5rem;
-
-  .filter-select {
-    background: var(--bg-color);
-    height: 40px;
-    box-sizing: border-box;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    text-align: center;
-    padding: 0.5rem;
-    width: 100%;
-    border: 1px solid var(--accent-color);
-    color: #fff;
-    cursor: pointer;
-    font-size: 0.9rem;
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent-color);
-    }
-
-    option {
-      background: var(--bg-color);
-      color: #fff;
-    }
+  gap: 0.5rem;
+  transition: background 0.2s ease;
+  
+  &:focus-within {
+    background: rgba(255, 255, 255, 0.08);
   }
-}
-
-// Remove margins and padding for Loans table section
-.loans-container:has(.loans-table-container) {
-  .loans-table-container {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: transparent !important;
-    border: none !important;
+  
+  .filter-icon {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1.125rem;
+    flex-shrink: 0;
+  }
+  
+  .filter-select {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 1rem 0;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    outline: none;
+    cursor: pointer;
     
-    .table-header {
-      width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-    
-    .table-wrapper {
-      width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-    
-    .loans-table {
-      width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      border-radius: 0 !important;
-      border: none !important;
+    option {
+      background: #1a1a1a;
+      color: #ffffff;
+      padding: 0.5rem;
     }
   }
 }
 
 .loans-table-section {
-  .no-loans {
-    text-align: center;
-    padding: 3rem 1rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-secondary);
-
-    svg {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      opacity: 0.5;
-    }
-
-    h3 {
-      font-size: 1.25rem;
-      margin-bottom: 0.5rem;
-      color: var(--text-color);
-    }
-
-    p {
-      margin-bottom: 1.5rem;
-      line-height: 1.5;
-    }
-
-    .action-btn {
-      padding: 0.75rem 1.5rem;
-      background: var(--accent-color);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.875rem;
-      cursor: pointer;
-    }
-  }
-}
-
-.loans-table-container {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 0 !important;
-  padding: 2rem;
   margin-bottom: 2rem;
+}
+
+.no-loans {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: transparent;
+  border: none;
   
-  .table-header {
+  svg {
+    width: 48px;
+    height: 48px;
+    color: rgba(91, 141, 239, 0.6);
+    margin-bottom: 1rem;
+    opacity: 0.7;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+  
+  p {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
     margin-bottom: 1.5rem;
-    
-    h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 0.5rem;
-    }
-    
-    .table-subtitle {
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.6);
-    }
   }
   
-  .table-wrapper {
-    position: relative;
-    overflow: hidden;
-  }
-}
-
-.loans-table {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-
-  thead {
-    background: linear-gradient(135deg, var(--secondary-color), rgba(255, 255, 255, 0.1));
-
-    th {
-      padding: 1rem;
-      font-weight: 600;
-      color: #fff;
-      text-align: left;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-
-      &.sortable {
-        cursor: pointer;
-        user-select: none;
-      }
-    }
-  }
-
-  tbody {
-    tr {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      &.new::after,
-      &.updated::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        border-top: 1px solid var(--accent-color);
-        border-bottom: 1px solid var(--accent-color);
-        transition: opacity 2s ease-out;
-        animation: expandBorder 2s forwards;
-      }
-
-      &.removed {
-        animation: highlight-removed forwards 1s ease-out;
-      }
-
-      td {
-        padding: 1rem;
-        color: #fff;
-        vertical-align: middle;
-      }
-    }
-  }
-
-  .loan-title {
-    .title-content {
-      .title-text {
-        .loan-link {
-          color: var(--accent-color);
-          text-decoration: none;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-weight: 500;
-
-          .external-link-icon {
-            font-size: 0.75rem;
-            opacity: 0.7;
-          }
-        }
-      }
-    }
-  }
-
-  .loan-principal {
-    .principal-value {
-      font-weight: 600;
-      color: #fff;
-      font-size: 1.1rem;
-    }
-  }
-
-  .loan-status {
-    .status-content {
-      .status-badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-
-        &.active {
-          background: rgba(76, 175, 80, 0.2);
-          color: #4caf50;
-        }
-
-        &.completed {
-          background: rgba(33, 150, 243, 0.2);
-          color: #2196f3;
-        }
-
-        &.pending {
-          background: rgba(255, 152, 0, 0.2);
-          color: #ff9800;
-        }
-      }
-    }
-  }
-
-  .loan-date {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-  }
-
-  .loan-actions-cell {
-    .action-buttons {
-      display: flex;
-      gap: 0.5rem;
-
-      button {
-        width: 36px;
-        height: 36px;
-        border: none;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 0.9rem;
-
-        &.btn-edit {
-          background: rgba(33, 150, 243, 0.2);
-          color: #2196f3;
-        }
-
-        &.btn-delete {
-          background: rgba(244, 67, 54, 0.2);
-          color: #f44336;
-        }
-      }
+  .action-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.875rem 1.75rem;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-1px);
     }
   }
 }
 
-// Gmail-style swipe actions
-.loan-item {
-  position: relative;
-  transition: transform 0.3s ease;
-  background: var(--bg-color);
-
-  &.new::after,
-  &.updated::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-top: 1px solid var(--accent-color);
-    border-bottom: 1px solid var(--accent-color);
-    transition: opacity 2s ease-out;
-    animation: expandBorder 2s forwards;
+.loader {
+  display: flex;
+  gap: 0.5rem;
+  
+  .loader__element {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #5B8DEF;
+    animation: loader-bounce 1.4s ease-in-out infinite both;
+    
+    &:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+    
+    &:nth-child(2) {
+      animation-delay: -0.16s;
+    }
   }
+}
 
-  &.removed {
-    animation: highlight-removed forwards 1s ease-out;
+@keyframes loader-bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
   }
 }
 
 // Mobile responsive
-@media (max-width: 768px) {
-  .loans-container {
-    padding: 0.75rem;
+@media (max-width: $breakpoint-md) {
+  .loans-page {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
   }
-
-  .loans-header h1 {
-    font-size: 1.75rem;
-  }
-
-  .loans-stats {
-    flex-direction: column;
-    gap: 0.75rem;
-
-    .stat-item {
-      .stat-value {
-        font-size: 1.25rem;
-      }
-    }
-  }
-
-  .loans-table-container {
-    padding: 1rem;
-  }
-
-  .loans-table {
-    font-size: 0.9rem;
-
-    thead th,
-    tbody td {
-      padding: 0.75rem 0.5rem;
-    }
-
-    .loan-actions-cell {
-      display: none;
+  
+  .loans-header {
+    h1 {
+      font-size: 1.5rem;
     }
   }
 }
-
-// Responsive bottom padding for FAB clearance
-@media (max-width: 768px) {
-  .loans-container {
-    padding-bottom: 110px; // Slightly less padding on tablet
-  }
-}
-
-@media (max-width: 480px) {
-  .loans-container {
-    padding-bottom: 100px; // Even less padding on mobile
-  }
-} 

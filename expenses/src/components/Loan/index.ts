@@ -1,7 +1,1 @@
-export { default as LoanForm } from './LoanForm';
-export { default as LoanDetails } from './LoanDetails';
-export { default as AmortizationTable } from './AmortizationTable';
-
-export { default as PaymentForm } from './PaymentForm';
-export { default as PaymentDetails } from './PaymentDetails';
-export { LoanCostBreakdown } from './LoanCharts'; 
+export { default as LoansList } from './LoansList';

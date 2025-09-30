@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useLoan } from '@context/loan';
 import { useLocalization } from '@context/localization';
@@ -6,22 +6,15 @@ import { AuthState } from '@type/types';
 import { fetchLoans, formatNumber, deleteLoan } from '@utils/utils';
 import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
-import useSwipeActions from '@hooks/useSwipeActions';
 import {
   FaHandHoldingUsd,
   FaPlus,
-  FaPen,
   FaTrash,
-  FaChartLine,
-  FaExternalLinkAlt,
-  FaSort,
-  FaSortUp,
-  FaSortDown,
   FaFilter,
 } from 'react-icons/fa';
 import Modal from '@components/Modal/Modal';
 import LoanForm from '@components/Loan/LoanForm';
-import { Link } from 'react-router-dom';
+import LoansList from '@components/Loan/LoansList';
 import './Loans.scss';
 
 const Loans: React.FC = () => {
@@ -35,21 +28,7 @@ const Loans: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [focusedItem, setFocusedItem] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [sortBy, setSortBy] = useState<'status' | 'title' | 'principal'>(
-    'status'
-  );
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const tableRef = useRef(null);
-
-  const {
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    deleteVisible,
-    editVisible,
-    extraRowStyle,
-  } = useSwipeActions();
 
   const { loans, loading } = data;
 
@@ -92,20 +71,6 @@ const Loans: React.FC = () => {
     });
   };
 
-  const handleSort = (field: 'status' | 'title' | 'principal') => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('asc');
-    }
-  };
-
-  const getSortIcon = (field: 'status' | 'title' | 'principal') => {
-    if (sortBy !== field) return <FaSort />;
-    return sortOrder === 'asc' ? <FaSortUp /> : <FaSortDown />;
-  };
-
   const getLoanStatus = (loan: any) => {
     if (loan.fls === 'completed') return 'completed';
     if (loan.fls === 'in_progress') return 'active';
@@ -125,8 +90,8 @@ const Loans: React.FC = () => {
     }
   };
 
-  // Filter and sort loans
-  const filteredAndSortedLoans = useMemo(() => {
+  // Filter loans
+  const filteredLoans = useMemo(() => {
     if (!loans) return [];
 
     let filtered = loans;
@@ -138,34 +103,8 @@ const Loans: React.FC = () => {
       );
     }
 
-    // Apply sorting
-    filtered.sort((a: any, b: any) => {
-      let aValue: any, bValue: any;
-
-      switch (sortBy) {
-        case 'status':
-          aValue = getLoanStatus(a);
-          bValue = getLoanStatus(b);
-          break;
-        case 'title':
-          aValue = a.title?.toLowerCase() || '';
-          bValue = b.title?.toLowerCase() || '';
-          break;
-        case 'principal':
-          aValue = parseFloat(a.fp || '0');
-          bValue = parseFloat(b.fp || '0');
-          break;
-        default:
-          return 0;
-      }
-
-      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
-
     return filtered;
-  }, [loans, sortBy, sortOrder, statusFilter]);
+  }, [loans, statusFilter]);
 
   const totalLoans = loans?.length || 0;
   const activeLoans =
@@ -176,8 +115,8 @@ const Loans: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="loans-container">
-        <div className="loading-container">
+      <div className="loans-page">
+        <div className="loans-loading">
           <div className="loader">
             <span className="loader__element"></span>
             <span className="loader__element"></span>
@@ -189,10 +128,11 @@ const Loans: React.FC = () => {
   }
 
   return (
-    <div className="loans-container">
-      {/* Simple Header */}
-      <div className="income-header">
+    <div className="loans-page">
+      {/* Header - same structure as Home1 */}
+      <div className="loans-header">
         <h1>{t('loans.title')}</h1>
+        <p className="transaction-count">{totalLoans} {totalLoans === 1 ? 'loan' : 'loans'}</p>
       </div>
 
 
@@ -212,9 +152,24 @@ const Loans: React.FC = () => {
         </div>
       </div>
 
-      {/* Loans Table Section */}
+      {/* Status Filter */}
+      <div className="loans-filter">
+        <FaFilter className="filter-icon" />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="filter-select"
+        >
+          <option value="all">{t('loans.allStatuses')}</option>
+          <option value="active">{t('loans.active')}</option>
+          <option value="completed">{t('common.completed')}</option>
+          <option value="pending">{t('loans.pending')}</option>
+        </select>
+      </div>
+
+      {/* Loans List Section */}
       <div className="loans-table-section">
-        {filteredAndSortedLoans.length === 0 ? (
+        {filteredLoans.length === 0 ? (
           <div className="no-loans">
             <FaHandHoldingUsd />
             <h3>{t('loans.noLoans')}</h3>
@@ -233,144 +188,13 @@ const Loans: React.FC = () => {
             )}
           </div>
         ) : (
-          <>
-            <div className="loans-filter">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="filter-select"
-              >
-                                    <option value="all">{t('loans.allStatuses')}</option>
-                <option value="active">{t('loans.active')}</option>
-                <option value="completed">{t('common.completed')}</option>
-                <option value="pending">{t('loans.pending')}</option>
-              </select>
-            </div>
-
-            <div className="loans-table-container">
-              <div className="table-header">
-                <h3>{t('loans.loanRecords')}</h3>
-                <p className="table-subtitle">{t('loans.manageLoans')}</p>
-              </div>
-
-              <div className="table-wrapper">
-                <table
-                  className="loans-table"
-                  cellSpacing="0"
-                  cellPadding="0"
-                  ref={tableRef}
-                >
-                  <thead>
-                    <tr>
-                      <th
-                        onClick={() => handleSort('title')}
-                        className={`sortable ${sortBy === 'title' ? (sortOrder === 'asc' ? 'asc' : 'desc') : ''}`}
-                      >
-                        {t('loans.loanTitle')}
-                      </th>
-                      <th
-                        onClick={() => handleSort('principal')}
-                        className={`sortable ${sortBy === 'principal' ? (sortOrder === 'asc' ? 'asc' : 'desc') : ''}`}
-                      >
-                        {t('loans.principal')}
-                      </th>
-                      <th
-                        onClick={() => handleSort('status')}
-                        className={`sortable ${sortBy === 'status' ? (sortOrder === 'asc' ? 'asc' : 'desc') : ''}`}
-                      >
-                        {t('loans.status')}
-                      </th>
-                      <th className="desktop-only">{t('common.actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredAndSortedLoans.map((loan: any) => {
-                      const status = getLoanStatus(loan);
-                      return (
-                        <tr
-                          key={loan.id}
-                          className="loan-item"
-                          data-id={loan.id}
-                          onTouchStart={(e) =>
-                            handleTouchStart(e, loan.id, tableRef)
-                          }
-                          onTouchMove={(e) => handleTouchMove(e, tableRef)}
-                          onTouchEnd={(e) =>
-                            handleTouchEnd(
-                              e,
-                              tableRef,
-                              loan.id,
-                              handleEdit,
-                              handleDelete
-                            )
-                          }
-                        >
-                          <td className="loan-title">
-                            <div className="title-content">
-                              <div className="title-text">
-                                <Link
-                                  to={`/expenses/loan/${loan.id}`}
-                                  className="loan-link"
-                                >
-                                  {loan.title}
-                                </Link>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="loan-principal">
-                            <div className="principal-value">
-                              {formatNumber(parseFloat(loan.fp || '0'))}
-                            </div>
-                          </td>
-                          <td className="loan-status">
-                            <div className="status-content">
-                              <span className={`status-badge ${status}`}>
-                                {getStatusText(status)}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="desktop-only loan-actions-cell">
-                            <div className="action-buttons">
-                              <button
-                                onClick={() => handleEdit(loan.id)}
-                                className="btn-edit"
-                                title={t('loan.editLoan')}
-                              >
-                                <FaPen />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(loan.id)}
-                                className="btn-delete"
-                                title={t('loans.deleteLoan')}
-                              >
-                                <FaTrash />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-
-                {deleteVisible && (
-                  <div style={{ ...extraRowStyle }}>
-                    <div className="row-action delete">
-                      <FaTrash />
-                    </div>
-                  </div>
-                )}
-
-                {editVisible && (
-                  <div style={{ ...extraRowStyle }}>
-                    <div className="row-action edit">
-                      <FaPen />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
+          <LoansList
+            loans={filteredLoans}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            getStatus={getLoanStatus}
+            getStatusText={getStatusText}
+          />
         )}
       </div>
 
