@@ -266,6 +266,7 @@ const Loan: React.FC = () => {
           e.preventDefault();
           setShowEditModal(false);
         }}
+        title={t('loan.editLoan')}
       >
         <LoanForm
           formType={'edit'}
@@ -295,6 +296,7 @@ const Loan: React.FC = () => {
           e.preventDefault();
           setShowAddPaymentModal(false);
         }}
+        title={t('loan.addPayment')}
       >
         <PaymentForm
           formType="add"

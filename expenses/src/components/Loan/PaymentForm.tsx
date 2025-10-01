@@ -158,10 +158,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
   return (
     <div className="payment-form-container">
-      <div className="form-header">
-        <h2>{formType === 'add' ? t('paymentForm.addPayment') : t('paymentForm.editPayment')}</h2>
-      </div>
-      
       <form className="payment-form" onSubmit={handleSubmit}>
         {/* Basic Information */}
         <div className="form-group required">

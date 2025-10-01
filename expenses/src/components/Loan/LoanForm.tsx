@@ -167,12 +167,6 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
 
   return (
     <div className="loan-form-container">
-      <div className="form-header">
-        <h2>
-          {formType === 'add' ? t('loanForm.addLoan') : t('loanForm.editLoan')}
-        </h2>
-      </div>
-
       <form className="loan-form" onSubmit={handleSubmit}>
         {/* Basic Information */}
         <div className="form-group required">

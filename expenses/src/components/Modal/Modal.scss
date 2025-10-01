@@ -1,40 +1,35 @@
 @use '../../styles/variables' as *;
 @use '../../styles/mixins' as *;
 
+// Modal styles - inspired by CalendarView modal (source of truth)
 .modal-window {
   position: fixed;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   top: 0;
+  left: 0;
   right: 0;
   bottom: 0;
-  left: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
   z-index: 9999;
-  transition: all $transition-normal;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: $spacing-md;
-  
-  // Ensure date pickers can appear above modal backdrop
-  // Note: :has() selector might not be supported in all browsers
-  // Alternative approach: always use high z-index for modals with forms
+  padding: 1rem;
+  transition: all 0.2s ease;
 }
 
 .modal-content {
-  @include modern-card();
-  position: relative;
-  width: 100%;
+  background: rgba(26, 26, 26, 0.98);
+  border-radius: 16px;
   max-width: 500px;
+  width: 100%;
   max-height: 80vh;
-  background: var(--bg-color);
-  overflow: hidden;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  position: relative;
   display: flex;
   flex-direction: column;
-  padding: 0;
   
-  // Special handling for forms with date inputs
   &.form-modal {
     overflow: hidden;
     
@@ -45,61 +40,135 @@
   }
 }
 
+// Modal Header (same as day-modal-header)
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  
+  h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+  
+  .modal-close-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+}
+
+// Modal Top Content (same as day-modal-total)
+.modal-top-content {
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  
+  strong {
+    color: #ffffff;
+    font-size: 1.125rem;
+    margin-left: 0.5rem;
+  }
+}
+
 .modal-body {
   overflow-y: auto;
   overflow-x: hidden;
-  padding: $spacing-xl;
+  padding: 1.5rem;
   flex-grow: 1;
   
-  // Ensure date pickers work in modal body while maintaining scroll
   &:has(input[type='date']) {
     overflow-y: auto;
     overflow-x: hidden;
   }
   
+  // For forms without header
   h3 {
-    color: #fff;
-    font-size: 1.4rem;
-    font-weight: 700;
-    margin-bottom: $spacing-lg;
+    color: #ffffff;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 1.5rem;
     text-align: center;
-    @include text-shadow();
   }
   
-  // Modal button styles
+  // Modern button styles
   .button {
-    @include gradient-button();
     width: 100%;
-    margin-top: $spacing-md;
+    background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 48px;
+    box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
+    margin-top: 1rem;
+    
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(91, 141, 239, 0.5);
+      background: linear-gradient(135deg, #4A7DDC 0%, #5B8DEF 100%);
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
     
     &.wide {
       width: 100%;
     }
     
     &.danger {
-      background: linear-gradient(145deg, #dc3545, #c82333);
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
       
-      &:hover {
-        background: linear-gradient(145deg, #c82333, #dc3545);
-        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.5);
       }
     }
     
     &.cancel {
-      background: linear-gradient(145deg, #6c757d, #5a6268);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: none;
       
-      &:hover {
-        background: linear-gradient(145deg, #5a6268, #6c757d);
-        box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
       }
     }
   }
   
-  // Button group for multiple buttons
   .button-group {
     display: flex;
-    gap: $spacing-md;
-    margin-top: $spacing-lg;
+    gap: 1rem;
+    margin-top: 1.5rem;
     
     .button {
       flex: 1;
@@ -107,13 +176,29 @@
     }
   }
   
-  // Loading state for buttons
   .loader {
-    @include loading-dots();
+    display: flex;
+    gap: 0.25rem;
+    
+    span {
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      animation: loader-bounce 1.4s infinite ease-in-out both;
+      
+      &:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+      
+      &:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+    }
     
     .loader__element {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: #fff;
       animation: loader-bounce 1.4s ease-in-out infinite both;
@@ -128,7 +213,6 @@
     }
   }
   
-  // Ensure date pickers work properly in modals
   input[type='date'] {
     position: relative;
     
@@ -142,7 +226,6 @@
       position: relative;
     }
     
-    // Force the date picker to appear above everything
     &::-webkit-datetime-edit,
     &::-webkit-datetime-edit-fields-wrapper,
     &::-webkit-datetime-edit-text,
@@ -154,7 +237,6 @@
     }
   }
   
-  // Ensure proper scrolling for form content
   form {
     overflow-y: auto;
     max-height: 100%;
@@ -164,106 +246,103 @@
     }
   }
   
-  // Specific styling for loan forms in modals
-  .loan-form {
-    max-height: 60vh;
-    overflow-y: auto;
-    padding: 1rem;
-    
-    .form-group {
-      margin-bottom: 0.8rem;
-    }
-  }
-  
-  // Specific styling for transaction forms in modals
-  .transaction-form {
-    max-height: 60vh;
-    overflow-y: auto;
-    padding: 1rem;
-    
-    .form-group {
-      margin-bottom: 0.8rem;
-    }
-  }
-  
-  // Specific styling for income forms in modals
-  .income-form {
-    max-height: 60vh;
-    overflow-y: auto;
-    padding: 1rem;
-    
-    .form-group {
-      margin-bottom: 0.8rem;
-    }
-  }
-  
-  // Specific styling for payment forms in modals
+  // Forms inside modal should have no extra padding (padding comes from modal-body)
+  .loan-form,
+  .transaction-form,
+  .income-form,
   .payment-form {
     max-height: 60vh;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 0;
     
     .form-group {
-      margin-bottom: 0.8rem;
+      margin-bottom: 1.25rem;
     }
   }
 }
 
+// Close button for modals without header (legacy support)
 .modal-close {
   position: absolute;
-  top: $spacing-md;
-  right: $spacing-md;
-  color: rgba(255, 255, 255, 0.7);
+  top: 1.25rem;
+  right: 1.5rem;
+  color: rgba(255, 255, 255, 0.6);
   font-size: 1.5rem;
   text-decoration: none;
   z-index: 10;
-  transition: all 0.3s ease;
+  transition: color 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
   
   &:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
+    color: rgba(255, 255, 255, 0.9);
   }
 }
 
-// Animations
 @keyframes loader-bounce {
   0%, 80%, 100% {
     transform: scale(0);
+    opacity: 0.5;
   }
   40% {
     transform: scale(1);
+    opacity: 1;
   }
 }
 
-// Responsive design
-@media (max-width: $breakpoint-sm) {
+@media (max-width: 640px) {
   .modal-window {
-    padding: $spacing-sm;
+    padding: 1rem;
   }
   
   .modal-content {
     max-width: 100%;
-    max-height: 90vh;
+  }
+  
+  .modal-header {
+    padding: 1rem;
+    
+    h3 {
+      font-size: 1rem;
+    }
+  }
+  
+  .modal-top-content {
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+    
+    strong {
+      font-size: 1rem;
+    }
   }
   
   .modal-body {
-    padding: $spacing-lg;
+    padding: 1rem;
     
     h3 {
-      font-size: 1.2rem;
+      font-size: 1rem;
     }
     
     .button-group {
       flex-direction: column;
-      gap: $spacing-sm;
+      gap: 0.75rem;
+    }
+    
+    .loan-form,
+    .transaction-form,
+    .income-form,
+    .payment-form {
+      padding: 0;
     }
   }
-} 
+  
+  .modal-close {
+    top: 1rem;
+    right: 1rem;
+  }
+}

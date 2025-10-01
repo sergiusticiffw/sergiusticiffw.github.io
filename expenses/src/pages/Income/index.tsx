@@ -262,8 +262,8 @@ const Income = () => {
           e.preventDefault();
           setShowDeleteModal(false);
         }}
+        title={t('modal.deleteIncome')}
       >
-        <h3>{t('modal.deleteIncome')}</h3>
         <p
           style={{
             textAlign: 'center',
@@ -302,6 +302,7 @@ const Income = () => {
           setShowEditModal(false);
           setIsNewModal(false);
         }}
+        title={!isNewModal ? t('incomeForm.editIncome') : t('incomeForm.addIncome')}
       >
         <IncomeForm
           formType={!isNewModal ? 'edit' : 'add'}

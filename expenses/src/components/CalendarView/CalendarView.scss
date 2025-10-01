@@ -224,86 +224,6 @@
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
   }
-  
-  // Day Modal
-  .day-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    
-    .day-modal-content {
-      background: rgba(26, 26, 26, 0.98);
-      border-radius: 16px;
-      max-width: 500px;
-      width: 100%;
-      max-height: 80vh;
-      overflow-y: auto;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-      
-      .day-modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1.25rem 1.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        
-        h3 {
-          margin: 0;
-          color: #ffffff;
-          font-size: 1.125rem;
-          font-weight: 600;
-        }
-        
-        .modal-close-btn {
-          background: transparent;
-          border: none;
-          color: rgba(255, 255, 255, 0.6);
-          font-size: 1.5rem;
-          cursor: pointer;
-          padding: 0.25rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: color 0.2s ease;
-          
-          &:hover {
-            color: rgba(255, 255, 255, 0.9);
-          }
-        }
-      }
-      
-      .day-modal-total {
-        padding: 1rem 1.5rem;
-        background: rgba(255, 255, 255, 0.03);
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.95rem;
-        
-        strong {
-          color: #ffffff;
-          font-size: 1.125rem;
-          margin-left: 0.5rem;
-        }
-      }
-      
-      .day-transactions-list {
-        padding: 1rem 1.5rem;
-        
-        // Use TransactionList component - it already has swipe
-        .transaction-list-component {
-          gap: 0.5rem;
-        }
-      }
-    }
-  }
 }
 
 // Mobile optimizations
@@ -337,31 +257,6 @@
       
       .event-count {
         font-size: 0.55rem;
-      }
-    }
-    
-    .day-modal-content {
-      max-width: 100%;
-      
-      .day-modal-header {
-        padding: 1rem;
-        
-        h3 {
-          font-size: 1rem;
-        }
-      }
-      
-      .day-modal-total {
-        padding: 0.875rem 1rem;
-        font-size: 0.875rem;
-        
-        strong {
-          font-size: 1rem;
-        }
-      }
-      
-      .day-transactions-list {
-        padding: 0.875rem 1rem;
       }
     }
   }

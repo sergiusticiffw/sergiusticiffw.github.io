@@ -3,7 +3,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { formatNumber } from '@utils/utils';
-import { FaTimes } from 'react-icons/fa';
+import Modal from '@components/Modal';
 import TransactionList from '@components/TransactionList';
 import Month from '@components/Home/Month';
 import './CalendarView.scss';
@@ -215,58 +215,37 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       </div>
 
       {/* Day Transactions Modal */}
-      {showDayModal && selectedDate && (
-        <div
-          className="day-modal-overlay"
-          onClick={() => setShowDayModal(false)}
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchMove={(e) => e.stopPropagation()}
-          onTouchEnd={(e) => e.stopPropagation()}
-        >
-          <div
-            className="day-modal-content"
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}
-            onTouchEnd={(e) => e.stopPropagation()}
-          >
-            <div className="day-modal-header">
-              <h3>
-                {new Date(selectedDate).toLocaleDateString('en-US', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </h3>
-              <button
-                className="modal-close-btn"
-                onClick={() => setShowDayModal(false)}
-              >
-                <FaTimes />
-              </button>
-            </div>
-
-            <div className="day-modal-total">
-              Total: <strong>{formatNumber(selectedDayTotal)}</strong>
-            </div>
-
-            <div className="day-transactions-list">
-              <TransactionList
-                transactions={selectedDayTransactions}
-                categoryLabels={categoryLabels}
-                onEdit={(id) => {
-                  setShowDayModal(false);
-                  onEdit?.(id);
-                }}
-                onDelete={(id) => {
-                  setShowDayModal(false);
-                  onDelete?.(id);
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        show={showDayModal && !!selectedDate}
+        onClose={() => setShowDayModal(false)}
+        title={
+          selectedDate
+            ? new Date(selectedDate).toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })
+            : ''
+        }
+        topContent={
+          <>
+            Total: <strong>{formatNumber(selectedDayTotal)}</strong>
+          </>
+        }
+      >
+        <TransactionList
+          transactions={selectedDayTransactions}
+          categoryLabels={categoryLabels}
+          onEdit={(id) => {
+            setShowDayModal(false);
+            onEdit?.(id);
+          }}
+          onDelete={(id) => {
+            setShowDayModal(false);
+            onDelete?.(id);
+          }}
+        />
+      </Modal>
     </div>
   );
 };

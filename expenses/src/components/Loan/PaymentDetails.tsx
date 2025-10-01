@@ -141,8 +141,8 @@ const PaymentDetails = (props) => {
           e.preventDefault();
           setDeleteModalId(false);
         }}
+        title={t('modal.deletePayment')}
       >
-        <h3>{t('modal.deletePayment')}</h3>
         <p
           style={{
             textAlign: 'center',
@@ -180,6 +180,7 @@ const PaymentDetails = (props) => {
           setShowEditModal(false);
           setIsNewModal(false);
         }}
+        title={!isNewModal ? t('payment.editPayment') : t('payment.addPayment')}
       >
         <PaymentForm
           formType={!isNewModal ? 'edit' : 'add'}

@@ -193,8 +193,8 @@ const Home1 = () => {
           e.preventDefault();
           setShowDeleteModal(false);
         }}
+        title={t('modal.deleteTransaction')}
       >
-        <h3>{t('modal.deleteTransaction')}</h3>
         <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
           {t('modal.deleteMessage')}
         </p>
@@ -225,6 +225,7 @@ const Home1 = () => {
           e.preventDefault();
           setShowEditModal(false);
         }}
+        title={t('transactionForm.editTransaction')}
       >
         <TransactionForm
           formType="edit"
@@ -243,6 +244,7 @@ const Home1 = () => {
           e.preventDefault();
           setShowAddModal(false);
         }}
+        title={t('transactionForm.addTransaction')}
       >
         <TransactionForm
           formType="add"

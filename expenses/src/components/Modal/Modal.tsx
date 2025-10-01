@@ -1,16 +1,20 @@
 import React, { useEffect, useRef, ReactNode } from 'react';
-import { FaTimesCircle } from 'react-icons/fa';
+import { FaTimes } from 'react-icons/fa';
 
 interface ModalProps {
   show: boolean;
   onClose: (
-    event?: React.MouseEvent<HTMLAnchorElement, MouseEvent> | KeyboardEvent
+    event?: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement, MouseEvent> | KeyboardEvent
   ) => void;
   children: ReactNode;
+  title?: string;
+  headerContent?: ReactNode;
+  topContent?: ReactNode;
 }
 
-const Modal = ({ show, onClose, children }: ModalProps) => {
+const Modal = ({ show, onClose, children, title, headerContent, topContent }: ModalProps) => {
   const ref = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     const checkIfClickedOutside = (e: MouseEvent) => {
       if (show && ref.current && !ref.current.contains(e.target as Node)) {
@@ -35,21 +39,66 @@ const Modal = ({ show, onClose, children }: ModalProps) => {
     };
   }, [show, onClose]);
 
+  if (!show) return null;
+
   return (
-    <>
-      {show ? (
-        <div className="modal-window">
-          <div ref={ref} className="modal-content">
-            <a href="/" onClick={onClose} title="Close" className="modal-close">
-              <FaTimesCircle />
-            </a>
-            <div className="modal-body">{children}</div>
+    <div 
+      className="modal-window"
+      onClick={onClose}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
+      onTouchEnd={(e) => e.stopPropagation()}
+    >
+      <div 
+        ref={ref} 
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+      >
+        {/* Header Section */}
+        {(title || headerContent) && (
+          <div className="modal-header">
+            {headerContent ? (
+              headerContent
+            ) : (
+              <>
+                <h3>{title}</h3>
+                <button
+                  className="modal-close-btn"
+                  onClick={onClose}
+                  type="button"
+                >
+                  <FaTimes />
+                </button>
+              </>
+            )}
           </div>
-        </div>
-      ) : (
-        ''
-      )}
-    </>
+        )}
+        
+        {/* Top Content Section (for total, summary, etc.) */}
+        {topContent && (
+          <div className="modal-top-content">
+            {topContent}
+          </div>
+        )}
+        
+        {/* Main Body */}
+        <div className="modal-body">{children}</div>
+        
+        {/* Close button for modals without header */}
+        {!title && !headerContent && (
+          <button
+            className="modal-close"
+            onClick={onClose}
+            type="button"
+          >
+            <FaTimes />
+          </button>
+        )}
+      </div>
+    </div>
   );
 };
 

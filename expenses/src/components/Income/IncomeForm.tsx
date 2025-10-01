@@ -114,9 +114,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
   return (
     <div className="income-form-container">
-      <div className="form-header">
-        <h2>{formType === 'add' ? t('incomeForm.addIncome') : t('incomeForm.editIncome')}</h2>
-      </div>
       <form className="income-form" onSubmit={handleSubmit}>
         <div className="form-group required">
           <label htmlFor="field_amount">{t('incomeForm.amount')}</label>

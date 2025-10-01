@@ -29,6 +29,8 @@ const translations = {
     'common.edit': 'Edit',
     'common.add': 'Add',
     'common.close': 'Close',
+    'transactionForm.addTransaction': 'Add Transaction',
+    'transactionForm.editTransaction': 'Edit Transaction',
     'common.yes': 'Yes',
     'common.no': 'No',
     'common.confirm': 'Confirm',
@@ -285,6 +287,7 @@ const translations = {
     'notification.profileUpdated': 'Profile updated successfully!',
 
     // Loan
+    'loan.addLoan': 'Add Loan',
     'loan.editLoan': 'Edit Loan',
     'loan.addPayment': 'Add Payment',
     'loan.principal': 'Principal',
@@ -443,6 +446,8 @@ const translations = {
     'common.edit': 'Editează',
     'common.add': 'Adaugă',
     'common.close': 'Închide',
+    'transactionForm.addTransaction': 'Adaugă Tranzacție',
+    'transactionForm.editTransaction': 'Editează Tranzacție',
     'common.yes': 'Da',
     'common.no': 'Nu',
     'common.confirm': 'Confirmă',
@@ -703,6 +708,7 @@ const translations = {
     'notification.profileUpdated': 'Profilul a fost actualizat cu succes!',
 
     // Loan
+    'loan.addLoan': 'Adaugă Împrumut',
     'loan.editLoan': 'Editează Împrumutul',
     'loan.addPayment': 'Adaugă Plata',
     'loan.principal': 'Principal',

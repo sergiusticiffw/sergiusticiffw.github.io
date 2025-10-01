@@ -4,7 +4,6 @@ import SavingsHistory from '../components/Charts/SavingsHistory';
 export const getCategories = () => {
   const { t } = useLocalization();
   return [
-    { value: '', label: t('common.category') },
     { value: '2', label: t('category.entertainment') },
     { value: '3', label: t('category.food') },
     { value: '4', label: t('category.gifts') },
