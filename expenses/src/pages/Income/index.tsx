@@ -270,7 +270,7 @@ const Income = () => {
           e.preventDefault();
           setShowDeleteModal(false);
         }}
-        title={t('modal.deleteIncome')}
+        title={t('income.deleteIncome')}
       >
         <p
           style={{

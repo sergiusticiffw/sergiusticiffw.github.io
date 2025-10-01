@@ -193,7 +193,7 @@ const Home1 = () => {
           e.preventDefault();
           setShowDeleteModal(false);
         }}
-        title={t('modal.deleteTransaction')}
+        title={t('transaction.deleteTransaction')}
       >
         <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
           {t('modal.deleteMessage')}

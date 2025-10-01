@@ -253,8 +253,8 @@ const Loans: React.FC = () => {
           e.preventDefault();
           setShowDeleteModal(false);
         }}
+        title={t('loan.deleteLoan')}
       >
-        <h3>{t('modal.deleteLoanTitle')}</h3>
         <p
           style={{
             textAlign: 'center',

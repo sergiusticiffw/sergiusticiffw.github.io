@@ -141,7 +141,7 @@ const PaymentDetails = (props) => {
           e.preventDefault();
           setDeleteModalId(false);
         }}
-        title={t('modal.deletePayment')}
+        title={t('payment.deletePayment')}
       >
         <p
           style={{
