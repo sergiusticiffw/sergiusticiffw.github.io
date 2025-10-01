@@ -15,7 +15,13 @@ import IncomeFilters from '@components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
-import { FaPlus, FaTrash, FaCaretDown, FaMoneyBillWave } from 'react-icons/fa';
+import {
+  FaPlus,
+  FaTrash,
+  FaCaretDown,
+  FaMoneyBillWave,
+  FaChartLine,
+} from 'react-icons/fa';
 import './Income.scss';
 
 const Income = () => {
@@ -185,20 +191,22 @@ const Income = () => {
         }
       />
 
-      {/* Simple Stats */}
-      <div className="income-stats">
-        <div className="stat-item">
-          <span className="stat-value">{formatNumber(totalRecords)}</span>
-          <span className="stat-label">{t('common.total')}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-value">{formatNumber(totalIncome)}</span>
-          <span className="stat-label">{t('income.totalIncome')}</span>
+      {/* Income Stats Cards */}
+      <div className="home1-stats-grid">
+        <div className="home1-stat-card">
+          <div className="stat-icon">
+            <FaMoneyBillWave />
+          </div>
+          <div className="stat-value">{formatNumber(totalIncome)}</div>
+          <div className="stat-label">{t('income.totalIncome')}</div>
         </div>
         {!filters.textFilter && !filters.selectedMonth && (
-          <div className="stat-item">
-            <span className="stat-value">{formatNumber(averageIncome)}</span>
-            <span className="stat-label">{t('income.averageIncome')}</span>
+          <div className="home1-stat-card">
+            <div className="stat-icon">
+              <FaChartLine />
+            </div>
+            <div className="stat-value">{formatNumber(averageIncome)}</div>
+            <div className="stat-label">{t('income.averageIncome')}</div>
           </div>
         )}
       </div>
@@ -302,7 +310,9 @@ const Income = () => {
           setShowEditModal(false);
           setIsNewModal(false);
         }}
-        title={!isNewModal ? t('incomeForm.editIncome') : t('incomeForm.addIncome')}
+        title={
+          !isNewModal ? t('incomeForm.editIncome') : t('incomeForm.addIncome')
+        }
       >
         <IncomeForm
           formType={!isNewModal ? 'edit' : 'add'}
