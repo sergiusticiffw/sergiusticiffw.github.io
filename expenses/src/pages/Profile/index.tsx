@@ -10,8 +10,6 @@ import {
   FaSignOutAlt,
   FaCog,
   FaChartBar,
-  FaPalette,
-  FaGlobe,
 } from 'react-icons/fa';
 import { fetchRequest } from '@utils/utils';
 import {
@@ -170,11 +168,11 @@ const Profile = () => {
 
       {/* Settings Sections */}
       <div className="profile-sections">
-        {/* Language Settings Section */}
-        <div className="profile-section">
+        {/* Language & Currency Settings */}
+        <div className="profile-section-simple">
           <div className="section-header">
-            <FaGlobe />
-            <h3>{t('profile.language')}</h3>
+            <FaCog />
+            <h3>{t('profile.personalInfo')}</h3>
           </div>
 
           <div className="form-field">
@@ -188,14 +186,6 @@ const Profile = () => {
               <option value="en">{t('profile.english')}</option>
               <option value="ro">{t('profile.romanian')}</option>
             </select>
-          </div>
-        </div>
-
-        {/* General Settings Section */}
-        <div className="profile-section">
-          <div className="section-header">
-            <FaCog />
-            <h3>{t('profile.personalInfo')}</h3>
           </div>
 
           <div className="form-field">
@@ -213,11 +203,10 @@ const Profile = () => {
               ))}
             </select>
           </div>
-
         </div>
 
-        {/* Charts Settings Section */}
-        <div className="profile-section">
+        {/* Charts Settings */}
+        <div className="profile-section-simple">
           <div className="section-header">
             <FaChartBar />
             <h3>{t('profile.chartsSettings')}</h3>
@@ -252,7 +241,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Logout Section */}
+        {/* Account Section - with card */}
         <div className="profile-section">
           <div className="section-header">
             <FaSignOutAlt />

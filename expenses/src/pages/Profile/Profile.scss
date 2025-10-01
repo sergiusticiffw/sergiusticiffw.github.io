@@ -9,6 +9,9 @@
   max-width: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   
   * {
     box-sizing: border-box;
@@ -20,6 +23,8 @@
   margin-bottom: 2.5rem;
   padding-bottom: 0;
   border-bottom: none;
+  width: 100%;
+  max-width: 800px;
   
   h1 {
     font-size: 2.25rem;
@@ -41,25 +46,66 @@
   display: flex;
   flex-direction: column;
   gap: 3rem;
+  width: 100%;
+  max-width: 800px;
 }
 
-.profile-section {
+// Simple sections without card background
+.profile-section-simple {
   background: transparent;
   border: none;
-  border-radius: 0;
   padding: 0;
 
   .section-header {
     display: flex;
     align-items: center;
     gap: 0.875rem;
-    margin-bottom: 1.75rem;
+    margin-bottom: 1.5rem;
     padding-bottom: 0.75rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
     svg {
       font-size: 1.25rem;
       color: rgba(91, 141, 239, 0.7);
+    }
+
+    h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: -0.3px;
+    }
+  }
+}
+
+// Card section for Account only
+.profile-section {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0;
+    border-bottom: none;
+
+    svg {
+      font-size: 1.375rem;
+      color: #5B8DEF;
+      filter: drop-shadow(0 2px 4px rgba(91, 141, 239, 0.3));
     }
 
     h3 {
@@ -140,19 +186,23 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.875rem;
+  margin-bottom: 0.75rem;
+  padding: 0;
 
   input[type="checkbox"] {
     width: 18px;
     height: 18px;
     accent-color: #5B8DEF;
     cursor: pointer;
+    flex-shrink: 0;
   }
 
   label {
     font-size: 0.9rem;
     color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
+    flex: 1;
+    user-select: none;
   }
 }
 
@@ -167,16 +217,35 @@ h4 {
 
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+  
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .user-info {
   margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1.25rem;
+  background: rgba(91, 141, 239, 0.08);
+  border-radius: 12px;
+  border: 1px solid rgba(91, 141, 239, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  
+  &:before {
+    content: '';
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5B8DEF, #4A7DDC);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   
   .user-name {
     font-size: 1.125rem;
@@ -193,24 +262,26 @@ h4 {
   gap: 0.875rem;
   width: 100%;
   padding: 1rem 1.75rem;
-  background: rgba(244, 67, 54, 0.08);
-  border: 1px solid rgba(244, 67, 54, 0.25);
-  border-radius: 10px;
+  background: transparent;
+  border: 2px solid rgba(244, 67, 54, 0.3);
+  border-radius: 12px;
   color: #ff5252;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s ease;
+  min-height: 56px;
 
   &:hover {
-    background: rgba(244, 67, 54, 0.15);
-    border-color: rgba(244, 67, 54, 0.4);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.2);
+    background: rgba(244, 67, 54, 0.1);
+    border-color: #ff5252;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(244, 67, 54, 0.25);
   }
 
   &:active {
     transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.2);
   }
 
   svg {
@@ -227,36 +298,80 @@ h4 {
   }
   
   .profile-header {
+    margin-bottom: 2rem;
+    
     h1 {
-      font-size: 1.5rem;
+      font-size: 1.75rem;
     }
 
     p {
       font-size: 0.875rem;
     }
   }
-
-  .profile-section {
+  
+  .profile-sections {
+    gap: 2.5rem;
+  }
+  
+  .profile-section-simple {
     .section-header {
+      margin-bottom: 1.25rem;
+      
       h3 {
         font-size: 1rem;
       }
 
       svg {
-        font-size: 1rem;
+        font-size: 1.125rem;
+      }
+    }
+  }
+
+  .profile-section {
+    padding: 1.5rem;
+    
+    &:hover {
+      transform: none;
+    }
+    
+    .section-header {
+      margin-bottom: 1.25rem;
+      
+      h3 {
+        font-size: 1.125rem;
+      }
+
+      svg {
+        font-size: 1.25rem;
       }
     }
   }
 
   .form-field {
+    margin-bottom: 1.25rem;
+    
     input,
     select {
       font-size: 0.9rem;
-      padding: 0.625rem 0.875rem;
+      padding: 0.75rem 1rem;
     }
   }
+  
 
   .charts-grid {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .user-info {
+    padding: 1rem;
+    
+    .user-name {
+      font-size: 1rem;
+    }
+  }
+  
+  .logout-btn {
+    padding: 0.875rem 1.5rem;
   }
 }
