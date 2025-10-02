@@ -6,18 +6,13 @@
 
 // Import component styles
 @use 'components/Navbar/Navbar' as *;
-@use 'components/TransactionsTable/TransactionsTable' as *;
 @use 'components/TransactionForm/TransactionForm' as *;
 @use 'components/Modal/Modal' as *;
-@use 'components/Filters/Filters' as *;
 @use 'components/Charts/Charts' as *;
-@use 'components/Calendar/Calendar' as *;
-@use 'components/Profile/Profile' as *;
 @use 'components/Notification/Notification' as *;
 @use 'components/Loan/Loan' as *;
 @use 'components/Home/Home' as *;
 @use 'components/DailyAverage/DailyAverage' as *;
-@use 'components/Suggestions/Suggestions' as *;
 @use 'components/Income/IncomeForm' as *;
 @use 'components/Income/IncomeTable' as *;
 @use 'components/Income/Income' as *;
@@ -26,7 +21,6 @@
 @use 'components/Home/LastTwoMonthsAverage' as *;
 
 // Import page styles
-@use 'pages/AddTransaction/AddTransaction' as *;
 @use 'pages/Login/Login' as *;
 
 // App-specific styles

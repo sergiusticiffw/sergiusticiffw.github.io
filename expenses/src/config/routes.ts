@@ -1,5 +1,4 @@
 import Income from '@pages/Income';
-import AddTransaction from '@pages/AddTransaction';
 import LazyCharts from '@pages/LazyCharts';
 import Profile from '@pages/Profile';
 import Login from '@pages/Login';
@@ -24,21 +23,6 @@ const routes = [
     isPrivate: true,
   },
   {
-    path: '/expenses/home1',
-    component: NewHome,
-    isPrivate: true,
-  },
-  {
-    path: '/expenses/user',
-    component: Profile,
-    isPrivate: true,
-  },
-  {
-    path: '/expenses/add-transaction',
-    component: AddTransaction,
-    isPrivate: true,
-  },
-  {
     path: '/expenses/income',
     component: Income,
     isPrivate: true,
@@ -51,6 +35,11 @@ const routes = [
   {
     path: '/expenses/loan/:id',
     component: Loan,
+    isPrivate: true,
+  },
+  {
+    path: '/expenses/user',
+    component: Profile,
     isPrivate: true,
   },
 ];
