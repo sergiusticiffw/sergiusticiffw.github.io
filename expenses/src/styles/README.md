@@ -144,12 +144,12 @@ mkdir src/components/NewComponent
 
 .new-component {
   padding: $spacing-md;
-  background: var(--bg-color);
+  background: $bg-dark;
   border-radius: $border-radius-md;
   
   &__title {
     font-size: $font-size-lg;
-    color: var(--text-color);
+    color: rgba(255, 255, 255, 0.9);
   }
   
   @media (max-width: $breakpoint-sm) {
