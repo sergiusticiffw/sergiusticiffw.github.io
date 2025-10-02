@@ -285,6 +285,7 @@ const translations = {
     'notification.loanUpdated': 'Loan updated successfully!',
     'notification.loanDeleted': 'Loan deleted successfully!',
     'notification.paymentAdded': 'Payment added successfully!',
+    'notification.paymentUpdated': 'Payment updated successfully!',
     'notification.paymentDeleted': 'Payment deleted successfully!',
     'notification.profileUpdated': 'Profile updated successfully!',
 
@@ -382,6 +383,8 @@ const translations = {
     'loanForm.paymentDayOfMonth': 'Payment Day of Month',
     'loanForm.loanStatus': 'Loan Status',
     'loanForm.updateLoan': 'Update Loan',
+    'loanForm.endDateMustBeAfterStartDate': 'End date must be after start date',
+    'loanForm.firstPaymentDateMustBeBetweenStartAndEnd': 'First payment date must be between start and end date',
 
     // Payment
     'payment.simulated': 'Simulated',
@@ -709,6 +712,7 @@ const translations = {
     'notification.loanUpdated': 'Împrumutul a fost actualizat cu succes!',
     'notification.loanDeleted': 'Împrumutul a fost șters cu succes!',
     'notification.paymentAdded': 'Plata a fost adăugată cu succes!',
+    'notification.paymentUpdated': 'Plata a fost actualizată cu succes!',
     'notification.paymentDeleted': 'Plata a fost ștearsă cu succes!',
     'notification.profileUpdated': 'Profilul a fost actualizat cu succes!',
 
@@ -808,6 +812,8 @@ const translations = {
     'loanForm.paymentDayOfMonth': 'Ziua Plății din Lună',
     'loanForm.loanStatus': 'Statusul Împrumutului',
     'loanForm.updateLoan': 'Actualizează Împrumutul',
+    'loanForm.endDateMustBeAfterStartDate': 'Data de sfârșit trebuie să fie după data de început',
+    'loanForm.firstPaymentDateMustBeBetweenStartAndEnd': 'Data primei plăți trebuie să fie între data de început și data de sfârșit',
 
     // Payment
     'payment.simulated': 'Simulat',

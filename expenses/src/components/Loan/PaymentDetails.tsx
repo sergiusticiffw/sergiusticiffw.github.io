@@ -186,6 +186,7 @@ const PaymentDetails = (props) => {
           formType={!isNewModal ? 'edit' : 'add'}
           values={focusedItem}
           startDate={loan.sdt}
+          endDate={loan.edt}
           onSuccess={() => {
             setIsNewModal(false);
             setShowEditModal(false);

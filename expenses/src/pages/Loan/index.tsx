@@ -304,6 +304,8 @@ const Loan: React.FC = () => {
             field_pay_single_fee: 0,
             field_new_recurring_amount: 0,
           }}
+          startDate={loan.sdt}
+          endDate={loan.edt}
           onSuccess={() => {
             setShowAddPaymentModal(false);
             fetchLoans(token, dataDispatch, dispatch);

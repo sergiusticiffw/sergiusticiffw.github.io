@@ -127,12 +127,77 @@
       color: #5B8DEF;
     }
     
-    h2 {
+    h2, h3 {
       font-size: 1.125rem;
       font-weight: 600;
       color: #ffffff;
       margin: 0;
     }
+  }
+}
+
+// Progress Container
+.progress-container {
+  width: 100%;
+  
+  .progress-bar-container {
+    margin-bottom: 1.5rem;
+    
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      
+      span {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-weight: 500;
+        
+        &:last-child {
+          color: #5B8DEF;
+          font-weight: 700;
+          font-size: 1rem;
+        }
+      }
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+      
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #5B8DEF 0%, #4A7FDB 100%);
+        border-radius: 6px;
+        transition: width 0.3s ease;
+        position: relative;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+          animation: shimmer 2s infinite;
+        }
+      }
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
   }
 }
 

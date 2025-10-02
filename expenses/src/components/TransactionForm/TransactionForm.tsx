@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { fetchRequest } from '@utils/utils';
-import { useAuthDispatch, useAuthState, useData } from '@context/context';
-import { useNotification } from '@context/notification';
+import { useData } from '@context/context';
 import { useLocalization } from '@context/localization';
-import { getCategories, getSuggestions, categories, suggestions } from '@utils/constants';
-import { notificationType } from '@utils/constants';
-import { AuthState, DataState, NodeData } from '@type/types';
-import { FaPlus, FaPen, FaCheck, FaTimes } from 'react-icons/fa';
+import { getCategories, getSuggestions } from '@utils/constants';
+import { useFormSubmit } from '@hooks/useFormSubmit';
+import { useFormValidation } from '@hooks/useFormValidation';
+import { DataState } from '@type/types';
+import { FaPlus, FaPen } from 'react-icons/fa';
 import './TransactionForm.scss';
 
 interface TransactionFormProps {
@@ -20,114 +19,72 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   values,
   onSuccess,
 }) => {
-  const showNotification = useNotification();
   const { t } = useLocalization();
-  const dispatch = useAuthDispatch();
   const { dataDispatch } = useData() as DataState;
+  
   const initialState = {
     field_amount: '',
     field_date: new Date().toISOString().slice(0, 10),
     field_category: '',
     field_description: '',
   };
-  const [formState, setFormState] = useState(
-    formType === 'add' ? initialState : values
-  );
-  const { token } = useAuthState() as AuthState;
-  
+
   // Get localized categories and suggestions
   const localizedCategories = getCategories();
   const localizedSuggestions = getSuggestions();
-  
-  const handleChange = (
-    event: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const value = event.target.value;
-    setFormState({
-      ...formState,
-      [event.target.name]: value,
-    });
-    if (event.target.name === 'field_category') {
-      setSuggestionData(localizedSuggestions[value as keyof typeof localizedSuggestions] || []);
-    }
+
+  const validationRules = {
+    field_amount: {
+      required: true,
+      custom: (value: string) => !isNaN(parseFloat(value)) && parseFloat(value) > 0,
+    },
+    field_date: {
+      required: true,
+      custom: (value: string) => new Date(value) <= new Date(),
+    },
+    field_category: {
+      required: true,
+    },
+    field_description: {
+      required: true,
+    },
   };
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    const node = {
-      type: 'transaction',
-      title: [formState.field_date],
-      field_amount: [formState.field_amount],
-      field_category: [formState.field_category],
-      field_date: [formState.field_date],
-      field_description: [formState.field_description],
-    };
-    const fetchOptions = {
-      method: formType === 'add' ? 'POST' : 'PATCH',
-      headers: new Headers({
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'JWT-Authorization': 'Bearer ' + token,
-      }),
-      body: JSON.stringify(node),
-    };
-    const url =
-      formType === 'add'
-        ? 'https://dev-expenses-api.pantheonsite.io/node?_format=json'
-        : `https://dev-expenses-api.pantheonsite.io/node/${values.nid}?_format=json`;
-    fetchRequest(
-      url,
-      fetchOptions,
-      dataDispatch,
-      dispatch,
-      (data: NodeData) => {
-        if (data.nid) {
-          onSuccess();
-          showNotification(
-            formType === 'add' 
-              ? t('notification.transactionAdded')
-              : t('notification.transactionUpdated'),
-            notificationType.SUCCESS
-          );
-          setIsSubmitting(false);
-          setFormState(initialState);
-          setSuggestionData([]);
-          setSelectedIndices([]);
-        } else {
-          showNotification(t('error.unknown'), notificationType.ERROR);
-          setIsSubmitting(false);
-        }
-      }
-    );
-  };
+
+  const { getFieldValidation } = useFormValidation(validationRules);
+
+  const { formState, setFormState, isSubmitting, handleChange: baseHandleChange, handleSubmit } = useFormSubmit({
+    formType,
+    initialState,
+    values,
+    nodeType: 'transaction',
+    onSuccess,
+    dataDispatch,
+    buildNodeData: (state) => ({
+      title: [state.field_date],
+      field_amount: [state.field_amount],
+      field_category: [state.field_category],
+      field_date: [state.field_date],
+      field_description: [state.field_description],
+    }),
+    successMessageKeys: {
+      add: 'notification.transactionAdded',
+      edit: 'notification.transactionUpdated',
+    },
+  });
 
   const [suggestionData, setSuggestionData] = useState<string[]>(
     localizedSuggestions[formState.field_category as keyof typeof localizedSuggestions] || []
   );
   const [selectedIndices, setSelectedIndices] = useState<string[]>([]);
 
-  // Validation functions
-  const validateField = (name: string, value: string) => {
-    switch (name) {
-      case 'field_amount':
-        return value && value.trim() !== '' && !isNaN(parseFloat(value)) && parseFloat(value) > 0;
-      case 'field_date':
-        return value && value.trim() !== '' && new Date(value) <= new Date();
-      case 'field_category':
-        return value && value.trim() !== '';
-      case 'field_description':
-        return value && value.trim() !== '';
-      default:
-        return true;
+  // Extended handleChange with suggestions logic
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    baseHandleChange(event);
+    if (event.target.name === 'field_category') {
+      setSuggestionData(localizedSuggestions[event.target.value as keyof typeof localizedSuggestions] || []);
     }
-  };
-
-  const getFieldValidation = (name: string) => {
-    const value = formState[name as keyof typeof formState];
-    return validateField(name, value);
   };
 
   const handleSuggestionClick = (suggestion: string, index: string) => {
@@ -159,7 +116,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               onChange={handleChange}
               min={0}
               step={0.01}
-              className={`form-input ${getFieldValidation('field_amount') ? 'valid' : ''}`}
+              className={`form-input ${getFieldValidation('field_amount', formState) ? 'valid' : ''}`}
             />
           </div>
         </div>
@@ -174,7 +131,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               name="field_date"
               value={formState.field_date}
               onChange={handleChange}
-              className={`form-input ${getFieldValidation('field_date') ? 'valid' : ''}`}
+              className={`form-input ${getFieldValidation('field_date', formState) ? 'valid' : ''}`}
             />
           </div>
         </div>
@@ -188,7 +145,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               name="field_category"
               value={formState.field_category}
               onChange={handleChange}
-              className={`form-input ${getFieldValidation('field_category') ? 'valid' : ''}`}
+              className={`form-input ${getFieldValidation('field_category', formState) ? 'valid' : ''}`}
             >
               <option value="">Select a category...</option>
               {localizedCategories.map((category, id) => (
@@ -210,7 +167,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               type="text"
               value={formState.field_description}
               onChange={handleChange}
-              className={`form-input ${getFieldValidation('field_description') ? 'valid' : ''}`}
+              className={`form-input ${getFieldValidation('field_description', formState) ? 'valid' : ''}`}
             />
           </div>
         </div>
