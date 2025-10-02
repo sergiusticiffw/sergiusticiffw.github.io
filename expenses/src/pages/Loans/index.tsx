@@ -129,7 +129,7 @@ const Loans: React.FC = () => {
 
   return (
     <div className="loans-page">
-      {/* Header - same structure as Home1 */}
+      {/* Header - same structure as NewHome */}
       <div className="loans-header">
         <h1>{t('loans.title')}</h1>
         <p className="transaction-count">{totalLoans} {totalLoans === 1 ? 'loan' : 'loans'}</p>

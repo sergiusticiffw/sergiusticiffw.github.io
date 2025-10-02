@@ -23,8 +23,8 @@
 }
 
 // Gradient button styling
-@mixin gradient-button($primary-color: var(--accent-color), $secondary-color: #64b5f6) {
-  background: linear-gradient(145deg, $primary-color, $secondary-color);
+@mixin gradient-button() {
+  background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%);
   border: none;
   color: #fff;
   padding: 0.8rem 1.5rem;
@@ -41,9 +41,9 @@
   min-height: 46px;
   
   &:hover {
-    background: linear-gradient(145deg, $secondary-color, $primary-color);
+    background: linear-gradient(135deg, #4A7DDC 0%, #5B8DEF 100%);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(100, 181, 246, 0.4);
+    box-shadow: 0 8px 25px rgba(91, 141, 239, 0.4);
   }
   
   &:disabled {
@@ -69,8 +69,8 @@
   
   &:focus {
     outline: none;
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.15);
+    border-color: #5B8DEF;
+    box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.15);
     background: rgba(255, 255, 255, 0.15);
     transform: translateY(-1px);
   }
@@ -145,9 +145,9 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   
   svg {
-    color: var(--accent-color);
+    color: #5B8DEF;
     font-size: 1.5rem;
-    filter: drop-shadow(0 2px 4px rgba(100, 181, 246, 0.3));
+    filter: drop-shadow(0 2px 4px rgba(91, 141, 239, 0.3));
   }
   
   h3 {

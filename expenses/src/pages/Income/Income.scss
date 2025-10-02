@@ -23,7 +23,7 @@
   padding: 3rem 0;
 }
 
-// Header - exact same as home1-header
+// Header - exact same as newhome-header
 .income-header {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -48,7 +48,7 @@
 }
 
 // Stats Grid - 3 Columns (1 when filtered)
-.home1-stats-grid {
+.newhome-stats-grid {
   display: grid !important;
   grid-template-columns: repeat(3, 1fr) !important;
   grid-template-rows: 1fr !important;
@@ -63,7 +63,7 @@
     margin-right: auto;
   }
 
-  .home1-stat-card {
+  .newhome-stat-card {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 16px;
     padding: 1rem 0.75rem;

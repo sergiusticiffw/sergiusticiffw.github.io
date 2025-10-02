@@ -141,7 +141,7 @@ const Loan: React.FC = () => {
 
   return (
     <div className="loan-container">
-      {/* Header - same structure as Home1 */}
+      {/* Header - same structure as NewHome */}
       <div className="loan-header">
         <h1>{loan?.title}</h1>
       </div>

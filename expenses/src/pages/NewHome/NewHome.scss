@@ -1,6 +1,6 @@
 @use '../../styles/variables' as *;
 
-.home1-page {
+.newhome-page {
   background: #1a1a1a;
   padding-left: 1.5rem !important;
   padding-right: 1.5rem !important;
@@ -15,21 +15,21 @@
   }
 
   // Loading
-  .home1-loading {
+  .newhome-loading {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 3rem 0;
   }
 
-  .home1-no-data {
+  .newhome-no-data {
     text-align: center;
     padding: 2rem;
     color: rgba(255, 255, 255, 0.7);
   }
 
   // Header
-  .home1-header {
+  .newhome-header {
     text-align: center;
     margin-bottom: 1.5rem;
     padding-top: 1.5rem;
@@ -49,7 +49,7 @@
   }
 
   // Month Navigation - Sticky at Bottom Above Menu
-  .home1-month-navigation-sticky {
+  .newhome-month-navigation-sticky {
     position: fixed;
     bottom: 70px;
     left: 50%;
@@ -98,7 +98,7 @@
   }
 
   // View Tabs
-  .home1-view-tabs {
+  .newhome-view-tabs {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1.5rem;
@@ -137,12 +137,12 @@
   }
 
   // Search Bar Wrapper
-  .home1-search-wrapper {
+  .newhome-search-wrapper {
     margin-bottom: 1.5rem;
   }
 
   // Stats Grid - 3 Columns (1 when filtered)
-  .home1-stats-grid {
+  .newhome-stats-grid {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
     grid-template-rows: 1fr !important;
@@ -157,7 +157,7 @@
       margin-right: auto;
     }
     
-    .home1-stat-card {
+    .newhome-stat-card {
       background: rgba(255, 255, 255, 0.05);
       border-radius: 16px;
       padding: 1rem 0.75rem;
@@ -206,19 +206,19 @@
   }
 
   // Transaction List Wrapper
-  .home1-transaction-wrapper {
+  .newhome-transaction-wrapper {
     // No extra padding - inherited from parent
   }
 
   // Calendar Wrapper
-  .home1-calendar-wrapper {
+  .newhome-calendar-wrapper {
     margin-bottom: 2rem;
   }
 
   // FAB
-  .home1-fab {
+  .newhome-fab {
     position: fixed;
-    bottom: 90px;
+    bottom: 100px;
     right: 20px;
     width: 56px;
     height: 56px;
@@ -255,13 +255,13 @@
   @media (max-width: 360px) {
     padding-bottom: 150px;
     
-    .home1-header {
+    .newhome-header {
       h1 {
         font-size: 1.75rem;
       }
     }
     
-    .home1-month-navigation-sticky {
+    .newhome-month-navigation-sticky {
       bottom: 60px;
       padding: 0.625rem 1.25rem;
       
@@ -275,10 +275,10 @@
       }
     }
     
-    .home1-stats-grid {
+    .newhome-stats-grid {
       grid-template-columns: 1fr !important;
       
-      .home1-stat-card {
+      .newhome-stat-card {
         flex-direction: row;
         justify-content: flex-start;
         padding: 1rem;
@@ -305,8 +305,8 @@
       }
     }
     
-    .home1-fab {
-      bottom: 80px;
+    .newhome-fab {
+      bottom: 90px;
     }
   }
 }

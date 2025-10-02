@@ -167,7 +167,7 @@ const Income = () => {
 
   return (
     <div className="income-page">
-      {/* Header - exact same structure as Home1 */}
+      {/* Header - exact same structure as NewHome */}
       <div className="income-header">
         <h1>{t('income.title')}</h1>
         <p className="transaction-count">
@@ -192,8 +192,8 @@ const Income = () => {
       />
 
       {/* Income Stats Cards */}
-      <div className="home1-stats-grid">
-        <div className="home1-stat-card">
+      <div className="newhome-stats-grid">
+        <div className="newhome-stat-card">
           <div className="stat-icon">
             <FaMoneyBillWave />
           </div>
@@ -201,7 +201,7 @@ const Income = () => {
           <div className="stat-label">{t('income.totalIncome')}</div>
         </div>
         {!filters.textFilter && !filters.selectedMonth && (
-          <div className="home1-stat-card">
+          <div className="newhome-stat-card">
             <div className="stat-icon">
               <FaChartLine />
             </div>

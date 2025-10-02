@@ -89,15 +89,15 @@
 // Floating Action Button - Global styles
 .fab {
   position: fixed;
-  bottom: 90px; // Default position for all pages except Home
+  bottom: 100px;
   right: 20px;
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%); // Modern blue gradient
+  background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%);
   color: white;
   border: none;
-  box-shadow: 0 4px 12px rgba(91, 141, 239, 0.4);
+  box-shadow: 0 4px 16px rgba(91, 141, 239, 0.4);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -107,14 +107,13 @@
   transition: all 0.3s ease;
 
   &:hover {
-    background: linear-gradient(135deg, #6A9DF5 0%, #5B8DEF 100%); // Lighter gradient on hover
-    box-shadow: 0 6px 16px rgba(91, 141, 239, 0.5);
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(91, 141, 239, 0.5);
   }
 
   &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
   }
 
   svg {
@@ -122,19 +121,9 @@
     height: 24px;
   }
 
-  // Home page specific positioning (higher due to pager navigation)
-  .home & {
-    bottom: 115px; // Higher on Home page due to .pager-navigation
-  }
-
   // Responsive adjustments
   @media (max-width: 768px) {
-    bottom: 80px; // Slightly higher on mobile for non-Home pages
-    
-    .home & {
-      bottom: 115px; // Higher on Home page mobile
-    }
-    
+    bottom: 90px;
     right: 16px;
     width: 52px;
     height: 52px;
@@ -146,12 +135,7 @@
   }
 
   @media (max-width: 480px) {
-    bottom: 70px; // Even higher on small mobile screens for non-Home pages
-    
-    .home & {
-      bottom: 115px; // Higher on Home page small mobile
-    }
-    
+    bottom: 80px;
     right: 12px;
     width: 48px;
     height: 48px;

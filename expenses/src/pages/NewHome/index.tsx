@@ -23,9 +23,9 @@ import {
   FaCalendar,
 } from 'react-icons/fa';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
-import './Home1.scss';
+import './NewHome.scss';
 
-const Home1 = () => {
+const NewHome = () => {
   const showNotification = useNotification();
   const { t } = useLocalization();
   const { token } = useAuthState() as AuthState;
@@ -185,7 +185,7 @@ const Home1 = () => {
   const displayProfit = hasFilters ? filteredProfit : parseFloat((monthIncome - (items.totals?.[currentMonth] || 0)).toFixed(2));
 
   return (
-    <div className="home1-page">
+    <div className="newhome-page">
       {/* Delete Modal */}
       <Modal
         show={!!showDeleteModal}
@@ -257,7 +257,7 @@ const Home1 = () => {
       </Modal>
 
       {loading ? (
-        <div className="home1-loading">
+        <div className="newhome-loading">
           <div className="loader">
             <span className="loader__element"></span>
             <span className="loader__element"></span>
@@ -265,13 +265,13 @@ const Home1 = () => {
           </div>
         </div>
       ) : noData ? (
-        <div className="home1-no-data">
+        <div className="newhome-no-data">
           <p>{t('home.noData')}</p>
         </div>
       ) : (
         <>
           {/* Header */}
-          <div className="home1-header">
+          <div className="newhome-header">
             <h1>{currentMonth || t('home.title')}</h1>
             <p className="transaction-count">
               {filteredTransactions.length} transactions
@@ -279,7 +279,7 @@ const Home1 = () => {
           </div>
 
           {/* Search Bar - For Both Views */}
-          <div className="home1-search-wrapper">
+          <div className="newhome-search-wrapper">
             <SearchBar 
               searchValue={searchText}
               onSearchChange={setSearchText}
@@ -291,7 +291,7 @@ const Home1 = () => {
           </div>
 
           {/* View Tabs - Below Search */}
-          <div className="home1-view-tabs">
+          <div className="newhome-view-tabs">
             <button
               className={`tab-button ${activeView === 'list' ? 'active' : ''}`}
               onClick={() => setActiveView('list')}
@@ -309,8 +309,8 @@ const Home1 = () => {
           </div>
 
           {/* Stats Cards - Show all 3 when no filters, only Total when filtered */}
-          <div className={`home1-stats-grid ${hasFilters ? 'filtered' : ''}`}>
-            <div className="home1-stat-card">
+          <div className={`newhome-stats-grid ${hasFilters ? 'filtered' : ''}`}>
+            <div className="newhome-stat-card">
               <div className="stat-icon">
                 <FaMoneyBillWave />
               </div>
@@ -320,7 +320,7 @@ const Home1 = () => {
             
             {!hasFilters && (
               <>
-                <div className="home1-stat-card">
+                <div className="newhome-stat-card">
                   <div className="stat-icon">
                     <FaUniversity />
                   </div>
@@ -328,7 +328,7 @@ const Home1 = () => {
                   <div className="stat-label">Income</div>
                 </div>
 
-                <div className="home1-stat-card">
+                <div className="newhome-stat-card">
                   <div className="stat-icon">
                     <FaChartLine />
                   </div>
@@ -341,7 +341,7 @@ const Home1 = () => {
 
           {/* Content - List or Calendar */}
           {activeView === 'list' ? (
-            <div className="home1-transaction-wrapper">
+            <div className="newhome-transaction-wrapper">
               <TransactionList
                 transactions={filteredTransactions}
                 categoryLabels={localizedCategories}
@@ -350,7 +350,7 @@ const Home1 = () => {
               />
             </div>
           ) : (
-            <div className="home1-calendar-wrapper">
+            <div className="newhome-calendar-wrapper">
               <CalendarView
                 transactions={filteredTransactions}
                 currentMonth={currentMonth}
@@ -370,7 +370,7 @@ const Home1 = () => {
 
           {/* Month Navigation - Sticky at Bottom (Only for List View) */}
           {activeView === 'list' && (
-            <div className="home1-month-navigation-sticky">
+            <div className="newhome-month-navigation-sticky">
               <button
                 className="nav-button-sticky"
                 onClick={() => setCurrentMonthIndex(currentMonthIndex + 1)}
@@ -393,7 +393,7 @@ const Home1 = () => {
 
           {/* FAB */}
           <button 
-            className="home1-fab" 
+            className="newhome-fab" 
             onClick={() => setShowAddModal(true)}
             title="Add Transaction"
           >
@@ -405,4 +405,4 @@ const Home1 = () => {
   );
 };
 
-export default Home1;
+export default NewHome;
