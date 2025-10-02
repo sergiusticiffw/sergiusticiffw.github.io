@@ -10,6 +10,10 @@
 @use 'components/Loan/Loan' as *;
 @use 'components/Home/Home' as *;
 @use 'components/Common/Common' as *;
+@use 'components/Common/PageHeader' as *;
+@use 'components/Common/LoadingSpinner' as *;
+@use 'components/Common/StatCard' as *;
+@use 'components/Common/StatsGrid' as *;
 
 // Import page styles
 @use 'pages/Login/Login' as *;

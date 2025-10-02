@@ -13,11 +13,11 @@ import Modal from '@components/Modal/Modal';
 import IncomeTable from '@components/Income/IncomeTable';
 import IncomeFilters from '@components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
+import { PageHeader, LoadingSpinner, StatCard, StatsGrid, DeleteConfirmModal } from '@components/Common';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import {
   FaPlus,
-  FaTrash,
   FaCaretDown,
   FaMoneyBillWave,
   FaChartLine,
@@ -154,27 +154,18 @@ const Income = () => {
   if (loading) {
     return (
       <div className="income-page">
-        <div className="income-loading">
-          <div className="loader">
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-          </div>
-        </div>
+        <LoadingSpinner />
       </div>
     );
   }
 
   return (
     <div className="income-page">
-      {/* Header - exact same structure as NewHome */}
-      <div className="income-header">
-        <h1>{t('income.title')}</h1>
-        <p className="transaction-count">
-          {totalRecords}{' '}
-          {totalRecords === 1 ? 'income record' : 'income records'}
-        </p>
-      </div>
+      {/* Header */}
+      <PageHeader 
+        title={t('income.title')}
+        subtitle={`${totalRecords} ${totalRecords === 1 ? 'income record' : 'income records'}`}
+      />
 
       {/* Filters */}
       <IncomeFilters
@@ -192,24 +183,20 @@ const Income = () => {
       />
 
       {/* Income Stats Cards */}
-      <div className="newhome-stats-grid">
-        <div className="newhome-stat-card">
-          <div className="stat-icon">
-            <FaMoneyBillWave />
-          </div>
-          <div className="stat-value">{formatNumber(totalIncome)}</div>
-          <div className="stat-label">{t('income.totalIncome')}</div>
-        </div>
+      <StatsGrid columns={2} filtered={!!(filters.textFilter || filters.selectedMonth)}>
+        <StatCard
+          icon={<FaMoneyBillWave />}
+          value={formatNumber(totalIncome)}
+          label={t('income.totalIncome')}
+        />
         {!filters.textFilter && !filters.selectedMonth && (
-          <div className="newhome-stat-card">
-            <div className="stat-icon">
-              <FaChartLine />
-            </div>
-            <div className="stat-value">{formatNumber(averageIncome)}</div>
-            <div className="stat-label">{t('income.averageIncome')}</div>
-          </div>
+          <StatCard
+            icon={<FaChartLine />}
+            value={formatNumber(averageIncome)}
+            label={t('income.averageIncome')}
+          />
         )}
-      </div>
+      </StatsGrid>
 
       {/* Income Table Section */}
       <div className="income-table-section">
@@ -264,44 +251,16 @@ const Income = () => {
       ) : null}
 
       {/* Modals */}
-      <Modal
+      <DeleteConfirmModal
         show={!!showDeleteModal}
         onClose={(e) => {
           e.preventDefault();
           setShowDeleteModal(false);
         }}
+        onConfirm={() => showDeleteModal && handleDelete(showDeleteModal, token)}
         title={t('income.deleteIncome')}
-      >
-        <p
-          style={{
-            textAlign: 'center',
-            color: 'rgba(255, 255, 255, 0.7)',
-            marginBottom: '1.5rem',
-          }}
-        >
-          {t('modal.deleteMessage')}
-        </p>
-        <button
-          onClick={() =>
-            showDeleteModal && handleDelete(showDeleteModal, token)
-          }
-          className="button danger wide"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : (
-            <>
-              <FaTrash />
-              {t('common.delete')}
-            </>
-          )}
-        </button>
-      </Modal>
+        isSubmitting={isSubmitting}
+      />
 
       <Modal
         show={showEditModal}

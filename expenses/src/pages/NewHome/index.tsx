@@ -11,6 +11,7 @@ import TransactionList from '@components/TransactionList';
 import CalendarView from '@components/CalendarView';
 import Modal from '@components/Modal';
 import TransactionForm from '@components/TransactionForm';
+import { PageHeader, LoadingSpinner, StatCard, StatsGrid, DeleteConfirmModal } from '@components/Common';
 import {
   FaPlus,
   FaMoneyBillWave,
@@ -18,7 +19,6 @@ import {
   FaChartLine,
   FaChevronLeft,
   FaChevronRight,
-  FaTrash,
   FaList,
   FaCalendar,
 } from 'react-icons/fa';
@@ -187,36 +187,16 @@ const NewHome = () => {
   return (
     <div className="newhome-page">
       {/* Delete Modal */}
-      <Modal
+      <DeleteConfirmModal
         show={!!showDeleteModal}
         onClose={(e) => {
           e.preventDefault();
           setShowDeleteModal(false);
         }}
+        onConfirm={() => showDeleteModal && handleDelete(showDeleteModal, token)}
         title={t('transaction.deleteTransaction')}
-      >
-        <p style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '1.5rem' }}>
-          {t('modal.deleteMessage')}
-        </p>
-        <button
-          onClick={() => showDeleteModal && handleDelete(showDeleteModal, token)}
-          className="button danger wide"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : (
-            <>
-              <FaTrash />
-              {t('common.delete')}
-            </>
-          )}
-        </button>
-      </Modal>
+        isSubmitting={isSubmitting}
+      />
 
       {/* Edit Modal */}
       <Modal
@@ -257,13 +237,7 @@ const NewHome = () => {
       </Modal>
 
       {loading ? (
-        <div className="newhome-loading">
-          <div className="loader">
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-          </div>
-        </div>
+        <LoadingSpinner />
       ) : noData ? (
         <div className="newhome-no-data">
           <p>{t('home.noData')}</p>
@@ -271,12 +245,10 @@ const NewHome = () => {
       ) : (
         <>
           {/* Header */}
-          <div className="newhome-header">
-            <h1>{currentMonth || t('home.title')}</h1>
-            <p className="transaction-count">
-              {filteredTransactions.length} transactions
-            </p>
-          </div>
+          <PageHeader
+            title={currentMonth || t('home.title')}
+            subtitle={`${filteredTransactions.length} transactions`}
+          />
 
           {/* Search Bar - For Both Views */}
           <div className="newhome-search-wrapper">
@@ -309,35 +281,29 @@ const NewHome = () => {
           </div>
 
           {/* Stats Cards - Show all 3 when no filters, only Total when filtered */}
-          <div className={`newhome-stats-grid ${hasFilters ? 'filtered' : ''}`}>
-            <div className="newhome-stat-card">
-              <div className="stat-icon">
-                <FaMoneyBillWave />
-              </div>
-              <div className="stat-value">{formatNumber(displayTotal)}</div>
-              <div className="stat-label">Total</div>
-            </div>
+          <StatsGrid columns={3} filtered={hasFilters}>
+            <StatCard
+              icon={<FaMoneyBillWave />}
+              value={formatNumber(displayTotal)}
+              label="Total"
+            />
             
             {!hasFilters && (
               <>
-                <div className="newhome-stat-card">
-                  <div className="stat-icon">
-                    <FaUniversity />
-                  </div>
-                  <div className="stat-value">{formatNumber(displayIncome)}</div>
-                  <div className="stat-label">Income</div>
-                </div>
+                <StatCard
+                  icon={<FaUniversity />}
+                  value={formatNumber(displayIncome)}
+                  label="Income"
+                />
 
-                <div className="newhome-stat-card">
-                  <div className="stat-icon">
-                    <FaChartLine />
-                  </div>
-                  <div className="stat-value">{formatNumber(displayProfit)}</div>
-                  <div className="stat-label">Profit</div>
-                </div>
+                <StatCard
+                  icon={<FaChartLine />}
+                  value={formatNumber(displayProfit)}
+                  label="Profit"
+                />
               </>
             )}
-          </div>
+          </StatsGrid>
 
           {/* Content - List or Calendar */}
           {activeView === 'list' ? (

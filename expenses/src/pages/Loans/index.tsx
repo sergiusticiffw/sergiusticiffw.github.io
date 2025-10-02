@@ -6,10 +6,10 @@ import { AuthState } from '@type/types';
 import { fetchLoans, formatNumber, deleteLoan } from '@utils/utils';
 import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
+import { PageHeader, LoadingSpinner, DeleteConfirmModal } from '@components/Common';
 import {
   FaHandHoldingUsd,
   FaPlus,
-  FaTrash,
   FaFilter,
 } from 'react-icons/fa';
 import Modal from '@components/Modal/Modal';
@@ -116,24 +116,18 @@ const Loans: React.FC = () => {
   if (loading) {
     return (
       <div className="loans-page">
-        <div className="loans-loading">
-          <div className="loader">
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-          </div>
-        </div>
+        <LoadingSpinner />
       </div>
     );
   }
 
   return (
     <div className="loans-page">
-      {/* Header - same structure as NewHome */}
-      <div className="loans-header">
-        <h1>{t('loans.title')}</h1>
-        <p className="transaction-count">{totalLoans} {totalLoans === 1 ? 'loan' : 'loans'}</p>
-      </div>
+      {/* Header */}
+      <PageHeader
+        title={t('loans.title')}
+        subtitle={`${totalLoans} ${totalLoans === 1 ? 'loan' : 'loans'}`}
+      />
 
 
       {/* Simple Stats */}
@@ -247,42 +241,17 @@ const Loans: React.FC = () => {
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal
+      <DeleteConfirmModal
         show={showDeleteModal}
         onClose={(e) => {
           e.preventDefault();
           setShowDeleteModal(false);
         }}
+        onConfirm={handleConfirmDelete}
         title={t('loan.deleteLoan')}
-      >
-        <p
-          style={{
-            textAlign: 'center',
-            color: 'rgba(255, 255, 255, 0.7)',
-            marginBottom: '1.5rem',
-          }}
-        >
-          {t('modal.deleteLoanMessage')}
-        </p>
-        <button
-          onClick={handleConfirmDelete}
-          className="button danger wide"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : (
-            <>
-              <FaTrash />
-              {t('common.delete')}
-            </>
-          )}
-        </button>
-      </Modal>
+        message={t('modal.deleteLoanMessage')}
+        isSubmitting={isSubmitting}
+      />
       
       {/* Floating Action Button */}
       <button

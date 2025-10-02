@@ -17,33 +17,7 @@
   }
 }
 
-// Loading
-.loans-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem 0;
-}
-
-// Header - exact same as newhome-header
-.loans-header {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  padding-top: 1.5rem;
-  
-  h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0 0 0.5rem 0;
-    color: #ffffff;
-  }
-  
-  .transaction-count {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin: 0;
-  }
-}
+// Loading and header now use reusable components
 
 .btns-actions {
   display: none; // Hidden - using FAB instead
