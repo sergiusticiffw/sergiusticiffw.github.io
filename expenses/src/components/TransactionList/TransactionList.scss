@@ -27,6 +27,7 @@
         opacity: 1;
       }
       
+      // Component-specific overrides (circular buttons)
       .delete-action-bg,
       .edit-action-bg {
         position: absolute;
@@ -46,12 +47,12 @@
       }
       
       .delete-action-bg {
-        left: 20px;  // Delete on the LEFT (appears when swipe right →)
+        left: 20px;
         background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
       }
       
       .edit-action-bg {
-        right: 20px;  // Edit on the RIGHT (appears when swipe left ←)
+        right: 20px;
         background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
       }
       

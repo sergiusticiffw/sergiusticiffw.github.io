@@ -2,6 +2,7 @@
 @use 'styles/variables' as *;
 @use 'styles/base' as *;
 @use 'styles/mixins' as *;
+@use 'styles/swipe-actions' as *;
 
 // Import component styles (only those not imported by components themselves)
 @use 'components/Navbar/Navbar' as *;

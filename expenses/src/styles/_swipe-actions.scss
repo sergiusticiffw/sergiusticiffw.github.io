@@ -1,0 +1,41 @@
+// Shared Swipe Actions Styles
+// Used by: TransactionList, IncomeTable, LoansList, PaymentDetails
+
+.swipe-actions-background {
+  &.visible {
+    opacity: 1;
+  }
+  
+  .delete-action-bg,
+  .edit-action-bg {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    svg {
+      font-size: 1.25rem;
+      color: #ffffff;
+    }
+  }
+  
+  .delete-action-bg {
+    left: 20px;
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  }
+  
+  .edit-action-bg {
+    right: 20px;
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  }
+  
+  // Scale up when threshold is reached
+  body.action-active & {
+    .delete-action-bg,
+    .edit-action-bg {
+      transform: scale(1.3);
+      transition: transform 0.2s ease-out;
+    }
+  }
+}
+
