@@ -115,14 +115,14 @@ const Loans: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="loans-page">
+      <div className="page-container">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="loans-page">
+    <div className="page-container loans-page">
       {/* Header */}
       <PageHeader
         title={t('loans.title')}

@@ -1,58 +1,8 @@
 @use '../../styles/variables' as *;
 
-.loan-container {
-  background: #1a1a1a;
-  padding-left: 1.5rem !important;
-  padding-right: 1.5rem !important;
-  padding-top: 0;
-  padding-bottom: 80px;
-  max-width: 100%;
-  overflow-x: hidden;
-  box-sizing: border-box;
-  
-  * {
-    box-sizing: border-box;
-  }
-}
+// Page-specific styles (container styling moved to _base.scss .page-container)
 
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 3rem 0;
-  
-  .loader {
-    display: flex;
-    gap: 0.5rem;
-    
-    .loader__element {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #5B8DEF;
-      animation: loader-bounce 1.4s ease-in-out infinite both;
-      
-      &:nth-child(1) {
-        animation-delay: -0.32s;
-      }
-      
-      &:nth-child(2) {
-        animation-delay: -0.16s;
-      }
-    }
-  }
-}
-
-@keyframes loader-bounce {
-  0%, 80%, 100% {
-    transform: scale(0);
-  }
-  40% {
-    transform: scale(1);
-  }
-}
-
-// Header - same as newhome-header
+// Header
 .loan-header {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -78,40 +28,82 @@
   margin-bottom: 2rem;
   
   .action-btn {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 0.625rem;
-    padding: 0.875rem 2rem;
-    background: linear-gradient(135deg, rgba(91, 141, 239, 0.15) 0%, rgba(74, 125, 220, 0.15) 100%);
-    border: 1px solid rgba(91, 141, 239, 0.3);
-    border-radius: 8px;
-    color: #ffffff;
-    font-size: 0.95rem;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(91, 141, 239, 0.15);
-    
-    svg {
-      font-size: 1rem;
-      color: #5B8DEF;
-    }
+    transition: all 0.3s ease;
     
     &:hover {
-      background: linear-gradient(135deg, rgba(91, 141, 239, 0.25) 0%, rgba(74, 125, 220, 0.25) 100%);
-      border-color: rgba(91, 141, 239, 0.5);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #5B8DEF;
       transform: translateY(-2px);
-      box-shadow: 0 4px 16px rgba(91, 141, 239, 0.25);
+      box-shadow: 0 4px 16px rgba(91, 141, 239, 0.2);
     }
     
-    &:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 8px rgba(91, 141, 239, 0.15);
+    svg {
+      font-size: 1.125rem;
+      color: #5B8DEF;
     }
   }
 }
 
-// Loan sections container
+.error-message {
+  margin-bottom: 1.5rem;
+}
+
+// Loan Stats Grid - 2 columns
+.loan-stats-grid-2col {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  width: 100%;
+  max-width: 100%;
+
+  .loan-stat-item {
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .loan-stat-label {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 500;
+    }
+
+    .loan-stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+  }
+
+  @media (max-width: 640px) {
+    gap: 0.75rem;
+    
+    .loan-stat-item {
+      padding: 1rem;
+      
+      .loan-stat-value {
+        font-size: 1.25rem;
+      }
+    }
+  }
+}
+
+// Loan Sections
 .loan-sections {
   display: flex;
   flex-direction: column;
@@ -119,258 +111,86 @@
   width: 100%;
 }
 
-// Loan sections
 .loan-section {
-  margin-bottom: 0;
   width: 100%;
   
   .section-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
     padding-bottom: 0.75rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    cursor: pointer;
-    transition: all 0.2s ease;
-
-    &:hover {
-      .accordion-icon {
-        color: rgba(91, 141, 239, 0.9);
-      }
-    }
-
-    .header-content {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex: 1;
-    }
     
-    .accordion-icon {
-      color: rgba(91, 141, 239, 0.7);
-      font-size: 1.125rem;
-      transition: transform 0.3s ease, color 0.2s ease;
-      
-      &.expanded {
-        transform: rotate(180deg);
-      }
-    }
-
-    svg:not(.accordion-icon) {
-      font-size: 1.125rem;
-      color: rgba(91, 141, 239, 0.7);
-    }
-
-    h3 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #ffffff;
-      margin: 0;
-      letter-spacing: -0.3px;
-    }
-  }
-}
-
-// Loan info stats - simple 2 columns
-.loan-container .loan-stats-grid-2col {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  
-  &.accordion-content {
-    transition: all 0.3s ease;
-    
-    &.collapsed {
-      max-height: 0;
-      opacity: 0;
-      padding: 0;
-      margin: 0;
-      display: none !important;
-    }
-    
-    &.expanded {
-      display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important;
-      opacity: 1;
-    }
-  }
-  
-  .loan-stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    transition: all 0.2s ease;
-    
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      transform: translateY(-2px);
-    }
-    
-    .loan-stat-label {
-      font-size: 0.7rem;
-      color: rgba(255, 255, 255, 0.6);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 0.5rem;
-    }
-    
-    .loan-stat-value {
-      font-size: 1.375rem;
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: -0.02em;
-    }
-  }
-}
-
-// Loan details grid - minimal
-.loan-details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-
-  .detail-item {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-
-    .detail-label {
-      font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.5);
-      margin-bottom: 0.375rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-    }
-
-    .detail-value {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #fff;
-    }
-  }
-}
-
-// Progress section - minimal
-.loan-progress-section {
-  width: 100%;
-  
-  .progress-container {
-    width: 100%;
-    display: block;
-    
-    .progress-bar-container {
-      margin-bottom: 1.5rem;
-      
-      .progress-label {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.75rem;
-        font-size: 0.875rem;
-        color: rgba(255, 255, 255, 0.7);
-        font-weight: 500;
-      }
-
-      .progress-bar {
-        width: 100%;
-        height: 8px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 4px;
-        overflow: hidden;
-
-        .progress-fill {
-          height: 100%;
-          background: linear-gradient(90deg, #5B8DEF, #4A7DDC);
-          border-radius: 4px;
-          transition: width 0.5s ease;
-        }
-      }
-    }
-    
-  }
-}
-
-// NEW: Loan progress grid - 2 columns
-.loan-container .loan-progress-grid-2col {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  width: 100% !important;
-  max-width: 100% !important;
-  
-  .loan-progress-item {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    transition: all 0.2s ease;
-    
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      transform: translateY(-2px);
-    }
-    
-    .loan-progress-label {
-      font-size: 0.7rem;
-      color: rgba(255, 255, 255, 0.6);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-    }
-    
-    .loan-progress-value {
+    svg {
       font-size: 1.25rem;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: -0.02em;
+      color: #5B8DEF;
+    }
+    
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0;
     }
   }
 }
 
-// Mobile responsive - only for small screens
-@media (max-width: 640px) {
-  .loan-container {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-  
-  .loan-header {
-    h1 {
+// Progress Grid - 2 columns
+.loan-progress-grid-2col {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+
+  .loan-progress-item {
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .loan-progress-label {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.6);
+      font-weight: 500;
+    }
+
+    .loan-progress-value {
       font-size: 1.5rem;
+      font-weight: 700;
+      color: #ffffff;
     }
   }
-  
-  .loan-stats-grid-2col {
-    grid-template-columns: 1fr !important;
+
+  @media (max-width: 640px) {
     gap: 0.75rem;
+    
+    .loan-progress-item {
+      padding: 1rem;
+      
+      .loan-progress-value {
+        font-size: 1.25rem;
+      }
+    }
   }
-  
-  .loan-container .loan-progress-grid-2col {
-    grid-template-columns: 1fr !important;
-    gap: 0.75rem;
-  }
-  
-  .loan-details-grid {
-    grid-template-columns: 1fr;
+}
+
+// Loan Details Section
+.loan-details-section {
+  margin-top: 2rem;
+}
+
+// Payment Section
+.payment-section {
+  margin-top: 2rem;
+}
+
+// Responsive
+@media (max-width: $breakpoint-md) {
+  .loan-sections {
+    gap: 1.5rem;
   }
 }

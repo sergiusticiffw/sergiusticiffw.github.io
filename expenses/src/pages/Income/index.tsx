@@ -153,14 +153,14 @@ const Income = () => {
 
   if (loading) {
     return (
-      <div className="income-page">
+      <div className="page-container">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="income-page">
+    <div className="page-container income-page">
       {/* Header */}
       <PageHeader 
         title={t('income.title')}

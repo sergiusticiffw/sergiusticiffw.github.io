@@ -6,6 +6,7 @@ import Modal from '@components/Modal/Modal';
 import { useParams } from 'react-router-dom';
 import PaymentDetails from '@components/Loan/PaymentDetails';
 import PaymentForm from '@components/Loan/PaymentForm';
+import { LoadingSpinner } from '@components/Common';
 import { useLoan } from '@context/loan';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { AuthState } from '@type/types';
@@ -41,14 +42,8 @@ const Loan: React.FC = () => {
   const loan = loans?.find((item: any) => item.id === id);
   if (!loan)
     return (
-      <div className="loan-container">
-        <div className="loading-container">
-          <div className="loader">
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-          </div>
-        </div>
+      <div className="page-container">
+        <LoadingSpinner />
       </div>
     );
 
@@ -140,7 +135,7 @@ const Loan: React.FC = () => {
   const totalMonths = Math.ceil(daysCalculated / 30);
 
   return (
-    <div className="loan-container">
+    <div className="page-container loan-container">
       {/* Header - same structure as NewHome */}
       <div className="loan-header">
         <h1>{loan?.title}</h1>

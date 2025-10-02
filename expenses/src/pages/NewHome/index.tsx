@@ -22,6 +22,7 @@ import {
   FaList,
   FaCalendar,
 } from 'react-icons/fa';
+import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import './NewHome.scss';
 
@@ -185,7 +186,7 @@ const NewHome = () => {
   const displayProfit = hasFilters ? filteredProfit : parseFloat((monthIncome - (items.totals?.[currentMonth] || 0)).toFixed(2));
 
   return (
-    <div className="newhome-page">
+    <div className="page-container newhome-page">
       {/* Delete Modal */}
       <DeleteConfirmModal
         show={!!showDeleteModal}
@@ -297,7 +298,7 @@ const NewHome = () => {
                 />
 
                 <StatCard
-                  icon={<FaChartLine />}
+                  icon={displayProfit >= 0 ? <FiTrendingUp /> : <FiTrendingDown />}
                   value={formatNumber(displayProfit)}
                   label="Profit"
                 />

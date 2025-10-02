@@ -1,21 +1,6 @@
 @use '../../styles/variables' as *;
 
-.income-page {
-  background: #1a1a1a;
-  padding-left: 1.5rem !important;
-  padding-right: 1.5rem !important;
-  padding-top: 0;
-  padding-bottom: 80px;
-  max-width: 100%;
-  overflow-x: hidden;
-  box-sizing: border-box;
-  
-  * {
-    box-sizing: border-box;
-  }
-}
-
-// Loading and header now use reusable components
+// Page-specific styles (container styling moved to _base.scss .page-container)
 
 .btns-actions {
   display: none; // Hidden - using FAB instead
@@ -114,13 +99,5 @@
     svg {
       font-size: 0.875rem;
     }
-  }
-}
-
-// Mobile responsive
-@media (max-width: $breakpoint-md) {
-  .income-page {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
   }
 }

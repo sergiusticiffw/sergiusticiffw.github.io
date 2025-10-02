@@ -16,6 +16,27 @@ body {
   overflow-x: hidden;
 }
 
+// Shared page container styling
+.page-container {
+  background: #1a1a1a;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  padding-top: 0;
+  padding-bottom: 80px;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  
+  * {
+    box-sizing: border-box;
+  }
+
+  @media (max-width: $breakpoint-md) {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
 // Form elements
 select,
 label,

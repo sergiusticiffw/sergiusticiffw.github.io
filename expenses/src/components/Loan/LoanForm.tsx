@@ -35,7 +35,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values, onSuccess }) => {
     field_rate: '',
     field_initial_fee: '',
 
-    field_rec_first_payment_date: null,
+    field_rec_first_payment_date: '',
     field_recurring_payment_day: '',
     field_loan_status: 'draft',
   };

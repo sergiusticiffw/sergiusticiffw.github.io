@@ -1,55 +1,15 @@
 @use '../../styles/variables' as *;
 
-.newhome-page {
-  background: #1a1a1a;
-  padding-left: 1.5rem !important;
-  padding-right: 1.5rem !important;
-  padding-top: 0;
-  padding-bottom: 80px;
-  max-width: 100%;
-  overflow-x: hidden;
-  box-sizing: border-box;
-  
-  * {
-    box-sizing: border-box;
-  }
+// Page-specific styles (container styling moved to _base.scss .page-container)
 
-  // Loading
-  .newhome-loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 3rem 0;
-  }
+.newhome-no-data {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(255, 255, 255, 0.7);
+}
 
-  .newhome-no-data {
-    text-align: center;
-    padding: 2rem;
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  // Header
-  .newhome-header {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    padding-top: 1.5rem;
-    
-    h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      margin: 0 0 0.5rem 0;
-      color: #ffffff;
-    }
-    
-    .transaction-count {
-      font-size: 0.95rem;
-      color: rgba(255, 255, 255, 0.5);
-      margin: 0;
-    }
-  }
-
-  // Month Navigation - Sticky at Bottom Above Menu
-  .newhome-month-navigation-sticky {
+// Month Navigation - Sticky at Bottom Above Menu
+.newhome-month-navigation-sticky {
     position: fixed;
     bottom: 70px;
     left: 50%;
@@ -97,126 +57,64 @@
     }
   }
 
-  // View Tabs
-  .newhome-view-tabs {
+// View Tabs
+.newhome-view-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  
+  .tab-button {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-radius: 12px;
+    padding: 0.875rem 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.95rem;
+    cursor: pointer;
     display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    margin-bottom: 1.5rem;
+    transition: all 0.2s ease;
     
-    .tab-button {
-      flex: 1;
-      background: rgba(255, 255, 255, 0.05);
-      border: none;
-      border-radius: 12px;
-      padding: 0.875rem 1rem;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 0.95rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      transition: all 0.2s ease;
-      
-      svg {
-        font-size: 1.125rem;
-      }
-      
-      &:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.8);
-      }
-      
-      &.active {
-        background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%);
-        color: #ffffff;
-        font-weight: 500;
-        box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
-      }
-    }
-  }
-
-  // Search Bar Wrapper
-  .newhome-search-wrapper {
-    margin-bottom: 1.5rem;
-  }
-
-  // Stats Grid - 3 Columns (1 when filtered)
-  .newhome-stats-grid {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    grid-template-rows: 1fr !important;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-    transition: all 0.3s ease;
-    
-    &.filtered {
-      grid-template-columns: 1fr !important;
-      max-width: 300px;
-      margin-left: auto;
-      margin-right: auto;
+    svg {
+      font-size: 1.125rem;
     }
     
-    .newhome-stat-card {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 16px;
-      padding: 1rem 0.75rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 0.625rem;
-      min-height: 100px;
-      transition: background 0.2s ease;
-      
-      &:hover {
-        background: rgba(255, 255, 255, 0.07);
-      }
-      
-      .stat-icon {
-        width: 48px;
-        height: 48px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        
-        svg {
-          font-size: 1.5rem;
-          color: rgba(255, 255, 255, 0.6);
-        }
-      }
-      
-      .stat-value {
-        font-size: 1.375rem;
-        font-weight: 700;
-        color: #ffffff;
-        text-align: center;
-        letter-spacing: -0.02em;
-      }
-      
-      .stat-label {
-        font-size: 0.875rem;
-        color: rgba(255, 255, 255, 0.5);
-        font-weight: 400;
-        text-align: center;
-      }
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.8);
+    }
+    
+    &.active {
+      background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%);
+      color: #ffffff;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
     }
   }
+}
 
-  // Transaction List Wrapper
-  .newhome-transaction-wrapper {
-    // No extra padding - inherited from parent
-  }
+// Search Bar Wrapper
+.newhome-search-wrapper {
+  margin-bottom: 1.5rem;
+}
 
-  // Calendar Wrapper
-  .newhome-calendar-wrapper {
-    margin-bottom: 2rem;
-  }
+// Stats Grid now uses reusable StatsGrid and StatCard components
 
-  // FAB
-  .newhome-fab {
+// Transaction List Wrapper
+.newhome-transaction-wrapper {
+  // No extra padding - inherited from parent
+}
+
+// Calendar Wrapper
+.newhome-calendar-wrapper {
+  margin-bottom: 2rem;
+}
+
+// FAB
+.newhome-fab {
     position: fixed;
     bottom: 100px;
     right: 20px;
@@ -251,62 +149,23 @@
     }
   }
 
-  // Responsive - ONLY for very small phones
-  @media (max-width: 360px) {
-    padding-bottom: 150px;
+// Responsive - ONLY for very small phones
+@media (max-width: 360px) {
+  .newhome-month-navigation-sticky {
+    bottom: 60px;
+    padding: 0.625rem 1.25rem;
     
-    .newhome-header {
-      h1 {
-        font-size: 1.75rem;
-      }
-    }
-    
-    .newhome-month-navigation-sticky {
-      bottom: 60px;
-      padding: 0.625rem 1.25rem;
+    .nav-button-sticky {
+      width: 44px;
+      height: 44px;
       
-      .nav-button-sticky {
-        width: 44px;
-        height: 44px;
-        
-        svg {
-          font-size: 1.125rem;
-        }
+      svg {
+        font-size: 1.125rem;
       }
     }
-    
-    .newhome-stats-grid {
-      grid-template-columns: 1fr !important;
-      
-      .newhome-stat-card {
-        flex-direction: row;
-        justify-content: flex-start;
-        padding: 1rem;
-        gap: 1rem;
-        
-        .stat-icon {
-          width: 44px;
-          height: 44px;
-          
-          svg {
-            font-size: 1.375rem;
-          }
-        }
-        
-        .stat-value {
-          font-size: 1.375rem;
-          text-align: left;
-        }
-        
-        .stat-label {
-          font-size: 0.8rem;
-          text-align: left;
-        }
-      }
-    }
-    
-    .newhome-fab {
-      bottom: 90px;
-    }
+  }
+  
+  .newhome-fab {
+    bottom: 90px;
   }
 }
