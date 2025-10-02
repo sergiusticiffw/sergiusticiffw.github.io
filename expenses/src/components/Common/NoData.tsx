@@ -28,3 +28,4 @@ const NoData: React.FC<NoDataProps> = ({ icon, title, description, action }) => 
 
 export default NoData;
 
+

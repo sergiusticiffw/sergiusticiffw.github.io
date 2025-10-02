@@ -24,6 +24,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: #1a1a1a;
 }
 
 .main-content {
@@ -31,6 +32,7 @@
   padding-bottom: 95px; // Space for navbar - default for Home page
   overflow-y: auto; // Allow scrolling when needed
   min-height: calc(100vh - 70px); // Minimum height minus navbar
+  background: #1a1a1a;
   
   // Reduced padding for non-Home pages
   &:not(:has(.month-stats)) {
@@ -42,7 +44,48 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 50vh;
+  min-height: 100vh;
+  background: #1a1a1a;
+  
+  .loader {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .loader__element {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: #5B8DEF;
+    animation: loader-bounce 1.4s infinite ease-in-out both;
+    
+    &:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+    
+    &:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+    
+    &:nth-child(3) {
+      animation-delay: 0s;
+    }
+  }
+}
+
+@keyframes loader-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .error-container {
