@@ -1,12 +1,7 @@
 @use '../../styles/variables' as *;
 
 // Page-specific styles (container styling moved to _base.scss .page-container)
-
-.newhome-no-data {
-  text-align: center;
-  padding: 2rem;
-  color: rgba(255, 255, 255, 0.7);
-}
+// No data styles moved to shared NoData component
 
 // Month Navigation - Sticky at Bottom Above Menu
 .newhome-month-navigation-sticky {

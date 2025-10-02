@@ -6,7 +6,7 @@ import { AuthState } from '@type/types';
 import { fetchLoans, formatNumber, deleteLoan } from '@utils/utils';
 import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
-import { PageHeader, LoadingSpinner, DeleteConfirmModal } from '@components/Common';
+import { PageHeader, LoadingSpinner, DeleteConfirmModal, NoData } from '@components/Common';
 import {
   FaHandHoldingUsd,
   FaPlus,
@@ -164,23 +164,19 @@ const Loans: React.FC = () => {
       {/* Loans List Section */}
       <div className="loans-table-section">
         {filteredLoans.length === 0 ? (
-          <div className="no-loans">
-            <FaHandHoldingUsd />
-            <h3>{t('loans.noLoans')}</h3>
-            <p>
-              {statusFilter !== 'all'
+          <NoData
+            icon={<FaHandHoldingUsd />}
+            title={t('loans.noLoans')}
+            description={
+              statusFilter !== 'all'
                 ? `${t('loans.noLoansWithStatus')} "${statusFilter}".`
-                : t('loans.noLoansDesc')}
-            </p>
-            {statusFilter !== 'all' && (
-              <button
-                onClick={() => setStatusFilter('all')}
-                className="action-btn"
-              >
-                {t('loans.showAllLoans')}
-              </button>
-            )}
-          </div>
+                : t('loans.noLoansDesc')
+            }
+            action={statusFilter !== 'all' ? {
+              label: t('loans.showAllLoans'),
+              onClick: () => setStatusFilter('all')
+            } : undefined}
+          />
         ) : (
           <LoansList
             loans={filteredLoans}

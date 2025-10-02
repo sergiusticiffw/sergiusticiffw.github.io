@@ -54,7 +54,9 @@
   margin-bottom: 2rem;
 }
 
+// No data styles moved to shared NoData component
 .no-loans {
+  // Kept for backwards compatibility if needed
   text-align: center;
   padding: 3rem 2rem;
   background: transparent;

@@ -13,7 +13,7 @@ import Modal from '@components/Modal/Modal';
 import IncomeTable from '@components/Income/IncomeTable';
 import IncomeFilters from '@components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
-import { PageHeader, LoadingSpinner, StatCard, StatsGrid, DeleteConfirmModal } from '@components/Common';
+import { PageHeader, LoadingSpinner, StatCard, StatsGrid, DeleteConfirmModal, NoData } from '@components/Common';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import {
@@ -201,11 +201,11 @@ const Income = () => {
       {/* Income Table Section */}
       <div className="income-table-section">
         {noData ? (
-          <div className="no-income">
-            <FaMoneyBillWave />
-            <h3>{t('income.noIncome')}</h3>
-            <p>{t('income.noIncomeDesc')}</p>
-          </div>
+          <NoData
+            icon={<FaMoneyBillWave />}
+            title={t('income.noIncome')}
+            description={t('income.noIncomeDesc')}
+          />
         ) : (
           <>
             {filteredIncomeData && filteredIncomeData.length ? (
@@ -217,15 +217,11 @@ const Income = () => {
                 handleClearChangedItem={handleClearChangedItem}
               />
             ) : (
-              <div className="no-income">
-                <FaMoneyBillWave />
-                <h3>{t('income.noIncome')}</h3>
-                <p>
-                  {filters.textFilter || filters.selectedMonth
-                    ? t('income.noIncomeDesc')
-                    : t('income.noIncomeDesc')}
-                </p>
-              </div>
+              <NoData
+                icon={<FaMoneyBillWave />}
+                title={t('income.noIncome')}
+                description={t('income.noIncomeDesc')}
+              />
             )}
 
             {filteredIncomeData?.length > nrOfItemsToShow && (
