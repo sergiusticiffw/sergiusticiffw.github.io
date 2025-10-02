@@ -80,7 +80,7 @@
   
   div {
     position: absolute;
-    border: 4px solid var(--accent-color);
+    border: 4px solid #5B8DEF;
     opacity: 1;
     animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
     
@@ -106,16 +106,16 @@
     
     // Ensure table header remains visible
     thead {
-      background-color: var(--secondary-color) !important;
+      background-color: #3e3f4a !important;
       position: sticky !important;
       top: 0 !important;
       z-index: 10 !important;
       
       tr {
-        background-color: var(--secondary-color) !important;
+        background-color: #3e3f4a !important;
         
         th {
-          background-color: var(--secondary-color) !important;
+          background-color: #3e3f4a !important;
           color: #fff !important;
           padding: 8px !important;
           border: none !important;
@@ -134,10 +134,10 @@
     // Ensure table body remains visible
     tbody {
       tr {
-        background-color: var(--bg-color) !important;
+        background-color: #282a36 !important;
         
         &:nth-of-type(even) {
-          background-color: var(--secondary-color) !important;
+          background-color: #3e3f4a !important;
         }
         
         // Restore paid row styling

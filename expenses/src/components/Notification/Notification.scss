@@ -160,19 +160,19 @@
   
   // Info notification
   &.info {
-    border-left: 4px solid var(--accent-color);
+    border-left: 4px solid #5B8DEF;
     
     .notification-icon {
-      background: rgba(100, 181, 246, 0.2);
-      color: var(--accent-color);
+      background: rgba(91, 141, 239, 0.2);
+      color: #5B8DEF;
     }
     
     .notification-title {
-      color: var(--accent-color);
+      color: #5B8DEF;
     }
     
     .notification-progress {
-      background: linear-gradient(90deg, var(--accent-color), #64B5F6);
+      background: linear-gradient(90deg, #5B8DEF, #64B5F6);
     }
   }
 }

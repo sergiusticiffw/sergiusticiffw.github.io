@@ -57,16 +57,12 @@ input[type="checkbox"] {
 
   &.delete {
     justify-content: left;
-    background: linear-gradient(
-                    90deg,
-                    rgba(255, 107, 250, 1) 0%,
-                    var(--accent-color) 100%
-    );
+    background: linear-gradient(90deg, rgba(255, 107, 250, 1) 0%, #5B8DEF 100%);
   }
 
   &.edit {
     justify-content: right;
-    background: linear-gradient(90deg, var(--accent-color) 0%, #7bd0c9 100%);
+    background: linear-gradient(90deg, #5B8DEF 0%, #7bd0c9 100%);
   }
 
   svg {
@@ -74,7 +70,7 @@ input[type="checkbox"] {
     transition: all $transition-normal ease-in-out;
 
     body.action-active & {
-      fill: var(--bg-color);
+      fill: #282a36;
     }
   }
 }
@@ -209,14 +205,14 @@ table tr {
 
     &:hover {
       background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.1));
-      border-color: var(--accent-color);
+      border-color: #5B8DEF;
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(100, 181, 246, 0.3);
+      box-shadow: 0 8px 25px rgba(91, 141, 239, 0.3);
     }
 
     svg {
       font-size: 1.2rem;
-      color: var(--accent-color);
+      color: #5B8DEF;
     }
   }
 }
