@@ -2,6 +2,9 @@ import { categories } from '@utils//constants';
 import { logout } from '@context/actions';
 import { DataStructure, ItemTotal, TransactionOrIncomeItem } from '@type/types';
 
+// API Configuration
+export const API_BASE_URL = 'https://dev-expenses-api.pantheonsite.io';
+
 const handleErrors = (
   response: Response,
   options: RequestInit,
@@ -9,7 +12,7 @@ const handleErrors = (
   dispatch: any
 ) => {
   if (!response.ok) {
-    fetch('https://dev-expenses-api.pantheonsite.io/jwt/token', options).then(
+    fetch(`${API_BASE_URL}/jwt/token`, options).then(
       (response) => {
         if (response.status === 403) {
           // Add null checks before calling logout
@@ -35,6 +38,37 @@ const handleErrors = (
   
   // For successful responses, return the response object to be handled by the caller
   return response;
+};
+
+/**
+ * Generic API fetch helper
+ * Creates a standardized fetch request with authentication headers
+ */
+export const createAuthenticatedFetchOptions = (token: string, method: string = 'GET'): RequestInit => {
+  return {
+    method,
+    headers: new Headers({
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'JWT-Authorization': 'Bearer ' + token,
+    }),
+  };
+};
+
+/**
+ * Generic API fetch wrapper
+ * Handles common API call patterns with authentication and error handling
+ */
+export const fetchFromAPI = <T = any>(
+  url: string,
+  token: string,
+  dataDispatch: any,
+  dispatch: any,
+  onSuccess: (data: T) => void,
+  method: string = 'GET'
+) => {
+  const fetchOptions = createAuthenticatedFetchOptions(token, method);
+  fetchRequest(url, fetchOptions, dataDispatch, dispatch, onSuccess);
 };
 
 export const formatDataForChart = (data: DataStructure, secondSet = false, localizedMonthNames?: string[]) => {
@@ -128,16 +162,9 @@ export const fetchRequest = (
 };
 
 export const deleteNode = (nid: string, token: string, callback: any) => {
-  const fetchOptions = {
-    method: 'DELETE',
-    headers: new Headers({
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      'JWT-Authorization': 'Bearer ' + token,
-    }),
-  };
+  const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
   fetch(
-    `https://dev-expenses-api.pantheonsite.io/node/${nid}?_format=json`,
+    `${API_BASE_URL}/node/${nid}?_format=json`,
     fetchOptions
   ).then((response) => {
     callback(response);
@@ -150,24 +177,14 @@ export const deleteLoan = (nid: string, token: string, dataDispatch: any, dispat
     console.error('Dispatch functions not available for delete loan');
     return;
   }
-
-  const fetchOptions = {
-    method: 'DELETE',
-    headers: new Headers({
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      'JWT-Authorization': 'Bearer ' + token,
-    }),
-  };
   
-  fetchRequest(
-    `https://dev-expenses-api.pantheonsite.io/node/${nid}?_format=json`,
-    fetchOptions,
+  fetchFromAPI(
+    `${API_BASE_URL}/node/${nid}?_format=json`,
+    token,
     dataDispatch,
     dispatch,
-    (data: any) => {
-      onSuccess();
-    }
+    onSuccess,
+    'DELETE'
   );
 };
 
@@ -178,20 +195,12 @@ export const fetchData = (
   category: string = '',
   textFilter: string = ''
 ) => {
-  const fetchOptions = {
-    method: 'GET',
-    headers: new Headers({
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      'JWT-Authorization': 'Bearer ' + token,
-    }),
-  };
-  fetchRequest(
-    'https://dev-expenses-api.pantheonsite.io/api/expenses',
-    fetchOptions,
+  fetchFromAPI<TransactionOrIncomeItem[]>(
+    `${API_BASE_URL}/api/expenses`,
+    token,
     dataDispatch,
     dispatch,
-    (data: TransactionOrIncomeItem[]) => {
+    (data) => {
       const groupedData: Record<string, TransactionOrIncomeItem[]> = {};
       const totalsPerYearAndMonth: DataStructure = {};
       const totalPerYear: ItemTotal = {};
@@ -323,24 +332,17 @@ export const fetchLoans = (token: string, dataDispatch: any, dispatch: any) => {
     return;
   }
 
-  const fetchOptions = {
-    method: 'GET',
-    headers: new Headers({
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      'JWT-Authorization': 'Bearer ' + token,
-    }),
-  };
-  fetchRequest(
-    'https://dev-expenses-api.pantheonsite.io/api/loans',
-    fetchOptions,
+  fetchFromAPI(
+    `${API_BASE_URL}/api/loans`,
+    token,
     dataDispatch,
     dispatch,
     async (data) => {
+      const fetchOptions = createAuthenticatedFetchOptions(token);
       if (data.length > 0) {
         const paymentPromises = data.map((item) =>
           fetch(
-            `https://dev-expenses-api.pantheonsite.io/api/payments/${item.id}`,
+            `${API_BASE_URL}/api/payments/${item.id}`,
             fetchOptions
           )
             .then((response) => response.json())

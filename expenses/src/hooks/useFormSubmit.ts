@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
-import { fetchRequest } from '@utils/utils';
+import { fetchRequest, API_BASE_URL } from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import { AuthState, NodeData } from '@type/types';
 
@@ -88,8 +88,8 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
     const url =
       formType === 'add'
-        ? 'https://dev-expenses-api.pantheonsite.io/node?_format=json'
-        : `https://dev-expenses-api.pantheonsite.io/node/${values.nid}?_format=json`;
+        ? `${API_BASE_URL}/node?_format=json`
+        : `${API_BASE_URL}/node/${values.nid}?_format=json`;
 
     if (useFetchRequest && dataDispatch) {
       // Use fetchRequest utility (for transactions, income)
