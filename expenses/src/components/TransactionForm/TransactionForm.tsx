@@ -21,7 +21,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 }) => {
   const { t } = useLocalization();
   const { dataDispatch } = useData() as DataState;
-  
+
   const initialState = {
     field_amount: '',
     field_date: new Date().toISOString().slice(0, 10),
@@ -36,7 +36,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const validationRules = {
     field_amount: {
       required: true,
-      custom: (value: string) => !isNaN(parseFloat(value)) && parseFloat(value) > 0,
+      custom: (value: string) =>
+        !isNaN(parseFloat(value)) && parseFloat(value) > 0,
     },
     field_date: {
       required: true,
@@ -52,7 +53,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
   const { getFieldValidation } = useFormValidation(validationRules);
 
-  const { formState, setFormState, isSubmitting, handleChange: baseHandleChange, handleSubmit } = useFormSubmit({
+  const {
+    formState,
+    setFormState,
+    isSubmitting,
+    handleChange: baseHandleChange,
+    handleSubmit,
+  } = useFormSubmit({
     formType,
     initialState,
     values,
@@ -73,17 +80,25 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   });
 
   const [suggestionData, setSuggestionData] = useState<string[]>(
-    localizedSuggestions[formState.field_category as keyof typeof localizedSuggestions] || []
+    localizedSuggestions[
+      formState.field_category as keyof typeof localizedSuggestions
+    ] || []
   );
   const [selectedIndices, setSelectedIndices] = useState<string[]>([]);
 
   // Extended handleChange with suggestions logic
   const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     baseHandleChange(event);
     if (event.target.name === 'field_category') {
-      setSuggestionData(localizedSuggestions[event.target.value as keyof typeof localizedSuggestions] || []);
+      setSuggestionData(
+        localizedSuggestions[
+          event.target.value as keyof typeof localizedSuggestions
+        ] || []
+      );
     }
   };
 
@@ -120,7 +135,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             />
           </div>
         </div>
-        
+
         <div className="form-group required">
           <label htmlFor="field_date">{t('transactionForm.date')}</label>
           <div className="input-wrapper">
@@ -135,9 +150,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             />
           </div>
         </div>
-        
+
         <div className="form-group required">
-          <label htmlFor="field_category">{t('transactionForm.category')}</label>
+          <label htmlFor="field_category">
+            {t('transactionForm.category')}
+          </label>
           <div className="input-wrapper">
             <select
               id="field_category"
@@ -156,9 +173,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             </select>
           </div>
         </div>
-        
+
         <div className="form-group">
-          <label htmlFor="field_description">{t('transactionForm.description')}</label>
+          <label htmlFor="field_description">
+            {t('transactionForm.description')}
+          </label>
           <div className="input-wrapper">
             <input
               id="field_description"
@@ -171,7 +190,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             />
           </div>
         </div>
-        
+
         {suggestionData.length ? (
           <div className="form-group">
             <label>{t('suggestions.title')}</label>
@@ -194,7 +213,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             </ul>
           </div>
         ) : null}
-        
+
         <div className="form-actions">
           <button type="submit" className="btn-submit" disabled={isSubmitting}>
             {isSubmitting ? (
@@ -206,7 +225,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             ) : (
               <>
                 {formType === 'add' ? <FaPlus /> : <FaPen />}
-                <span>{formType === 'add' ? t('transactionForm.title') : t('transactionForm.editTitle')}</span>
+                <span>
+                  {formType === 'add'
+                    ? t('transactionForm.title')
+                    : t('transactionForm.editTitle')}
+                </span>
               </>
             )}
           </button>

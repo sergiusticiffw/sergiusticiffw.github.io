@@ -7,7 +7,7 @@
 
 .income-list-header {
   margin-bottom: 1.5rem;
-  
+
   .income-list-title {
     font-size: 1.125rem;
     font-weight: 600;
@@ -15,11 +15,11 @@
     margin: 0 0 1rem 0;
     letter-spacing: -0.3px;
   }
-  
+
   .sort-controls {
     display: flex;
     gap: 0.75rem;
-    
+
     .sort-button {
       display: flex;
       align-items: center;
@@ -33,23 +33,23 @@
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s ease;
-      
+
       svg {
         font-size: 0.75rem;
         opacity: 0.7;
       }
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.08);
         border-color: rgba(255, 255, 255, 0.15);
         color: rgba(255, 255, 255, 0.8);
       }
-      
+
       &.active {
         background: rgba(91, 141, 239, 0.15);
         border-color: rgba(91, 141, 239, 0.3);
-        color: #5B8DEF;
-        
+        color: #5b8def;
+
         svg {
           opacity: 1;
         }
@@ -68,11 +68,11 @@
   position: relative;
   overflow: hidden;
   border-radius: 12px;
-  
+
   &.added {
     animation: slideIn 0.3s ease;
   }
-  
+
   &.removed {
     animation: slideOut 0.3s ease;
     opacity: 0.5;
@@ -92,7 +92,7 @@
   transition: opacity 0.2s ease;
   pointer-events: none;
   z-index: 1;
-  
+
   // Component-specific overrides (circular buttons)
   .delete-action-bg,
   .edit-action-bg {
@@ -116,7 +116,7 @@
   position: relative;
   z-index: 2;
   transition: background 0.2s ease;
-  
+
   &:active {
     background: rgba(255, 255, 255, 0.05);
   }
@@ -129,14 +129,14 @@
   justify-content: center;
   min-width: 50px;
   flex-shrink: 0;
-  
+
   .date-day {
     font-size: 1.5rem;
     font-weight: 700;
     color: #ffffff;
     line-height: 1;
   }
-  
+
   .date-month {
     font-size: 0.7rem;
     font-weight: 600;
@@ -145,7 +145,7 @@
     letter-spacing: 0.5px;
     margin-top: 0.125rem;
   }
-  
+
   .date-year {
     font-size: 0.65rem;
     font-weight: 500;
@@ -157,7 +157,7 @@
 .income-content {
   flex: 1;
   min-width: 0;
-  
+
   .income-description {
     font-size: 0.95rem;
     font-weight: 500;
@@ -205,48 +205,48 @@
     .income-list-title {
       font-size: 1rem;
     }
-    
+
     .sort-controls {
       gap: 0.5rem;
-      
+
       .sort-button {
         padding: 0.4rem 0.75rem;
         font-size: 0.8rem;
-        
+
         svg {
           font-size: 0.7rem;
         }
       }
     }
   }
-  
+
   .income-list-item {
     padding: 0.875rem;
     gap: 0.75rem;
   }
-  
+
   .income-date-box {
     min-width: 45px;
-    
+
     .date-day {
       font-size: 1.25rem;
     }
-    
+
     .date-month {
       font-size: 0.65rem;
     }
-    
+
     .date-year {
       font-size: 0.6rem;
     }
   }
-  
+
   .income-content {
     .income-description {
       font-size: 0.875rem;
     }
   }
-  
+
   .income-amount {
     font-size: 1rem;
   }

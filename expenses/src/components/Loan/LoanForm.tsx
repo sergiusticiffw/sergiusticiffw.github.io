@@ -12,7 +12,11 @@ interface LoanFormProps {
   onSuccess?: () => void;
 }
 
-const LoanForm: React.FC<LoanFormProps> = ({ formType, values = {}, onSuccess = () => {} }) => {
+const LoanForm: React.FC<LoanFormProps> = ({
+  formType,
+  values = {},
+  onSuccess = () => {},
+}) => {
   const { t } = useLocalization();
   const showNotification = useNotification();
 
@@ -28,29 +32,31 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values = {}, onSuccess = 
     field_loan_status: 'draft',
   };
 
-  const { formState, isSubmitting, handleChange, handleSubmit } = useFormSubmit({
-    formType,
-    initialState,
-    values,
-    nodeType: 'loan',
-    onSuccess,
-    useFetchRequest: false,
-    buildNodeData: (state) => ({
-      title: [state.title],
-      field_principal: [state.field_principal],
-      field_start_date: [state.field_start_date],
-      field_end_date: [state.field_end_date],
-      field_rate: [state.field_rate],
-      field_initial_fee: [state.field_initial_fee],
-      field_rec_first_payment_date: [state.field_rec_first_payment_date],
-      field_recurring_payment_day: [state.field_recurring_payment_day],
-      field_loan_status: [state.field_loan_status],
-    }),
-    successMessageKeys: {
-      add: 'notification.loanAdded',
-      edit: 'notification.loanUpdated',
-    },
-  });
+  const { formState, isSubmitting, handleChange, handleSubmit } = useFormSubmit(
+    {
+      formType,
+      initialState,
+      values,
+      nodeType: 'loan',
+      onSuccess,
+      useFetchRequest: false,
+      buildNodeData: (state) => ({
+        title: [state.title],
+        field_principal: [state.field_principal],
+        field_start_date: [state.field_start_date],
+        field_end_date: [state.field_end_date],
+        field_rate: [state.field_rate],
+        field_initial_fee: [state.field_initial_fee],
+        field_rec_first_payment_date: [state.field_rec_first_payment_date],
+        field_recurring_payment_day: [state.field_recurring_payment_day],
+        field_loan_status: [state.field_loan_status],
+      }),
+      successMessageKeys: {
+        add: 'notification.loanAdded',
+        edit: 'notification.loanUpdated',
+      },
+    }
+  );
 
   const validationRules = {
     title: { required: true },
@@ -101,7 +107,12 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values = {}, onSuccess = 
       custom: (value: any, state: any) => {
         if (!value) return true; // Optional field, empty is valid
         const currentState = state || formState;
-        if (!currentState || !currentState.field_start_date || !currentState.field_end_date) return true;
+        if (
+          !currentState ||
+          !currentState.field_start_date ||
+          !currentState.field_end_date
+        )
+          return true;
         const paymentDate = new Date(value);
         const startDate = new Date(currentState.field_start_date);
         const endDate = new Date(currentState.field_end_date);
@@ -124,7 +135,8 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values = {}, onSuccess = 
     },
   };
 
-  const { getFieldValidation, isFormValid } = useFormValidation(validationRules);
+  const { getFieldValidation, isFormValid } =
+    useFormValidation(validationRules);
 
   const options = [
     { value: 'in_progress', label: t('common.active') },
@@ -158,7 +170,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values = {}, onSuccess = 
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     // Validate end_date > start_date
     if (formState.field_end_date && formState.field_start_date) {
       const endDate = new Date(formState.field_end_date);
@@ -171,9 +183,13 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values = {}, onSuccess = 
         return;
       }
     }
-    
+
     // Validate first payment date is between start and end
-    if (formState.field_rec_first_payment_date && formState.field_start_date && formState.field_end_date) {
+    if (
+      formState.field_rec_first_payment_date &&
+      formState.field_start_date &&
+      formState.field_end_date
+    ) {
       const paymentDate = new Date(formState.field_rec_first_payment_date);
       const startDate = new Date(formState.field_start_date);
       const endDate = new Date(formState.field_end_date);
@@ -185,7 +201,7 @@ const LoanForm: React.FC<LoanFormProps> = ({ formType, values = {}, onSuccess = 
         return;
       }
     }
-    
+
     // If all validations pass, call the original handleSubmit
     handleSubmit(e);
   };

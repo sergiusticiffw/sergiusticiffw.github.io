@@ -14,13 +14,13 @@
   border: none;
   border-radius: 0;
   padding: 0;
-  
+
   .card-header {
     background: transparent;
     padding: 0;
     border-bottom: none;
     margin-bottom: 1rem;
-    
+
     .card-title {
       font-size: 1.125rem;
       font-weight: 600;
@@ -28,12 +28,12 @@
       margin: 0;
       letter-spacing: -0.3px;
     }
-    
+
     .card-subtitle {
       display: none;
     }
   }
-  
+
   .card-content {
     padding: 0;
   }
@@ -47,7 +47,7 @@
     background: transparent;
     border-bottom: none;
     padding-bottom: 0.5rem;
-    
+
     .header-cell {
       padding: 0;
       font-size: 0.75rem;
@@ -56,54 +56,54 @@
       text-transform: uppercase;
       text-align: center;
       letter-spacing: 0.8px;
-      
+
       &.year-header {
         text-align: left;
       }
     }
   }
-  
+
   .table-body {
     .table-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr 1fr;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       background: transparent !important;
-      
+
       &:last-child {
         border-bottom: none;
       }
-      
+
       &.total-row {
         background: transparent !important;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
         border-bottom: none;
       }
-      
+
       .table-cell {
         padding: 0.625rem 0;
         display: flex;
         align-items: center;
         justify-content: center;
         background: transparent !important;
-        
+
         &.year-cell {
           justify-content: flex-start;
-          
+
           .year-content {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            
+
             .year-icon {
               font-size: 1rem;
             }
-            
+
             .year-label {
               font-size: 0.95rem;
               font-weight: 500;
               color: white;
-              
+
               &.total-label {
                 font-weight: 700;
                 text-transform: uppercase;
@@ -112,30 +112,31 @@
             }
           }
         }
-        
-        &.income-cell, &.spent-cell {
+
+        &.income-cell,
+        &.spent-cell {
           .amount-value {
             font-size: 0.95rem;
             font-weight: 500;
             color: white;
             text-align: center;
-            
+
             &.total-amount {
               font-weight: 700;
             }
           }
         }
-        
+
         &.savings-cell {
           .savings-content {
             text-align: center;
-            
+
             .savings-amount {
               font-size: 0.95rem;
               font-weight: 500;
               color: white;
             }
-            
+
             .savings-percentage {
               font-size: 0.8rem;
               font-weight: 400;
@@ -158,42 +159,42 @@
       }
     }
   }
-  
+
   .income-table-wrapper {
     .table-header {
       padding-bottom: 0.375rem;
-      
+
       .header-cell {
         font-size: 0.7rem;
       }
     }
-    
+
     .table-body .table-row {
       .table-cell {
         padding: 0.5rem 0;
-        
+
         &.year-cell .year-content {
           gap: 0.375rem;
-          
+
           .year-icon {
             font-size: 0.875rem;
           }
-          
+
           .year-label {
             font-size: 0.85rem;
           }
         }
-        
+
         &.income-cell .amount-value,
         &.spent-cell .amount-value {
           font-size: 0.85rem;
         }
-        
+
         &.savings-cell .savings-content {
           .savings-amount {
             font-size: 0.85rem;
           }
-          
+
           .savings-percentage {
             font-size: 0.75rem;
           }

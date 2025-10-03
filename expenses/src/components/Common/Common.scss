@@ -16,7 +16,7 @@
 
 .form-select {
   cursor: pointer;
-  
+
   option {
     background: #1a1a1a;
     color: #fff;
@@ -27,4 +27,4 @@
 // Common section styles
 .section-header {
   @include section-header();
-} 
+}

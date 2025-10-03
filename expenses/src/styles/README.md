@@ -109,21 +109,25 @@ The main `App.scss` file uses a simple import system:
 ## 🎯 Benefits of This Architecture
 
 ### Maintainability
+
 - **Separation of Concerns**: Each component's styles are isolated
 - **Easy to Find**: Styles are co-located with components
 - **Reduced Conflicts**: No more CSS specificity wars
 
 ### Scalability
+
 - **Modular Growth**: Easy to add new components
 - **Consistent Design**: Shared variables ensure consistency
 - **Theme Support**: Easy to add new themes
 
 ### Performance
+
 - **Tree Shaking**: Unused styles can be eliminated
 - **Caching**: Component styles can be cached independently
 - **Build Optimization**: Parallel processing of style files
 
 ### Developer Experience
+
 - **Clear Structure**: Easy to understand and navigate
 - **Hot Reloading**: Faster development with component-scoped changes
 - **Debugging**: Easier to identify style issues
@@ -133,11 +137,13 @@ The main `App.scss` file uses a simple import system:
 ### Adding a New Component
 
 1. Create the component directory:
+
 ```bash
 mkdir src/components/NewComponent
 ```
 
 2. Create the SCSS file:
+
 ```scss
 // src/components/NewComponent/NewComponent.scss
 @import '../../styles/variables';
@@ -146,12 +152,12 @@ mkdir src/components/NewComponent
   padding: $spacing-md;
   background: $bg-dark;
   border-radius: $border-radius-md;
-  
+
   &__title {
     font-size: $font-size-lg;
     color: rgba(255, 255, 255, 0.9);
   }
-  
+
   @media (max-width: $breakpoint-sm) {
     padding: $spacing-sm;
   }
@@ -159,6 +165,7 @@ mkdir src/components/NewComponent
 ```
 
 3. Import in App.scss:
+
 ```scss
 @import 'components/NewComponent/NewComponent';
 ```
@@ -166,15 +173,16 @@ mkdir src/components/NewComponent
 ### Adding a New Theme
 
 1. Add to the color map in `_variables.scss`:
+
 ```scss
 $color-map: (
   // ... existing themes
   new-theme: (
-    accent-color: #ff6b6b,
-    secondary-color: #4ecdc4,
-    bg-color: #2c3e50,
-    text-color: $white,
-  ),
+      accent-color: #ff6b6b,
+      secondary-color: #4ecdc4,
+      bg-color: #2c3e50,
+      text-color: $white,
+    )
 );
 ```
 
@@ -198,4 +206,4 @@ The refactoring maintains all existing functionality while providing:
 - Improved developer experience
 - Future-proof architecture
 
-All existing styles have been preserved and organized into their respective component files. 
+All existing styles have been preserved and organized into their respective component files.

@@ -19,10 +19,10 @@ const Month: React.FC<MonthProps> = ({ month }) => {
   if (!items) return null;
 
   const totals = {};
-  
+
   // Get localized categories
   const localizedCategories = getCategories();
-  
+
   for (const item of items) {
     if (item.type === 'incomes') {
       continue;

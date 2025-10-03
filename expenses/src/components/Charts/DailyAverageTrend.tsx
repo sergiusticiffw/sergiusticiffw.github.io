@@ -111,9 +111,9 @@ const DailyAverageTrend = () => {
       text: t('charts.dailyAverageTrends'),
     },
     yAxis: {
-          title: {
-      text: t('charts.dailyAverage'),
-    },
+      title: {
+        text: t('charts.dailyAverage'),
+      },
     },
     xAxis: {
       type: 'datetime',

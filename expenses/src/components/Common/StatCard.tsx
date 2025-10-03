@@ -8,7 +8,12 @@ interface StatCardProps {
   className?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ icon, value, label, className = '' }) => {
+const StatCard: React.FC<StatCardProps> = ({
+  icon,
+  value,
+  label,
+  className = '',
+}) => {
   return (
     <div className={`stat-card ${className}`}>
       <div className="stat-icon">{icon}</div>
@@ -19,5 +24,3 @@ const StatCard: React.FC<StatCardProps> = ({ icon, value, label, className = '' 
 };
 
 export default StatCard;
-
-

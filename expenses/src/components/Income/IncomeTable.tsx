@@ -50,7 +50,9 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   const allItems = [
     ...items,
     ...Object.values(changedItems)
-      .filter((item: any) => item.type === 'removed' && item.data.type === 'incomes')
+      .filter(
+        (item: any) => item.type === 'removed' && item.data.type === 'incomes'
+      )
       .map((item: any) => item.data),
   ];
 
@@ -95,15 +97,15 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
       {/* Header with Sort Controls */}
       <div className="income-list-header">
         <h3 className="income-list-title">{t('income.incomeRecords')}</h3>
-        
+
         <div className="sort-controls">
-          <button 
+          <button
             className={`sort-button ${sortField === 'date' ? 'active' : ''}`}
             onClick={() => handleSort('date')}
           >
             Date {getSortIcon('date')}
           </button>
-          <button 
+          <button
             className={`sort-button ${sortField === 'amount' ? 'active' : ''}`}
             onClick={() => handleSort('amount')}
           >
@@ -118,18 +120,22 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
           const changeType = changedItems[income.id]?.type;
           const date = new Date(income.dt);
           const day = date.getDate();
-          const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+          const month = date
+            .toLocaleDateString('en-US', { month: 'short' })
+            .toUpperCase();
           const year = date.getFullYear();
-          
+
           const isThisItemSwiped = swipedItemId === income.id;
-          
+
           return (
             <div
               key={income.id}
               className={`income-item-wrapper ${changeType || ''}`}
             >
               {/* Swipe Actions Background */}
-              <div className={`swipe-actions-background ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}>
+              <div
+                className={`swipe-actions-background ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}
+              >
                 {isThisItemSwiped && deleteVisible && (
                   <div className="delete-action-bg">
                     <FaTrash />
@@ -141,14 +147,14 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                   </div>
                 )}
               </div>
-              
+
               {/* Income Item */}
               <div
                 data-id={income.id}
                 className="income-list-item"
                 onTouchStart={(e) => handleTouchStart(e, income.id, listRef)}
                 onTouchMove={(e) => handleTouchMove(e, listRef)}
-                onTouchEnd={(e) => 
+                onTouchEnd={(e) =>
                   handleTouchEnd(
                     e,
                     listRef,
@@ -164,16 +170,14 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                   <div className="date-month">{month}</div>
                   <div className="date-year">{year}</div>
                 </div>
-                
+
                 {/* Content */}
                 <div className="income-content">
                   <div className="income-description">{income.dsc}</div>
                 </div>
-                
+
                 {/* Amount */}
-                <div className="income-amount">
-                  {formatNumber(income.sum)}
-                </div>
+                <div className="income-amount">{formatNumber(income.sum)}</div>
               </div>
             </div>
           );

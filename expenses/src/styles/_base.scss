@@ -26,7 +26,7 @@ body {
   max-width: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
-  
+
   * {
     box-sizing: border-box;
   }
@@ -59,7 +59,7 @@ button {
 }
 
 // Checkbox styles
-input[type="checkbox"] {
+input[type='checkbox'] {
   width: 16px;
   height: 16px;
   border-radius: 0 !important;
@@ -72,18 +72,18 @@ input[type="checkbox"] {
   width: 100%;
   height: 100%;
   box-shadow:
-          inset 2px 5px 15px -5px rgba(0, 0, 0, 0.5),
-          inset 2px -5px 15px -5px rgba(0, 0, 0, 0.5);
+    inset 2px 5px 15px -5px rgba(0, 0, 0, 0.5),
+    inset 2px -5px 15px -5px rgba(0, 0, 0, 0.5);
   transition: all $transition-fast ease-in-out;
 
   &.delete {
     justify-content: left;
-    background: linear-gradient(90deg, rgba(255, 107, 250, 1) 0%, #5B8DEF 100%);
+    background: linear-gradient(90deg, rgba(255, 107, 250, 1) 0%, #5b8def 100%);
   }
 
   &.edit {
     justify-content: right;
-    background: linear-gradient(90deg, #5B8DEF 0%, #7bd0c9 100%);
+    background: linear-gradient(90deg, #5b8def 0%, #7bd0c9 100%);
   }
 
   svg {
@@ -151,7 +151,7 @@ input[type="checkbox"] {
     stroke: #bdbdbd;
   }
   50% {
-    stroke: #5B8DEF;
+    stroke: #5b8def;
   }
   100% {
     stroke: #bdbdbd;
@@ -212,7 +212,11 @@ table tr {
     justify-content: center;
     gap: 0.75rem;
     padding: 1rem 2rem;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.12),
+      rgba(255, 255, 255, 0.06)
+    );
     border: 2px solid rgba(255, 255, 255, 0.15);
     border-radius: 0 !important;
     color: #fff;
@@ -225,15 +229,19 @@ table tr {
     max-width: 1200px;
 
     &:hover {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.1));
-      border-color: #5B8DEF;
+      background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.18),
+        rgba(255, 255, 255, 0.1)
+      );
+      border-color: #5b8def;
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(91, 141, 239, 0.3);
     }
 
     svg {
       font-size: 1.2rem;
-      color: #5B8DEF;
+      color: #5b8def;
     }
   }
 }

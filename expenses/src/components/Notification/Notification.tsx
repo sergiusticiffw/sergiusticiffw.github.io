@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { FaCheckCircle, FaExclamationTriangle, FaInfoCircle, FaTimes, FaTimesCircle } from 'react-icons/fa';
+import {
+  FaCheckCircle,
+  FaExclamationTriangle,
+  FaInfoCircle,
+  FaTimes,
+  FaTimesCircle,
+} from 'react-icons/fa';
 import './Notification.scss';
 
 interface NotificationProps {
@@ -8,7 +14,11 @@ interface NotificationProps {
   onClose?: () => void;
 }
 
-const Notification: React.FC<NotificationProps> = ({ message, type, onClose }) => {
+const Notification: React.FC<NotificationProps> = ({
+  message,
+  type,
+  onClose,
+}) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -52,11 +62,11 @@ const Notification: React.FC<NotificationProps> = ({ message, type, onClose }) =
   };
 
   return (
-    <div className={`notification ${type} ${isVisible ? 'visible' : ''} ${isClosing ? 'closing' : ''}`}>
+    <div
+      className={`notification ${type} ${isVisible ? 'visible' : ''} ${isClosing ? 'closing' : ''}`}
+    >
       <div className="notification-content">
-        <div className="notification-icon">
-          {getIcon()}
-        </div>
+        <div className="notification-icon">{getIcon()}</div>
         <div className="notification-body">
           <div className="notification-title">{getTitle()}</div>
           <div className="notification-message">{message}</div>

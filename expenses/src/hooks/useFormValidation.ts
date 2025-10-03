@@ -21,7 +21,11 @@ interface UseFormValidationReturn {
 export const useFormValidation = <T extends Record<string, any>>(
   rules: ValidationRules<T>
 ): UseFormValidationReturn => {
-  const validateField = (name: string, value: any, formState?: any): boolean => {
+  const validateField = (
+    name: string,
+    value: any,
+    formState?: any
+  ): boolean => {
     const rule = rules[name as keyof T];
     if (!rule) return true;
 
@@ -32,7 +36,10 @@ export const useFormValidation = <T extends Record<string, any>>(
     }
 
     // If not required and empty, it's valid
-    if (!rule.required && (value === '' || value === null || value === undefined)) {
+    if (
+      !rule.required &&
+      (value === '' || value === null || value === undefined)
+    ) {
       return true;
     }
 
@@ -75,4 +82,3 @@ export const useFormValidation = <T extends Record<string, any>>(
     isFormValid,
   };
 };
-

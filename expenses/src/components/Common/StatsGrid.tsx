@@ -8,14 +8,14 @@ interface StatsGridProps {
   className?: string;
 }
 
-const StatsGrid: React.FC<StatsGridProps> = ({ 
-  children, 
-  columns = 3, 
+const StatsGrid: React.FC<StatsGridProps> = ({
+  children,
+  columns = 3,
   filtered = false,
-  className = '' 
+  className = '',
 }) => {
   return (
-    <div 
+    <div
       className={`stats-grid stats-grid-${columns}col ${filtered ? 'filtered' : ''} ${className}`}
     >
       {children}
@@ -24,5 +24,3 @@ const StatsGrid: React.FC<StatsGridProps> = ({
 };
 
 export default StatsGrid;
-
-

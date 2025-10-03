@@ -118,7 +118,9 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
           key={`summary-scroll-${element.year}`}
           className="annual-summary-row annual-summary-total"
         >
-          <td className="sticky-col">{t('amortization.total')} {element.year}</td>
+          <td className="sticky-col">
+            {t('amortization.total')} {element.year}
+          </td>
           <td>-</td>
           <td>-</td>
           <td>{formatNumber(element.totalPaid)}</td>
@@ -180,7 +182,9 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
         >
           <thead ref={theadRef}>
             <tr>
-              <th className="sticky-col first-header-cell">{t('amortization.date')}</th>
+              <th className="sticky-col first-header-cell">
+                {t('amortization.date')}
+              </th>
               <th>{t('amortization.rate')}</th>
               <th>{t('amortization.days')}</th>
               <th>{t('amortization.installment')}</th>

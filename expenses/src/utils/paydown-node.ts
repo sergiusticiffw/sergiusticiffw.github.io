@@ -112,7 +112,11 @@ const daysInMonth = (month: number, year: number): number => {
   }
 };
 
-const calculateDayCount = (firstDate: string, secondDate: string, excludeLastDay = false): number => {
+const calculateDayCount = (
+  firstDate: string,
+  secondDate: string,
+  excludeLastDay = false
+): number => {
   const lastDay = excludeLastDay ? 0 : 1;
   const [day1, month1, year1] = splitDate(firstDate);
   const [day2, month2, year2] = splitDate(secondDate);
@@ -121,7 +125,10 @@ const calculateDayCount = (firstDate: string, secondDate: string, excludeLastDay
   const date2 = new Date(Number(year2), Number(month2) - 1, Number(day2));
 
   // Must round here because of daylight saving time changes
-  return Math.round((date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24)) + lastDay;
+  return (
+    Math.round((date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24)) +
+    lastDay
+  );
 };
 
 const getNumberOfMonths = (firstDate: string, secondDate: string): number => {
@@ -131,7 +138,10 @@ const getNumberOfMonths = (firstDate: string, secondDate: string): number => {
   const date1 = new Date(Number(year1), Number(month1) - 1, Number(day1));
   const date2 = new Date(Number(year2), Number(month2) - 1, Number(day2));
 
-  return (date2.getFullYear() - date1.getFullYear()) * 12 + (date2.getMonth() - date1.getMonth());
+  return (
+    (date2.getFullYear() - date1.getFullYear()) * 12 +
+    (date2.getMonth() - date1.getMonth())
+  );
 };
 
 const checkDateValidity = (date: string): boolean => {
@@ -213,7 +223,10 @@ class Days {
   }
 
   getNthMonthNthDay(periodInMonths: number, dayNumber: number): string {
-    if (periodInMonths === 1 && (dayNumber === 31 || (this.month === 1 && dayNumber > 28))) {
+    if (
+      periodInMonths === 1 &&
+      (dayNumber === 31 || (this.month === 1 && dayNumber > 28))
+    ) {
       return this.getNextMonthLastDay();
     }
 
@@ -225,7 +238,8 @@ class Days {
       year++;
     }
 
-    const actualDay = dayNumber === 31 ? daysInMonth(nextMonth, year) : dayNumber;
+    const actualDay =
+      dayNumber === 31 ? daysInMonth(nextMonth, year) : dayNumber;
     this.day = actualDay;
     this.month = nextMonth;
     this.year = year;
@@ -311,7 +325,9 @@ class PaydownCalculator {
     }
 
     if (typeof date !== 'string') {
-      throw new Error(`checkDate: ${context} date must be of type string: ${date}`);
+      throw new Error(
+        `checkDate: ${context} date must be of type string: ${date}`
+      );
     }
 
     if (!checkDateValidity(date)) {
@@ -319,7 +335,12 @@ class PaydownCalculator {
     }
   };
 
-  private getPeriodInterests = (principal: number, rate: number, startDate: string, endDate: string): number => {
+  private getPeriodInterests = (
+    principal: number,
+    rate: number,
+    startDate: string,
+    endDate: string
+  ): number => {
     let sumOfInterests = 0;
 
     if (!principal) {
@@ -333,13 +354,21 @@ class PaydownCalculator {
     }
 
     if (dateToInteger(startDate) > dateToInteger(endDate)) {
-      throw new Error(`getPeriodInterests: invalid date: startDate ${startDate} is after endDate ${endDate}`);
+      throw new Error(
+        `getPeriodInterests: invalid date: startDate ${startDate} is after endDate ${endDate}`
+      );
     }
 
     if (this.latestPeriodEndDate) {
-      const dateDifference = calculateDayCount(this.latestPeriodEndDate, startDate, true);
+      const dateDifference = calculateDayCount(
+        this.latestPeriodEndDate,
+        startDate,
+        true
+      );
       if (dateDifference !== 1) {
-        throw new Error(`Date difference is not one day as expected, latestPeriodEndDate: ${this.latestPeriodEndDate} startDate: ${startDate}`);
+        throw new Error(
+          `Date difference is not one day as expected, latestPeriodEndDate: ${this.latestPeriodEndDate} startDate: ${startDate}`
+        );
       }
     }
 
@@ -377,18 +406,27 @@ class PaydownCalculator {
       let numberOfDays: number, factor: number, subperiodInterest: number;
 
       while (rateEvent) {
-        numberOfDays = calculateDayCount(subperiodStartDate, rateEventDate, true);
+        numberOfDays = calculateDayCount(
+          subperiodStartDate,
+          rateEventDate,
+          true
+        );
         this.gpiTotalDays += numberOfDays;
         factor = numberOfDays / this.dayCountDivisor;
         subperiodInterest = principal * (currentRate / 100) * factor;
-        
+
         if (this.debugLoggingEnabled) {
-          this.debugLogSubperiod(numberOfDays, subperiodInterest, rateEvent.date, rateEvent.rate);
+          this.debugLogSubperiod(
+            numberOfDays,
+            subperiodInterest,
+            rateEvent.date,
+            rateEvent.rate
+          );
         }
-        
+
         sumOfInterests += subperiodInterest;
         currentRate = rateEvent.rate;
-        
+
         this.logPayment({
           date: rateEvent.date,
           rate: rateEvent.rate,
@@ -398,8 +436,12 @@ class PaydownCalculator {
           principal: this.round(principal),
           fee: '-',
         });
-        
-        const nextRateEvent = this.getFirstEventAfterDate('rate', rateEventDate, endDate);
+
+        const nextRateEvent = this.getFirstEventAfterDate(
+          'rate',
+          rateEventDate,
+          endDate
+        );
         subperiodStartDate = rateEventDate;
         if (nextRateEvent) {
           rateEventDate = nextRateEvent.date;
@@ -411,11 +453,11 @@ class PaydownCalculator {
       this.gpiTotalDays += numberOfDays;
       factor = numberOfDays / this.dayCountDivisor;
       subperiodInterest = principal * (currentRate / 100) * factor;
-      
+
       if (this.debugLoggingEnabled) {
         this.debugLogSubperiod(numberOfDays, subperiodInterest);
       }
-      
+
       sumOfInterests += subperiodInterest;
       this.currentRate = currentRate;
     } else {
@@ -423,11 +465,13 @@ class PaydownCalculator {
       this.gpiTotalDays += numberOfDays;
       let factor = numberOfDays / this.dayCountDivisor;
       let subperiodInterest = principal * (rate / 100) * factor;
-      
+
       if (this.debugLoggingEnabled) {
-        this.debugLog(`Period daily interest: ${subperiodInterest / numberOfDays}`);
+        this.debugLog(
+          `Period daily interest: ${subperiodInterest / numberOfDays}`
+        );
       }
-      
+
       sumOfInterests += subperiodInterest;
       this.currentRate = rate;
     }
@@ -435,20 +479,28 @@ class PaydownCalculator {
     if (this.debugLoggingEnabled) {
       this.debugLog('Period total interest: ', sumOfInterests);
     }
-    
+
     this.gpiSumOfInterests += sumOfInterests;
     this.latestPeriodEndDate = endDate;
 
     return sumOfInterests;
   };
 
-  private getFirstEventAfterDate = (property: keyof PaydownEvent, date: string, boundaryDate: string): PaydownEvent | false => {
+  private getFirstEventAfterDate = (
+    property: keyof PaydownEvent,
+    date: string,
+    boundaryDate: string
+  ): PaydownEvent | false => {
     for (const event of this.eventArray) {
       const eventDate = dateToInteger(event.date);
       const targetDate = dateToInteger(date);
       const boundaryDateInt = dateToInteger(boundaryDate);
-      
-      if (eventDate > targetDate && event.hasOwnProperty(property) && eventDate <= boundaryDateInt) {
+
+      if (
+        eventDate > targetDate &&
+        event.hasOwnProperty(property) &&
+        eventDate <= boundaryDateInt
+      ) {
         return event;
       }
       if (eventDate > boundaryDateInt) {
@@ -458,7 +510,13 @@ class PaydownCalculator {
     return false;
   };
 
-  private handleLastPayment = (reduction: number, date: string, periodInterest: number, fee = 0, numDays?: number): void => {
+  private handleLastPayment = (
+    reduction: number,
+    date: string,
+    periodInterest: number,
+    fee = 0,
+    numDays?: number
+  ): void => {
     let installment: number;
     reduction += this.currentPrincipal;
 
@@ -488,12 +546,17 @@ class PaydownCalculator {
       fee: this.round(fee),
       num_days: numDays || null,
     });
-    
+
     this.currentPrincipal = 0;
     this.latestPaymentDate = date;
   };
 
-  private funcPayInstallment = (index: number, dateObj: Days, installment: number, fee = 0): boolean => {
+  private funcPayInstallment = (
+    index: number,
+    dateObj: Days,
+    installment: number,
+    fee = 0
+  ): boolean => {
     let periodInterest: number;
     let reduction: number;
     let startDate: string, endDate: string;
@@ -501,9 +564,16 @@ class PaydownCalculator {
     if (this.latestCalculatedInterestDate === this.eventArray[index].date) {
       periodInterest = 0;
     } else {
-      startDate = dateObj.setCurrent(this.latestCalculatedInterestDate).getNext();
+      startDate = dateObj
+        .setCurrent(this.latestCalculatedInterestDate)
+        .getNext();
       endDate = this.eventArray[index].date;
-      periodInterest = this.getPeriodInterests(this.currentPrincipal, this.currentRate, startDate, endDate);
+      periodInterest = this.getPeriodInterests(
+        this.currentPrincipal,
+        this.currentRate,
+        startDate,
+        endDate
+      );
     }
 
     if (installment === 0) {
@@ -513,7 +583,9 @@ class PaydownCalculator {
     }
 
     if (reduction < 0) {
-      throw new Error(`Exception: installment ${this.round(installment)} is too small to cover the interest ${this.round(periodInterest)}: ${startDate} - ${endDate}`);
+      throw new Error(
+        `Exception: installment ${this.round(installment)} is too small to cover the interest ${this.round(periodInterest)}: ${startDate} - ${endDate}`
+      );
     }
 
     this.sumOfInterests += periodInterest;
@@ -524,7 +596,13 @@ class PaydownCalculator {
     const numDays = calculateDayCount(startDate, endDate, false);
 
     if (this.currentPrincipal <= 0) {
-      this.handleLastPayment(reduction, this.eventArray[index].date, periodInterest, fee, numDays);
+      this.handleLastPayment(
+        reduction,
+        this.eventArray[index].date,
+        periodInterest,
+        fee,
+        numDays
+      );
       return false;
     }
 
@@ -554,14 +632,16 @@ class PaydownCalculator {
       was_payed: this.eventArray[index].was_payed,
       num_days: numDays,
     });
-    
+
     return true;
   };
 
   private calculateRecurringAmount = (data: PaydownInit): number => {
     const months = getNumberOfMonths(data.start_date, data.end_date);
     const monthlyRate = data.rate / 12 / 100;
-    const monthlyPayment = (data.principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+    const monthlyPayment =
+      (data.principal * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+      (Math.pow(1 + monthlyRate, months) - 1);
     return monthlyPayment + 1;
   };
 
@@ -585,7 +665,12 @@ class PaydownCalculator {
       }
       this.init.first_payment_date = data.recurring.first_payment_date;
 
-      if (!numberIsValid(data.recurring.payment_day) || data.recurring.payment_day < 1 || data.recurring.payment_day > 31 || !Number.isInteger(data.recurring.payment_day)) {
+      if (
+        !numberIsValid(data.recurring.payment_day) ||
+        data.recurring.payment_day < 1 ||
+        data.recurring.payment_day > 31 ||
+        !Number.isInteger(data.recurring.payment_day)
+      ) {
         throw new Error('setInit: invalid or missing first payment_day number');
       }
       this.init.payment_day = data.recurring.payment_day;
@@ -594,7 +679,8 @@ class PaydownCalculator {
       this.currentRecurringPayment = null;
     }
 
-    this.roundValues = data.round_values !== undefined ? data.round_values : true;
+    this.roundValues =
+      data.round_values !== undefined ? data.round_values : true;
     this.debugLoggingEnabled = data.debug_logging || false;
     this.initialFee = data.initial_fee || 0;
   };
@@ -608,19 +694,29 @@ class PaydownCalculator {
 
     if (event.hasOwnProperty('rate')) {
       if (isNaN(event.rate!) || typeof event.rate !== 'number') {
-        throw new Error(`checkAndAddEvent: invalid rate in event ${event.date}`);
+        throw new Error(
+          `checkAndAddEvent: invalid rate in event ${event.date}`
+        );
       }
     }
 
     if (event.hasOwnProperty('recurring_amount')) {
       if (!numberIsValid(event.recurring_amount!)) {
-        throw new Error(`checkAndAddEvent: invalid recurring_amount in event ${event.date}`);
+        throw new Error(
+          `checkAndAddEvent: invalid recurring_amount in event ${event.date}`
+        );
       }
     }
 
     if (event.hasOwnProperty('pay_installment')) {
-      if (typeof event.pay_installment !== 'number' || event.pay_installment <= 0 || isNaN(event.pay_installment)) {
-        throw new Error(`checkAndAddEvent: invalid pay_installment in event ${event.date}`);
+      if (
+        typeof event.pay_installment !== 'number' ||
+        event.pay_installment <= 0 ||
+        isNaN(event.pay_installment)
+      ) {
+        throw new Error(
+          `checkAndAddEvent: invalid pay_installment in event ${event.date}`
+        );
       } else {
         event.was_payed = true;
         event.pay_recurring = true;
@@ -629,7 +725,9 @@ class PaydownCalculator {
 
     if (event.hasOwnProperty('pay_single_fee')) {
       if (!numberIsValid(event.pay_single_fee!)) {
-        throw new Error(`checkAndAddEvent: invalid pay_single_fee in event ${event.date}`);
+        throw new Error(
+          `checkAndAddEvent: invalid pay_single_fee in event ${event.date}`
+        );
       }
     }
 
@@ -663,10 +761,14 @@ class PaydownCalculator {
 
     for (let index = 0; index < this.eventArray.length - 1; index++) {
       if (this.eventArray[index].hasOwnProperty('rate')) {
-        this.rateHashMap[dateToInteger(this.eventArray[index].date)] = this.eventArray[index].rate!;
+        this.rateHashMap[dateToInteger(this.eventArray[index].date)] =
+          this.eventArray[index].rate!;
       }
 
-      if (dateToInteger(this.eventArray[index].date) === dateToInteger(this.eventArray[index + 1].date)) {
+      if (
+        dateToInteger(this.eventArray[index].date) ===
+        dateToInteger(this.eventArray[index + 1].date)
+      ) {
         Object.assign(this.eventArray[index], this.eventArray[index + 1]);
         this.eventArray.splice(index + 1, 1);
         index--;
@@ -676,17 +778,27 @@ class PaydownCalculator {
 
   private checkFirstPaymentDate = (): void => {
     this.checkDate(this.init.first_payment_date!, '1st recurring payment');
-    if (dateToInteger(this.init.first_payment_date!) <= dateToInteger(this.init.start_date!)) {
-      throw new Error('checkFirstPaymentDate: first payment date must be after start date');
+    if (
+      dateToInteger(this.init.first_payment_date!) <=
+      dateToInteger(this.init.start_date!)
+    ) {
+      throw new Error(
+        'checkFirstPaymentDate: first payment date must be after start date'
+      );
     }
   };
 
-  private generatePaymentEventsTill = (date: string, lastPaymentDate?: string): void => {
+  private generatePaymentEventsTill = (
+    date: string,
+    lastPaymentDate?: string
+  ): void => {
     const dateObj = new Days(this.init.first_payment_date!);
 
     const addEventIfValid = (eventDate: string): void => {
       const eventDateInt = dateToInteger(eventDate);
-      const lastPaymentDateInt = lastPaymentDate ? dateToInteger(lastPaymentDate) : null;
+      const lastPaymentDateInt = lastPaymentDate
+        ? dateToInteger(lastPaymentDate)
+        : null;
 
       if (!lastPaymentDate || eventDateInt > lastPaymentDateInt!) {
         this.addEvent({ date: eventDate, pay_recurring: true });
@@ -695,7 +807,14 @@ class PaydownCalculator {
 
     addEventIfValid(dateObj.getCurrent());
 
-    while (dateToInteger(dateObj.getNthMonthNthDay(this.recurringPaymentPeriod, this.init.payment_day!)) <= dateToInteger(date)) {
+    while (
+      dateToInteger(
+        dateObj.getNthMonthNthDay(
+          this.recurringPaymentPeriod,
+          this.init.payment_day!
+        )
+      ) <= dateToInteger(date)
+    ) {
       const nextPaymentDate = dateObj.getCurrent();
       addEventIfValid(nextPaymentDate);
     }
@@ -704,21 +823,37 @@ class PaydownCalculator {
   private checkEvents = (): void => {
     for (const event of this.eventArray) {
       if (dateToInteger(event.date) <= dateToInteger(this.init.start_date!)) {
-        throw new Error(`checkEvents: event date (${event.date}) before start date not allowed`);
+        throw new Error(
+          `checkEvents: event date (${event.date}) before start date not allowed`
+        );
       }
     }
   };
 
-  private debugLogPeriodStart = (startDate: string, totalNumberOfDays: number, principal: number, rate: number): void => {
+  private debugLogPeriodStart = (
+    startDate: string,
+    totalNumberOfDays: number,
+    principal: number,
+    rate: number
+  ): void => {
     this.debugWrite(`New period starts ${startDate}`);
     this.debugWrite(`Days in period: ${totalNumberOfDays}`);
     this.debugWrite(`Remaining principal: ${this.round(principal)}`);
   };
 
-  private debugLogSubperiod = (numberOfDays: number, subperiodInterest: number, rateEventDate?: string, newRate?: number): void => {
+  private debugLogSubperiod = (
+    numberOfDays: number,
+    subperiodInterest: number,
+    rateEventDate?: string,
+    newRate?: number
+  ): void => {
     this.debugWrite(`Subperiod days: ${numberOfDays}`);
-    this.debugWrite(`Subperiod daily interest: ${this.round(subperiodInterest / numberOfDays)}`);
-    this.debugWrite(`Subperiod total interest: ${this.round(subperiodInterest)}`);
+    this.debugWrite(
+      `Subperiod daily interest: ${this.round(subperiodInterest / numberOfDays)}`
+    );
+    this.debugWrite(
+      `Subperiod total interest: ${this.round(subperiodInterest)}`
+    );
     if (rateEventDate) {
       this.debugWrite(`Rate changes ${rateEventDate}, new rate is ${newRate}`);
     }
@@ -740,11 +875,18 @@ class PaydownCalculator {
     }
   };
 
-  public calculateToDate = (arrayOfEvents?: PaymentLog[], arrayOfDebugPrints?: string[], lastPaymentDate?: string): PaydownCalculationResult => {
+  public calculateToDate = (
+    arrayOfEvents?: PaymentLog[],
+    arrayOfDebugPrints?: string[],
+    lastPaymentDate?: string
+  ): PaydownCalculationResult => {
     let installment: number;
     let finalInterest = 0;
 
-    if (typeof this.init.principal !== 'number' || isNaN(this.init.principal!)) {
+    if (
+      typeof this.init.principal !== 'number' ||
+      isNaN(this.init.principal!)
+    ) {
       throw new Error('calculateToDate: principal must be number');
     }
     if (this.init.principal === 0) {
@@ -781,10 +923,14 @@ class PaydownCalculator {
     } else if (this.init.day_count_method === 'act/365') {
       this.dayCountDivisor = 365;
     } else {
-      throw new Error(`invalid day count method: ${this.init.day_count_method}`);
+      throw new Error(
+        `invalid day count method: ${this.init.day_count_method}`
+      );
     }
 
-    this.latestCalculatedInterestDate = dateObj.setCurrent(this.init.start_date!).getPrev();
+    this.latestCalculatedInterestDate = dateObj
+      .setCurrent(this.init.start_date!)
+      .getPrev();
     this.latestPeriodEndDate = this.latestCalculatedInterestDate;
     this.totalNumberOfDays = 0;
     this.gpiTotalDays = 0;
@@ -818,7 +964,9 @@ class PaydownCalculator {
 
       if (event.hasOwnProperty('recurring_amount')) {
         if (this.currentRecurringPayment === null) {
-          throw new Error("Can't do recurring_amount: initial recurring data missing or invalid!");
+          throw new Error(
+            "Can't do recurring_amount: initial recurring data missing or invalid!"
+          );
         }
         this.currentRecurringPayment = event.recurring_amount!;
       }
@@ -844,23 +992,38 @@ class PaydownCalculator {
         if (event.payment_method === 'equal_installment') {
           this.init.payment_method = 'equal_installment';
         } else {
-          throw new Error(`invalid payment method in event: ${event.payment_method}`);
+          throw new Error(
+            `invalid payment method in event: ${event.payment_method}`
+          );
         }
       }
 
       if (event.hasOwnProperty('pay_recurring')) {
         if (this.currentRecurringPayment === null) {
-          throw new Error("Can't do pay_recurring: initial recurring data missing or invalid!");
+          throw new Error(
+            "Can't do pay_recurring: initial recurring data missing or invalid!"
+          );
         }
         this.sumOfFees += this.currentRecurringFee;
 
         if (this.init.payment_method === 'equal_installment') {
-          installment = event.hasOwnProperty('pay_installment') ? event.pay_installment! : this.currentRecurringPayment;
-          if (!this.funcPayInstallment(index, dateObj, installment, this.currentRecurringFee)) {
+          installment = event.hasOwnProperty('pay_installment')
+            ? event.pay_installment!
+            : this.currentRecurringPayment;
+          if (
+            !this.funcPayInstallment(
+              index,
+              dateObj,
+              installment,
+              this.currentRecurringFee
+            )
+          ) {
             break;
           }
         } else {
-          throw new Error(`invalid payment method: ${this.init.payment_method}`);
+          throw new Error(
+            `invalid payment method: ${this.init.payment_method}`
+          );
         }
       }
 
@@ -880,7 +1043,10 @@ class PaydownCalculator {
       }
 
       if (event.hasOwnProperty('ending')) {
-        if (!event.hasOwnProperty('pay_recurring') && !event.hasOwnProperty('pay_installment')) {
+        if (
+          !event.hasOwnProperty('pay_recurring') &&
+          !event.hasOwnProperty('pay_installment')
+        ) {
           finalInterest = this.getPeriodInterests(
             this.currentPrincipal,
             this.currentRate,
@@ -902,7 +1068,8 @@ class PaydownCalculator {
             };
           }
           this.annualSummaries[endingYear].total_interest += finalInterest;
-          this.annualSummaries[endingYear].total_principal += this.currentPrincipal;
+          this.annualSummaries[endingYear].total_principal +=
+            this.currentPrincipal;
 
           this.logPayment({
             date: event.date,
@@ -922,19 +1089,29 @@ class PaydownCalculator {
       }
     }
 
-    if (this.round(this.gpiSumOfInterests) !== this.round(this.sumOfInterests)) {
-      throw new Error(`Sum of interests mismatch: ${this.round(this.gpiSumOfInterests)} vs. ${this.round(this.sumOfInterests)}`);
+    if (
+      this.round(this.gpiSumOfInterests) !== this.round(this.sumOfInterests)
+    ) {
+      throw new Error(
+        `Sum of interests mismatch: ${this.round(this.gpiSumOfInterests)} vs. ${this.round(this.sumOfInterests)}`
+      );
     }
 
     if (this.gpiTotalDays !== this.totalNumberOfDays) {
-      throw new Error(`Day count mismatch, gpiTotalDays: ${this.gpiTotalDays} totalNumberOfDays: ${this.totalNumberOfDays}`);
+      throw new Error(
+        `Day count mismatch, gpiTotalDays: ${this.gpiTotalDays} totalNumberOfDays: ${this.totalNumberOfDays}`
+      );
     }
 
     if (this.paymentLoggingEnabled && arrayOfEvents) {
       arrayOfEvents.push(...this.paymentLogArray);
     }
 
-    if (this.debugLoggingEnabled && !this.debugPrintToConsole && arrayOfDebugPrints) {
+    if (
+      this.debugLoggingEnabled &&
+      !this.debugPrintToConsole &&
+      arrayOfDebugPrints
+    ) {
       arrayOfDebugPrints.push(...this.debugLogArray);
     }
 
@@ -960,99 +1137,114 @@ export default function Paydown() {
       paymentsArray?: PaymentLog[],
       debugArray?: string[]
     ): PaydownResult {
-    const paydown = new PaydownCalculator();
+      const paydown = new PaydownCalculator();
 
-    paydown.setInit(initObj);
+      paydown.setInit(initObj);
 
-    let localArray: PaydownEvent[] = [];
-    let lastPaymentDate: string | undefined;
+      let localArray: PaydownEvent[] = [];
+      let lastPaymentDate: string | undefined;
 
-    if (eventsArray) {
-      const filteredEvents = eventsArray.filter(
-        (event) => event.pay_installment !== undefined && !event.isSimulatedPayment
-      );
-      const sortedByDate = filteredEvents.sort(
-        (a, b) => paydown.parseDate(b.date).getTime() - paydown.parseDate(a.date).getTime()
-      );
-      const lastEventByDate = sortedByDate[0];
-      lastPaymentDate = lastEventByDate ? lastEventByDate.date : undefined;
-      localArray = eventsArray.slice();
-    }
+      if (eventsArray) {
+        const filteredEvents = eventsArray.filter(
+          (event) =>
+            event.pay_installment !== undefined && !event.isSimulatedPayment
+        );
+        const sortedByDate = filteredEvents.sort(
+          (a, b) =>
+            paydown.parseDate(b.date).getTime() -
+            paydown.parseDate(a.date).getTime()
+        );
+        const lastEventByDate = sortedByDate[0];
+        lastPaymentDate = lastEventByDate ? lastEventByDate.date : undefined;
+        localArray = eventsArray.slice();
+      }
 
-    while (localArray[0]) {
-      paydown.checkAndAddEvent(localArray.shift()!);
-    }
+      while (localArray[0]) {
+        paydown.checkAndAddEvent(localArray.shift()!);
+      }
 
-    let interests: number,
-      reductions: number,
-      remainingPrincipal: number,
-      actualEndDate: string,
-      latestPaymentDate: string,
-      finalInterest: number,
-      fees: number,
-      annualSummaries: Record<string, AnnualSummary>;
+      let interests: number,
+        reductions: number,
+        remainingPrincipal: number,
+        actualEndDate: string,
+        latestPaymentDate: string,
+        finalInterest: number,
+        fees: number,
+        annualSummaries: Record<string, AnnualSummary>;
 
-    try {
-      [
-        interests,
-        reductions,
-        remainingPrincipal,
-        actualEndDate,
-        latestPaymentDate,
-        finalInterest,
-        fees,
-        annualSummaries,
-      ] = paydown.calculateToDate(paymentsArray, debugArray, lastPaymentDate);
-    } catch (err) {
-      throw err;
-    }
+      try {
+        [
+          interests,
+          reductions,
+          remainingPrincipal,
+          actualEndDate,
+          latestPaymentDate,
+          finalInterest,
+          fees,
+          annualSummaries,
+        ] = paydown.calculateToDate(paymentsArray, debugArray, lastPaymentDate);
+      } catch (err) {
+        throw err;
+      }
 
-    let sumOfInstallments: number;
+      let sumOfInstallments: number;
 
-    if (initObj.hasOwnProperty('round_values')) {
-      if (initObj.round_values) {
+      if (initObj.hasOwnProperty('round_values')) {
+        if (initObj.round_values) {
+          sumOfInstallments = funcRound(interests + reductions - finalInterest);
+          interests = funcRound(interests);
+          reductions = funcRound(reductions);
+          remainingPrincipal = funcRound(remainingPrincipal);
+          finalInterest = funcRound(finalInterest);
+          fees = funcRound(fees);
+
+          for (const year in annualSummaries) {
+            annualSummaries[year].total_principal = funcRound(
+              annualSummaries[year].total_principal
+            );
+            annualSummaries[year].total_interest = funcRound(
+              annualSummaries[year].total_interest
+            );
+            annualSummaries[year].total_fees = funcRound(
+              annualSummaries[year].total_fees
+            );
+          }
+        } else {
+          sumOfInstallments = interests + reductions - finalInterest;
+        }
+      } else {
         sumOfInstallments = funcRound(interests + reductions - finalInterest);
         interests = funcRound(interests);
         reductions = funcRound(reductions);
         remainingPrincipal = funcRound(remainingPrincipal);
         finalInterest = funcRound(finalInterest);
         fees = funcRound(fees);
-        
-        for (const year in annualSummaries) {
-          annualSummaries[year].total_principal = funcRound(annualSummaries[year].total_principal);
-          annualSummaries[year].total_interest = funcRound(annualSummaries[year].total_interest);
-          annualSummaries[year].total_fees = funcRound(annualSummaries[year].total_fees);
-        }
-      } else {
-        sumOfInstallments = interests + reductions - finalInterest;
-      }
-    } else {
-      sumOfInstallments = funcRound(interests + reductions - finalInterest);
-      interests = funcRound(interests);
-      reductions = funcRound(reductions);
-      remainingPrincipal = funcRound(remainingPrincipal);
-      finalInterest = funcRound(finalInterest);
-      fees = funcRound(fees);
-      
-      for (const year in annualSummaries) {
-        annualSummaries[year].total_principal = funcRound(annualSummaries[year].total_principal);
-        annualSummaries[year].total_interest = funcRound(annualSummaries[year].total_interest);
-        annualSummaries[year].total_fees = funcRound(annualSummaries[year].total_fees);
-      }
-    }
 
-    return {
-      sum_of_interests: interests,
-      sum_of_reductions: reductions,
-      sum_of_installments: sumOfInstallments,
-      remaining_principal: remainingPrincipal,
-      days_calculated: paydown.totalNumberOfDays,
-      actual_end_date: zeroFillDate(actualEndDate),
-      latest_payment_date: zeroFillDate(latestPaymentDate),
-      unpaid_interest: finalInterest,
-      sum_of_fees: fees,
-      annual_summaries: annualSummaries,
-    };
-  }
+        for (const year in annualSummaries) {
+          annualSummaries[year].total_principal = funcRound(
+            annualSummaries[year].total_principal
+          );
+          annualSummaries[year].total_interest = funcRound(
+            annualSummaries[year].total_interest
+          );
+          annualSummaries[year].total_fees = funcRound(
+            annualSummaries[year].total_fees
+          );
+        }
+      }
+
+      return {
+        sum_of_interests: interests,
+        sum_of_reductions: reductions,
+        sum_of_installments: sumOfInstallments,
+        remaining_principal: remainingPrincipal,
+        days_calculated: paydown.totalNumberOfDays,
+        actual_end_date: zeroFillDate(actualEndDate),
+        latest_payment_date: zeroFillDate(latestPaymentDate),
+        unpaid_interest: finalInterest,
+        sum_of_fees: fees,
+        annual_summaries: annualSummaries,
+      };
+    },
   };
-} 
+}

@@ -18,19 +18,19 @@
   padding: 0 !important;
   background: transparent !important;
   border: none !important;
-  
+
   .table-header {
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
   }
-  
+
   .table-wrapper {
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
   }
-  
+
   .income-table {
     width: 100% !important;
     margin: 0 !important;
@@ -46,7 +46,7 @@
 .load-more {
   text-align: center;
   margin-top: 1.5rem;
-  
+
   .load-more-btn {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -60,7 +60,7 @@
     align-items: center;
     gap: 0.625rem;
     transition: all 0.25s ease;
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.08);
       border-color: rgba(255, 255, 255, 0.15);
@@ -70,7 +70,7 @@
     &:active {
       transform: translateY(0);
     }
-    
+
     svg {
       font-size: 0.875rem;
     }

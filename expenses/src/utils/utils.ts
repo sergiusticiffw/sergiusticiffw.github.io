@@ -12,30 +12,32 @@ const handleErrors = (
   dispatch: any
 ) => {
   if (!response.ok) {
-    fetch(`${API_BASE_URL}/jwt/token`, options).then(
-      (response) => {
-        if (response.status === 403) {
-          // Add null checks before calling logout
-          if (dispatch && dataDispatch) {
-            logout(dispatch, dataDispatch);
-          } else {
-            console.error('Dispatch functions not available for logout');
-          }
+    fetch(`${API_BASE_URL}/jwt/token`, options).then((response) => {
+      if (response.status === 403) {
+        // Add null checks before calling logout
+        if (dispatch && dataDispatch) {
+          logout(dispatch, dataDispatch);
+        } else {
+          console.error('Dispatch functions not available for logout');
         }
       }
-    );
+    });
     return response.statusText;
   }
-  
+
   // Check if response has content before trying to parse JSON
   const contentType = response.headers.get('content-type');
   const contentLength = response.headers.get('content-length');
-  
+
   // If response is empty or doesn't have JSON content, return null
-  if (!contentType || !contentType.includes('application/json') || contentLength === '0') {
+  if (
+    !contentType ||
+    !contentType.includes('application/json') ||
+    contentLength === '0'
+  ) {
     return null;
   }
-  
+
   // For successful responses, return the response object to be handled by the caller
   return response;
 };
@@ -44,7 +46,10 @@ const handleErrors = (
  * Generic API fetch helper
  * Creates a standardized fetch request with authentication headers
  */
-export const createAuthenticatedFetchOptions = (token: string, method: string = 'GET'): RequestInit => {
+export const createAuthenticatedFetchOptions = (
+  token: string,
+  method: string = 'GET'
+): RequestInit => {
   return {
     method,
     headers: new Headers({
@@ -71,13 +76,27 @@ export const fetchFromAPI = <T = any>(
   fetchRequest(url, fetchOptions, dataDispatch, dispatch, onSuccess);
 };
 
-export const formatDataForChart = (data: DataStructure, secondSet = false, localizedMonthNames?: string[]) => {
+export const formatDataForChart = (
+  data: DataStructure,
+  secondSet = false,
+  localizedMonthNames?: string[]
+) => {
   const seriesData = [];
 
   // English month names (used in data structure)
   const englishMonthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   for (const year in data) {
@@ -93,7 +112,7 @@ export const formatDataForChart = (data: DataStructure, secondSet = false, local
       const displayMonth = monthsToUse[i];
       const englishMonth = englishMonthNames[i];
       const monthValue = data[year][`${englishMonth} ${year}`];
-      
+
       if (secondSet) {
         // @ts-ignore
         const monthValueSpent = secondSet[year][`${englishMonth} ${year}`];
@@ -133,15 +152,15 @@ export const fetchRequest = (
       if (typeof result === 'string') {
         return callback(result);
       }
-      
+
       // If handleErrors returned null (empty response), pass null to callback
       if (result === null) {
         return callback(null);
       }
-      
+
       // If handleErrors returned a response object, try to parse JSON
       if (result instanceof Response) {
-        return result.text().then(text => {
+        return result.text().then((text) => {
           if (!text || text.trim() === '') {
             return callback(null);
           }
@@ -154,7 +173,7 @@ export const fetchRequest = (
           }
         });
       }
-      
+
       // For any other case, pass the result to callback
       return callback(result);
     })
@@ -163,21 +182,26 @@ export const fetchRequest = (
 
 export const deleteNode = (nid: string, token: string, callback: any) => {
   const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
-  fetch(
-    `${API_BASE_URL}/node/${nid}?_format=json`,
-    fetchOptions
-  ).then((response) => {
-    callback(response);
-  });
+  fetch(`${API_BASE_URL}/node/${nid}?_format=json`, fetchOptions).then(
+    (response) => {
+      callback(response);
+    }
+  );
 };
 
-export const deleteLoan = (nid: string, token: string, dataDispatch: any, dispatch: any, onSuccess: () => void) => {
+export const deleteLoan = (
+  nid: string,
+  token: string,
+  dataDispatch: any,
+  dispatch: any,
+  onSuccess: () => void
+) => {
   // Add null checks for dispatch functions
   if (!dataDispatch || !dispatch) {
     console.error('Dispatch functions not available for delete loan');
     return;
   }
-  
+
   fetchFromAPI(
     `${API_BASE_URL}/node/${nid}?_format=json`,
     token,
@@ -284,8 +308,18 @@ export const fetchData = (
           const year = date.getFullYear();
           // Use English month names for data processing (this is for internal use)
           const englishMonthNames = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
           ];
           const month = `${englishMonthNames[date.getMonth()]} ${year}`;
 
@@ -341,10 +375,7 @@ export const fetchLoans = (token: string, dataDispatch: any, dispatch: any) => {
       const fetchOptions = createAuthenticatedFetchOptions(token);
       if (data.length > 0) {
         const paymentPromises = data.map((item) =>
-          fetch(
-            `${API_BASE_URL}/api/payments/${item.id}`,
-            fetchOptions
-          )
+          fetch(`${API_BASE_URL}/api/payments/${item.id}`, fetchOptions)
             .then((response) => response.json())
             .then((responseData) => ({ loanId: item.id, data: responseData }))
         );
@@ -371,7 +402,7 @@ export const formatNumber = (value: unknown): string => {
   // Get user's language preference from localStorage or default to 'en'
   const language = localStorage.getItem('language') || 'en';
   const locale = language === 'ro' ? 'ro-RO' : 'en-US';
-  
+
   if (typeof value === 'number') {
     // Handle numbers directly
     return value.toLocaleString(locale, {
@@ -433,7 +464,7 @@ export const formatMonth = (date: Date) => {
   // Get user's language preference from localStorage or default to 'en'
   const language = localStorage.getItem('language') || 'en';
   const locale = language === 'ro' ? 'ro-RO' : 'en-US';
-  
+
   return new Date(date.getFullYear(), date.getMonth(), 1).toLocaleString(
     locale,
     { month: 'long', year: 'numeric' }

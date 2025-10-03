@@ -41,7 +41,8 @@ const LastTwoMonthsAverage = () => {
       <div className="content">
         <span>
           {t('home.averageSpendingLast60Days')}:{' '}
-          {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} / {t('home.day')}
+          {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} /{' '}
+          {t('home.day')}
         </span>
       </div>
     </div>

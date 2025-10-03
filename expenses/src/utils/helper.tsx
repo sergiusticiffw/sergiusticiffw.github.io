@@ -32,12 +32,18 @@ export const getFinancialStabilityIcon = (
 export const getIconForCategory = (category: string) => {
   // Handle both English and Romanian category names
   const categoryLower = category.toLowerCase();
-  
+
   // Check for English category names
-  if (categoryLower.includes('clothing') || categoryLower.includes('îmbrăcăminte')) {
+  if (
+    categoryLower.includes('clothing') ||
+    categoryLower.includes('îmbrăcăminte')
+  ) {
     return <FaTshirt color="#4A90E2" />;
   }
-  if (categoryLower.includes('entertainment') || categoryLower.includes('divertisment')) {
+  if (
+    categoryLower.includes('entertainment') ||
+    categoryLower.includes('divertisment')
+  ) {
     return <FaMusic color="#F5A623" />;
   }
   if (categoryLower.includes('food') || categoryLower.includes('mâncare')) {
@@ -46,7 +52,10 @@ export const getIconForCategory = (category: string) => {
   if (categoryLower.includes('gifts') || categoryLower.includes('cadouri')) {
     return <FaGift color="#D0021B" />;
   }
-  if (categoryLower.includes('household') || categoryLower.includes('articole casnice')) {
+  if (
+    categoryLower.includes('household') ||
+    categoryLower.includes('articole casnice')
+  ) {
     return <FaTools color="#9B9B9B" />;
   }
   if (categoryLower.includes('housing') || categoryLower.includes('locuință')) {
@@ -70,10 +79,16 @@ export const getIconForCategory = (category: string) => {
   if (categoryLower.includes('family') || categoryLower.includes('familie')) {
     return <FaUsers color="#FF7F50" />;
   }
-  if (categoryLower.includes('investment') || categoryLower.includes('investiții')) {
+  if (
+    categoryLower.includes('investment') ||
+    categoryLower.includes('investiții')
+  ) {
     return <FaChartLine color="#FFD700" />;
   }
-  if (categoryLower.includes('education') || categoryLower.includes('educație')) {
+  if (
+    categoryLower.includes('education') ||
+    categoryLower.includes('educație')
+  ) {
     return <FaChartLine color="#9370DB" />;
   }
   if (categoryLower.includes('bills') || categoryLower.includes('facturi')) {
@@ -82,9 +97,12 @@ export const getIconForCategory = (category: string) => {
   if (categoryLower.includes('other') || categoryLower.includes('altele')) {
     return <FaTools color="#808080" />;
   }
-  if (categoryLower.includes('shopping') || categoryLower.includes('cumpărături')) {
+  if (
+    categoryLower.includes('shopping') ||
+    categoryLower.includes('cumpărături')
+  ) {
     return <FaGift color="#FF69B4" />;
   }
-  
+
   return null;
 };

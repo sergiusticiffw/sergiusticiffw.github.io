@@ -24,7 +24,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 }) => {
   const { t } = useLocalization();
   const { dataDispatch } = useData() as DataState;
-  
+
   const initialState = {
     field_amount: '',
     field_date: new Date().toISOString().slice(0, 10),
@@ -34,7 +34,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   const validationRules = {
     field_amount: {
       required: true,
-      custom: (value: string) => !isNaN(parseFloat(value)) && parseFloat(value) > 0,
+      custom: (value: string) =>
+        !isNaN(parseFloat(value)) && parseFloat(value) > 0,
     },
     field_date: {
       required: true,
@@ -47,24 +48,26 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
   const { getFieldValidation } = useFormValidation(validationRules);
 
-  const { formState, isSubmitting, handleChange, handleSubmit } = useFormSubmit({
-    formType,
-    initialState,
-    values,
-    nodeType: 'incomes',
-    onSuccess,
-    dataDispatch,
-    buildNodeData: (state) => ({
-      title: [state.field_date],
-      field_amount: [state.field_amount],
-      field_date: [state.field_date],
-      field_description: [state.field_description],
-    }),
-    successMessageKeys: {
-      add: 'notification.incomeAdded',
-      edit: 'notification.incomeUpdated',
-    },
-  });
+  const { formState, isSubmitting, handleChange, handleSubmit } = useFormSubmit(
+    {
+      formType,
+      initialState,
+      values,
+      nodeType: 'incomes',
+      onSuccess,
+      dataDispatch,
+      buildNodeData: (state) => ({
+        title: [state.field_date],
+        field_amount: [state.field_amount],
+        field_date: [state.field_date],
+        field_description: [state.field_description],
+      }),
+      successMessageKeys: {
+        add: 'notification.incomeAdded',
+        edit: 'notification.incomeUpdated',
+      },
+    }
+  );
 
   return (
     <div className="income-form-container">
@@ -102,7 +105,9 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
         </div>
 
         <div className="form-group required">
-          <label htmlFor="field_description">{t('incomeForm.description')}</label>
+          <label htmlFor="field_description">
+            {t('incomeForm.description')}
+          </label>
           <div className="input-wrapper">
             <input
               type="text"

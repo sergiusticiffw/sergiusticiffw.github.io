@@ -26,11 +26,13 @@ export const getCurrentDate = (): string => {
   return formatDate(new Date());
 };
 
-export const formatDateForDisplay = (date: string): { day: number; month: string } => {
+export const formatDateForDisplay = (
+  date: string
+): { day: number; month: string } => {
   const dateObj = new Date(date);
   return {
     day: dateObj.getDate(),
-    month: dateObj.toLocaleDateString('en-US', { month: 'short' })
+    month: dateObj.toLocaleDateString('en-US', { month: 'short' }),
   };
 };
 
@@ -40,7 +42,10 @@ export const formatNumber = (value: number | string): string => {
   return num.toLocaleString();
 };
 
-export const formatCurrency = (value: number | string, currency: string = 'RON'): string => {
+export const formatCurrency = (
+  value: number | string,
+  currency: string = 'RON'
+): string => {
   const num = typeof value === 'string' ? parseFloat(value) : value;
   return `${num.toLocaleString()} ${currency}`;
 };
@@ -104,10 +109,10 @@ export const handleFormSubmission = async (
 // Loading state utilities
 export const createLoadingState = () => {
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const startLoading = () => setIsLoading(true);
   const stopLoading = () => setIsLoading(false);
-  
+
   return { isLoading, startLoading, stopLoading };
 };
 
@@ -131,9 +136,12 @@ export const setToLocalStorage = <T>(key: string, value: T): void => {
 };
 
 // Array utilities
-export const sortByDate = <T extends { dt?: string; cr?: number }>(items: T[]): T[] => {
+export const sortByDate = <T extends { dt?: string; cr?: number }>(
+  items: T[]
+): T[] => {
   return items.sort((a, b) => {
-    const dateComparison = new Date(b.dt || '').getTime() - new Date(a.dt || '').getTime();
+    const dateComparison =
+      new Date(b.dt || '').getTime() - new Date(a.dt || '').getTime();
     if (dateComparison !== 0) {
       return dateComparison;
     }
@@ -146,7 +154,7 @@ export const filterByDateRange = <T extends { dt?: string }>(
   startDate: string,
   endDate: string
 ): T[] => {
-  return items.filter(item => {
+  return items.filter((item) => {
     if (!item.dt) return false;
     const itemDate = new Date(item.dt);
     const start = new Date(startDate);
@@ -194,16 +202,17 @@ export const handleApiError = (
 };
 
 // Validation utilities
-export const validateForm = (formData: Record<string, any>, requiredFields: string[]): string[] => {
+export const validateForm = (
+  formData: Record<string, any>,
+  requiredFields: string[]
+): string[] => {
   const errors: string[] = [];
-  
-  requiredFields.forEach(field => {
+
+  requiredFields.forEach((field) => {
     if (!validateRequired(formData[field])) {
       errors.push(`${field} is required`);
     }
   });
-  
+
   return errors;
 };
-
- 

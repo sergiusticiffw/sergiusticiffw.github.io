@@ -85,7 +85,8 @@ const MonthlyTotals = () => {
     series: [
       {
         name: data.category
-          ? getCategories().find((element) => element.value === data.category)?.label
+          ? getCategories().find((element) => element.value === data.category)
+              ?.label
           : t('charts.monthlyTotals'),
         data: seriesData,
         colorByPoint: true,

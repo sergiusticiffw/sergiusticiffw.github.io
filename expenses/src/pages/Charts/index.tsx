@@ -115,7 +115,7 @@ const Charts = () => {
           </div>
         )
       )}
-      
+
       {/* Add Transaction Modal */}
       <Modal
         show={showAddModal}
@@ -133,7 +133,7 @@ const Charts = () => {
           }}
         />
       </Modal>
-      
+
       {/* Floating Action Button */}
       <button
         onClick={() => setShowAddModal(true)}

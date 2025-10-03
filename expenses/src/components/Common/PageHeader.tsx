@@ -7,7 +7,11 @@ interface PageHeaderProps {
   className?: string;
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, className = '' }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({
+  title,
+  subtitle,
+  className = '',
+}) => {
   return (
     <div className={`page-header ${className}`}>
       <h1>{title}</h1>
@@ -17,5 +21,3 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, className = ''
 };
 
 export default PageHeader;
-
-

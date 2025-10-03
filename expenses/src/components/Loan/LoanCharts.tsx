@@ -18,7 +18,11 @@ export const LoanCostBreakdown = ({ data }) => {
       text: t('loan.loanCostBreakdown'),
     },
     xAxis: {
-      categories: [t('loan.principal'), t('loan.interests'), t('loan.installments')],
+      categories: [
+        t('loan.principal'),
+        t('loan.interests'),
+        t('loan.installments'),
+      ],
     },
     yAxis: {
       min: 0,

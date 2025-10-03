@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 import Highcharts from 'highcharts';
 import Highstock from 'highcharts/highstock';
 import BrandDark from 'highcharts/themes/brand-dark';
@@ -9,12 +15,16 @@ interface HighchartsContextType {
   setUseChartsBackgroundColor: (value: boolean) => void;
 }
 
-const HighchartsContext = createContext<HighchartsContextType | undefined>(undefined);
+const HighchartsContext = createContext<HighchartsContextType | undefined>(
+  undefined
+);
 
 export const useHighchartsContext = () => {
   const context = useContext(HighchartsContext);
   if (!context) {
-    throw new Error('useHighchartsContext must be used within a HighchartsProvider');
+    throw new Error(
+      'useHighchartsContext must be used within a HighchartsProvider'
+    );
   }
   return context;
 };
@@ -23,11 +33,15 @@ interface HighchartsProviderProps {
   children: ReactNode;
 }
 
-export const HighchartsProvider: React.FC<HighchartsProviderProps> = ({ children }) => {
-  const [useChartsBackgroundColor, setUseChartsBackgroundColor] = useState(() => {
-    const stored = localStorage.getItem('useChartsBackgroundColor');
-    return stored ? JSON.parse(stored) : false;
-  });
+export const HighchartsProvider: React.FC<HighchartsProviderProps> = ({
+  children,
+}) => {
+  const [useChartsBackgroundColor, setUseChartsBackgroundColor] = useState(
+    () => {
+      const stored = localStorage.getItem('useChartsBackgroundColor');
+      return stored ? JSON.parse(stored) : false;
+    }
+  );
 
   const updateHighchartsConfig = () => {
     // Set default theme
@@ -42,7 +56,9 @@ export const HighchartsProvider: React.FC<HighchartsProviderProps> = ({ children
 
     // Get user preferences
     const theme = localStorage.getItem('theme') || 'blue-pink-gradient';
-    const currentUseChartsBackgroundColor = localStorage.getItem('useChartsBackgroundColor');
+    const currentUseChartsBackgroundColor = localStorage.getItem(
+      'useChartsBackgroundColor'
+    );
 
     // Configure theme
     const chartTheme = {
@@ -85,17 +101,26 @@ export const HighchartsProvider: React.FC<HighchartsProviderProps> = ({ children
     };
 
     const handleCustomStorageChange = (e: CustomEvent) => {
-      if (e.detail?.key === 'useChartsBackgroundColor' || e.detail?.key === 'theme') {
+      if (
+        e.detail?.key === 'useChartsBackgroundColor' ||
+        e.detail?.key === 'theme'
+      ) {
         updateHighchartsConfig();
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('localStorageChange', handleCustomStorageChange as EventListener);
-    
+    window.addEventListener(
+      'localStorageChange',
+      handleCustomStorageChange as EventListener
+    );
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('localStorageChange', handleCustomStorageChange as EventListener);
+      window.removeEventListener(
+        'localStorageChange',
+        handleCustomStorageChange as EventListener
+      );
     };
   }, []);
 
@@ -126,4 +151,4 @@ export const HighchartsProvider: React.FC<HighchartsProviderProps> = ({ children
       {children}
     </HighchartsContext.Provider>
   );
-}; 
+};

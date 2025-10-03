@@ -9,4 +9,4 @@ export const useHighchartsUpdate = () => {
   }, [updateHighchartsConfig]);
 
   return { triggerUpdate };
-}; 
+};

@@ -4,12 +4,12 @@
   gap: 0.5rem;
   width: 100%;
   position: relative;
-  
+
   // Transaction Item Wrapper
   .transaction-item-wrapper {
     position: relative;
     width: 100%;
-    
+
     .swipe-actions-background {
       position: absolute;
       top: 0;
@@ -22,11 +22,11 @@
       z-index: 0;
       opacity: 0;
       transition: opacity 0.2s ease;
-      
+
       &.visible {
         opacity: 1;
       }
-      
+
       // Component-specific overrides (circular buttons)
       .delete-action-bg,
       .edit-action-bg {
@@ -39,23 +39,23 @@
         border-radius: 50%;
         box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
         transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        
+
         svg {
           font-size: 1.25rem;
           color: #ffffff;
         }
       }
-      
+
       .delete-action-bg {
         left: 20px;
-        background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       }
-      
+
       .edit-action-bg {
         right: 20px;
-        background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
       }
-      
+
       // Scale up when threshold is reached
       body.action-active & {
         .delete-action-bg,
@@ -66,13 +66,13 @@
       }
     }
   }
-  
+
   // Sort Controls
   .sort-controls {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 0.75rem;
-    
+
     .sort-button {
       background: rgba(255, 255, 255, 0.05);
       border: none;
@@ -85,24 +85,24 @@
       align-items: center;
       gap: 0.5rem;
       transition: all 0.2s ease;
-      
+
       svg {
         font-size: 0.875rem;
       }
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.08);
         color: rgba(255, 255, 255, 0.8);
       }
-      
+
       &.active {
         background: rgba(91, 141, 239, 0.2);
-        color: #5B8DEF;
+        color: #5b8def;
         font-weight: 500;
       }
     }
   }
-  
+
   .transaction-list-item {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 16px;
@@ -116,16 +116,16 @@
     z-index: 1;
     width: 100%;
     min-height: fit-content;
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.08);
       transform: translateX(4px);
     }
-    
+
     &:active {
       transform: scale(0.98);
     }
-    
+
     .transaction-date-box {
       display: flex;
       flex-direction: column;
@@ -133,14 +133,14 @@
       justify-content: center;
       min-width: 50px;
       flex-shrink: 0;
-      
+
       .date-day {
         font-size: 1.5rem;
         font-weight: 700;
         color: #ffffff;
         line-height: 1;
       }
-      
+
       .date-month {
         font-size: 0.75rem;
         font-weight: 600;
@@ -149,7 +149,7 @@
         letter-spacing: 0.5px;
       }
     }
-    
+
     .transaction-category-box {
       display: flex;
       align-items: center;
@@ -160,7 +160,7 @@
       border-radius: 12px;
       padding: 0.5rem 0.75rem;
       flex-shrink: 0;
-      
+
       .category-name {
         font-size: 0.8rem;
         font-weight: 500;
@@ -171,11 +171,11 @@
         text-overflow: ellipsis;
       }
     }
-    
+
     .transaction-content {
       flex: 1;
       min-width: 0;
-      
+
       .transaction-name {
         font-size: 1rem;
         font-weight: 500;
@@ -185,7 +185,7 @@
         overflow-wrap: break-word;
       }
     }
-    
+
     .transaction-price {
       font-size: 1.125rem;
       font-weight: 700;
@@ -193,7 +193,6 @@
       white-space: nowrap;
     }
   }
-  
 }
 
 // Responsive
@@ -201,48 +200,47 @@
   .transaction-list-component {
     .transaction-list-item {
       gap: 0.75rem;
-      
+
       .transaction-date-box {
         min-width: 45px;
-        
+
         .date-day {
           font-size: 1.25rem;
         }
-        
+
         .date-month {
           font-size: 0.7rem;
         }
       }
-      
+
       .transaction-category-box {
         min-width: 70px;
         max-width: 90px;
         padding: 0.4rem 0.625rem;
-        
+
         .category-name {
           font-size: 0.75rem;
         }
       }
-      
+
       .transaction-content {
         .transaction-name {
           font-size: 0.95rem;
         }
       }
-      
+
       .transaction-price {
         font-size: 1rem;
       }
     }
-    
+
     .swipe-action {
       width: 50px;
       height: 50px;
-      
+
       svg {
         font-size: 1.25rem;
       }
     }
   }
 }
-

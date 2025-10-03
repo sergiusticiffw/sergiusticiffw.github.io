@@ -27,7 +27,9 @@ interface UseFormSubmitReturn<T> {
   setFormState: React.Dispatch<React.SetStateAction<T>>;
   isSubmitting: boolean;
   handleChange: (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => void;
   handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }
@@ -55,12 +57,15 @@ export const useFormSubmit = <T extends Record<string, any>>({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
-    const value = event.target.type === 'checkbox' 
-      ? (event.target as HTMLInputElement).checked 
-      : event.target.value;
-    
+    const value =
+      event.target.type === 'checkbox'
+        ? (event.target as HTMLInputElement).checked
+        : event.target.value;
+
     setFormState({
       ...formState,
       [event.target.name]: value,
@@ -106,8 +111,8 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 ? successMessageKeys.add
                 : successMessageKeys.edit
               : formType === 'add'
-              ? 'notification.added'
-              : 'notification.updated';
+                ? 'notification.added'
+                : 'notification.updated';
             showNotification(t(messageKey), notificationType.SUCCESS);
             setIsSubmitting(false);
             setFormState(initialState);
@@ -134,8 +139,8 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 ? successMessageKeys.add
                 : successMessageKeys.edit
               : formType === 'add'
-              ? 'notification.added'
-              : 'notification.updated';
+                ? 'notification.added'
+                : 'notification.updated';
             showNotification(t(messageKey), notificationType.SUCCESS);
             setIsSubmitting(false);
             setFormState(initialState);
@@ -160,4 +165,3 @@ export const useFormSubmit = <T extends Record<string, any>>({
     handleSubmit,
   };
 };
-

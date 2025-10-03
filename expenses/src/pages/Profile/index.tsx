@@ -5,12 +5,7 @@ import { useHighchartsContext } from '@context/highcharts';
 import { useLocalization } from '@context/localization';
 import { logout } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
-import {
-  FaUserCircle,
-  FaSignOutAlt,
-  FaCog,
-  FaChartBar,
-} from 'react-icons/fa';
+import { FaUserCircle, FaSignOutAlt, FaCog, FaChartBar } from 'react-icons/fa';
 import { fetchRequest } from '@utils/utils';
 import {
   notificationType,
@@ -26,12 +21,8 @@ const Profile = () => {
   const { language, setLanguage, t } = useLocalization();
   const dispatch = useAuthDispatch();
   const { dataDispatch } = useData();
-  const {
-    userDetails,
-    token,
-    currency,
-    useChartsBackgroundColor,
-  } = useAuthState() as AuthState;
+  const { userDetails, token, currency, useChartsBackgroundColor } =
+    useAuthState() as AuthState;
   const [state, setState] = useState({
     useChartsBackgroundColor: useChartsBackgroundColor,
     visibleCharts:
@@ -39,10 +30,15 @@ const Profile = () => {
   });
   const navigate = useNavigate();
 
-  const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleLanguageChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const newLanguage = event.target.value as 'en' | 'ro';
     setLanguage(newLanguage);
-    showNotification(t('notification.profileUpdated'), notificationType.SUCCESS);
+    showNotification(
+      t('notification.profileUpdated'),
+      notificationType.SUCCESS
+    );
   };
 
   const handleLogout = (
@@ -77,14 +73,10 @@ const Profile = () => {
         setBlink(true);
         setTimeout(() => setBlink(false), 2000);
       } else {
-        showNotification(
-          t('error.unknown'),
-          notificationType.ERROR
-        );
+        showNotification(t('error.unknown'), notificationType.ERROR);
       }
     });
   };
-
 
   const onBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -247,7 +239,7 @@ const Profile = () => {
             <FaSignOutAlt />
             <h3>{t('profile.account')}</h3>
           </div>
-          
+
           <div className="user-info">
             <div className="user-name">{userDetails.current_user.name}</div>
           </div>

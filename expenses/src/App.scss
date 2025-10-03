@@ -33,7 +33,7 @@
   overflow-y: auto; // Allow scrolling when needed
   min-height: calc(100vh - 70px); // Minimum height minus navbar
   background: #1a1a1a;
-  
+
   // Reduced padding for non-Home pages
   &:not(:has(.month-stats)) {
     padding-bottom: 60px; // Reduced space for other pages
@@ -46,7 +46,7 @@
   align-items: center;
   min-height: 100vh;
   background: #1a1a1a;
-  
+
   .loader {
     position: relative;
     display: flex;
@@ -60,17 +60,17 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background-color: #5B8DEF;
+    background-color: #5b8def;
     animation: loader-bounce 1.4s infinite ease-in-out both;
-    
+
     &:nth-child(1) {
       animation-delay: -0.32s;
     }
-    
+
     &:nth-child(2) {
       animation-delay: -0.16s;
     }
-    
+
     &:nth-child(3) {
       animation-delay: 0s;
     }
@@ -78,7 +78,9 @@
 }
 
 @keyframes loader-bounce {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0.6);
     opacity: 0.5;
   }
@@ -96,22 +98,22 @@
   min-height: 50vh;
   text-align: center;
   padding: $spacing-xl;
-  
+
   h2 {
-    color: #5B8DEF;
+    color: #5b8def;
     margin-bottom: $spacing-md;
   }
-  
+
   p {
     margin-bottom: $spacing-lg;
     color: #ffffff;
   }
-  
+
   .button {
     padding: $spacing-sm $spacing-lg;
     border-radius: 0 !important;
     transition: all $transition-normal;
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -127,7 +129,7 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%);
+  background: linear-gradient(135deg, #5b8def 0%, #4a7ddc 100%);
   color: white;
   border: none;
   box-shadow: 0 4px 16px rgba(91, 141, 239, 0.4);

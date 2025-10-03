@@ -192,6 +192,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           right: '',
         }}
         height="auto"
+        firstDay={1}
         eventClick={handleEventClick}
         eventContent={(eventInfo) => {
           const amount = eventInfo.event.extendedProps.total;

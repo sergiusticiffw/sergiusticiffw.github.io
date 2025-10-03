@@ -2,11 +2,11 @@ import { useState, useCallback } from 'react';
 import { useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
 import { AuthState } from '@type/types';
-import { 
-  handleFormSubmission, 
-  createLoadingState, 
+import {
+  handleFormSubmission,
+  createLoadingState,
   validateForm,
-  getCurrentDate 
+  getCurrentDate,
 } from '@utils/commonUtils';
 
 interface UseFormOptions<T> {
@@ -20,7 +20,9 @@ interface UseFormOptions<T> {
   transformData?: (data: T) => any;
 }
 
-export const useForm = <T extends Record<string, any>>(options: UseFormOptions<T>) => {
+export const useForm = <T extends Record<string, any>>(
+  options: UseFormOptions<T>
+) => {
   const {
     initialValues,
     requiredFields = [],
@@ -29,7 +31,7 @@ export const useForm = <T extends Record<string, any>>(options: UseFormOptions<T
     errorMessage = 'Something went wrong, please try again.',
     apiUrl,
     method,
-    transformData
+    transformData,
   } = options;
 
   const [formData, setFormData] = useState<T>(initialValues);
@@ -37,24 +39,29 @@ export const useForm = <T extends Record<string, any>>(options: UseFormOptions<T
   const { token } = useAuthState() as AuthState;
   const showNotification = useNotification();
 
-  const handleChange = useCallback((
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = event.target;
-    const checked = (event.target as HTMLInputElement).checked;
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  }, []);
+  const handleChange = useCallback(
+    (
+      event: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) => {
+      const { name, value, type } = event.target;
+      const checked = (event.target as HTMLInputElement).checked;
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
+    },
+    []
+  );
 
   const resetForm = useCallback(() => {
     setFormData(initialValues);
   }, [initialValues]);
 
   const setFieldValue = useCallback((name: keyof T, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -64,58 +71,61 @@ export const useForm = <T extends Record<string, any>>(options: UseFormOptions<T
     return validateForm(formData, requiredFields as string[]);
   }, [formData, requiredFields]);
 
-  const handleSubmit = useCallback(async (event?: React.FormEvent) => {
-    if (event) {
-      event.preventDefault();
-    }
+  const handleSubmit = useCallback(
+    async (event?: React.FormEvent) => {
+      if (event) {
+        event.preventDefault();
+      }
 
-    const errors = validate();
-    if (errors.length > 0) {
-      errors.forEach(error => showNotification(error, 'error'));
-      return;
-    }
+      const errors = validate();
+      if (errors.length > 0) {
+        errors.forEach((error) => showNotification(error, 'error'));
+        return;
+      }
 
-    startLoading();
+      startLoading();
 
-    try {
-      const dataToSend = transformData ? transformData(formData) : formData;
-      
-      await handleFormSubmission(
-        apiUrl,
-        method,
-        dataToSend,
-        token,
-        null, // dataDispatch - not needed for this hook
-        null, // dispatch - not needed for this hook
-        () => {
-          resetForm();
-          onSuccess?.();
-        },
-        showNotification,
-        successMessage,
-        errorMessage
-      );
-    } catch (error) {
-      console.error('Form submission error:', error);
-      showNotification(errorMessage, 'error');
-    } finally {
-      stopLoading();
-    }
-  }, [
-    formData,
-    validate,
-    startLoading,
-    stopLoading,
-    apiUrl,
-    method,
-    token,
-    transformData,
-    resetForm,
-    onSuccess,
-    showNotification,
-    successMessage,
-    errorMessage
-  ]);
+      try {
+        const dataToSend = transformData ? transformData(formData) : formData;
+
+        await handleFormSubmission(
+          apiUrl,
+          method,
+          dataToSend,
+          token,
+          null, // dataDispatch - not needed for this hook
+          null, // dispatch - not needed for this hook
+          () => {
+            resetForm();
+            onSuccess?.();
+          },
+          showNotification,
+          successMessage,
+          errorMessage
+        );
+      } catch (error) {
+        console.error('Form submission error:', error);
+        showNotification(errorMessage, 'error');
+      } finally {
+        stopLoading();
+      }
+    },
+    [
+      formData,
+      validate,
+      startLoading,
+      stopLoading,
+      apiUrl,
+      method,
+      token,
+      transformData,
+      resetForm,
+      onSuccess,
+      showNotification,
+      successMessage,
+      errorMessage,
+    ]
+  );
 
   return {
     formData,
@@ -129,16 +139,24 @@ export const useForm = <T extends Record<string, any>>(options: UseFormOptions<T
 };
 
 // Specialized hooks for common form types
-export const useTransactionForm = (formType: 'add' | 'edit', values?: any, onSuccess?: () => void) => {
+export const useTransactionForm = (
+  formType: 'add' | 'edit',
+  values?: any,
+  onSuccess?: () => void
+) => {
   const initialValues = {
     field_amount: '',
     field_date: getCurrentDate(),
     field_category: '',
     field_description: '',
-    ...values
+    ...values,
   };
 
-  const requiredFields: (keyof typeof initialValues)[] = ['field_amount', 'field_date', 'field_category'];
+  const requiredFields: (keyof typeof initialValues)[] = [
+    'field_amount',
+    'field_date',
+    'field_category',
+  ];
 
   const transformData = (data: typeof initialValues) => ({
     type: 'transaction',
@@ -149,9 +167,10 @@ export const useTransactionForm = (formType: 'add' | 'edit', values?: any, onSuc
     field_description: [data.field_description],
   });
 
-  const apiUrl = formType === 'add' 
-    ? 'https://dev-expenses-api.pantheonsite.io/node?_format=json'
-    : `https://dev-expenses-api.pantheonsite.io/node/${values?.nid}?_format=json`;
+  const apiUrl =
+    formType === 'add'
+      ? 'https://dev-expenses-api.pantheonsite.io/node?_format=json'
+      : `https://dev-expenses-api.pantheonsite.io/node/${values?.nid}?_format=json`;
 
   return useForm({
     initialValues,
@@ -163,15 +182,23 @@ export const useTransactionForm = (formType: 'add' | 'edit', values?: any, onSuc
   });
 };
 
-export const useIncomeForm = (formType: 'add' | 'edit', values?: any, onSuccess?: () => void) => {
+export const useIncomeForm = (
+  formType: 'add' | 'edit',
+  values?: any,
+  onSuccess?: () => void
+) => {
   const initialValues = {
     field_amount: '',
     field_date: getCurrentDate(),
     field_description: '',
-    ...values
+    ...values,
   };
 
-  const requiredFields: (keyof typeof initialValues)[] = ['field_amount', 'field_date', 'field_description'];
+  const requiredFields: (keyof typeof initialValues)[] = [
+    'field_amount',
+    'field_date',
+    'field_description',
+  ];
 
   const transformData = (data: typeof initialValues) => ({
     type: 'incomes',
@@ -181,9 +208,10 @@ export const useIncomeForm = (formType: 'add' | 'edit', values?: any, onSuccess?
     field_description: [data.field_description],
   });
 
-  const apiUrl = formType === 'add' 
-    ? 'https://dev-expenses-api.pantheonsite.io/node?_format=json'
-    : `https://dev-expenses-api.pantheonsite.io/node/${values?.nid}?_format=json`;
+  const apiUrl =
+    formType === 'add'
+      ? 'https://dev-expenses-api.pantheonsite.io/node?_format=json'
+      : `https://dev-expenses-api.pantheonsite.io/node/${values?.nid}?_format=json`;
 
   return useForm({
     initialValues,
@@ -193,4 +221,4 @@ export const useIncomeForm = (formType: 'add' | 'edit', values?: any, onSuccess?
     method: formType === 'add' ? 'POST' : 'PATCH',
     transformData,
   });
-}; 
+};

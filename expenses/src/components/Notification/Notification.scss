@@ -3,7 +3,11 @@
 .notification {
   max-width: 400px;
   min-width: 300px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.05)
+  );
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -14,17 +18,17 @@
   opacity: 0;
   transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   overflow: hidden;
-  
+
   &.visible {
     transform: translateX(0);
     opacity: 1;
   }
-  
+
   &.closing {
     transform: translateX(100%);
     opacity: 0;
   }
-  
+
   .notification-content {
     display: flex;
     align-items: flex-start;
@@ -32,7 +36,7 @@
     gap: 1rem;
     position: relative;
   }
-  
+
   .notification-icon {
     flex-shrink: 0;
     width: 24px;
@@ -42,18 +46,18 @@
     justify-content: center;
     border-radius: 50%;
     font-size: 1rem;
-    
+
     svg {
       width: 16px;
       height: 16px;
     }
   }
-  
+
   .notification-body {
     flex: 1;
     min-width: 0;
   }
-  
+
   .notification-title {
     font-size: 0.9rem;
     font-weight: 700;
@@ -61,14 +65,14 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  
+
   .notification-message {
     font-size: 0.95rem;
     font-weight: 500;
     line-height: 1.4;
     color: rgba(255, 255, 255, 0.9);
   }
-  
+
   .notification-close {
     flex-shrink: 0;
     width: 24px;
@@ -83,18 +87,18 @@
     justify-content: center;
     transition: all 0.3s ease;
     font-size: 0.8rem;
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.2);
       color: #fff;
       transform: scale(1.1);
     }
-    
+
     &:active {
       transform: scale(0.95);
     }
   }
-  
+
   .notification-progress {
     position: absolute;
     bottom: 0;
@@ -103,76 +107,76 @@
     background: rgba(255, 255, 255, 0.3);
     animation: progress 4s linear forwards;
   }
-  
+
   // Success notification
   &.success {
-    border-left: 4px solid #4CAF50;
-    
+    border-left: 4px solid #4caf50;
+
     .notification-icon {
       background: rgba(76, 175, 80, 0.2);
-      color: #4CAF50;
+      color: #4caf50;
     }
-    
+
     .notification-title {
-      color: #4CAF50;
+      color: #4caf50;
     }
-    
+
     .notification-progress {
-      background: linear-gradient(90deg, #4CAF50, #66BB6A);
+      background: linear-gradient(90deg, #4caf50, #66bb6a);
     }
   }
-  
+
   // Error notification
   &.error {
     border-left: 4px solid #f44336;
-    
+
     .notification-icon {
       background: rgba(244, 67, 54, 0.2);
       color: #f44336;
     }
-    
+
     .notification-title {
       color: #f44336;
     }
-    
+
     .notification-progress {
-      background: linear-gradient(90deg, #f44336, #EF5350);
+      background: linear-gradient(90deg, #f44336, #ef5350);
     }
   }
-  
+
   // Warning notification
   &.warning {
-    border-left: 4px solid #FF9800;
-    
+    border-left: 4px solid #ff9800;
+
     .notification-icon {
       background: rgba(255, 152, 0, 0.2);
-      color: #FF9800;
+      color: #ff9800;
     }
-    
+
     .notification-title {
-      color: #FF9800;
+      color: #ff9800;
     }
-    
+
     .notification-progress {
-      background: linear-gradient(90deg, #FF9800, #FFB74D);
+      background: linear-gradient(90deg, #ff9800, #ffb74d);
     }
   }
-  
+
   // Info notification
   &.info {
-    border-left: 4px solid #5B8DEF;
-    
+    border-left: 4px solid #5b8def;
+
     .notification-icon {
       background: rgba(91, 141, 239, 0.2);
-      color: #5B8DEF;
+      color: #5b8def;
     }
-    
+
     .notification-title {
-      color: #5B8DEF;
+      color: #5b8def;
     }
-    
+
     .notification-progress {
-      background: linear-gradient(90deg, #5B8DEF, #64B5F6);
+      background: linear-gradient(90deg, #5b8def, #64b5f6);
     }
   }
 }
@@ -191,18 +195,18 @@
   .notification {
     max-width: none;
     min-width: auto;
-    
+
     .notification-content {
       padding: 1rem;
       gap: 0.75rem;
     }
-    
+
     .notification-title {
       font-size: 0.85rem;
     }
-    
+
     .notification-message {
       font-size: 0.9rem;
     }
   }
-} 
+}

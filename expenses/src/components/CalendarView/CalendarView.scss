@@ -26,7 +26,7 @@
       }
     }
   }
-  
+
   // FullCalendar overrides
   .fc {
     position: relative;
@@ -34,17 +34,17 @@
     touch-action: pan-y; // Allow vertical scrolling, detect horizontal swipe
     background: transparent;
     font-size: 0.85rem;
-    
+
     // Remove borders
     .fc-theme-standard td,
     .fc-theme-standard th {
       border-color: rgba(255, 255, 255, 0.05);
     }
-    
+
     // Day headers (Mon, Tue, Wed...)
     .fc-col-header {
       background: rgba(0, 0, 0, 0.6);
-      
+
       th {
         background: rgba(0, 0, 0, 0.6);
         color: #ffffff;
@@ -59,7 +59,7 @@
         }
       }
     }
-    
+
     // Day cells
     .fc-daygrid-day {
       background: transparent;
@@ -70,7 +70,7 @@
       @media (max-width: 640px) {
         min-height: 50px;
       }
-      
+
       .fc-daygrid-day-number {
         color: rgba(255, 255, 255, 0.8);
         font-weight: 600;
@@ -84,7 +84,7 @@
         }
       }
     }
-    
+
     // Event styling
     .fc-event {
       background: transparent;
@@ -92,18 +92,18 @@
       padding: 0.125rem;
       pointer-events: auto;
     }
-    
+
     .fc-daygrid-event {
       margin: 0.125rem;
       pointer-events: auto;
     }
-    
+
     // Hide event time
     .fc-event-time {
       display: none;
     }
   }
-  
+
   // Custom event styling
   .calendar-event {
     padding: 0.25rem 0.375rem;
@@ -112,7 +112,7 @@
     font-size: 0.7rem;
     font-weight: 600;
     line-height: 1.2;
-    
+
     .event-amount {
       font-size: 0.75rem;
       font-weight: 700;
@@ -122,7 +122,7 @@
         font-size: 0.65rem;
       }
     }
-    
+
     .event-count {
       font-size: 0.6rem;
       opacity: 0.85;
@@ -136,7 +136,7 @@
       padding: 0.2rem 0.3rem;
       border-radius: 4px;
     }
-    
+
     // Color ranges - darker, more muted
     &.amount-low {
       background: rgba(34, 139, 34, 0.6);
@@ -144,14 +144,14 @@
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
       font-weight: 600;
     }
-    
+
     &.amount-medium {
       background: rgba(218, 165, 32, 0.6);
       color: #ffffff;
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
       font-weight: 600;
     }
-    
+
     &.amount-high {
       background: rgba(178, 34, 34, 0.65);
       color: #ffffff;
@@ -166,30 +166,30 @@
   .calendar-view-component {
     .fc {
       font-size: 0.75rem;
-      
+
       .fc-col-header th {
         padding: 0.5rem 0.125rem;
         font-size: 0.65rem;
       }
-      
+
       .fc-daygrid-day {
         min-height: 50px;
-        
+
         .fc-daygrid-day-number {
           font-size: 0.75rem;
           padding: 0.125rem;
         }
       }
     }
-    
+
     .calendar-event {
       padding: 0.2rem 0.3rem;
       font-size: 0.6rem;
-      
+
       .event-amount {
         font-size: 0.65rem;
       }
-      
+
       .event-count {
         font-size: 0.55rem;
       }

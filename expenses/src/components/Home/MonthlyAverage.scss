@@ -16,7 +16,7 @@
   margin-bottom: 0.75rem;
   background: none !important;
   border: none !important;
-  
+
   h3 {
     margin: 0;
     font-size: 0.95rem;
@@ -31,16 +31,16 @@
   width: 100%;
   border-collapse: collapse;
   background: transparent !important;
-  
+
   thead {
     tr {
       border-bottom: none;
       background: transparent !important;
-      
+
       th {
         padding: 0 0 0.5rem 0;
         background: transparent !important;
-        
+
         &:first-child {
           font-size: 1.125rem;
           font-weight: 600;
@@ -49,7 +49,7 @@
           letter-spacing: -0.3px;
           text-align: left;
         }
-        
+
         &:not(:first-child) {
           font-weight: 600;
           color: rgba(255, 255, 255, 0.5);
@@ -58,10 +58,10 @@
           letter-spacing: 0.8px;
           text-align: right;
         }
-        
+
         &.sortable {
           cursor: pointer;
-          
+
           &:hover {
             color: rgba(255, 255, 255, 0.8);
           }
@@ -69,25 +69,25 @@
       }
     }
   }
-  
+
   tbody tr:first-child td {
     padding-top: 1rem;
   }
-  
+
   td {
     padding: 0.625rem 0;
     border-bottom: none;
     vertical-align: middle;
     background: transparent !important;
-    
+
     &:first-child {
       text-align: left;
     }
-    
+
     &:last-child {
       text-align: right;
     }
-    
+
     &.category-cell {
       .category-name {
         color: rgba(255, 255, 255, 0.9);
@@ -96,7 +96,7 @@
         display: block;
         text-align: left;
       }
-      
+
       .category-percentage {
         color: rgba(255, 255, 255, 0.5);
         font-size: 0.875rem;
@@ -106,7 +106,7 @@
         text-align: left;
       }
     }
-    
+
     &.amount-cell {
       color: white;
       font-size: 1rem;
@@ -114,19 +114,19 @@
       text-align: right;
     }
   }
-  
+
   tbody tr {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     background: transparent !important;
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     &.total-row {
       background: transparent !important;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
-      
+
       .total-label {
         color: white;
         font-size: 1rem;
@@ -134,7 +134,7 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
-      
+
       .total-amount {
         color: white;
         font-size: 1rem;
@@ -149,36 +149,36 @@
   .monthly-average-balanced {
     margin: 1rem 0;
   }
-  
+
   .balanced-table {
     thead th {
       &:first-child {
         font-size: 1rem;
       }
-      
+
       &:not(:first-child) {
         font-size: 0.7rem;
       }
     }
-    
+
     td {
       font-size: 0.9rem;
     }
-    
+
     td.category-cell {
       .category-name {
         font-size: 0.9rem;
       }
-      
+
       .category-percentage {
         font-size: 0.8rem;
       }
     }
-    
+
     td.amount-cell {
       font-size: 0.9rem;
     }
-    
+
     tr.total-row {
       .total-label,
       .total-amount {

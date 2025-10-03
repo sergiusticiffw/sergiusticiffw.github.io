@@ -6,12 +6,13 @@ import { AuthState } from '@type/types';
 import { fetchLoans, formatNumber, deleteLoan } from '@utils/utils';
 import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
-import { PageHeader, LoadingSpinner, DeleteConfirmModal, NoData } from '@components/Common';
 import {
-  FaHandHoldingUsd,
-  FaPlus,
-  FaFilter,
-} from 'react-icons/fa';
+  PageHeader,
+  LoadingSpinner,
+  DeleteConfirmModal,
+  NoData,
+} from '@components/Common';
+import { FaHandHoldingUsd, FaPlus, FaFilter } from 'react-icons/fa';
 import Modal from '@components/Modal/Modal';
 import LoanForm from '@components/Loan/LoanForm';
 import LoansList from '@components/Loan/LoansList';
@@ -129,7 +130,6 @@ const Loans: React.FC = () => {
         subtitle={`${totalLoans} ${totalLoans === 1 ? 'loan' : 'loans'}`}
       />
 
-
       {/* Simple Stats */}
       <div className="loans-stats">
         <div className="stat-item">
@@ -172,10 +172,14 @@ const Loans: React.FC = () => {
                 ? `${t('loans.noLoansWithStatus')} "${statusFilter}".`
                 : t('loans.noLoansDesc')
             }
-            action={statusFilter !== 'all' ? {
-              label: t('loans.showAllLoans'),
-              onClick: () => setStatusFilter('all')
-            } : undefined}
+            action={
+              statusFilter !== 'all'
+                ? {
+                    label: t('loans.showAllLoans'),
+                    onClick: () => setStatusFilter('all'),
+                  }
+                : undefined
+            }
           />
         ) : (
           <LoansList
@@ -248,7 +252,7 @@ const Loans: React.FC = () => {
         message={t('modal.deleteLoanMessage')}
         isSubmitting={isSubmitting}
       />
-      
+
       {/* Floating Action Button */}
       <button
         onClick={() => setShowAddModal(true)}

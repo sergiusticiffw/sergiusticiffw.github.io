@@ -14,19 +14,19 @@
   transition: background 0.2s ease;
   width: 100%;
   gap: 0.5rem;
-  
+
   &:focus-within {
     background: rgba(255, 255, 255, 0.08);
   }
-  
+
   .search-bar-icon {
     color: rgba(255, 255, 255, 0.4);
     font-size: 1.125rem;
     flex-shrink: 0;
   }
-  
+
   .selected-category-chip {
-    background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%);
+    background: linear-gradient(135deg, #5b8def 0%, #4a7ddc 100%);
     color: #ffffff;
     font-size: 0.8rem;
     font-weight: 500;
@@ -35,17 +35,17 @@
     white-space: nowrap;
     flex-shrink: 0;
     transition: all 0.2s ease;
-    
+
     &.clickable {
       cursor: pointer;
-      
+
       &:hover {
-        background: linear-gradient(135deg, #6B9DFF 0%, #5A8DEC 100%);
+        background: linear-gradient(135deg, #6b9dff 0%, #5a8dec 100%);
         transform: scale(1.05);
       }
     }
   }
-  
+
   .search-bar-input {
     flex: 1;
     background: transparent;
@@ -55,12 +55,12 @@
     font-size: 0.95rem;
     outline: none;
     min-width: 0;
-    
+
     &::placeholder {
       color: rgba(255, 255, 255, 0.4);
     }
   }
-  
+
   .clear-filters-btn {
     background: transparent;
     border: none;
@@ -70,13 +70,13 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    
+
     svg {
       color: rgba(255, 255, 255, 0.4);
       font-size: 1rem;
       transition: color 0.2s ease;
     }
-    
+
     &:hover svg {
       color: rgba(255, 255, 255, 0.7);
     }
@@ -88,7 +88,7 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   animation: slideDown 0.2s ease-out;
-  
+
   .category-chip {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -99,15 +99,15 @@
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
-    
+
     &:hover {
       background: rgba(255, 255, 255, 0.08);
       border-color: rgba(255, 255, 255, 0.2);
       color: rgba(255, 255, 255, 0.9);
     }
-    
+
     &.active {
-      background: linear-gradient(135deg, #5B8DEF 0%, #4A7DDC 100%);
+      background: linear-gradient(135deg, #5b8def 0%, #4a7ddc 100%);
       border-color: transparent;
       color: #ffffff;
       font-weight: 500;

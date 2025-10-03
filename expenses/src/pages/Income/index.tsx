@@ -13,7 +13,14 @@ import Modal from '@components/Modal/Modal';
 import IncomeTable from '@components/Income/IncomeTable';
 import IncomeFilters from '@components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
-import { PageHeader, LoadingSpinner, StatCard, StatsGrid, DeleteConfirmModal, NoData } from '@components/Common';
+import {
+  PageHeader,
+  LoadingSpinner,
+  StatCard,
+  StatsGrid,
+  DeleteConfirmModal,
+  NoData,
+} from '@components/Common';
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import {
@@ -162,7 +169,7 @@ const Income = () => {
   return (
     <div className="page-container income-page">
       {/* Header */}
-      <PageHeader 
+      <PageHeader
         title={t('income.title')}
         subtitle={`${totalRecords} ${totalRecords === 1 ? 'income record' : 'income records'}`}
       />
@@ -183,7 +190,10 @@ const Income = () => {
       />
 
       {/* Income Stats Cards */}
-      <StatsGrid columns={2} filtered={!!(filters.textFilter || filters.selectedMonth)}>
+      <StatsGrid
+        columns={2}
+        filtered={!!(filters.textFilter || filters.selectedMonth)}
+      >
         <StatCard
           icon={<FaMoneyBillWave />}
           value={formatNumber(totalIncome)}
@@ -253,7 +263,9 @@ const Income = () => {
           e.preventDefault();
           setShowDeleteModal(false);
         }}
-        onConfirm={() => showDeleteModal && handleDelete(showDeleteModal, token)}
+        onConfirm={() =>
+          showDeleteModal && handleDelete(showDeleteModal, token)
+        }
         title={t('income.deleteIncome')}
         isSubmitting={isSubmitting}
       />

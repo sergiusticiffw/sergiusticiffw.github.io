@@ -21,7 +21,9 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
   const { t } = useLocalization();
   const [isFilterFocused, setIsFilterFocused] = useState(false);
 
-  const handleTextFilterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTextFilterChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     onTextFilterChange(event.target.value);
   };
 
@@ -47,7 +49,10 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
       const year = date.getFullYear();
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const monthValue = `${year}-${month}`;
-      const monthLabel = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const monthLabel = date.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+      });
       months.push({ value: monthValue, label: monthLabel });
     }
     return months;

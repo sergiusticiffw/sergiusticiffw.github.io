@@ -40,7 +40,11 @@ const Login = () => {
   return (
     <div className="login-container">
       <h4>{t('login.pleaseLogin')}</h4>
-      {errorMessage ? <p>{t('login.errors')}: {errorMessage}</p> : null}
+      {errorMessage ? (
+        <p>
+          {t('login.errors')}: {errorMessage}
+        </p>
+      ) : null}
       <button
         // @ts-expect-error
         onClick={useGoogleLogin({

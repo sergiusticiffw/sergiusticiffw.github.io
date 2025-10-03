@@ -25,7 +25,7 @@ export const NotificationProvider = ({
   children,
 }: NotificationContextProps) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  
+
   // Add null check for auth state
   const authState = useAuthState() as AuthState | null;
   let theme = authState?.theme || 'blue-pink-gradient';
@@ -43,9 +43,9 @@ export const NotificationProvider = ({
       type,
       timestamp: Date.now(),
     };
-    
-    setNotifications(prev => [...prev, newNotification]);
-    
+
+    setNotifications((prev) => [...prev, newNotification]);
+
     let timeout = 4000; // Default 4 seconds
     if (type === notificationType.ERROR) {
       timeout = 6000; // 6 seconds for errors
@@ -62,7 +62,9 @@ export const NotificationProvider = ({
   };
 
   const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== id)
+    );
   };
 
   return (
@@ -74,7 +76,7 @@ export const NotificationProvider = ({
             key={notification.id}
             style={{
               position: 'fixed',
-              top: `${20 + (index * 100)}px`,
+              top: `${20 + index * 100}px`,
               right: '20px',
               zIndex: 9999 + index,
             }}

@@ -17,7 +17,9 @@ export const useHighcharts = () => {
 
     // Get user preferences
     const theme = localStorage.getItem('theme') || 'blue-pink-gradient';
-    const useChartsBackgroundColor = localStorage.getItem('useChartsBackgroundColor');
+    const useChartsBackgroundColor = localStorage.getItem(
+      'useChartsBackgroundColor'
+    );
 
     // Configure theme
     const chartTheme = {
@@ -50,4 +52,4 @@ export const useHighcharts = () => {
     Highcharts.setOptions(performanceOptions);
     Highstock.setOptions(performanceOptions);
   }, []);
-}; 
+};

@@ -350,15 +350,23 @@ const NewHome = () => {
             <NoData
               icon={<FaMoneyBillWave />}
               title={t('home.noTransactionsFound')}
-              description={hasFilters ? t('home.tryDifferentFilters') : t('home.noDataDesc')}
-              action={hasFilters ? {
-                label: t('common.clearFilters'),
-                onClick: () => {
-                  setSearchText('');
-                  setSelectedCategory('');
-                  setCurrentMonthIndex(0); // Reset to current month
-                }
-              } : undefined}
+              description={
+                hasFilters
+                  ? t('home.tryDifferentFilters')
+                  : t('home.noDataDesc')
+              }
+              action={
+                hasFilters
+                  ? {
+                      label: t('common.clearFilters'),
+                      onClick: () => {
+                        setSearchText('');
+                        setSelectedCategory('');
+                        setCurrentMonthIndex(0); // Reset to current month
+                      },
+                    }
+                  : undefined
+              }
             />
           ) : activeView === 'list' ? (
             <div className="newhome-transaction-wrapper">

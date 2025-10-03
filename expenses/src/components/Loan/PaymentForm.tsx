@@ -26,7 +26,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   const { id } = useParams();
   const { t } = useLocalization();
   const { dataDispatch } = useData() as DataState;
-  
+
   const initialState = {
     field_date: new Date().toISOString().slice(0, 10),
     title: '',
@@ -37,7 +37,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     field_loan_reference: id,
     field_is_simulated_payment: false,
   };
-  
+
   const initialValues = {
     title: values.title || '',
     field_date: values.field_date || new Date().toISOString().slice(0, 10),
@@ -106,28 +106,30 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
   const { getFieldValidation } = useFormValidation(validationRules);
 
-  const { formState, isSubmitting, handleChange, handleSubmit } = useFormSubmit({
-    formType,
-    initialState: formType === 'add' ? initialState : initialValues,
-    values,
-    nodeType: 'payment',
-    onSuccess,
-    useFetchRequest: false,
-    buildNodeData: (state) => ({
-      title: [state.title],
-      field_date: [state.field_date],
-      field_rate: [state.field_rate],
-      field_pay_installment: [state.field_pay_installment],
-      field_pay_single_fee: [state.field_pay_single_fee],
-      field_new_recurring_amount: [state.field_new_recurring_amount],
-      field_is_simulated_payment: [state.field_is_simulated_payment ? 1 : 0],
-      field_loan_reference: [id],
-    }),
-    successMessageKeys: {
-      add: 'notification.paymentAdded',
-      edit: 'notification.paymentUpdated',
-    },
-  });
+  const { formState, isSubmitting, handleChange, handleSubmit } = useFormSubmit(
+    {
+      formType,
+      initialState: formType === 'add' ? initialState : initialValues,
+      values,
+      nodeType: 'payment',
+      onSuccess,
+      useFetchRequest: false,
+      buildNodeData: (state) => ({
+        title: [state.title],
+        field_date: [state.field_date],
+        field_rate: [state.field_rate],
+        field_pay_installment: [state.field_pay_installment],
+        field_pay_single_fee: [state.field_pay_single_fee],
+        field_new_recurring_amount: [state.field_new_recurring_amount],
+        field_is_simulated_payment: [state.field_is_simulated_payment ? 1 : 0],
+        field_loan_reference: [id],
+      }),
+      successMessageKeys: {
+        add: 'notification.paymentAdded',
+        edit: 'notification.paymentUpdated',
+      },
+    }
+  );
 
   return (
     <div className="payment-form-container">

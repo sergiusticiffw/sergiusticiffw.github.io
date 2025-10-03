@@ -11,13 +11,13 @@ interface SearchBarProps {
   placeholder?: string;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ 
+const SearchBar: React.FC<SearchBarProps> = ({
   searchValue,
   onSearchChange,
   categoryValue,
   onCategoryChange,
   categories,
-  placeholder = 'Search or filter by category...' 
+  placeholder = 'Search or filter by category...',
 }) => {
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
 
@@ -40,16 +40,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const hasFilters = searchValue !== '' || categoryValue !== '';
 
   // Filter out "All categories" option
-  const categoryChips = categories.filter(cat => cat.value !== '');
-  
+  const categoryChips = categories.filter((cat) => cat.value !== '');
+
   // Get selected category label
-  const selectedCategoryLabel = categoryValue 
-    ? categories.find(cat => cat.value === categoryValue)?.label 
+  const selectedCategoryLabel = categoryValue
+    ? categories.find((cat) => cat.value === categoryValue)?.label
     : '';
-  
+
   // Build display text
-  const displayText = selectedCategoryLabel 
-    ? (searchValue ? `${selectedCategoryLabel}: ${searchValue}` : selectedCategoryLabel)
+  const displayText = selectedCategoryLabel
+    ? searchValue
+      ? `${selectedCategoryLabel}: ${searchValue}`
+      : selectedCategoryLabel
     : searchValue;
 
   return (
@@ -57,17 +59,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
       {/* Search Input */}
       <div className="search-bar-component">
         <FaSearch className="search-bar-icon" />
-        
+
         {/* Show selected category as chip inside search - clickable to change */}
         {categoryValue && !isSearchFocused && (
-          <div 
+          <div
             className="selected-category-chip clickable"
             onClick={() => setIsSearchFocused(true)}
           >
             {selectedCategoryLabel}
           </div>
         )}
-        
+
         <input
           type="text"
           value={searchValue}
@@ -77,13 +79,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
             // Delay to allow chip click
             setTimeout(() => setIsSearchFocused(false), 200);
           }}
-          placeholder={categoryValue && !isSearchFocused ? 'Search in category...' : placeholder}
+          placeholder={
+            categoryValue && !isSearchFocused
+              ? 'Search in category...'
+              : placeholder
+          }
           className="search-bar-input"
         />
-        
+
         {hasFilters && (
-          <button 
-            onClick={handleClear} 
+          <button
+            onClick={handleClear}
             className="clear-filters-btn"
             title="Clear all filters"
           >
@@ -91,7 +97,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           </button>
         )}
       </div>
-      
+
       {/* Category Chips - Show when focused (to select or change category) */}
       {isSearchFocused && (
         <div className="category-chips">

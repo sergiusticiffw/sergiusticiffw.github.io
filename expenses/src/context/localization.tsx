@@ -85,9 +85,11 @@ const translations = {
     // Home Page
     'home.title': 'Expenses',
     'home.noData': 'No transaction records found.',
-    'home.noDataDesc': 'Start tracking your expenses by adding your first transaction.',
+    'home.noDataDesc':
+      'Start tracking your expenses by adding your first transaction.',
     'home.noTransactionsFound': 'No transactions found',
-    'home.tryDifferentFilters': 'Try adjusting your search or filters to find what you\'re looking for.',
+    'home.tryDifferentFilters':
+      "Try adjusting your search or filters to find what you're looking for.",
     'home.addFirstTransaction': 'Add your first transaction to get started!',
     'home.monthlyStats': 'Monthly Statistics',
     'home.dailyAverage': 'Daily Average',
@@ -388,7 +390,8 @@ const translations = {
     'loanForm.loanStatus': 'Loan Status',
     'loanForm.updateLoan': 'Update Loan',
     'loanForm.endDateMustBeAfterStartDate': 'End date must be after start date',
-    'loanForm.firstPaymentDateMustBeBetweenStartAndEnd': 'First payment date must be between start and end date',
+    'loanForm.firstPaymentDateMustBeBetweenStartAndEnd':
+      'First payment date must be between start and end date',
 
     // Payment
     'payment.simulated': 'Simulated',
@@ -512,9 +515,11 @@ const translations = {
     // Home Page
     'home.title': 'Cheltuieli',
     'home.noData': 'Nu s-au găsit înregistrări de tranzacții.',
-    'home.noDataDesc': 'Începe să îți urmărești cheltuielile adăugând prima ta tranzacție.',
+    'home.noDataDesc':
+      'Începe să îți urmărești cheltuielile adăugând prima ta tranzacție.',
     'home.noTransactionsFound': 'Nu s-au găsit tranzacții',
-    'home.tryDifferentFilters': 'Încearcă să ajustezi căutarea sau filtrele pentru a găsi ce cauți.',
+    'home.tryDifferentFilters':
+      'Încearcă să ajustezi căutarea sau filtrele pentru a găsi ce cauți.',
     'home.addFirstTransaction': 'Adaugă prima ta tranzacție pentru a începe!',
     'home.monthlyStats': 'Statistici Lunare',
     'home.dailyAverage': 'Media Zilnică',
@@ -820,8 +825,10 @@ const translations = {
     'loanForm.paymentDayOfMonth': 'Ziua Plății din Lună',
     'loanForm.loanStatus': 'Statusul Împrumutului',
     'loanForm.updateLoan': 'Actualizează Împrumutul',
-    'loanForm.endDateMustBeAfterStartDate': 'Data de sfârșit trebuie să fie după data de început',
-    'loanForm.firstPaymentDateMustBeBetweenStartAndEnd': 'Data primei plăți trebuie să fie între data de început și data de sfârșit',
+    'loanForm.endDateMustBeAfterStartDate':
+      'Data de sfârșit trebuie să fie după data de început',
+    'loanForm.firstPaymentDateMustBeBetweenStartAndEnd':
+      'Data primei plăți trebuie să fie între data de început și data de sfârșit',
 
     // Payment
     'payment.simulated': 'Simulat',

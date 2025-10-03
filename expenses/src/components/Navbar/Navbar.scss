@@ -57,15 +57,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
   svg {
     margin: 0 auto;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   }
-  
+
   &:focus,
   &.active {
-    color: #5B8DEF;
+    color: #5b8def;
   }
 }
 
@@ -74,7 +74,7 @@
     height: 60px;
     padding: 0.25rem 0;
   }
-  
+
   .navbar ul li a {
     font-size: 24px;
   }

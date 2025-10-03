@@ -10,7 +10,7 @@
   padding: $spacing-xl;
   text-align: center;
   position: relative;
-  
+
   // Modern card container
   &::before {
     content: '';
@@ -28,13 +28,13 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     z-index: 0;
   }
-  
+
   // Ensure content is above the card
   > * {
     position: relative;
     z-index: 1;
   }
-  
+
   h4 {
     color: rgba(255, 255, 255, 0.95);
     font-size: 2rem;
@@ -44,7 +44,7 @@
     font-weight: 600;
     letter-spacing: -0.02em;
   }
-  
+
   p {
     color: #ff6b6b;
     margin-bottom: $spacing-lg;
@@ -56,7 +56,7 @@
     border: 1px solid rgba(255, 107, 107, 0.2);
     max-width: 400px;
   }
-  
+
   .login-button {
     @include gradient-button();
     display: flex;
@@ -72,55 +72,55 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 16px rgba(91, 141, 239, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 24px rgba(91, 141, 239, 0.4);
       border-color: rgba(255, 255, 255, 0.2);
     }
-    
+
     &:active {
       transform: translateY(0);
     }
-    
+
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
       transform: none;
       box-shadow: 0 4px 16px rgba(91, 141, 239, 0.2);
     }
-    
+
     svg {
       font-size: 1.3em;
       filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     }
   }
-  
+
   // Responsive design
   @media only screen and (max-width: $breakpoint-sm) {
     padding: $spacing-lg;
-    
+
     &::before {
       width: 95%;
       min-height: 280px;
       border-radius: 20px;
     }
-    
+
     h4 {
       font-size: 1.5rem;
       margin-bottom: $spacing-lg;
     }
-    
+
     .login-button {
       padding: $spacing-md $spacing-xl;
       font-size: 1rem;
       min-width: 240px;
       min-height: 52px;
       gap: $spacing-sm;
-      
+
       svg {
         font-size: 1.2em;
       }
     }
   }
-} 
+}

@@ -6,4 +6,4 @@ export { default as MonthlyTotals } from './MonthlyTotals';
 export { default as YearIncomeAverageTrend } from '../Income/YearIncomeAverageTrend';
 export { default as MonthlyComparisonIncomeTrend } from './MonthlyComparisonIncomeTrend';
 export { default as MonthlySavingsTrend } from './MonthlySavingsTrend';
-export { default as SavingsHistory } from './SavingsHistory'; 
+export { default as SavingsHistory } from './SavingsHistory';

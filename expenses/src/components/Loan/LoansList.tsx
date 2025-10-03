@@ -1,14 +1,21 @@
 import React, { useRef, useState } from 'react';
 import { formatNumber } from '@utils/utils';
 import useSwipeActions from '@hooks/useSwipeActions';
-import { FaPen, FaTrash, FaSort, FaSortUp, FaSortDown, FaExternalLinkAlt } from 'react-icons/fa';
+import {
+  FaPen,
+  FaTrash,
+  FaSort,
+  FaSortUp,
+  FaSortDown,
+  FaExternalLinkAlt,
+} from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import './LoansList.scss';
 
 interface Loan {
   id: string;
   title: string;
-  fp: string;  // principal
+  fp: string; // principal
   fls: string; // status
 }
 
@@ -33,7 +40,7 @@ const LoansList: React.FC<LoansListProps> = ({
   const listRef = useRef<any>(null);
   const [sortField, setSortField] = useState<SortField>('status');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  
+
   const {
     handleTouchStart,
     handleTouchMove,
@@ -42,7 +49,7 @@ const LoansList: React.FC<LoansListProps> = ({
     editVisible,
     swipedItemId,
   } = useSwipeActions();
-  
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -51,13 +58,13 @@ const LoansList: React.FC<LoansListProps> = ({
       setSortDirection('asc');
     }
   };
-  
+
   // Sort loans
   const sortedLoans = [...loans].sort((a, b) => {
     if (!sortField) return 0;
-    
+
     let aValue: any, bValue: any;
-    
+
     if (sortField === 'title') {
       aValue = a.title?.toLowerCase() || '';
       bValue = b.title?.toLowerCase() || '';
@@ -68,17 +75,17 @@ const LoansList: React.FC<LoansListProps> = ({
       aValue = getStatus(a);
       bValue = getStatus(b);
     }
-    
+
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
     if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
     return 0;
   });
-  
+
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) return <FaSort />;
     return sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />;
   };
-  
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -96,40 +103,39 @@ const LoansList: React.FC<LoansListProps> = ({
     <div className="loans-list-component" ref={listRef}>
       {/* Sort Controls */}
       <div className="sort-controls">
-        <button 
+        <button
           className={`sort-button ${sortField === 'title' ? 'active' : ''}`}
           onClick={() => handleSort('title')}
         >
           Title {getSortIcon('title')}
         </button>
-        <button 
+        <button
           className={`sort-button ${sortField === 'principal' ? 'active' : ''}`}
           onClick={() => handleSort('principal')}
         >
           Amount {getSortIcon('principal')}
         </button>
-        <button 
+        <button
           className={`sort-button ${sortField === 'status' ? 'active' : ''}`}
           onClick={() => handleSort('status')}
         >
           Status {getSortIcon('status')}
         </button>
       </div>
-      
+
       {sortedLoans.map((loan) => {
         const status = getStatus(loan);
         const statusText = getStatusText(status);
         const statusColor = getStatusColor(status);
-        
+
         const isThisItemSwiped = swipedItemId === loan.id;
-        
+
         return (
-          <div
-            key={loan.id}
-            className="loan-item-wrapper"
-          >
+          <div key={loan.id} className="loan-item-wrapper">
             {/* Swipe Actions Background */}
-            <div className={`swipe-actions-background ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}>
+            <div
+              className={`swipe-actions-background ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}
+            >
               {isThisItemSwiped && deleteVisible && (
                 <div className="delete-action-bg">
                   <FaTrash />
@@ -141,21 +147,15 @@ const LoansList: React.FC<LoansListProps> = ({
                 </div>
               )}
             </div>
-            
+
             <Link
               to={`/expenses/loan/${loan.id}`}
               data-id={loan.id}
               className="loan-list-item"
               onTouchStart={(e) => handleTouchStart(e, loan.id, listRef)}
               onTouchMove={(e) => handleTouchMove(e, listRef)}
-              onTouchEnd={(e) => 
-                handleTouchEnd(
-                  e,
-                  listRef,
-                  loan.id,
-                  onEdit,
-                  onDelete
-                )
+              onTouchEnd={(e) =>
+                handleTouchEnd(e, listRef, loan.id, onEdit, onDelete)
               }
             >
               {/* Content */}
@@ -163,7 +163,7 @@ const LoansList: React.FC<LoansListProps> = ({
                 <div className="loan-title">{loan.title}</div>
                 <div className="loan-amount">{formatNumber(loan.fp)}</div>
               </div>
-              
+
               {/* Status */}
               <div className="loan-status" style={{ color: statusColor }}>
                 {statusText}

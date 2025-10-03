@@ -1,1 +1,1 @@
-export { default } from './DailyAverage'; 
+export { default } from './DailyAverage';

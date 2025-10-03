@@ -22,7 +22,10 @@ const LoadingFallback: React.FC = () => (
 );
 
 // Error boundary component
-const ErrorFallback: React.FC<{ error: Error; resetErrorBoundary: () => void }> = ({ error, resetErrorBoundary }) => {
+const ErrorFallback: React.FC<{
+  error: Error;
+  resetErrorBoundary: () => void;
+}> = ({ error, resetErrorBoundary }) => {
   const { t } = useLocalization();
   return (
     <div className="error-container">
@@ -37,19 +40,18 @@ const ErrorFallback: React.FC<{ error: Error; resetErrorBoundary: () => void }> 
 
 const App: React.FC = () => {
   // Memoize routes to prevent unnecessary re-renders
-  const appRoutes = useMemo(() => 
-    routes.map((route) => (
-      <Route
-        key={route.path}
-        path={route.path}
-        element={
-          <AppRoute
-            component={route.component}
-            isPrivate={route.isPrivate}
-          />
-        }
-      />
-    )), []
+  const appRoutes = useMemo(
+    () =>
+      routes.map((route) => (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={
+            <AppRoute component={route.component} isPrivate={route.isPrivate} />
+          }
+        />
+      )),
+    []
   );
 
   return (
@@ -63,9 +65,7 @@ const App: React.FC = () => {
                   <Navbar />
                   <main className="main-content">
                     <Suspense fallback={<LoadingFallback />}>
-                      <Routes>
-                        {appRoutes}
-                      </Routes>
+                      <Routes>{appRoutes}</Routes>
                     </Suspense>
                   </main>
                 </div>

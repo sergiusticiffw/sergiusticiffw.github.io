@@ -11,7 +11,12 @@ interface NoDataProps {
   };
 }
 
-const NoData: React.FC<NoDataProps> = ({ icon, title, description, action }) => {
+const NoData: React.FC<NoDataProps> = ({
+  icon,
+  title,
+  description,
+  action,
+}) => {
   return (
     <div className="no-data">
       <div className="no-data-icon">{icon}</div>
@@ -27,5 +32,3 @@ const NoData: React.FC<NoDataProps> = ({ icon, title, description, action }) => 
 };
 
 export default NoData;
-
-
