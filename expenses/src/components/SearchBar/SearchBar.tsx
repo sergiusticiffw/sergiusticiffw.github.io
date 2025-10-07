@@ -9,6 +9,7 @@ interface SearchBarProps {
   onCategoryChange: (value: string) => void;
   categories: Array<{ value: string; label: string }>;
   placeholder?: string;
+  onClear?: () => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -18,12 +19,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onCategoryChange,
   categories,
   placeholder = 'Search or filter by category...',
+  onClear,
 }) => {
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
 
   const handleClear = () => {
     onSearchChange('');
     onCategoryChange('');
+    // Call the optional onClear callback to reset month index
+    if (onClear) {
+      onClear();
+    }
   };
 
   const handleCategoryClick = (value: string) => {

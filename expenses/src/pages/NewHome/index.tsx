@@ -62,6 +62,13 @@ const NewHome = () => {
     });
   }, [searchText, selectedCategory, dataDispatch]);
 
+  // Reset to most recent month when filters are applied
+  useEffect(() => {
+    if (searchText !== '' || selectedCategory !== '') {
+      setCurrentMonthIndex(0);
+    }
+  }, [searchText, selectedCategory]);
+
   const items = data.filtered || data;
   const localizedCategories = getCategories();
 
@@ -297,6 +304,7 @@ const NewHome = () => {
               onCategoryChange={setSelectedCategory}
               categories={localizedCategories}
               placeholder="Search or filter by category..."
+              onClear={() => setCurrentMonthIndex(0)}
             />
           </div>
 
