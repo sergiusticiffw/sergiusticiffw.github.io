@@ -123,6 +123,7 @@ const Charts = () => {
           e.preventDefault();
           setShowAddModal(false);
         }}
+        title={t('transactionForm.addTransaction')}
       >
         <TransactionForm
           formType="add"
