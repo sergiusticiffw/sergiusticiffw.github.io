@@ -4,7 +4,7 @@ import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
 import { deleteNode, fetchData, formatNumber } from '@utils/utils';
 import { getCategories, notificationType } from '@utils/constants';
-import SearchBar from '@components/SearchBar';
+import TransactionFilters from '@components/Home/TransactionFilters';
 import TransactionList from '@components/TransactionList';
 import CalendarView from '@components/CalendarView';
 import Modal from '@components/Modal';
@@ -40,6 +40,7 @@ const NewHome = () => {
   const dispatch = useAuthDispatch();
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
+  const [selectedMonth, setSelectedMonth] = useState(data.selectedMonth ?? '');
   const [showDeleteModal, setShowDeleteModal] = useState<string | false>(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -59,8 +60,20 @@ const NewHome = () => {
       type: 'FILTER_DATA',
       category: selectedCategory,
       textFilter: searchText,
+      selectedMonth: selectedMonth,
     });
-  }, [searchText, selectedCategory, dataDispatch]);
+  }, [searchText, selectedCategory, selectedMonth, dataDispatch]);
+
+  const items = data.filtered || data;
+  const localizedCategories = getCategories();
+
+  // Get ALL available months from UNFILTERED data (for month picker)
+  const allMonths = data.groupedData ? Object.keys(data.groupedData) : [];
+  
+  // Get months from current view (filtered or unfiltered)
+  const months = items.groupedData ? Object.keys(items.groupedData) : [];
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
+  const currentMonth = months[currentMonthIndex] || months[0] || '';
 
   // Reset to most recent month when filters are applied
   useEffect(() => {
@@ -69,8 +82,21 @@ const NewHome = () => {
     }
   }, [searchText, selectedCategory]);
 
-  const items = data.filtered || data;
-  const localizedCategories = getCategories();
+  // Navigate to selected month
+  useEffect(() => {
+    if (selectedMonth && months.length > 0) {
+      const monthIndex = months.findIndex((month) => month === selectedMonth);
+      if (monthIndex !== -1) {
+        setCurrentMonthIndex(monthIndex);
+      }
+    }
+  }, [selectedMonth, months]);
+
+  useEffect(() => {
+    if (months.length > 0 && currentMonthIndex === 0) {
+      setCurrentMonthIndex(0);
+    }
+  }, [months.length]);
 
   const handleEdit = (id: string) => {
     const item = items.groupedData[currentMonth].find(
@@ -103,16 +129,6 @@ const NewHome = () => {
       fetchData(token, dataDispatch, dispatch);
     });
   };
-
-  const months = items.groupedData ? Object.keys(items.groupedData) : [];
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
-  const currentMonth = months[currentMonthIndex] || months[0] || '';
-
-  useEffect(() => {
-    if (months.length > 0 && currentMonthIndex === 0) {
-      setCurrentMonthIndex(0);
-    }
-  }, [months.length]);
 
   // Filter transactions by search AND category
   const filteredTransactions =
@@ -214,7 +230,7 @@ const NewHome = () => {
   const filteredProfit = parseFloat((monthIncome - filteredTotal).toFixed(2));
 
   // Decide which values to show - filtered or full month
-  const hasFilters = searchText !== '' || selectedCategory !== '';
+  const hasFilters = searchText !== '' || selectedCategory !== '' || selectedMonth !== '';
   const displayTotal = hasFilters
     ? filteredTotal
     : items.totals?.[currentMonth] || 0;
@@ -295,16 +311,23 @@ const NewHome = () => {
             subtitle={`${filteredTransactions.length} transactions`}
           />
 
-          {/* Search Bar - For Both Views */}
+          {/* Filters - For Both Views */}
           <div className="newhome-search-wrapper">
-            <SearchBar
+            <TransactionFilters
               searchValue={searchText}
-              onSearchChange={setSearchText}
               categoryValue={selectedCategory}
-              onCategoryChange={setSelectedCategory}
+              selectedMonth={selectedMonth}
               categories={localizedCategories}
-              placeholder="Search or filter by category..."
-              onClear={() => setCurrentMonthIndex(0)}
+              availableMonths={allMonths}
+              onSearchChange={setSearchText}
+              onCategoryChange={setSelectedCategory}
+              onMonthChange={setSelectedMonth}
+              onClearFilters={() => {
+                setSearchText('');
+                setSelectedCategory('');
+                setSelectedMonth('');
+                setCurrentMonthIndex(0);
+              }}
             />
           </div>
 
@@ -370,6 +393,7 @@ const NewHome = () => {
                       onClick: () => {
                         setSearchText('');
                         setSelectedCategory('');
+                        setSelectedMonth('');
                         setCurrentMonthIndex(0); // Reset to current month
                       },
                     }

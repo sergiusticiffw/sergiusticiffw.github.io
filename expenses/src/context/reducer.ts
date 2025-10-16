@@ -45,6 +45,9 @@ export const initialData = {
   loading: true,
   totalSpent: 0,
   changedItems: {},
+  category: '',
+  textFilter: '',
+  selectedMonth: '',
 };
 
 export const initialLoanData = {
@@ -117,7 +120,7 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
 
     case 'FILTER_DATA':
       if (
-        (action.category !== '' || action.textFilter !== '') &&
+        (action.category !== '' || action.textFilter !== '' || action.selectedMonth !== '') &&
         initialState.raw
       ) {
         const { raw } = initialState;
@@ -136,6 +139,18 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
             (item: TransactionOrIncomeItem) =>
               item.dsc && item.dsc.toLowerCase().includes(textFilterLower)
           );
+        }
+
+        if (action.selectedMonth) {
+          filtered = filtered.filter((item: TransactionOrIncomeItem) => {
+            const itemDate = new Date(item.dt);
+            const selectedDate = new Date(action.selectedMonth + '-01');
+            const itemYear = itemDate.getFullYear();
+            const itemMonth = itemDate.getMonth();
+            const selectedYear = selectedDate.getFullYear();
+            const selectedMonthNum = selectedDate.getMonth();
+            return itemYear === selectedYear && itemMonth === selectedMonthNum;
+          });
         }
         const newState = filtered.reduce(
           (accumulator: Accumulator, item: TransactionOrIncomeItem) => {
@@ -196,6 +211,7 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
           filtered: newState,
           category: action.category,
           textFilter: action.textFilter,
+          selectedMonth: action.selectedMonth,
           filtered_raw: filtered,
         };
       }
@@ -204,6 +220,7 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
         filtered: null,
         category: '',
         textFilter: '',
+        selectedMonth: '',
         filtered_raw: null,
       };
 

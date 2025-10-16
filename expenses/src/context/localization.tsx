@@ -434,6 +434,8 @@ const translations = {
     'filters.search': 'Search transactions...',
     'filters.selectMonth': 'Select month',
     'filters.category': 'All Categories',
+    'filters.categories': 'Categories',
+    'filters.months': 'Months',
     'filters.dateRange': 'Date Range',
     'filters.clear': 'Clear Filters',
 
@@ -871,6 +873,8 @@ const translations = {
     'filters.search': 'Caută tranzacții...',
     'filters.selectMonth': 'Selectează luna',
     'filters.category': 'Toate Categoriile',
+    'filters.categories': 'Categorii',
+    'filters.months': 'Luni',
     'filters.dateRange': 'Interval de Date',
     'filters.clear': 'Curăță Filtrele',
 
