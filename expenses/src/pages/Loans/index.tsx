@@ -3,9 +3,10 @@ import { useAuthDispatch, useAuthState } from '@context/context';
 import { useLoan } from '@context/loan';
 import { useLocalization } from '@context/localization';
 import { AuthState } from '@type/types';
-import { fetchLoans, formatNumber, deleteLoan } from '@utils/utils';
+import { fetchLoans, formatNumber, deleteLoan, transformDateFormat, transformToNumber } from '@utils/utils';
 import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
+import Paydown from '@utils/paydown-node';
 import {
   PageHeader,
   LoadingSpinner,
@@ -31,7 +32,7 @@ const Loans: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const { loans, loading } = data;
+  const { loans, loading, payments } = data;
 
   useEffect(() => {
     if (!loans) {
@@ -88,6 +89,80 @@ const Loans: React.FC = () => {
         return t('common.pending');
       default:
         return t('common.status');
+    }
+  };
+
+  const calculateLoanProgress = (loan: any) => {
+    const status = getLoanStatus(loan);
+    
+    // If completed, return 100%
+    if (status === 'completed') return 100;
+    
+    // If pending, return 0%
+    if (status === 'pending') return 0;
+    
+    // For active loans, calculate based on payments
+    try {
+      const [filteredData] =
+        payments?.filter(
+          (item: any) => item?.loanId === loan.id && item?.data?.length > 0
+        ) || [];
+
+      if (!filteredData || !filteredData.data) return 0;
+
+      const loanPayments =
+        filteredData?.data?.map((item: any) => {
+          return {
+            isSimulatedPayment: Number(item.fisp),
+            date: transformDateFormat(item.fdt),
+            ...(item.fr ? { rate: transformToNumber(item.fr) } : {}),
+            ...(item.fpi ? { pay_installment: transformToNumber(item.fpi) } : {}),
+            ...(item.fpsf ? { pay_single_fee: transformToNumber(item.fpsf) } : {}),
+            ...(item.fnra
+              ? { recurring_amount: transformToNumber(item.fnra) }
+              : {}),
+          };
+        }) || [];
+
+      const loanData = {
+        start_date: transformDateFormat(loan.sdt),
+        end_date: transformDateFormat(loan.edt),
+        principal: transformToNumber(loan.fp),
+        rate: transformToNumber(loan.fr),
+        day_count_method: 'act/365' as const,
+        ...(loan.fif
+          ? {
+              initial_fee: transformToNumber(loan.fif),
+            }
+          : {}),
+        ...(loan.pdt && loan.frpd
+          ? {
+              recurring: {
+                first_payment_date: transformDateFormat(loan.pdt),
+                payment_day: transformToNumber(loan.frpd),
+              },
+            }
+          : {}),
+      };
+
+      const amortizationSchedule: any[] = [];
+      const calculator = Paydown();
+      const paydown = calculator.calculate(loanData, loanPayments, amortizationSchedule);
+
+      const totalPaidAmount = filteredData?.data?.reduce(
+        (sum: number, item: any) => {
+          return sum + parseFloat(item.fpi || '0');
+        },
+        0
+      );
+
+      const sumInstallments = paydown.sum_of_installments || 0;
+      
+      if (sumInstallments === 0) return 0;
+
+      return ((totalPaidAmount ?? 0) / sumInstallments) * 100;
+    } catch (err) {
+      return 0;
     }
   };
 
@@ -188,6 +263,7 @@ const Loans: React.FC = () => {
             onDelete={handleDelete}
             getStatus={getLoanStatus}
             getStatusText={getStatusText}
+            getProgress={calculateLoanProgress}
           />
         )}
       </div>
