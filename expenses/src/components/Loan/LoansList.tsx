@@ -172,7 +172,7 @@ const LoansList: React.FC<LoansListProps> = ({
                 className="loan-progress-bg" 
                 style={{ 
                   width: `${Math.min(progress, 100)}%`,
-                  background: `linear-gradient(90deg, ${statusColor}15 0%, ${statusColor}08 100%)`
+                  background: `linear-gradient(90deg, ${statusColor}35 0%, ${statusColor}20 100%)`
                 }}
               />
               
