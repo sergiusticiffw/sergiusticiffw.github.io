@@ -94,11 +94,6 @@
     text-align: center;
   }
 
-  // When form has sticky actions, add bottom padding
-  &:has(.form-actions-sticky) {
-    padding-bottom: 0;
-  }
-
   // Modern button styles
   .button {
     width: 100%;
@@ -255,26 +250,7 @@
   }
 }
 
-// Sticky form actions at bottom
-.form-actions-sticky {
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(26, 26, 26, 0.98);
-  padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 10;
-  margin: 0 -1.5rem -1.5rem -1.5rem;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
-
-  .btn-submit,
-  button[type='submit'] {
-    width: 100%;
-    margin: 0;
-  }
-}
+// Note: form-actions-sticky styles are defined in _modern-form.scss
 
 // Close button for modals without header (legacy support)
 .modal-close {
@@ -358,11 +334,6 @@
     .payment-form {
       padding: 0;
     }
-  }
-
-  .form-actions-sticky {
-    padding: 0.875rem 1rem;
-    margin: 0 -1rem -1rem -1rem;
   }
 
   .modal-close {

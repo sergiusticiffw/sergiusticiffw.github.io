@@ -11,7 +11,7 @@
 
 .modern-form {
   background: transparent;
-  padding: 1.5rem;
+  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -244,14 +244,14 @@
   // Sticky form actions specific styles
   .form-actions-sticky {
     position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: -1.5rem;
+    left: -1.5rem;
+    right: -1.5rem;
     background: rgba(26, 26, 26, 0.98);
     padding: 1rem 1.5rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 10;
-    margin: 0 -1.5rem -1.5rem -1.5rem;
+    margin-top: 1.5rem;
     backdrop-filter: blur(10px);
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
 
@@ -277,7 +277,7 @@
 // Mobile responsive
 @media (max-width: 768px) {
   .modern-form {
-    padding: 1.25rem;
+    padding: 0;
     gap: 1rem;
 
     .form-group {
@@ -301,15 +301,18 @@
     }
 
     .form-actions-sticky {
-      padding: 0.875rem 1.25rem;
-      margin: 0 -1.25rem -1.25rem -1.25rem;
+      padding: 0.875rem 1rem;
+      bottom: -1rem;
+      left: -1rem;
+      right: -1rem;
+      margin-top: 1.25rem;
     }
   }
 }
 
 @media (max-width: 480px) {
   .modern-form {
-    padding: 1rem;
+    padding: 0;
 
     .form-group {
       label {
@@ -325,7 +328,10 @@
 
     .form-actions-sticky {
       padding: 0.75rem 1rem;
-      margin: 0 -1rem -1rem -1rem;
+      bottom: -1rem;
+      left: -1rem;
+      right: -1rem;
+      margin-top: 1rem;
     }
   }
 }
