@@ -214,7 +214,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           </div>
         ) : null}
 
-        <div className="form-actions">
+        <div className="form-actions-sticky">
           <button type="submit" className="btn-submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <div className="loader">

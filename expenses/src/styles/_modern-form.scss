@@ -167,7 +167,8 @@
     }
   }
 
-  .form-actions {
+  .form-actions,
+  .form-actions-sticky {
     margin-top: 1rem;
 
     .btn-submit {
@@ -239,6 +240,25 @@
       }
     }
   }
+
+  // Sticky form actions specific styles
+  .form-actions-sticky {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(26, 26, 26, 0.98);
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 10;
+    margin: 0 -1.5rem -1.5rem -1.5rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+
+    .btn-submit {
+      margin: 0;
+    }
+  }
 }
 
 @keyframes loading-dots {
@@ -273,10 +293,16 @@
       }
     }
 
-    .form-actions .btn-submit {
+    .form-actions .btn-submit,
+    .form-actions-sticky .btn-submit {
       padding: 0.75rem 1.25rem;
       font-size: 0.9rem;
       min-height: 44px;
+    }
+
+    .form-actions-sticky {
+      padding: 0.875rem 1.25rem;
+      margin: 0 -1.25rem -1.25rem -1.25rem;
     }
   }
 }
@@ -295,6 +321,11 @@
         padding: 0.625rem;
         font-size: 0.875rem;
       }
+    }
+
+    .form-actions-sticky {
+      padding: 0.75rem 1rem;
+      margin: 0 -1rem -1rem -1rem;
     }
   }
 }

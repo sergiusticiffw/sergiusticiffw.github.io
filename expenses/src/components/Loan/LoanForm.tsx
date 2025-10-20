@@ -355,7 +355,7 @@ const LoanForm: React.FC<LoanFormProps> = ({
           </div>
         </div>
 
-        <div className="form-actions">
+        <div className="form-actions-sticky">
           <button type="submit" disabled={isSubmitting} className="btn-submit">
             {isSubmitting ? (
               <div className="loader">

@@ -235,7 +235,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           </label>
         </div>
 
-        <div className="form-actions">
+        <div className="form-actions-sticky">
           <button type="submit" disabled={isSubmitting} className="btn-submit">
             {isSubmitting ? (
               <div className="loader">
