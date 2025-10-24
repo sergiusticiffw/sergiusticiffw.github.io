@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useLocalization } from '@context/localization';
 import { fetchData } from '@utils/utils';
@@ -7,8 +7,10 @@ import { getCategories } from '@utils/constants';
 import SearchBar from '@components/SearchBar/SearchBar';
 import Modal from '@components/Modal';
 import TransactionForm from '@components/TransactionForm';
+import LoadingSpinner from '@components/Common/LoadingSpinner';
+import NoData from '@components/Common/NoData';
 import { AuthState } from '@type/types';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaChartBar } from 'react-icons/fa';
 import MonthlySavingsTrend from '@components/Charts/MonthlySavingsTrend';
 import MonthlyTotals from '@components/Charts/MonthlyTotals';
 import SavingsHistory from '@components/Charts/SavingsHistory';
@@ -49,15 +51,25 @@ const Charts = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
+  const [isDataReady, setIsDataReady] = useState(false);
 
   const categoryLabels = getCategories();
 
+  // Fetch data if needed
   useEffect(() => {
-    if (noData) {
+    if (noData && !loading) {
       fetchData(token, dataDispatch, dispatch);
     }
-  }, [data, dataDispatch, noData, token, dispatch]);
+  }, [noData, loading, token, dataDispatch, dispatch]);
 
+  // Check if data is ready
+  useEffect(() => {
+    if (!loading && !noData) {
+      setIsDataReady(true);
+    }
+  }, [loading, noData]);
+
+  // Load visible charts from localStorage
   useEffect(() => {
     const storedCharts =
       JSON.parse(localStorage.getItem('visibleCharts')) || availableCharts;
@@ -91,29 +103,34 @@ const Charts = () => {
         />
       </div>
 
-      {loading ? (
-        <div className="charts-loading">
-          <div className="loader">
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-            <span className="loader__element"></span>
-          </div>
+      {/* Loading State */}
+      {loading && <LoadingSpinner />}
+
+      {/* No Data State */}
+      {!loading && noEntries && (
+        <NoData
+          icon={<FaChartBar />}
+          title={t('common.noData')}
+          description={t('common.noTransactions')}
+          action={{
+            label: t('transactionForm.addTransaction'),
+            onClick: () => setShowAddModal(true),
+          }}
+        />
+      )}
+
+      {/* Charts Content */}
+      {!loading && !noEntries && isDataReady && (
+        <div className="charts-content">
+          {visibleCharts.map((chartKey) => {
+            const ChartComponent = componentMap[chartKey];
+            return ChartComponent ? (
+              <div key={chartKey} className="charts-section">
+                <ChartComponent />
+              </div>
+            ) : null;
+          })}
         </div>
-      ) : (
-        !noEntries && (
-          <div className="charts-content">
-            {visibleCharts.map((chartKey) => {
-              const ChartComponent = componentMap[chartKey];
-              return ChartComponent ? (
-                <div key={chartKey} className="charts-section">
-                  <Suspense fallback="">
-                    <ChartComponent />
-                  </Suspense>
-                </div>
-              ) : null;
-            })}
-          </div>
-        )
       )}
 
       {/* Add Transaction Modal */}

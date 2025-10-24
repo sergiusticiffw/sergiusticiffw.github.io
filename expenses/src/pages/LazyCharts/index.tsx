@@ -1,12 +1,4 @@
-import React, { Suspense } from 'react';
+import Charts from '@pages/Charts';
 
-const LazyCharts = () => {
-  const Charts = React.lazy(() => import('@pages//Charts'));
-  return (
-    <Suspense fallback="">
-      <Charts />
-    </Suspense>
-  );
-};
-
-export default LazyCharts;
+// Direct export without lazy loading to improve performance
+export default Charts;
