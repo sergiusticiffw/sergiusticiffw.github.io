@@ -42,7 +42,7 @@ const Charts = () => {
   const { data, dataDispatch } = useData();
   const { t } = useLocalization();
   const noData = data.groupedData === null;
-  const noEntries = Object.keys(data.raw).length === 0;
+  const noEntries = Object.keys(data.raw || {}).length === 0;
   const { token } = useAuthState() as AuthState;
   const loading = data.loading;
   const dispatch = useAuthDispatch();
@@ -51,23 +51,15 @@ const Charts = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
-  const [isDataReady, setIsDataReady] = useState(false);
 
   const categoryLabels = getCategories();
 
-  // Fetch data if needed
+  // Fetch data on mount if needed
   useEffect(() => {
-    if (noData && !loading) {
+    if (noData) {
       fetchData(token, dataDispatch, dispatch);
     }
-  }, [noData, loading, token, dataDispatch, dispatch]);
-
-  // Check if data is ready
-  useEffect(() => {
-    if (!loading && !noData) {
-      setIsDataReady(true);
-    }
-  }, [loading, noData]);
+  }, []);
 
   // Load visible charts from localStorage
   useEffect(() => {
@@ -78,12 +70,14 @@ const Charts = () => {
 
   // Update filters in context
   useEffect(() => {
-    dataDispatch({
-      type: 'FILTER_DATA',
-      category: selectedCategory,
-      textFilter: searchText,
-    });
-  }, [searchText, selectedCategory, dataDispatch]);
+    if (!loading && !noData) {
+      dataDispatch({
+        type: 'FILTER_DATA',
+        category: selectedCategory,
+        textFilter: searchText,
+      });
+    }
+  }, [searchText, selectedCategory, loading, noData, dataDispatch]);
 
   return (
     <div className="charts-page-wrapper">
@@ -120,7 +114,7 @@ const Charts = () => {
       )}
 
       {/* Charts Content */}
-      {!loading && !noEntries && isDataReady && (
+      {!loading && !noEntries && data.groupedData && (
         <div className="charts-content">
           {visibleCharts.map((chartKey) => {
             const ChartComponent = componentMap[chartKey];
