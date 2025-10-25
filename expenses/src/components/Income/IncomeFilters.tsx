@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocalization } from '@context/localization';
+import { useData } from '@context/context';
 import { FaCalendar, FaSearch, FaTimes } from 'react-icons/fa';
 import './IncomeFilters.scss';
 
@@ -19,6 +20,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
   onClearFilters,
 }) => {
   const { t } = useLocalization();
+  const { data } = useData();
   const [isFilterFocused, setIsFilterFocused] = useState(false);
 
   const handleTextFilterChange = (
@@ -40,23 +42,36 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
 
   const hasActiveFilters = textFilter || selectedMonth;
 
-  // Generate list of available months (last 24 months)
+  // Generate list of available months from actual income data
   const availableMonths = useMemo(() => {
-    const months = [];
-    const now = new Date();
-    for (let i = 0; i < 24; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    if (!data.incomeData || data.incomeData.length === 0) {
+      return [];
+    }
+
+    // Extract unique months from income data
+    const monthsSet = new Set<string>();
+    data.incomeData.forEach((item: any) => {
+      const date = new Date(item.dt);
       const year = date.getFullYear();
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const monthValue = `${year}-${month}`;
+      monthsSet.add(monthValue);
+    });
+
+    // Convert to array and sort descending (newest first)
+    const monthsArray = Array.from(monthsSet).sort((a, b) => b.localeCompare(a));
+
+    // Format for display
+    return monthsArray.map((monthValue) => {
+      const [year, month] = monthValue.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, 1);
       const monthLabel = date.toLocaleDateString('en-US', {
         month: 'long',
         year: 'numeric',
       });
-      months.push({ value: monthValue, label: monthLabel });
-    }
-    return months;
-  }, []);
+      return { value: monthValue, label: monthLabel };
+    });
+  }, [data.incomeData]);
 
   // Get selected month label
   const selectedMonthLabel = selectedMonth
