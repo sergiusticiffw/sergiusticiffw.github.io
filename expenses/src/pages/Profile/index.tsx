@@ -152,16 +152,26 @@ const Profile = () => {
 
   return (
     <div className="profile-container">
-      {/* Simple Header */}
+      {/* Header */}
       <div className="profile-header">
         <h1>{t('profile.title')}</h1>
-        <p>{t('profile.subtitle')}</p>
       </div>
 
       {/* Settings Sections */}
       <div className="profile-sections">
+        {/* Account Section */}
+        <div className="profile-section">
+          <div className="section-header">
+            <FaUserCircle />
+            <h3>{t('profile.account')}</h3>
+          </div>
+          <div className="user-info">
+            <div className="user-name">{userDetails.current_user.name}</div>
+          </div>
+        </div>
+
         {/* Language & Currency Settings */}
-        <div className="profile-section-simple">
+        <div className="profile-section">
           <div className="section-header">
             <FaCog />
             <h3>{t('profile.personalInfo')}</h3>
@@ -198,7 +208,7 @@ const Profile = () => {
         </div>
 
         {/* Charts Settings */}
-        <div className="profile-section-simple">
+        <div className="profile-section">
           <div className="section-header">
             <FaChartBar />
             <h3>{t('profile.chartsSettings')}</h3>
@@ -217,38 +227,29 @@ const Profile = () => {
             </label>
           </div>
 
-          <h4>{t('profile.chartsVisibility')}</h4>
-          <div className="charts-grid">
-            {availableCharts.map((chart) => (
-              <div key={chart} className="checkbox-item">
-                <input
-                  type="checkbox"
-                  name={chart}
-                  checked={state.visibleCharts.includes(chart)}
-                  onChange={handleChartVisibilityChange}
-                />
-                <label htmlFor={chart}>{chart}</label>
-              </div>
-            ))}
+          <div className="charts-visibility">
+            <h4>{t('profile.chartsVisibility')}</h4>
+            <div className="charts-grid">
+              {availableCharts.map((chart) => (
+                <div key={chart} className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    name={chart}
+                    checked={state.visibleCharts.includes(chart)}
+                    onChange={handleChartVisibilityChange}
+                  />
+                  <label htmlFor={chart}>{chart}</label>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Account Section - with card */}
-        <div className="profile-section">
-          <div className="section-header">
-            <FaSignOutAlt />
-            <h3>{t('profile.account')}</h3>
-          </div>
-
-          <div className="user-info">
-            <div className="user-name">{userDetails.current_user.name}</div>
-          </div>
-
-          <button className="logout-btn" onClick={handleLogout}>
-            <FaSignOutAlt />
-            {t('profile.signOut')}
-          </button>
-        </div>
+        {/* Logout Button */}
+        <button className="logout-btn" onClick={handleLogout}>
+          <FaSignOutAlt />
+          {t('profile.signOut')}
+        </button>
       </div>
     </div>
   );
