@@ -182,11 +182,12 @@ const Loans: React.FC = () => {
     return filtered;
   }, [loans, statusFilter]);
 
-  const totalLoans = loans?.length || 0;
+  // Calculate stats based on filtered loans
+  const totalLoans = filteredLoans?.length || 0;
   const activeLoans =
-    loans?.filter((loan: any) => getLoanStatus(loan) === 'active').length || 0;
+    filteredLoans?.filter((loan: any) => getLoanStatus(loan) === 'active').length || 0;
   const completedLoans =
-    loans?.filter((loan: any) => getLoanStatus(loan) === 'completed').length ||
+    filteredLoans?.filter((loan: any) => getLoanStatus(loan) === 'completed').length ||
     0;
 
   if (loading) {
