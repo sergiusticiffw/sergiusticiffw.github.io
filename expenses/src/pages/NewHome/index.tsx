@@ -69,7 +69,7 @@ const NewHome = () => {
 
   // Get ALL available months from UNFILTERED data (for month picker)
   const allMonths = data.groupedData ? Object.keys(data.groupedData) : [];
-  
+
   // Get months from current view (filtered or unfiltered)
   const months = items.groupedData ? Object.keys(items.groupedData) : [];
   const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
@@ -230,7 +230,8 @@ const NewHome = () => {
   const filteredProfit = parseFloat((monthIncome - filteredTotal).toFixed(2));
 
   // Decide which values to show - filtered or full month
-  const hasFilters = searchText !== '' || selectedCategory !== '' || selectedMonth !== '';
+  const hasFilters =
+    searchText !== '' || selectedCategory !== '' || selectedMonth !== '';
   const displayTotal = hasFilters
     ? filteredTotal
     : items.totals?.[currentMonth] || 0;
@@ -331,24 +332,6 @@ const NewHome = () => {
             />
           </div>
 
-          {/* View Tabs - Below Search */}
-          <div className="newhome-view-tabs">
-            <button
-              className={`tab-button ${activeView === 'list' ? 'active' : ''}`}
-              onClick={() => setActiveView('list')}
-            >
-              <FaList />
-              <span>List</span>
-            </button>
-            <button
-              className={`tab-button ${activeView === 'calendar' ? 'active' : ''}`}
-              onClick={() => setActiveView('calendar')}
-            >
-              <FaCalendar />
-              <span>Calendar</span>
-            </button>
-          </div>
-
           {/* Stats Cards - Show all 3 when no filters, only Total when filtered */}
           <StatsGrid columns={3} filtered={hasFilters}>
             <StatCard
@@ -375,6 +358,24 @@ const NewHome = () => {
               </>
             )}
           </StatsGrid>
+
+          {/* View Tabs - Below Search */}
+          <div className="newhome-view-tabs">
+            <button
+              className={`tab-button ${activeView === 'list' ? 'active' : ''}`}
+              onClick={() => setActiveView('list')}
+            >
+              <FaList />
+              <span>List</span>
+            </button>
+            <button
+              className={`tab-button ${activeView === 'calendar' ? 'active' : ''}`}
+              onClick={() => setActiveView('calendar')}
+            >
+              <FaCalendar />
+              <span>Calendar</span>
+            </button>
+          </div>
 
           {/* Content - List or Calendar */}
           {filteredTransactions.length === 0 ? (
