@@ -285,6 +285,7 @@ export const getSuggestions = () => {
       'car wash',
       'taxi',
       'parcare',
+      'troleibus',
     ],
     10: ['gaz', 'lumina', 'orange', 'bloc'],
     11: ['Romania'],

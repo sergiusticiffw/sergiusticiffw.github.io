@@ -3,19 +3,36 @@
 
 // Modal styles - inspired by CalendarView modal (source of truth)
 .modal-window {
-  position: fixed;
+  position: fixed !important;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
+  // Fix backdrop-filter for iOS
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
+  // Fallback for browsers without backdrop-filter
+  @supports not (backdrop-filter: blur(4px)) {
+    background: rgba(0, 0, 0, 0.85);
+  }
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
+  // Fix for iOS safe area - minimal padding, let content handle safe area
   padding: 1rem;
+  padding-top: calc(1rem + env(safe-area-inset-top, 0));
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+  padding-left: calc(1rem + env(safe-area-inset-left, 0));
+  padding-right: calc(1rem + env(safe-area-inset-right, 0));
   transition: all 0.2s ease;
+  // Prevent iOS scroll bounce when modal is open
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  // Ensure proper centering
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .modal-content {
@@ -23,12 +40,17 @@
   border-radius: 16px;
   max-width: 500px;
   width: 100%;
+  // Fix for iOS viewport height
   max-height: 90vh;
+  max-height: calc(90vh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem);
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   position: relative;
   display: flex;
   flex-direction: column;
+  // Ensure proper centering and no transform issues
+  margin: 0 auto;
+  transform: none;
 }
 
 // Modal Header (same as day-modal-header)
@@ -81,6 +103,10 @@
 .modal-body {
   overflow-y: auto;
   overflow-x: hidden;
+  // Enable smooth scrolling on iOS
+  -webkit-overflow-scrolling: touch;
+  // Prevent scroll bounce
+  overscroll-behavior: contain;
   padding: 1.5rem;
   flex: 1 1 auto;
   min-height: 0;

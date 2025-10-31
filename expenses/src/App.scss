@@ -22,17 +22,30 @@
 // App-specific styles
 .app-container {
   min-height: 100vh;
+  min-height: -webkit-fill-available; // Safari iOS fix
+  min-height: 100dvh; // Dynamic viewport height
   display: flex;
   flex-direction: column;
   background: #1a1a1a;
+  position: relative;
+  width: 100%;
 }
 
 .main-content {
   flex: 1;
   padding-bottom: 95px; // Space for navbar - default for Home page
-  overflow-y: auto; // Allow scrolling when needed
-  min-height: calc(100vh - 70px); // Minimum height minus navbar
+  overflow-y: auto;
+  overflow-x: hidden;
+  // Enable smooth scrolling on iOS
+  -webkit-overflow-scrolling: touch;
+  // Prevent overscroll bounce on iOS
+  overscroll-behavior-y: contain;
+  // Fix for Safari iOS viewport calculations
+  min-height: calc(100vh - 70px);
+  min-height: calc(100dvh - 70px); // Dynamic viewport height
   background: #1a1a1a;
+  width: 100%;
+  position: relative;
 
   // Reduced padding for non-Home pages
   &:not(:has(.month-stats)) {
@@ -45,6 +58,8 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  min-height: -webkit-fill-available; // Safari iOS fix
+  min-height: 100dvh; // Dynamic viewport height
   background: #1a1a1a;
 
   .loader {
@@ -123,9 +138,10 @@
 
 // Floating Action Button - Global styles
 .fab {
-  position: fixed;
-  bottom: 100px;
-  right: 20px;
+  position: fixed !important;
+  // iOS safe area fix
+  bottom: calc(100px + env(safe-area-inset-bottom, 0));
+  right: calc(20px + env(safe-area-inset-right, 0));
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -140,6 +156,15 @@
   font-size: 24px;
   z-index: 1000;
   transition: all 0.3s ease;
+  // Fix for Safari iOS tap highlight
+  -webkit-tap-highlight-color: transparent;
+  // Fix for iOS touch handling
+  touch-action: manipulation;
+  // Prevent iOS zoom on double tap
+  user-select: none;
+  -webkit-user-select: none;
+  // Ensure it stays fixed - no transform initially
+  transform: none;
 
   &:hover {
     transform: translateY(-2px) scale(1.05);
@@ -154,12 +179,13 @@
   svg {
     width: 24px;
     height: 24px;
+    pointer-events: none; // Prevent touch events on SVG
   }
 
   // Responsive adjustments
   @media (max-width: 768px) {
-    bottom: 90px;
-    right: 16px;
+    bottom: calc(90px + env(safe-area-inset-bottom, 0));
+    right: calc(16px + env(safe-area-inset-right, 0));
     width: 52px;
     height: 52px;
 
@@ -170,8 +196,8 @@
   }
 
   @media (max-width: 480px) {
-    bottom: 80px;
-    right: 12px;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0));
+    right: calc(12px + env(safe-area-inset-right, 0));
     width: 48px;
     height: 48px;
 

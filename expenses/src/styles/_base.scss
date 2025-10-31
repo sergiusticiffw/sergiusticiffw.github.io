@@ -4,16 +4,37 @@
 html {
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
     env(safe-area-inset-bottom) env(safe-area-inset-left);
+  // Fix for Safari iOS viewport height issue
+  height: -webkit-fill-available;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 body {
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
+  // Fallback for Safari iOS
+  min-height: -webkit-fill-available;
+  min-height: 100dvh; // Dynamic viewport height (newer browsers)
   text-align: center;
   margin: 0;
+  padding: 0;
   color: #fff;
   background: #1a1a1a;
   overflow-x: hidden;
+  // Enable smooth scrolling on iOS
+  -webkit-overflow-scrolling: touch;
+  // Prevent iOS text size adjustment
+  -webkit-text-size-adjust: 100%;
+  // Fix for iOS tap highlight
+  -webkit-tap-highlight-color: transparent;
+  // Prevent pull-to-refresh on iOS (can be annoying)
+  overscroll-behavior-y: contain;
+  // Optimize font rendering
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  // Prevent text selection on tap (for better UX on mobile)
+  -webkit-touch-callout: none;
 }
 
 // Shared page container styling
@@ -23,9 +44,18 @@ body {
   padding-right: 1.5rem !important;
   padding-top: 0;
   padding-bottom: 80px;
+  // Add safe area bottom padding for iOS
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
   max-width: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
+  // Enable smooth scrolling on iOS
+  -webkit-overflow-scrolling: touch;
+  // Prevent overscroll bounce on iOS
+  overscroll-behavior-y: contain;
   box-sizing: border-box;
+  width: 100%;
+  position: relative;
 
   * {
     box-sizing: border-box;
@@ -46,6 +76,13 @@ input {
   justify-content: space-between;
   color: #fff;
   border-radius: 0 !important;
+  // Fix for Safari iOS form elements
+  -webkit-appearance: none;
+  appearance: none;
+  // Fix for iOS text size adjustment
+  -webkit-text-size-adjust: 100%;
+  // Fix tap highlight
+  -webkit-tap-highlight-color: transparent;
 
   &::placeholder {
     color: #fff;
@@ -56,6 +93,16 @@ input {
 button {
   cursor: pointer;
   border-radius: 0 !important;
+  // Fix for Safari iOS buttons
+  -webkit-appearance: none;
+  appearance: none;
+  // Fix tap highlight
+  -webkit-tap-highlight-color: transparent;
+  // Fix touch handling
+  touch-action: manipulation;
+  // Prevent iOS zoom on double tap
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 // Checkbox styles
