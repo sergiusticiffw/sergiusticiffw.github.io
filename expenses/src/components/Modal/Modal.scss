@@ -274,9 +274,25 @@
       margin-bottom: 1.25rem;
     }
   }
+
+  // Fix sticky button overlap with navbar ONLY in modals on iOS Safari mobile
+  .form-actions-sticky {
+    // Default: keep original behavior for desktop
+    bottom: -1.5rem;
+
+    // Fix ONLY for iOS Safari mobile (touch device with small screen)
+    @media (max-width: 640px) and (hover: none) and (pointer: coarse) {
+      // Account for navbar height + safe area to avoid overlap
+      bottom: calc(60px + env(safe-area-inset-bottom, 0) + 0.5rem);
+      // Lower z-index than navbar to ensure navbar stays on top
+      z-index: 5;
+      // Add extra bottom padding for safe area
+      padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+    }
+  }
 }
 
-// Note: form-actions-sticky styles are defined in _modern-form.scss
+// Note: form-actions-sticky base styles are defined in _modern-form.scss
 
 // Close button for modals without header (legacy support)
 .modal-close {
