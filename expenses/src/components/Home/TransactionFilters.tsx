@@ -111,8 +111,8 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           }}
           placeholder={
             selectedMonth || categoryValue
-              ? 'Search in month/category...'
-              : t('filters.search') || 'Search or filter...'
+              ? t('filters.searchInMonthCategory')
+              : t('filters.search')
           }
           className="search-bar-input"
         />
@@ -121,7 +121,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           <button
             onClick={onClearFilters}
             className="clear-filters-btn"
-            title="Clear all filters"
+            title={t('filters.clearAll')}
           >
             <FaTimes />
           </button>

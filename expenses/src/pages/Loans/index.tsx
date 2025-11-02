@@ -203,7 +203,7 @@ const Loans: React.FC = () => {
       {/* Header */}
       <PageHeader
         title={t('loans.title')}
-        subtitle={`${totalLoans} ${totalLoans === 1 ? 'loan' : 'loans'}`}
+        subtitle={`${totalLoans} ${totalLoans === 1 ? t('loans.loan') : t('loans.loans')}`}
       />
 
       {/* Simple Stats */}
@@ -245,7 +245,7 @@ const Loans: React.FC = () => {
             title={t('loans.noLoans')}
             description={
               statusFilter !== 'all'
-                ? `${t('loans.noLoansWithStatus')} "${statusFilter}".`
+                ? `${t('loans.noLoansWithStatus')} "${getStatusText(statusFilter)}".`
                 : t('loans.noLoansDesc')
             }
             action={

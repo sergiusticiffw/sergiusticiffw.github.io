@@ -309,7 +309,7 @@ const NewHome = () => {
           {/* Header */}
           <PageHeader
             title={currentMonth || t('home.title')}
-            subtitle={`${filteredTransactions.length} transactions`}
+            subtitle={`${filteredTransactions.length} ${filteredTransactions.length === 1 ? t('common.transaction') : t('common.transactions')}`}
           />
 
           {/* Filters - For Both Views */}
@@ -337,7 +337,7 @@ const NewHome = () => {
             <StatCard
               icon={<FaMoneyBillWave />}
               value={formatNumber(displayTotal)}
-              label="Total"
+              label={t('common.total')}
             />
 
             {!hasFilters && (
@@ -345,7 +345,7 @@ const NewHome = () => {
                 <StatCard
                   icon={<FaUniversity />}
                   value={formatNumber(displayIncome)}
-                  label="Income"
+                  label={t('common.income')}
                 />
 
                 <StatCard
@@ -353,7 +353,7 @@ const NewHome = () => {
                     displayProfit >= 0 ? <FiTrendingUp /> : <FiTrendingDown />
                   }
                   value={formatNumber(displayProfit)}
-                  label="Profit"
+                  label={t('common.profit')}
                 />
               </>
             )}

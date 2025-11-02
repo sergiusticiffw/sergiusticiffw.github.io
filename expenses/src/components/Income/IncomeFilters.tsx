@@ -113,7 +113,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
           }}
           placeholder={
             selectedMonth && !isFilterFocused
-              ? 'Search in month...'
+              ? t('filters.searchInMonth')
               : t('filters.search')
           }
           className="search-bar-input"
@@ -123,7 +123,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
           <button
             onClick={onClearFilters}
             className="clear-filters-btn"
-            title="Clear all filters"
+            title={t('filters.clearAll')}
           >
             <FaTimes />
           </button>

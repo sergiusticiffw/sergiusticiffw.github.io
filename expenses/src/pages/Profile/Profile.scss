@@ -134,6 +134,8 @@
   gap: 0.625rem;
   margin-bottom: 0.5rem;
   padding: 0.5rem 0;
+  position: relative;
+  pointer-events: auto;
 
   &:last-child {
     margin-bottom: 0;
@@ -142,9 +144,25 @@
   input[type='checkbox'] {
     width: 18px;
     height: 18px;
+    min-width: 18px;
+    min-height: 18px;
     accent-color: #5b8def;
     cursor: pointer;
     flex-shrink: 0;
+    pointer-events: auto;
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    // Override global flex display from _base.scss
+    display: inline-block !important;
+    // Override global appearance from _base.scss to show checkbox properly
+    -webkit-appearance: checkbox !important;
+    appearance: checkbox !important;
+    // Override global border-radius from _base.scss
+    border-radius: 4px !important;
+    // Ensure checkbox is visible
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 
   label {
@@ -153,6 +171,8 @@
     cursor: pointer;
     flex: 1;
     user-select: none;
+    pointer-events: auto;
+    margin: 0;
   }
 }
 
@@ -313,3 +333,4 @@
     }
   }
 }
+

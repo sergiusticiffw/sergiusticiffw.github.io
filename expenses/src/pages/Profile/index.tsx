@@ -234,6 +234,7 @@ const Profile = () => {
                 <div key={chart} className="checkbox-item">
                   <input
                     type="checkbox"
+                    id={chart}
                     name={chart}
                     checked={state.visibleCharts.includes(chart)}
                     onChange={handleChartVisibilityChange}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaSearch, FaTimes } from 'react-icons/fa';
+import { useLocalization } from '@context/localization';
 import './SearchBar.scss';
 
 interface SearchBarProps {
@@ -18,10 +19,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
   categoryValue,
   onCategoryChange,
   categories,
-  placeholder = 'Search or filter by category...',
+  placeholder,
   onClear,
 }) => {
+  const { t } = useLocalization();
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
+  
+  // Use provided placeholder or default translated placeholder
+  const defaultPlaceholder = placeholder || t('filters.search');
 
   const handleClear = () => {
     onSearchChange('');
@@ -87,8 +92,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
           }}
           placeholder={
             categoryValue && !isSearchFocused
-              ? 'Search in category...'
-              : placeholder
+              ? t('filters.searchInCategory')
+              : defaultPlaceholder
           }
           className="search-bar-input"
         />
@@ -97,7 +102,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <button
             onClick={handleClear}
             className="clear-filters-btn"
-            title="Clear all filters"
+            title={t('filters.clearAll')}
           >
             <FaTimes />
           </button>

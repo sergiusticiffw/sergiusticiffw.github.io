@@ -52,12 +52,14 @@ const translations = {
     'common.category': 'Category',
     'common.total': 'Total',
     'common.average': 'Average',
+    'common.profit': 'Profit',
     'common.active': 'Active',
     'common.completed': 'Completed',
     'common.pending': 'Pending',
     'common.loadMore': 'Load More',
     'common.remaining': 'remaining',
     'common.showing': 'Showing',
+    'common.transaction': 'transaction',
     'common.transactions': 'transactions',
 
     // Months
@@ -119,6 +121,7 @@ const translations = {
     'income.noIncomeDesc':
       'No income available. Add your first income to get started!',
     'income.addFirstIncome': 'Add Your First Income',
+    'income.incomeRecord': 'income record',
     'income.incomeRecords': 'Income Records',
     'income.manageAndTrackIncome': 'Manage and track your income sources',
     'income.totalIncomePerYear': 'Total Income Per Year',
@@ -332,6 +335,8 @@ const translations = {
     'loans.principal': 'Principal',
     'loans.status': 'Status',
     'loans.deleteLoan': 'Delete Loan',
+    'loans.loan': 'loan',
+    'loans.loans': 'loans',
 
     // Amortization
     'amortization.total': 'Total',
@@ -433,6 +438,10 @@ const translations = {
 
     // Filters
     'filters.search': 'Search transactions...',
+    'filters.searchInMonth': 'Search in month...',
+    'filters.searchInMonthCategory': 'Search in month/category...',
+    'filters.searchInCategory': 'Search in category...',
+    'filters.clearAll': 'Clear all filters',
     'filters.selectMonth': 'Select month',
     'filters.category': 'All Categories',
     'filters.categories': 'Categories',
@@ -485,12 +494,14 @@ const translations = {
     'common.category': 'Categorie',
     'common.total': 'Total',
     'common.average': 'Medie',
+    'common.profit': 'Profit',
     'common.active': 'Activ',
     'common.completed': 'Completat',
     'common.pending': 'În așteptare',
     'common.loadMore': 'Încarcă Mai Multe',
     'common.remaining': 'rămase',
     'common.showing': 'Se afișează',
+    'common.transaction': 'tranzacție',
     'common.transactions': 'tranzacții',
 
     // Months
@@ -552,6 +563,7 @@ const translations = {
     'income.noIncome': 'Nu s-au găsit înregistrări de venit',
     'income.noIncomeDesc':
       'Nu sunt venituri disponibile. Adaugă primul tău venit pentru a începe!',
+    'income.incomeRecord': 'înregistrare de venit',
     'income.incomeRecords': 'Înregistrări de Venituri',
     'income.manageAndTrackIncome':
       'Gestionează și urmărește sursele tale de venit',
@@ -770,6 +782,8 @@ const translations = {
     'loans.principal': 'Principal',
     'loans.status': 'Status',
     'loans.deleteLoan': 'Șterge Împrumutul',
+    'loans.loan': 'împrumut',
+    'loans.loans': 'împrumuturi',
 
     // Amortization
     'amortization.total': 'Total',
@@ -873,6 +887,10 @@ const translations = {
 
     // Filters
     'filters.search': 'Caută tranzacții...',
+    'filters.searchInMonth': 'Caută în lună...',
+    'filters.searchInMonthCategory': 'Caută în lună/categorie...',
+    'filters.searchInCategory': 'Caută în categorie...',
+    'filters.clearAll': 'Curăță toate filtrele',
     'filters.selectMonth': 'Selectează luna',
     'filters.category': 'Toate Categoriile',
     'filters.categories': 'Categorii',

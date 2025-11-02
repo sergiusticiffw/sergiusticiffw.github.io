@@ -171,7 +171,7 @@ const Income = () => {
       {/* Header */}
       <PageHeader
         title={t('income.title')}
-        subtitle={`${totalRecords} ${totalRecords === 1 ? 'income record' : 'income records'}`}
+        subtitle={`${totalRecords} ${totalRecords === 1 ? t('income.incomeRecord') : t('income.incomeRecords')}`}
       />
 
       {/* Filters */}
