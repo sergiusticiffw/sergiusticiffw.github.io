@@ -869,7 +869,9 @@ class PaydownCalculator {
 
   private debugWrite = (string: string, number: number | string = ''): void => {
     if (this.debugPrintToConsole) {
-      console.log(string, number);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(string, number);
+      }
     } else {
       this.debugLogArray.push(string + number);
     }

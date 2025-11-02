@@ -104,8 +104,11 @@ const TransactionList: React.FC<TransactionListProps> = ({
         const categoryLabel = getCategoryLabel(transaction.cat);
         const date = new Date(transaction.dt);
         const day = date.getDate();
+        // Use user's language for month formatting
+        const language = localStorage.getItem('language') || 'en';
+        const locale = language === 'ro' ? 'ro-RO' : 'en-US';
         const month = date
-          .toLocaleDateString('en-US', { month: 'short' })
+          .toLocaleDateString(locale, { month: 'short' })
           .toUpperCase();
 
         const isThisItemSwiped = swipedItemId === transaction.id;

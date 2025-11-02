@@ -177,7 +177,11 @@ export const fetchRequest = (
       // For any other case, pass the result to callback
       return callback(result);
     })
-    .catch((error) => console.log(error));
+    .catch((error) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Fetch request error:', error);
+      }
+    });
 };
 
 export const deleteNode = (nid: string, token: string, callback: any) => {
@@ -469,6 +473,26 @@ export const formatMonth = (date: Date) => {
     locale,
     { month: 'long', year: 'numeric' }
   );
+};
+
+// Helper function to format month option from YYYY-MM format
+export const formatMonthOption = (
+  monthValue: string,
+  language: string = localStorage.getItem('language') || 'en'
+): { value: string; label: string } => {
+  const [year, month] = monthValue.split('-');
+  const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+  const locale = language === 'ro' ? 'ro-RO' : 'en-US';
+  const label = date.toLocaleDateString(locale, {
+    month: 'long',
+    year: 'numeric',
+  });
+  return { value: monthValue, label };
+};
+
+// Helper function to get locale based on language
+export const getLocale = (language: string = localStorage.getItem('language') || 'en'): string => {
+  return language === 'ro' ? 'ro-RO' : 'en-US';
 };
 
 export const calculateDaysFrom = (

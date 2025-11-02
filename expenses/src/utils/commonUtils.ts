@@ -30,9 +30,12 @@ export const formatDateForDisplay = (
   date: string
 ): { day: number; month: string } => {
   const dateObj = new Date(date);
+  // Get user's language preference from localStorage or default to 'en'
+  const language = localStorage.getItem('language') || 'en';
+  const locale = language === 'ro' ? 'ro-RO' : 'en-US';
   return {
     day: dateObj.getDate(),
-    month: dateObj.toLocaleDateString('en-US', { month: 'short' }),
+    month: dateObj.toLocaleDateString(locale, { month: 'short' }),
   };
 };
 

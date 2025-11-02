@@ -206,6 +206,7 @@ const translations = {
     'form.passwordMismatch': 'Passwords do not match',
     'form.minLength': 'Must be at least {min} characters',
     'form.amountPlaceholder': '0.00',
+    'form.selectCategory': 'Select a category...',
     'form.maxLength': 'Must be no more than {max} characters',
 
     // Categories
@@ -651,6 +652,7 @@ const translations = {
     'form.passwordMismatch': 'Parolele nu se potrivesc',
     'form.minLength': 'Trebuie să aibă cel puțin {min} caractere',
     'form.amountPlaceholder': '0,00',
+    'form.selectCategory': 'Selectează o categorie...',
     'form.maxLength': 'Nu poate avea mai mult de {max} caractere',
 
     // Categories

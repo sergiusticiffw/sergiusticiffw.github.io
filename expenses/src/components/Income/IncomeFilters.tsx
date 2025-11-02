@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLocalization } from '@context/localization';
 import { useData } from '@context/context';
 import { FaCalendar, FaSearch, FaTimes } from 'react-icons/fa';
+import { formatMonthOption } from '@utils/utils';
 import './IncomeFilters.scss';
 
 interface IncomeFiltersProps {
@@ -19,7 +20,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
   onMonthFilterChange,
   onClearFilters,
 }) => {
-  const { t } = useLocalization();
+  const { t, language } = useLocalization();
   const { data } = useData();
   const [isFilterFocused, setIsFilterFocused] = useState(false);
 
@@ -61,17 +62,9 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
     // Convert to array and sort descending (newest first)
     const monthsArray = Array.from(monthsSet).sort((a, b) => b.localeCompare(a));
 
-    // Format for display
-    return monthsArray.map((monthValue) => {
-      const [year, month] = monthValue.split('-');
-      const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-      const monthLabel = date.toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      });
-      return { value: monthValue, label: monthLabel };
-    });
-  }, [data.incomeData]);
+    // Format for display using reusable utility
+    return monthsArray.map((monthValue) => formatMonthOption(monthValue, language));
+  }, [data.incomeData, language]);
 
   // Get selected month label
   const selectedMonthLabel = selectedMonth

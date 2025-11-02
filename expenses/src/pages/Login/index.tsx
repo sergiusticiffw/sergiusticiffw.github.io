@@ -28,13 +28,17 @@ const Login = () => {
         }
         navigate(`/expenses`);
       } catch (error) {
-        console.log(error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Login error:', error);
+        }
       }
     }
   };
 
   const failedResponseGoogle = (response: Response) => {
-    console.log(response);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Login response:', response);
+    }
   };
 
   return (

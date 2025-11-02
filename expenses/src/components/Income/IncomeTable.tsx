@@ -120,8 +120,11 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
           const changeType = changedItems[income.id]?.type;
           const date = new Date(income.dt);
           const day = date.getDate();
+          // Use user's language for month formatting
+          const language = localStorage.getItem('language') || 'en';
+          const locale = language === 'ro' ? 'ro-RO' : 'en-US';
           const month = date
-            .toLocaleDateString('en-US', { month: 'short' })
+            .toLocaleDateString(locale, { month: 'short' })
             .toUpperCase();
           const year = date.getFullYear();
 

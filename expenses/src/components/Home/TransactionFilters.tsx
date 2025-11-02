@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useLocalization } from '@context/localization';
 import { FaCalendar, FaSearch, FaTimes } from 'react-icons/fa';
+import { formatMonthOption } from '@utils/utils';
 import './TransactionFilters.scss';
 
 interface TransactionFiltersProps {
@@ -57,17 +58,11 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     ? categories.find((cat) => cat.value === categoryValue)?.label
     : '';
 
-  // Generate month options with labels
+  // Generate month options with labels - use user's language
+  const { language } = useLocalization();
   const monthOptions = useMemo(() => {
-    return availableMonths.map((month) => {
-      const date = new Date(month + '-01');
-      const label = date.toLocaleDateString('en-US', {
-        month: 'long',
-        year: 'numeric',
-      });
-      return { value: month, label };
-    });
-  }, [availableMonths]);
+    return availableMonths.map((month) => formatMonthOption(month, language));
+  }, [availableMonths, language]);
 
   // Get selected month label
   const selectedMonthLabel = selectedMonth
@@ -135,7 +130,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           {categoryChips.length > 0 && (
             <div className="chips-section">
               <div className="chips-section-title">
-                {t('filters.categories') || 'Categories'}
+                {t('filters.categories')}
               </div>
               <div className="category-chips">
                 {categoryChips.map((category) => (
@@ -156,7 +151,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             <div className="chips-section">
               <div className="chips-section-title">
                 <FaCalendar />
-                {t('filters.months') || 'Months'}
+                {t('filters.months')}
               </div>
               <div className="month-chips">
                 {monthOptions.map((month) => (

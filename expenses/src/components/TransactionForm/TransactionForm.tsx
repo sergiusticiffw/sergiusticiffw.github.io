@@ -124,7 +124,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             <input
               id="field_amount"
               required
-              placeholder="0.00"
+              placeholder={t('form.amountPlaceholder')}
               type="number"
               name="field_amount"
               value={formState.field_amount}
@@ -164,7 +164,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               onChange={handleChange}
               className={`form-input ${getFieldValidation('field_category', formState) ? 'valid' : ''}`}
             >
-              <option value="">Select a category...</option>
+              <option value="">{t('form.selectCategory')}</option>
               {localizedCategories.map((category, id) => (
                 <option key={id} value={category.value}>
                   {category.label}

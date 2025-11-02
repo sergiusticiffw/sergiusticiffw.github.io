@@ -177,6 +177,43 @@
     }
   }
 
+  // Checkbox label styling (for PaymentForm and other forms)
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.75);
+    margin: 0;
+    user-select: none;
+
+    input[type='checkbox'] {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      min-height: 18px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: #5b8def;
+      flex-shrink: 0;
+      // Override global appearance from _base.scss to show checkbox properly
+      -webkit-appearance: checkbox !important;
+      appearance: checkbox !important;
+      // Override global display from _base.scss
+      display: inline-block !important;
+      // Ensure checkbox is visible
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto;
+    }
+
+    span {
+      flex: 1;
+      pointer-events: none;
+    }
+  }
+
   .form-actions,
   .form-actions-sticky {
     margin-top: 1rem;

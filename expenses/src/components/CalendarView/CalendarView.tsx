@@ -221,11 +221,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         onClose={() => setShowDayModal(false)}
         title={
           selectedDate
-            ? new Date(selectedDate).toLocaleDateString('en-US', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })
+            ? (() => {
+                // Use user's language for date formatting
+                const language = localStorage.getItem('language') || 'en';
+                const locale = language === 'ro' ? 'ro-RO' : 'en-US';
+                return new Date(selectedDate).toLocaleDateString(locale, {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                });
+              })()
             : ''
         }
         topContent={

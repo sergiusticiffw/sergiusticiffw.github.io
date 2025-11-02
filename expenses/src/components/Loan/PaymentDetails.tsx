@@ -228,8 +228,11 @@ const PaymentDetails = (props) => {
               const isSimulated = Number(payment.fisp) === 1;
               const date = new Date(payment.fdt);
               const day = date.getDate();
+              // Use user's language for month formatting
+              const language = localStorage.getItem('language') || 'en';
+              const locale = language === 'ro' ? 'ro-RO' : 'en-US';
               const month = date
-                .toLocaleDateString('en-US', { month: 'short' })
+                .toLocaleDateString(locale, { month: 'short' })
                 .toUpperCase();
               const year = date.getFullYear();
 
