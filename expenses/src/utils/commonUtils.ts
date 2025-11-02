@@ -42,6 +42,7 @@ export const formatDateForDisplay = (
 // Number formatting
 export const formatNumber = (value: number | string): string => {
   const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return '0';
   return num.toLocaleString();
 };
 
@@ -50,6 +51,7 @@ export const formatCurrency = (
   currency: string = 'RON'
 ): string => {
   const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return `0 ${currency}`;
   return `${num.toLocaleString()} ${currency}`;
 };
 

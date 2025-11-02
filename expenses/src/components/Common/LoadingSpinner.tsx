@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import './LoadingSpinner.scss';
 
 interface LoadingSpinnerProps {
   className?: string;
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ className = '' }) => {
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = memo(({ className = '' }) => {
   return (
     <div className={`loading-spinner ${className}`}>
       <div className="loader">
@@ -15,6 +15,8 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ className = '' }) => {
       </div>
     </div>
   );
-};
+});
+
+LoadingSpinner.displayName = 'LoadingSpinner';
 
 export default LoadingSpinner;

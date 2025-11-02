@@ -59,13 +59,15 @@ const Charts = () => {
     if (noData) {
       fetchData(token, dataDispatch, dispatch);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load visible charts from localStorage
   useEffect(() => {
     const storedCharts =
-      JSON.parse(localStorage.getItem('visibleCharts')) || availableCharts;
+      JSON.parse(localStorage.getItem('visibleCharts') || '[]') || availableCharts;
     setVisibleCharts(storedCharts);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update filters in context

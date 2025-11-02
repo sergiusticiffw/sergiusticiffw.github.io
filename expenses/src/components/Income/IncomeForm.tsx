@@ -84,6 +84,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
               step="0.01"
               min="0"
               required
+              aria-label={t('incomeForm.amount')}
               className={`form-input ${getFieldValidation('field_amount', formState) ? 'valid' : ''}`}
             />
           </div>
@@ -99,6 +100,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
               value={formState.field_date}
               onChange={handleChange}
               required
+              aria-label={t('incomeForm.date')}
               className={`form-input ${getFieldValidation('field_date', formState) ? 'valid' : ''}`}
             />
           </div>
@@ -116,6 +118,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
               value={formState.field_description}
               onChange={handleChange}
               required
+              aria-label={t('incomeForm.description')}
               className={`form-input ${getFieldValidation('field_description', formState) ? 'valid' : ''}`}
             />
           </div>

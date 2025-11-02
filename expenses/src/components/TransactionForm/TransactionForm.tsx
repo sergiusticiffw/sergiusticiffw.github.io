@@ -131,6 +131,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               onChange={handleChange}
               min={0}
               step={0.01}
+              aria-label={t('transactionForm.amount')}
               className={`form-input ${getFieldValidation('field_amount', formState) ? 'valid' : ''}`}
             />
           </div>
@@ -146,6 +147,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               name="field_date"
               value={formState.field_date}
               onChange={handleChange}
+              aria-label={t('transactionForm.date')}
               className={`form-input ${getFieldValidation('field_date', formState) ? 'valid' : ''}`}
             />
           </div>
@@ -162,6 +164,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               name="field_category"
               value={formState.field_category}
               onChange={handleChange}
+              aria-label={t('transactionForm.category')}
               className={`form-input ${getFieldValidation('field_category', formState) ? 'valid' : ''}`}
             >
               <option value="">{t('form.selectCategory')}</option>
@@ -186,6 +189,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
               type="text"
               value={formState.field_description}
               onChange={handleChange}
+              aria-label={t('transactionForm.description')}
               className={`form-input ${getFieldValidation('field_description', formState) ? 'valid' : ''}`}
             />
           </div>

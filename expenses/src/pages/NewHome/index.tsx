@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
-import { deleteNode, fetchData, formatNumber } from '@utils/utils';
+import { deleteNode, fetchData, formatNumber, extractMonthsFromRawData } from '@utils/utils';
 import { getCategories, notificationType } from '@utils/constants';
 import TransactionFilters from '@components/Home/TransactionFilters';
 import TransactionList from '@components/TransactionList';
@@ -67,8 +67,10 @@ const NewHome = () => {
   const items = data.filtered || data;
   const localizedCategories = getCategories();
 
-  // Get ALL available months from UNFILTERED data (for month picker)
-  const allMonths = data.groupedData ? Object.keys(data.groupedData) : [];
+  // Get ALL available months from UNFILTERED raw data in YYYY-MM format (for month picker)
+  const allMonths = data.raw && data.raw.length > 0 
+    ? extractMonthsFromRawData(data.raw) 
+    : [];
 
   // Get months from current view (filtered or unfiltered)
   const months = items.groupedData ? Object.keys(items.groupedData) : [];

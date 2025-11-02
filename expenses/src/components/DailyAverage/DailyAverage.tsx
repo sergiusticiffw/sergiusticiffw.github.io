@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useData } from '@context/context';
 import { useLocalization } from '@context/localization';
 import { calculateDaysFrom, formatNumber } from '@utils/utils';
@@ -11,7 +11,7 @@ const DailyAverage = () => {
   const { data } = useData() as DataState;
   const { t } = useLocalization();
 
-  useEffect(() => {}, [data.raw, data.categoryTotals]);
+  // Note: Component will re-render when data.raw or data.categoryTotals change naturally
 
   const firstDay = data.raw[data.raw.length - 1]?.dt;
   const daysPassed = calculateDaysFrom(firstDay);

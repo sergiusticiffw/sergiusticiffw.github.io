@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, memo } from 'react';
 import './StatCard.scss';
 
 interface StatCardProps {
@@ -8,7 +8,7 @@ interface StatCardProps {
   className?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({
+const StatCard: React.FC<StatCardProps> = memo(({
   icon,
   value,
   label,
@@ -21,6 +21,8 @@ const StatCard: React.FC<StatCardProps> = ({
       <div className="stat-label">{label}</div>
     </div>
   );
-};
+});
+
+StatCard.displayName = 'StatCard';
 
 export default StatCard;

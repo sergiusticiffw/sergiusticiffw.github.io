@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, memo } from 'react';
 import './NoData.scss';
 
 interface NoDataProps {
@@ -11,7 +11,7 @@ interface NoDataProps {
   };
 }
 
-const NoData: React.FC<NoDataProps> = ({
+const NoData: React.FC<NoDataProps> = memo(({
   icon,
   title,
   description,
@@ -29,6 +29,8 @@ const NoData: React.FC<NoDataProps> = ({
       )}
     </div>
   );
-};
+});
+
+NoData.displayName = 'NoData';
 
 export default NoData;

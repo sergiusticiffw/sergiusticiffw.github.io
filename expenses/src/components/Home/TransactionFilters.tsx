@@ -1,7 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useLocalization } from '@context/localization';
 import { FaCalendar, FaSearch, FaTimes } from 'react-icons/fa';
-import { formatMonthOption } from '@utils/utils';
+import { useFilterFocus } from '@hooks/useFilterFocus';
+import { useMonthOptions } from '@hooks/useMonthOptions';
+import { useMonthFilter } from '@hooks/useMonthFilter';
+import MonthChips from '@components/Common/MonthChips';
 import './TransactionFilters.scss';
 
 interface TransactionFiltersProps {
@@ -28,23 +31,32 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   onClearFilters,
 }) => {
   const { t } = useLocalization();
-  const [isFilterFocused, setIsFilterFocused] = useState(false);
+  
+  // Use reusable hooks
+  const {
+    isFilterFocused,
+    handleFocus,
+    handleBlur,
+    handleChipClick,
+    handleSelection,
+  } = useFilterFocus();
+
+  const { monthOptions, getSelectedMonthLabel } = useMonthOptions({
+    availableMonths,
+  });
+
+  const { handleMonthClick } = useMonthFilter({
+    selectedMonth,
+    onMonthChange,
+    onSelection: handleSelection,
+  });
 
   const handleCategoryClick = (value: string) => {
     if (value === categoryValue) {
       onCategoryChange('');
     } else {
       onCategoryChange(value);
-      setIsFilterFocused(false);
-    }
-  };
-
-  const handleMonthClick = (month: string) => {
-    if (month === selectedMonth) {
-      onMonthChange('');
-    } else {
-      onMonthChange(month);
-      setIsFilterFocused(false);
+      handleSelection();
     }
   };
 
@@ -58,16 +70,8 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     ? categories.find((cat) => cat.value === categoryValue)?.label
     : '';
 
-  // Generate month options with labels - use user's language
-  const { language } = useLocalization();
-  const monthOptions = useMemo(() => {
-    return availableMonths.map((month) => formatMonthOption(month, language));
-  }, [availableMonths, language]);
-
   // Get selected month label
-  const selectedMonthLabel = selectedMonth
-    ? monthOptions.find((m) => m.value === selectedMonth)?.label || selectedMonth
-    : '';
+  const selectedMonthLabel = getSelectedMonthLabel(selectedMonth);
 
   return (
     <div className="transaction-filters-combined">
@@ -79,7 +83,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
         {selectedMonth && !isFilterFocused && (
           <div
             className="selected-month-chip clickable"
-            onClick={() => setIsFilterFocused(true)}
+            onClick={handleChipClick}
           >
             <FaCalendar />
             {selectedMonthLabel}
@@ -90,7 +94,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
         {categoryValue && !isFilterFocused && (
           <div
             className="selected-category-chip clickable"
-            onClick={() => setIsFilterFocused(true)}
+            onClick={handleChipClick}
           >
             {selectedCategoryLabel}
           </div>
@@ -100,10 +104,8 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           type="text"
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
-          onFocus={() => setIsFilterFocused(true)}
-          onBlur={() => {
-            setTimeout(() => setIsFilterFocused(false), 200);
-          }}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           placeholder={
             selectedMonth || categoryValue
               ? t('filters.searchInMonthCategory')
@@ -147,25 +149,12 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           )}
 
           {/* Month Chips Section */}
-          {monthOptions.length > 0 && (
-            <div className="chips-section">
-              <div className="chips-section-title">
-                <FaCalendar />
-                {t('filters.months')}
-              </div>
-              <div className="month-chips">
-                {monthOptions.map((month) => (
-                  <button
-                    key={month.value}
-                    onClick={() => handleMonthClick(month.value)}
-                    className={`month-chip ${month.value === selectedMonth ? 'active' : ''}`}
-                  >
-                    {month.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <MonthChips
+            months={monthOptions}
+            selectedMonth={selectedMonth}
+            onMonthClick={handleMonthClick}
+            className="chips-section"
+          />
         </div>
       )}
     </div>

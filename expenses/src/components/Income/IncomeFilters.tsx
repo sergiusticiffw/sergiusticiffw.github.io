@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useLocalization } from '@context/localization';
 import { useData } from '@context/context';
 import { FaCalendar, FaSearch, FaTimes } from 'react-icons/fa';
+import { useFilterFocus } from '@hooks/useFilterFocus';
+import { useMonthFilter } from '@hooks/useMonthFilter';
 import { formatMonthOption } from '@utils/utils';
+import MonthChips from '@components/Common/MonthChips';
 import './IncomeFilters.scss';
 
 interface IncomeFiltersProps {
@@ -22,24 +25,21 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
 }) => {
   const { t, language } = useLocalization();
   const { data } = useData();
-  const [isFilterFocused, setIsFilterFocused] = useState(false);
 
-  const handleTextFilterChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    onTextFilterChange(event.target.value);
-  };
+  // Use reusable hooks
+  const {
+    isFilterFocused,
+    handleFocus,
+    handleBlur,
+    handleChipClick,
+    handleSelection,
+  } = useFilterFocus();
 
-  const handleMonthClick = (month: string) => {
-    if (month === selectedMonth) {
-      // Deselect
-      onMonthFilterChange('');
-    } else {
-      // Select
-      onMonthFilterChange(month);
-      setIsFilterFocused(false); // Hide month list after selection
-    }
-  };
+  const { handleMonthClick } = useMonthFilter({
+    selectedMonth,
+    onMonthChange: onMonthFilterChange,
+    onSelection: handleSelection,
+  });
 
   const hasActiveFilters = textFilter || selectedMonth;
 
@@ -49,34 +49,35 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
       return [];
     }
 
-    // Extract unique months from income data
+    // Extract unique months from income data with validation
     const monthsSet = new Set<string>();
     data.incomeData.forEach((item: any) => {
+      if (!item.dt) return; // Skip invalid dates
       const date = new Date(item.dt);
+      // Validate date is valid
+      if (isNaN(date.getTime())) return;
       const year = date.getFullYear();
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const monthValue = `${year}-${month}`;
-      monthsSet.add(monthValue);
+      // Additional validation: year should be reasonable (1900-2100)
+      if (year >= 1900 && year <= 2100) {
+        monthsSet.add(monthValue);
+      }
     });
 
     // Convert to array and sort descending (newest first)
     const monthsArray = Array.from(monthsSet).sort((a, b) => b.localeCompare(a));
 
-    // Format for display using reusable utility
-    return monthsArray.map((monthValue) => formatMonthOption(monthValue, language));
+    // Format for display using reusable utility, filter out invalid dates
+    return monthsArray
+      .map((monthValue) => formatMonthOption(monthValue, language))
+      .filter((option) => option.label !== '' && option.label !== option.value); // Filter out invalid formatted dates
   }, [data.incomeData, language]);
 
   // Get selected month label
   const selectedMonthLabel = selectedMonth
     ? availableMonths.find((m) => m.value === selectedMonth)?.label
     : '';
-
-  // Build display text
-  const displayText = selectedMonthLabel
-    ? textFilter
-      ? `${selectedMonthLabel}: ${textFilter}`
-      : selectedMonthLabel
-    : textFilter;
 
   return (
     <div className="income-filters-combined">
@@ -88,7 +89,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
         {selectedMonth && !isFilterFocused && (
           <div
             className="selected-month-chip clickable"
-            onClick={() => setIsFilterFocused(true)}
+            onClick={handleChipClick}
           >
             <FaCalendar />
             {selectedMonthLabel}
@@ -98,12 +99,9 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
         <input
           type="text"
           value={textFilter}
-          onChange={handleTextFilterChange}
-          onFocus={() => setIsFilterFocused(true)}
-          onBlur={() => {
-            // Delay to allow chip click
-            setTimeout(() => setIsFilterFocused(false), 200);
-          }}
+          onChange={(e) => onTextFilterChange(e.target.value)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           placeholder={
             selectedMonth && !isFilterFocused
               ? t('filters.searchInMonth')
@@ -125,17 +123,11 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
 
       {/* Month Chips - Show when focused (to select or change month) */}
       {isFilterFocused && (
-        <div className="month-chips">
-          {availableMonths.map((month) => (
-            <button
-              key={month.value}
-              onClick={() => handleMonthClick(month.value)}
-              className={`month-chip ${month.value === selectedMonth ? 'active' : ''}`}
-            >
-              {month.label}
-            </button>
-          ))}
-        </div>
+        <MonthChips
+          months={availableMonths}
+          selectedMonth={selectedMonth}
+          onMonthClick={handleMonthClick}
+        />
       )}
     </div>
   );

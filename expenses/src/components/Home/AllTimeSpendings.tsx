@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAuthState, useData } from '@context/context';
 import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts';
@@ -15,8 +15,7 @@ const AllTimeSpendings = () => {
   const { currency } = useAuthState() as AuthState;
   const { t } = useLocalization();
 
-  // Re-render the component only when dependencies are changed.
-  useEffect(() => {}, [data, currency]);
+  // Note: Component will re-render when data or currency change naturally
 
   // Get localized categories
   const localizedCategories = getCategories();
