@@ -284,11 +284,16 @@
     bottom: -1.5rem;
 
     // Fix for iOS Safari mobile - account for navbar height to avoid overlap
+    // Modal is fixed relative to viewport, so sticky button needs to account for navbar
     @media (max-width: 640px) and (hover: none) and (pointer: coarse) {
-      // Account for navbar height + safe area to avoid overlap
-      bottom: calc(60px + env(safe-area-inset-bottom, 0) + 0.5rem);
-      // Lower z-index than navbar to ensure navbar stays on top
+      // Navbar height is 60px on mobile (below 600px breakpoint)
+      // Add safe area inset bottom + padding gap (1.5rem = 24px) to ensure clear separation
+      // Position from bottom of scrollable container (modal-body) accounting for navbar
+      bottom: calc(60px + env(safe-area-inset-bottom, 0) + 1.5rem);
+      // Lower z-index than navbar (9999) to ensure navbar stays on top
       z-index: 5;
+      // Ensure it stays sticky within modal-body
+      position: sticky !important;
     }
   }
 }
