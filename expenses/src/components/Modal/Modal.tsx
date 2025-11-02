@@ -47,29 +47,49 @@ const Modal = ({
         target &&
         (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')
       ) {
-        // Only on mobile devices
-        if (window.matchMedia('(max-width: 640px)').matches || 'ontouchstart' in window) {
+        // Only on mobile touch devices
+        const isMobile = window.matchMedia('(max-width: 640px)').matches && 'ontouchstart' in window;
+        if (isMobile) {
+          // Wait for keyboard to fully open
           setTimeout(() => {
             const modalBody = modalBodyRef.current;
             if (modalBody) {
               const form = target.closest('form');
               if (form) {
-                const submitButton = form.querySelector('button[type="submit"], .btn-submit') as HTMLElement;
+                // Find submit button - try multiple selectors
+                const submitButton = form.querySelector('button[type="submit"], .btn-submit, .form-actions-sticky button') as HTMLElement;
                 if (submitButton && modalBody) {
+                  // Get positions relative to viewport
                   const buttonRect = submitButton.getBoundingClientRect();
                   const bodyRect = modalBody.getBoundingClientRect();
-                  const scrollTop = modalBody.scrollTop;
-                  const buttonOffset = buttonRect.top - bodyRect.top + scrollTop;
-                  const scrollToPosition = Math.max(0, buttonOffset - 100);
+                  const viewportHeight = window.innerHeight;
                   
-                  modalBody.scrollTo({
-                    top: scrollToPosition,
-                    behavior: 'smooth',
-                  });
+                  // Check if button is below visible area (accounting for keyboard ~250px)
+                  const visibleBottom = viewportHeight - 250; // Approximate keyboard height
+                  
+                  if (buttonRect.bottom > visibleBottom) {
+                    // Calculate how much we need to scroll
+                    const scrollAmount = buttonRect.bottom - visibleBottom + 120; // Extra padding
+                    const currentScroll = modalBody.scrollTop;
+                    
+                    modalBody.scrollTo({
+                      top: currentScroll + scrollAmount,
+                      behavior: 'smooth',
+                    });
+                  }
+                  
+                  // Also try scrollIntoView as fallback
+                  setTimeout(() => {
+                    submitButton.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'end',
+                      inline: 'nearest',
+                    });
+                  }, 100);
                 }
               }
             }
-          }, 350);
+          }, 400); // Wait a bit longer for keyboard animation
         }
       }
     };
