@@ -27,7 +27,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   const listRef = useRef<any>(null);
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const { t } = useLocalization();
+  const { t, language } = useLocalization();
 
   const {
     handleTouchStart,
