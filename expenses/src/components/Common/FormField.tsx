@@ -6,7 +6,7 @@ export interface FormFieldProps {
   name: string;
   type?: 'text' | 'number' | 'date' | 'email' | 'tel' | 'url' | 'password';
   label: string;
-  value: string | number;
+  value: string | number | null | undefined;
   onChange: (
     event: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -46,6 +46,9 @@ const FormField: React.FC<FormFieldProps> = ({
 }) => {
   const { t } = useLocalization();
   const fieldId = id || name;
+  
+  // Ensure value is never null - convert null/undefined to empty string
+  const safeValue = value == null ? '' : value;
 
   return (
     <div className={`form-group ${required ? 'required' : ''} ${className}`}>
@@ -56,7 +59,7 @@ const FormField: React.FC<FormFieldProps> = ({
           ref={inputRef}
           type={type}
           name={name}
-          value={value}
+          value={safeValue}
           onChange={onChange}
           required={required}
           placeholder={placeholder}
