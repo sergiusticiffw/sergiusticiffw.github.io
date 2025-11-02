@@ -1,6 +1,7 @@
 import React, { useRef, useState, useMemo, useCallback } from 'react';
 import { getIconForCategory } from '@utils/helper';
-import { formatNumber } from '@utils/utils';
+import { formatNumber, getLocale } from '@utils/utils';
+import { useLocalization } from '@context/localization';
 import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import './TransactionList.scss';
@@ -32,6 +33,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const listRef = useRef<HTMLDivElement>(null);
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const { language } = useLocalization();
 
   const {
     handleTouchStart,
@@ -105,8 +107,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
         const date = new Date(transaction.dt);
         const day = date.getDate();
         // Use user's language for month formatting
-        const language = localStorage.getItem('language') || 'en';
-        const locale = language === 'ro' ? 'ro-RO' : 'en-US';
+        const locale = getLocale(language);
         const month = date
           .toLocaleDateString(locale, { month: 'short' })
           .toUpperCase();

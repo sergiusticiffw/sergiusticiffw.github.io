@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { formatNumber } from '@utils/utils';
+import { formatNumber, getLocale } from '@utils/utils';
+import { useLocalization } from '@context/localization';
 import Modal from '@components/Modal';
 import TransactionList from '@components/TransactionList';
 import Month from '@components/Home/Month';
@@ -33,6 +34,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const { language } = useLocalization();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showDayModal, setShowDayModal] = useState(false);
   // Group transactions by date
@@ -225,8 +227,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           selectedDate
             ? (() => {
                 // Use user's language for date formatting
-                const language = localStorage.getItem('language') || 'en';
-                const locale = language === 'ro' ? 'ro-RO' : 'en-US';
+                const locale = getLocale(language);
                 return new Date(selectedDate).toLocaleDateString(locale, {
                   day: 'numeric',
                   month: 'long',
@@ -258,4 +259,4 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   );
 };
 
-export default CalendarView;
+export default React.memo(CalendarView);

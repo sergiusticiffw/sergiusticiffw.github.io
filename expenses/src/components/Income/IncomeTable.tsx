@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
-import { formatNumber } from '@utils/utils';
+import { formatNumber, getLocale } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
 import './IncomeTable.scss';
 import { useLocalization } from '@context/localization';
@@ -123,8 +123,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
           const date = new Date(income.dt);
           const day = date.getDate();
           // Use user's language for month formatting
-          const language = localStorage.getItem('language') || 'en';
-          const locale = language === 'ro' ? 'ro-RO' : 'en-US';
+          const locale = getLocale(language);
           const month = date
             .toLocaleDateString(locale, { month: 'short' })
             .toUpperCase();

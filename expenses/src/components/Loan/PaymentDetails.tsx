@@ -13,7 +13,7 @@ import {
   FaSortUp,
   FaSortDown,
 } from 'react-icons/fa';
-import { deleteNode, fetchLoans, formatNumber } from '@utils/utils';
+import { deleteNode, fetchLoans, formatNumber, getLocale } from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import Modal from '@components/Modal/Modal';
 import PaymentForm from '@components/Loan/PaymentForm';
@@ -28,7 +28,7 @@ const PaymentDetails = (props) => {
   const loan = props?.loan ?? {};
   const listRef = useRef<any>(null);
   const showNotification = useNotification();
-  const { t } = useLocalization();
+  const { t, language } = useLocalization();
   const [showEditModal, setShowEditModal] = useState(false);
   const [isNewModal, setIsNewModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -229,8 +229,7 @@ const PaymentDetails = (props) => {
               const date = new Date(payment.fdt);
               const day = date.getDate();
               // Use user's language for month formatting
-              const language = localStorage.getItem('language') || 'en';
-              const locale = language === 'ro' ? 'ro-RO' : 'en-US';
+              const locale = getLocale(language);
               const month = date
                 .toLocaleDateString(locale, { month: 'short' })
                 .toUpperCase();
