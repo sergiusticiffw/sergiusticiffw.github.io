@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo, useCallback } from 'react';
 import { getIconForCategory } from '@utils/helper';
 import { formatNumber } from '@utils/utils';
 import useSwipeActions from '@hooks/useSwipeActions';
@@ -174,4 +174,4 @@ const TransactionList: React.FC<TransactionListProps> = ({
   );
 };
 
-export default TransactionList;
+export default React.memo(TransactionList);

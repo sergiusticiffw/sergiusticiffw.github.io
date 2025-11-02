@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useLocalization } from '@context/localization';
 import { FaCalendar, FaSearch, FaTimes } from 'react-icons/fa';
 import { useFilterFocus } from '@hooks/useFilterFocus';
@@ -51,14 +51,14 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     onSelection: handleSelection,
   });
 
-  const handleCategoryClick = (value: string) => {
+  const handleCategoryClick = useCallback((value: string) => {
     if (value === categoryValue) {
       onCategoryChange('');
     } else {
       onCategoryChange(value);
       handleSelection();
     }
-  };
+  }, [categoryValue, onCategoryChange, handleSelection]);
 
   const hasFilters = searchValue || categoryValue || selectedMonth;
 
@@ -161,5 +161,5 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   );
 };
 
-export default TransactionFilters;
+export default React.memo(TransactionFilters);
 

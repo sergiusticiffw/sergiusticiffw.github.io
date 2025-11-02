@@ -36,17 +36,19 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showDayModal, setShowDayModal] = useState(false);
   // Group transactions by date
-  const transactionsByDate = transactions.reduce(
-    (acc, transaction) => {
-      const date = transaction.dt;
-      if (!acc[date]) {
-        acc[date] = [];
-      }
-      acc[date].push(transaction);
-      return acc;
-    },
-    {} as Record<string, Transaction[]>
-  );
+  const transactionsByDate = useMemo(() => {
+    return transactions.reduce(
+      (acc, transaction) => {
+        const date = transaction.dt;
+        if (!acc[date]) {
+          acc[date] = [];
+        }
+        acc[date].push(transaction);
+        return acc;
+      },
+      {} as Record<string, Transaction[]>
+    );
+  }, [transactions]);
 
   // Calculate total per day
   const dailyTotals = Object.entries(transactionsByDate).map(

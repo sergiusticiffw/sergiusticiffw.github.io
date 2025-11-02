@@ -4,6 +4,7 @@ import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
 import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
+import { FormField } from '@components/Common';
 import './LoanForm.scss';
 
 interface LoanFormProps {
@@ -210,130 +211,98 @@ const LoanForm: React.FC<LoanFormProps> = ({
     <div className="loan-form-container">
       <form className="loan-form" onSubmit={handleFormSubmit}>
         {/* Basic Information */}
-        <div className="form-group required">
-          <label>{t('loanForm.loanTitle')}</label>
-          <div className="input-wrapper">
-            <input
-              required
-              placeholder={t('loanForm.enterLoanTitle')}
-              type="text"
-              name="title"
-              value={formState.title}
-              onChange={handleChange}
-              className={`form-input ${getFieldValidation('title', formState) ? 'valid' : ''}`}
-            />
-          </div>
+        <FormField
+          name="title"
+          type="text"
+          label={t('loanForm.loanTitle')}
+          value={formState.title}
+          onChange={handleChange}
+          required
+          placeholder={t('loanForm.enterLoanTitle')}
+          isValid={getFieldValidation('title', formState)}
+        />
+
+        <div className="form-row">
+          <FormField
+            name="field_principal"
+            type="number"
+            label={t('loanForm.principalAmount')}
+            value={formState.field_principal}
+            onChange={handleChange}
+            required
+            step="0.01"
+            min="0"
+            isValid={getFieldValidation('field_principal', formState)}
+          />
+
+          <FormField
+            name="field_rate"
+            type="number"
+            label={t('loanForm.interestRate')}
+            value={formState.field_rate}
+            onChange={handleChange}
+            required
+            step="0.01"
+            min="0"
+            isValid={getFieldValidation('field_rate', formState)}
+          />
         </div>
 
         <div className="form-row">
-          <div className="form-group required">
-            <label>{t('loanForm.principalAmount')}</label>
-            <div className="input-wrapper">
-              <input
-                required
-                type="number"
-                name="field_principal"
-                value={formState.field_principal}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                className={`form-input ${getFieldValidation('field_principal', formState) ? 'valid' : ''}`}
-              />
-            </div>
-          </div>
+          <FormField
+            name="field_start_date"
+            type="date"
+            label={t('loanForm.startDate')}
+            value={formState.field_start_date}
+            onChange={handleChange}
+            required
+            isValid={getFieldValidation('field_start_date', formState)}
+          />
 
-          <div className="form-group required">
-            <label>{t('loanForm.interestRate')}</label>
-            <div className="input-wrapper">
-              <input
-                required
-                type="number"
-                name="field_rate"
-                value={formState.field_rate}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                className={`form-input ${getFieldValidation('field_rate', formState) ? 'valid' : ''}`}
-              />
-            </div>
-          </div>
+          <FormField
+            name="field_end_date"
+            type="date"
+            label={t('loanForm.endDate')}
+            value={formState.field_end_date}
+            onChange={handleChange}
+            required
+            inputRef={endDateRef}
+            isValid={getFieldValidation('field_end_date', formState)}
+          />
         </div>
+
+        <FormField
+          name="field_initial_fee"
+          type="number"
+          label={t('loanForm.initialFee')}
+          value={formState.field_initial_fee}
+          onChange={handleChange}
+          step="0.01"
+          min="0"
+          isValid={getFieldValidation('field_initial_fee', formState)}
+        />
 
         <div className="form-row">
-          <div className="form-group required">
-            <label>{t('loanForm.startDate')}</label>
-            <div className="input-wrapper">
-              <input
-                required
-                type="date"
-                name="field_start_date"
-                value={formState.field_start_date}
-                onChange={handleChange}
-                className={`form-input ${getFieldValidation('field_start_date', formState) ? 'valid' : ''}`}
-              />
-            </div>
-          </div>
+          <FormField
+            name="field_rec_first_payment_date"
+            type="date"
+            label={t('loanForm.firstPaymentDate')}
+            value={formState.field_rec_first_payment_date}
+            onChange={handleChange}
+            inputRef={firstPaymentDateRef}
+            isValid={getFieldValidation('field_rec_first_payment_date', formState)}
+          />
 
-          <div className="form-group required">
-            <label>{t('loanForm.endDate')}</label>
-            <div className="input-wrapper">
-              <input
-                required
-                type="date"
-                name="field_end_date"
-                ref={endDateRef}
-                value={formState.field_end_date}
-                onChange={handleChange}
-                className={`form-input ${getFieldValidation('field_end_date', formState) ? 'valid' : ''}`}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label>{t('loanForm.initialFee')}</label>
-          <div className="input-wrapper">
-            <input
-              type="number"
-              name="field_initial_fee"
-              value={formState.field_initial_fee}
-              onChange={handleChange}
-              step="0.01"
-              min="0"
-              className={`form-input ${getFieldValidation('field_initial_fee', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>{t('loanForm.firstPaymentDate')}</label>
-            <div className="input-wrapper">
-              <input
-                type="date"
-                name="field_rec_first_payment_date"
-                ref={firstPaymentDateRef}
-                value={formState.field_rec_first_payment_date}
-                onChange={handleChange}
-                className={`form-input ${getFieldValidation('field_rec_first_payment_date', formState) ? 'valid' : ''}`}
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>{t('loanForm.paymentDayOfMonth')}</label>
-            <div className="input-wrapper">
-              <input
-                type="number"
-                name="field_recurring_payment_day"
-                value={formState.field_recurring_payment_day}
-                onChange={handleChange}
-                min="1"
-                max="31"
-                className={`form-input ${getFieldValidation('field_recurring_payment_day', formState) ? 'valid' : ''}`}
-              />
-            </div>
-          </div>
+          <FormField
+            name="field_recurring_payment_day"
+            type="number"
+            label={t('loanForm.paymentDayOfMonth')}
+            value={formState.field_recurring_payment_day}
+            onChange={handleChange}
+            min="1"
+            max="31"
+            isValid={getFieldValidation('field_recurring_payment_day', formState)}
+          />
         </div>
 
         <div className="form-group required">

@@ -6,6 +6,7 @@ import { addOneDay } from '@utils/utils';
 import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
 import { useParams } from 'react-router-dom';
+import { FormField } from '@components/Common';
 import './PaymentForm.scss';
 
 interface PaymentFormProps {
@@ -134,94 +135,76 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   return (
     <div className="payment-form-container">
       <form className="payment-form" onSubmit={handleSubmit}>
-        <div className="form-group required">
-          <label>{t('paymentForm.paymentTitle')}</label>
-          <div className="input-wrapper">
-            <input
-              required
-              type="text"
-              name="title"
-              placeholder={t('paymentForm.enterPaymentTitle')}
-              value={formState.title}
-              onChange={handleChange}
-              className={`form-input ${getFieldValidation('title', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="title"
+          type="text"
+          label={t('paymentForm.paymentTitle')}
+          value={formState.title}
+          onChange={handleChange}
+          required
+          placeholder={t('paymentForm.enterPaymentTitle')}
+          isValid={getFieldValidation('title', formState)}
+          ariaLabel={t('paymentForm.paymentTitle')}
+        />
 
-        <div className="form-group required">
-          <label>{t('paymentForm.paymentDate')}</label>
-          <div className="input-wrapper">
-            <input
-              required
-              type="date"
-              name="field_date"
-              value={formState.field_date}
-              onChange={handleChange}
-              className={`form-input ${getFieldValidation('field_date', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="field_date"
+          type="date"
+          label={t('paymentForm.paymentDate')}
+          value={formState.field_date}
+          onChange={handleChange}
+          required
+          isValid={getFieldValidation('field_date', formState)}
+          ariaLabel={t('paymentForm.paymentDate')}
+        />
 
-        <div className="form-group">
-          <label>{t('paymentForm.newInterestRate')}</label>
-          <div className="input-wrapper">
-            <input
-              type="number"
-              name="field_rate"
-              value={formState.field_rate}
-              onChange={handleChange}
-              step="0.01"
-              min="0"
-              className={`form-input ${getFieldValidation('field_rate', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="field_rate"
+          type="number"
+          label={t('paymentForm.newInterestRate')}
+          value={formState.field_rate}
+          onChange={handleChange}
+          step="0.01"
+          min="0"
+          isValid={getFieldValidation('field_rate', formState)}
+          ariaLabel={t('paymentForm.newInterestRate')}
+        />
 
-        <div className="form-group">
-          <label>{t('paymentForm.installmentPayment')}</label>
-          <div className="input-wrapper">
-            <input
-              type="number"
-              name="field_pay_installment"
-              value={formState.field_pay_installment}
-              onChange={handleChange}
-              step="0.01"
-              min="0"
-              className={`form-input ${getFieldValidation('field_pay_installment', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="field_pay_installment"
+          type="number"
+          label={t('paymentForm.installmentPayment')}
+          value={formState.field_pay_installment}
+          onChange={handleChange}
+          step="0.01"
+          min="0"
+          isValid={getFieldValidation('field_pay_installment', formState)}
+          ariaLabel={t('paymentForm.installmentPayment')}
+        />
 
-        <div className="form-group">
-          <label>{t('paymentForm.individualFee')}</label>
-          <div className="input-wrapper">
-            <input
-              type="number"
-              name="field_pay_single_fee"
-              value={formState.field_pay_single_fee}
-              onChange={handleChange}
-              step="0.01"
-              min="0"
-              className={`form-input ${getFieldValidation('field_pay_single_fee', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="field_pay_single_fee"
+          type="number"
+          label={t('paymentForm.individualFee')}
+          value={formState.field_pay_single_fee}
+          onChange={handleChange}
+          step="0.01"
+          min="0"
+          isValid={getFieldValidation('field_pay_single_fee', formState)}
+          ariaLabel={t('paymentForm.individualFee')}
+        />
 
-        <div className="form-group">
-          <label>{t('paymentForm.newRecurringAmount')}</label>
-          <div className="input-wrapper">
-            <input
-              type="number"
-              name="field_new_recurring_amount"
-              value={formState.field_new_recurring_amount}
-              onChange={handleChange}
-              step="0.01"
-              min="0"
-              className={`form-input ${getFieldValidation('field_new_recurring_amount', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="field_new_recurring_amount"
+          type="number"
+          label={t('paymentForm.newRecurringAmount')}
+          value={formState.field_new_recurring_amount}
+          onChange={handleChange}
+          step="0.01"
+          min="0"
+          isValid={getFieldValidation('field_new_recurring_amount', formState)}
+          ariaLabel={t('paymentForm.newRecurringAmount')}
+        />
 
         <div className="form-group">
           <label className="checkbox-label">

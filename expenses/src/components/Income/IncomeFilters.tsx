@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { useLocalization } from '@context/localization';
 import { useData } from '@context/context';
 import { FaCalendar, FaSearch, FaTimes } from 'react-icons/fa';
@@ -133,4 +133,4 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
   );
 };
 
-export default IncomeFilters;
+export default memo(IncomeFilters);

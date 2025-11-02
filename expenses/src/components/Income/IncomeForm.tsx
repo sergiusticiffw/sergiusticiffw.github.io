@@ -4,6 +4,7 @@ import { useLocalization } from '@context/localization';
 import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
 import { DataState } from '@type/types';
+import { FormField } from '@components/Common';
 import './IncomeForm.scss';
 
 interface IncomeFormProps {
@@ -72,57 +73,40 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   return (
     <div className="income-form-container">
       <form className="income-form" onSubmit={handleSubmit}>
-        <div className="form-group required">
-          <label htmlFor="field_amount">{t('incomeForm.amount')}</label>
-          <div className="input-wrapper">
-            <input
-              type="number"
-              id="field_amount"
-              name="field_amount"
-              value={formState.field_amount}
-              onChange={handleChange}
-              step="0.01"
-              min="0"
-              required
-              aria-label={t('incomeForm.amount')}
-              className={`form-input ${getFieldValidation('field_amount', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="field_amount"
+          type="number"
+          label={t('incomeForm.amount')}
+          value={formState.field_amount}
+          onChange={handleChange}
+          required
+          step="0.01"
+          min="0"
+          isValid={getFieldValidation('field_amount', formState)}
+          ariaLabel={t('incomeForm.amount')}
+        />
 
-        <div className="form-group required">
-          <label htmlFor="field_date">{t('incomeForm.date')}</label>
-          <div className="input-wrapper">
-            <input
-              type="date"
-              id="field_date"
-              name="field_date"
-              value={formState.field_date}
-              onChange={handleChange}
-              required
-              aria-label={t('incomeForm.date')}
-              className={`form-input ${getFieldValidation('field_date', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="field_date"
+          type="date"
+          label={t('incomeForm.date')}
+          value={formState.field_date}
+          onChange={handleChange}
+          required
+          isValid={getFieldValidation('field_date', formState)}
+          ariaLabel={t('incomeForm.date')}
+        />
 
-        <div className="form-group required">
-          <label htmlFor="field_description">
-            {t('incomeForm.description')}
-          </label>
-          <div className="input-wrapper">
-            <input
-              type="text"
-              id="field_description"
-              name="field_description"
-              value={formState.field_description}
-              onChange={handleChange}
-              required
-              aria-label={t('incomeForm.description')}
-              className={`form-input ${getFieldValidation('field_description', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="field_description"
+          type="text"
+          label={t('incomeForm.description')}
+          value={formState.field_description}
+          onChange={handleChange}
+          required
+          isValid={getFieldValidation('field_description', formState)}
+          ariaLabel={t('incomeForm.description')}
+        />
 
         <div className="form-actions-sticky">
           <button type="submit" className="btn-submit" disabled={isSubmitting}>

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import { formatNumber } from '@utils/utils';
@@ -47,45 +47,47 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
     });
   }, [changedItems, handleClearChangedItem]);
 
-  const allItems = [
+  const allItems = useMemo(() => [
     ...items,
-    ...Object.values(changedItems)
+    ...Object.values(changedItems || {})
       .filter(
         (item: any) => item.type === 'removed' && item.data.type === 'incomes'
       )
       .map((item: any) => item.data),
-  ];
+  ], [items, changedItems]);
 
-  const handleSort = (field: SortField) => {
+  const handleSort = useCallback((field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
       setSortDirection('desc');
     }
-  };
+  }, [sortField, sortDirection]);
 
   // Sort items
-  const sortedItems = [...allItems].sort((a, b) => {
-    if (!sortField) {
-      // Default sort by date descending
-      return new Date(b.dt).getTime() - new Date(a.dt).getTime();
-    }
+  const sortedItems = useMemo(() => {
+    return [...allItems].sort((a, b) => {
+      if (!sortField) {
+        // Default sort by date descending
+        return new Date(b.dt).getTime() - new Date(a.dt).getTime();
+      }
 
-    if (sortField === 'date') {
-      const dateA = new Date(a.dt).getTime();
-      const dateB = new Date(b.dt).getTime();
-      return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
-    }
+      if (sortField === 'date') {
+        const dateA = new Date(a.dt).getTime();
+        const dateB = new Date(b.dt).getTime();
+        return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+      }
 
-    if (sortField === 'amount') {
-      const amountA = typeof a.sum === 'string' ? parseFloat(a.sum) : a.sum;
-      const amountB = typeof b.sum === 'string' ? parseFloat(b.sum) : b.sum;
-      return sortDirection === 'asc' ? amountA - amountB : amountB - amountA;
-    }
+      if (sortField === 'amount') {
+        const amountA = typeof a.sum === 'string' ? parseFloat(a.sum) : a.sum;
+        const amountB = typeof b.sum === 'string' ? parseFloat(b.sum) : b.sum;
+        return sortDirection === 'asc' ? amountA - amountB : amountB - amountA;
+      }
 
-    return 0;
-  });
+      return 0;
+    });
+  }, [allItems, sortField, sortDirection]);
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) return <FaSort />;
@@ -190,4 +192,4 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   );
 };
 
-export default IncomeTable;
+export default React.memo(IncomeTable);

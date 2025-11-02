@@ -5,6 +5,7 @@ import { getCategories, getSuggestions } from '@utils/constants';
 import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
 import { DataState } from '@type/types';
+import { FormField } from '@components/Common';
 import { FaPlus, FaPen } from 'react-icons/fa';
 import './TransactionForm.scss';
 
@@ -118,40 +119,30 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   return (
     <div className="transaction-form-container">
       <form className="transaction-form" onSubmit={handleSubmit}>
-        <div className="form-group required">
-          <label htmlFor="field_amount">{t('transactionForm.amount')}</label>
-          <div className="input-wrapper">
-            <input
-              id="field_amount"
-              required
-              placeholder={t('form.amountPlaceholder')}
-              type="number"
-              name="field_amount"
-              value={formState.field_amount}
-              onChange={handleChange}
-              min={0}
-              step={0.01}
-              aria-label={t('transactionForm.amount')}
-              className={`form-input ${getFieldValidation('field_amount', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="field_amount"
+          type="number"
+          label={t('transactionForm.amount')}
+          value={formState.field_amount}
+          onChange={handleChange}
+          required
+          placeholder={t('form.amountPlaceholder')}
+          min={0}
+          step={0.01}
+          isValid={getFieldValidation('field_amount', formState)}
+          ariaLabel={t('transactionForm.amount')}
+        />
 
-        <div className="form-group required">
-          <label htmlFor="field_date">{t('transactionForm.date')}</label>
-          <div className="input-wrapper">
-            <input
-              id="field_date"
-              required
-              type="date"
-              name="field_date"
-              value={formState.field_date}
-              onChange={handleChange}
-              aria-label={t('transactionForm.date')}
-              className={`form-input ${getFieldValidation('field_date', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="field_date"
+          type="date"
+          label={t('transactionForm.date')}
+          value={formState.field_date}
+          onChange={handleChange}
+          required
+          isValid={getFieldValidation('field_date', formState)}
+          ariaLabel={t('transactionForm.date')}
+        />
 
         <div className="form-group required">
           <label htmlFor="field_category">
@@ -177,23 +168,16 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="field_description">
-            {t('transactionForm.description')}
-          </label>
-          <div className="input-wrapper">
-            <input
-              id="field_description"
-              placeholder={t('transactionForm.description')}
-              name="field_description"
-              type="text"
-              value={formState.field_description}
-              onChange={handleChange}
-              aria-label={t('transactionForm.description')}
-              className={`form-input ${getFieldValidation('field_description', formState) ? 'valid' : ''}`}
-            />
-          </div>
-        </div>
+        <FormField
+          name="field_description"
+          type="text"
+          label={t('transactionForm.description')}
+          value={formState.field_description}
+          onChange={handleChange}
+          placeholder={t('transactionForm.description')}
+          isValid={getFieldValidation('field_description', formState)}
+          ariaLabel={t('transactionForm.description')}
+        />
 
         {suggestionData.length ? (
           <div className="form-group">
