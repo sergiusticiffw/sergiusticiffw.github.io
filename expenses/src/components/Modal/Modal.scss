@@ -56,6 +56,20 @@
   // Ensure proper centering and no transform issues
   margin: 0 auto;
   transform: none;
+  
+  // On mobile, adapt dynamically to screen size
+  @media (max-width: 768px) {
+    // Use viewport height that adapts to available space
+    max-height: calc(100svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
+    // Ensure modal doesn't exceed viewport, but leave some margin
+    max-height: min(90svh, calc(100vh - 2rem));
+  }
+  
+  // On very small screens
+  @media (max-width: 480px) {
+    max-height: calc(100svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
+    max-height: min(85svh, calc(100vh - 1rem));
+  }
 }
 
 // Modal Header (same as day-modal-header)
@@ -193,14 +207,20 @@
     }
   }
   
-  // On mobile, ensure footer stays visible
+  // On mobile, ensure footer stays visible and works with modal scroll
   @media (max-width: 768px) {
-    padding: 1rem 1.5rem;
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+    // Use sticky positioning within modal-content
+    // This keeps footer at bottom of visible modal area, not fixed to viewport
     position: sticky;
     bottom: 0;
-    // Ensure it stays above scrolling content and keyboard
-    z-index: 100;
+    // Ensure it stays above scrolling content
+    z-index: 10;
+    padding: 1rem 1.5rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+    // Background with blur to ensure visibility when scrolling
+    background: rgba(26, 26, 26, 0.98);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
   
   @media (max-width: 480px) {
@@ -223,13 +243,19 @@
   // Ensure modal-body is scrollable container
   display: flex;
   flex-direction: column;
-  // On mobile, allow more scrolling when keyboard is open
+  // On mobile, ensure scrolling works when content exceeds viewport
   @media (max-width: 768px) {
     // Use dynamic viewport height to account for keyboard
     max-height: 100svh;
     max-height: calc(100svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
-    // Normal padding when footer is present (footer handles bottom spacing)
-    padding-bottom: 1.5rem;
+    // Add extra padding bottom to allow scrolling past all content
+    // This ensures footer doesn't cover the last form field
+    padding-bottom: calc(1.5rem + 80px); // Extra space for footer visibility
+  }
+  
+  // On very small screens
+  @media (max-width: 480px) {
+    padding-bottom: calc(1.5rem + 70px);
   }
   
   // Hide form-actions-sticky when modal-footer is used
