@@ -8,13 +8,20 @@ import { AuthState, DataState } from '@type/types';
 import { formatMonth } from '@utils/utils';
 
 const MonthlyTotals = () => {
+  // All hooks must be called unconditionally at the top
   const { data } = useData() as DataState;
-  const items = data.filtered || data;
   const { currency } = useAuthState() as AuthState;
   const { t } = useLocalization();
 
   // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data, currency]);
+
+  // Guard against empty data - must be after all hooks
+  if (!data.raw || data.raw.length === 0) {
+    return null;
+  }
+
+  const items = data.filtered || data;
 
   // Get the first and last day in the dataset
   const firstDay = new Date(data.raw[data.raw.length - 1]?.dt as string);
