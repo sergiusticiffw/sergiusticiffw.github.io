@@ -30,6 +30,8 @@ const Loans: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [focusedItem, setFocusedItem] = useState<any>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loanFormSubmitting, setLoanFormSubmitting] = useState(false);
+  const [loanFormEditSubmitting, setLoanFormEditSubmitting] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const { loans, loading, payments } = data;
@@ -277,6 +279,24 @@ const Loans: React.FC = () => {
           setShowAddModal(false);
         }}
         title={t('loan.addLoan')}
+        footer={
+          <button
+            type="submit"
+            form="loan-form-add"
+            disabled={loanFormSubmitting}
+            className="btn-submit"
+          >
+            {loanFormSubmitting ? (
+              <div className="loader">
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+              </div>
+            ) : (
+              t('common.add')
+            )}
+          </button>
+        }
       >
         <LoanForm
           formType="add"
@@ -290,6 +310,10 @@ const Loans: React.FC = () => {
             field_initial_fee: 0,
             field_rec_first_payment_date: '',
             field_recurring_payment_day: 0,
+          }}
+          hideSubmitButton={true}
+          onFormReady={(submitHandler, isSubmitting) => {
+            setLoanFormSubmitting(isSubmitting);
           }}
           onSuccess={() => {
             setShowAddModal(false);
@@ -306,10 +330,32 @@ const Loans: React.FC = () => {
           setShowEditModal(false);
         }}
         title={t('loan.editLoan')}
+        footer={
+          <button
+            type="submit"
+            form="loan-form-edit"
+            disabled={loanFormEditSubmitting}
+            className="btn-submit"
+          >
+            {loanFormEditSubmitting ? (
+              <div className="loader">
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+              </div>
+            ) : (
+              t('common.save')
+            )}
+          </button>
+        }
       >
         <LoanForm
           formType="edit"
           values={focusedItem}
+          hideSubmitButton={true}
+          onFormReady={(submitHandler, isSubmitting) => {
+            setLoanFormEditSubmitting(isSubmitting);
+          }}
           onSuccess={() => {
             setShowEditModal(false);
             fetchLoans(token, dataDispatch, dispatch);

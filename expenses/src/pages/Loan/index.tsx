@@ -29,6 +29,8 @@ const Loan: React.FC = () => {
   const dispatch = useAuthDispatch();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
+  const [loanFormEditSubmitting, setLoanFormEditSubmitting] = useState(false);
+  const [paymentFormSubmitting, setPaymentFormSubmitting] = useState(false);
   const { loans } = data;
   const noData = data.loans === null;
   const { t } = useLocalization();
@@ -262,6 +264,24 @@ const Loan: React.FC = () => {
           setShowEditModal(false);
         }}
         title={t('loan.editLoan')}
+        footer={
+          <button
+            type="submit"
+            form="loan-form-edit"
+            disabled={loanFormEditSubmitting}
+            className="btn-submit"
+          >
+            {loanFormEditSubmitting ? (
+              <div className="loader">
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+              </div>
+            ) : (
+              t('common.save')
+            )}
+          </button>
+        }
       >
         <LoanForm
           formType={'edit'}
@@ -276,6 +296,10 @@ const Loan: React.FC = () => {
             field_rec_first_payment_date: loan.pdt,
             field_recurring_payment_day: loan.frpd,
             field_loan_status: loan.fls,
+          }}
+          hideSubmitButton={true}
+          onFormReady={(submitHandler, isSubmitting) => {
+            setLoanFormEditSubmitting(isSubmitting);
           }}
           onSuccess={() => {
             setShowEditModal(false);
@@ -292,6 +316,24 @@ const Loan: React.FC = () => {
           setShowAddPaymentModal(false);
         }}
         title={t('loan.addPayment')}
+        footer={
+          <button
+            type="submit"
+            form="payment-form-add"
+            disabled={paymentFormSubmitting}
+            className="btn-submit"
+          >
+            {paymentFormSubmitting ? (
+              <div className="loader">
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+              </div>
+            ) : (
+              t('common.add')
+            )}
+          </button>
+        }
       >
         <PaymentForm
           formType="add"
@@ -306,6 +348,10 @@ const Loan: React.FC = () => {
           }}
           startDate={loan.sdt}
           endDate={loan.edt}
+          hideSubmitButton={true}
+          onFormReady={(submitHandler, isSubmitting) => {
+            setPaymentFormSubmitting(isSubmitting);
+          }}
           onSuccess={() => {
             setShowAddPaymentModal(false);
             fetchLoans(token, dataDispatch, dispatch);

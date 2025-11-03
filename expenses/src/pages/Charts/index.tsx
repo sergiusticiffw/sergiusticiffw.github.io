@@ -10,7 +10,7 @@ import TransactionForm from '@components/TransactionForm';
 import LoadingSpinner from '@components/Common/LoadingSpinner';
 import NoData from '@components/Common/NoData';
 import { AuthState } from '@type/types';
-import { FaPlus, FaChartBar } from 'react-icons/fa';
+import { FaPlus, FaPen, FaChartBar } from 'react-icons/fa';
 import MonthlySavingsTrend from '@components/Charts/MonthlySavingsTrend';
 import MonthlyTotals from '@components/Charts/MonthlyTotals';
 import SavingsHistory from '@components/Charts/SavingsHistory';
@@ -49,6 +49,7 @@ const Charts = () => {
 
   const [visibleCharts, setVisibleCharts] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [transactionFormSubmitting, setTransactionFormSubmitting] = useState(false);
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
 
@@ -137,10 +138,35 @@ const Charts = () => {
           setShowAddModal(false);
         }}
         title={t('transactionForm.addTransaction')}
+        footer={
+          <button
+            type="submit"
+            form="transaction-form-add"
+            disabled={transactionFormSubmitting}
+            className="btn-submit"
+          >
+            {transactionFormSubmitting ? (
+              <div className="loader">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            ) : (
+              <>
+                <FaPlus />
+                <span>{t('transactionForm.title')}</span>
+              </>
+            )}
+          </button>
+        }
       >
         <TransactionForm
           formType="add"
           values={{}}
+          hideSubmitButton={true}
+          onFormReady={(submitHandler, isSubmitting) => {
+            setTransactionFormSubmitting(isSubmitting);
+          }}
           onSuccess={() => {
             setShowAddModal(false);
             fetchData(token, dataDispatch, dispatch);

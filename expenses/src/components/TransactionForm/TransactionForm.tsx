@@ -13,12 +13,16 @@ interface TransactionFormProps {
   formType: 'add' | 'edit';
   values: any;
   onSuccess: () => void;
+  hideSubmitButton?: boolean;
+  onFormReady?: (submitHandler: () => void, isSubmitting: boolean) => void;
 }
 
 const TransactionForm: React.FC<TransactionFormProps> = ({
   formType,
   values,
   onSuccess,
+  hideSubmitButton = false,
+  onFormReady,
 }) => {
   const { t } = useLocalization();
   const { dataDispatch } = useData() as DataState;
@@ -116,9 +120,21 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     }
     setSelectedIndices([...selectedIndices, index]);
   };
+  // Expose form submit handler and state to parent if needed
+  React.useEffect(() => {
+    if (onFormReady) {
+      onFormReady(() => {
+        const form = document.querySelector(`.transaction-form-${formType}`) as HTMLFormElement;
+        if (form) {
+          form.requestSubmit();
+        }
+      }, isSubmitting);
+    }
+  }, [onFormReady, isSubmitting, formType]);
+
   return (
     <div className="transaction-form-container">
-      <form className="transaction-form" onSubmit={handleSubmit}>
+      <form id={`transaction-form-${formType}`} className={`transaction-form transaction-form-${formType}`} onSubmit={handleSubmit}>
         <FormField
           name="field_amount"
           type="number"
@@ -202,26 +218,28 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           </div>
         ) : null}
 
-        <div className="form-actions-sticky">
-          <button type="submit" className="btn-submit" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <div className="loader">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            ) : (
-              <>
-                {formType === 'add' ? <FaPlus /> : <FaPen />}
-                <span>
-                  {formType === 'add'
-                    ? t('transactionForm.title')
-                    : t('transactionForm.editTitle')}
-                </span>
-              </>
-            )}
-          </button>
-        </div>
+        {!hideSubmitButton && (
+          <div className="form-actions-sticky">
+            <button type="submit" className="btn-submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <div className="loader">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              ) : (
+                <>
+                  {formType === 'add' ? <FaPlus /> : <FaPen />}
+                  <span>
+                    {formType === 'add'
+                      ? t('transactionForm.title')
+                      : t('transactionForm.editTitle')}
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

@@ -15,6 +15,8 @@ interface PaymentFormProps {
   onSuccess: () => void;
   startDate?: string;
   endDate?: string;
+  hideSubmitButton?: boolean;
+  onFormReady?: (submitHandler: () => void, isSubmitting: boolean) => void;
 }
 
 const PaymentForm: React.FC<PaymentFormProps> = ({
@@ -23,6 +25,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   onSuccess,
   startDate,
   endDate,
+  hideSubmitButton = false,
+  onFormReady,
 }) => {
   const { id } = useParams();
   const { t } = useLocalization();
@@ -132,9 +136,21 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     }
   );
 
+  // Expose form submit handler and state to parent if needed
+  React.useEffect(() => {
+    if (onFormReady) {
+      onFormReady(() => {
+        const form = document.querySelector(`.payment-form-${formType}`) as HTMLFormElement;
+        if (form) {
+          form.requestSubmit();
+        }
+      }, isSubmitting);
+    }
+  }, [onFormReady, isSubmitting, formType]);
+
   return (
     <div className="payment-form-container">
-      <form className="payment-form" onSubmit={handleSubmit}>
+      <form id={`payment-form-${formType}`} className={`payment-form payment-form-${formType}`} onSubmit={handleSubmit}>
         <FormField
           name="title"
           type="text"
@@ -218,21 +234,23 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           </label>
         </div>
 
-        <div className="form-actions-sticky">
-          <button type="submit" disabled={isSubmitting} className="btn-submit">
-            {isSubmitting ? (
-              <div className="loader">
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-              </div>
-            ) : formType === 'add' ? (
-              t('common.add')
-            ) : (
-              t('common.save')
-            )}
-          </button>
-        </div>
+        {!hideSubmitButton && (
+          <div className="form-actions-sticky">
+            <button type="submit" disabled={isSubmitting} className="btn-submit">
+              {isSubmitting ? (
+                <div className="loader">
+                  <span className="loader__element"></span>
+                  <span className="loader__element"></span>
+                  <span className="loader__element"></span>
+                </div>
+              ) : formType === 'add' ? (
+                t('common.add')
+              ) : (
+                t('common.save')
+              )}
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

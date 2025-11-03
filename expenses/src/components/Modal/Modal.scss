@@ -105,6 +105,111 @@
   }
 }
 
+// Modal Footer - Always sticky at bottom
+.modal-footer {
+  padding: 1rem 1.5rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+  background: rgba(26, 26, 26, 0.98);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  // Footer is always at bottom, not scrollable
+  flex-shrink: 0;
+  z-index: 10;
+  // Round bottom corners to match modal-content
+  border-radius: 0 0 16px 16px;
+  
+  // Style button in footer - match _modern-form.scss btn-submit styles
+  .btn-submit {
+    width: 100%;
+    background: linear-gradient(135deg, #5b8def 0%, #4a7ddc 100%);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 48px;
+    box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
+    margin: 0;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(91, 141, 239, 0.5);
+      background: linear-gradient(135deg, #4a7ddc 0%, #5b8def 100%);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    svg {
+      font-size: 1rem;
+    }
+
+    span {
+      font-weight: 600;
+    }
+    
+    // Loader styles in footer button
+    .loader {
+      display: flex;
+      gap: 4px;
+      
+      span,
+      .loader__element {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #fff;
+        animation: loading-dots 1.4s infinite ease-in-out both;
+        
+        &:nth-child(1) {
+          animation-delay: -0.32s;
+        }
+        
+        &:nth-child(2) {
+          animation-delay: -0.16s;
+        }
+        
+        &:nth-child(3) {
+          animation-delay: 0s;
+        }
+      }
+    }
+  }
+  
+  // On mobile, ensure footer stays visible
+  @media (max-width: 768px) {
+    padding: 1rem 1.5rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+    position: sticky;
+    bottom: 0;
+    // Ensure it stays above scrolling content and keyboard
+    z-index: 100;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.875rem 1rem;
+    padding-bottom: calc(0.875rem + env(safe-area-inset-bottom, 0));
+    border-radius: 0 0 12px 12px;
+  }
+}
+
 .modal-body {
   overflow-y: auto;
   overflow-x: hidden;
@@ -113,10 +218,9 @@
   // Prevent scroll bounce
   overscroll-behavior: contain;
   padding: 1.5rem;
-  padding-bottom: 0; // Remove bottom padding to allow sticky button to sit flush
   flex: 1 1 auto;
   min-height: 0;
-  // Ensure modal-body is scrollable container for sticky positioning
+  // Ensure modal-body is scrollable container
   display: flex;
   flex-direction: column;
   // On mobile, allow more scrolling when keyboard is open
@@ -124,6 +228,18 @@
     // Use dynamic viewport height to account for keyboard
     max-height: 100svh;
     max-height: calc(100svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
+    // Normal padding when footer is present (footer handles bottom spacing)
+    padding-bottom: 1.5rem;
+  }
+  
+  // Hide form-actions-sticky when modal-footer is used
+  + .modal-footer ~ * .form-actions-sticky,
+  .form-actions-sticky {
+    // Hide if footer exists (will be moved to footer)
+    &:has(+ .modal-footer),
+    &:has(~ .modal-footer) {
+      display: none;
+    }
   }
 
   // For forms without header
@@ -370,6 +486,19 @@
 }
 
 @keyframes loader-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes loading-dots {
   0%,
   80%,
   100% {

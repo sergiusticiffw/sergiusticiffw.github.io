@@ -38,6 +38,7 @@ const Income = () => {
   const [showDeleteModal, setShowDeleteModal] = useState<string | false>(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isNewModal, setIsNewModal] = useState(false);
+  const [incomeFormSubmitting, setIncomeFormSubmitting] = useState(false);
   const { data, dataDispatch } = useData();
   const noData = data.groupedData === null;
   const loading = data.loading;
@@ -280,10 +281,34 @@ const Income = () => {
         title={
           !isNewModal ? t('incomeForm.editIncome') : t('incomeForm.addIncome')
         }
+        footer={
+          <button
+            type="submit"
+            form={`income-form-${!isNewModal ? 'edit' : 'add'}`}
+            disabled={incomeFormSubmitting}
+            className="btn-submit"
+          >
+            {incomeFormSubmitting ? (
+              <div className="loader">
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+              </div>
+            ) : !isNewModal ? (
+              t('common.save')
+            ) : (
+              t('common.add')
+            )}
+          </button>
+        }
       >
         <IncomeForm
           formType={!isNewModal ? 'edit' : 'add'}
           values={focusedItem}
+          hideSubmitButton={true}
+          onFormReady={(submitHandler, isSubmitting) => {
+            setIncomeFormSubmitting(isSubmitting);
+          }}
           onSuccess={() => {
             setShowEditModal(false);
             setIsNewModal(false);

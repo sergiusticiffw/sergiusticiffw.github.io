@@ -19,6 +19,7 @@ import {
 } from '@components/Common';
 import {
   FaPlus,
+  FaPen,
   FaMoneyBillWave,
   FaUniversity,
   FaChevronLeft,
@@ -46,6 +47,7 @@ const NewHome = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [focusedItem, setFocusedItem] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [transactionFormSubmitting, setTransactionFormSubmitting] = useState(false);
   const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
 
   useEffect(() => {
@@ -268,10 +270,35 @@ const NewHome = () => {
           setShowEditModal(false);
         }}
         title={t('transactionForm.editTransaction')}
+        footer={
+          <button
+            type="submit"
+            form="transaction-form-edit"
+            disabled={transactionFormSubmitting}
+            className="btn-submit"
+          >
+            {transactionFormSubmitting ? (
+              <div className="loader">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            ) : (
+              <>
+                <FaPen />
+                <span>{t('transactionForm.editTitle')}</span>
+              </>
+            )}
+          </button>
+        }
       >
         <TransactionForm
           formType="edit"
           values={focusedItem}
+          hideSubmitButton={true}
+          onFormReady={(submitHandler, isSubmitting) => {
+            setTransactionFormSubmitting(isSubmitting);
+          }}
           onSuccess={() => {
             setShowEditModal(false);
             fetchData(token, dataDispatch, dispatch);
@@ -287,10 +314,35 @@ const NewHome = () => {
           setShowAddModal(false);
         }}
         title={t('transactionForm.addTransaction')}
+        footer={
+          <button
+            type="submit"
+            form="transaction-form-add"
+            disabled={transactionFormSubmitting}
+            className="btn-submit"
+          >
+            {transactionFormSubmitting ? (
+              <div className="loader">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            ) : (
+              <>
+                <FaPlus />
+                <span>{t('transactionForm.title')}</span>
+              </>
+            )}
+          </button>
+        }
       >
         <TransactionForm
           formType="add"
           values={{}}
+          hideSubmitButton={true}
+          onFormReady={(submitHandler, isSubmitting) => {
+            setTransactionFormSubmitting(isSubmitting);
+          }}
           onSuccess={() => {
             setShowAddModal(false);
             fetchData(token, dataDispatch, dispatch);

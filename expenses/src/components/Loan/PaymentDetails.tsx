@@ -32,6 +32,7 @@ const PaymentDetails = (props) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [isNewModal, setIsNewModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentFormSubmitting, setPaymentFormSubmitting] = useState(false);
   const { dataDispatch } = useLoan();
   const { token } = useAuthState() as AuthState;
   const dispatch = useAuthDispatch();
@@ -181,12 +182,36 @@ const PaymentDetails = (props) => {
           setIsNewModal(false);
         }}
         title={!isNewModal ? t('payment.editPayment') : t('payment.addPayment')}
+        footer={
+          <button
+            type="submit"
+            form={`payment-form-${!isNewModal ? 'edit' : 'add'}`}
+            disabled={paymentFormSubmitting}
+            className="btn-submit"
+          >
+            {paymentFormSubmitting ? (
+              <div className="loader">
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+                <span className="loader__element"></span>
+              </div>
+            ) : !isNewModal ? (
+              t('common.save')
+            ) : (
+              t('common.add')
+            )}
+          </button>
+        }
       >
         <PaymentForm
           formType={!isNewModal ? 'edit' : 'add'}
           values={focusedItem}
           startDate={loan.sdt}
           endDate={loan.edt}
+          hideSubmitButton={true}
+          onFormReady={(submitHandler, isSubmitting) => {
+            setPaymentFormSubmitting(isSubmitting);
+          }}
           onSuccess={() => {
             setIsNewModal(false);
             setShowEditModal(false);

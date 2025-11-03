@@ -11,12 +11,16 @@ interface LoanFormProps {
   formType: 'add' | 'edit';
   values?: any;
   onSuccess?: () => void;
+  hideSubmitButton?: boolean;
+  onFormReady?: (submitHandler: () => void, isSubmitting: boolean) => void;
 }
 
 const LoanForm: React.FC<LoanFormProps> = ({
   formType,
   values = {},
   onSuccess = () => {},
+  hideSubmitButton = false,
+  onFormReady,
 }) => {
   const { t } = useLocalization();
   const showNotification = useNotification();
@@ -207,9 +211,21 @@ const LoanForm: React.FC<LoanFormProps> = ({
     handleSubmit(e);
   };
 
+  // Expose form submit handler and state to parent if needed
+  React.useEffect(() => {
+    if (onFormReady) {
+      onFormReady(() => {
+        const form = document.querySelector('.loan-form') as HTMLFormElement;
+        if (form) {
+          form.requestSubmit();
+        }
+      }, isSubmitting);
+    }
+  }, [onFormReady, isSubmitting]);
+
   return (
     <div className="loan-form-container">
-      <form className="loan-form" onSubmit={handleFormSubmit}>
+      <form id={`loan-form-${formType}`} className="loan-form" onSubmit={handleFormSubmit}>
         {/* Basic Information */}
         <FormField
           name="title"
@@ -324,21 +340,23 @@ const LoanForm: React.FC<LoanFormProps> = ({
           </div>
         </div>
 
-        <div className="form-actions-sticky">
-          <button type="submit" disabled={isSubmitting} className="btn-submit">
-            {isSubmitting ? (
-              <div className="loader">
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-              </div>
-            ) : formType === 'add' ? (
-              t('common.add')
-            ) : (
-              t('common.save')
-            )}
-          </button>
-        </div>
+        {!hideSubmitButton && (
+          <div className="form-actions-sticky">
+            <button type="submit" disabled={isSubmitting} className="btn-submit">
+              {isSubmitting ? (
+                <div className="loader">
+                  <span className="loader__element"></span>
+                  <span className="loader__element"></span>
+                  <span className="loader__element"></span>
+                </div>
+              ) : formType === 'add' ? (
+                t('common.add')
+              ) : (
+                t('common.save')
+              )}
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );

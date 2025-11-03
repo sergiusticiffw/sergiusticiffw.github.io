@@ -12,6 +12,7 @@ interface ModalProps {
   title?: string;
   headerContent?: ReactNode;
   topContent?: ReactNode;
+  footer?: ReactNode;
 }
 
 const Modal = ({
@@ -21,6 +22,7 @@ const Modal = ({
   title,
   headerContent,
   topContent,
+  footer,
 }: ModalProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const modalBodyRef = useRef<HTMLDivElement>(null);
@@ -92,6 +94,9 @@ const Modal = ({
 
         {/* Main Body */}
         <div ref={modalBodyRef} className="modal-body">{children}</div>
+
+        {/* Footer Section - Always sticky at bottom */}
+        {footer && <div className="modal-footer">{footer}</div>}
 
         {/* Close button for modals without header */}
         {!title && !headerContent && (
