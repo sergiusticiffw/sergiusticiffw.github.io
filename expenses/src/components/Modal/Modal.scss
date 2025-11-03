@@ -40,9 +40,14 @@
   border-radius: 16px;
   max-width: 500px;
   width: 100%;
-  // Fix for iOS viewport height
+  // Fix for iOS viewport height - use dynamic viewport units for keyboard support
   max-height: 90vh;
   max-height: calc(90vh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem);
+  // Support for dynamic viewport height when keyboard is open
+  @supports (height: 100svh) {
+    max-height: 90svh;
+    max-height: calc(90svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem);
+  }
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   position: relative;
@@ -114,6 +119,12 @@
   // Ensure modal-body is scrollable container for sticky positioning
   display: flex;
   flex-direction: column;
+  // On mobile, allow more scrolling when keyboard is open
+  @media (max-width: 768px) {
+    // Use dynamic viewport height to account for keyboard
+    max-height: 100svh;
+    max-height: calc(100svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
+  }
 
   // For forms without header
   h3 {
@@ -270,13 +281,19 @@
   .income-form,
   .payment-form {
     padding: 0;
-    padding-bottom: 1.5rem; // Add bottom padding to forms to prevent content from touching sticky button
+    // Add extra bottom padding on mobile to account for fixed button
+    padding-bottom: 1.5rem;
     display: flex;
     flex-direction: column;
     overflow: visible;
 
     .form-group {
       margin-bottom: 1.25rem;
+    }
+    
+    // Extra bottom padding on mobile for fixed button space
+    @media (max-width: 768px) {
+      padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0)); // Space for fixed button + padding
     }
   }
 
@@ -291,35 +308,38 @@
     // Fix for all mobile browsers (iOS Safari, Chrome Android, etc.)
     // When keyboard is open, button should remain visible above keyboard
     @media (max-width: 768px) {
-      // Use bottom: 0 to stick to bottom of scrollable container
-      // This ensures button stays visible when keyboard opens
-      bottom: 0;
-      // Ensure it stays sticky within modal-body
+      // Use sticky positioning that works with keyboard
       position: sticky !important;
-      // Higher z-index to ensure it stays above form content
-      z-index: 10;
+      // Stick to bottom of scrollable container (modal-body)
+      bottom: 0;
+      // Position relative to modal-body, not viewport
+      left: 0;
+      right: 0;
+      width: 100%;
+      // Higher z-index to stay above form content
+      z-index: 100;
       // Adjust padding for safe area (iOS notch/home indicator)
+      padding: 1rem 1.5rem;
       padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
-      padding-top: 1rem;
-      // Remove negative margins for proper positioning
-      margin-left: 0;
-      margin-right: 0;
-      margin-bottom: 0;
+      // Remove negative margins from base styles
+      margin: 0;
       margin-top: 1.5rem;
       // Background with blur to ensure visibility
       background: rgba(26, 26, 26, 0.98);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      // Ensure button stays visible when scrolling
-      width: 100%;
       box-sizing: border-box;
+      // Add border-top for visual separation
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+      // Ensure button scrolls with content but stays at bottom
+      align-self: flex-end;
     }
     
     // Specific adjustments for very small screens
     @media (max-width: 480px) {
+      padding: 0.75rem 1rem;
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
-      padding-top: 0.75rem;
-      margin-top: 1rem;
     }
   }
 }
