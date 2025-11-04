@@ -6,7 +6,13 @@
   position: relative;
   // Prevent horizontal scroll on mobile, but allow swipe gestures on items
   overflow-x: hidden;
+  overflow-y: auto; // Allow vertical scroll
+  // Safari iOS specific fixes
+  -webkit-overflow-scrolling: touch;
   touch-action: pan-y pinch-zoom; // Allow vertical scrolling and pinch zoom
+  // Additional Safari fix
+  -webkit-transform: translateZ(0); // Force hardware acceleration
+  transform: translateZ(0);
 
   // Transaction Item Wrapper
   .transaction-item-wrapper {

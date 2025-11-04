@@ -77,8 +77,19 @@ const useSwipeActions = (): SwipeActions => {
       }
     } else if (isSwiping) {
       // Prevent body scroll when swiping horizontally
+      // Safari iOS requires more aggressive prevention
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
+      document.body.style.position = 'fixed'; // Safari iOS fix
+      document.body.style.width = '100%'; // Prevent layout shift when fixed
+      
+      // Also prevent scroll on container
+      if (containerRef.current) {
+        containerRef.current.style.overflowX = 'hidden';
+        containerRef.current.style.overflowY = 'hidden';
+        // Safari iOS specific
+        (containerRef.current as HTMLElement).style.webkitOverflowScrolling = 'auto';
+      }
 
       const diff = e.touches[0].clientX - (startX ?? 0);
       const trElement = containerRef.current?.querySelector(
@@ -118,6 +129,15 @@ const useSwipeActions = (): SwipeActions => {
     // Restore body scroll
     document.body.style.overflow = '';
     document.body.style.touchAction = '';
+    document.body.style.position = ''; // Restore position
+    document.body.style.width = ''; // Restore width
+    
+    // Restore container scroll
+    if (containerRef.current) {
+      containerRef.current.style.overflowX = '';
+      containerRef.current.style.overflowY = '';
+      (containerRef.current as HTMLElement).style.webkitOverflowScrolling = 'touch';
+    }
 
     const touch = e.changedTouches[0];
     if (touch && startX !== null) {
