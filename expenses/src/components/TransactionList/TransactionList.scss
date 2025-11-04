@@ -130,6 +130,9 @@
     // Allow swipe gestures but prevent horizontal scroll
     touch-action: pan-y pan-x pinch-zoom;
     overflow: hidden;
+    // Safari iOS - prevent horizontal scroll
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
 
     &:hover {
       background: rgba(255, 255, 255, 0.08);

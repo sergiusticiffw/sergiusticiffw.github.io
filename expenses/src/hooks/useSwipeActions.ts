@@ -92,17 +92,26 @@ const useSwipeActions = (): SwipeActions => {
         
         if (isSafariIOS.current) {
           // For Safari iOS, use a less aggressive approach to avoid flickering
-          // Only prevent scroll on container, not on body
+          // But still prevent horizontal scroll effectively
           if (containerRef.current) {
             containerRef.current.style.overflowX = 'hidden';
-            containerRef.current.style.overflowY = 'hidden';
+            containerRef.current.style.overflowY = 'auto'; // Allow vertical scroll
             containerRef.current.style.webkitOverflowScrolling = 'auto';
             containerRef.current.style.willChange = 'transform';
+            containerRef.current.style.overscrollBehaviorX = 'contain'; // Prevent horizontal overscroll
+            containerRef.current.style.overscrollBehaviorY = 'contain';
             // Prevent touch events from propagating
             containerRef.current.style.pointerEvents = 'auto';
+            // Force no horizontal scroll
+            containerRef.current.style.touchAction = 'pan-y pinch-zoom'; // Only vertical panning
           }
-          // Use touch-action on body instead of position: fixed
+          // Use touch-action on body to prevent horizontal scroll
           document.body.style.touchAction = 'pan-y'; // Only allow vertical panning
+          document.body.style.overscrollBehaviorX = 'contain'; // Prevent horizontal overscroll
+          
+          // Also prevent scroll on document.documentElement for Safari
+          document.documentElement.style.overflowX = 'hidden';
+          document.documentElement.style.touchAction = 'pan-y';
         } else {
           // For Chrome and other browsers, use position: fixed
           scrollPositionRef.current = window.pageYOffset || document.documentElement.scrollTop || 0;
@@ -162,6 +171,11 @@ const useSwipeActions = (): SwipeActions => {
       if (isSafariIOS.current) {
         // Restore Safari iOS styles
         document.body.style.touchAction = '';
+        document.body.style.overscrollBehaviorX = '';
+        
+        // Restore documentElement styles
+        document.documentElement.style.overflowX = '';
+        document.documentElement.style.touchAction = '';
         
         // Restore container scroll
         if (containerRef.current) {
@@ -170,6 +184,9 @@ const useSwipeActions = (): SwipeActions => {
           containerRef.current.style.webkitOverflowScrolling = 'touch';
           containerRef.current.style.willChange = '';
           containerRef.current.style.pointerEvents = '';
+          containerRef.current.style.overscrollBehaviorX = '';
+          containerRef.current.style.overscrollBehaviorY = '';
+          containerRef.current.style.touchAction = '';
         }
       } else {
         // Restore body styles for other browsers
