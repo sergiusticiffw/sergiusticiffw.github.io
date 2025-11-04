@@ -8,6 +8,9 @@
 .payment-list-component {
   width: 100%;
   position: relative;
+  // Prevent horizontal scroll on mobile, but allow swipe gestures on items
+  overflow-x: hidden;
+  touch-action: pan-y pinch-zoom; // Allow vertical scrolling and pinch zoom
 }
 
 .payment-list-header {
@@ -125,6 +128,9 @@
   position: relative;
   z-index: 2;
   transition: background 0.2s ease;
+  // Allow swipe gestures but prevent horizontal scroll
+  touch-action: pan-y pan-x pinch-zoom;
+  overflow: hidden;
 
   &:active {
     background: rgba(255, 255, 255, 0.05);

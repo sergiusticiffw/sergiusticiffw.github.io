@@ -4,6 +4,9 @@
   gap: 0.5rem;
   width: 100%;
   position: relative;
+  // Prevent horizontal scroll on mobile, but allow swipe gestures on items
+  overflow-x: hidden;
+  touch-action: pan-y pinch-zoom; // Allow vertical scrolling and pinch zoom
 
   // Transaction Item Wrapper
   .transaction-item-wrapper {
@@ -118,6 +121,9 @@
     width: 100%;
     min-height: fit-content;
     box-sizing: border-box;
+    // Allow swipe gestures but prevent horizontal scroll
+    touch-action: pan-y pan-x pinch-zoom;
+    overflow: hidden;
 
     &:hover {
       background: rgba(255, 255, 255, 0.08);

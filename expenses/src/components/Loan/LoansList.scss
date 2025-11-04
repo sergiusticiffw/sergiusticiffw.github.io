@@ -5,6 +5,8 @@
   max-width: 100%;
   position: relative;
   overflow-x: hidden;
+  // Prevent horizontal scroll on mobile, but allow swipe gestures on items
+  touch-action: pan-y pinch-zoom; // Allow vertical scrolling and pinch zoom
 }
 
 .sort-controls {
@@ -104,6 +106,8 @@
   max-width: 100%;
   width: 100%;
   overflow: hidden;
+  // Allow swipe gestures but prevent horizontal scroll
+  touch-action: pan-y pan-x pinch-zoom;
 
   &:hover {
     background: rgba(255, 255, 255, 0.05);

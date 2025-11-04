@@ -11,15 +11,15 @@ interface SwipeActions {
   handleTouchStart: (
     e: React.TouchEvent<HTMLDivElement>,
     id: string,
-    tableRef: React.RefObject<HTMLTableElement>
+    containerRef: React.RefObject<HTMLElement>
   ) => void;
   handleTouchMove: (
     e: React.TouchEvent<HTMLDivElement>,
-    tableRef: React.RefObject<HTMLTableElement>
+    containerRef: React.RefObject<HTMLElement>
   ) => void;
   handleTouchEnd: (
     e: React.TouchEvent<HTMLDivElement>,
-    tableRef: React.RefObject<HTMLTableElement>,
+    containerRef: React.RefObject<HTMLElement>,
     id: string,
     handleEdit: (id: string) => void,
     setShowDeleteModal: (id: string) => void
@@ -38,7 +38,7 @@ const useSwipeActions = (): SwipeActions => {
   const handleTouchStart = (
     e: React.TouchEvent<HTMLDivElement>,
     id: string,
-    tableRef: React.RefObject<HTMLTableElement>
+    containerRef: React.RefObject<HTMLElement>
   ) => {
     const touch = e.touches[0];
     if (touch) {
@@ -46,7 +46,7 @@ const useSwipeActions = (): SwipeActions => {
       setStartY(touch.clientY);
       setSwipedItemId(id);
 
-      const trElement = tableRef.current?.querySelector(
+      const trElement = containerRef.current?.querySelector(
         `[data-id="${id}"]`
       ) as HTMLElement;
       if (trElement) {
@@ -65,20 +65,23 @@ const useSwipeActions = (): SwipeActions => {
 
   const handleTouchMove = (
     e: React.TouchEvent<HTMLDivElement>,
-    tableRef: React.RefObject<HTMLTableElement>
+    containerRef: React.RefObject<HTMLElement>
   ) => {
     if (isSwiping === null) {
       const touch = e.touches[0];
       if (touch && startX !== null && startY !== null) {
         const distanceX = startX - touch.clientX;
         const distanceY = startY - touch.clientY;
-        setIsSwiping(Math.abs(distanceX) > Math.abs(distanceY));
+        const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY);
+        setIsSwiping(isHorizontalSwipe);
       }
     } else if (isSwiping) {
+      // Prevent body scroll when swiping horizontally
       document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
 
       const diff = e.touches[0].clientX - (startX ?? 0);
-      const trElement = tableRef.current?.querySelector(
+      const trElement = containerRef.current?.querySelector(
         `[data-id="${swipedItemId}"]`
       ) as HTMLElement;
       if (trElement) {
@@ -107,17 +110,19 @@ const useSwipeActions = (): SwipeActions => {
 
   const handleTouchEnd = (
     e: React.TouchEvent<HTMLDivElement>,
-    tableRef: React.RefObject<HTMLTableElement>,
+    containerRef: React.RefObject<HTMLElement>,
     id: string,
     handleEdit: (id: string) => void,
     setShowDeleteModal: (id: string) => void
   ) => {
+    // Restore body scroll
     document.body.style.overflow = '';
+    document.body.style.touchAction = '';
 
     const touch = e.changedTouches[0];
     if (touch && startX !== null) {
       const endX = touch.clientX;
-      const trElement = tableRef.current?.querySelector(
+      const trElement = containerRef.current?.querySelector(
         `[data-id="${id}"]`
       ) as HTMLElement;
 
