@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 interface SwipeActions {
   startX: number | null;
@@ -34,6 +34,9 @@ const useSwipeActions = (): SwipeActions => {
   const [editVisible, setEditVisible] = useState<boolean>(false);
   const [extraRowStyle, setExtraRowStyle] = useState<React.CSSProperties>({});
   const [isSwiping, setIsSwiping] = useState<boolean | null>(null);
+  // Store scroll position to restore after position: fixed
+  const scrollPositionRef = useRef<number>(0);
+  const isFixedRef = useRef<boolean>(false);
 
   const handleTouchStart = (
     e: React.TouchEvent<HTMLDivElement>,
@@ -78,10 +81,20 @@ const useSwipeActions = (): SwipeActions => {
     } else if (isSwiping) {
       // Prevent body scroll when swiping horizontally
       // Safari iOS requires more aggressive prevention
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-      document.body.style.position = 'fixed'; // Safari iOS fix
-      document.body.style.width = '100%'; // Prevent layout shift when fixed
+      // Save scroll position before applying position: fixed
+      if (!isFixedRef.current) {
+        scrollPositionRef.current = window.pageYOffset || document.documentElement.scrollTop || 0;
+        isFixedRef.current = true;
+        
+        // Apply position: fixed with top offset to maintain scroll position
+        document.body.style.overflow = 'hidden';
+        document.body.style.touchAction = 'none';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollPositionRef.current}px`;
+        document.body.style.width = '100%';
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+      }
       
       // Also prevent scroll on container
       if (containerRef.current) {
@@ -126,11 +139,22 @@ const useSwipeActions = (): SwipeActions => {
     handleEdit: (id: string) => void,
     setShowDeleteModal: (id: string) => void
   ) => {
-    // Restore body scroll
-    document.body.style.overflow = '';
-    document.body.style.touchAction = '';
-    document.body.style.position = ''; // Restore position
-    document.body.style.width = ''; // Restore width
+    // Restore body scroll and scroll position
+    if (isFixedRef.current) {
+      // Restore body styles
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      
+      // Restore scroll position
+      window.scrollTo(0, scrollPositionRef.current);
+      
+      isFixedRef.current = false;
+    }
     
     // Restore container scroll
     if (containerRef.current) {
