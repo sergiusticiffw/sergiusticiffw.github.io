@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, ReactNode } from 'react';
+import React, { ReactNode } from 'react';
+import ReactModal from 'react-modal';
 import { FaTimes } from 'react-icons/fa';
 
 interface ModalProps {
@@ -15,6 +16,11 @@ interface ModalProps {
   footer?: ReactNode;
 }
 
+// Set app element for react-modal (for accessibility)
+if (typeof window !== 'undefined' && document.getElementById('root')) {
+  ReactModal.setAppElement('#root');
+}
+
 const Modal = ({
   show,
   onClose,
@@ -24,88 +30,64 @@ const Modal = ({
   topContent,
   footer,
 }: ModalProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const modalBodyRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const checkIfClickedOutside = (e: MouseEvent) => {
-      if (show && ref.current && !ref.current.contains(e.target as Node)) {
-        onClose(
-          e as unknown as React.MouseEvent<HTMLAnchorElement, MouseEvent>
-        );
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (show && e.key === 'Escape') {
-        onClose(e);
-      }
-    };
-
-    document.addEventListener('mousedown', checkIfClickedOutside);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('mousedown', checkIfClickedOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [show, onClose]);
-
-  if (!show) return null;
+  const handleRequestClose = (
+    event: React.MouseEvent | React.KeyboardEvent
+  ) => {
+    onClose(event as unknown as React.MouseEvent<HTMLButtonElement, MouseEvent>);
+  };
 
   return (
-    <div
-      className="modal-window"
-      onClick={onClose}
-      onTouchStart={(e) => e.stopPropagation()}
-      onTouchMove={(e) => e.stopPropagation()}
-      onTouchEnd={(e) => e.stopPropagation()}
+    <ReactModal
+      isOpen={show}
+      onRequestClose={handleRequestClose}
+      className="modal-content"
+      overlayClassName="modal-window"
+      contentLabel={title || 'Modal'}
+      shouldCloseOnOverlayClick={true}
+      shouldCloseOnEsc={true}
     >
-      <div
-        ref={ref}
-        className="modal-content"
-        onClick={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
-        onTouchMove={(e) => e.stopPropagation()}
-        onTouchEnd={(e) => e.stopPropagation()}
-      >
-        {/* Header Section */}
-        {(title || headerContent) && (
-          <div className="modal-header">
-            {headerContent ? (
-              headerContent
-            ) : (
-              <>
-                <h3>{title}</h3>
-                <button
-                  className="modal-close-btn"
-                  onClick={onClose}
-                  type="button"
-                >
-                  <FaTimes />
-                </button>
-              </>
-            )}
-          </div>
-        )}
+      {/* Header Section */}
+      {(title || headerContent) && (
+        <div className="modal-header">
+          {headerContent ? (
+            headerContent
+          ) : (
+            <>
+              <h3>{title}</h3>
+              <button
+                className="modal-close-btn"
+                onClick={handleRequestClose}
+                type="button"
+                aria-label="Close"
+              >
+                <FaTimes />
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
-        {/* Top Content Section (for total, summary, etc.) */}
-        {topContent && <div className="modal-top-content">{topContent}</div>}
+      {/* Top Content Section */}
+      {topContent && <div className="modal-top-content">{topContent}</div>}
 
-        {/* Main Body */}
-        <div ref={modalBodyRef} className="modal-body">{children}</div>
+      {/* Main Body */}
+      <div className="modal-body">{children}</div>
 
-        {/* Footer Section - Always sticky at bottom */}
-        {footer && <div className="modal-footer">{footer}</div>}
+      {/* Footer Section */}
+      {footer && <div className="modal-footer">{footer}</div>}
 
-        {/* Close button for modals without header */}
-        {!title && !headerContent && (
-          <button className="modal-close" onClick={onClose} type="button">
-            <FaTimes />
-          </button>
-        )}
-      </div>
-    </div>
+      {/* Close button for modals without header */}
+      {!title && !headerContent && (
+        <button
+          className="modal-close"
+          onClick={handleRequestClose}
+          type="button"
+          aria-label="Close"
+        >
+          <FaTimes />
+        </button>
+      )}
+    </ReactModal>
   );
 };
 
