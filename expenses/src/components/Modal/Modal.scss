@@ -219,13 +219,30 @@
   overscroll-behavior: contain;
   padding: 1.5rem;
   
-  // Mobile padding adjustments
+  // When no footer (like CalendarView modal), reduce bottom padding
+  &:not(:has(+ .modal-footer)) {
+    padding-bottom: 1.5rem;
+    
+    @media (max-width: 768px) {
+      padding-bottom: 1.5rem;
+    }
+    
+    @media (max-width: 480px) {
+      padding-bottom: 1rem;
+    }
+  }
+  
+  // Mobile padding adjustments when footer exists
   @media (max-width: 768px) {
-    padding-bottom: calc(1.5rem + 80px);
+    &:has(+ .modal-footer) {
+      padding-bottom: calc(1.5rem + 80px);
+    }
   }
   
   @media (max-width: 480px) {
-    padding-bottom: calc(1.5rem + 70px);
+    &:has(+ .modal-footer) {
+      padding-bottom: calc(1.5rem + 70px);
+    }
   }
   
   // Hide form-actions-sticky when modal-footer is used
