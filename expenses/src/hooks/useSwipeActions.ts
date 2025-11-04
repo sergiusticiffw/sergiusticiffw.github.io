@@ -37,6 +37,13 @@ const useSwipeActions = (): SwipeActions => {
   // Store scroll position to restore after position: fixed
   const scrollPositionRef = useRef<number>(0);
   const isFixedRef = useRef<boolean>(false);
+  
+  // Detect Safari iOS
+  const isSafariIOS = useRef<boolean>(
+    typeof window !== 'undefined' &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+    !(window as any).MSStream
+  );
 
   const handleTouchStart = (
     e: React.TouchEvent<HTMLDivElement>,
@@ -80,28 +87,39 @@ const useSwipeActions = (): SwipeActions => {
       }
     } else if (isSwiping) {
       // Prevent body scroll when swiping horizontally
-      // Safari iOS requires more aggressive prevention
-      // Save scroll position before applying position: fixed
       if (!isFixedRef.current) {
-        scrollPositionRef.current = window.pageYOffset || document.documentElement.scrollTop || 0;
         isFixedRef.current = true;
         
-        // Apply position: fixed with top offset to maintain scroll position
-        document.body.style.overflow = 'hidden';
-        document.body.style.touchAction = 'none';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollPositionRef.current}px`;
-        document.body.style.width = '100%';
-        document.body.style.left = '0';
-        document.body.style.right = '0';
-      }
-      
-      // Also prevent scroll on container
-      if (containerRef.current) {
-        containerRef.current.style.overflowX = 'hidden';
-        containerRef.current.style.overflowY = 'hidden';
-        // Safari iOS specific
-        (containerRef.current as HTMLElement).style.webkitOverflowScrolling = 'auto';
+        if (isSafariIOS.current) {
+          // For Safari iOS, use a less aggressive approach to avoid flickering
+          // Only prevent scroll on container, not on body
+          if (containerRef.current) {
+            containerRef.current.style.overflowX = 'hidden';
+            containerRef.current.style.overflowY = 'hidden';
+            containerRef.current.style.webkitOverflowScrolling = 'auto';
+            containerRef.current.style.willChange = 'transform';
+            // Prevent touch events from propagating
+            containerRef.current.style.pointerEvents = 'auto';
+          }
+          // Use touch-action on body instead of position: fixed
+          document.body.style.touchAction = 'pan-y'; // Only allow vertical panning
+        } else {
+          // For Chrome and other browsers, use position: fixed
+          scrollPositionRef.current = window.pageYOffset || document.documentElement.scrollTop || 0;
+          document.body.style.overflow = 'hidden';
+          document.body.style.touchAction = 'none';
+          document.body.style.position = 'fixed';
+          document.body.style.top = `-${scrollPositionRef.current}px`;
+          document.body.style.width = '100%';
+          document.body.style.left = '0';
+          document.body.style.right = '0';
+          
+          // Also prevent scroll on container
+          if (containerRef.current) {
+            containerRef.current.style.overflowX = 'hidden';
+            containerRef.current.style.overflowY = 'hidden';
+          }
+        }
       }
 
       const diff = e.touches[0].clientX - (startX ?? 0);
@@ -141,26 +159,39 @@ const useSwipeActions = (): SwipeActions => {
   ) => {
     // Restore body scroll and scroll position
     if (isFixedRef.current) {
-      // Restore body styles
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      
-      // Restore scroll position
-      window.scrollTo(0, scrollPositionRef.current);
+      if (isSafariIOS.current) {
+        // Restore Safari iOS styles
+        document.body.style.touchAction = '';
+        
+        // Restore container scroll
+        if (containerRef.current) {
+          containerRef.current.style.overflowX = '';
+          containerRef.current.style.overflowY = '';
+          containerRef.current.style.webkitOverflowScrolling = 'touch';
+          containerRef.current.style.willChange = '';
+          containerRef.current.style.pointerEvents = '';
+        }
+      } else {
+        // Restore body styles for other browsers
+        document.body.style.overflow = '';
+        document.body.style.touchAction = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        
+        // Restore scroll position
+        window.scrollTo(0, scrollPositionRef.current);
+        
+        // Restore container scroll
+        if (containerRef.current) {
+          containerRef.current.style.overflowX = '';
+          containerRef.current.style.overflowY = '';
+        }
+      }
       
       isFixedRef.current = false;
-    }
-    
-    // Restore container scroll
-    if (containerRef.current) {
-      containerRef.current.style.overflowX = '';
-      containerRef.current.style.overflowY = '';
-      (containerRef.current as HTMLElement).style.webkitOverflowScrolling = 'touch';
     }
 
     const touch = e.changedTouches[0];
