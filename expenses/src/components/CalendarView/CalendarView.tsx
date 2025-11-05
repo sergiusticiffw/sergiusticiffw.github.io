@@ -210,7 +210,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             </div>
           );
         }}
-        dayCellClassNames="calendar-day-cell"
+        dayCellClassNames={(args) => {
+          const classes = ['calendar-day-cell'];
+          if (args.isToday) {
+            classes.push('calendar-day-today');
+          }
+          return classes.join(' ');
+        }}
         dayHeaderClassNames="calendar-day-header"
       />
 
