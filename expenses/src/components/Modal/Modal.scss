@@ -47,12 +47,10 @@
   }
   
   @media (max-width: 768px) {
-    max-height: calc(100svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
     max-height: min(90svh, calc(100vh - 2rem));
   }
   
   @media (max-width: 480px) {
-    max-height: calc(100svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
     max-height: min(85svh, calc(100vh - 1rem));
   }
 }
@@ -218,6 +216,18 @@
   // Prevent scroll bounce
   overscroll-behavior: contain;
   padding: 1.5rem;
+  // Ensure body can scroll when keyboard is visible
+  position: relative;
+  
+  // When keyboard is visible, allow more scrolling space
+  &.keyboard-visible {
+    // Add extra padding at bottom to ensure submit button is accessible
+    padding-bottom: calc(1.5rem + 20px);
+    
+    @media (max-width: 480px) {
+      padding-bottom: calc(1rem + 20px);
+    }
+  }
   
   // When no footer (like CalendarView modal), reduce bottom padding
   &:not(:has(+ .modal-footer)) {
