@@ -5,7 +5,7 @@ import { loginUser } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
 import { AuthState } from '@type/types';
 import { useGoogleLogin, TokenResponse } from '@react-oauth/google';
-import { FaSignInAlt } from 'react-icons/fa';
+import { FiLogIn } from 'react-icons/fi';
 import './Login.scss';
 
 const Login = () => {
@@ -59,7 +59,7 @@ const Login = () => {
         className="login-button"
         disabled={loading}
       >
-        <FaSignInAlt />
+        <FiLogIn />
         {loading ? t('login.signingIn') : t('login.signInWithGoogle')}
       </button>
     </div>

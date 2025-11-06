@@ -6,7 +6,7 @@ import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
 import { DataState } from '@type/types';
 import { FormField } from '@components/Common';
-import { FaPlus, FaPen } from 'react-icons/fa';
+import { FiPlus, FiEdit2 } from 'react-icons/fi';
 import './TransactionForm.scss';
 
 interface TransactionFormProps {
@@ -239,7 +239,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 </div>
               ) : (
                 <>
-                  {formType === 'add' ? <FaPlus /> : <FaPen />}
+                  {formType === 'add' ? <FiPlus /> : <FiEdit2 />}
                   <span>
                     {formType === 'add'
                       ? t('transactionForm.title')

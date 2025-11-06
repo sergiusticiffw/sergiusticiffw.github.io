@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from '@components/Modal/Modal';
-import { FaTrash } from 'react-icons/fa';
+import { FiTrash2 } from 'react-icons/fi';
 import { useLocalization } from '@context/localization';
 
 interface DeleteConfirmModalProps {
@@ -46,7 +46,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
           </div>
         ) : (
           <>
-            <FaTrash />
+            <FiTrash2 />
             {t('common.delete')}
           </>
         )}

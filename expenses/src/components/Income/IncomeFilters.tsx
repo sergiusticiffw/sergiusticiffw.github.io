@@ -1,7 +1,7 @@
 import React, { useMemo, memo } from 'react';
 import { useLocalization } from '@context/localization';
 import { useData } from '@context/context';
-import { FaCalendar, FaSearch, FaTimes } from 'react-icons/fa';
+import { FiCalendar, FiSearch, FiX } from 'react-icons/fi';
 import { useFilterFocus } from '@hooks/useFilterFocus';
 import { useMonthFilter } from '@hooks/useMonthFilter';
 import { formatMonthOption } from '@utils/utils';
@@ -85,7 +85,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
     <div className="income-filters-combined">
       {/* Combined Search Input */}
       <div className="search-bar-component">
-        <FaSearch className="search-bar-icon" />
+        <FiSearch className="search-bar-icon" />
 
         {/* Show selected month as chip inside search - clickable to change */}
         {selectedMonth && !isFilterFocused && (
@@ -93,7 +93,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
             className="selected-month-chip clickable"
             onClick={handleChipClick}
           >
-            <FaCalendar />
+            <FiCalendar />
             {selectedMonthLabel}
           </div>
         )}
@@ -118,7 +118,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
             className="clear-filters-btn"
             title={t('filters.clearAll')}
           >
-            <FaTimes />
+            <FiX />
           </button>
         )}
       </div>

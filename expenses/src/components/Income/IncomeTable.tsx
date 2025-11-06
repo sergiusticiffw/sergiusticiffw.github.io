@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from 'react';
 import useSwipeActions from '@hooks/useSwipeActions';
-import { FaPen, FaTrash, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { FiEdit2, FiTrash2, FiMove, FiArrowUp, FiArrowDown } from 'react-icons/fi';
 import { formatNumber, getLocale } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
 import './IncomeTable.scss';
@@ -102,8 +102,8 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   }, [allItems, sortField, sortDirection]);
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <FaSort />;
-    return sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />;
+    if (sortField !== field) return <FiMove />;
+    return sortDirection === 'asc' ? <FiArrowUp /> : <FiArrowDown />;
   };
 
   return (
@@ -154,12 +154,12 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
               >
                 {isThisItemSwiped && deleteVisible && (
                   <div className="delete-action-bg">
-                    <FaTrash />
+                    <FiTrash2 />
                   </div>
                 )}
                 {isThisItemSwiped && editVisible && (
                   <div className="edit-action-bg">
-                    <FaPen />
+                    <FiEdit2 />
                   </div>
                 )}
               </div>

@@ -5,14 +5,14 @@ import { useLocalization } from '@context/localization';
 import { AuthState } from '@type/types';
 import useSwipeActions from '@hooks/useSwipeActions';
 import {
-  FaPen,
-  FaTrash,
-  FaCaretDown,
-  FaMoneyBillWave,
-  FaSort,
-  FaSortUp,
-  FaSortDown,
-} from 'react-icons/fa';
+  FiEdit2,
+  FiTrash2,
+  FiChevronDown,
+  FiDollarSign,
+  FiMove,
+  FiArrowUp,
+  FiArrowDown,
+} from 'react-icons/fi';
 import { deleteNode, fetchLoans, formatNumber, getLocale } from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import Modal from '@components/Modal/Modal';
@@ -129,8 +129,8 @@ const PaymentDetails = (props) => {
   });
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <FaSort />;
-    return sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />;
+    if (sortField !== field) return <FiMove />;
+    return sortDirection === 'asc' ? <FiArrowUp /> : <FiArrowDown />;
   };
 
   return (
@@ -166,7 +166,7 @@ const PaymentDetails = (props) => {
             </div>
           ) : (
             <>
-              <FaTrash />
+              <FiTrash2 />
               {t('common.delete')}
             </>
           )}
@@ -273,12 +273,12 @@ const PaymentDetails = (props) => {
                   >
                     {isThisItemSwiped && deleteVisible && (
                       <div className="delete-action-bg">
-                        <FaTrash />
+                        <FiTrash2 />
                       </div>
                     )}
                     {isThisItemSwiped && editVisible && (
                       <div className="edit-action-bg">
-                        <FaPen />
+                        <FiEdit2 />
                       </div>
                     )}
                   </div>
@@ -337,7 +337,7 @@ const PaymentDetails = (props) => {
                 onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
                 className="load-more-btn"
               >
-                <FaCaretDown />
+                <FiChevronDown />
                 <span>
                   {t('common.loadMore')} ({payments.length - nrOfItemsToShow}{' '}
                   {t('common.remaining')})
@@ -348,7 +348,7 @@ const PaymentDetails = (props) => {
         </div>
       ) : (
         <div className="no-payments">
-          <FaMoneyBillWave />
+          <FiDollarSign />
           <h3>{t('payment.noPaymentsYet')}</h3>
           <p>{t('payment.noPaymentsDesc')}</p>
         </div>

@@ -17,7 +17,7 @@ import {
   transformDateFormat,
   transformToNumber,
 } from '@utils/utils';
-import { FaChartLine, FaMoneyBillWave, FaPen, FaPlus } from 'react-icons/fa';
+import { FiTrendingUp, FiDollarSign, FiEdit2, FiPlus } from 'react-icons/fi';
 import Notification from '@components/Notification/Notification';
 import './Loan.scss';
 import { useLocalization } from '@context/localization';
@@ -146,7 +146,7 @@ const Loan: React.FC = () => {
       {/* Payment Actions */}
       <div className="btns-actions">
         <button onClick={() => setShowEditModal(true)} className="action-btn">
-          <FaPen />
+          <FiEdit2 />
           {t('loan.editLoan')}
         </button>
       </div>
@@ -191,7 +191,7 @@ const Loan: React.FC = () => {
         {/* Progress Section */}
         <div className="loan-section loan-progress-section">
           <div className="section-header">
-            <FaChartLine />
+            <FiTrendingUp />
             <h3>{t('loan.paymentProgress')}</h3>
           </div>
 
@@ -231,7 +231,7 @@ const Loan: React.FC = () => {
         {/* Payment Details Section */}
         <div className="loan-section">
           <div className="section-header">
-            <FaMoneyBillWave />
+            <FiDollarSign />
             <h3>{t('loan.paymentHistory')}</h3>
           </div>
           <PaymentDetails
@@ -244,7 +244,7 @@ const Loan: React.FC = () => {
         {/* Loan Details Section */}
         <div className="loan-section">
           <div className="section-header">
-            <FaChartLine />
+            <FiTrendingUp />
             <h3>{t('loan.amortizationSchedule')}</h3>
           </div>
           <LoanDetails
@@ -365,7 +365,7 @@ const Loan: React.FC = () => {
         className="fab"
         title={t('loan.addPayment')}
       >
-        <FaPlus />
+        <FiPlus />
       </button>
     </div>
   );

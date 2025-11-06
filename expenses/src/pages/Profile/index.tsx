@@ -5,7 +5,7 @@ import { useHighchartsContext } from '@context/highcharts';
 import { useLocalization } from '@context/localization';
 import { logout } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaSignOutAlt, FaCog, FaChartBar } from 'react-icons/fa';
+import { FiUser, FiLogOut, FiSettings, FiBarChart2 } from 'react-icons/fi';
 import { fetchRequest } from '@utils/utils';
 import {
   notificationType,
@@ -162,7 +162,7 @@ const Profile = () => {
         {/* Account Section */}
         <div className="profile-section">
           <div className="section-header">
-            <FaUserCircle />
+            <FiUser />
             <h3>{t('profile.account')}</h3>
           </div>
           <div className="user-info">
@@ -173,7 +173,7 @@ const Profile = () => {
         {/* Language & Currency Settings */}
         <div className="profile-section">
           <div className="section-header">
-            <FaCog />
+            <FiSettings />
             <h3>{t('profile.personalInfo')}</h3>
           </div>
 
@@ -210,7 +210,7 @@ const Profile = () => {
         {/* Charts Settings */}
         <div className="profile-section">
           <div className="section-header">
-            <FaChartBar />
+            <FiBarChart2 />
             <h3>{t('profile.chartsSettings')}</h3>
           </div>
 
@@ -248,7 +248,7 @@ const Profile = () => {
 
         {/* Logout Button */}
         <button className="logout-btn" onClick={handleLogout}>
-          <FaSignOutAlt />
+          <FiLogOut />
           {t('profile.signOut')}
         </button>
       </div>

@@ -1,6 +1,6 @@
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import ReactModal from 'react-modal';
-import { FaTimes } from 'react-icons/fa';
+import { FiX } from 'react-icons/fi';
 
 interface ModalProps {
   show: boolean;
@@ -150,7 +150,7 @@ const Modal = ({
                 type="button"
                 aria-label="Close"
               >
-                <FaTimes />
+                <FiX />
               </button>
             </>
           )}
@@ -179,7 +179,7 @@ const Modal = ({
           type="button"
           aria-label="Close"
         >
-          <FaTimes />
+          <FiX />
         </button>
       )}
     </ReactModal>

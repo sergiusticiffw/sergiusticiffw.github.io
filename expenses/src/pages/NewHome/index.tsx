@@ -23,16 +23,17 @@ import {
   NoData,
 } from '@components/Common';
 import {
-  FaPlus,
-  FaPen,
-  FaMoneyBillWave,
-  FaUniversity,
-  FaChevronLeft,
-  FaChevronRight,
-  FaList,
-  FaCalendar,
-} from 'react-icons/fa';
-import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
+  FiPlus,
+  FiEdit2,
+  FiDollarSign,
+  FiBriefcase,
+  FiChevronLeft,
+  FiChevronRight,
+  FiList,
+  FiCalendar,
+  FiTrendingUp,
+  FiTrendingDown,
+} from 'react-icons/fi';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import './NewHome.scss';
 
@@ -298,7 +299,7 @@ const NewHome = () => {
               </div>
             ) : (
               <>
-                <FaPen />
+                <FiEdit2 />
                 <span>{t('transactionForm.editTitle')}</span>
               </>
             )}
@@ -342,7 +343,7 @@ const NewHome = () => {
               </div>
             ) : (
               <>
-                <FaPlus />
+                <FiPlus />
                 <span>{t('transactionForm.title')}</span>
               </>
             )}
@@ -367,7 +368,7 @@ const NewHome = () => {
         <LoadingSpinner />
       ) : noData ? (
         <NoData
-          icon={<FaMoneyBillWave />}
+          icon={<FiDollarSign />}
           title={t('home.noData')}
           description={t('home.noDataDesc')}
         />
@@ -402,7 +403,7 @@ const NewHome = () => {
           {/* Stats Cards - Show all 3 when no filters, only Total when filtered */}
           <StatsGrid columns={3} filtered={hasFilters}>
             <StatCard
-              icon={<FaMoneyBillWave />}
+              icon={<FiDollarSign />}
               value={formatNumber(displayTotal)}
               label={t('common.total')}
             />
@@ -410,7 +411,7 @@ const NewHome = () => {
             {!hasFilters && (
               <>
                 <StatCard
-                  icon={<FaUniversity />}
+                  icon={<FiBriefcase />}
                   value={formatNumber(displayIncome)}
                   label={t('common.income')}
                 />
@@ -432,14 +433,14 @@ const NewHome = () => {
               className={`tab-button ${activeView === 'list' ? 'active' : ''}`}
               onClick={() => setActiveView('list')}
             >
-              <FaList />
+              <FiList />
               <span>List</span>
             </button>
             <button
               className={`tab-button ${activeView === 'calendar' ? 'active' : ''}`}
               onClick={() => setActiveView('calendar')}
             >
-              <FaCalendar />
+              <FiCalendar />
               <span>Calendar</span>
             </button>
           </div>
@@ -447,7 +448,7 @@ const NewHome = () => {
           {/* Content - List or Calendar */}
           {filteredTransactions.length === 0 ? (
             <NoData
-              icon={<FaMoneyBillWave />}
+              icon={<FiDollarSign />}
               title={t('home.noTransactionsFound')}
               description={
                 hasFilters
@@ -508,7 +509,7 @@ const NewHome = () => {
                 disabled={currentMonthIndex >= months.length - 1}
                 aria-label="Previous month"
               >
-                <FaChevronLeft />
+                <FiChevronLeft />
               </button>
 
               <button
@@ -517,7 +518,7 @@ const NewHome = () => {
                 disabled={currentMonthIndex <= 0}
                 aria-label="Next month"
               >
-                <FaChevronRight />
+                <FiChevronRight />
               </button>
             </div>
           )}
@@ -528,7 +529,7 @@ const NewHome = () => {
             onClick={() => setShowAddModal(true)}
             title="Add Transaction"
           >
-            <FaPlus />
+            <FiPlus />
           </button>
         </>
       )}

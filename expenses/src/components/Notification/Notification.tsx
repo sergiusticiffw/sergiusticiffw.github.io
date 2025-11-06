@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
-  FaCheckCircle,
-  FaExclamationTriangle,
-  FaInfoCircle,
-  FaTimes,
-  FaTimesCircle,
-} from 'react-icons/fa';
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiInfo,
+  FiX,
+  FiXCircle,
+} from 'react-icons/fi';
 import './Notification.scss';
 
 interface NotificationProps {
@@ -38,13 +38,13 @@ const Notification: React.FC<NotificationProps> = ({
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <FaCheckCircle />;
+        return <FiCheckCircle />;
       case 'error':
-        return <FaTimesCircle />;
+        return <FiXCircle />;
       case 'warning':
-        return <FaExclamationTriangle />;
+        return <FiAlertTriangle />;
       default:
-        return <FaInfoCircle />;
+        return <FiInfo />;
     }
   };
 
@@ -72,7 +72,7 @@ const Notification: React.FC<NotificationProps> = ({
           <div className="notification-message">{message}</div>
         </div>
         <button className="notification-close" onClick={handleClose}>
-          <FaTimes />
+          <FiX />
         </button>
       </div>
       <div className="notification-progress"></div>

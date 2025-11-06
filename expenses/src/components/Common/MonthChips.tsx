@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaCalendar } from 'react-icons/fa';
+import { FiCalendar } from 'react-icons/fi';
 import { useLocalization } from '@context/localization';
 import './MonthChips.scss';
 
@@ -36,7 +36,7 @@ const MonthChips: React.FC<MonthChipsProps> = ({
     <div className={`month-chips ${className}`}>
       {showTitle && (
         <div className="chips-section-title">
-          <FaCalendar />
+          <FiCalendar />
           {t('filters.months')}
         </div>
       )}

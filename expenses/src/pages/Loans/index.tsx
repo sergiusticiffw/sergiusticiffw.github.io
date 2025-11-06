@@ -19,7 +19,7 @@ import {
   DeleteConfirmModal,
   NoData,
 } from '@components/Common';
-import { FaHandHoldingUsd, FaPlus, FaFilter } from 'react-icons/fa';
+import { FiCreditCard, FiPlus, FiFilter } from 'react-icons/fi';
 import Modal from '@components/Modal/Modal';
 import LoanForm from '@components/Loan/LoanForm';
 import LoansList from '@components/Loan/LoansList';
@@ -241,7 +241,7 @@ const Loans: React.FC = () => {
 
       {/* Status Filter */}
       <div className="loans-filter">
-        <FaFilter className="filter-icon" />
+        <FiFilter className="filter-icon" />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -258,7 +258,7 @@ const Loans: React.FC = () => {
       <div className="loans-table-section">
         {filteredLoans.length === 0 ? (
           <NoData
-            icon={<FaHandHoldingUsd />}
+            icon={<FiCreditCard />}
             title={t('loans.noLoans')}
             description={
               statusFilter !== 'all'
@@ -397,7 +397,7 @@ const Loans: React.FC = () => {
         className="fab"
         title={t('loans.addLoan')}
       >
-        <FaPlus />
+        <FiPlus />
       </button>
     </div>
   );

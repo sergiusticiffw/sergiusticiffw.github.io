@@ -10,7 +10,7 @@ import TransactionForm from '@components/TransactionForm';
 import LoadingSpinner from '@components/Common/LoadingSpinner';
 import NoData from '@components/Common/NoData';
 import { AuthState } from '@type/types';
-import { FaPlus, FaPen, FaChartBar } from 'react-icons/fa';
+import { FiPlus, FiEdit2, FiBarChart2 } from 'react-icons/fi';
 import MonthlySavingsTrend from '@components/Charts/MonthlySavingsTrend';
 import MonthlyTotals from '@components/Charts/MonthlyTotals';
 import SavingsHistory from '@components/Charts/SavingsHistory';
@@ -108,7 +108,7 @@ const Charts = () => {
       {/* No Data State */}
       {!loading && noEntries && (
         <NoData
-          icon={<FaChartBar />}
+          icon={<FiBarChart2 />}
           title={t('common.noData')}
           description={t('common.noTransactions')}
           action={{
@@ -155,7 +155,7 @@ const Charts = () => {
               </div>
             ) : (
               <>
-                <FaPlus />
+                <FiPlus />
                 <span>{t('transactionForm.title')}</span>
               </>
             )}
@@ -182,7 +182,7 @@ const Charts = () => {
         className="fab"
         title={t('transactionForm.addTransaction')}
       >
-        <FaPlus />
+        <FiPlus />
       </button>
     </div>
   );

@@ -2,13 +2,13 @@ import React, { useRef, useState } from 'react';
 import { formatNumber } from '@utils/utils';
 import useSwipeActions from '@hooks/useSwipeActions';
 import {
-  FaPen,
-  FaTrash,
-  FaSort,
-  FaSortUp,
-  FaSortDown,
-  FaExternalLinkAlt,
-} from 'react-icons/fa';
+  FiEdit2,
+  FiTrash2,
+  FiMove,
+  FiArrowUp,
+  FiArrowDown,
+  FiExternalLink,
+} from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import './LoansList.scss';
 
@@ -90,8 +90,8 @@ const LoansList: React.FC<LoansListProps> = ({
   });
 
   const getSortIcon = (field: SortField) => {
-    if (sortField !== field) return <FaSort />;
-    return sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />;
+    if (sortField !== field) return <FiMove />;
+    return sortDirection === 'asc' ? <FiArrowUp /> : <FiArrowDown />;
   };
 
   const getStatusColor = (status: string) => {
@@ -147,12 +147,12 @@ const LoansList: React.FC<LoansListProps> = ({
             >
               {isThisItemSwiped && deleteVisible && (
                 <div className="delete-action-bg">
-                  <FaTrash />
+                  <FiTrash2 />
                 </div>
               )}
               {isThisItemSwiped && editVisible && (
                 <div className="edit-action-bg">
-                  <FaPen />
+                  <FiEdit2 />
                 </div>
               )}
             </div>

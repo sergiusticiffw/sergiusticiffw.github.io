@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { useLocalization } from '@context/localization';
-import { FaCalendar, FaSearch, FaTimes } from 'react-icons/fa';
+import { FiCalendar, FiSearch, FiX } from 'react-icons/fi';
 import { useFilterFocus } from '@hooks/useFilterFocus';
 import { useMonthOptions } from '@hooks/useMonthOptions';
 import { useMonthFilter } from '@hooks/useMonthFilter';
@@ -80,7 +80,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     <div className="transaction-filters-combined">
       {/* Combined Search Input */}
       <div className="search-bar-component">
-        <FaSearch className="search-bar-icon" />
+        <FiSearch className="search-bar-icon" />
 
         {/* Show selected month as chip inside search */}
         {selectedMonth && !isFilterFocused && (
@@ -88,7 +88,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             className="selected-month-chip clickable"
             onClick={handleChipClick}
           >
-            <FaCalendar />
+            <FiCalendar />
             {selectedMonthLabel}
           </div>
         )}
@@ -123,7 +123,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             className="clear-filters-btn"
             title={t('filters.clearAll')}
           >
-            <FaTimes />
+            <FiX />
           </button>
         )}
       </div>

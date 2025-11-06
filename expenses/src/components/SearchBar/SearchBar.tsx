@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaSearch, FaTimes } from 'react-icons/fa';
+import { FiSearch, FiX } from 'react-icons/fi';
 import { useLocalization } from '@context/localization';
 import './SearchBar.scss';
 
@@ -69,7 +69,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     <div className="search-bar-with-chips">
       {/* Search Input */}
       <div className="search-bar-component">
-        <FaSearch className="search-bar-icon" />
+        <FiSearch className="search-bar-icon" />
 
         {/* Show selected category as chip inside search - clickable to change */}
         {categoryValue && !isSearchFocused && (
@@ -104,7 +104,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             className="clear-filters-btn"
             title={t('filters.clearAll')}
           >
-            <FaTimes />
+            <FiX />
           </button>
         )}
       </div>

@@ -70,15 +70,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 
   svg {
     margin: 0 auto;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    stroke-width: 2;
+    transition: all 0.2s ease;
+  }
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.7);
+    
+    svg {
+      transform: scale(1.1);
+    }
   }
 
   &:focus,
   &.active {
     color: #5b8def;
+    
+    svg {
+      stroke-width: 2.5;
+      filter: drop-shadow(0 2px 8px rgba(91, 141, 239, 0.4));
+    }
   }
 }
 

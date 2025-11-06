@@ -24,11 +24,11 @@ import {
 import { notificationType } from '@utils/constants';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import {
-  FaPlus,
-  FaCaretDown,
-  FaMoneyBillWave,
-  FaChartLine,
-} from 'react-icons/fa';
+  FiPlus,
+  FiChevronDown,
+  FiDollarSign,
+  FiTrendingUp,
+} from 'react-icons/fi';
 import './Income.scss';
 
 const Income = () => {
@@ -196,13 +196,13 @@ const Income = () => {
         filtered={!!(filters.textFilter || filters.selectedMonth)}
       >
         <StatCard
-          icon={<FaMoneyBillWave />}
+          icon={<FiDollarSign />}
           value={formatNumber(totalIncome)}
           label={t('income.totalIncome')}
         />
         {!filters.textFilter && !filters.selectedMonth && (
           <StatCard
-            icon={<FaChartLine />}
+            icon={<FiTrendingUp />}
             value={formatNumber(averageIncome)}
             label={t('income.averageIncome')}
           />
@@ -213,7 +213,7 @@ const Income = () => {
       <div className="income-table-section">
         {noData ? (
           <NoData
-            icon={<FaMoneyBillWave />}
+            icon={<FiDollarSign />}
             title={t('income.noIncome')}
             description={t('income.noIncomeDesc')}
           />
@@ -229,7 +229,7 @@ const Income = () => {
               />
             ) : (
               <NoData
-                icon={<FaMoneyBillWave />}
+                icon={<FiDollarSign />}
                 title={t('income.noIncome')}
                 description={t('income.noIncomeDesc')}
               />
@@ -241,7 +241,7 @@ const Income = () => {
                   onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
                   className="load-more-btn"
                 >
-                  <FaCaretDown />
+                  <FiChevronDown />
                   {t('common.loading')}
                 </button>
               </div>
@@ -326,7 +326,7 @@ const Income = () => {
         className="fab"
         title={t('income.addIncome')}
       >
-        <FaPlus />
+        <FiPlus />
       </button>
     </div>
   );

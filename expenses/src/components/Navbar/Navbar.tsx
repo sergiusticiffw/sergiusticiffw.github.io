@@ -2,13 +2,12 @@ import { NavLink } from 'react-router-dom';
 import { useAuthState } from '@context/context';
 import { useLocalization } from '@context/localization';
 import {
-  FaChartPie,
-  FaHome,
-  FaMoneyBill,
-  FaPlus,
-  FaUser,
-  FaHandHoldingUsd,
-} from 'react-icons/fa';
+  FiHome,
+  FiBarChart2,
+  FiDollarSign,
+  FiCreditCard,
+  FiUser,
+} from 'react-icons/fi';
 import React, { useState } from 'react';
 import { AuthState } from '@type/types';
 
@@ -54,12 +53,12 @@ const Navbar = () => {
       <ul>
         <li>
           <NavLink to="/expenses/" end title={t('nav.home')}>
-            <FaHome />
+            <FiHome />
           </NavLink>
         </li>
         <li>
           <NavLink to="/expenses/charts" title={t('nav.charts')}>
-            <FaChartPie />
+            <FiBarChart2 />
           </NavLink>
         </li>
         {/*<li>*/}
@@ -69,18 +68,18 @@ const Navbar = () => {
         {/*</li>*/}
         <li>
           <NavLink to="/expenses/income" title={t('nav.income')}>
-            <FaMoneyBill />
+            <FiDollarSign />
           </NavLink>
         </li>
         <li>
           <NavLink to="/expenses/loans" title={t('nav.loans')}>
-            <FaHandHoldingUsd />
+            <FiCreditCard />
           </NavLink>
         </li>
         {userIsLoggedIn ? (
           <li>
             <NavLink to="/expenses/user" title={t('nav.profile')}>
-              <FaUser />
+              <FiUser />
             </NavLink>
           </li>
         ) : (
