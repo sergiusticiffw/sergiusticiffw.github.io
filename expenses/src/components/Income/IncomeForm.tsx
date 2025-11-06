@@ -78,7 +78,9 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
   React.useEffect(() => {
     if (onFormReady) {
       onFormReady(() => {
-        const form = document.querySelector(`.income-form-${formType}`) as HTMLFormElement;
+        const form = document.querySelector(
+          `.income-form-${formType}`
+        ) as HTMLFormElement;
         if (form) {
           form.requestSubmit();
         }
@@ -88,7 +90,11 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
   return (
     <div className="income-form-container">
-      <form id={`income-form-${formType}`} className={`income-form income-form-${formType}`} onSubmit={handleSubmit}>
+      <form
+        id={`income-form-${formType}`}
+        className={`income-form income-form-${formType}`}
+        onSubmit={handleSubmit}
+      >
         <FormField
           name="field_amount"
           type="number"
@@ -126,7 +132,11 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
         {!hideSubmitButton && (
           <div className="form-actions-sticky">
-            <button type="submit" className="btn-submit" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="btn-submit"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? (
                 <div className="loader">
                   <span className="loader__element"></span>

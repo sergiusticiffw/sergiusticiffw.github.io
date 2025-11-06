@@ -24,7 +24,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
   const { t } = useLocalization();
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
-  
+
   // Use provided placeholder or default translated placeholder
   const defaultPlaceholder = placeholder || t('filters.search');
 

@@ -168,19 +168,22 @@ const LoansList: React.FC<LoansListProps> = ({
               }
             >
               {/* Progress Background Fill */}
-              <div 
-                className="loan-progress-bg" 
-                style={{ 
+              <div
+                className="loan-progress-bg"
+                style={{
                   width: `${Math.min(progress, 100)}%`,
-                  background: `linear-gradient(90deg, ${statusColor}35 0%, ${statusColor}20 100%)`
+                  background: `linear-gradient(90deg, ${statusColor}35 0%, ${statusColor}20 100%)`,
                 }}
               />
-              
+
               {/* Content */}
               <div className="loan-content">
                 <div className="loan-header-row">
                   <div className="loan-title">{loan.title}</div>
-                  <div className="loan-progress-badge" style={{ backgroundColor: statusColor }}>
+                  <div
+                    className="loan-progress-badge"
+                    style={{ backgroundColor: statusColor }}
+                  >
                     {Math.round(progress)}%
                   </div>
                 </div>

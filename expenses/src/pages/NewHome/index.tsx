@@ -2,7 +2,12 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useAuthDispatch, useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
-import { deleteNode, fetchData, formatNumber, extractMonthsFromRawData } from '@utils/utils';
+import {
+  deleteNode,
+  fetchData,
+  formatNumber,
+  extractMonthsFromRawData,
+} from '@utils/utils';
 import { getCategories, notificationType } from '@utils/constants';
 import TransactionFilters from '@components/Home/TransactionFilters';
 import TransactionList from '@components/TransactionList';
@@ -47,7 +52,8 @@ const NewHome = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [focusedItem, setFocusedItem] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [transactionFormSubmitting, setTransactionFormSubmitting] = useState(false);
+  const [transactionFormSubmitting, setTransactionFormSubmitting] =
+    useState(false);
   const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
 
   useEffect(() => {
@@ -70,14 +76,13 @@ const NewHome = () => {
   const localizedCategories = getCategories();
 
   // Get ALL available months from UNFILTERED raw data in YYYY-MM format (for month picker)
-  const allMonths = data.raw && data.raw.length > 0 
-    ? extractMonthsFromRawData(data.raw) 
-    : [];
+  const allMonths =
+    data.raw && data.raw.length > 0 ? extractMonthsFromRawData(data.raw) : [];
 
   // Get months from current view (filtered or unfiltered)
   const months = items.groupedData ? Object.keys(items.groupedData) : [];
   const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
-  
+
   // Ensure currentMonthIndex is valid when months array changes
   useEffect(() => {
     if (months.length > 0) {
@@ -89,7 +94,7 @@ const NewHome = () => {
       setCurrentMonthIndex(0);
     }
   }, [months, currentMonthIndex]);
-  
+
   const currentMonth = months[currentMonthIndex] || months[0] || '';
 
   // Reset to most recent month when filters are applied
@@ -146,28 +151,29 @@ const NewHome = () => {
   // So we only need to apply text search filter if it exists
   const filteredTransactions = useMemo(() => {
     const monthTransactions = items.groupedData?.[currentMonth] || [];
-    
+
     // If category is filtered in context, items.groupedData already contains only that category
     // So we only need to filter by text search if it exists
     if (searchText !== '') {
       const searchLower = searchText.toLowerCase();
-      return monthTransactions.filter((transaction: TransactionOrIncomeItem) => {
-        const descriptionMatch = transaction.dsc
-          ?.toLowerCase()
-          .includes(searchLower) || false;
+      return monthTransactions.filter(
+        (transaction: TransactionOrIncomeItem) => {
+          const descriptionMatch =
+            transaction.dsc?.toLowerCase().includes(searchLower) || false;
 
-        // Get category label and check if it matches
-        const categoryLabel =
-          localizedCategories.find((cat) => cat.value === transaction.cat)
-            ?.label || '';
-        const categoryMatch = categoryLabel
-          .toLowerCase()
-          .includes(searchLower);
+          // Get category label and check if it matches
+          const categoryLabel =
+            localizedCategories.find((cat) => cat.value === transaction.cat)
+              ?.label || '';
+          const categoryMatch = categoryLabel
+            .toLowerCase()
+            .includes(searchLower);
 
-        return descriptionMatch || categoryMatch;
-      });
+          return descriptionMatch || categoryMatch;
+        }
+      );
     }
-    
+
     return monthTransactions;
   }, [items.groupedData, currentMonth, searchText, localizedCategories]);
 
@@ -186,7 +192,7 @@ const NewHome = () => {
       // Search for first month with matching transactions
       for (let i = 0; i < months.length; i++) {
         const monthTransactions = items.groupedData[months[i]] || [];
-        
+
         // If category is filtered, items.groupedData already contains only that category
         // So we only need to filter by text search if it exists
         let matchingTransactions = monthTransactions;
@@ -194,14 +200,12 @@ const NewHome = () => {
           const searchLower = searchText.toLowerCase();
           matchingTransactions = monthTransactions.filter(
             (transaction: TransactionOrIncomeItem) => {
-              const descriptionMatch = transaction.dsc
-                ?.toLowerCase()
-                .includes(searchLower) || false;
+              const descriptionMatch =
+                transaction.dsc?.toLowerCase().includes(searchLower) || false;
 
               const categoryLabel =
-                localizedCategories.find(
-                  (cat) => cat.value === transaction.cat
-                )?.label || '';
+                localizedCategories.find((cat) => cat.value === transaction.cat)
+                  ?.label || '';
               const categoryMatch = categoryLabel
                 .toLowerCase()
                 .includes(searchLower);
@@ -217,7 +221,15 @@ const NewHome = () => {
         }
       }
     }
-  }, [searchText, selectedCategory, hasFilters, filteredTransactions.length, months, items.groupedData, localizedCategories]);
+  }, [
+    searchText,
+    selectedCategory,
+    hasFilters,
+    filteredTransactions.length,
+    months,
+    items.groupedData,
+    localizedCategories,
+  ]);
 
   // Calculate stats based on filtered transactions
   const filteredTotal = filteredTransactions.reduce(

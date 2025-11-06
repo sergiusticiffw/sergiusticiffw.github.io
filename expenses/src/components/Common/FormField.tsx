@@ -46,7 +46,7 @@ const FormField: React.FC<FormFieldProps> = ({
 }) => {
   const { t } = useLocalization();
   const fieldId = id || name;
-  
+
   // Ensure value is never null - convert null/undefined to empty string
   const safeValue = value == null ? '' : value;
 
@@ -77,4 +77,3 @@ const FormField: React.FC<FormFieldProps> = ({
 };
 
 export default FormField;
-

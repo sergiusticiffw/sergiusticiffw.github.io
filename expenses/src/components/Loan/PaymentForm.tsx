@@ -140,7 +140,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   React.useEffect(() => {
     if (onFormReady) {
       onFormReady(() => {
-        const form = document.querySelector(`.payment-form-${formType}`) as HTMLFormElement;
+        const form = document.querySelector(
+          `.payment-form-${formType}`
+        ) as HTMLFormElement;
         if (form) {
           form.requestSubmit();
         }
@@ -150,7 +152,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
   return (
     <div className="payment-form-container">
-      <form id={`payment-form-${formType}`} className={`payment-form payment-form-${formType}`} onSubmit={handleSubmit}>
+      <form
+        id={`payment-form-${formType}`}
+        className={`payment-form payment-form-${formType}`}
+        onSubmit={handleSubmit}
+      >
         <FormField
           name="title"
           type="text"
@@ -236,7 +242,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
         {!hideSubmitButton && (
           <div className="form-actions-sticky">
-            <button type="submit" disabled={isSubmitting} className="btn-submit">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-submit"
+            >
               {isSubmitting ? (
                 <div className="loader">
                   <span className="loader__element"></span>

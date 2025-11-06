@@ -26,7 +26,9 @@ const MonthChips: React.FC<MonthChipsProps> = ({
   const { t } = useLocalization();
 
   // Filter out invalid months (those without valid labels)
-  const validMonths = months.filter((month) => month.label && month.label !== month.value && month.label !== '');
+  const validMonths = months.filter(
+    (month) => month.label && month.label !== month.value && month.label !== ''
+  );
 
   if (validMonths.length === 0) return null;
 
@@ -55,4 +57,3 @@ const MonthChips: React.FC<MonthChipsProps> = ({
 };
 
 export default MonthChips;
-

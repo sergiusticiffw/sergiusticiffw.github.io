@@ -38,18 +38,23 @@
   max-width: 500px;
   width: 100%;
   max-height: 90vh;
-  max-height: calc(90vh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem);
+  max-height: calc(
+    90vh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem
+  );
   outline: none;
-  
+
   @supports (height: 100svh) {
     max-height: 90svh;
-    max-height: calc(90svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem);
+    max-height: calc(
+      90svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) -
+        2rem
+    );
   }
-  
+
   @media (max-width: 768px) {
     max-height: min(90svh, calc(100vh - 2rem));
   }
-  
+
   @media (max-width: 480px) {
     max-height: min(85svh, calc(100vh - 1rem));
   }
@@ -116,7 +121,7 @@
   flex-shrink: 0;
   padding: 1rem 1.5rem;
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
-  
+
   // Style button in footer - match _modern-form.scss btn-submit styles
   .btn-submit {
     width: 100%;
@@ -161,12 +166,12 @@
     span {
       font-weight: 600;
     }
-    
+
     // Loader styles in footer button
     .loader {
       display: flex;
       gap: 4px;
-      
+
       span,
       .loader__element {
         width: 6px;
@@ -174,28 +179,28 @@
         border-radius: 50%;
         background: #fff;
         animation: loading-dots 1.4s infinite ease-in-out both;
-        
+
         &:nth-child(1) {
           animation-delay: -0.32s;
         }
-        
+
         &:nth-child(2) {
           animation-delay: -0.16s;
         }
-        
+
         &:nth-child(3) {
           animation-delay: 0s;
         }
       }
     }
   }
-  
+
   // Mobile padding adjustments
   @media (max-width: 768px) {
     padding: 1rem 1.5rem;
     padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
   }
-  
+
   @media (max-width: 480px) {
     padding: 0.875rem 1rem;
     padding-bottom: calc(0.875rem + env(safe-area-inset-bottom, 0));
@@ -218,43 +223,43 @@
   padding: 1.5rem;
   // Ensure body can scroll when keyboard is visible
   position: relative;
-  
+
   // When keyboard is visible, allow more scrolling space
   &.keyboard-visible {
     // Add extra padding at bottom to ensure submit button is accessible
     padding-bottom: calc(1.5rem + 20px);
-    
+
     @media (max-width: 480px) {
       padding-bottom: calc(1rem + 20px);
     }
   }
-  
+
   // When no footer (like CalendarView modal), reduce bottom padding
   &:not(:has(+ .modal-footer)) {
     padding-bottom: 1.5rem;
-    
+
     @media (max-width: 768px) {
       padding-bottom: 1.5rem;
     }
-    
+
     @media (max-width: 480px) {
       padding-bottom: 1rem;
     }
   }
-  
+
   // Mobile padding adjustments when footer exists
   @media (max-width: 768px) {
     &:has(+ .modal-footer) {
       padding-bottom: calc(1.5rem + 80px);
     }
   }
-  
+
   @media (max-width: 480px) {
     &:has(+ .modal-footer) {
       padding-bottom: calc(1.5rem + 70px);
     }
   }
-  
+
   // Hide form-actions-sticky when modal-footer is used
   + .modal-footer ~ * .form-actions-sticky,
   .form-actions-sticky {

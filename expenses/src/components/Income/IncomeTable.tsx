@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+} from 'react';
 import useSwipeActions from '@hooks/useSwipeActions';
 import { FaPen, FaTrash, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 import { formatNumber, getLocale } from '@utils/utils';
@@ -47,23 +53,29 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
     });
   }, [changedItems, handleClearChangedItem]);
 
-  const allItems = useMemo(() => [
-    ...items,
-    ...Object.values(changedItems || {})
-      .filter(
-        (item: any) => item.type === 'removed' && item.data.type === 'incomes'
-      )
-      .map((item: any) => item.data),
-  ], [items, changedItems]);
+  const allItems = useMemo(
+    () => [
+      ...items,
+      ...Object.values(changedItems || {})
+        .filter(
+          (item: any) => item.type === 'removed' && item.data.type === 'incomes'
+        )
+        .map((item: any) => item.data),
+    ],
+    [items, changedItems]
+  );
 
-  const handleSort = useCallback((field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-  }, [sortField, sortDirection]);
+  const handleSort = useCallback(
+    (field: SortField) => {
+      if (sortField === field) {
+        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      } else {
+        setSortField(field);
+        setSortDirection('desc');
+      }
+    },
+    [sortField, sortDirection]
+  );
 
   // Sort items
   const sortedItems = useMemo(() => {

@@ -32,7 +32,3 @@ export const useFilterFocus = () => {
     handleSelection,
   };
 };
-
-
-
-

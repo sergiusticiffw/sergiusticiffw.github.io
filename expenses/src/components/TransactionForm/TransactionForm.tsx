@@ -124,7 +124,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   React.useEffect(() => {
     if (onFormReady) {
       onFormReady(() => {
-        const form = document.querySelector(`.transaction-form-${formType}`) as HTMLFormElement;
+        const form = document.querySelector(
+          `.transaction-form-${formType}`
+        ) as HTMLFormElement;
         if (form) {
           form.requestSubmit();
         }
@@ -134,7 +136,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
   return (
     <div className="transaction-form-container">
-      <form id={`transaction-form-${formType}`} className={`transaction-form transaction-form-${formType}`} onSubmit={handleSubmit}>
+      <form
+        id={`transaction-form-${formType}`}
+        className={`transaction-form transaction-form-${formType}`}
+        onSubmit={handleSubmit}
+      >
         <FormField
           name="field_amount"
           type="number"
@@ -220,7 +226,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
         {!hideSubmitButton && (
           <div className="form-actions-sticky">
-            <button type="submit" className="btn-submit" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="btn-submit"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? (
                 <div className="loader">
                   <span></span>

@@ -37,12 +37,12 @@ const useSwipeActions = (): SwipeActions => {
   // Store scroll position to restore after position: fixed
   const scrollPositionRef = useRef<number>(0);
   const isFixedRef = useRef<boolean>(false);
-  
+
   // Detect Safari iOS
   const isSafariIOS = useRef<boolean>(
     typeof window !== 'undefined' &&
-    /iPad|iPhone|iPod/.test(navigator.userAgent) &&
-    !(window as any).MSStream
+      /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+      !(window as any).MSStream
   );
 
   const handleTouchStart = (
@@ -89,7 +89,7 @@ const useSwipeActions = (): SwipeActions => {
       // Prevent body scroll when swiping horizontally
       if (!isFixedRef.current) {
         isFixedRef.current = true;
-        
+
         if (isSafariIOS.current) {
           // For Safari iOS, use a less aggressive approach to avoid flickering
           // But still prevent horizontal scroll effectively
@@ -108,13 +108,14 @@ const useSwipeActions = (): SwipeActions => {
           // Use touch-action on body to prevent horizontal scroll
           document.body.style.touchAction = 'pan-y'; // Only allow vertical panning
           document.body.style.overscrollBehaviorX = 'contain'; // Prevent horizontal overscroll
-          
+
           // Also prevent scroll on document.documentElement for Safari
           document.documentElement.style.overflowX = 'hidden';
           document.documentElement.style.touchAction = 'pan-y';
         } else {
           // For Chrome and other browsers, use position: fixed
-          scrollPositionRef.current = window.pageYOffset || document.documentElement.scrollTop || 0;
+          scrollPositionRef.current =
+            window.pageYOffset || document.documentElement.scrollTop || 0;
           document.body.style.overflow = 'hidden';
           document.body.style.touchAction = 'none';
           document.body.style.position = 'fixed';
@@ -122,7 +123,7 @@ const useSwipeActions = (): SwipeActions => {
           document.body.style.width = '100%';
           document.body.style.left = '0';
           document.body.style.right = '0';
-          
+
           // Also prevent scroll on container
           if (containerRef.current) {
             containerRef.current.style.overflowX = 'hidden';
@@ -172,11 +173,11 @@ const useSwipeActions = (): SwipeActions => {
         // Restore Safari iOS styles
         document.body.style.touchAction = '';
         document.body.style.overscrollBehaviorX = '';
-        
+
         // Restore documentElement styles
         document.documentElement.style.overflowX = '';
         document.documentElement.style.touchAction = '';
-        
+
         // Restore container scroll
         if (containerRef.current) {
           containerRef.current.style.overflowX = '';
@@ -197,17 +198,17 @@ const useSwipeActions = (): SwipeActions => {
         document.body.style.width = '';
         document.body.style.left = '';
         document.body.style.right = '';
-        
+
         // Restore scroll position
         window.scrollTo(0, scrollPositionRef.current);
-        
+
         // Restore container scroll
         if (containerRef.current) {
           containerRef.current.style.overflowX = '';
           containerRef.current.style.overflowY = '';
         }
       }
-      
+
       isFixedRef.current = false;
     }
 

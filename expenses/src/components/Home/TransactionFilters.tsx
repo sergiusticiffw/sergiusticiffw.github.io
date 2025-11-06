@@ -31,7 +31,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   onClearFilters,
 }) => {
   const { t } = useLocalization();
-  
+
   // Use reusable hooks
   const {
     isFilterFocused,
@@ -51,14 +51,17 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     onSelection: handleSelection,
   });
 
-  const handleCategoryClick = useCallback((value: string) => {
-    if (value === categoryValue) {
-      onCategoryChange('');
-    } else {
-      onCategoryChange(value);
-      handleSelection();
-    }
-  }, [categoryValue, onCategoryChange, handleSelection]);
+  const handleCategoryClick = useCallback(
+    (value: string) => {
+      if (value === categoryValue) {
+        onCategoryChange('');
+      } else {
+        onCategoryChange(value);
+        handleSelection();
+      }
+    },
+    [categoryValue, onCategoryChange, handleSelection]
+  );
 
   const hasFilters = searchValue || categoryValue || selectedMonth;
 
@@ -162,4 +165,3 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
 };
 
 export default React.memo(TransactionFilters);
-

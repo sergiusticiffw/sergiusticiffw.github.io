@@ -49,7 +49,8 @@ const Charts = () => {
 
   const [visibleCharts, setVisibleCharts] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [transactionFormSubmitting, setTransactionFormSubmitting] = useState(false);
+  const [transactionFormSubmitting, setTransactionFormSubmitting] =
+    useState(false);
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
 
@@ -66,7 +67,8 @@ const Charts = () => {
   // Load visible charts from localStorage
   useEffect(() => {
     const storedCharts =
-      JSON.parse(localStorage.getItem('visibleCharts') || '[]') || availableCharts;
+      JSON.parse(localStorage.getItem('visibleCharts') || '[]') ||
+      availableCharts;
     setVisibleCharts(storedCharts);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

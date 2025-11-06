@@ -491,30 +491,32 @@ export const formatMonthOption = (
 };
 
 // Helper function to get locale based on language
-export const getLocale = (language: string = localStorage.getItem('language') || 'en'): string => {
+export const getLocale = (
+  language: string = localStorage.getItem('language') || 'en'
+): string => {
   return language === 'ro' ? 'ro-RO' : 'en-US';
 };
 
 // Helper function to extract unique months from raw data in YYYY-MM format
 export const extractMonthsFromRawData = (rawData: any[]): string[] => {
   if (!rawData || rawData.length === 0) return [];
-  
+
   const monthsSet = new Set<string>();
-  
+
   rawData.forEach((item: any) => {
     if (!item.dt) return;
     const date = new Date(item.dt);
     if (isNaN(date.getTime())) return;
-    
+
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const monthValue = `${year}-${month}`;
-    
+
     if (year >= 1900 && year <= 2100) {
       monthsSet.add(monthValue);
     }
   });
-  
+
   return Array.from(monthsSet).sort((a, b) => b.localeCompare(a));
 };
 

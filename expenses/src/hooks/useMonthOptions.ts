@@ -14,7 +14,9 @@ interface UseMonthOptionsOptions {
 /**
  * Hook for formatting month options with user's language
  */
-export const useMonthOptions = ({ availableMonths }: UseMonthOptionsOptions) => {
+export const useMonthOptions = ({
+  availableMonths,
+}: UseMonthOptionsOptions) => {
   const { language } = useLocalization();
 
   const monthOptions = useMemo(() => {
@@ -27,7 +29,14 @@ export const useMonthOptions = ({ availableMonths }: UseMonthOptionsOptions) => 
         if (parts.length !== 2) return false;
         const year = parseInt(parts[0], 10);
         const monthNum = parseInt(parts[1], 10);
-        return !isNaN(year) && !isNaN(monthNum) && monthNum >= 1 && monthNum <= 12 && year >= 1900 && year <= 2100;
+        return (
+          !isNaN(year) &&
+          !isNaN(monthNum) &&
+          monthNum >= 1 &&
+          monthNum <= 12 &&
+          year >= 1900 &&
+          year <= 2100
+        );
       })
       .map((month) => formatMonthOption(month, language))
       .filter((option) => option.label !== '' && option.label !== option.value); // Filter out invalid formatted dates
@@ -47,4 +56,3 @@ export const useMonthOptions = ({ availableMonths }: UseMonthOptionsOptions) => 
     getSelectedMonthLabel,
   };
 };
-

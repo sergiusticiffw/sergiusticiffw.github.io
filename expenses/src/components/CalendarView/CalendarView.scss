@@ -89,8 +89,9 @@
       &.calendar-day-today {
         background: rgba(91, 141, 239, 0.2) !important;
         border: 2px solid #5b8def !important;
-        box-shadow: 0 0 0 2px rgba(91, 141, 239, 0.15), 
-                    0 2px 8px rgba(91, 141, 239, 0.3);
+        box-shadow:
+          0 0 0 2px rgba(91, 141, 239, 0.15),
+          0 2px 8px rgba(91, 141, 239, 0.3);
 
         .fc-daygrid-day-number {
           color: #ffffff !important;

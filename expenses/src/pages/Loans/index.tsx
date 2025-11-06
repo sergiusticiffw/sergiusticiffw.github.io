@@ -3,7 +3,13 @@ import { useAuthDispatch, useAuthState } from '@context/context';
 import { useLoan } from '@context/loan';
 import { useLocalization } from '@context/localization';
 import { AuthState } from '@type/types';
-import { fetchLoans, formatNumber, deleteLoan, transformDateFormat, transformToNumber } from '@utils/utils';
+import {
+  fetchLoans,
+  formatNumber,
+  deleteLoan,
+  transformDateFormat,
+  transformToNumber,
+} from '@utils/utils';
 import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
 import Paydown from '@utils/paydown-node';
@@ -96,13 +102,13 @@ const Loans: React.FC = () => {
 
   const calculateLoanProgress = (loan: any) => {
     const status = getLoanStatus(loan);
-    
+
     // If completed, return 100%
     if (status === 'completed') return 100;
-    
+
     // If pending, return 0%
     if (status === 'pending') return 0;
-    
+
     // For active loans, calculate based on payments
     try {
       const [filteredData] =
@@ -118,8 +124,12 @@ const Loans: React.FC = () => {
             isSimulatedPayment: Number(item.fisp),
             date: transformDateFormat(item.fdt),
             ...(item.fr ? { rate: transformToNumber(item.fr) } : {}),
-            ...(item.fpi ? { pay_installment: transformToNumber(item.fpi) } : {}),
-            ...(item.fpsf ? { pay_single_fee: transformToNumber(item.fpsf) } : {}),
+            ...(item.fpi
+              ? { pay_installment: transformToNumber(item.fpi) }
+              : {}),
+            ...(item.fpsf
+              ? { pay_single_fee: transformToNumber(item.fpsf) }
+              : {}),
             ...(item.fnra
               ? { recurring_amount: transformToNumber(item.fnra) }
               : {}),
@@ -149,7 +159,11 @@ const Loans: React.FC = () => {
 
       const amortizationSchedule: any[] = [];
       const calculator = Paydown();
-      const paydown = calculator.calculate(loanData, loanPayments, amortizationSchedule);
+      const paydown = calculator.calculate(
+        loanData,
+        loanPayments,
+        amortizationSchedule
+      );
 
       const totalPaidAmount = filteredData?.data?.reduce(
         (sum: number, item: any) => {
@@ -159,7 +173,7 @@ const Loans: React.FC = () => {
       );
 
       const sumInstallments = paydown.sum_of_installments || 0;
-      
+
       if (sumInstallments === 0) return 0;
 
       return ((totalPaidAmount ?? 0) / sumInstallments) * 100;
@@ -187,10 +201,11 @@ const Loans: React.FC = () => {
   // Calculate stats based on filtered loans
   const totalLoans = filteredLoans?.length || 0;
   const activeLoans =
-    filteredLoans?.filter((loan: any) => getLoanStatus(loan) === 'active').length || 0;
+    filteredLoans?.filter((loan: any) => getLoanStatus(loan) === 'active')
+      .length || 0;
   const completedLoans =
-    filteredLoans?.filter((loan: any) => getLoanStatus(loan) === 'completed').length ||
-    0;
+    filteredLoans?.filter((loan: any) => getLoanStatus(loan) === 'completed')
+      .length || 0;
 
   if (loading) {
     return (

@@ -225,7 +225,11 @@ const LoanForm: React.FC<LoanFormProps> = ({
 
   return (
     <div className="loan-form-container">
-      <form id={`loan-form-${formType}`} className="loan-form" onSubmit={handleFormSubmit}>
+      <form
+        id={`loan-form-${formType}`}
+        className="loan-form"
+        onSubmit={handleFormSubmit}
+      >
         {/* Basic Information */}
         <FormField
           name="title"
@@ -306,7 +310,10 @@ const LoanForm: React.FC<LoanFormProps> = ({
             value={formState.field_rec_first_payment_date}
             onChange={handleChange}
             inputRef={firstPaymentDateRef}
-            isValid={getFieldValidation('field_rec_first_payment_date', formState)}
+            isValid={getFieldValidation(
+              'field_rec_first_payment_date',
+              formState
+            )}
           />
 
           <FormField
@@ -317,7 +324,10 @@ const LoanForm: React.FC<LoanFormProps> = ({
             onChange={handleChange}
             min="1"
             max="31"
-            isValid={getFieldValidation('field_recurring_payment_day', formState)}
+            isValid={getFieldValidation(
+              'field_recurring_payment_day',
+              formState
+            )}
           />
         </div>
 
@@ -342,7 +352,11 @@ const LoanForm: React.FC<LoanFormProps> = ({
 
         {!hideSubmitButton && (
           <div className="form-actions-sticky">
-            <button type="submit" disabled={isSubmitting} className="btn-submit">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-submit"
+            >
               {isSubmitting ? (
                 <div className="loader">
                   <span className="loader__element"></span>

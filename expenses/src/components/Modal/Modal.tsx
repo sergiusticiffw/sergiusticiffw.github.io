@@ -46,7 +46,7 @@ const Modal = ({
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
         const threshold = 150; // Keyboard typically reduces height by ~200-300px
-        
+
         setKeyboardVisible(viewportHeight < windowHeight - threshold);
       }
     };
@@ -63,8 +63,14 @@ const Modal = ({
 
     return () => {
       if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportChange);
-        window.visualViewport.removeEventListener('scroll', handleViewportChange);
+        window.visualViewport.removeEventListener(
+          'resize',
+          handleViewportChange
+        );
+        window.visualViewport.removeEventListener(
+          'scroll',
+          handleViewportChange
+        );
       }
       window.removeEventListener('resize', handleViewportChange);
     };
@@ -76,20 +82,29 @@ const Modal = ({
 
     const handleFocusIn = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+      if (
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
+      ) {
         // Small delay to allow keyboard to appear
         setTimeout(() => {
           if (target && modalBodyRef.current) {
             // Scroll the input into view within the modal body
             const inputRect = target.getBoundingClientRect();
             const modalBodyRect = modalBodyRef.current.getBoundingClientRect();
-            const footer = modalBodyRef.current.parentElement?.querySelector('.modal-footer');
-            const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
-            
+            const footer =
+              modalBodyRef.current.parentElement?.querySelector(
+                '.modal-footer'
+              );
+            const footerHeight = footer
+              ? footer.getBoundingClientRect().height
+              : 0;
+
             // Check if input is below visible area (accounting for footer)
             if (inputRect.bottom > modalBodyRect.bottom - footerHeight) {
               // Scroll within modal-body to show the input
-              const scrollOffset = inputRect.bottom - modalBodyRect.bottom + footerHeight + 20;
+              const scrollOffset =
+                inputRect.bottom - modalBodyRect.bottom + footerHeight + 20;
               modalBodyRef.current.scrollTop += scrollOffset;
             }
           }
@@ -106,7 +121,9 @@ const Modal = ({
   const handleRequestClose = (
     event: React.MouseEvent | React.KeyboardEvent
   ) => {
-    onClose(event as unknown as React.MouseEvent<HTMLButtonElement, MouseEvent>);
+    onClose(
+      event as unknown as React.MouseEvent<HTMLButtonElement, MouseEvent>
+    );
   };
 
   return (
@@ -144,7 +161,7 @@ const Modal = ({
       {topContent && <div className="modal-top-content">{topContent}</div>}
 
       {/* Main Body */}
-      <div 
+      <div
         ref={modalBodyRef}
         className={`modal-body ${keyboardVisible ? 'keyboard-visible' : ''}`}
       >

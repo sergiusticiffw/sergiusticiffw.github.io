@@ -120,7 +120,9 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
 
     case 'FILTER_DATA':
       if (
-        (action.category !== '' || action.textFilter !== '' || action.selectedMonth !== '') &&
+        (action.category !== '' ||
+          action.textFilter !== '' ||
+          action.selectedMonth !== '') &&
         initialState.raw
       ) {
         const { raw } = initialState;

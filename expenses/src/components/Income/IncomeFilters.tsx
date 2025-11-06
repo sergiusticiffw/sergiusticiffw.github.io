@@ -66,7 +66,9 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
     });
 
     // Convert to array and sort descending (newest first)
-    const monthsArray = Array.from(monthsSet).sort((a, b) => b.localeCompare(a));
+    const monthsArray = Array.from(monthsSet).sort((a, b) =>
+      b.localeCompare(a)
+    );
 
     // Format for display using reusable utility, filter out invalid dates
     return monthsArray
