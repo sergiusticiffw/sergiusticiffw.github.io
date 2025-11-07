@@ -70,7 +70,8 @@ body {
 // Form elements
 select,
 label,
-input {
+input,
+textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -83,6 +84,9 @@ input {
   -webkit-text-size-adjust: 100%;
   // Fix tap highlight
   -webkit-tap-highlight-color: transparent;
+  // Prevent Safari auto-zoom on focus
+  font-size: 16px;
+  line-height: 1.4;
 
   &::placeholder {
     color: #fff;
