@@ -119,8 +119,8 @@
   border-radius: 0 0 16px 16px;
   // Internal layout
   flex-shrink: 0;
-  padding: 1rem 1.5rem;
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+  padding: 0.35rem 1rem 0.3rem;
+  padding-bottom: calc(0.3rem + env(safe-area-inset-bottom, 0));
 
   // Style button in footer - match _modern-form.scss btn-submit styles
   .btn-submit {
@@ -138,7 +138,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    min-height: 48px;
+    min-height: 44px;
     box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
     margin: 0;
 
@@ -220,43 +220,43 @@
   -webkit-overflow-scrolling: touch;
   // Prevent scroll bounce
   overscroll-behavior: contain;
-  padding: 1.5rem;
+  padding: 1rem 1.4rem 0rem;
   // Ensure body can scroll when keyboard is visible
   position: relative;
 
   // When keyboard is visible, allow more scrolling space
   &.keyboard-visible {
     // Add extra padding at bottom to ensure submit button is accessible
-    padding-bottom: calc(1.5rem + 20px);
+    padding-bottom: calc(0.5rem + 16px);
 
     @media (max-width: 480px) {
-      padding-bottom: calc(1rem + 20px);
+      padding-bottom: calc(0.4rem + 16px);
     }
   }
 
   // When no footer (like CalendarView modal), reduce bottom padding
   &:not(:has(+ .modal-footer)) {
-    padding-bottom: 1.5rem;
+    padding-bottom: 0.9rem;
 
     @media (max-width: 768px) {
-      padding-bottom: 1.5rem;
+      padding-bottom: 0.9rem;
     }
 
     @media (max-width: 480px) {
-      padding-bottom: 1rem;
+      padding-bottom: 0.7rem;
     }
   }
 
   // Mobile padding adjustments when footer exists
   @media (max-width: 768px) {
     &:has(+ .modal-footer) {
-      padding-bottom: calc(1.5rem + 80px);
+      padding-bottom: calc(0.7rem + 62px);
     }
   }
 
   @media (max-width: 480px) {
     &:has(+ .modal-footer) {
-      padding-bottom: calc(1.5rem + 70px);
+      padding-bottom: calc(0.7rem + 50px);
     }
   }
 

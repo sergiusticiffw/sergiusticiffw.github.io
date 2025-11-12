@@ -25,6 +25,8 @@
     gap: 0.5rem;
 
     label {
+      position: relative;
+      padding-left: 0.8rem;
       color: rgba(255, 255, 255, 0.9);
       font-size: 0.875rem;
       font-weight: 600;
@@ -33,10 +35,15 @@
       margin-bottom: 0;
     }
 
-    &.required label::after {
-      content: ' *';
+    &.required label::before {
+      content: '*';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
       color: #ff6b6b;
       font-weight: 600;
+      font-size: 0.9rem;
     }
 
     .input-wrapper {
@@ -125,6 +132,10 @@
         -webkit-appearance: none;
         margin: 0;
       }
+    }
+
+    &:last-of-type {
+      margin-bottom: 0;
     }
   }
 
@@ -219,9 +230,9 @@
     }
   }
 
-  .form-actions,
-  .form-actions-sticky {
-    margin-top: 1rem;
+.form-actions,
+.form-actions-sticky {
+  margin-top: 0.5rem;
 
     .btn-submit {
       width: 100%;
