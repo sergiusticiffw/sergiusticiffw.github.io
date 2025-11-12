@@ -535,3 +535,11 @@ export const calculateDaysFrom = (
 
   return daysDifference;
 };
+
+export type LoanStatus = 'completed' | 'active' | 'pending';
+
+export const getLoanStatus = (status?: string): LoanStatus => {
+  if (status === 'completed') return 'completed';
+  if (status === 'in_progress') return 'active';
+  return 'pending';
+};

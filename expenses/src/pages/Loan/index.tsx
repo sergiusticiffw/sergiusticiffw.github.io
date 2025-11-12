@@ -16,6 +16,7 @@ import {
   formatNumber,
   transformDateFormat,
   transformToNumber,
+  getLoanStatus,
 } from '@utils/utils';
 import { FiTrendingUp, FiDollarSign, FiEdit2, FiPlus } from 'react-icons/fi';
 import Notification from '@components/Notification/Notification';
@@ -42,6 +43,8 @@ const Loan: React.FC = () => {
   }, [data, dataDispatch, noData, token, dispatch]);
 
   const loan = loans?.find((item: any) => item.id === id);
+  const loanStatus = getLoanStatus(loan?.fls);
+
   if (!loan)
     return (
       <div className="page-container">
@@ -108,11 +111,17 @@ const Loan: React.FC = () => {
   );
 
   const calculateProgress = () => {
+    if (loanStatus === 'completed') return 100;
+    if (loanStatus === 'pending') return 0;
     if (!loan.fp || !paydown) return 0;
 
     const sumInstallments = paydown.sum_of_installments || 0;
 
-    return ((totalPaidAmount ?? 0) / sumInstallments) * 100;
+    if (sumInstallments === 0) return 0;
+
+    const progressValue = ((totalPaidAmount ?? 0) / sumInstallments) * 100;
+
+    return Math.max(0, Math.min(progressValue, 100));
   };
 
   const progress = calculateProgress();

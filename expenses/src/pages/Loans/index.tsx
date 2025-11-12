@@ -9,6 +9,7 @@ import {
   deleteLoan,
   transformDateFormat,
   transformToNumber,
+  getLoanStatus,
 } from '@utils/utils';
 import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
@@ -81,11 +82,7 @@ const Loans: React.FC = () => {
     });
   };
 
-  const getLoanStatus = (loan: any) => {
-    if (loan.fls === 'completed') return 'completed';
-    if (loan.fls === 'in_progress') return 'active';
-    return 'pending';
-  };
+  const getLoanStatusForLoan = (loan: any) => getLoanStatus(loan?.fls);
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -101,7 +98,7 @@ const Loans: React.FC = () => {
   };
 
   const calculateLoanProgress = (loan: any) => {
-    const status = getLoanStatus(loan);
+    const status = getLoanStatusForLoan(loan);
 
     // If completed, return 100%
     if (status === 'completed') return 100;
@@ -191,7 +188,7 @@ const Loans: React.FC = () => {
     // Apply status filter
     if (statusFilter !== 'all') {
       filtered = loans.filter(
-        (loan: any) => getLoanStatus(loan) === statusFilter
+        (loan: any) => getLoanStatusForLoan(loan) === statusFilter
       );
     }
 
@@ -201,10 +198,14 @@ const Loans: React.FC = () => {
   // Calculate stats based on filtered loans
   const totalLoans = filteredLoans?.length || 0;
   const activeLoans =
-    filteredLoans?.filter((loan: any) => getLoanStatus(loan) === 'active')
+    filteredLoans?.filter(
+      (loan: any) => getLoanStatusForLoan(loan) === 'active'
+    )
       .length || 0;
   const completedLoans =
-    filteredLoans?.filter((loan: any) => getLoanStatus(loan) === 'completed')
+    filteredLoans?.filter(
+      (loan: any) => getLoanStatusForLoan(loan) === 'completed'
+    )
       .length || 0;
 
   if (loading) {
@@ -279,7 +280,7 @@ const Loans: React.FC = () => {
             loans={filteredLoans}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            getStatus={getLoanStatus}
+            getStatus={getLoanStatusForLoan}
             getStatusText={getStatusText}
             getProgress={calculateLoanProgress}
           />
