@@ -318,6 +318,7 @@ const translations = {
     'loan.debugInfo': 'Debug info',
     'loan.monthsPassed': 'Months Passed',
     'loan.daysRemaining': 'Days Remaining',
+    'loan.notStarted': 'Not started',
 
     // Loans Page
     'loans.title': 'Loans',
@@ -766,6 +767,7 @@ const translations = {
     'loan.debugInfo': 'Informații de debug',
     'loan.monthsPassed': 'Luni Trecute',
     'loan.daysRemaining': 'Zile Rămase',
+    'loan.notStarted': 'Nu a început',
 
     // Loans Page
     'loans.title': 'Împrumuturi',

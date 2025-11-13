@@ -145,6 +145,20 @@ const Loan: React.FC = () => {
   const monthsPassed = Math.floor(daysPassed / 30);
   const totalMonths = Math.ceil(daysCalculated / 30);
 
+  const monthsPassedDisplay =
+    loanStatus === 'active'
+      ? `${monthsPassed} / ${totalMonths}`
+      : loanStatus === 'completed'
+        ? `${totalMonths} / ${totalMonths}`
+        : t('loan.notStarted');
+
+  const daysRemainingDisplay =
+    loanStatus === 'active'
+      ? daysRemaining
+      : loanStatus === 'completed'
+        ? t('common.completed')
+        : t('loan.notStarted');
+
   return (
     <div className="page-container loan-container">
       {/* Header - same structure as NewHome */}
@@ -223,15 +237,15 @@ const Loan: React.FC = () => {
                 <span className="loan-stat-label">
                   {t('loan.monthsPassed')}
                 </span>
-                <span className="loan-stat-value">
-                  {monthsPassed} / {totalMonths}
-                </span>
+                <span className="loan-stat-value">{monthsPassedDisplay}</span>
               </div>
               <div className="loan-stat-item">
                 <span className="loan-stat-label">
                   {t('loan.daysRemaining')}
                 </span>
-                <span className="loan-stat-value">{daysRemaining}</span>
+                <span className="loan-stat-value">
+                  {daysRemainingDisplay}
+                </span>
               </div>
             </div>
           </div>
