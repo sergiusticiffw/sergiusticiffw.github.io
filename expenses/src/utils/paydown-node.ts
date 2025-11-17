@@ -512,6 +512,27 @@ class PaydownCalculator {
     return false;
   };
 
+  // Get the last rate event on or before a given date
+  private getLastRateEventOnOrBeforeDate = (date: string): PaydownEvent | null => {
+    const targetDateInt = dateToInteger(date);
+    let lastEvent: PaydownEvent | null = null;
+    let lastEventDate = 0;
+
+    for (const event of this.eventArray) {
+      const eventDate = dateToInteger(event.date);
+      if (
+        event.hasOwnProperty('rate') &&
+        eventDate <= targetDateInt &&
+        eventDate > lastEventDate
+      ) {
+        lastEvent = event;
+        lastEventDate = eventDate;
+      }
+    }
+
+    return lastEvent;
+  };
+
   private handleLastPayment = (
     reduction: number,
     date: string,
@@ -1188,21 +1209,31 @@ class PaydownCalculator {
           : this.currentPrincipal || 0;
       }
       
-      // Get current rate as number
-      const currentRateNum = typeof this.currentRate === 'string'
-        ? parseFloat(this.currentRate) || 0
-        : Number(this.currentRate) || 0;
+      // Determine the rate that was active at the interest start date
+      // This should be the last rate change on or before interestStartDateStr
+      // NOT the current rate which might be from a future rate change
+      let rate = 0;
       
-      if (currentDateInt > startDateInt && principalToUse > 0 && currentRateNum > 0) {
+      // First, try to get rate from rateHashMap for the exact start date
+      if (this.rateHashMap.hasOwnProperty(dateToInteger(interestStartDateStr))) {
+        rate = this.rateHashMap[dateToInteger(interestStartDateStr)];
+      } else {
+        // Find the last rate event on or before the start date
+        const lastRateEvent = this.getLastRateEventOnOrBeforeDate(interestStartDateStr);
+        if (lastRateEvent && lastRateEvent.rate !== undefined) {
+          rate = lastRateEvent.rate;
+        } else {
+          // Fall back to initial rate from loan data
+          rate = typeof this.init.rate === 'string'
+            ? parseFloat(this.init.rate) || 0
+            : Number(this.init.rate) || 0;
+        }
+      }
+      
+      if (currentDateInt > startDateInt && principalToUse > 0 && rate > 0) {
         // Calculate interest manually using the same logic as getPeriodInterests
         // but without modifying global state variables
         let sumOfInterests = 0;
-        let rate = currentRateNum;
-        
-        // Check if rate is in rateHashMap for the start date
-        if (this.rateHashMap.hasOwnProperty(dateToInteger(interestStartDateStr))) {
-          rate = this.rateHashMap[dateToInteger(interestStartDateStr)];
-        }
         
         // Check if interest rate changes during period
         let rateEvent = this.getFirstEventAfterDate('rate', interestStartDateStr, currentDateStr);
@@ -1215,6 +1246,8 @@ class PaydownCalculator {
           let numberOfDays: number, factor: number, subperiodInterest: number;
           
           while (rateEvent) {
+            // Calculate interest for the period from subperiodStartDate to rateEventDate
+            // using the current rate (before the rate change)
             numberOfDays = calculateDayCount(
               subperiodStartDate,
               rateEventDate,
@@ -1223,14 +1256,18 @@ class PaydownCalculator {
             factor = numberOfDays / this.dayCountDivisor;
             subperiodInterest = principalToUse * (currentRate / 100) * factor;
             sumOfInterests += subperiodInterest;
+            
+            // Update rate to the new rate from the rate change event
             currentRate = rateEvent.rate;
             
+            // Move to the next rate change event
+            subperiodStartDate = rateEventDate;
             const nextRateEvent = this.getFirstEventAfterDate(
               'rate',
               rateEventDate,
               currentDateStr
             );
-            subperiodStartDate = rateEventDate;
+            
             if (nextRateEvent) {
               rateEventDate = nextRateEvent.date;
             }
@@ -1238,10 +1275,13 @@ class PaydownCalculator {
           }
           
           // Calculate interest for the last subperiod
-          numberOfDays = calculateDayCount(rateEventDate, currentDateStr);
-          factor = numberOfDays / this.dayCountDivisor;
-          subperiodInterest = principalToUse * (currentRate / 100) * factor;
-          sumOfInterests += subperiodInterest;
+          // From the last rate change date to current date, using the last rate
+          if (subperiodStartDate < currentDateStr) {
+            numberOfDays = calculateDayCount(subperiodStartDate, currentDateStr, true);
+            factor = numberOfDays / this.dayCountDivisor;
+            subperiodInterest = principalToUse * (currentRate / 100) * factor;
+            sumOfInterests += subperiodInterest;
+          }
         } else {
           // No rate changes, simple calculation
           const numberOfDays = calculateDayCount(interestStartDateStr, currentDateStr);
