@@ -159,6 +159,18 @@ const Loan: React.FC = () => {
         ? t('common.completed')
         : t('loan.notStarted');
 
+  // Get current interest due from paydown calculation
+  const currentInterest =
+    loanStatus === 'pending' || loanStatus === 'completed' || !paydown
+      ? 0
+      : paydown.current_interest_due || 0;
+  const currentInterestDisplay =
+    loanStatus === 'pending'
+      ? t('loan.notStarted')
+      : loanStatus === 'completed'
+        ? t('common.completed')
+        : formatNumber(currentInterest);
+
   return (
     <div className="page-container loan-container">
       {/* Header - same structure as NewHome */}
@@ -207,6 +219,10 @@ const Loan: React.FC = () => {
             {formatNumber(remainingAmount)}
           </span>
         </div>
+        <div className="loan-stat-item">
+          <span className="loan-stat-label">{t('loan.currentInterest')}</span>
+          <span className="loan-stat-value">{currentInterestDisplay}</span>
+        </div>
       </div>
 
       {/* Loan Sections */}
@@ -243,9 +259,7 @@ const Loan: React.FC = () => {
                 <span className="loan-stat-label">
                   {t('loan.daysRemaining')}
                 </span>
-                <span className="loan-stat-value">
-                  {daysRemainingDisplay}
-                </span>
+                <span className="loan-stat-value">{daysRemainingDisplay}</span>
               </div>
             </div>
           </div>

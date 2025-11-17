@@ -15,14 +15,14 @@ const Navbar = () => {
   const { userIsLoggedIn } = useAuthState() as AuthState;
   const { t } = useLocalization();
   const [cssClass, setCssClass] = useState('closed');
-  const [xDown, setXDown] = useState<number | null>(null);
-  const [yDown, setYDown] = useState<number | null>(null);
+  // const [xDown, setXDown] = useState<number | null>(null);
+  // const [yDown, setYDown] = useState<number | null>(null);
 
-  const handleTouchStart = (event: React.TouchEvent) => {
-    const firstTouch = event.touches[0];
-    setXDown(firstTouch.clientX);
-    setYDown(firstTouch.clientY);
-  };
+  // const handleTouchStart = (event: React.TouchEvent) => {
+  //   const firstTouch = event.touches[0];
+  //   setXDown(firstTouch.clientX);
+  //   setYDown(firstTouch.clientY);
+  // };
 
   // const handleTouchMove = (event: React.TouchEvent) => {
   //   if (!xDown || !yDown) {
