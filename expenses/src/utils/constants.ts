@@ -248,7 +248,15 @@ export const currencies = {
 export const getSuggestions = () => {
   return {
     '': [],
-    1: ['haine', 'incaltaminte', 'pantaloni', 'tricouri', 'Nelea', 'Leo'],
+    1: [
+      'haine',
+      'incaltaminte',
+      'pantaloni',
+      'tricouri',
+      'Nelea',
+      'Leo',
+      'Sergiu',
+    ],
     2: [
       'happy hour',
       'benzinarie',
@@ -258,7 +266,7 @@ export const getSuggestions = () => {
       'parc',
     ],
     3: ['market', 'apa', 'lunch', 'inghetata', 'straus/glovo food'],
-    4: ['flori', 'Nelea', 'zi de nastere'],
+    4: ['flori', 'Nelea', 'Sergiu', 'zi de nastere'],
     5: ['igiena/curatinie', 'scutece', 'Leo'],
     6: [
       'house',
@@ -272,11 +280,12 @@ export const getSuggestions = () => {
       'stomatolog',
       'pediatru',
       'Nelea',
+      'Sergiu',
       'Leo',
       'sport',
       'asigurare',
     ],
-    8: ['haircut', 'nails', 'Nelea'],
+    8: ['haircut', 'nails', 'Nelea', 'Sergiu', 'beauty'],
     9: [
       'benzina',
       'motorina',
@@ -289,7 +298,7 @@ export const getSuggestions = () => {
     ],
     10: ['gaz', 'lumina', 'orange', 'bloc'],
     11: ['Romania'],
-    12: ['Nelea', 'Leo', 'gradinita', 'jucarii', 'teren de joaca'],
+    12: ['Nelea', 'Leo', 'Sergiu', 'gradinita', 'jucarii', 'teren de joaca'],
     13: [],
     14: ['vin', 'bere', 'whiskey', 'cognac', 'gin', 'cocktails'],
   };
