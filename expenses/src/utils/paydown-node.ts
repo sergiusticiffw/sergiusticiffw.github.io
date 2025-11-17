@@ -56,6 +56,7 @@ export interface PaydownResult {
   latest_payment_date: string;
   unpaid_interest: number;
   current_interest_due: number;
+  interest_paid: number;
   sum_of_fees: number;
   annual_summaries: Record<string, AnnualSummary>;
 }
@@ -70,6 +71,7 @@ export interface PaydownCalculationResult {
   fees: number;
   annual_summaries: Record<string, AnnualSummary>;
   current_interest_due: number;
+  interest_paid: number;
 }
 
 // Utility functions
@@ -1140,6 +1142,30 @@ class PaydownCalculator {
       arrayOfDebugPrints.push(...this.debugLogArray);
     }
 
+    // Calculate interest paid from actual payments only (was_payed === true)
+    let interestPaid = 0;
+    if (this.paymentLogArray && this.paymentLogArray.length > 0) {
+      this.paymentLogArray.forEach((payment: PaymentLog) => {
+        if (
+          payment.was_payed === true &&
+          payment.interest !== undefined &&
+          payment.interest !== null &&
+          payment.interest !== '-'
+        ) {
+          const interestValue =
+            typeof payment.interest === 'string'
+              ? parseFloat(payment.interest) || 0
+              : payment.interest || 0;
+          interestPaid += interestValue;
+        }
+      });
+    }
+
+    // Round if needed
+    if (this.roundValues) {
+      interestPaid = funcRound(interestPaid);
+    }
+
     // Calculate current interest due from last payment date (or start date) to current date
     let currentInterestDue = 0;
     try {
@@ -1312,6 +1338,7 @@ class PaydownCalculator {
       this.sumOfFees,
       this.annualSummaries,
       currentInterestDue,
+      interestPaid,
     ] as PaydownCalculationResult;
   };
 }
@@ -1359,7 +1386,8 @@ export default function Paydown() {
         finalInterest: number,
         fees: number,
         annualSummaries: Record<string, AnnualSummary>,
-        currentInterestDue: number;
+        currentInterestDue: number,
+        interestPaid: number;
 
       try {
         [
@@ -1372,6 +1400,7 @@ export default function Paydown() {
           fees,
           annualSummaries,
           currentInterestDue,
+          interestPaid,
         ] = paydown.calculateToDate(paymentsArray, debugArray, lastPaymentDate);
       } catch (err) {
         throw err;
@@ -1388,6 +1417,7 @@ export default function Paydown() {
           finalInterest = funcRound(finalInterest);
           fees = funcRound(fees);
           currentInterestDue = funcRound(currentInterestDue);
+          interestPaid = funcRound(interestPaid);
 
           for (const year in annualSummaries) {
             annualSummaries[year].total_principal = funcRound(
@@ -1411,6 +1441,7 @@ export default function Paydown() {
         finalInterest = funcRound(finalInterest);
         fees = funcRound(fees);
         currentInterestDue = funcRound(currentInterestDue);
+        interestPaid = funcRound(interestPaid);
 
         for (const year in annualSummaries) {
           annualSummaries[year].total_principal = funcRound(
@@ -1435,6 +1466,7 @@ export default function Paydown() {
         latest_payment_date: zeroFillDate(latestPaymentDate),
         unpaid_interest: finalInterest,
         current_interest_due: currentInterestDue,
+        interest_paid: interestPaid,
         sum_of_fees: fees,
         annual_summaries: annualSummaries,
       };
