@@ -320,6 +320,7 @@ const translations = {
     'loan.daysRemaining': 'Days Remaining',
     'loan.notStarted': 'Not started',
     'loan.currentInterest': 'Interest Due',
+    'loan.interestSavings': 'Interest Saved',
 
     // Loans Page
     'loans.title': 'Loans',
@@ -770,6 +771,7 @@ const translations = {
     'loan.daysRemaining': 'Zile Rămase',
     'loan.notStarted': 'Nu a început',
     'loan.currentInterest': 'Dobândă de Achitat',
+    'loan.interestSavings': 'Dobândă Economisită',
 
     // Loans Page
     'loans.title': 'Împrumuturi',

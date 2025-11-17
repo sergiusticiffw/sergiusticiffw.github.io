@@ -60,6 +60,7 @@ const Loan: React.FC = () => {
   const payments =
     filteredData?.data?.map((item: any) => {
       return {
+        title: item.title,
         isSimulatedPayment: Number(item.fisp),
         date: transformDateFormat(item.fdt),
         ...(item.fr ? { rate: transformToNumber(item.fr) } : {}),
@@ -101,6 +102,122 @@ const Loan: React.FC = () => {
     paydown = calculator.calculate(loanData, payments, amortizationSchedule);
   } catch (err: any) {
     errorMessage = err?.message;
+  }
+
+  // Calculate interest savings from early payments
+  // Only calculate if there are payments with title "Anticipat" and loan is active
+  // This is done by comparing:
+  // 1. Interest with all payments (actual scenario - already calculated above)
+  // 2. Interest with only scheduled payments (Regular + rate/fee changes)
+  let interestSavings = 0;
+
+  // Check if there are any early payments
+  // Look for various keywords that indicate early/advance payments
+  const hasEarlyPayments = payments.some((payment: any) => {
+    if (!payment.title) return false;
+    const titleLower = payment.title.toLowerCase();
+    
+    // Romanian variants
+    if (
+      titleLower.includes('anticipat') ||
+      titleLower.includes('avans') ||
+      titleLower.includes('înainte') ||
+      titleLower.includes('inainte') ||
+      titleLower.includes('prematur') ||
+      titleLower.includes('extra') ||
+      titleLower.includes('suplimentar')
+    ) {
+      return true;
+    }
+    
+    // English variants
+    if (
+      titleLower.includes('early') ||
+      titleLower.includes('advance') ||
+      titleLower.includes('premature') ||
+      titleLower.includes('extra') ||
+      titleLower.includes('additional')
+    ) {
+      return true;
+    }
+    
+    return false;
+  });
+
+  if (
+    (loanStatus === 'active' || loanStatus === 'completed') &&
+    hasEarlyPayments &&
+    paydown &&
+    loanData.recurring &&
+    loanData.recurring.first_payment_date &&
+    loanData.recurring.payment_day
+  ) {
+    try {
+      // Clone payments and filter out early payments
+      // Keep only:
+      // - Payments with title "Regular" (scheduled payments)
+      // - Payments that change rate (rate changes)
+      // - Payments that change fee (pay_single_fee changes)
+      // - Payments that change recurring_amount
+      const scheduledPayments = payments.filter((payment: any) => {
+        // Keep Regular payments
+        if (payment.title?.toLowerCase() === 'regular') {
+          return true;
+        }
+        // Keep rate changes
+        if (payment.hasOwnProperty('rate') && payment.rate !== undefined) {
+          return true;
+        }
+        // Keep fee changes
+        if (
+          payment.hasOwnProperty('pay_single_fee') &&
+          payment.pay_single_fee !== undefined
+        ) {
+          return true;
+        }
+        // Keep recurring_amount changes
+        if (
+          payment.hasOwnProperty('recurring_amount') &&
+          payment.recurring_amount !== undefined
+        ) {
+          return true;
+        }
+        // Exclude all other payments (early payments)
+        return false;
+      });
+
+      // Calculate paydown with only scheduled payments
+      const scheduledAmortizationSchedule: any[] = [];
+      const scheduledCalculator = Paydown();
+      const scheduledPaydown = scheduledCalculator.calculate(
+        loanData,
+        scheduledPayments,
+        scheduledAmortizationSchedule
+      );
+
+      // Interest without early payments (scheduled scenario)
+      const interestWithoutEarlyPayments =
+        scheduledPaydown?.sum_of_interests || 0;
+
+      // Interest with early payments (actual scenario)
+      const interestWithEarlyPayments = paydown?.sum_of_interests || 0;
+
+      // Savings = difference
+      interestSavings = Math.max(
+        0,
+        interestWithoutEarlyPayments - interestWithEarlyPayments
+      );
+
+      // Validate: savings should be reasonable
+      // Only reject if savings are unreasonably large (more than 10x the actual interest)
+      if (interestSavings > interestWithEarlyPayments * 10) {
+        // Likely calculation error, set to 0
+        interestSavings = 0;
+      }
+    } catch (err) {
+      // If calculation fails, set to 0
+      interestSavings = 0;
+    }
   }
 
   const totalPaidAmount = filteredData?.data?.reduce(
@@ -171,6 +288,16 @@ const Loan: React.FC = () => {
         ? t('common.completed')
         : formatNumber(currentInterest);
 
+  // Interest savings is calculated above (outside paydown calculation)
+  const interestSavingsValue =
+    loanStatus === 'pending' || !paydown ? 0 : interestSavings;
+  const interestSavingsDisplay =
+    loanStatus === 'pending'
+      ? t('loan.notStarted')
+      : interestSavingsValue > 0
+        ? formatNumber(interestSavingsValue)
+        : formatNumber(0);
+
   return (
     <div className="page-container loan-container">
       {/* Header - same structure as NewHome */}
@@ -222,6 +349,10 @@ const Loan: React.FC = () => {
         <div className="loan-stat-item">
           <span className="loan-stat-label">{t('loan.currentInterest')}</span>
           <span className="loan-stat-value">{currentInterestDisplay}</span>
+        </div>
+        <div className="loan-stat-item">
+          <span className="loan-stat-label">{t('loan.interestSavings')}</span>
+          <span className="loan-stat-value">{interestSavingsDisplay}</span>
         </div>
       </div>
 
