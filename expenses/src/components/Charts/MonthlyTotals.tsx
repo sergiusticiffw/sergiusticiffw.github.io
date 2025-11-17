@@ -107,8 +107,8 @@ const MonthlyTotals = () => {
         type: 'spline',
         color: '#4DD0E1',
         visible: false,
-        data: items.incomeTotals
-          ? Object.values(items.incomeTotals)
+        data: data.incomeTotals
+          ? Object.values(data.incomeTotals)
               .reverse()
               .map((item) => {
                 return item;
