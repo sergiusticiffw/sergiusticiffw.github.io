@@ -12,6 +12,10 @@ import {
   FiMove,
   FiArrowUp,
   FiArrowDown,
+  FiHome,
+  FiActivity,
+  FiLayers,
+  FiBell,
 } from 'react-icons/fi';
 import { deleteNode, fetchLoans, formatNumber, getLocale } from '@utils/utils';
 import { notificationType } from '@utils/constants';
@@ -20,12 +24,18 @@ import PaymentForm from '@components/Loan/PaymentForm';
 import { useLoan } from '@context/loan';
 import './PaymentDetails.scss';
 
+interface PaymentDetailsProps {
+  payments?: any[];
+  loan?: any;
+}
+
 type SortField = 'date' | 'amount' | null;
 type SortDirection = 'asc' | 'desc';
 
-const PaymentDetails = (props) => {
-  const payments = props?.payments ?? [];
-  const loan = props?.loan ?? {};
+const PaymentDetails: React.FC<PaymentDetailsProps> = ({
+  payments = [],
+  loan = {},
+}) => {
   const listRef = useRef<any>(null);
   const showNotification = useNotification();
   const { t, language } = useLocalization();
@@ -40,6 +50,7 @@ const PaymentDetails = (props) => {
   const [deleteModalId, setDeleteModalId] = useState<string | false>(false);
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [activeNav, setActiveNav] = useState('overview');
 
   const {
     handleTouchStart,
@@ -133,6 +144,19 @@ const PaymentDetails = (props) => {
     return sortDirection === 'asc' ? <FiArrowUp /> : <FiArrowDown />;
   };
 
+  const visiblePaymentsCount = Math.min(nrOfItemsToShow, payments.length);
+  const totalPaidFromList = payments.reduce(
+    (sum, item) => sum + parseFloat(item.fpi || '0'),
+    0
+  );
+  const paymentNavItems = [
+    { id: 'overview', icon: FiHome, label: t('nav.home') },
+    { id: 'progress', icon: FiActivity, label: t('loan.paymentProgress') },
+    { id: 'amounts', icon: FiDollarSign, label: t('common.amount') },
+    { id: 'layers', icon: FiLayers, label: t('loan.amortizationSchedule') },
+    { id: 'alerts', icon: FiBell, label: t('notification.info') },
+  ];
+
   return (
     <div className="payment-history">
       {/* Delete Modal */}
@@ -223,12 +247,42 @@ const PaymentDetails = (props) => {
       {/* Payment List */}
       {payments.length ? (
         <div className="payment-list-component" ref={listRef}>
-          {/* Header with count */}
-          <div className="payment-list-header">
-            <p className="payment-count">
-              {Math.min(nrOfItemsToShow, payments.length)} of {payments.length}{' '}
-              payments
-            </p>
+          <div className="payment-top-meta">
+            <div>
+              <p className="payment-meta-heading">
+                {t('payment.showingPayments')}
+              </p>
+              <span className="payment-meta-sub">
+                {visiblePaymentsCount} {t('payment.of')} {payments.length}{' '}
+                {t('payment.payments')}
+              </span>
+            </div>
+            <span className="payment-meta-chip">
+              {t('loan.paid')}: {formatNumber(totalPaidFromList)}
+            </span>
+          </div>
+
+          <div
+            className="payment-view-tabs"
+            role="tablist"
+            aria-label="Payment views"
+          >
+            {paymentNavItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-label={item.label}
+                  aria-selected={activeNav === item.id}
+                  className={activeNav === item.id ? 'active' : ''}
+                  onClick={() => setActiveNav(item.id)}
+                >
+                  <Icon />
+                </button>
+              );
+            })}
           </div>
 
           {/* Sort Controls */}
@@ -237,13 +291,13 @@ const PaymentDetails = (props) => {
               className={`sort-button ${sortField === 'date' ? 'active' : ''}`}
               onClick={() => handleSort('date')}
             >
-              Date {getSortIcon('date')}
+              {t('common.date')} {getSortIcon('date')}
             </button>
             <button
               className={`sort-button ${sortField === 'amount' ? 'active' : ''}`}
               onClick={() => handleSort('amount')}
             >
-              Amount {getSortIcon('amount')}
+              {t('common.amount')} {getSortIcon('amount')}
             </button>
           </div>
 

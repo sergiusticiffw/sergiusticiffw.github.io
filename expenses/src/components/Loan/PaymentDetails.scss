@@ -1,80 +1,114 @@
 @use '../../styles/variables' as *;
 
 .payment-history {
-  margin: 1.5rem 0;
+  margin: 0;
   padding: 0;
 }
 
 .payment-list-component {
   width: 100%;
   position: relative;
-  // Prevent horizontal scroll on mobile, but allow swipe gestures on items
-  overflow-x: hidden;
-  overflow-y: auto; // Allow vertical scroll
-  // Safari iOS specific fixes
+  overflow: hidden;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y pinch-zoom; // Allow vertical scrolling and pinch zoom
-  // Additional Safari fix
-  -webkit-transform: translateZ(0); // Force hardware acceleration
-  transform: translateZ(0);
 }
 
-.payment-list-header {
-  margin-bottom: 1.5rem;
+.payment-top-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
 
-  .payment-list-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #ffffff;
-    margin: 0 0 0.5rem 0;
-    letter-spacing: -0.3px;
+  .payment-meta-heading {
+    font-size: 0.75rem;
+    letter-spacing: 0.3rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+    margin: 0 0 0.25rem;
   }
 
-  .payment-count {
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin: 0;
+  .payment-meta-sub {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.65);
+  }
+}
+
+.payment-meta-chip {
+  padding: 0.4rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.8rem;
+  letter-spacing: 0.3px;
+}
+
+.payment-view-tabs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
+  padding: 0.5rem;
+
+  button {
+    background: transparent;
+    border: none;
+    border-radius: 14px;
+    width: 100%;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 1.1rem;
+    transition: all 0.25s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #9bb8ff;
+    }
+
+    &.active {
+      background: linear-gradient(135deg, #4a7fdc, #6d8bff);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(77, 116, 255, 0.3);
+    }
   }
 }
 
 .sort-controls {
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.4rem;
+  border-radius: 14px;
 
   .sort-button {
-    display: flex;
+    flex: 1;
+    display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    color: rgba(255, 255, 255, 0.6);
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0.75rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.65);
     font-size: 0.85rem;
     font-weight: 500;
-    cursor: pointer;
     transition: all 0.2s ease;
 
     svg {
-      font-size: 0.75rem;
-      opacity: 0.7;
-    }
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.15);
-      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.8rem;
     }
 
     &.active {
-      background: rgba(91, 141, 239, 0.15);
-      border-color: rgba(91, 141, 239, 0.3);
-      color: #5b8def;
-
-      svg {
-        opacity: 1;
-      }
+      border-color: rgba(109, 139, 255, 0.4);
+      background: rgba(109, 139, 255, 0.12);
+      color: #d6deff;
     }
   }
 }
@@ -82,45 +116,44 @@
 .payment-list-items {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .payment-item-wrapper {
   position: relative;
+  border-radius: 18px;
   overflow: hidden;
-  border-radius: 12px;
 
-  &.simulated {
-    .payment-list-item {
-      border-left: 3px solid #ff9800;
-    }
+  &.simulated .payment-list-item {
+    border: 1px solid rgba(255, 152, 0, 0.4);
   }
 }
 
 .swipe-actions-background {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   opacity: 0;
-  transition: opacity 0.2s ease;
   pointer-events: none;
-  z-index: 1;
+  transition: opacity 0.2s ease;
 
-  // Component-specific overrides (circular buttons)
   .delete-action-bg,
   .edit-action-bg {
-    width: 50px;
-    height: 50px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-    color: white;
-    font-size: 1.125rem;
-    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 71, 124, 0.8);
+    box-shadow: 0 8px 25px rgba(255, 71, 124, 0.3);
+  }
+
+  .edit-action-bg {
+    background: rgba(96, 212, 190, 0.85);
+    box-shadow: 0 8px 20px rgba(96, 212, 190, 0.25);
   }
 }
 
@@ -128,53 +161,44 @@
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  background: linear-gradient(135deg, rgba(20, 25, 40, 0.85), rgba(13, 15, 23, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
   position: relative;
   z-index: 2;
-  transition: background 0.2s ease;
-  // Allow swipe gestures but prevent horizontal scroll
   touch-action: pan-y pan-x pinch-zoom;
-  overflow: hidden;
-  // Safari iOS - prevent horizontal scroll
   overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
+  transition: border 0.25s ease;
 
-  &:active {
-    background: rgba(255, 255, 255, 0.05);
+  &:hover {
+    border-color: rgba(109, 139, 255, 0.5);
   }
 }
 
 .payment-date-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 50px;
-  flex-shrink: 0;
+  min-width: 56px;
+  padding: 0.35rem 0.5rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: center;
 
   .date-day {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    color: #ffffff;
-    line-height: 1;
   }
 
   .date-month {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.65rem;
+    letter-spacing: 0.4px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 0.125rem;
+    color: rgba(255, 255, 255, 0.55);
   }
 
   .date-year {
-    font-size: 0.65rem;
-    font-weight: 500;
+    font-size: 0.6rem;
     color: rgba(255, 255, 255, 0.4);
-    margin-top: 0.125rem;
   }
 }
 
@@ -184,169 +208,93 @@
 
   .payment-title {
     font-size: 0.95rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
-    line-height: 1.4;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+    font-weight: 600;
+    color: #fff;
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    gap: 0.45rem;
     flex-wrap: wrap;
   }
 
   .simulated-badge {
-    display: inline-block;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #ff9800;
-    background: rgba(255, 152, 0, 0.15);
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
+    font-size: 0.65rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    background: rgba(255, 152, 0, 0.15);
+    color: #ffb74d;
   }
 }
 
 .payment-amount {
-  font-size: 1.125rem;
+  font-size: 1.15rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #d6deff;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .load-more {
   text-align: center;
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
 
   .load-more-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 0.875rem 1.75rem;
+    border: none;
+    border-radius: 14px;
+    padding: 0.85rem 1.5rem;
+    background: rgba(255, 255, 255, 0.04);
     color: #fff;
-    font-size: 0.95rem;
-    font-weight: 500;
-    cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 0.5rem;
+    font-weight: 600;
     transition: all 0.25s ease;
 
     &:hover {
       background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.15);
       transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
-
-    svg {
-      font-size: 0.875rem;
     }
   }
 }
 
 .no-payments {
   text-align: center;
-  padding: 3rem 2rem;
-  background: transparent;
-  border: none;
+  padding: 2.5rem 1.5rem;
 
   svg {
-    width: 48px;
-    height: 48px;
-    color: rgba(91, 141, 239, 0.6);
-    margin-bottom: 1rem;
-    opacity: 0.7;
+    color: rgba(91, 141, 239, 0.8);
+    margin-bottom: 0.75rem;
+    width: 42px;
+    height: 42px;
   }
 
   h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.35rem;
   }
 
   p {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
   }
 }
 
-// Mobile
 @media (max-width: 640px) {
-  .payment-list-header {
-    .payment-list-title {
-      font-size: 1rem;
-    }
+  .payment-view-tabs {
+    grid-template-columns: repeat(5, 1fr);
+    padding: 0.35rem;
 
-    .payment-count {
-      font-size: 0.8rem;
+    button {
+      height: 42px;
     }
   }
 
   .sort-controls {
-    gap: 0.5rem;
+    flex-direction: column;
 
     .sort-button {
-      padding: 0.4rem 0.75rem;
-      font-size: 0.8rem;
-
-      svg {
-        font-size: 0.7rem;
-      }
+      width: 100%;
     }
   }
 
   .payment-list-item {
-    padding: 0.875rem;
-    gap: 0.75rem;
-  }
-
-  .payment-date-box {
-    min-width: 45px;
-
-    .date-day {
-      font-size: 1.25rem;
-    }
-
-    .date-month {
-      font-size: 0.65rem;
-    }
-
-    .date-year {
-      font-size: 0.6rem;
-    }
-  }
-
-  .payment-content {
-    .payment-title {
-      font-size: 0.875rem;
-    }
-
-    .simulated-badge {
-      font-size: 0.65rem;
-    }
-  }
-
-  .payment-amount {
-    font-size: 1rem;
-  }
-}
-
-// Keyframe animation for swipe action icons
-@keyframes swipeIconPop {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.3);
-  }
-  100% {
-    transform: scale(1);
+    padding: 0.9rem;
   }
 }

@@ -18,7 +18,14 @@ import {
   transformToNumber,
   getLoanStatus,
 } from '@utils/utils';
-import { FiTrendingUp, FiDollarSign, FiEdit2, FiPlus } from 'react-icons/fi';
+import {
+  FiTrendingUp,
+  FiDollarSign,
+  FiEdit2,
+  FiPlus,
+  FiClock,
+  FiCalendar,
+} from 'react-icons/fi';
 import Notification from '@components/Notification/Notification';
 import './Loan.scss';
 import { useLocalization } from '@context/localization';
@@ -36,21 +43,21 @@ const Loan: React.FC = () => {
   const noData = data.loans === null;
   const { t } = useLocalization();
 
-  useEffect(() => {
-    if (noData) {
-      fetchLoans(token, dataDispatch, dispatch);
-    }
-  }, [data, dataDispatch, noData, token, dispatch]);
+    useEffect(() => {
+      if (noData) {
+        fetchLoans(token, dataDispatch, dispatch);
+      }
+    }, [data, dataDispatch, noData, token, dispatch]);
 
-  const loan = loans?.find((item: any) => item.id === id);
-  const loanStatus = getLoanStatus(loan?.fls);
+    const loan = loans?.find((item: any) => item.id === id);
+    const loanStatus = getLoanStatus(loan?.fls);
 
-  if (!loan)
-    return (
-      <div className="page-container">
-        <LoadingSpinner />
-      </div>
-    );
+    if (!loan)
+      return (
+        <div className="page-container">
+          <LoadingSpinner />
+        </div>
+      );
 
   const [filteredData] =
     data?.payments?.filter(
@@ -305,131 +312,196 @@ const Loan: React.FC = () => {
         ? formatNumber(interestSavingsValue)
         : formatNumber(0);
 
-  return (
-    <div className="page-container loan-container">
-      {/* Header - same structure as NewHome */}
-      <div className="loan-header">
-        <h1>{loan?.title}</h1>
-      </div>
+    const statusLabelMap: Record<string, string> = {
+      active: t('common.active'),
+      completed: t('common.completed'),
+      pending: t('common.pending'),
+    };
 
-      {/* Payment Actions */}
-      <div className="btns-actions">
-        <button onClick={() => setShowEditModal(true)} className="action-btn">
-          <FiEdit2 />
-          {t('loan.editLoan')}
-        </button>
-      </div>
+    const heroStatusLabel =
+      statusLabelMap[loanStatus] || t('common.active');
+    const progressDisplay = Math.round(progress * 10) / 10;
+    const totalPayments = filteredData?.data?.length || 0;
 
-      {/* Error Message */}
-      {errorMessage && (
-        <div className="error-message">
-          <Notification message={errorMessage} type="error" />
-        </div>
-      )}
-
-      {/* Loan Stats */}
-      <div className="loan-stats-grid-2col">
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.principal')}</span>
-          <span className="loan-stat-value">
-            {formatNumber(totalPrincipal)}
-          </span>
-        </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('common.total')}</span>
-          <span className="loan-stat-value">
-            {formatNumber(totalInstallments)}
-          </span>
-        </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.paid')}</span>
-          <span className="loan-stat-value">
-            {formatNumber(totalPaidAmount)}
-          </span>
-        </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.remaining')}</span>
-          <span className="loan-stat-value">
-            {formatNumber(remainingAmount)}
-          </span>
-        </div>
-        <div className="loan-stat-item">
-              <span className="loan-stat-label">{t('loan.currentInterest')}</span>
-              <span className="loan-stat-value">{interestPaidDisplay}</span>
-        </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.interestSavings')}</span>
-          <span className="loan-stat-value">{interestSavingsDisplay}</span>
-        </div>
-      </div>
-
-      {/* Loan Sections */}
-      <div className="loan-sections">
-        {/* Progress Section */}
-        <div className="loan-section loan-progress-section">
-          <div className="section-header">
-            <FiTrendingUp />
-            <h3>{t('loan.paymentProgress')}</h3>
-          </div>
-
-          <div className="progress-container">
-            <div className="progress-bar-container">
-              <div className="progress-label">
-                <span>{t('loan.paymentProgress')}</span>
-                <span>{formatNumber(progress)}%</span>
+    return (
+      <div className="page-container loan-container">
+        <div className="loan-mobile-shell">
+          <section className="loan-hero-card loan-card">
+            <div className="loan-hero-content">
+              <span className={`loan-status-pill loan-status-${loanStatus}`}>
+                {heroStatusLabel}
+              </span>
+              <h1>{loan?.title}</h1>
+              <p className="loan-hero-meta">
+                <FiCalendar />
+                <span>
+                  {loanData.start_date} &ndash; {loanData.end_date}
+                </span>
+              </p>
+              <div className="loan-hero-meta">
+                <FiClock />
+                <span>
+                  {t('loan.paymentProgress')}: {formatNumber(progressDisplay)}%
+                </span>
               </div>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${progress}%` }}
-                ></div>
+              <div className="loan-hero-actions">
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="ghost-button"
+                >
+                  <FiEdit2 />
+                  {t('loan.editLoan')}
+                </button>
+                <button
+                  onClick={() => setShowAddPaymentModal(true)}
+                  className="ghost-button ghost-button--primary"
+                >
+                  <FiPlus />
+                  {t('loan.addPayment')}
+                </button>
               </div>
             </div>
+            <div className="loan-hero-visual">
+              <div className="loan-hero-progress">
+                <span>{t('loan.paymentProgress')}</span>
+                <strong>{formatNumber(progressDisplay)}%</strong>
+              </div>
+              <img
+                src="/images/loan-mobile-mockup.svg"
+                alt="Loan mobile preview"
+                loading="lazy"
+              />
+            </div>
+          </section>
 
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="loan-card error-message">
+              <Notification message={errorMessage} type="error" />
+            </div>
+          )}
+
+          <section className="loan-card loan-overview-card">
             <div className="loan-stats-grid-2col">
               <div className="loan-stat-item">
-                <span className="loan-stat-label">
-                  {t('loan.monthsPassed')}
+                <span className="loan-stat-label">{t('loan.principal')}</span>
+                <span className="loan-stat-value">
+                  {formatNumber(totalPrincipal)}
                 </span>
-                <span className="loan-stat-value">{monthsPassedDisplay}</span>
+              </div>
+              <div className="loan-stat-item">
+                <span className="loan-stat-label">{t('common.total')}</span>
+                <span className="loan-stat-value">
+                  {formatNumber(totalInstallments)}
+                </span>
+              </div>
+              <div className="loan-stat-item">
+                <span className="loan-stat-label">{t('loan.paid')}</span>
+                <span className="loan-stat-value">
+                  {formatNumber(totalPaidAmount)}
+                </span>
+              </div>
+              <div className="loan-stat-item">
+                <span className="loan-stat-label">{t('loan.remaining')}</span>
+                <span className="loan-stat-value">
+                  {formatNumber(remainingAmount)}
+                </span>
               </div>
               <div className="loan-stat-item">
                 <span className="loan-stat-label">
-                  {t('loan.daysRemaining')}
+                  {t('loan.currentInterest')}
                 </span>
-                <span className="loan-stat-value">{daysRemainingDisplay}</span>
+                <span className="loan-stat-value">{interestPaidDisplay}</span>
+              </div>
+              <div className="loan-stat-item">
+                <span className="loan-stat-label">
+                  {t('loan.interestSavings')}
+                </span>
+                <span className="loan-stat-value">{interestSavingsDisplay}</span>
               </div>
             </div>
-          </div>
-        </div>
+          </section>
 
-        {/* Payment Details Section */}
-        <div className="loan-section">
-          <div className="section-header">
-            <FiDollarSign />
-            <h3>{t('loan.paymentHistory')}</h3>
-          </div>
-          <PaymentDetails
-            loan={loan}
-            payments={filteredData?.data || []}
-            totalPaidAmount={totalPaidAmount}
-          />
-        </div>
+          <section className="loan-card loan-progress-card">
+            <div className="loan-card-header">
+              <div>
+                <p className="eyebrow">{t('loan.paymentProgress')}</p>
+                <h3>{formatNumber(progressDisplay)}%</h3>
+              </div>
+              <span className={`loan-status-pill loan-status-${loanStatus}`}>
+                {heroStatusLabel}
+              </span>
+            </div>
+            <div className="progress-container">
+              <div className="progress-bar-container">
+                <div className="progress-label">
+                  <span>{t('loan.paymentProgress')}</span>
+                  <span>{formatNumber(progressDisplay)}%</span>
+                </div>
+                <div className="progress-bar">
+                  <div
+                    className="progress-fill"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+              </div>
+              <div className="loan-stats-grid-2col compact">
+                <div className="loan-stat-item">
+                  <span className="loan-stat-label">
+                    {t('loan.monthsPassed')}
+                  </span>
+                  <span className="loan-stat-value">{monthsPassedDisplay}</span>
+                </div>
+                <div className="loan-stat-item">
+                  <span className="loan-stat-label">
+                    {t('loan.daysRemaining')}
+                  </span>
+                  <span className="loan-stat-value">{daysRemainingDisplay}</span>
+                </div>
+              </div>
+            </div>
+          </section>
 
-        {/* Loan Details Section */}
-        <div className="loan-section">
-          <div className="section-header">
-            <FiTrendingUp />
-            <h3>{t('loan.amortizationSchedule')}</h3>
-          </div>
-          <LoanDetails
-            loanData={loanData}
-            loan={paydown}
-            amortizationSchedule={amortizationSchedule}
-            totalPaidAmount={totalPaidAmount}
-          />
+          <section className="loan-card loan-history-card">
+            <div className="loan-card-header">
+              <div>
+                <p className="eyebrow">{t('loan.paymentHistory')}</p>
+                <span className="loan-card-subtitle">
+                  {t('loan.paid')}: {formatNumber(totalPaidAmount)} ·{' '}
+                  {t('payment.payments')}: {totalPayments}
+                </span>
+              </div>
+              <button
+                className="ghost-button ghost-button--icon"
+                onClick={() => setShowAddPaymentModal(true)}
+                aria-label={t('loan.addPayment')}
+              >
+                <FiPlus />
+              </button>
+            </div>
+            <PaymentDetails
+              loan={loan}
+              payments={filteredData?.data || []}
+            />
+          </section>
+
+          <section className="loan-card loan-analytics-card">
+            <div className="loan-card-header">
+              <div>
+                <p className="eyebrow">{t('loan.amortizationSchedule')}</p>
+                <span className="loan-card-subtitle">
+                  {t('loan.loanCostBreakdown')}
+                </span>
+              </div>
+            </div>
+            <LoanDetails
+              loanData={loanData}
+              loan={paydown}
+              amortizationSchedule={amortizationSchedule}
+              totalPaidAmount={totalPaidAmount}
+            />
+          </section>
         </div>
-      </div>
 
       {/* Edit Loan Modal */}
       <Modal
