@@ -2,6 +2,37 @@
 $white: #fff;
 $dark: #000;
 
+// Modern color palette
+$primary-blue: #5b8def;
+$primary-blue-dark: #4a7ddc;
+$primary-blue-light: #6b9dff;
+$accent-purple: #8b5cf6;
+$accent-pink: #ec4899;
+$success-green: #10b981;
+$warning-orange: #f59e0b;
+$error-red: #ef4444;
+
+// Background colors
+$bg-primary: #0f0f1a;
+$bg-secondary: #1a1a2e;
+$bg-tertiary: #16213e;
+$bg-glass: rgba(255, 255, 255, 0.05);
+$bg-glass-hover: rgba(255, 255, 255, 0.08);
+$bg-glass-active: rgba(255, 255, 255, 0.12);
+
+// Text colors
+$text-primary: #ffffff;
+$text-secondary: rgba(255, 255, 255, 0.7);
+$text-tertiary: rgba(255, 255, 255, 0.5);
+$text-muted: rgba(255, 255, 255, 0.4);
+
+// Gradient definitions
+$gradient-primary: linear-gradient(135deg, #5b8def 0%, #8b5cf6 100%);
+$gradient-secondary: linear-gradient(135deg, #4a7ddc 0%, #6b9dff 100%);
+$gradient-accent: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+$gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+$gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+
 // Theme color map
 $color-map: (
   bondi-blue: (

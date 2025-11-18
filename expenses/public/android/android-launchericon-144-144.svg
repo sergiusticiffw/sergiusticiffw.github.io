@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="144" height="144" viewBox="0 0 144 144" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0f1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a2e;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="circleGradient" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#5b8def;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#5b8def;stop-opacity:0.2" />
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="144" height="144" fill="url(#bgGradient)" rx="21.599999999999998"/>
+  
+  <!-- Glowing circle -->
+  <circle cx="72" cy="72" r="57.6" fill="url(#circleGradient)" filter="url(#glow)"/>
+  
+  <!-- Dollar sign icon -->
+  <g transform="translate(72, 72)" fill="#ffffff" filter="url(#glow)">
+    <!-- Vertical line -->
+    <rect x="-2.88" y="-24" width="5.76" height="48" rx="2.88"/>
+    <!-- Top curve -->
+    <path d="M -12 -16 Q 0 -12 12 -16" 
+          stroke="#ffffff" stroke-width="5.76" fill="none" stroke-linecap="round"/>
+    <!-- Bottom curve -->
+    <path d="M -12 16 Q 0 12 12 16" 
+          stroke="#ffffff" stroke-width="5.76" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

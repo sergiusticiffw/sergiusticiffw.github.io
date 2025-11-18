@@ -20,7 +20,8 @@ body {
   margin: 0;
   padding: 0;
   color: #fff;
-  background: #1a1a1a;
+  background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+  background-attachment: fixed;
   overflow-x: hidden;
   // Enable smooth scrolling on iOS
   -webkit-overflow-scrolling: touch;
@@ -39,7 +40,7 @@ body {
 
 // Shared page container styling
 .page-container {
-  background: #1a1a1a;
+  background: transparent;
   padding-left: 1.5rem !important;
   padding-right: 1.5rem !important;
   padding-top: 0;
