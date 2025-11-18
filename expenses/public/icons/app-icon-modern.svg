@@ -1,0 +1,45 @@
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="appIconBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0f0f;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1a1a1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#151515;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="appIconMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5b8def;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#4a7ddc;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7ba3f5;stop-opacity:1" />
+    </linearGradient>
+    <filter id="appGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect width="192" height="192" rx="45" fill="url(#appIconBg)"/>
+  
+  <!-- Decorative elements -->
+  <circle cx="48" cy="48" r="22" fill="url(#appIconMain)" opacity="0.2" filter="url(#appGlow)"/>
+  <circle cx="144" cy="144" r="30" fill="url(#appIconMain)" opacity="0.15" filter="url(#appGlow)"/>
+  
+  <!-- Main card icon -->
+  <g transform="translate(96, 96)">
+    <!-- Card -->
+    <rect x="-45" y="-30" width="90" height="60" rx="12" fill="url(#appIconMain)" opacity="0.95" filter="url(#appGlow)"/>
+    <rect x="-42" y="-27" width="84" height="54" rx="10" fill="rgba(255,255,255,0.1)"/>
+    
+    <!-- Dollar symbol -->
+    <g transform="translate(0, -3)">
+      <path d="M -11 -19 L -11 19 M -17 -8 Q -11 -8 -11 0 Q -11 8 -4 8 M -4 8 Q 4 8 4 0 Q 4 -8 -4 -8 M -4 -8 Q -11 -8 -11 0" 
+            stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </g>
+    
+    <!-- Accent lines -->
+    <line x1="-38" y1="-19" x2="38" y2="-19" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+    <line x1="-38" y1="12" x2="38" y2="12" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+  </g>
+</svg>

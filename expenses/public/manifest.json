@@ -411,6 +411,6 @@
   "start_url": "/expenses/",
   "scope": "/expenses/",
   "display": "standalone",
-  "theme_color": "#282a36",
-  "background_color": "#ffffff"
+  "theme_color": "#1a1a1a",
+  "background_color": "#0f0f0f"
 }

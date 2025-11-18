@@ -1,0 +1,29 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="addIconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5b8def;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7ba3f5;stop-opacity:1" />
+    </linearGradient>
+    <filter id="addGlow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="url(#addIconGradient)" filter="url(#addGlow)"/>
+  
+  <!-- Plus icon -->
+  <g transform="translate(64, 64)">
+    <!-- Horizontal line -->
+    <rect x="-30" y="-4" width="60" height="8" rx="4" fill="white"/>
+    <!-- Vertical line -->
+    <rect x="-4" y="-30" width="8" height="60" rx="4" fill="white"/>
+  </g>
+  
+  <!-- Shine effect -->
+  <ellipse cx="64" cy="40" rx="35" ry="20" fill="white" opacity="0.2"/>
+</svg>

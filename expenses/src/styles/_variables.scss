@@ -2,6 +2,36 @@
 $white: #fff;
 $dark: #000;
 
+// Modern color palette
+$primary-blue: #5b8def;
+$primary-blue-dark: #4a7ddc;
+$primary-blue-light: #7ba3f5;
+$accent-purple: #a78bfa;
+$accent-cyan: #06b6d4;
+$success-green: #10b981;
+$warning-orange: #f59e0b;
+$error-red: #ef4444;
+
+// Modern gradients
+$gradient-primary: linear-gradient(135deg, #5b8def 0%, #4a7ddc 50%, #7ba3f5 100%);
+$gradient-accent: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+$gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+$gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+$gradient-dark: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(20, 20, 20, 0.98) 100%);
+
+// Modern shadows
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+$shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.25);
+$shadow-glow-blue: 0 0 20px rgba(91, 141, 239, 0.3);
+$shadow-glow-purple: 0 0 20px rgba(167, 139, 250, 0.3);
+
+// Glassmorphism
+$glass-bg: rgba(255, 255, 255, 0.08);
+$glass-border: rgba(255, 255, 255, 0.12);
+$glass-blur: blur(20px);
+
 // Theme color map
 $color-map: (
   bondi-blue: (
@@ -86,12 +116,13 @@ $spacing-xl: 15px;
 $spacing-xxl: 30px;
 $spacing-xxxl: 40px;
 
-// Border radius variables
-$border-radius-sm: 4px;
-$border-radius-md: 8px;
-$border-radius-lg: 12px;
-$border-radius-xl: 16px;
-$border-radius-xxl: 20px;
+// Border radius variables (modern rounded design)
+$border-radius-sm: 8px;
+$border-radius-md: 12px;
+$border-radius-lg: 16px;
+$border-radius-xl: 20px;
+$border-radius-xxl: 24px;
+$border-radius-full: 9999px;
 
 // Font sizes
 $font-size-xs: 12px;
@@ -117,7 +148,8 @@ $breakpoint-md: 768px;
 $breakpoint-lg: 1024px;
 $breakpoint-xl: 1200px;
 
-// Transitions
-$transition-fast: 0.15s ease-in-out;
-$transition-normal: 0.3s ease-in-out;
-$transition-slow: 0.5s ease-in-out;
+// Transitions (modern easing curves)
+$transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-bounce: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);

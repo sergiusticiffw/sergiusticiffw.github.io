@@ -83,45 +83,63 @@
     margin-bottom: 0.75rem;
 
     .sort-button {
-      background: rgba(255, 255, 255, 0.05);
-      border: none;
-      border-radius: 8px;
-      padding: 0.5rem 1rem;
-      color: rgba(255, 255, 255, 0.6);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 0.625rem 1.125rem;
+      color: rgba(255, 255, 255, 0.7);
       font-size: 0.875rem;
+      font-weight: 500;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      transition: all 0.2s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
 
       svg {
         font-size: 0.875rem;
+        transition: transform 0.3s ease;
       }
 
       &:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.8);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+        color: rgba(255, 255, 255, 0.9);
+        border-color: rgba(91, 141, 239, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        
+        svg {
+          transform: scale(1.1);
+        }
       }
 
       &.active {
-        background: rgba(91, 141, 239, 0.2);
+        background: linear-gradient(135deg, rgba(91, 141, 239, 0.25) 0%, rgba(91, 141, 239, 0.15) 100%);
+        border-color: rgba(91, 141, 239, 0.4);
         color: #5b8def;
-        font-weight: 500;
+        font-weight: 600;
+        box-shadow: 0 0 0 2px rgba(91, 141, 239, 0.2), 0 4px 12px rgba(91, 141, 239, 0.2);
+        
+        svg {
+          filter: drop-shadow(0 2px 4px rgba(91, 141, 239, 0.4));
+        }
       }
     }
   }
 
   .transaction-list-item {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
     padding: 1rem;
     padding-right: 1.5rem;
     display: flex;
     align-items: flex-start;
     gap: 1rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 1;
     width: 100%;
@@ -133,14 +151,36 @@
     // Safari iOS - prevent horizontal scroll
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, #5b8def 0%, #7ba3f5 100%);
+      border-radius: 0 3px 3px 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
 
     &:hover {
-      background: rgba(255, 255, 255, 0.08);
-      transform: translateX(4px);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+      border-color: rgba(91, 141, 239, 0.3);
+      transform: translateX(4px) translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      
+      &::before {
+        opacity: 1;
+      }
     }
 
     &:active {
-      transform: scale(0.98);
+      transform: translateX(2px) scale(0.98);
     }
 
     .transaction-date-box {
@@ -173,20 +213,29 @@
       justify-content: center;
       min-width: 80px;
       max-width: 100px;
-      background: rgba(255, 255, 255, 0.1);
+      background: linear-gradient(135deg, rgba(91, 141, 239, 0.15) 0%, rgba(91, 141, 239, 0.08) 100%);
+      border: 1px solid rgba(91, 141, 239, 0.2);
       border-radius: 12px;
       padding: 0.5rem 0.75rem;
       flex-shrink: 0;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(91, 141, 239, 0.1);
 
       .category-name {
         font-size: 0.8rem;
-        font-weight: 500;
-        color: rgba(255, 255, 255, 0.7);
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.85);
         text-align: center;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
+    }
+
+    &:hover .transaction-category-box {
+      background: linear-gradient(135deg, rgba(91, 141, 239, 0.25) 0%, rgba(91, 141, 239, 0.15) 100%);
+      border-color: rgba(91, 141, 239, 0.4);
+      transform: scale(1.05);
     }
 
     .transaction-content {

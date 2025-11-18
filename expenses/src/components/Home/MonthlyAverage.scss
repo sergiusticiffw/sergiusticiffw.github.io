@@ -34,11 +34,11 @@
 
   thead {
     tr {
-      border-bottom: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       background: transparent !important;
 
       th {
-        padding: 0 0 0.5rem 0;
+        padding: 0.75rem 0 0.75rem 0;
         background: transparent !important;
 
         &:first-child {
@@ -52,7 +52,7 @@
 
         &:not(:first-child) {
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.5);
+          color: rgba(255, 255, 255, 0.6);
           font-size: 0.75rem;
           text-transform: uppercase;
           letter-spacing: 0.8px;
@@ -61,9 +61,27 @@
 
         &.sortable {
           cursor: pointer;
+          transition: color 0.3s ease;
+          position: relative;
 
           &:hover {
-            color: rgba(255, 255, 255, 0.8);
+            color: rgba(255, 255, 255, 0.9);
+          }
+
+          &::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, rgba(91, 141, 239, 0.5) 50%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
+
+          &:hover::after {
+            opacity: 1;
           }
         }
       }
@@ -118,14 +136,22 @@
   tbody tr {
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     background: transparent !important;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.02) !important;
+    }
 
     &:last-child {
       border-bottom: none;
     }
 
     &.total-row {
-      background: transparent !important;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(90deg, rgba(91, 141, 239, 0.1) 0%, transparent 100%) !important;
+      border-top: 2px solid rgba(91, 141, 239, 0.3);
+      border-bottom: none;
+      margin-top: 0.5rem;
+      padding-top: 0.75rem;
 
       .total-label {
         color: white;
@@ -136,9 +162,10 @@
       }
 
       .total-amount {
-        color: white;
+        color: #5b8def;
         font-size: 1rem;
         font-weight: 700;
+        text-shadow: 0 0 8px rgba(91, 141, 239, 0.3);
       }
     }
   }
