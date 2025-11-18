@@ -73,14 +73,6 @@ const Loan: React.FC = () => {
       };
     }) || [];
 
-  // Filter to only actual paid payments (exclude simulated payments)
-  const payments = allPayments
-    .filter((payment: any) => !payment.isSimulatedPayment)
-    .map((payment: any) => ({
-      ...payment,
-      was_payed: true, // Mark as paid since we filtered out simulated payments
-    }));
-
   const loanData = {
     start_date: transformDateFormat(loan.sdt),
     end_date: transformDateFormat(loan.edt),
@@ -122,7 +114,7 @@ const Loan: React.FC = () => {
 
   // Check if there are any early payments
   // Look for various keywords that indicate early/advance payments
-  const hasEarlyPayments = payments.some((payment: any) => {
+  const hasEarlyPayments = allPayments.some((payment: any) => {
     if (!payment.title) return false;
     const titleLower = payment.title.toLowerCase();
 
@@ -168,7 +160,7 @@ const Loan: React.FC = () => {
       // - Payments that change rate (rate changes)
       // - Payments that change fee (pay_single_fee changes)
       // - Payments that change recurring_amount
-      const scheduledPayments = payments.filter((payment: any) => {
+      const scheduledPayments = allPayments.filter((payment: any) => {
         // Keep Regular payments
         if (payment.title?.toLowerCase() === 'regular') {
           return true;
