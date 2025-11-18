@@ -1,0 +1,56 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="256" height="256" rx="64" fill="url(#loanGradient)"/>
+  
+  <defs>
+    <linearGradient id="loanGradient" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    
+    <filter id="glowEffect">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Credit card icon -->
+  <g transform="translate(48, 80)" filter="url(#glowEffect)">
+    <!-- Card body -->
+    <rect x="0" y="0" width="160" height="96" rx="12" fill="white" opacity="0.95"/>
+    
+    <!-- Magnetic strip -->
+    <rect x="0" y="16" width="160" height="20" fill="rgba(91, 141, 239, 0.4)"/>
+    
+    <!-- Chip -->
+    <rect x="16" y="48" width="28" height="24" rx="4" fill="url(#chipGradient)"/>
+    <defs>
+      <linearGradient id="chipGradient" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#f59e0b"/>
+        <stop offset="100%" stop-color="#ef4444"/>
+      </linearGradient>
+    </defs>
+    
+    <!-- Card number dots -->
+    <circle cx="60" cy="60" r="3" fill="#5b8def"/>
+    <circle cx="72" cy="60" r="3" fill="#5b8def"/>
+    <circle cx="84" cy="60" r="3" fill="#5b8def"/>
+    <circle cx="96" cy="60" r="3" fill="#5b8def"/>
+    
+    <!-- Waves decoration -->
+    <path d="M 120 50 Q 125 45, 130 50 T 140 50" stroke="#8b5cf6" stroke-width="2" fill="none" opacity="0.6"/>
+    <path d="M 120 58 Q 125 53, 130 58 T 140 58" stroke="#8b5cf6" stroke-width="2" fill="none" opacity="0.6"/>
+  </g>
+  
+  <!-- Shine effect -->
+  <rect width="256" height="256" rx="64" fill="url(#loanShine)" opacity="0.2"/>
+  <defs>
+    <radialGradient id="loanShine">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>

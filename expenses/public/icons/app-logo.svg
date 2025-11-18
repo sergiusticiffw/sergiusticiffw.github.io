@@ -1,0 +1,55 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient circle -->
+  <circle cx="256" cy="256" r="256" fill="url(#gradient1)"/>
+  
+  <!-- Gradient definitions -->
+  <defs>
+    <linearGradient id="gradient1" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#5b8def"/>
+      <stop offset="50%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+    
+    <linearGradient id="gradient2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.7"/>
+    </linearGradient>
+    
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Icon design: Modern wallet/expense tracker -->
+  <g transform="translate(128, 128)" filter="url(#glow)">
+    <!-- Wallet base -->
+    <rect x="20" y="40" width="216" height="160" rx="24" fill="url(#gradient2)" opacity="0.95"/>
+    
+    <!-- Card slot -->
+    <rect x="40" y="60" width="176" height="100" rx="16" fill="rgba(91, 141, 239, 0.3)"/>
+    
+    <!-- Dollar sign -->
+    <g transform="translate(128, 110)">
+      <path d="M 0,-30 L 0,30" stroke="url(#gradient1)" stroke-width="12" stroke-linecap="round"/>
+      <path d="M -20,-15 Q -20,-25 -10,-25 L 10,-25 Q 20,-25 20,-15 Q 20,-5 10,-5 L -10,-5 Q -20,-5 -20,5 Q -20,15 -10,15 L 10,15 Q 20,15 20,25" stroke="url(#gradient1)" stroke-width="10" stroke-linecap="round" fill="none"/>
+    </g>
+    
+    <!-- Accent circles -->
+    <circle cx="50" cy="180" r="8" fill="#5b8def" opacity="0.6"/>
+    <circle cx="80" cy="180" r="8" fill="#8b5cf6" opacity="0.6"/>
+    <circle cx="110" cy="180" r="8" fill="#ec4899" opacity="0.6"/>
+  </g>
+  
+  <!-- Shine effect -->
+  <circle cx="256" cy="256" r="256" fill="url(#shine)" opacity="0.3"/>
+  <defs>
+    <radialGradient id="shine">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4"/>
+      <stop offset="70%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>

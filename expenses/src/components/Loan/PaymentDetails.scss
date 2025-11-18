@@ -128,12 +128,15 @@
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
   position: relative;
   z-index: 2;
-  transition: background 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   // Allow swipe gestures but prevent horizontal scroll
   touch-action: pan-y pan-x pinch-zoom;
   overflow: hidden;
@@ -141,8 +144,16 @@
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
 
+  &:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+    border-color: rgba(91, 141, 239, 0.2);
+    transform: translateX(4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+
   &:active {
-    background: rgba(255, 255, 255, 0.05);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    transform: translateX(2px);
   }
 }
 
@@ -151,29 +162,46 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 50px;
+  min-width: 60px;
+  padding: 0.75rem;
   flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(91, 141, 239, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(91, 141, 239, 0.2);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #5b8def, #8b5cf6);
+  }
 
   .date-day {
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.75rem;
+    font-weight: 800;
     color: #ffffff;
     line-height: 1;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   }
 
   .date-month {
     font-size: 0.7rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(91, 141, 239, 1);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 0.125rem;
+    letter-spacing: 0.8px;
+    margin-top: 0.25rem;
   }
 
   .date-year {
     font-size: 0.65rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 0.125rem;
   }
 }

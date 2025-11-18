@@ -1,0 +1,65 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="256" height="256" rx="64" fill="url(#chartGradient)"/>
+  
+  <defs>
+    <linearGradient id="chartGradient" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    
+    <filter id="barGlow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Chart bars -->
+  <g transform="translate(48, 180)" filter="url(#barGlow)">
+    <!-- Bar 1 -->
+    <rect x="10" y="-80" width="30" height="80" rx="6" fill="white" opacity="0.9">
+      <animate attributeName="height" values="80;100;80" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="-80;-100;-80" dur="2s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Bar 2 -->
+    <rect x="55" y="-110" width="30" height="110" rx="6" fill="white" opacity="0.9">
+      <animate attributeName="height" values="110;130;110" dur="2s" begin="0.3s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="-110;-130;-110" dur="2s" begin="0.3s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Bar 3 -->
+    <rect x="100" y="-65" width="30" height="65" rx="6" fill="white" opacity="0.9">
+      <animate attributeName="height" values="65;85;65" dur="2s" begin="0.6s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="-65;-85;-65" dur="2s" begin="0.6s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Bar 4 -->
+    <rect x="145" y="-95" width="30" height="95" rx="6" fill="white" opacity="0.9">
+      <animate attributeName="height" values="95;115;95" dur="2s" begin="0.9s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="-95;-115;-95" dur="2s" begin="0.9s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Base line -->
+    <line x1="0" y1="5" x2="185" y2="5" stroke="white" stroke-width="2" opacity="0.5"/>
+  </g>
+  
+  <!-- Grid lines -->
+  <g opacity="0.2">
+    <line x1="48" y1="70" x2="233" y2="70" stroke="white" stroke-width="1" stroke-dasharray="4 4"/>
+    <line x1="48" y1="110" x2="233" y2="110" stroke="white" stroke-width="1" stroke-dasharray="4 4"/>
+    <line x1="48" y1="150" x2="233" y2="150" stroke="white" stroke-width="1" stroke-dasharray="4 4"/>
+  </g>
+  
+  <!-- Shine overlay -->
+  <rect width="256" height="256" rx="64" fill="url(#chartShine)" opacity="0.2"/>
+  <defs>
+    <linearGradient id="chartShine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg>

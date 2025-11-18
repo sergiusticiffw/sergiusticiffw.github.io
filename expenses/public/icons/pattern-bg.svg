@@ -1,0 +1,55 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Modern abstract pattern background -->
+  <defs>
+    <linearGradient id="patternGrad1" x1="0" y1="0" x2="1920" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="rgba(91, 141, 239, 0.05)"/>
+      <stop offset="50%" stop-color="rgba(139, 92, 246, 0.03)"/>
+      <stop offset="100%" stop-color="rgba(236, 72, 153, 0.02)"/>
+    </linearGradient>
+    
+    <filter id="blur">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="40"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="#0a0a0a"/>
+  
+  <!-- Gradient overlay -->
+  <rect width="1920" height="1080" fill="url(#patternGrad1)"/>
+  
+  <!-- Floating circles -->
+  <g opacity="0.4" filter="url(#blur)">
+    <circle cx="300" cy="200" r="200" fill="#5b8def" opacity="0.2">
+      <animate attributeName="cy" values="200;250;200" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="1600" cy="300" r="250" fill="#8b5cf6" opacity="0.15">
+      <animate attributeName="cx" values="1600;1550;1600" dur="10s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="960" cy="800" r="180" fill="#ec4899" opacity="0.18">
+      <animate attributeName="cy" values="800;750;800" dur="7s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="400" cy="900" r="150" fill="#06b6d4" opacity="0.2">
+      <animate attributeName="cx" values="400;450;400" dur="9s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Grid pattern -->
+  <g opacity="0.03">
+    <pattern id="grid" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="white" stroke-width="1"/>
+    </pattern>
+    <rect width="1920" height="1080" fill="url(#grid)"/>
+  </g>
+  
+  <!-- Dots pattern -->
+  <g opacity="0.05">
+    <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="20" cy="20" r="1.5" fill="white"/>
+    </pattern>
+    <rect width="1920" height="1080" fill="url(#dots)"/>
+  </g>
+</svg>

@@ -2,6 +2,40 @@
 $white: #fff;
 $dark: #000;
 
+// Modern color palette
+$primary-blue: #5b8def;
+$primary-blue-dark: #4a7ddc;
+$primary-blue-light: #7ca3f3;
+$accent-purple: #8b5cf6;
+$accent-cyan: #06b6d4;
+$accent-pink: #ec4899;
+$success-green: #10b981;
+$warning-orange: #f59e0b;
+$error-red: #ef4444;
+
+// Background colors
+$bg-primary: #0a0a0a;
+$bg-secondary: #121212;
+$bg-tertiary: #1a1a1a;
+$bg-card: rgba(255, 255, 255, 0.03);
+$bg-card-hover: rgba(255, 255, 255, 0.05);
+
+// Modern gradients
+$gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$gradient-blue: linear-gradient(135deg, #5b8def 0%, #4a7ddc 100%);
+$gradient-purple: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+$gradient-pink-blue: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+$gradient-cyan-blue: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+$gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+
+// Shadows
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+$shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.3);
+$shadow-glow: 0 0 20px rgba(91, 141, 239, 0.4);
+$shadow-glow-strong: 0 0 40px rgba(91, 141, 239, 0.6);
+
 // Theme color map
 $color-map: (
   bondi-blue: (

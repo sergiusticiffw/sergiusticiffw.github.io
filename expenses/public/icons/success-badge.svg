@@ -1,0 +1,51 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="64" fill="url(#successGradient)"/>
+  
+  <defs>
+    <linearGradient id="successGradient" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    
+    <filter id="checkGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Checkmark -->
+  <g filter="url(#checkGlow)">
+    <path d="M 35 64 L 52 81 L 93 40" 
+          stroke="white" 
+          stroke-width="8" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          fill="none">
+      <animate attributeName="stroke-dasharray" 
+               from="0 100" 
+               to="100 0" 
+               dur="0.5s" 
+               fill="freeze"/>
+    </path>
+  </g>
+  
+  <!-- Outer ring animation -->
+  <circle cx="64" cy="64" r="60" 
+          stroke="white" 
+          stroke-width="2" 
+          fill="none" 
+          opacity="0.3">
+    <animate attributeName="r" 
+             values="60;64;60" 
+             dur="2s" 
+             repeatCount="indefinite"/>
+    <animate attributeName="opacity" 
+             values="0.3;0.1;0.3" 
+             dur="2s" 
+             repeatCount="indefinite"/>
+  </circle>
+</svg>

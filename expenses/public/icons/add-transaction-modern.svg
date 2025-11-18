@@ -1,0 +1,36 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <rect width="256" height="256" rx="64" fill="url(#bgGradient)"/>
+  
+  <defs>
+    <linearGradient id="bgGradient" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#5b8def"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Plus icon with modern design -->
+  <g transform="translate(128, 128)" filter="url(#shadow)">
+    <!-- Horizontal bar -->
+    <rect x="-60" y="-12" width="120" height="24" rx="12" fill="white"/>
+    
+    <!-- Vertical bar -->
+    <rect x="-12" y="-60" width="24" height="120" rx="12" fill="white"/>
+    
+    <!-- Center circle for depth -->
+    <circle cx="0" cy="0" r="20" fill="rgba(255, 255, 255, 0.3)"/>
+  </g>
+  
+  <!-- Shine overlay -->
+  <rect width="256" height="256" rx="64" fill="url(#shineGradient)" opacity="0.2"/>
+  <defs>
+    <linearGradient id="shineGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg>
