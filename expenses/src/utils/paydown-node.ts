@@ -515,7 +515,9 @@ class PaydownCalculator {
   };
 
   // Get the last rate event on or before a given date
-  private getLastRateEventOnOrBeforeDate = (date: string): PaydownEvent | null => {
+  private getLastRateEventOnOrBeforeDate = (
+    date: string
+  ): PaydownEvent | null => {
     const targetDateInt = dateToInteger(date);
     let lastEvent: PaydownEvent | null = null;
     let lastEventDate = 0;
@@ -1166,168 +1168,6 @@ class PaydownCalculator {
       interestPaid = funcRound(interestPaid);
     }
 
-    // Calculate current interest due from last payment date (or start date) to current date
-    let currentInterestDue = 0;
-    try {
-      // Get current date in DD.MM.YYYY format
-      const today = new Date();
-      const currentDateStr = `${zeroFill(today.getDate())}.${zeroFill(today.getMonth() + 1)}.${today.getFullYear()}`;
-      
-      // Find the last actual payment date from eventArray (not the end date)
-      // Look for events with pay_installment that are not simulated
-      let lastActualPaymentDate: string | null = null;
-      for (let i = this.eventArray.length - 1; i >= 0; i--) {
-        const event = this.eventArray[i];
-        if (
-          event.hasOwnProperty('pay_installment') &&
-          !event.isSimulatedPayment &&
-          event.date !== this.init.end_date
-        ) {
-          lastActualPaymentDate = event.date;
-          break;
-        }
-      }
-      
-      // If no actual payment found, use latestPaymentDate if it's not the end date
-      if (!lastActualPaymentDate) {
-        if (this.latestPaymentDate && this.latestPaymentDate !== this.init.end_date) {
-          lastActualPaymentDate = this.latestPaymentDate;
-        }
-      }
-      
-      // Determine the start date for interest calculation
-      // If there are payments, start from the day AFTER the last payment
-      // Otherwise, start from the loan start date
-      let interestStartDateStr: string;
-      if (lastActualPaymentDate) {
-        // Add one day to the last payment date
-        const [day, month, year] = lastActualPaymentDate.split('.').map(Number);
-        const baseDate = new Date(year, month - 1, day);
-        baseDate.setDate(baseDate.getDate() + 1);
-        interestStartDateStr = `${zeroFill(baseDate.getDate())}.${zeroFill(baseDate.getMonth() + 1)}.${baseDate.getFullYear()}`;
-      } else {
-        // Use start date as-is if no payments
-        interestStartDateStr = this.init.start_date!;
-      }
-      
-      // Check if current date is after interest start date
-      const startDateInt = dateToInteger(interestStartDateStr);
-      const currentDateInt = dateToInteger(currentDateStr);
-      
-      // Get principal at the time of last payment (from paymentLogArray if available)
-      // Otherwise use current principal
-      let principalToUse = 0;
-      if (this.paymentLogArray.length > 0 && lastActualPaymentDate) {
-        // Find the principal from the last payment log entry
-        for (let i = this.paymentLogArray.length - 1; i >= 0; i--) {
-          const logEntry = this.paymentLogArray[i];
-          if (logEntry.date === lastActualPaymentDate && typeof logEntry.principal === 'number') {
-            principalToUse = logEntry.principal;
-            break;
-          }
-        }
-      }
-      
-      // If not found in logs, use current principal
-      if (principalToUse === 0) {
-        principalToUse = typeof this.currentPrincipal === 'string' 
-          ? parseFloat(this.currentPrincipal) || 0 
-          : this.currentPrincipal || 0;
-      }
-      
-      // Determine the rate that was active at the interest start date
-      // This should be the last rate change on or before interestStartDateStr
-      // NOT the current rate which might be from a future rate change
-      let rate = 0;
-      
-      // First, try to get rate from rateHashMap for the exact start date
-      if (this.rateHashMap.hasOwnProperty(dateToInteger(interestStartDateStr))) {
-        rate = this.rateHashMap[dateToInteger(interestStartDateStr)];
-      } else {
-        // Find the last rate event on or before the start date
-        const lastRateEvent = this.getLastRateEventOnOrBeforeDate(interestStartDateStr);
-        if (lastRateEvent && lastRateEvent.rate !== undefined) {
-          rate = lastRateEvent.rate;
-        } else {
-          // Fall back to initial rate from loan data
-          rate = typeof this.init.rate === 'string'
-            ? parseFloat(this.init.rate) || 0
-            : Number(this.init.rate) || 0;
-        }
-      }
-      
-      if (currentDateInt > startDateInt && principalToUse > 0 && rate > 0) {
-        // Calculate interest manually using the same logic as getPeriodInterests
-        // but without modifying global state variables
-        let sumOfInterests = 0;
-        
-        // Check if interest rate changes during period
-        let rateEvent = this.getFirstEventAfterDate('rate', interestStartDateStr, currentDateStr);
-        
-        if (rateEvent) {
-          // Handle rate changes during the period
-          let subperiodStartDate = interestStartDateStr;
-          let rateEventDate = rateEvent.date;
-          let currentRate = rate;
-          let numberOfDays: number, factor: number, subperiodInterest: number;
-          
-          while (rateEvent) {
-            // Calculate interest for the period from subperiodStartDate to rateEventDate
-            // using the current rate (before the rate change)
-            numberOfDays = calculateDayCount(
-              subperiodStartDate,
-              rateEventDate,
-              true
-            );
-            factor = numberOfDays / this.dayCountDivisor;
-            subperiodInterest = principalToUse * (currentRate / 100) * factor;
-            sumOfInterests += subperiodInterest;
-            
-            // Update rate to the new rate from the rate change event
-            currentRate = rateEvent.rate;
-            
-            // Move to the next rate change event
-            subperiodStartDate = rateEventDate;
-            const nextRateEvent = this.getFirstEventAfterDate(
-              'rate',
-              rateEventDate,
-              currentDateStr
-            );
-            
-            if (nextRateEvent) {
-              rateEventDate = nextRateEvent.date;
-            }
-            rateEvent = nextRateEvent;
-          }
-          
-          // Calculate interest for the last subperiod
-          // From the last rate change date to current date, using the last rate
-          if (subperiodStartDate < currentDateStr) {
-            numberOfDays = calculateDayCount(subperiodStartDate, currentDateStr, true);
-            factor = numberOfDays / this.dayCountDivisor;
-            subperiodInterest = principalToUse * (currentRate / 100) * factor;
-            sumOfInterests += subperiodInterest;
-          }
-        } else {
-          // No rate changes, simple calculation
-          const numberOfDays = calculateDayCount(interestStartDateStr, currentDateStr);
-          const factor = numberOfDays / this.dayCountDivisor;
-          const subperiodInterest = principalToUse * (rate / 100) * factor;
-          sumOfInterests += subperiodInterest;
-        }
-        
-        currentInterestDue = sumOfInterests;
-        
-        // Round if needed
-        if (this.roundValues) {
-          currentInterestDue = funcRound(currentInterestDue);
-        }
-      }
-    } catch (err) {
-      // If calculation fails, set to 0
-      currentInterestDue = 0;
-    }
-
     return [
       this.sumOfInterests,
       this.sumOfReductions,
@@ -1337,7 +1177,6 @@ class PaydownCalculator {
       finalInterest,
       this.sumOfFees,
       this.annualSummaries,
-      currentInterestDue,
       interestPaid,
     ] as PaydownCalculationResult;
   };
@@ -1386,7 +1225,6 @@ export default function Paydown() {
         finalInterest: number,
         fees: number,
         annualSummaries: Record<string, AnnualSummary>,
-        currentInterestDue: number,
         interestPaid: number;
 
       try {
@@ -1399,7 +1237,6 @@ export default function Paydown() {
           finalInterest,
           fees,
           annualSummaries,
-          currentInterestDue,
           interestPaid,
         ] = paydown.calculateToDate(paymentsArray, debugArray, lastPaymentDate);
       } catch (err) {
@@ -1416,7 +1253,6 @@ export default function Paydown() {
           remainingPrincipal = funcRound(remainingPrincipal);
           finalInterest = funcRound(finalInterest);
           fees = funcRound(fees);
-          currentInterestDue = funcRound(currentInterestDue);
           interestPaid = funcRound(interestPaid);
 
           for (const year in annualSummaries) {
@@ -1440,7 +1276,6 @@ export default function Paydown() {
         remainingPrincipal = funcRound(remainingPrincipal);
         finalInterest = funcRound(finalInterest);
         fees = funcRound(fees);
-        currentInterestDue = funcRound(currentInterestDue);
         interestPaid = funcRound(interestPaid);
 
         for (const year in annualSummaries) {
@@ -1465,7 +1300,6 @@ export default function Paydown() {
         actual_end_date: zeroFillDate(actualEndDate),
         latest_payment_date: zeroFillDate(latestPaymentDate),
         unpaid_interest: finalInterest,
-        current_interest_due: currentInterestDue,
         interest_paid: interestPaid,
         sum_of_fees: fees,
         annual_summaries: annualSummaries,

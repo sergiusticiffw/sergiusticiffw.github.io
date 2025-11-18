@@ -108,7 +108,7 @@ const Loan: React.FC = () => {
   let errorMessage: string | undefined;
 
   try {
-    paydown = calculator.calculate(loanData, payments, amortizationSchedule);
+    paydown = calculator.calculate(loanData, allPayments, amortizationSchedule);
   } catch (err: any) {
     errorMessage = err?.message;
   }
@@ -125,7 +125,7 @@ const Loan: React.FC = () => {
   const hasEarlyPayments = payments.some((payment: any) => {
     if (!payment.title) return false;
     const titleLower = payment.title.toLowerCase();
-    
+
     // Romanian variants
     if (
       titleLower.includes('anticipat') ||
@@ -138,7 +138,7 @@ const Loan: React.FC = () => {
     ) {
       return true;
     }
-    
+
     // English variants
     if (
       titleLower.includes('early') ||
@@ -149,7 +149,7 @@ const Loan: React.FC = () => {
     ) {
       return true;
     }
-    
+
     return false;
   });
 
@@ -287,9 +287,7 @@ const Loan: React.FC = () => {
 
   // Get total interest paid from paydown calculation
   const interestPaid =
-    loanStatus === 'pending' || !paydown
-      ? 0
-      : paydown.interest_paid || 0;
+    loanStatus === 'pending' || !paydown ? 0 : paydown.interest_paid || 0;
   const interestPaidDisplay =
     loanStatus === 'pending'
       ? t('loan.notStarted')
@@ -354,8 +352,8 @@ const Loan: React.FC = () => {
           </span>
         </div>
         <div className="loan-stat-item">
-              <span className="loan-stat-label">{t('loan.currentInterest')}</span>
-              <span className="loan-stat-value">{interestPaidDisplay}</span>
+          <span className="loan-stat-label">{t('loan.currentInterest')}</span>
+          <span className="loan-stat-value">{interestPaidDisplay}</span>
         </div>
         <div className="loan-stat-item">
           <span className="loan-stat-label">{t('loan.interestSavings')}</span>
