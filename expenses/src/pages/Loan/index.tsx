@@ -287,13 +287,9 @@ const Loan: React.FC = () => {
 
   // Get total interest paid from paydown calculation
   const interestPaid =
-    loanStatus === 'pending' || !paydown
-      ? 0
-      : paydown.interest_paid || 0;
+    loanStatus === 'pending' || !paydown ? 0 : paydown.interest_paid || 0;
   const interestPaidDisplay =
-    loanStatus === 'pending'
-      ? t('loan.notStarted')
-      : formatNumber(interestPaid);
+    loanStatus === 'pending' ? t('loan.notStarted') : formatNumber(interestPaid);
 
   // Interest savings is calculated above (outside paydown calculation)
   const interestSavingsValue =
@@ -305,122 +301,152 @@ const Loan: React.FC = () => {
         ? formatNumber(interestSavingsValue)
         : formatNumber(0);
 
+  const statusLabelMap = {
+    active: t('common.active'),
+    completed: t('common.completed'),
+    pending: t('common.pending'),
+  } as const;
+
+  const statusDescriptionMap = {
+    active: t('loan.statusActiveDescription'),
+    completed: t('loan.statusCompletedDescription'),
+    pending: t('loan.statusPendingDescription'),
+  } as const;
+
+  const statusLabel = statusLabelMap[loanStatus];
+  const statusDescription = statusDescriptionMap[loanStatus];
+  const formattedRate = loanData.rate
+    ? `${formatNumber(loanData.rate)}%`
+    : '—';
+  const sanitizedRemainingAmount = remainingAmount < 0 ? 0 : remainingAmount;
+  const statCards = [
+    {
+      label: t('loan.principal'),
+      value: formatNumber(totalPrincipal),
+    },
+    {
+      label: t('common.total'),
+      value: formatNumber(totalInstallments),
+    },
+    {
+      label: t('loan.paid'),
+      value: formatNumber(totalPaidAmount),
+    },
+    {
+      label: t('loan.remaining'),
+      value: formatNumber(sanitizedRemainingAmount),
+    },
+    {
+      label: t('loan.currentInterest'),
+      value: interestPaidDisplay,
+    },
+    {
+      label: t('loan.interestSavings'),
+      value: interestSavingsDisplay,
+    },
+  ];
+
   return (
     <div className="page-container loan-container">
-      {/* Header - same structure as NewHome */}
-      <div className="loan-header">
-        <h1>{loan?.title}</h1>
-      </div>
+      <div className="loan-page">
+        <section className="loan-hero">
+          <div className="loan-hero__eyebrow">
+            <span className="eyebrow">{t('loan.loanOverview')}</span>
+            <span className={`status-pill ${loanStatus}`}>{statusLabel}</span>
+          </div>
+          <div className="loan-hero__title-row">
+            <div>
+              <h1>{loan?.title}</h1>
+              <p className="loan-hero__status-copy">{statusDescription}</p>
+            </div>
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="hero-edit-btn"
+            >
+              <FiEdit2 />
+              <span>{t('loan.editLoan')}</span>
+            </button>
+          </div>
+          <div className="loan-hero__meta">
+            <div className="meta-card">
+              <span>{t('loan.startDate')}</span>
+              <strong>{loanData.start_date || '—'}</strong>
+            </div>
+            <div className="meta-card">
+              <span>{t('loan.endDate')}</span>
+              <strong>{loanData.end_date || '—'}</strong>
+            </div>
+            <div className="meta-card">
+              <span>{t('loan.rate')}</span>
+              <strong>{formattedRate}</strong>
+            </div>
+          </div>
+        </section>
 
-      {/* Payment Actions */}
-      <div className="btns-actions">
-        <button onClick={() => setShowEditModal(true)} className="action-btn">
-          <FiEdit2 />
-          {t('loan.editLoan')}
-        </button>
-      </div>
+        {errorMessage && (
+          <div className="loan-alert">
+            <Notification message={errorMessage} type="error" />
+          </div>
+        )}
 
-      {/* Error Message */}
-      {errorMessage && (
-        <div className="error-message">
-          <Notification message={errorMessage} type="error" />
-        </div>
-      )}
+        <section className="loan-stats-grid">
+          {statCards.map((stat) => (
+            <div className="loan-stat-card" key={stat.label}>
+              <span className="loan-stat-label">{stat.label}</span>
+              <span className="loan-stat-value">{stat.value}</span>
+            </div>
+          ))}
+        </section>
 
-      {/* Loan Stats */}
-      <div className="loan-stats-grid-2col">
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.principal')}</span>
-          <span className="loan-stat-value">
-            {formatNumber(totalPrincipal)}
-          </span>
-        </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('common.total')}</span>
-          <span className="loan-stat-value">
-            {formatNumber(totalInstallments)}
-          </span>
-        </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.paid')}</span>
-          <span className="loan-stat-value">
-            {formatNumber(totalPaidAmount)}
-          </span>
-        </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.remaining')}</span>
-          <span className="loan-stat-value">
-            {formatNumber(remainingAmount)}
-          </span>
-        </div>
-        <div className="loan-stat-item">
-              <span className="loan-stat-label">{t('loan.currentInterest')}</span>
-              <span className="loan-stat-value">{interestPaidDisplay}</span>
-        </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.interestSavings')}</span>
-          <span className="loan-stat-value">{interestSavingsDisplay}</span>
-        </div>
-      </div>
-
-      {/* Loan Sections */}
-      <div className="loan-sections">
-        {/* Progress Section */}
-        <div className="loan-section loan-progress-section">
-          <div className="section-header">
-            <FiTrendingUp />
-            <h3>{t('loan.paymentProgress')}</h3>
+        <section className="loan-card loan-progress-card">
+          <div className="loan-card__title">
+            <div className="icon-pill">
+              <FiTrendingUp />
+            </div>
+            <div>
+              <p className="eyebrow">{t('loan.paymentProgress')}</p>
+              <h3>{formatNumber(progress)}%</h3>
+            </div>
           </div>
 
           <div className="progress-container">
-            <div className="progress-bar-container">
-              <div className="progress-label">
-                <span>{t('loan.paymentProgress')}</span>
-                <span>{formatNumber(progress)}%</span>
-              </div>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
+            <div className="progress-bar">
+              <div
+                className="progress-fill"
+                style={{ width: `${progress}%` }}
+              ></div>
             </div>
-
-            <div className="loan-stats-grid-2col">
-              <div className="loan-stat-item">
-                <span className="loan-stat-label">
-                  {t('loan.monthsPassed')}
-                </span>
-                <span className="loan-stat-value">{monthsPassedDisplay}</span>
+            <div className="progress-meta">
+              <div>
+                <span>{t('loan.monthsPassed')}</span>
+                <strong>{monthsPassedDisplay}</strong>
               </div>
-              <div className="loan-stat-item">
-                <span className="loan-stat-label">
-                  {t('loan.daysRemaining')}
-                </span>
-                <span className="loan-stat-value">{daysRemainingDisplay}</span>
+              <div>
+                <span>{t('loan.daysRemaining')}</span>
+                <strong>{daysRemainingDisplay}</strong>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Payment Details Section */}
-        <div className="loan-section">
-          <div className="section-header">
-            <FiDollarSign />
-            <h3>{t('loan.paymentHistory')}</h3>
-          </div>
+        <section className="loan-card loan-payments-card">
           <PaymentDetails
             loan={loan}
             payments={filteredData?.data || []}
             totalPaidAmount={totalPaidAmount}
+            onAddPayment={() => setShowAddPaymentModal(true)}
           />
-        </div>
+        </section>
 
-        {/* Loan Details Section */}
-        <div className="loan-section">
-          <div className="section-header">
-            <FiTrendingUp />
-            <h3>{t('loan.amortizationSchedule')}</h3>
+        <section className="loan-card loan-analytics-card">
+          <div className="loan-card__title">
+            <div className="icon-pill">
+              <FiTrendingUp />
+            </div>
+            <div>
+              <p className="eyebrow">{t('loan.amortizationSchedule')}</p>
+              <h3>{t('loan.loanCostBreakdown')}</h3>
+            </div>
           </div>
           <LoanDetails
             loanData={loanData}
@@ -428,10 +454,9 @@ const Loan: React.FC = () => {
             amortizationSchedule={amortizationSchedule}
             totalPaidAmount={totalPaidAmount}
           />
-        </div>
+        </section>
       </div>
 
-      {/* Edit Loan Modal */}
       <Modal
         show={showEditModal}
         onClose={(e) => {
@@ -483,7 +508,6 @@ const Loan: React.FC = () => {
         />
       </Modal>
 
-      {/* Add Payment Modal */}
       <Modal
         show={showAddPaymentModal}
         onClose={(e) => {
@@ -534,7 +558,6 @@ const Loan: React.FC = () => {
         />
       </Modal>
 
-      {/* Floating Action Button */}
       <button
         onClick={() => setShowAddPaymentModal(true)}
         className="fab"

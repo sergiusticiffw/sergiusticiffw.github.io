@@ -1,198 +1,304 @@
 @use '../../styles/variables' as *;
+@use '../../styles/mixins' as *;
 
-// Page-specific styles (container styling moved to _base.scss .page-container)
-
-// Header
-.loan-header {
-  text-align: center;
-  margin-bottom: 1.5rem;
+.loan-container {
   padding-top: 1.5rem;
-
-  h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0 0 0.5rem 0;
-    color: #ffffff;
-  }
-
-  .transaction-count {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin: 0;
-  }
 }
 
-.btns-actions {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 2rem;
-
-  .action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 1rem 2rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: #5b8def;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 16px rgba(91, 141, 239, 0.2);
-    }
-
-    svg {
-      font-size: 1.125rem;
-      color: #5b8def;
-    }
-  }
-}
-
-.error-message {
-  margin-bottom: 1.5rem;
-}
-
-// Loan Stats Grid - 2 columns
-.loan-stats-grid-2col {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;
-  gap: 1rem;
-  margin-bottom: 2rem;
+.loan-page {
   width: 100%;
-  max-width: 100%;
-
-  .loan-stat-item {
-    padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-
-    .loan-stat-label {
-      font-size: 0.875rem;
-      color: rgba(255, 255, 255, 0.6);
-      font-weight: 500;
-    }
-
-    .loan-stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #ffffff;
-    }
-  }
-
-  @media (max-width: 640px) {
-    gap: 0.75rem;
-
-    .loan-stat-item {
-      padding: 1rem;
-
-      .loan-stat-value {
-        font-size: 1.25rem;
-      }
-    }
-  }
-}
-
-// Loan Sections
-.loan-sections {
+  max-width: 520px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  width: 100%;
+  gap: 1.75rem;
 }
 
-.loan-section {
-  width: 100%;
+.loan-hero {
+  position: relative;
+  padding: 1.75rem;
+  border-radius: 28px;
+  background: radial-gradient(circle at 0% 0%, rgba(91, 141, 239, 0.4), transparent 55%),
+    linear-gradient(135deg, #1f1e2e 0%, #0e0e17 100%);
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.45);
 
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(
+        circle at 20% 20%,
+        rgba(255, 255, 255, 0.12),
+        transparent 45%
+      ),
+      radial-gradient(circle at 80% 0%, rgba(91, 141, 239, 0.35), transparent 40%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
+    opacity: 0.5;
+    z-index: -1;
+  }
 
-    svg {
-      font-size: 1.25rem;
-      color: #5b8def;
-    }
+  h1 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
 
-    h2,
-    h3 {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: #ffffff;
-      margin: 0;
-    }
+  .eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
   }
 }
 
-// Progress Container
-.progress-container {
-  width: 100%;
+.loan-hero__eyebrow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
 
-  .progress-bar-container {
-    margin-bottom: 1.5rem;
+.status-pill {
+  padding: 0.25rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 
-    .progress-label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.75rem;
+  &.active {
+    color: #7bc9ff;
+    background: rgba(91, 141, 239, 0.15);
+  }
 
-      span {
-        font-size: 0.875rem;
-        color: rgba(255, 255, 255, 0.6);
-        font-weight: 500;
+  &.completed {
+    color: #7ef5c4;
+    background: rgba(83, 232, 139, 0.18);
+  }
 
-        &:last-child {
-          color: #5b8def;
-          font-weight: 700;
-          font-size: 1rem;
-        }
-      }
+  &.pending {
+    color: #ffd07a;
+    background: rgba(255, 193, 7, 0.18);
+  }
+}
+
+.loan-hero__title-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+
+  .loan-hero__status-copy {
+    margin: 0.35rem 0 0 0;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.75);
+    max-width: 260px;
+    line-height: 1.4;
+  }
+}
+
+.hero-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  svg {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    border-color: #5b8def;
+    background: rgba(91, 141, 239, 0.15);
+    transform: translateY(-1px);
+  }
+}
+
+.loan-hero__meta {
+  margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+
+  .meta-card {
+    padding: 0.9rem;
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+
+    span {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.55);
     }
 
-    .progress-bar {
-      width: 100%;
-      height: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 6px;
-      overflow: hidden;
+    strong {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.loan-alert {
+  border-radius: 20px;
+  padding: 1rem;
+  background: rgba(233, 120, 120, 0.12);
+  border: 1px solid rgba(233, 120, 120, 0.35);
+}
+
+.loan-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+
+  @media (max-width: 460px) {
+    gap: 0.75rem;
+  }
+}
+
+.loan-stat-card {
+  padding: 1.25rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  backdrop-filter: blur(10px);
+
+  .loan-stat-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .loan-stat-value {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+  }
+}
+
+.loan-card {
+  padding: 1.5rem;
+  border-radius: 24px;
+  background: rgba(10, 10, 16, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(16px);
+}
+
+.loan-card__title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1.3rem;
+  }
+
+  .eyebrow {
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 0.2rem 0;
+  }
+}
+
+.icon-pill {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: rgba(91, 141, 239, 0.15);
+  border: 1px solid rgba(91, 141, 239, 0.3);
+  display: grid;
+  place-items: center;
+  color: #5b8def;
+  font-size: 1.2rem;
+}
+
+.loan-progress-card {
+  .progress-bar {
+    width: 100%;
+    height: 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    margin-bottom: 1rem;
+
+    .progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #5b8def 0%, #ffa26b 100%);
       position: relative;
+      transition: width 0.4s ease;
 
-      .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #5b8def 0%, #4a7fdb 100%);
-        border-radius: 6px;
-        transition: width 0.3s ease;
-        position: relative;
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.45) 50%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        animation: shimmer 2s infinite;
+      }
+    }
+  }
 
-        &::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(
-            90deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.2) 50%,
-            transparent 100%
-          );
-          animation: shimmer 2s infinite;
-        }
+  .progress-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+
+    div {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      span {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.55);
+      }
+
+      strong {
+        font-size: 1.2rem;
+        font-weight: 700;
       }
     }
   }
@@ -207,61 +313,22 @@
   }
 }
 
-// Progress Grid - 2 columns
-.loan-progress-grid-2col {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;
-  gap: 1rem;
-  width: 100%;
-  max-width: 100%;
+.loan-card .charts-page {
+  padding: 0;
+  background: transparent;
 
-  .loan-progress-item {
+  .highcharts-background {
+    fill: transparent !important;
+  }
+}
+
+.loan-card .amortization-schedule {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: $breakpoint-sm) {
+  .loan-card,
+  .loan-hero {
     padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-
-    .loan-progress-label {
-      font-size: 0.875rem;
-      color: rgba(255, 255, 255, 0.6);
-      font-weight: 500;
-    }
-
-    .loan-progress-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #ffffff;
-    }
-  }
-
-  @media (max-width: 640px) {
-    gap: 0.75rem;
-
-    .loan-progress-item {
-      padding: 1rem;
-
-      .loan-progress-value {
-        font-size: 1.25rem;
-      }
-    }
-  }
-}
-
-// Loan Details Section
-.loan-details-section {
-  margin-top: 2rem;
-}
-
-// Payment Section
-.payment-section {
-  margin-top: 2rem;
-}
-
-// Responsive
-@media (max-width: $breakpoint-md) {
-  .loan-sections {
-    gap: 1.5rem;
   }
 }
