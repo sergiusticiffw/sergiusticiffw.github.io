@@ -277,6 +277,14 @@ const Loan: React.FC = () => {
         ? t('common.completed')
         : t('loan.notStarted');
 
+  // Remaining amount display - don't show amount for completed or pending loans
+  const remainingDisplay =
+    loanStatus === 'completed' || loanStatus === 'pending'
+      ? loanStatus === 'completed'
+        ? t('common.completed')
+        : t('loan.notStarted')
+      : formatNumber(remainingAmount);
+
   // Get total interest paid from paydown calculation
   const interestPaid =
     loanStatus === 'pending' || !paydown ? 0 : paydown.interest_paid || 0;
@@ -340,7 +348,7 @@ const Loan: React.FC = () => {
         <div className="loan-stat-item">
           <span className="loan-stat-label">{t('loan.remaining')}</span>
           <span className="loan-stat-value">
-            {formatNumber(remainingAmount)}
+            {remainingDisplay}
           </span>
         </div>
         <div className="loan-stat-item">
