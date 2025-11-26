@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMS as Code & CI/CD in Contentful</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .slides-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            padding: 60px 80px;
+            background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+            overflow-y: auto;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+
+        .slide.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .slide-header {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            padding: 50px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(26, 35, 126, 0.3);
+        }
+
+        .slide-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .slide-header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .slide-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .slide h2 {
+            color: #1a237e;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #667eea;
+            border-image: linear-gradient(90deg, #667eea 0%, #764ba2 100%) 1;
+        }
+
+        .slide h3 {
+            color: #283593;
+            font-size: 1.8em;
+            margin: 25px 0 20px 0;
+        }
+
+        .slide p {
+            font-size: 1.3em;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .card h4 {
+            color: #1a237e;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .card p {
+            font-size: 1.1em;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+            border-left: 5px solid #ffc107;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);
+        }
+
+        .warning {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border-left: 5px solid #dc3545;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+        }
+
+        .info {
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+            border-left: 5px solid #0dcaf0;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 15px rgba(13, 202, 240, 0.2);
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+
+        ul, ol {
+            margin-left: 30px;
+            margin-top: 20px;
+        }
+
+        li {
+            margin-bottom: 12px;
+            line-height: 1.8;
+            font-size: 1.2em;
+            position: relative;
+            padding-left: 10px;
+        }
+
+        ul li::marker {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        ol li::marker {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(26, 35, 126, 0.3);
+            min-width: 140px;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #283593 0%, #3949ab 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 35, 126, 0.3);
+        }
+
+        .nav-btn:active:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .nav-btn:disabled {
+            background: #e0e0e0;
+            color: #9e9e9e;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .nav-btn:focus {
+            outline: 3px solid rgba(102, 126, 234, 0.5);
+            outline-offset: 2px;
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(26, 35, 126, 0.95) 0%, rgba(40, 53, 147, 0.95) 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.1em;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(26, 35, 126, 0.3);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            z-index: 1001;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            font-size: 0.95em;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 18px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 1.05em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .comparison-table tr {
+            transition: background 0.2s ease;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Scrollbar styling */
+        .slide::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+        }
+
+        /* Smooth scrolling */
+        .slide {
+            scroll-behavior: smooth;
+        }
+
+        /* Focus visible for accessibility */
+        *:focus-visible {
+            outline: 3px solid #667eea;
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 30px 20px;
+            }
+            
+            .slide-header {
+                padding: 30px 20px;
+            }
+            
+            .slide-header h1 {
+                font-size: 1.8em;
+            }
+            
+            .slide h2 {
+                font-size: 1.8em;
+            }
+
+            .navigation {
+                flex-direction: column;
+                width: 90%;
+                padding: 15px;
+                border-radius: 20px;
+            }
+
+            .nav-btn {
+                width: 100%;
+            }
+
+            .slide-counter {
+                top: 15px;
+                right: 15px;
+                padding: 8px 16px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="slide-counter" id="slideCounter">1 / 17</div>
+    
+    <div class="slides-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active">
+            <div class="slide-header">
+                <h1>🚀 CMS as Code & CI/CD</h1>
+                <p>Managing Contentful with Version Control and Automation</p>
+            </div>
+            <div class="slide-content">
+                <div style="text-align: center; margin-top: 60px;">
+                    <h2 style="border: none; color: #283593;">Presentation Overview</h2>
+                    <ul style="list-style: none; margin-top: 40px; font-size: 1.2em; line-height: 2;">
+                        <li>📦 What is CMS as Code?</li>
+                        <li>📦 Content Type Delivery (like Drupal configs)</li>
+                        <li>🖱️ UI Workflow & Merge App</li>
+                        <li>⚙️ CI/CD Integration</li>
+                        <li>⚠️ Contentful Field Limitations</li>
+                        <li>🔄 Migration Strategies</li>
+                        <li>🔧 Solutions & Best Practices</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: What is CMS as Code -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>📦 What is CMS as Code?</h2>
+                <p style="font-size: 1.1em; margin-bottom: 25px;">CMS as Code treats content models, schemas, and migrations as version-controlled code, bringing software engineering best practices to content management.</p>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h4>✅ Benefits</h4>
+                        <ul>
+                            <li>Version control for content models</li>
+                            <li>Code review for schema changes</li>
+                            <li>Reproducible environments</li>
+                            <li>Automated deployments</li>
+                            <li>Rollback capabilities</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🔄 Workflow</h4>
+                        <ol>
+                            <li>Define content types in code</li>
+                            <li>Commit to Git repository</li>
+                            <li>Review via Pull Requests</li>
+                            <li>Automate with CI/CD</li>
+                            <li>Deploy to environments</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="info" style="margin-top: 25px;">
+                    <strong>💡 Key Concept:</strong> Just like Infrastructure as Code (IaC), CMS as Code allows you to manage your content structure declaratively, track changes, and automate deployments.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Infrastructure as Code for Content -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>🏗️ Infrastructure as Code for Content</h2>
+                <p>Contentful spaces are like databases for content. Just as software requires infrastructure for each environment, content management systems need to be provisioned and configured.</p>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>📋 Provisioning</h4>
+                        <p>Scripts configure space environments with your content model</p>
+                    </div>
+                    <div class="card">
+                        <h4>🔄 Migration</h4>
+                        <p>Scripts migrate from older content models to current ones</p>
+                    </div>
+                    <div class="card">
+                        <h4>✅ Testing</h4>
+                        <p>Integration tests validate software works with current content model</p>
+                    </div>
+                </div>
+
+                <div class="highlight" style="margin-top: 25px;">
+                    <strong>🎯 Contentful provides:</strong> A composable content platform as a service which can be treated as code and included in your deployment pipeline. This requires provisioning scripts (to configure environments) and migration scripts (to update content models and data).
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Content Type Delivery -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>📦 Content Type Delivery</h2>
+                <p style="font-size: 1.4em; margin-bottom: 30px;"><strong>Similar to Drupal Configs:</strong> Content types are defined as code, versioned in Git, and deployed across environments.</p>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>📝 Content Type as Code</h4>
+                        <ul>
+                            <li>Define content types in migration files</li>
+                            <li>Fields, validations, and settings in code</li>
+                            <li>Version controlled in Git</li>
+                            <li>Reviewable via Pull Requests</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>🚀 Deployment Process</h4>
+                        <ul>
+                            <li>Create content type in dev</li>
+                            <li>Commit migration to Git</li>
+                            <li>Deploy to staging via CI/CD</li>
+                            <li>Deploy to production after approval</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info" style="margin-top: 25px;">
+                    <strong>💡 Key Concept:</strong> Just like Drupal stores content type configurations in YAML files that can be exported/imported, Contentful migrations define content types as code that can be versioned and deployed consistently across all environments.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4b: UI Workflow & Merge App -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>🖱️ UI Workflow & Merge App</h2>
+                <p style="font-size: 1.3em; margin-bottom: 30px;">You're not limited to code-only! You can work in the UI and export migrations using Merge App.</p>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>🖱️ Work in UI</h4>
+                        <ul>
+                            <li>Create/edit content types via web interface</li>
+                            <li>Click to add fields and configure settings</li>
+                            <li>Visual content modeling</li>
+                            <li>Test changes immediately</li>
+                            <li>No code required for initial setup</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>📤 Export with Merge App</h4>
+                        <ul>
+                            <li>Use Contentful Merge App</li>
+                            <li>Export content types to migration scripts</li>
+                            <li>Generate migration files automatically</li>
+                            <li>Compare environments (dev vs production)</li>
+                            <li>Export differences as migrations</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="highlight" style="margin-top: 25px;">
+                    <strong>💡 Best Practice:</strong> Create content types in UI (dev environment), then use Merge App to export them as migration scripts. This gives you the best of both worlds: visual editing and code-based deployment.
+                </div>
+
+                <div class="info" style="margin-top: 20px;">
+                    <strong>🔧 Merge App Command:</strong> <code style="background: rgba(0,0,0,0.1); padding: 8px 12px; border-radius: 5px; font-family: 'Courier New', monospace; font-size: 0.9em; display: inline-block; margin-top: 10px;">contentful merge --space-id SPACE_ID --management-token TOKEN export --te TARGET_ENV --se SOURCE_ENV</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Content Type Versioning -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>📚 Content Type Versioning & Management</h2>
+                <p>Content types are managed through sequential migration files, ensuring consistent delivery across environments.</p>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>🔢 Sequential Migrations</h4>
+                        <ul>
+                            <li>Numbered migration files (1-, 2-, 3-...)</li>
+                            <li>Each migration is a version</li>
+                            <li>Run in order across environments</li>
+                            <li>Tracked in version control</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>🔄 Environment Sync</h4>
+                        <ul>
+                            <li>Same migrations run in all environments</li>
+                            <li>Dev → Staging → Production</li>
+                            <li>Consistent content model everywhere</li>
+                            <li>No manual configuration needed</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>📋 Content Type Lifecycle</h4>
+                        <ul>
+                            <li>Create: Define new content type</li>
+                            <li>Update: Modify fields or settings</li>
+                            <li>Delete: Remove obsolete types</li>
+                            <li>All tracked in Git history</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="highlight" style="margin-top: 25px;">
+                    <strong>🎯 Benefit:</strong> Content types are reproducible. Any environment can be recreated from migration files, just like Drupal can be rebuilt from config exports.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: CI/CD Integration -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>⚙️ CI/CD Integration & Continuous Delivery</h2>
+                <p>Contentful environments are built into each deployment stage, similar to how branches are built into each repo in Git.</p>
+
+                <h3>Deployment Pipeline Stages</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>1️⃣ Development</h4>
+                        <p>Create migration files locally</p>
+                    </div>
+                    <div class="card">
+                        <h4>2️⃣ Build</h4>
+                        <p>Validate migration syntax</p>
+                    </div>
+                    <div class="card">
+                        <h4>3️⃣ Test</h4>
+                        <p>Run migrations on test environments</p>
+                    </div>
+                    <div class="card">
+                        <h4>4️⃣ QA</h4>
+                        <p>Validate in staging</p>
+                    </div>
+                    <div class="card">
+                        <h4>5️⃣ Deploy</h4>
+                        <p>Run on production</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Dual Lifecycle Challenge -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>🔄 Dual Lifecycle Challenge</h2>
+                <p>Content management involves two simultaneous lifecycles:</p>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>💻 Software Deployment Pipeline</h4>
+                        <ul>
+                            <li>Developers author software versions</li>
+                            <li>Code changes and releases</li>
+                            <li>Uses dev, QA environments</li>
+                            <li>Automated via CI/CD</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>📝 Content Creation Workflow</h4>
+                        <ul>
+                            <li>Content creators author content</li>
+                            <li>Draft → Review → Publish</li>
+                            <li>Uses production environment</li>
+                            <li>Preview API for review</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info" style="margin-top: 25px;">
+                    <strong>💡 Contentful Solution:</strong> Built-in workflow with "draft" and "published" stages, preview API for content review, and features to build advanced workflows. Content creation happens in production, while other environments are used for software deployment pipeline.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: CircleCI Example -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>🔧 CircleCI Integration Example</h2>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h4>🔧 Configuration Steps</h4>
+                        <ol>
+                            <li>Set up CircleCI project</li>
+                            <li>Add environment variables (tokens, space ID)</li>
+                            <li>Configure workflow to run on main branch</li>
+                            <li>Install dependencies (yarn install)</li>
+                            <li>Run migration command</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>🔒 Security</h4>
+                        <ul>
+                            <li>Store API tokens as secrets</li>
+                            <li>Never commit tokens to Git</li>
+                            <li>Use environment-specific tokens</li>
+                            <li>Test in non-production first</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="highlight" style="margin-top: 20px;">
+                    <strong>🎯 Best Practice:</strong> Store API tokens as CI/CD secrets, never commit them to version control. Always test migrations in non-production environments first.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Field Limitations -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>⚠️ Contentful Field Limitations</h2>
+                <p>While Contentful is powerful, there is a significant limitation regarding field reusability.</p>
+
+                <div class="warning">
+                    <strong>🚫 Problem:</strong> Contentful does not support true field reusability across content types. You cannot define a field once and reuse it in multiple content types.
+                </div>
+
+                <p><strong>Impact:</strong></p>
+                <ul>
+                    <li>You must duplicate field definitions for each content type</li>
+                    <li>Changes to a "common" field require updating multiple content types</li>
+                    <li>No centralized field definition or inheritance</li>
+                    <li>Increased maintenance overhead</li>
+                    <li>Higher risk of inconsistencies</li>
+                </ul>
+
+                <div class="info" style="margin-top: 30px;">
+                    <strong>💡 Example:</strong> If you need a "Title" field in BlogPost, Article, and Page content types, you must define it separately in each one. There's no way to define it once and reuse it.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Migration Strategies -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>🔄 Migration Strategies: Expand-and-Contract</h2>
+                <p style="font-size: 1.3em; margin-bottom: 30px;">Contentful recommends forward-only migrations using the expand-and-contract pattern for safe, backward-compatible changes.</p>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>📈 Expand Phase</h4>
+                        <p style="font-size: 1.1em; margin-bottom: 15px; color: #28a745;"><strong>ADD - Don't Remove</strong></p>
+                        <ul>
+                            <li>Add new fields and content types</li>
+                            <li>Transform content entries</li>
+                            <li>Keep existing content in place</li>
+                            <li>Support both old and new versions</li>
+                            <li>Allow gradual rollout</li>
+                            <li>Safe to rollback if needed</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>📉 Contract Phase</h4>
+                        <p style="font-size: 1.1em; margin-bottom: 15px; color: #dc3545;"><strong>REMOVE - After Success</strong></p>
+                        <ul>
+                            <li>Remove unneeded content types</li>
+                            <li>Remove obsolete fields</li>
+                            <li>Clean up old content</li>
+                            <li>Run after successful rollout</li>
+                            <li>Complete the migration</li>
+                            <li>Final cleanup step</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="highlight" style="margin-top: 25px;">
+                    <strong>💡 Key Difference:</strong> <strong>Expand Phase</strong> adds new things while keeping old ones (safe, reversible). <strong>Contract Phase</strong> removes old things only after everything works (final cleanup).
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10b: Expand vs Contract Detailed -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>📊 Expand Phase vs Contract Phase</h2>
+                <p style="font-size: 1.3em; margin-bottom: 30px;">Understanding when and why to use each phase:</p>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>📈 Expand Phase</th>
+                            <th>📉 Contract Phase</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Purpose</strong></td>
+                            <td>Add new functionality safely</td>
+                            <td>Remove old, unused elements</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Action</strong></td>
+                            <td>ADD new fields/types</td>
+                            <td>DELETE old fields/types</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Timing</strong></td>
+                            <td>Before software deployment</td>
+                            <td>After successful rollout</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Risk</strong></td>
+                            <td>Low - nothing removed</td>
+                            <td>Higher - permanent deletion</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Reversibility</strong></td>
+                            <td>Easy to rollback</td>
+                            <td>Difficult (requires backup)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Old Content</strong></td>
+                            <td>Kept intact</td>
+                            <td>Removed permanently</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Software Compatibility</strong></td>
+                            <td>Both old & new work</td>
+                            <td>Only new version works</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="info" style="margin-top: 25px;">
+                    <strong>🎯 Example:</strong> To change "author" from text to reference: <strong>Expand</strong> adds new "authorRef" field while keeping old "author" field. <strong>Contract</strong> removes old "author" field only after all systems use "authorRef".
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: Why Expand-and-Contract -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>🤔 Why Expand-and-Contract Pattern?</h2>
+                <p style="font-size: 1.3em; margin-bottom: 30px;">This pattern ensures safe migrations without breaking existing software.</p>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>✅ Benefits</h4>
+                        <ul>
+                            <li>No downtime during migration</li>
+                            <li>Old software continues working</li>
+                            <li>New software can be deployed gradually</li>
+                            <li>Easy rollback if problems occur</li>
+                            <li>Safe to test in production</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>❌ Without This Pattern</h4>
+                        <ul>
+                            <li>Breaking changes immediately</li>
+                            <li>Old software stops working</li>
+                            <li>Requires coordinated deployment</li>
+                            <li>Difficult to rollback</li>
+                            <li>High risk of downtime</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="warning" style="margin-top: 25px;">
+                    <strong>⚠️ Important:</strong> Contract Phase should only run after you're 100% sure the new version works everywhere. If in doubt, keep the old fields - they don't hurt anything.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Solutions & Examples -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>🔧 Solutions & Examples</h2>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h4>📝 Field Reusability Workaround</h4>
+                        <p style="font-size: 1.1em; margin-bottom: 15px;"><strong>Problem:</strong> Cannot reuse fields across content types</p>
+                        <p style="font-size: 1.1em;"><strong>Solution:</strong> Create helper functions for common fields</p>
+                        <ul style="margin-top: 15px; font-size: 1em;">
+                            <li>Define reusable field creators</li>
+                            <li>Call them for each content type</li>
+                            <li>Maintain consistency</li>
+                            <li>Easier to update</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🔄 Expand-and-Contract Example</h4>
+                        <p style="font-size: 1.1em; margin-bottom: 15px;"><strong>Scenario:</strong> Migrate author from text to reference</p>
+                        <p style="font-size: 1.1em;"><strong>Approach:</strong> Two-phase migration</p>
+                        <ul style="margin-top: 15px; font-size: 1em;">
+                            <li><strong>Expand:</strong> Add new field, keep old one</li>
+                            <li>Transform existing entries</li>
+                            <li>Support both versions</li>
+                            <li><strong>Contract:</strong> Remove old field after rollout</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="highlight" style="margin-top: 30px; font-size: 1.2em;">
+                    <strong>💡 Key Points:</strong> Use helper functions to reduce duplication. Use expand-and-contract pattern for safe migrations that don't break existing software.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Content Type Delivery Workflow -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>🔄 Content Type Delivery Workflow</h2>
+                <p style="font-size: 1.3em; margin-bottom: 30px;">Complete workflow for delivering content types across environments, similar to Drupal config management.</p>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>1️⃣ Development</h4>
+                        <ul>
+                            <li>Create migration file</li>
+                            <li>Define content type structure</li>
+                            <li>Add fields and validations</li>
+                            <li>Test locally</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>2️⃣ Version Control</h4>
+                        <ul>
+                            <li>Commit migration to Git</li>
+                            <li>Create Pull Request</li>
+                            <li>Code review process</li>
+                            <li>Merge to main branch</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>3️⃣ Automated Deployment</h4>
+                        <ul>
+                            <li>CI/CD runs migrations</li>
+                            <li>Deploy to staging first</li>
+                            <li>Validate content type</li>
+                            <li>Deploy to production</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="info" style="margin-top: 25px;">
+                    <strong>💡 Comparison with Drupal:</strong> Just like Drupal's config export/import system, Contentful migrations allow you to define content types once in code and deploy them consistently across all environments without manual configuration.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Getting Started -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>🚀 Getting Started with CMS as Code</h2>
+                
+                <h3>Two Approaches to Create Migrations</h3>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h4>1️⃣ UI + Merge App</h4>
+                        <ol style="font-size: 1em; line-height: 1.8;">
+                            <li>Create content types in UI (dev)</li>
+                            <li>Use Merge App to export</li>
+                            <li>Generate migration scripts automatically</li>
+                            <li>Commit to Git</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>2️⃣ Code-First</h4>
+                        <ol style="font-size: 1em; line-height: 1.8;">
+                            <li>Write migration files manually</li>
+                            <li>Define content types in code</li>
+                            <li>Run migrations via CLI</li>
+                            <li>Commit to Git</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="info" style="margin-top: 25px;">
+                    <strong>💡 Recommended Workflow:</strong> Start with UI for quick prototyping, then use Merge App to export. For complex changes or team collaboration, write migrations manually in code.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: Best Practices -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>✨ Best Practices</h2>
+
+                <div class="grid">
+                    <div class="card">
+                        <h4>📝 Field Management</h4>
+                        <ul>
+                            <li>Use helper functions</li>
+                            <li>Document field purposes</li>
+                            <li>Keep naming consistent</li>
+                            <li>Version control changes</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h4>🔄 Migration Strategy</h4>
+                        <ul>
+                            <li>Expand-and-contract pattern</li>
+                            <li>Forward-only migrations</li>
+                            <li>Test in dev first</li>
+                            <li>Maintain backups</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h4>🔒 Security & CI/CD</h4>
+                        <ul>
+                            <li>Store tokens as secrets</li>
+                            <li>Never commit tokens</li>
+                            <li>Use environment-specific tokens</li>
+                            <li>Monitor migration logs</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: Conclusion -->
+        <div class="slide">
+            <div class="slide-content">
+                <h2>🎯 Conclusion & Key Takeaways</h2>
+                
+                <div class="grid">
+                    <div class="card">
+                        <h4>📦 CMS as Code</h4>
+                        <p>Treat content models as version-controlled infrastructure</p>
+                    </div>
+                    <div class="card">
+                        <h4>🔄 Dual Lifecycle</h4>
+                        <p>Manage both software deployment and content creation workflows</p>
+                    </div>
+                    <div class="card">
+                        <h4>📈 Expand-and-Contract</h4>
+                        <p>Use this pattern for safe, backward-compatible migrations</p>
+                    </div>
+                    <div class="card">
+                        <h4>⚠️ Field Limitations</h4>
+                        <p>Create helper functions to work around lack of field reusability</p>
+                    </div>
+                    <div class="card">
+                        <h4>⚙️ CI/CD Integration</h4>
+                        <p>Automate migrations across environments for consistent deployments</p>
+                    </div>
+                </div>
+
+                <div class="info" style="margin-top: 30px;">
+                    <strong>📚 Resources:</strong>
+                    <ul style="margin-top: 10px;">
+                        <li><a href="https://www.contentful.com/help/cms-as-code/" target="_blank" style="color: #1a237e;">Contentful CMS as Code Guide</a></li>
+                        <li><a href="https://www.contentful.com/developers/docs/tutorials/general/continuous-integration-with-circleci/" target="_blank" style="color: #1a237e;">CircleCI Integration Tutorial</a></li>
+                        <li><a href="https://github.com/contentful/contentful-migration" target="_blank" style="color: #1a237e;">Contentful Migration Library</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">← Previous</button>
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">Next →</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+
+        function showSlide(n) {
+            if (n >= totalSlides) {
+                currentSlide = 0;
+            } else if (n < 0) {
+                currentSlide = totalSlides - 1;
+            } else {
+                currentSlide = n;
+            }
+
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active');
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                }
+            });
+
+            // Update counter
+            document.getElementById('slideCounter').textContent = `${currentSlide + 1} / ${totalSlides}`;
+            
+            // Update progress bar
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentSlide === 0;
+            document.getElementById('nextBtn').disabled = currentSlide === totalSlides - 1;
+        }
+
+        function changeSlide(direction) {
+            showSlide(currentSlide + direction);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                changeSlide(-1);
+            } else if (e.key === 'ArrowRight') {
+                changeSlide(1);
+            }
+        });
+
+        // Initialize
+        showSlide(0);
+    </script>
+</body>
+</html>
