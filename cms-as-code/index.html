@@ -376,7 +376,7 @@
 </head>
 <body>
 <div class="progress-bar" id="progressBar"></div>
-<div class="slide-counter" id="slideCounter">1 / 17</div>
+<div class="slide-counter" id="slideCounter">1 / 18</div>
 
 <div class="slides-container">
   <!-- Slide 1: Title -->
@@ -389,6 +389,7 @@
       <div style="text-align: center; margin-top: 60px;">
         <h2 style="border: none; color: #283593;">Presentation Overview</h2>
         <ul style="list-style: none; margin-top: 40px; font-size: 1.2em; line-height: 2;">
+          <li>❓ Why CMS as Code? (The Problem)</li>
           <li>📦 What is CMS as Code?</li>
           <li>📦 Content Type Delivery (like Drupal configs)</li>
           <li>🖱️ UI Workflow & Merge App</li>
@@ -401,7 +402,51 @@
     </div>
   </div>
 
-  <!-- Slide 2: What is CMS as Code -->
+  <!-- Slide 2: The Problem -->
+  <div class="slide">
+    <div class="slide-content">
+      <h2>❓ Why CMS as Code?</h2>
+      <p style="font-size: 1.3em; margin-bottom: 30px;">Traditional content management approaches face several challenges that CMS as Code solves.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h4>🚫 Manual Configuration Errors</h4>
+          <ul>
+            <li>Human errors when setting up content types</li>
+            <li>Inconsistent field configurations</li>
+            <li>Missing validations or settings</li>
+            <li>Difficult to reproduce exact setup</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>🔄 Environment Inconsistencies</h4>
+          <ul>
+            <li>Dev, staging, and production differ</li>
+            <li>Manual configuration in each environment</li>
+            <li>No guarantee of consistency</li>
+            <li>Deployment issues due to mismatches</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h4>📝 Lack of Version Control</h4>
+          <ul>
+            <li>No history of content model changes</li>
+            <li>Can't track who changed what</li>
+            <li>Difficult to rollback changes</li>
+            <li>No code review process</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warning" style="margin-top: 25px;">
+        <strong>⚠️ The Result:</strong> Unreliable deployments, time-consuming manual work, and high risk of production issues. CMS as Code addresses all these problems by treating content models as version-controlled infrastructure.
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 3: What is CMS as Code -->
   <div class="slide">
     <div class="slide-content">
       <h2>📦 What is CMS as Code?</h2>
@@ -437,7 +482,7 @@
     </div>
   </div>
 
-  <!-- Slide 3: Infrastructure as Code for Content -->
+  <!-- Slide 4: Infrastructure as Code for Content -->
   <div class="slide">
     <div class="slide-content">
       <h2>🏗️ Infrastructure as Code for Content</h2>
@@ -464,7 +509,7 @@
     </div>
   </div>
 
-  <!-- Slide 4: Content Type Delivery -->
+  <!-- Slide 5: Content Type Delivery -->
   <div class="slide">
     <div class="slide-content">
       <h2>📦 Content Type Delivery</h2>
@@ -497,7 +542,7 @@
     </div>
   </div>
 
-  <!-- Slide 4b: UI Workflow & Merge App -->
+  <!-- Slide 5b: UI Workflow & Merge App -->
   <div class="slide">
     <div class="slide-content">
       <h2>🖱️ UI Workflow & Merge App</h2>
@@ -536,7 +581,7 @@
     </div>
   </div>
 
-  <!-- Slide 5: Content Type Versioning -->
+  <!-- Slide 6: Content Type Versioning -->
   <div class="slide">
     <div class="slide-content">
       <h2>📚 Content Type Versioning & Management</h2>
@@ -578,7 +623,7 @@
     </div>
   </div>
 
-  <!-- Slide 6: CI/CD Integration -->
+  <!-- Slide 7: CI/CD Integration -->
   <div class="slide">
     <div class="slide-content">
       <h2>⚙️ CI/CD Integration & Continuous Delivery</h2>
@@ -612,7 +657,7 @@
     </div>
   </div>
 
-  <!-- Slide 7: Dual Lifecycle Challenge -->
+  <!-- Slide 8: Dual Lifecycle Challenge -->
   <div class="slide">
     <div class="slide-content">
       <h2>🔄 Dual Lifecycle Challenge</h2>
@@ -646,7 +691,7 @@
     </div>
   </div>
 
-  <!-- Slide 8: CircleCI Example -->
+  <!-- Slide 9: CircleCI Example -->
   <div class="slide">
     <div class="slide-content">
       <h2>🔧 CircleCI Integration Example</h2>
@@ -679,7 +724,7 @@
     </div>
   </div>
 
-  <!-- Slide 9: Field Limitations -->
+  <!-- Slide 10: Field Limitations -->
   <div class="slide">
     <div class="slide-content">
       <h2>⚠️ Contentful Field Limitations</h2>
@@ -704,7 +749,7 @@
     </div>
   </div>
 
-  <!-- Slide 10: Migration Strategies -->
+  <!-- Slide 11: Migration Strategies -->
   <div class="slide">
     <div class="slide-content">
       <h2>🔄 Migration Strategies: Expand-and-Contract</h2>
@@ -743,7 +788,7 @@
     </div>
   </div>
 
-  <!-- Slide 10b: Expand vs Contract Detailed -->
+  <!-- Slide 11b: Expand vs Contract Detailed -->
   <div class="slide">
     <div class="slide-content">
       <h2>📊 Expand Phase vs Contract Phase</h2>
@@ -802,7 +847,7 @@
     </div>
   </div>
 
-  <!-- Slide 11: Why Expand-and-Contract -->
+  <!-- Slide 12: Why Expand-and-Contract -->
   <div class="slide">
     <div class="slide-content">
       <h2>🤔 Why Expand-and-Contract Pattern?</h2>
@@ -837,7 +882,7 @@
     </div>
   </div>
 
-  <!-- Slide 12: Solutions & Examples -->
+  <!-- Slide 13: Solutions & Examples -->
   <div class="slide">
     <div class="slide-content">
       <h2>🔧 Solutions & Examples</h2>
@@ -874,7 +919,7 @@
     </div>
   </div>
 
-  <!-- Slide 13: Content Type Delivery Workflow -->
+  <!-- Slide 14: Content Type Delivery Workflow -->
   <div class="slide">
     <div class="slide-content">
       <h2>🔄 Content Type Delivery Workflow</h2>
@@ -916,7 +961,7 @@
     </div>
   </div>
 
-  <!-- Slide 14: Getting Started -->
+  <!-- Slide 15: Getting Started -->
   <div class="slide">
     <div class="slide-content">
       <h2>🚀 Getting Started with CMS as Code</h2>
@@ -950,7 +995,7 @@
     </div>
   </div>
 
-  <!-- Slide 15: Best Practices -->
+  <!-- Slide 16: Best Practices -->
   <div class="slide">
     <div class="slide-content">
       <h2>✨ Best Practices</h2>
@@ -989,7 +1034,7 @@
     </div>
   </div>
 
-  <!-- Slide 16: Conclusion -->
+  <!-- Slide 17: Conclusion -->
   <div class="slide">
     <div class="slide-content">
       <h2>🎯 Conclusion & Key Takeaways</h2>
