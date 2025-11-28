@@ -38,7 +38,7 @@ export async function syncPendingOperations(
     console.log(`Cleaned up ${cleanedCount} invalid sync operations`);
   }
 
-  const pendingOperations = await getPendingSyncOperations();
+  let pendingOperations = await getPendingSyncOperations();
   if (pendingOperations.length === 0) {
     return { success: 0, failed: 0 };
   }
@@ -46,7 +46,10 @@ export async function syncPendingOperations(
   let successCount = 0;
   let failCount = 0;
 
-  for (const op of pendingOperations) {
+  // Process operations, but re-fetch pending operations after each create
+  // to get updated localIds for subsequent operations
+  for (let i = 0; i < pendingOperations.length; i++) {
+    const op = pendingOperations[i];
     // Skip operations that exceeded max retries
     if (op.retries && op.retries >= 3) {
       await removeSyncOperation(op.id!);
@@ -64,11 +67,32 @@ export async function syncPendingOperations(
           const db = await openDB();
           const transaction = db.transaction('expenses', 'readonly');
           const store = transaction.objectStore('expenses');
-          const localItem = await new Promise<any>((resolve) => {
+          
+          // First try to find item with current localId
+          let localItem = await new Promise<any>((resolve) => {
             const req = store.get(op.localId!);
             req.onsuccess = () => resolve(req.result);
             req.onerror = () => resolve(null);
           });
+          
+          // If not found and URL contains server ID (was updated by updateSyncOperationsWithNewId),
+          // try to find item with that server ID
+          if (!localItem && op.type === 'update' && syncUrl && !syncUrl.includes('temp_') && syncUrl.includes('/node/')) {
+            const urlMatch = syncUrl.match(/\/node\/([^?]+)/);
+            if (urlMatch && urlMatch[1] && !urlMatch[1].startsWith('temp_')) {
+              const serverId = urlMatch[1];
+              localItem = await new Promise<any>((resolve) => {
+                const req = store.get(serverId);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => resolve(null);
+              });
+              if (localItem) {
+                op.localId = serverId;
+                itemExists = true;
+              }
+            }
+          }
+          
           transaction.oncomplete = () => db.close();
           
           if (localItem) {
@@ -84,11 +108,32 @@ export async function syncPendingOperations(
           const db = await openDB();
           const transaction = db.transaction('loans', 'readonly');
           const store = transaction.objectStore('loans');
-          const localItem = await new Promise<any>((resolve) => {
+          
+          // First try to find item with current localId
+          let localItem = await new Promise<any>((resolve) => {
             const req = store.get(op.localId!);
             req.onsuccess = () => resolve(req.result);
             req.onerror = () => resolve(null);
           });
+          
+          // If not found and URL contains server ID (was updated by updateSyncOperationsWithNewId),
+          // try to find item with that server ID
+          if (!localItem && op.type === 'update' && syncUrl && !syncUrl.includes('temp_') && syncUrl.includes('/node/')) {
+            const urlMatch = syncUrl.match(/\/node\/([^?]+)/);
+            if (urlMatch && urlMatch[1] && !urlMatch[1].startsWith('temp_')) {
+              const serverId = urlMatch[1];
+              localItem = await new Promise<any>((resolve) => {
+                const req = store.get(serverId);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => resolve(null);
+              });
+              if (localItem) {
+                op.localId = serverId;
+                itemExists = true;
+              }
+            }
+          }
+          
           transaction.oncomplete = () => db.close();
           
           if (localItem) {
@@ -240,6 +285,9 @@ export async function syncPendingOperations(
             
             // Update pending operations that reference this temp ID
             await updateSyncOperationsWithNewId(op.localId!, serverId, op.entityType);
+            
+            // Re-fetch pending operations to get updated localIds for subsequent operations
+            pendingOperations = await getPendingSyncOperations();
             
             // Update UI if dataDispatch is available
             if (dataDispatch) {
