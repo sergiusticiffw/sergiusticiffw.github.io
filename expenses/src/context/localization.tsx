@@ -84,6 +84,9 @@ const translations = {
     'nav.loans': 'Loans',
     'nav.profile': 'Profile',
 
+    // Offline
+    'offline.message': 'No internet connection',
+
     // Home Page
     'home.title': 'Expenses',
     'home.noData': 'No transaction records found.',
@@ -529,6 +532,9 @@ const translations = {
     'nav.charts': 'Grafice',
     'nav.loans': 'Împrumuturi',
     'nav.profile': 'Profil',
+
+    // Offline
+    'offline.message': 'Nu ai conexiune la internet',
 
     // Home Page
     'home.title': 'Cheltuieli',

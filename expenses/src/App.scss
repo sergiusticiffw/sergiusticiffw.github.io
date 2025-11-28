@@ -15,6 +15,7 @@
 @use 'components/Common/LoadingSpinner' as *;
 @use 'components/Common/StatCard' as *;
 @use 'components/Common/StatsGrid' as *;
+@use 'components/Common/OfflineBanner' as *;
 
 // Import page styles
 @use 'pages/Login/Login' as *;

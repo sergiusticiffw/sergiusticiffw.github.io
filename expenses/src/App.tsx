@@ -9,6 +9,7 @@ import { AppRoute } from '@components/Common';
 import React, { Suspense, useMemo } from 'react';
 import routes from '@config/routes';
 import Navbar from '@components/Navbar';
+import OfflineBanner from '@components/Common/OfflineBanner';
 
 // Loading component for Suspense fallback
 const LoadingFallback: React.FC = () => (
@@ -62,6 +63,7 @@ const App: React.FC = () => {
             <HighchartsProvider>
               <Router>
                 <div className="app-container">
+                  <OfflineBanner />
                   <Navbar />
                   <main className="main-content">
                     <Suspense fallback={<LoadingFallback />}>
