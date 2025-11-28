@@ -1,6 +1,18 @@
 @use '../../styles/variables' as *;
 @use '../../styles/mixins' as *;
 
+// Modal animations
+@keyframes scaleUp {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 // Modal styles - react-modal
 // Overlay (backdrop)
 .modal-window {
@@ -24,6 +36,7 @@
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
   padding-left: calc(1rem + env(safe-area-inset-left, 0));
   padding-right: calc(1rem + env(safe-area-inset-right, 0));
+  animation: fadeIn 0.3s;
 }
 
 // Modal Content
@@ -42,6 +55,7 @@
     90vh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem
   );
   outline: none;
+  animation: scaleUp 0.3s;
 
   @supports (height: 100svh) {
     max-height: 90svh;
@@ -76,19 +90,24 @@
   }
 
   .modal-close-btn {
-    background: transparent;
+    position: absolute;
+    top: $spacing-md;
+    right: $spacing-md;
+    background: none;
     border: none;
+    cursor: pointer;
     color: rgba(255, 255, 255, 0.6);
     font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.25rem;
+    padding: $spacing-sm;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
       color: rgba(255, 255, 255, 0.9);
+      background-color: rgba(0, 0, 0, 0.05);
     }
   }
 }
@@ -438,20 +457,26 @@
 
 // Close button for modals without header (legacy support)
 .modal-close {
+  position: absolute;
+  top: $spacing-md;
+  right: $spacing-md;
   color: rgba(255, 255, 255, 0.6);
   font-size: 1.5rem;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border: none;
-  padding: 0.25rem;
+  padding: $spacing-sm;
+  border-radius: 50%;
   cursor: pointer;
+  z-index: 10;
 
   &:hover {
     color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(0, 0, 0, 0.05);
   }
 }
 
