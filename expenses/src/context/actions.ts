@@ -1,4 +1,5 @@
 import { LoginPayload, UserData } from '@type/types';
+import { clearExpensesDB } from '../utils/indexedDB';
 
 const ROOT_URL = 'https://dev-expenses-api.pantheonsite.io';
 
@@ -34,4 +35,6 @@ export const logout = async (dispatch: any, dataDispatch: any) => {
   await dataDispatch({ type: 'REMOVE_DATA' });
   localStorage.removeItem('currentUser');
   localStorage.removeItem('token');
+  // Clear IndexedDB cache on logout
+  await clearExpensesDB();
 };

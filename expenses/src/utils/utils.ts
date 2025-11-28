@@ -1,6 +1,15 @@
 import { categories } from '@utils//constants';
 import { logout } from '@context/actions';
 import { DataStructure, ItemTotal, TransactionOrIncomeItem } from '@type/types';
+import {
+  getExpensesFromDB,
+  saveExpensesToDB,
+  getLoansFromDB,
+  saveLoansToDB,
+  getPaymentsFromDB,
+  savePaymentsToDB,
+  isIndexedDBAvailable,
+} from './indexedDB';
 
 // API Configuration
 export const API_BASE_URL = 'https://dev-expenses-api.pantheonsite.io';
@@ -216,166 +225,253 @@ export const deleteLoan = (
   );
 };
 
-export const fetchData = (
+// Process data using Web Worker
+function processDataWithWorker(
+  data: TransactionOrIncomeItem[],
+  callback: (processedData: any) => void
+) {
+  if (typeof Worker === 'undefined') {
+    // Fallback to synchronous processing if Web Workers are not available
+    console.warn('Web Workers not available, processing synchronously');
+    // Fallback: process synchronously (simplified version)
+    callback(processDataSync(data));
+    return;
+  }
+
+  try {
+    const worker = new Worker(
+      new URL('./dataProcessor.worker.ts', import.meta.url),
+      { type: 'module' }
+    );
+
+    worker.postMessage({
+      data,
+      getCategory,
+    });
+
+    worker.onmessage = (e: MessageEvent) => {
+      callback(e.data);
+      worker.terminate();
+    };
+
+    worker.onerror = (error) => {
+      console.error('Worker error:', error);
+      // Fallback to sync processing on error
+      callback(processDataSync(data));
+      worker.terminate();
+    };
+  } catch (error) {
+    console.error('Failed to create worker:', error);
+    // Fallback to sync processing
+    callback(processDataSync(data));
+  }
+}
+
+// Synchronous fallback processing (original logic)
+function processDataSync(data: TransactionOrIncomeItem[]) {
+  const groupedData: Record<string, TransactionOrIncomeItem[]> = {};
+  const totalsPerYearAndMonth: DataStructure = {};
+  const totalPerYear: ItemTotal = {};
+  const incomeData: TransactionOrIncomeItem[] = [];
+  const monthsTotals: Record<string, number> = {};
+  const incomeTotals: Record<string, number> = {};
+  const totalIncomePerYear: ItemTotal = {};
+  const totalIncomePerYearAndMonth: DataStructure = {};
+  const categoryTotals: Record<string, { name: string; y: number }> = {};
+  let totalSpent = 0;
+
+  const englishMonthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+
+  data.forEach((item) => {
+    const date = new Date(item.dt);
+    const year = date.getFullYear();
+    const month = `${englishMonthNames[date.getMonth()]} ${year}`;
+
+    if (!totalsPerYearAndMonth[year]) {
+      totalsPerYearAndMonth[year] = {};
+    }
+    if (!totalsPerYearAndMonth[year][month]) {
+      totalsPerYearAndMonth[year][month] = 0;
+    }
+    if (!groupedData[month]) {
+      groupedData[month] = [];
+    }
+    if (!monthsTotals[month]) {
+      monthsTotals[month] = 0;
+    }
+    if (!incomeTotals[month]) {
+      incomeTotals[month] = 0;
+    }
+    if (!totalIncomePerYearAndMonth[year]) {
+      totalIncomePerYearAndMonth[year] = {};
+    }
+    if (!totalIncomePerYearAndMonth[year][month]) {
+      totalIncomePerYearAndMonth[year][month] = 0;
+    }
+    if (!totalIncomePerYear[year]) {
+      totalIncomePerYear[year] = 0;
+    }
+    if (!totalPerYear[year]) {
+      totalPerYear[year] = 0;
+    }
+
+    const { cat, sum, type } = item;
+    if (type === 'incomes') {
+      totalIncomePerYear[year] = (totalIncomePerYear[year] as number || 0) + parseFloat(sum);
+      totalIncomePerYearAndMonth[year][month] += parseFloat(sum);
+      incomeData.push(item);
+      incomeTotals[month] = parseFloat((incomeTotals[month] + parseFloat(sum)).toFixed(2));
+    } else if (type === 'transaction') {
+      groupedData[month].push(item);
+      monthsTotals[month] = parseFloat((monthsTotals[month] + parseFloat(sum)).toFixed(2));
+      if (cat && !categoryTotals[cat]) {
+        categoryTotals[cat] = { name: getCategory[cat] || '', y: 0 };
+      }
+      if (cat && categoryTotals[cat]) {
+        categoryTotals[cat].y = parseFloat((categoryTotals[cat].y + parseFloat(sum)).toFixed(2));
+      }
+      totalSpent += parseFloat(sum);
+      totalsPerYearAndMonth[year][month] += parseFloat(sum);
+      totalPerYear[year] = (totalPerYear[year] as number || 0) + parseFloat(sum);
+    }
+  });
+
+  return {
+    groupedData,
+    totalsPerYearAndMonth,
+    totalPerYear,
+    incomeData,
+    monthsTotals,
+    totals: monthsTotals, // Also include as totals for compatibility
+    incomeTotals,
+    totalIncomePerYear,
+    totalIncomePerYearAndMonth,
+    categoryTotals,
+    totalSpent,
+  };
+}
+
+export const fetchData = async (
   token: string,
   dataDispatch: any,
   dispatch: any,
   category: string = '',
   textFilter: string = ''
 ) => {
+  // Try to load from IndexedDB first for instant display
+  if (isIndexedDBAvailable()) {
+    const cachedData = await getExpensesFromDB();
+    if (cachedData && cachedData.length > 0) {
+      // Process cached data with worker
+      processDataWithWorker(cachedData, (processedData) => {
+        dataDispatch({
+          type: 'SET_DATA',
+          raw: cachedData,
+          ...processedData,
+          totals: processedData.monthsTotals, // Map monthsTotals to totals
+          loading: false,
+        });
+        if (category || textFilter) {
+          dataDispatch({
+            type: 'FILTER_DATA',
+            category: category,
+            textFilter,
+          });
+        }
+      });
+    }
+  }
+
+  // Fetch fresh data from API
   fetchFromAPI<TransactionOrIncomeItem[]>(
     `${API_BASE_URL}/api/expenses`,
     token,
     dataDispatch,
     dispatch,
-    (data) => {
-      const groupedData: Record<string, TransactionOrIncomeItem[]> = {};
-      const totalsPerYearAndMonth: DataStructure = {};
-      const totalPerYear: ItemTotal = {};
-      const incomeData: TransactionOrIncomeItem[] = [];
-      const monthsTotals: Record<string, number> = {};
-      const incomeTotals: Record<string, number> = {};
-      const totalIncomePerYear: ItemTotal = {};
-      const totalIncomePerYearAndMonth: DataStructure = {};
-      const categoryTotals:
-        | Record<string, { name: string; y: number }>
-        | never[] = {};
-      let totalSpent = 0;
-      const updateYearAndMonth = (year: string | number, month: string) => {
-        if (!totalsPerYearAndMonth[year]) {
-          totalsPerYearAndMonth[year] = {};
-        }
-        if (!totalsPerYearAndMonth[year][month]) {
-          totalsPerYearAndMonth[year][month] = 0;
-        }
-        if (!groupedData[month]) {
-          groupedData[month] = [];
-        }
-        if (!monthsTotals[month]) {
-          monthsTotals[month] = 0;
-        }
-        if (!incomeTotals[month]) {
-          incomeTotals[month] = 0;
-        }
-        if (!totalIncomePerYearAndMonth[year]) {
-          totalIncomePerYearAndMonth[year] = {};
-        }
-        if (!totalIncomePerYearAndMonth[year][month]) {
-          totalIncomePerYearAndMonth[year][month] = 0;
-        }
-        if (!totalIncomePerYear[year]) {
-          totalIncomePerYear[year] = 0;
-        }
-        if (!totalPerYear[year]) {
-          totalPerYear[year] = 0;
-        }
-      };
+    async (data) => {
+      if (!data) return;
 
-      const updateTotals = (
-        item: TransactionOrIncomeItem,
-        year: number | string,
-        month: string
-      ) => {
-        const { cat, sum, type } = item;
-        if (type === 'incomes') {
-          totalIncomePerYear[year] =
-            (totalIncomePerYear[year] as number) + parseFloat(sum);
-          totalIncomePerYearAndMonth[year][month] += parseFloat(sum);
-          incomeData.push(item);
-          incomeTotals[month] = parseFloat(
-            (incomeTotals[month] + parseFloat(sum)).toFixed(2)
-          );
-        } else if (type === 'transaction') {
-          groupedData[month].push(item);
-          monthsTotals[month] = parseFloat(
-            (monthsTotals[month] + parseFloat(sum)).toFixed(2)
-          );
-          if (cat && categoryTotals[cat]) {
-            const categoryKey = cat as keyof typeof categories;
-            // @ts-expect-error
-            categoryTotals[categoryKey].name = getCategory[cat];
-            // @ts-expect-error
-            categoryTotals[categoryKey].y = parseFloat(
-              // @ts-expect-error
-              (categoryTotals[categoryKey].y + parseFloat(sum)).toFixed(2)
-            );
-          }
-          totalSpent = totalSpent + parseFloat(sum);
-          totalsPerYearAndMonth[year][month] += parseFloat(sum);
-          totalPerYear[year] = (totalPerYear[year] as number) + parseFloat(sum);
+      // Add created timestamp if not present for consistent sorting
+      const dataWithTimestamp = data.map((item) => {
+        if (!item.cr) {
+          // Use date as fallback for sorting
+          item.cr = new Date(item.dt).getTime();
         }
-      };
-      if (data) {
-        data.forEach((item: TransactionOrIncomeItem) => {
-          const { dt, cat } = item;
-          const date = new Date(dt);
-          const year = date.getFullYear();
-          // Use English month names for data processing (this is for internal use)
-          const englishMonthNames = [
-            'January',
-            'February',
-            'March',
-            'April',
-            'May',
-            'June',
-            'July',
-            'August',
-            'September',
-            'October',
-            'November',
-            'December',
-          ];
-          const month = `${englishMonthNames[date.getMonth()]} ${year}`;
-
-          if (cat && !categoryTotals[cat]) {
-            categoryTotals[cat] = {
-              name: '',
-              y: 0,
-            };
-          }
-          updateYearAndMonth(year, month);
-          updateTotals(item, year, month);
-        });
-      }
-      dataDispatch({
-        type: 'SET_DATA',
-        raw: data,
-        groupedData: groupedData,
-        totals: monthsTotals,
-        incomeData: incomeData,
-        incomeTotals: incomeTotals,
-        categoryTotals: categoryTotals,
-        loading: false,
-        totalsPerYearAndMonth,
-        totalIncomePerYear,
-        totalIncomePerYearAndMonth,
-        totalPerYear,
-        totalSpent,
+        return item;
       });
-      if (category || textFilter) {
-        dataDispatch({
-          type: 'FILTER_DATA',
-          category: category,
-          textFilter,
-        });
+
+      // Save to IndexedDB for next time
+      if (isIndexedDBAvailable()) {
+        await saveExpensesToDB(dataWithTimestamp);
       }
+
+      // Process data with Web Worker
+      processDataWithWorker(dataWithTimestamp, (processedData) => {
+        dataDispatch({
+          type: 'SET_DATA',
+          raw: dataWithTimestamp,
+          ...processedData,
+          totals: processedData.monthsTotals, // Map monthsTotals to totals
+          loading: false,
+        });
+        if (category || textFilter) {
+          dataDispatch({
+            type: 'FILTER_DATA',
+            category: category,
+            textFilter,
+          });
+        }
+      });
     }
   );
 };
 
-export const fetchLoans = (token: string, dataDispatch: any, dispatch: any) => {
+export const fetchLoans = async (
+  token: string,
+  dataDispatch: any,
+  dispatch: any
+) => {
   // Add null checks for dispatch functions
   if (!dataDispatch || !dispatch) {
     console.error('Dispatch functions not available for fetch loans');
     return;
   }
 
+  // Try to load from IndexedDB first for instant display
+  if (isIndexedDBAvailable()) {
+    const cachedLoans = await getLoansFromDB();
+    const cachedPayments = await getPaymentsFromDB();
+    
+    if (cachedLoans && cachedLoans.length > 0) {
+      dataDispatch({
+        type: 'SET_DATA',
+        loans: cachedLoans,
+        payments: cachedPayments || [],
+        loading: false,
+      });
+    }
+  }
+
+  // Fetch fresh data from API
   fetchFromAPI(
     `${API_BASE_URL}/api/loans`,
     token,
     dataDispatch,
     dispatch,
     async (data) => {
+      if (!data) {
+        dataDispatch({
+          type: 'SET_DATA',
+          loans: null,
+          payments: [],
+          loading: false,
+        });
+        return;
+      }
+
       const fetchOptions = createAuthenticatedFetchOptions(token);
       if (data.length > 0) {
         const paymentPromises = data.map((item) =>
@@ -384,6 +480,13 @@ export const fetchLoans = (token: string, dataDispatch: any, dispatch: any) => {
             .then((responseData) => ({ loanId: item.id, data: responseData }))
         );
         const payments = await Promise.all(paymentPromises);
+
+        // Save to IndexedDB for next time
+        if (isIndexedDBAvailable()) {
+          await saveLoansToDB(data);
+          await savePaymentsToDB(payments);
+        }
+
         dataDispatch({
           type: 'SET_DATA',
           loans: data,
@@ -391,6 +494,12 @@ export const fetchLoans = (token: string, dataDispatch: any, dispatch: any) => {
           loading: false,
         });
       } else {
+        // Clear IndexedDB if no loans
+        if (isIndexedDBAvailable()) {
+          await saveLoansToDB([]);
+          await savePaymentsToDB([]);
+        }
+        
         dataDispatch({
           type: 'SET_DATA',
           loans: null,
