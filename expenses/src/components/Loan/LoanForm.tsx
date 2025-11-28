@@ -5,6 +5,7 @@ import { notificationType } from '@utils/constants';
 import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
 import { FormField } from '@components/Common';
+import { useLoan } from '@context/loan';
 import './LoanForm.scss';
 
 interface LoanFormProps {
@@ -24,6 +25,7 @@ const LoanForm: React.FC<LoanFormProps> = ({
 }) => {
   const { t } = useLocalization();
   const showNotification = useNotification();
+  const { dataDispatch } = useLoan();
 
   const initialState = {
     title: '',
@@ -44,6 +46,7 @@ const LoanForm: React.FC<LoanFormProps> = ({
       values,
       nodeType: 'loan',
       onSuccess,
+      dataDispatch,
       useFetchRequest: false,
       buildNodeData: (state) => ({
         title: [state.title],

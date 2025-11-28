@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import {
   AuthReducer,
   DataReducer,
@@ -7,6 +7,7 @@ import {
 } from '@context/reducer';
 import { AuthState, DataItems, DataState } from '@type/types';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { setupNetworkListener } from '@utils/syncService';
 
 const AuthStateContext = React.createContext<AuthState | null>(null);
 const AuthDispatchContext = React.createContext<React.Dispatch<any> | null>(
@@ -55,6 +56,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     DataReducer,
     initialData as DataItems
   );
+
+  // Setup offline sync when user is logged in
+  useEffect(() => {
+    if (user.token && user.userIsLoggedIn) {
+      // Clean up invalid operations on mount
+      import('@utils/indexedDB').then(({ cleanupInvalidSyncOperations }) => {
+        cleanupInvalidSyncOperations().then((count) => {
+          if (count > 0) {
+            console.log(`Cleaned up ${count} invalid sync operations on mount`);
+          }
+        });
+      });
+
+      const cleanup = setupNetworkListener(user.token, dataDispatch);
+      return cleanup;
+    }
+  }, [user.token, user.userIsLoggedIn, dataDispatch]);
 
   return (
     <GoogleOAuthProvider clientId="14695610160-ui3d8l2qa7tdjfi4s1t46hfl609qcmie.apps.googleusercontent.com">

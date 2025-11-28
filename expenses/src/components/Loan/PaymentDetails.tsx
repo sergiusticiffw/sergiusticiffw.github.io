@@ -90,8 +90,11 @@ const PaymentDetails = (props) => {
         setIsSubmitting(false);
       }
       setDeleteModalId(false);
-      fetchLoans(token, dataDispatch, dispatch);
-    });
+      // UI update is handled by deleteNode, only fetch if online
+      if (navigator.onLine) {
+        fetchLoans(token, dataDispatch, dispatch);
+      }
+    }, dataDispatch, loan?.id);
   };
 
   const handleDeleteClick = (paymentId: string) => {

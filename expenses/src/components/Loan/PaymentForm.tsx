@@ -1,12 +1,11 @@
 import React from 'react';
-import { useData } from '@context/context';
 import { useLocalization } from '@context/localization';
-import { DataState } from '@type/types';
 import { addOneDay } from '@utils/utils';
 import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
 import { useParams } from 'react-router-dom';
 import { FormField } from '@components/Common';
+import { useLoan } from '@context/loan';
 import './PaymentForm.scss';
 
 interface PaymentFormProps {
@@ -30,7 +29,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 }) => {
   const { id } = useParams();
   const { t } = useLocalization();
-  const { dataDispatch } = useData() as DataState;
+  const { dataDispatch } = useLoan();
 
   const initialState = {
     field_date: new Date().toISOString().slice(0, 10),
@@ -118,7 +117,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       values,
       nodeType: 'payment',
       onSuccess,
+      dataDispatch,
       useFetchRequest: false,
+      additionalParams: { loanId: id },
       buildNodeData: (state) => ({
         title: [state.title],
         field_date: [state.field_date],

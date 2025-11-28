@@ -78,7 +78,10 @@ const Loans: React.FC = () => {
       setIsSubmitting(false);
       setShowDeleteModal(false);
       showNotification(t('notification.loanDeleted'), notificationType.SUCCESS);
-      fetchLoans(token, dataDispatch, dispatch);
+      // UI update is handled by deleteLoan, only fetch if online
+      if (navigator.onLine) {
+        fetchLoans(token, dataDispatch, dispatch);
+      }
     });
   };
 
@@ -333,7 +336,10 @@ const Loans: React.FC = () => {
           }}
           onSuccess={() => {
             setShowAddModal(false);
-            fetchLoans(token, dataDispatch, dispatch);
+            // UI update is handled by useFormSubmit, only fetch if online
+            if (navigator.onLine) {
+              fetchLoans(token, dataDispatch, dispatch);
+            }
           }}
         />
       </Modal>
@@ -374,7 +380,10 @@ const Loans: React.FC = () => {
           }}
           onSuccess={() => {
             setShowEditModal(false);
-            fetchLoans(token, dataDispatch, dispatch);
+            // UI update is handled by useFormSubmit, only fetch if online
+            if (navigator.onLine) {
+              fetchLoans(token, dataDispatch, dispatch);
+            }
           }}
         />
       </Modal>

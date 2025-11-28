@@ -9,6 +9,7 @@ import {
   getPaymentsFromDB,
   savePaymentsToDB,
   isIndexedDBAvailable,
+  isOnline,
 } from './indexedDB';
 
 // API Configuration
@@ -193,16 +194,150 @@ export const fetchRequest = (
     });
 };
 
-export const deleteNode = (nid: string, token: string, callback: any) => {
-  const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
-  fetch(`${API_BASE_URL}/node/${nid}?_format=json`, fetchOptions).then(
-    (response) => {
-      callback(response);
+export const deleteNode = async (
+  nid: string,
+  token: string,
+  callback: any,
+  dataDispatch?: any,
+  loanId?: string // Optional loanId for payments
+) => {
+  // For transactions/income/payments: implement offline-first approach
+  if (dataDispatch && isIndexedDBAvailable()) {
+    try {
+      const { 
+        deleteExpenseLocally, 
+        getExpensesFromDB, 
+        getPaymentsFromDB,
+        isOnline 
+      } = await import('./indexedDB');
+      const { 
+        deleteOffline, 
+        deletePaymentOffline,
+        updateUILocally,
+        updateLoansUILocally,
+      } = await import('./offlineAPI');
+      
+      // Check if it's a payment (has loanId)
+      if (loanId) {
+        // Handle payment deletion
+        const payments = await getPaymentsFromDB() || [];
+        const loanPayments = payments.find((p: any) => p.loanId === loanId);
+        const paymentToDelete = loanPayments?.data?.find((p: any) => p.id === nid);
+        
+        if (paymentToDelete) {
+          const url = `${API_BASE_URL}/node/${nid}?_format=json`;
+          
+          // Delete offline (saves locally and adds to sync queue)
+          await deletePaymentOffline(loanId, nid, url);
+          
+          // Update UI with local data
+          await updateLoansUILocally(dataDispatch);
+          
+          // Call callback immediately
+          callback({ ok: true } as Response);
+          
+          // Try to sync if online
+          if (isOnline()) {
+            const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
+            fetch(url, fetchOptions)
+              .then(async (response) => {
+                if (response.ok) {
+                  // Remove from sync queue on success
+                  const { getPendingSyncOperations, removeSyncOperation } = await import('./indexedDB');
+                  const pendingOps = await getPendingSyncOperations();
+                  const op = pendingOps.find(
+                    (o) => o.url === url && o.status === 'pending' && o.entityType === 'payment'
+                  );
+                  if (op && op.id) {
+                    await removeSyncOperation(op.id);
+                  }
+                }
+              })
+              .catch((error) => {
+                console.error('Delete payment sync failed:', error);
+              });
+          }
+        } else {
+          // Payment not found locally, try to delete from server
+          const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
+          fetch(`${API_BASE_URL}/node/${nid}?_format=json`, fetchOptions).then(
+            (response) => {
+              callback(response);
+            }
+          );
+        }
+      } else {
+        // Handle expense/income deletion
+        const currentData = await getExpensesFromDB() || [];
+        const itemToDelete = currentData.find((item: any) => item.id === nid);
+        
+        if (itemToDelete) {
+          // Determine entity type
+          const entityType = itemToDelete.type === 'transaction' ? 'expense' : 'income';
+          const url = `${API_BASE_URL}/node/${nid}?_format=json`;
+          
+          // Delete offline (saves locally and adds to sync queue)
+          await deleteOffline(nid, entityType, url);
+          
+          // Update UI with local data
+          await updateUILocally(dataDispatch);
+          
+          // Call callback immediately
+          callback({ ok: true } as Response);
+          
+          // Try to sync if online
+          if (isOnline()) {
+            const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
+            fetch(url, fetchOptions)
+              .then(async (response) => {
+                if (response.ok) {
+                  // Remove from sync queue on success
+                  const { getPendingSyncOperations, removeSyncOperation } = await import('./indexedDB');
+                  const pendingOps = await getPendingSyncOperations();
+                  const op = pendingOps.find(
+                    (o) => o.url === url && o.status === 'pending'
+                  );
+                  if (op && op.id) {
+                    await removeSyncOperation(op.id);
+                  }
+                }
+              })
+              .catch((error) => {
+                console.error('Delete sync failed:', error);
+              });
+          }
+        } else {
+          // Item not found locally, try to delete from server
+          const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
+          fetch(`${API_BASE_URL}/node/${nid}?_format=json`, fetchOptions).then(
+            (response) => {
+              callback(response);
+            }
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error in offline delete:', error);
+      // Fallback to original behavior
+      const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
+      fetch(`${API_BASE_URL}/node/${nid}?_format=json`, fetchOptions).then(
+        (response) => {
+          callback(response);
+        }
+      );
     }
-  );
+  } else {
+    // Original behavior if no dataDispatch or IndexedDB not available
+    const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
+    fetch(`${API_BASE_URL}/node/${nid}?_format=json`, fetchOptions).then(
+      (response) => {
+        callback(response);
+      }
+    );
+  }
 };
 
-export const deleteLoan = (
+export const deleteLoan = async (
   nid: string,
   token: string,
   dataDispatch: any,
@@ -215,14 +350,83 @@ export const deleteLoan = (
     return;
   }
 
-  fetchFromAPI(
-    `${API_BASE_URL}/node/${nid}?_format=json`,
-    token,
-    dataDispatch,
-    dispatch,
-    onSuccess,
-    'DELETE'
-  );
+  // Implement offline-first approach for loans
+  if (isIndexedDBAvailable()) {
+    try {
+      const { deleteLoanLocally, getLoansFromDB, isOnline } = await import('./indexedDB');
+      const { deleteLoanOffline, updateLoansUILocally } = await import('./offlineAPI');
+      
+      // Check if loan exists in local DB
+      const currentLoans = await getLoansFromDB() || [];
+      const loanToDelete = currentLoans.find((loan: any) => loan.id === nid);
+      
+      if (loanToDelete) {
+        const url = `${API_BASE_URL}/node/${nid}?_format=json`;
+        
+        // Delete offline (saves locally and adds to sync queue)
+        await deleteLoanOffline(nid, url);
+        
+        // Update UI with local data
+        await updateLoansUILocally(dataDispatch);
+        
+        // Call onSuccess immediately
+        onSuccess();
+        
+        // Try to sync if online
+        if (isOnline()) {
+          const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
+          fetch(url, fetchOptions)
+            .then(async (response) => {
+              if (response.ok) {
+                // Remove from sync queue on success
+                const { getPendingSyncOperations, removeSyncOperation } = await import('./indexedDB');
+                const pendingOps = await getPendingSyncOperations();
+                const op = pendingOps.find(
+                  (o) => o.url === url && o.status === 'pending' && o.entityType === 'loan'
+                );
+                if (op && op.id) {
+                  await removeSyncOperation(op.id);
+                }
+              }
+            })
+            .catch((error) => {
+              console.error('Delete loan sync failed:', error);
+            });
+        }
+      } else {
+        // Loan not found locally, try to delete from server
+        fetchFromAPI(
+          `${API_BASE_URL}/node/${nid}?_format=json`,
+          token,
+          dataDispatch,
+          dispatch,
+          onSuccess,
+          'DELETE'
+        );
+      }
+    } catch (error) {
+      console.error('Error in offline delete loan:', error);
+      // Fallback to original behavior
+      fetchFromAPI(
+        `${API_BASE_URL}/node/${nid}?_format=json`,
+        token,
+        dataDispatch,
+        dispatch,
+        onSuccess,
+        'DELETE'
+      );
+    }
+  } else {
+    // Original behavior if IndexedDB not available
+    fetchFromAPI(
+      `${API_BASE_URL}/node/${nid}?_format=json`,
+      token,
+      dataDispatch,
+      dispatch,
+      onSuccess,
+      'DELETE'
+    );
+  }
 };
 
 // Process data using Web Worker
@@ -268,7 +472,7 @@ function processDataWithWorker(
 }
 
 // Synchronous fallback processing (original logic)
-function processDataSync(data: TransactionOrIncomeItem[]) {
+export function processDataSync(data: TransactionOrIncomeItem[]) {
   const groupedData: Record<string, TransactionOrIncomeItem[]> = {};
   const totalsPerYearAndMonth: DataStructure = {};
   const totalPerYear: ItemTotal = {};
@@ -385,13 +589,14 @@ export const fetchData = async (
     }
   }
 
-  // Fetch fresh data from API
-  fetchFromAPI<TransactionOrIncomeItem[]>(
-    `${API_BASE_URL}/api/expenses`,
-    token,
-    dataDispatch,
-    dispatch,
-    async (data) => {
+  // Fetch fresh data from API only if online
+  if (isOnline()) {
+    fetchFromAPI<TransactionOrIncomeItem[]>(
+      `${API_BASE_URL}/api/expenses`,
+      token,
+      dataDispatch,
+      dispatch,
+      async (data) => {
       if (!data) return;
 
       // Add created timestamp if not present for consistent sorting
@@ -426,7 +631,8 @@ export const fetchData = async (
         }
       });
     }
-  );
+    );
+  }
 };
 
 export const fetchLoans = async (
@@ -455,13 +661,14 @@ export const fetchLoans = async (
     }
   }
 
-  // Fetch fresh data from API
-  fetchFromAPI(
-    `${API_BASE_URL}/api/loans`,
-    token,
-    dataDispatch,
-    dispatch,
-    async (data) => {
+  // Fetch fresh data from API only if online
+  if (isOnline()) {
+    fetchFromAPI(
+      `${API_BASE_URL}/api/loans`,
+      token,
+      dataDispatch,
+      dispatch,
+      async (data) => {
       if (!data) {
         dataDispatch({
           type: 'SET_DATA',
@@ -508,7 +715,8 @@ export const fetchLoans = async (
         });
       }
     }
-  );
+    );
+  }
 };
 
 export const formatNumber = (value: unknown): string => {

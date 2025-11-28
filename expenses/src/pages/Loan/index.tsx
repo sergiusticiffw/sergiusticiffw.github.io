@@ -476,7 +476,10 @@ const Loan: React.FC = () => {
           }}
           onSuccess={() => {
             setShowEditModal(false);
-            fetchLoans(token, dataDispatch, dispatch);
+            // UI update is handled by useFormSubmit, only fetch if online
+            if (navigator.onLine) {
+              fetchLoans(token, dataDispatch, dispatch);
+            }
           }}
         />
       </Modal>
@@ -527,7 +530,10 @@ const Loan: React.FC = () => {
           }}
           onSuccess={() => {
             setShowAddPaymentModal(false);
-            fetchLoans(token, dataDispatch, dispatch);
+            // UI update is handled by useFormSubmit, only fetch if online
+            if (navigator.onLine) {
+              fetchLoans(token, dataDispatch, dispatch);
+            }
           }}
         />
       </Modal>

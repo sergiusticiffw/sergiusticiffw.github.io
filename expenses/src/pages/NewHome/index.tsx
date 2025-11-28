@@ -143,8 +143,8 @@ const NewHome = () => {
         setIsSubmitting(false);
       }
       setShowDeleteModal(false);
-      fetchData(token, dataDispatch, dispatch);
-    });
+      // Don't fetch - UI already updated by deleteNode
+    }, dataDispatch);
   };
 
   // Get transactions for current month
@@ -315,7 +315,10 @@ const NewHome = () => {
           }}
           onSuccess={() => {
             setShowEditModal(false);
-            fetchData(token, dataDispatch, dispatch);
+            // UI update is handled by useFormSubmit, only fetch if online
+            if (navigator.onLine) {
+              fetchData(token, dataDispatch, dispatch);
+            }
           }}
         />
       </Modal>
@@ -359,7 +362,10 @@ const NewHome = () => {
           }}
           onSuccess={() => {
             setShowAddModal(false);
-            fetchData(token, dataDispatch, dispatch);
+            // UI update is handled by useFormSubmit, only fetch if online
+            if (navigator.onLine) {
+              fetchData(token, dataDispatch, dispatch);
+            }
           }}
         />
       </Modal>

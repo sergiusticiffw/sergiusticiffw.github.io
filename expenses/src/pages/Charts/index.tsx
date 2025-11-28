@@ -171,7 +171,10 @@ const Charts = () => {
           }}
           onSuccess={() => {
             setShowAddModal(false);
-            fetchData(token, dataDispatch, dispatch);
+            // UI update is handled by useFormSubmit, only fetch if online
+            if (navigator.onLine) {
+              fetchData(token, dataDispatch, dispatch);
+            }
           }}
         />
       </Modal>

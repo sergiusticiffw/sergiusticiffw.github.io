@@ -86,6 +86,9 @@ const translations = {
 
     // Offline
     'offline.message': 'No internet connection',
+    'syncStatus.syncing': 'Syncing...',
+    'syncStatus.synced': 'Synced',
+    'syncStatus.pending': 'pending',
 
     // Home Page
     'home.title': 'Expenses',
@@ -289,12 +292,14 @@ const translations = {
     'notification.error': 'Error',
     'notification.warning': 'Warning',
     'notification.info': 'Information',
+    'notification.savedOffline': 'Saved offline - will sync when online',
     'notification.transactionAdded': 'Transaction added successfully!',
     'notification.transactionUpdated': 'Transaction updated successfully!',
     'notification.transactionDeleted': 'Transaction deleted successfully!',
     'notification.incomeAdded': 'Income added successfully!',
     'notification.incomeUpdated': 'Income updated successfully!',
     'notification.incomeDeleted': 'Income deleted successfully!',
+    'notification.savedOffline': 'Saved offline - will sync when online',
     'notification.loanAdded': 'Loan added successfully!',
     'notification.loanUpdated': 'Loan updated successfully!',
     'notification.loanDeleted': 'Loan deleted successfully!',
@@ -535,6 +540,9 @@ const translations = {
 
     // Offline
     'offline.message': 'Nu ai conexiune la internet',
+    'syncStatus.syncing': 'Se sincronizează...',
+    'syncStatus.synced': 'Sincronizat',
+    'syncStatus.pending': 'în așteptare',
 
     // Home Page
     'home.title': 'Cheltuieli',
@@ -748,6 +756,7 @@ const translations = {
     'notification.incomeAdded': 'Venitul a fost adăugat cu succes!',
     'notification.incomeUpdated': 'Venitul a fost actualizat cu succes!',
     'notification.incomeDeleted': 'Venitul a fost șters cu succes!',
+    'notification.savedOffline': 'Salvat offline - se va sincroniza când vei fi online',
     'notification.loanAdded': 'Împrumutul a fost adăugat cu succes!',
     'notification.loanUpdated': 'Împrumutul a fost actualizat cu succes!',
     'notification.loanDeleted': 'Împrumutul a fost șters cu succes!',

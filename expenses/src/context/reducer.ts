@@ -237,7 +237,11 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
 // Optimized data comparison - avoids JSON.stringify for better performance
 const compareData = (oldData, newData) => {
   const changedItems = {};
-  if (oldData.length === 0) {
+  // Handle null/undefined cases
+  if (!oldData || !Array.isArray(oldData) || oldData.length === 0) {
+    return changedItems;
+  }
+  if (!newData || !Array.isArray(newData)) {
     return changedItems;
   }
   const oldMap = new Map(oldData.map((item) => [item.id, item]));
