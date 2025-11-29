@@ -299,7 +299,6 @@ const translations = {
     'notification.incomeAdded': 'Income added successfully!',
     'notification.incomeUpdated': 'Income updated successfully!',
     'notification.incomeDeleted': 'Income deleted successfully!',
-    'notification.savedOffline': 'Saved offline - will sync when online',
     'notification.loanAdded': 'Loan added successfully!',
     'notification.loanUpdated': 'Loan updated successfully!',
     'notification.loanDeleted': 'Loan deleted successfully!',
