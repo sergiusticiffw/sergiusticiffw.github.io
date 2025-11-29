@@ -122,6 +122,16 @@ export async function getExpensesFromDB(): Promise<any[] | null> {
   }
 }
 
+// Sort loans consistently (by created timestamp descending, newest first)
+function sortLoans(data: any[]): any[] {
+  return data.sort((a, b) => {
+    // Sort by created timestamp (descending - newest first)
+    const crA = a.cr || (a.sdt ? new Date(a.sdt).getTime() : 0);
+    const crB = b.cr || (b.sdt ? new Date(b.sdt).getTime() : 0);
+    return crB - crA; // Descending order (newest first)
+  });
+}
+
 // Save loans data to IndexedDB
 export async function saveLoansToDB(data: any[]): Promise<void> {
   try {
@@ -153,7 +163,7 @@ export async function saveLoansToDB(data: any[]): Promise<void> {
   }
 }
 
-// Get loans data from IndexedDB
+// Get loans data from IndexedDB (sorted consistently)
 export async function getLoansFromDB(): Promise<any[] | null> {
   try {
     const db = await openDB();
@@ -165,7 +175,9 @@ export async function getLoansFromDB(): Promise<any[] | null> {
       request.onsuccess = () => {
         const data = request.result as any[];
         transaction.oncomplete = () => db.close();
-        resolve(data.length > 0 ? data : null);
+        // Sort data before returning to match consistent order
+        const sortedData = data.length > 0 ? sortLoans(data) : null;
+        resolve(sortedData);
       };
       request.onerror = () => {
         transaction.oncomplete = () => db.close();
@@ -209,7 +221,32 @@ export async function savePaymentsToDB(payments: any[]): Promise<void> {
   }
 }
 
-// Get payments data from IndexedDB
+// Sort payments consistently (by created timestamp descending, newest first)
+function sortPayments(payments: any[]): any[] {
+  // Payments are stored by loanId, so we need to sort payments within each loan
+  return payments.map((loanPayment) => {
+    if (loanPayment.data && Array.isArray(loanPayment.data)) {
+      // Sort payments within each loan by date (descending), then by cr (descending)
+      loanPayment.data = [...loanPayment.data].sort((a: any, b: any) => {
+        const dateA = new Date(a.fdt || a.date || 0).getTime();
+        const dateB = new Date(b.fdt || b.date || 0).getTime();
+        const dateComparison = dateB - dateA;
+        
+        if (dateComparison !== 0) {
+          return dateComparison;
+        }
+        
+        // For same date, sort by created timestamp (descending - newest first)
+        const crA = a.cr || new Date(a.fdt || a.date || 0).getTime();
+        const crB = b.cr || new Date(b.fdt || b.date || 0).getTime();
+        return crB - crA;
+      });
+    }
+    return loanPayment;
+  });
+}
+
+// Get payments data from IndexedDB (sorted consistently)
 export async function getPaymentsFromDB(): Promise<any[] | null> {
   try {
     const db = await openDB();
@@ -221,7 +258,9 @@ export async function getPaymentsFromDB(): Promise<any[] | null> {
       request.onsuccess = () => {
         const data = request.result as any[];
         transaction.oncomplete = () => db.close();
-        resolve(data.length > 0 ? data : null);
+        // Sort payments before returning to match consistent order
+        const sortedData = data.length > 0 ? sortPayments(data) : null;
+        resolve(sortedData);
       };
       request.onerror = () => {
         transaction.oncomplete = () => db.close();

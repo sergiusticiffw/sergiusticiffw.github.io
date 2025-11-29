@@ -720,9 +720,16 @@ export const fetchLoans = async (
     const cachedPayments = await getPaymentsFromDB();
     
     if (cachedLoans && cachedLoans.length > 0) {
+      // Ensure loans are sorted consistently (by cr descending, newest first)
+      const sortedLoans = [...cachedLoans].sort((a, b) => {
+        const crA = a.cr || (a.sdt ? new Date(a.sdt).getTime() : 0);
+        const crB = b.cr || (b.sdt ? new Date(b.sdt).getTime() : 0);
+        return crB - crA; // Descending order (newest first)
+      });
+
       dataDispatch({
         type: 'SET_DATA',
-        loans: cachedLoans,
+        loans: sortedLoans,
         payments: cachedPayments || [],
         loading: false,
       });
@@ -752,19 +759,61 @@ export const fetchLoans = async (
         const paymentPromises = data.map((item) =>
           fetch(`${API_BASE_URL}/api/payments/${item.id}`, fetchOptions)
             .then((response) => response.json())
-            .then((responseData) => ({ loanId: item.id, data: responseData }))
+            .then((responseData) => {
+              // Add created timestamp if not present for consistent sorting
+              if (Array.isArray(responseData)) {
+                responseData = responseData.map((payment: any) => {
+                  if (!payment.cr && payment.fdt) {
+                    payment.cr = new Date(payment.fdt).getTime();
+                  }
+                  return payment;
+                });
+                // Sort payments by date (descending), then by cr (descending)
+                responseData.sort((a: any, b: any) => {
+                  const dateA = new Date(a.fdt || 0).getTime();
+                  const dateB = new Date(b.fdt || 0).getTime();
+                  const dateComparison = dateB - dateA;
+                  
+                  if (dateComparison !== 0) {
+                    return dateComparison;
+                  }
+                  
+                  // For same date, sort by created timestamp (descending - newest first)
+                  const crA = a.cr || new Date(a.fdt || 0).getTime();
+                  const crB = b.cr || new Date(b.fdt || 0).getTime();
+                  return crB - crA;
+                });
+              }
+              return { loanId: item.id, data: responseData };
+            })
         );
         const payments = await Promise.all(paymentPromises);
 
+        // Add created timestamp if not present for consistent sorting
+        const dataWithTimestamp = data.map((item: any) => {
+          if (!item.cr && item.sdt) {
+            // Use start date as fallback for sorting
+            item.cr = new Date(item.sdt).getTime();
+          }
+          return item;
+        });
+
+        // Sort loans by created timestamp (descending - newest first)
+        const sortedLoans = [...dataWithTimestamp].sort((a: any, b: any) => {
+          const crA = a.cr || (a.sdt ? new Date(a.sdt).getTime() : 0);
+          const crB = b.cr || (b.sdt ? new Date(b.sdt).getTime() : 0);
+          return crB - crA; // Descending order (newest first)
+        });
+
         // Save to IndexedDB for next time
         if (isIndexedDBAvailable()) {
-          await saveLoansToDB(data);
+          await saveLoansToDB(sortedLoans);
           await savePaymentsToDB(payments);
         }
 
         dataDispatch({
           type: 'SET_DATA',
-          loans: data,
+          loans: sortedLoans,
           payments,
           loading: false,
         });

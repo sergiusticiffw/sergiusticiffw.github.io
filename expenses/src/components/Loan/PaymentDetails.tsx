@@ -113,13 +113,43 @@ const PaymentDetails = (props) => {
   // Sort payments
   const sortedPayments = [...payments].sort((a, b) => {
     if (!sortField) {
-      return new Date(b.fdt).getTime() - new Date(a.fdt).getTime();
+      // Default sort: by date (descending), then by cr (descending) for same day
+      const dateA = new Date(a.fdt).getTime();
+      const dateB = new Date(b.fdt).getTime();
+      const dateComparison = dateB - dateA;
+      
+      if (dateComparison !== 0) {
+        return dateComparison;
+      }
+      
+      // For same date, sort by created timestamp (descending - newest first)
+      const crA = a.cr || new Date(a.fdt).getTime();
+      const crB = b.cr || new Date(b.fdt).getTime();
+      return crB - crA;
     }
 
     if (sortField === 'date') {
       const dateA = new Date(a.fdt).getTime();
       const dateB = new Date(b.fdt).getTime();
-      return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+      if (sortDirection === 'asc') {
+        // For ascending, if same date, sort by cr ascending (oldest first)
+        const dateComparison = dateA - dateB;
+        if (dateComparison !== 0) {
+          return dateComparison;
+        }
+        const crA = a.cr || new Date(a.fdt).getTime();
+        const crB = b.cr || new Date(b.fdt).getTime();
+        return crA - crB;
+      } else {
+        // For descending, if same date, sort by cr descending (newest first)
+        const dateComparison = dateB - dateA;
+        if (dateComparison !== 0) {
+          return dateComparison;
+        }
+        const crA = a.cr || new Date(a.fdt).getTime();
+        const crB = b.cr || new Date(b.fdt).getTime();
+        return crB - crA;
+      }
     }
 
     if (sortField === 'amount') {

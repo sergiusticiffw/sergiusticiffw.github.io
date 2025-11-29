@@ -185,9 +185,16 @@ export async function updateLoansUILocally(
   const loans = await getLoansFromDB() || [];
   const payments = await getPaymentsFromDB() || [];
   
+  // Ensure loans are sorted consistently (by cr descending, newest first)
+  const sortedLoans = loans.length > 0 ? [...loans].sort((a, b) => {
+    const crA = a.cr || (a.sdt ? new Date(a.sdt).getTime() : 0);
+    const crB = b.cr || (b.sdt ? new Date(b.sdt).getTime() : 0);
+    return crB - crA; // Descending order (newest first)
+  }) : null;
+  
   dataDispatch({
     type: 'SET_DATA',
-    loans: loans.length > 0 ? loans : null,
+    loans: sortedLoans,
     payments,
     loading: false,
   });
