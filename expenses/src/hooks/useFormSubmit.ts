@@ -16,6 +16,7 @@ import {
   savePaymentOffline,
   updateLoansUILocally,
 } from '@utils/offlineAPI';
+import { getPendingSyncOperations, removeSyncOperation } from '@utils/indexedDB';
 
 interface UseFormSubmitOptions<T> {
   formType: 'add' | 'edit';
@@ -198,8 +199,26 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 }
                 transaction.oncomplete = () => db.close();
                 
+                // Remove from sync queue since we successfully synced online
+                const pendingOps = await getPendingSyncOperations();
+                const op = pendingOps.find(
+                  (o) => o.localId === loanItem.id && o.type === 'create' && o.entityType === 'loan'
+                );
+                if (op && op.id) {
+                  await removeSyncOperation(op.id);
+                }
+                
                 // Update UI
                 await updateLoansUILocally(dataDispatch);
+              } else if (formType === 'edit' && data.nid) {
+                // For edit operations, also remove from sync queue if successful
+                const pendingOps = await getPendingSyncOperations();
+                const op = pendingOps.find(
+                  (o) => o.localId === loanItem.id && o.type === 'update' && o.entityType === 'loan'
+                );
+                if (op && op.id) {
+                  await removeSyncOperation(op.id);
+                }
               }
             })
             .catch((error) => {
@@ -276,9 +295,27 @@ export const useFormSubmit = <T extends Record<string, any>>({
             })
             .then(async (data: NodeData) => {
               if (data.nid && formType === 'add' && paymentItem.id?.startsWith('temp_')) {
+                // Remove from sync queue since we successfully synced online
+                const pendingOps = await getPendingSyncOperations();
+                const op = pendingOps.find(
+                  (o) => o.localId === paymentItem.id && o.type === 'create' && o.entityType === 'payment'
+                );
+                if (op && op.id) {
+                  await removeSyncOperation(op.id);
+                }
+                
                 // For payments, we need to reload from server to get updated structure
                 // The sync service will handle this
                 await updateLoansUILocally(dataDispatch);
+              } else if (formType === 'edit' && data.nid) {
+                // For edit operations, also remove from sync queue if successful
+                const pendingOps = await getPendingSyncOperations();
+                const op = pendingOps.find(
+                  (o) => o.localId === paymentItem.id && o.type === 'update' && o.entityType === 'payment'
+                );
+                if (op && op.id) {
+                  await removeSyncOperation(op.id);
+                }
               }
             })
             .catch((error) => {
@@ -378,8 +415,26 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 }
                 transaction.oncomplete = () => db.close();
                 
+                // Remove from sync queue since we successfully synced online
+                const pendingOps = await getPendingSyncOperations();
+                const op = pendingOps.find(
+                  (o) => o.localId === savedItem.id && o.type === 'create' && o.entityType === entityType
+                );
+                if (op && op.id) {
+                  await removeSyncOperation(op.id);
+                }
+                
                 // Update UI
                 await updateUILocally(dataDispatch);
+              } else if (formType === 'edit' && data.nid) {
+                // For edit operations, also remove from sync queue if successful
+                const pendingOps = await getPendingSyncOperations();
+                const op = pendingOps.find(
+                  (o) => o.localId === savedItem.id && o.type === 'update' && o.entityType === entityType
+                );
+                if (op && op.id) {
+                  await removeSyncOperation(op.id);
+                }
               }
             }
           );
