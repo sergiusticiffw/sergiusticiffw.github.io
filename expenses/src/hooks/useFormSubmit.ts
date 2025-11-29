@@ -127,9 +127,6 @@ export const useFormSubmit = <T extends Record<string, any>>({
         const savedId = await saveLoanOffline(loanItem, node, formType, url, method);
         loanItem.id = savedId;
 
-        // Update UI with local data
-        await updateLoansUILocally(dataDispatch);
-
         // Show success message
         const messageKey = successMessageKeys
           ? formType === 'add'
@@ -139,9 +136,12 @@ export const useFormSubmit = <T extends Record<string, any>>({
             ? 'notification.added'
             : 'notification.updated';
         
+        // Try to sync if online, otherwise update UI with local data
         if (isOnline()) {
-          showNotification(t(messageKey), notificationType.SUCCESS);
+          // Don't update UI yet - wait for server response
         } else {
+          // Update UI with local data when offline
+          await updateLoansUILocally(dataDispatch);
           showNotification(t('notification.savedOffline') || 'Saved offline', notificationType.SUCCESS);
         }
 
@@ -169,61 +169,86 @@ export const useFormSubmit = <T extends Record<string, any>>({
               return response.json();
             })
             .then(async (data: NodeData) => {
-              if (data.nid && formType === 'add' && loanItem.id?.startsWith('temp_')) {
-                // Update local item with server ID
+              if (data.nid) {
                 const serverId = data.nid[0]?.value?.toString() || data.nid.toString();
-                const { openDB } = await import('@utils/indexedDB');
-                const db = await openDB();
-                const transaction = db.transaction('loans', 'readwrite');
-                const store = transaction.objectStore('loans');
+                const { openDB, saveLoanLocally } = await import('@utils/indexedDB');
                 
-                const localItem = await new Promise<any>((resolve) => {
-                  const req = store.get(loanItem.id);
-                  req.onsuccess = () => resolve(req.result);
-                  req.onerror = () => resolve(null);
-                });
-
-                if (localItem) {
-                  await new Promise<void>((resolve) => {
-                    const delReq = store.delete(loanItem.id!);
-                    delReq.onsuccess = () => resolve();
-                    delReq.onerror = () => resolve();
-                  });
+                if (formType === 'add' && loanItem.id?.startsWith('temp_')) {
+                  // Update local item with server ID
+                  const db = await openDB();
+                  const transaction = db.transaction('loans', 'readwrite');
+                  const store = transaction.objectStore('loans');
                   
-                  localItem.id = serverId;
-                  await new Promise<void>((resolve) => {
-                    const putReq = store.put(localItem);
-                    putReq.onsuccess = () => resolve();
-                    putReq.onerror = () => resolve();
+                  const localItem = await new Promise<any>((resolve) => {
+                    const req = store.get(loanItem.id);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => resolve(null);
                   });
+
+                  if (localItem) {
+                    await new Promise<void>((resolve) => {
+                      const delReq = store.delete(loanItem.id!);
+                      delReq.onsuccess = () => resolve();
+                      delReq.onerror = () => resolve();
+                    });
+                    
+                    localItem.id = serverId;
+                    await new Promise<void>((resolve) => {
+                      const putReq = store.put(localItem);
+                      putReq.onsuccess = () => resolve();
+                      putReq.onerror = () => resolve();
+                    });
+                  }
+                  transaction.oncomplete = () => db.close();
+                  
+                  // Remove from sync queue since we successfully synced online
+                  const pendingOps = await getPendingSyncOperations();
+                  const op = pendingOps.find(
+                    (o) => o.localId === loanItem.id && o.type === 'create' && o.entityType === 'loan'
+                  );
+                  if (op && op.id) {
+                    await removeSyncOperation(op.id);
+                  }
+                } else if (formType === 'edit') {
+                  // For edit operations, update local DB with server data
+                  const updatedLoan: any = {
+                    id: serverId,
+                    title: node.title?.[0] || loanItem.title,
+                    fp: node.field_principal?.[0] || loanItem.fp,
+                    sdt: node.field_start_date?.[0] || loanItem.sdt,
+                    edt: node.field_end_date?.[0] || loanItem.edt,
+                    fr: node.field_rate?.[0] || loanItem.fr,
+                    fif: node.field_initial_fee?.[0] || loanItem.fif,
+                    pdt: node.field_rec_first_payment_date?.[0] || loanItem.pdt,
+                    frpd: node.field_recurring_payment_day?.[0] || loanItem.frpd,
+                    fls: node.field_loan_status?.[0] || loanItem.fls,
+                  };
+                  
+                  // Update local DB with server data
+                  await saveLoanLocally(updatedLoan, false);
+                  
+                  // Remove from sync queue since we successfully synced online
+                  const pendingOps = await getPendingSyncOperations();
+                  const op = pendingOps.find(
+                    (o) => o.localId === loanItem.id && o.type === 'update' && o.entityType === 'loan'
+                  );
+                  if (op && op.id) {
+                    await removeSyncOperation(op.id);
+                  }
                 }
-                transaction.oncomplete = () => db.close();
                 
-                // Remove from sync queue since we successfully synced online
-                const pendingOps = await getPendingSyncOperations();
-                const op = pendingOps.find(
-                  (o) => o.localId === loanItem.id && o.type === 'create' && o.entityType === 'loan'
-                );
-                if (op && op.id) {
-                  await removeSyncOperation(op.id);
-                }
-                
-                // Update UI
+                // Update UI with latest data from local DB
                 await updateLoansUILocally(dataDispatch);
-              } else if (formType === 'edit' && data.nid) {
-                // For edit operations, also remove from sync queue if successful
-                const pendingOps = await getPendingSyncOperations();
-                const op = pendingOps.find(
-                  (o) => o.localId === loanItem.id && o.type === 'update' && o.entityType === 'loan'
-                );
-                if (op && op.id) {
-                  await removeSyncOperation(op.id);
-                }
+                
+                // Show success notification after UI update
+                showNotification(t(messageKey), notificationType.SUCCESS);
               }
             })
             .catch((error) => {
               console.error('Loan sync failed:', error);
             });
+        } else {
+          // If offline, UI was already updated above
         }
       }
       // For payments: implement offline-first approach
@@ -252,9 +277,6 @@ export const useFormSubmit = <T extends Record<string, any>>({
         const savedId = await savePaymentOffline(loanId, paymentItem, node, formType, url, method);
         paymentItem.id = savedId;
 
-        // Update UI with local data
-        await updateLoansUILocally(dataDispatch);
-
         // Show success message
         const messageKey = successMessageKeys
           ? formType === 'add'
@@ -264,9 +286,12 @@ export const useFormSubmit = <T extends Record<string, any>>({
             ? 'notification.added'
             : 'notification.updated';
         
+        // Try to sync if online, otherwise update UI with local data
         if (isOnline()) {
-          showNotification(t(messageKey), notificationType.SUCCESS);
+          // Don't update UI yet - wait for server response
         } else {
+          // Update UI with local data when offline
+          await updateLoansUILocally(dataDispatch);
           showNotification(t('notification.savedOffline') || 'Saved offline', notificationType.SUCCESS);
         }
 
@@ -294,33 +319,73 @@ export const useFormSubmit = <T extends Record<string, any>>({
               return response.json();
             })
             .then(async (data: NodeData) => {
-              if (data.nid && formType === 'add' && paymentItem.id?.startsWith('temp_')) {
-                // Remove from sync queue since we successfully synced online
-                const pendingOps = await getPendingSyncOperations();
-                const op = pendingOps.find(
-                  (o) => o.localId === paymentItem.id && o.type === 'create' && o.entityType === 'payment'
-                );
-                if (op && op.id) {
-                  await removeSyncOperation(op.id);
+              if (data.nid) {
+                const serverId = data.nid[0]?.value?.toString() || data.nid.toString();
+                const { savePaymentLocally } = await import('@utils/indexedDB');
+                const loanId = node.field_loan_reference?.[0] || additionalParams?.loanId || values.field_loan_reference;
+                
+                if (formType === 'add' && paymentItem.id?.startsWith('temp_')) {
+                  // Update local payment with server ID
+                  const updatedPayment: any = {
+                    id: serverId,
+                    title: node.title?.[0] || paymentItem.title,
+                    fdt: node.field_date?.[0] || paymentItem.fdt,
+                    fr: node.field_rate?.[0] || paymentItem.fr,
+                    fpi: node.field_pay_installment?.[0] || paymentItem.fpi,
+                    fpsf: node.field_pay_single_fee?.[0] || paymentItem.fpsf,
+                    fnra: node.field_new_recurring_amount?.[0] || paymentItem.fnra,
+                    fisp: node.field_is_simulated_payment?.[0] || paymentItem.fisp,
+                  };
+                  
+                  // Update local DB with server data
+                  await savePaymentLocally(loanId, updatedPayment, false);
+                  
+                  // Remove from sync queue since we successfully synced online
+                  const pendingOps = await getPendingSyncOperations();
+                  const op = pendingOps.find(
+                    (o) => o.localId === paymentItem.id && o.type === 'create' && o.entityType === 'payment'
+                  );
+                  if (op && op.id) {
+                    await removeSyncOperation(op.id);
+                  }
+                } else if (formType === 'edit') {
+                  // For edit operations, update local DB with server data
+                  const updatedPayment: any = {
+                    id: serverId,
+                    title: node.title?.[0] || paymentItem.title,
+                    fdt: node.field_date?.[0] || paymentItem.fdt,
+                    fr: node.field_rate?.[0] || paymentItem.fr,
+                    fpi: node.field_pay_installment?.[0] || paymentItem.fpi,
+                    fpsf: node.field_pay_single_fee?.[0] || paymentItem.fpsf,
+                    fnra: node.field_new_recurring_amount?.[0] || paymentItem.fnra,
+                    fisp: node.field_is_simulated_payment?.[0] || paymentItem.fisp,
+                  };
+                  
+                  // Update local DB with server data
+                  await savePaymentLocally(loanId, updatedPayment, false);
+                  
+                  // Remove from sync queue since we successfully synced online
+                  const pendingOps = await getPendingSyncOperations();
+                  const op = pendingOps.find(
+                    (o) => o.localId === paymentItem.id && o.type === 'update' && o.entityType === 'payment'
+                  );
+                  if (op && op.id) {
+                    await removeSyncOperation(op.id);
+                  }
                 }
                 
-                // For payments, we need to reload from server to get updated structure
-                // The sync service will handle this
+                // Update UI with latest data from local DB
                 await updateLoansUILocally(dataDispatch);
-              } else if (formType === 'edit' && data.nid) {
-                // For edit operations, also remove from sync queue if successful
-                const pendingOps = await getPendingSyncOperations();
-                const op = pendingOps.find(
-                  (o) => o.localId === paymentItem.id && o.type === 'update' && o.entityType === 'payment'
-                );
-                if (op && op.id) {
-                  await removeSyncOperation(op.id);
-                }
+                
+                // Show success notification after UI update
+                showNotification(t(messageKey), notificationType.SUCCESS);
               }
             })
             .catch((error) => {
               console.error('Payment sync failed:', error);
             });
+        } else {
+          // If offline, UI was already updated above
         }
       }
       // For transactions/income: implement offline-first approach
@@ -340,9 +405,6 @@ export const useFormSubmit = <T extends Record<string, any>>({
         const savedId = await saveOffline(savedItem, node, formType, entityType, url, method);
         savedItem.id = savedId;
 
-        // Update UI with local data
-        await updateUILocally(dataDispatch);
-
         // Show success message
         const messageKey = successMessageKeys
           ? formType === 'add'
@@ -352,9 +414,12 @@ export const useFormSubmit = <T extends Record<string, any>>({
             ? 'notification.added'
             : 'notification.updated';
         
+        // Try to sync if online, otherwise update UI with local data
         if (isOnline()) {
-          showNotification(t(messageKey), notificationType.SUCCESS);
+          // Don't update UI yet - wait for server response
         } else {
+          // Update UI with local data when offline
+          await updateUILocally(dataDispatch);
           showNotification(t('notification.savedOffline') || 'Saved offline', notificationType.SUCCESS);
         }
 
@@ -385,59 +450,80 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 return;
               }
 
-              if (data.nid && formType === 'add' && savedItem.id?.startsWith('temp_')) {
-                // Update local item with server ID
+              if (data.nid) {
                 const serverId = data.nid[0]?.value?.toString() || data.nid.toString();
-                const { openDB } = await import('@utils/indexedDB');
-                const db = await openDB();
-                const transaction = db.transaction('expenses', 'readwrite');
-                const store = transaction.objectStore('expenses');
+                const { openDB, saveExpenseLocally } = await import('@utils/indexedDB');
                 
-                const localItem = await new Promise<any>((resolve) => {
-                  const req = store.get(savedItem.id);
-                  req.onsuccess = () => resolve(req.result);
-                  req.onerror = () => resolve(null);
-                });
-
-                if (localItem) {
-                  await new Promise<void>((resolve) => {
-                    const delReq = store.delete(savedItem.id!);
-                    delReq.onsuccess = () => resolve();
-                    delReq.onerror = () => resolve();
-                  });
+                if (formType === 'add' && savedItem.id?.startsWith('temp_')) {
+                  // Update local item with server ID
+                  const db = await openDB();
+                  const transaction = db.transaction('expenses', 'readwrite');
+                  const store = transaction.objectStore('expenses');
                   
-                  localItem.id = serverId;
-                  await new Promise<void>((resolve) => {
-                    const putReq = store.put(localItem);
-                    putReq.onsuccess = () => resolve();
-                    putReq.onerror = () => resolve();
+                  const localItem = await new Promise<any>((resolve) => {
+                    const req = store.get(savedItem.id);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => resolve(null);
                   });
+
+                  if (localItem) {
+                    await new Promise<void>((resolve) => {
+                      const delReq = store.delete(savedItem.id!);
+                      delReq.onsuccess = () => resolve();
+                      delReq.onerror = () => resolve();
+                    });
+                    
+                    localItem.id = serverId;
+                    await new Promise<void>((resolve) => {
+                      const putReq = store.put(localItem);
+                      putReq.onsuccess = () => resolve();
+                      putReq.onerror = () => resolve();
+                    });
+                  }
+                  transaction.oncomplete = () => db.close();
+                  
+                  // Remove from sync queue since we successfully synced online
+                  const pendingOps = await getPendingSyncOperations();
+                  const op = pendingOps.find(
+                    (o) => o.localId === savedItem.id && o.type === 'create' && o.entityType === entityType
+                  );
+                  if (op && op.id) {
+                    await removeSyncOperation(op.id);
+                  }
+                } else if (formType === 'edit') {
+                  // For edit operations, update local DB with server data
+                  const updatedItem: TransactionOrIncomeItem = {
+                    id: serverId,
+                    dt: node.field_date?.[0] || node.title?.[0] || savedItem.dt,
+                    sum: node.field_amount?.[0] || savedItem.sum,
+                    type: savedItem.type,
+                    cat: node.field_category?.[0] || savedItem.cat,
+                    dsc: node.field_description?.[0] || savedItem.dsc,
+                  };
+                  
+                  // Update local DB with server data
+                  await saveExpenseLocally(updatedItem, false);
+                  
+                  // Remove from sync queue since we successfully synced online
+                  const pendingOps = await getPendingSyncOperations();
+                  const op = pendingOps.find(
+                    (o) => o.localId === savedItem.id && o.type === 'update' && o.entityType === entityType
+                  );
+                  if (op && op.id) {
+                    await removeSyncOperation(op.id);
+                  }
                 }
-                transaction.oncomplete = () => db.close();
                 
-                // Remove from sync queue since we successfully synced online
-                const pendingOps = await getPendingSyncOperations();
-                const op = pendingOps.find(
-                  (o) => o.localId === savedItem.id && o.type === 'create' && o.entityType === entityType
-                );
-                if (op && op.id) {
-                  await removeSyncOperation(op.id);
-                }
-                
-                // Update UI
+                // Update UI with latest data from local DB
                 await updateUILocally(dataDispatch);
-              } else if (formType === 'edit' && data.nid) {
-                // For edit operations, also remove from sync queue if successful
-                const pendingOps = await getPendingSyncOperations();
-                const op = pendingOps.find(
-                  (o) => o.localId === savedItem.id && o.type === 'update' && o.entityType === entityType
-                );
-                if (op && op.id) {
-                  await removeSyncOperation(op.id);
-                }
+                
+                // Show success notification after UI update
+                showNotification(t(messageKey), notificationType.SUCCESS);
               }
             }
           );
+        } else {
+          // If offline, UI was already updated above
         }
       } else {
         // Fallback to original behavior
