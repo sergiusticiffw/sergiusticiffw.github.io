@@ -171,7 +171,7 @@ export async function updateUILocally(
   
   dataDispatch({
     type: 'SET_DATA',
-    raw: updatedData,
+    raw: processedData.raw || updatedData, // Use sorted data from processDataSync
     ...processedData,
     totals: processedData.monthsTotals,
     loading: false,

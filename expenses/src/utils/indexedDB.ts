@@ -74,17 +74,24 @@ export async function saveExpensesToDB(
   }
 }
 
-// Sort expenses consistently (by created timestamp if available, otherwise by date)
+// Sort expenses consistently (by date descending, then by created timestamp descending for same day)
 function sortExpenses(data: any[]): any[] {
   return data.sort((a, b) => {
-    // If both have created timestamp, use it
-    if (a.cr && b.cr) {
-      return b.cr - a.cr; // Descending order (newest first)
-    }
-    // Otherwise sort by date
+    // First sort by date (descending - newest dates first)
     const dateA = new Date(a.dt).getTime();
     const dateB = new Date(b.dt).getTime();
-    return dateB - dateA; // Descending order (newest first)
+    const dateComparison = dateB - dateA;
+    
+    // If dates are different, return date comparison
+    if (dateComparison !== 0) {
+      return dateComparison;
+    }
+    
+    // For same date, sort by created timestamp (descending - newest first, oldest last)
+    // This ensures new items appear at the beginning of the same day
+    const crA = a.cr || new Date(a.dt).getTime();
+    const crB = b.cr || new Date(b.dt).getTime();
+    return crB - crA; // Descending order (newest first, oldest last)
   });
 }
 

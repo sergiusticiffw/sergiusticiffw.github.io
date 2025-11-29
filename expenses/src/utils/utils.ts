@@ -473,6 +473,22 @@ function processDataWithWorker(
 
 // Synchronous fallback processing (original logic)
 export function processDataSync(data: TransactionOrIncomeItem[]) {
+  // First, ensure data is sorted correctly (by date descending, then by cr descending for same day)
+  const sortedData = [...data].sort((a, b) => {
+    const dateA = new Date(a.dt).getTime();
+    const dateB = new Date(b.dt).getTime();
+    const dateComparison = dateB - dateA;
+    
+    if (dateComparison !== 0) {
+      return dateComparison;
+    }
+    
+    // For same date, sort by created timestamp (descending - newest first, oldest last)
+    const crA = a.cr || new Date(a.dt).getTime();
+    const crB = b.cr || new Date(b.dt).getTime();
+    return crB - crA;
+  });
+
   const groupedData: Record<string, TransactionOrIncomeItem[]> = {};
   const totalsPerYearAndMonth: DataStructure = {};
   const totalPerYear: ItemTotal = {};
@@ -489,7 +505,7 @@ export function processDataSync(data: TransactionOrIncomeItem[]) {
     'July', 'August', 'September', 'October', 'November', 'December',
   ];
 
-  data.forEach((item) => {
+  sortedData.forEach((item) => {
     const date = new Date(item.dt);
     const year = date.getFullYear();
     const month = `${englishMonthNames[date.getMonth()]} ${year}`;
@@ -543,6 +559,41 @@ export function processDataSync(data: TransactionOrIncomeItem[]) {
     }
   });
 
+  // Sort grouped data by date (descending) and by created timestamp (descending) for same day
+  Object.keys(groupedData).forEach((month) => {
+    groupedData[month].sort((a, b) => {
+      const dateA = new Date(a.dt).getTime();
+      const dateB = new Date(b.dt).getTime();
+      const dateComparison = dateB - dateA;
+      
+      if (dateComparison !== 0) {
+        return dateComparison;
+      }
+      
+      // For same date, sort by created timestamp (descending - newest first, oldest last)
+      const crA = a.cr || new Date(a.dt).getTime();
+      const crB = b.cr || new Date(b.dt).getTime();
+      return crB - crA;
+    });
+  });
+
+  // Sort income data by date (descending) and by created timestamp (descending) for same day
+  incomeData.sort((a, b) => {
+    const dateA = new Date(a.dt).getTime();
+    const dateB = new Date(b.dt).getTime();
+    const dateComparison = dateB - dateA;
+    
+    if (dateComparison !== 0) {
+      return dateComparison;
+    }
+    
+    // For same date, sort by created timestamp (descending - newest first, oldest last)
+    const crA = a.cr || new Date(a.dt).getTime();
+    const crB = b.cr || new Date(b.dt).getTime();
+    return crB - crA;
+  });
+
+  // Return sorted data as raw (to maintain correct order)
   return {
     groupedData,
     totalsPerYearAndMonth,
@@ -555,6 +606,7 @@ export function processDataSync(data: TransactionOrIncomeItem[]) {
     totalIncomePerYearAndMonth,
     categoryTotals,
     totalSpent,
+    raw: sortedData, // Return sorted data
   };
 }
 
@@ -569,11 +621,27 @@ export const fetchData = async (
   if (isIndexedDBAvailable()) {
     const cachedData = await getExpensesFromDB();
     if (cachedData && cachedData.length > 0) {
+      // Ensure data is sorted before processing (by date descending, then by cr descending for same day)
+      const sortedCachedData = [...cachedData].sort((a, b) => {
+        const dateA = new Date(a.dt).getTime();
+        const dateB = new Date(b.dt).getTime();
+        const dateComparison = dateB - dateA;
+        
+        if (dateComparison !== 0) {
+          return dateComparison;
+        }
+        
+        // For same date, sort by created timestamp (descending - newest first, oldest last)
+        const crA = a.cr || new Date(a.dt).getTime();
+        const crB = b.cr || new Date(b.dt).getTime();
+        return crB - crA;
+      });
+
       // Process cached data with worker
-      processDataWithWorker(cachedData, (processedData) => {
+      processDataWithWorker(sortedCachedData, (processedData) => {
         dataDispatch({
           type: 'SET_DATA',
-          raw: cachedData,
+          raw: sortedCachedData,
           ...processedData,
           totals: processedData.monthsTotals, // Map monthsTotals to totals
           loading: false,

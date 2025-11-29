@@ -145,11 +145,14 @@ export const sortByDate = <T extends { dt?: string; cr?: number }>(
   items: T[]
 ): T[] => {
   return items.sort((a, b) => {
+    // First sort by date (descending - newest dates first)
     const dateComparison =
       new Date(b.dt || '').getTime() - new Date(a.dt || '').getTime();
     if (dateComparison !== 0) {
       return dateComparison;
     }
+    // For same date, sort by created timestamp (descending - newest first, oldest last)
+    // This ensures new items appear at the beginning of the same day
     return (b.cr || 0) - (a.cr || 0);
   });
 };

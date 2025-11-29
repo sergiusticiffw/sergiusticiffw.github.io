@@ -107,7 +107,23 @@ self.onmessage = function (e: MessageEvent) {
   };
 
   if (data) {
-    data.forEach((item: any) => {
+    // Sort data first: by date (descending), then by cr (descending) for same day
+    const sortedData = [...data].sort((a: any, b: any) => {
+      const dateA = new Date(a.dt).getTime();
+      const dateB = new Date(b.dt).getTime();
+      const dateComparison = dateB - dateA;
+      
+      if (dateComparison !== 0) {
+        return dateComparison;
+      }
+      
+      // For same date, sort by created timestamp (descending - newest first, oldest last)
+      const crA = a.cr || new Date(a.dt).getTime();
+      const crB = b.cr || new Date(b.dt).getTime();
+      return crB - crA;
+    });
+
+    sortedData.forEach((item: any) => {
       const { dt, cat } = item;
       const date = new Date(dt);
       const year = date.getFullYear();
@@ -121,6 +137,40 @@ self.onmessage = function (e: MessageEvent) {
       }
       updateYearAndMonth(year, month);
       updateTotals(item, year, month);
+    });
+
+    // Sort grouped data by date (descending) and by created timestamp (descending) for same day
+    Object.keys(groupedData).forEach((month) => {
+      groupedData[month].sort((a: any, b: any) => {
+        const dateA = new Date(a.dt).getTime();
+        const dateB = new Date(b.dt).getTime();
+        const dateComparison = dateB - dateA;
+        
+        if (dateComparison !== 0) {
+          return dateComparison;
+        }
+        
+        // For same date, sort by created timestamp (descending - newest first, oldest last)
+        const crA = a.cr || new Date(a.dt).getTime();
+        const crB = b.cr || new Date(b.dt).getTime();
+        return crB - crA;
+      });
+    });
+
+    // Sort income data by date (descending) and by created timestamp (descending) for same day
+    incomeData.sort((a: any, b: any) => {
+      const dateA = new Date(a.dt).getTime();
+      const dateB = new Date(b.dt).getTime();
+      const dateComparison = dateB - dateA;
+      
+      if (dateComparison !== 0) {
+        return dateComparison;
+      }
+      
+      // For same date, sort by created timestamp (descending - newest first, oldest last)
+      const crA = a.cr || new Date(a.dt).getTime();
+      const crB = b.cr || new Date(b.dt).getTime();
+      return crB - crA;
     });
   }
 
