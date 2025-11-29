@@ -14,7 +14,7 @@ import {
   isOnline,
   SyncOperation,
 } from './indexedDB';
-import { processDataSync } from './utils';
+import { processDataSync, processLoans } from './utils';
 import { TransactionOrIncomeItem } from '@type/types';
 
 // Save transaction/income offline
@@ -186,11 +186,7 @@ export async function updateLoansUILocally(
   const payments = await getPaymentsFromDB() || [];
   
   // Ensure loans are sorted consistently (by cr descending, newest first)
-  const sortedLoans = loans.length > 0 ? [...loans].sort((a, b) => {
-    const crA = a.cr || (a.sdt ? new Date(a.sdt).getTime() : 0);
-    const crB = b.cr || (b.sdt ? new Date(b.sdt).getTime() : 0);
-    return crB - crA; // Descending order (newest first)
-  }) : null;
+  const sortedLoans = loans.length > 0 ? processLoans(loans) : null;
   
   dataDispatch({
     type: 'SET_DATA',

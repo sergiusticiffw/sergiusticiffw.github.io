@@ -703,6 +703,84 @@ export const fetchData = async (
   }
 };
 
+// Helper function to process and sort payments (exported for reuse)
+export const processPayments = (payments: any[]): any[] => {
+  return payments
+    .map((payment: any) => {
+      if (!payment.cr && payment.fdt) {
+        payment.cr = new Date(payment.fdt).getTime();
+      }
+      return payment;
+    })
+    .sort((a: any, b: any) => {
+      const dateA = new Date(a.fdt || 0).getTime();
+      const dateB = new Date(b.fdt || 0).getTime();
+      const dateComparison = dateB - dateA;
+      
+      if (dateComparison !== 0) return dateComparison;
+      
+      // For same date, sort by created timestamp (descending - newest first)
+      const crA = a.cr || new Date(a.fdt || 0).getTime();
+      const crB = b.cr || new Date(b.fdt || 0).getTime();
+      return crB - crA;
+    });
+};
+
+// Helper function to process and sort loans (exported for reuse)
+export const processLoans = (loans: any[]): any[] => {
+  return loans
+    .map((loan: any) => {
+      if (!loan.cr && loan.sdt) {
+        loan.cr = new Date(loan.sdt).getTime();
+      }
+      return loan;
+    })
+    .sort((a: any, b: any) => {
+      const crA = a.cr || (a.sdt ? new Date(a.sdt).getTime() : 0);
+      const crB = b.cr || (b.sdt ? new Date(b.sdt).getTime() : 0);
+      return crB - crA; // Descending order (newest first)
+    });
+};
+
+// Helper function to fetch payments for a single loan with error handling
+const fetchLoanPayments = async (
+  loanId: string,
+  fetchOptions: RequestInit
+): Promise<{ loanId: string; data: any[] }> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/payments/${loanId}`, fetchOptions);
+    
+    if (!response.ok) {
+      console.warn(`Failed to fetch payments for loan ${loanId}: ${response.status}`);
+      return { loanId, data: [] };
+    }
+    
+    const responseData = await response.json();
+    const processedPayments = Array.isArray(responseData) 
+      ? processPayments(responseData)
+      : [];
+    
+    return { loanId, data: processedPayments };
+  } catch (error) {
+    console.error(`Error fetching payments for loan ${loanId}:`, error);
+    return { loanId, data: [] };
+  }
+};
+
+// Helper function to update UI with loans and payments data
+const updateLoansUI = (
+  dataDispatch: any,
+  loans: any[] | null,
+  payments: any[]
+) => {
+  dataDispatch({
+    type: 'SET_DATA',
+    loans,
+    payments,
+    loading: false,
+  });
+};
+
 export const fetchLoans = async (
   token: string,
   dataDispatch: any,
@@ -720,120 +798,56 @@ export const fetchLoans = async (
     const cachedPayments = await getPaymentsFromDB();
     
     if (cachedLoans && cachedLoans.length > 0) {
-      // Ensure loans are sorted consistently (by cr descending, newest first)
-      const sortedLoans = [...cachedLoans].sort((a, b) => {
-        const crA = a.cr || (a.sdt ? new Date(a.sdt).getTime() : 0);
-        const crB = b.cr || (b.sdt ? new Date(b.sdt).getTime() : 0);
-        return crB - crA; // Descending order (newest first)
-      });
-
-      dataDispatch({
-        type: 'SET_DATA',
-        loans: sortedLoans,
-        payments: cachedPayments || [],
-        loading: false,
-      });
+      // Loans are already sorted by getLoansFromDB, no need to sort again
+      updateLoansUI(dataDispatch, cachedLoans, cachedPayments || []);
+      // Continue to fetch fresh data if online (don't return early)
     }
   }
 
   // Fetch fresh data from API only if online
-  if (isOnline()) {
-    fetchFromAPI(
-      `${API_BASE_URL}/api/loans`,
-      token,
-      dataDispatch,
-      dispatch,
-      async (data) => {
-      if (!data) {
-        dataDispatch({
-          type: 'SET_DATA',
-          loans: null,
-          payments: [],
-          loading: false,
-        });
+  if (!isOnline()) return;
+
+  fetchFromAPI(
+    `${API_BASE_URL}/api/loans`,
+    token,
+    dataDispatch,
+    dispatch,
+    async (data) => {
+      if (!data || data.length === 0) {
+        // Clear IndexedDB if no loans
+        if (isIndexedDBAvailable()) {
+          await Promise.all([
+            saveLoansToDB([]),
+            savePaymentsToDB([])
+          ]);
+        }
+        updateLoansUI(dataDispatch, null, []);
         return;
       }
 
       const fetchOptions = createAuthenticatedFetchOptions(token);
-      if (data.length > 0) {
-        const paymentPromises = data.map((item) =>
-          fetch(`${API_BASE_URL}/api/payments/${item.id}`, fetchOptions)
-            .then((response) => response.json())
-            .then((responseData) => {
-              // Add created timestamp if not present for consistent sorting
-              if (Array.isArray(responseData)) {
-                responseData = responseData.map((payment: any) => {
-                  if (!payment.cr && payment.fdt) {
-                    payment.cr = new Date(payment.fdt).getTime();
-                  }
-                  return payment;
-                });
-                // Sort payments by date (descending), then by cr (descending)
-                responseData.sort((a: any, b: any) => {
-                  const dateA = new Date(a.fdt || 0).getTime();
-                  const dateB = new Date(b.fdt || 0).getTime();
-                  const dateComparison = dateB - dateA;
-                  
-                  if (dateComparison !== 0) {
-                    return dateComparison;
-                  }
-                  
-                  // For same date, sort by created timestamp (descending - newest first)
-                  const crA = a.cr || new Date(a.fdt || 0).getTime();
-                  const crB = b.cr || new Date(b.fdt || 0).getTime();
-                  return crB - crA;
-                });
-              }
-              return { loanId: item.id, data: responseData };
-            })
-        );
-        const payments = await Promise.all(paymentPromises);
+      
+      // Fetch all payments in parallel with error handling
+      const paymentPromises = data.map((loan: any) =>
+        fetchLoanPayments(loan.id, fetchOptions)
+      );
+      const payments = await Promise.all(paymentPromises);
 
-        // Add created timestamp if not present for consistent sorting
-        const dataWithTimestamp = data.map((item: any) => {
-          if (!item.cr && item.sdt) {
-            // Use start date as fallback for sorting
-            item.cr = new Date(item.sdt).getTime();
-          }
-          return item;
-        });
+      // Process and sort loans
+      const processedLoans = processLoans(data);
 
-        // Sort loans by created timestamp (descending - newest first)
-        const sortedLoans = [...dataWithTimestamp].sort((a: any, b: any) => {
-          const crA = a.cr || (a.sdt ? new Date(a.sdt).getTime() : 0);
-          const crB = b.cr || (b.sdt ? new Date(b.sdt).getTime() : 0);
-          return crB - crA; // Descending order (newest first)
-        });
-
-        // Save to IndexedDB for next time
-        if (isIndexedDBAvailable()) {
-          await saveLoansToDB(sortedLoans);
-          await savePaymentsToDB(payments);
-        }
-
-        dataDispatch({
-          type: 'SET_DATA',
-          loans: sortedLoans,
-          payments,
-          loading: false,
-        });
-      } else {
-        // Clear IndexedDB if no loans
-        if (isIndexedDBAvailable()) {
-          await saveLoansToDB([]);
-          await savePaymentsToDB([]);
-        }
-        
-        dataDispatch({
-          type: 'SET_DATA',
-          loans: null,
-          payments: [],
-          loading: false,
-        });
+      // Save to IndexedDB for next time (in parallel)
+      if (isIndexedDBAvailable()) {
+        await Promise.all([
+          saveLoansToDB(processedLoans),
+          savePaymentsToDB(payments)
+        ]);
       }
+
+      // Update UI
+      updateLoansUI(dataDispatch, processedLoans, payments);
     }
-    );
-  }
+  );
 };
 
 export const formatNumber = (value: unknown): string => {

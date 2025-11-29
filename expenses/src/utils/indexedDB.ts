@@ -1,4 +1,6 @@
 // IndexedDB utilities for caching expense data
+import { processLoans, processPayments } from './utils';
+
 const DB_NAME = 'expensesDB';
 const DB_VERSION = 3; // Incremented for sync queue store
 const STORE_EXPENSES = 'expenses';
@@ -123,14 +125,8 @@ export async function getExpensesFromDB(): Promise<any[] | null> {
 }
 
 // Sort loans consistently (by created timestamp descending, newest first)
-function sortLoans(data: any[]): any[] {
-  return data.sort((a, b) => {
-    // Sort by created timestamp (descending - newest first)
-    const crA = a.cr || (a.sdt ? new Date(a.sdt).getTime() : 0);
-    const crB = b.cr || (b.sdt ? new Date(b.sdt).getTime() : 0);
-    return crB - crA; // Descending order (newest first)
-  });
-}
+// Uses exported helper function for consistency
+const sortLoans = processLoans;
 
 // Save loans data to IndexedDB
 export async function saveLoansToDB(data: any[]): Promise<void> {
@@ -226,21 +222,8 @@ function sortPayments(payments: any[]): any[] {
   // Payments are stored by loanId, so we need to sort payments within each loan
   return payments.map((loanPayment) => {
     if (loanPayment.data && Array.isArray(loanPayment.data)) {
-      // Sort payments within each loan by date (descending), then by cr (descending)
-      loanPayment.data = [...loanPayment.data].sort((a: any, b: any) => {
-        const dateA = new Date(a.fdt || a.date || 0).getTime();
-        const dateB = new Date(b.fdt || b.date || 0).getTime();
-        const dateComparison = dateB - dateA;
-        
-        if (dateComparison !== 0) {
-          return dateComparison;
-        }
-        
-        // For same date, sort by created timestamp (descending - newest first)
-        const crA = a.cr || new Date(a.fdt || a.date || 0).getTime();
-        const crB = b.cr || new Date(b.fdt || b.date || 0).getTime();
-        return crB - crA;
-      });
+      // Use helper function for consistent sorting
+      loanPayment.data = processPayments(loanPayment.data);
     }
     return loanPayment;
   });

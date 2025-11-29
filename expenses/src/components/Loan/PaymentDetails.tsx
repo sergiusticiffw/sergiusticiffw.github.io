@@ -13,7 +13,7 @@ import {
   FiArrowUp,
   FiArrowDown,
 } from 'react-icons/fi';
-import { deleteNode, fetchLoans, formatNumber, getLocale } from '@utils/utils';
+import { deleteNode, fetchLoans, formatNumber, getLocale, processPayments } from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import Modal from '@components/Modal/Modal';
 import PaymentForm from '@components/Loan/PaymentForm';
@@ -111,22 +111,14 @@ const PaymentDetails = (props) => {
   };
 
   // Sort payments
-  const sortedPayments = [...payments].sort((a, b) => {
+  const sortedPayments = (() => {
+    // Use helper function for default sort (when no sortField is selected)
     if (!sortField) {
-      // Default sort: by date (descending), then by cr (descending) for same day
-      const dateA = new Date(a.fdt).getTime();
-      const dateB = new Date(b.fdt).getTime();
-      const dateComparison = dateB - dateA;
-      
-      if (dateComparison !== 0) {
-        return dateComparison;
-      }
-      
-      // For same date, sort by created timestamp (descending - newest first)
-      const crA = a.cr || new Date(a.fdt).getTime();
-      const crB = b.cr || new Date(b.fdt).getTime();
-      return crB - crA;
+      return processPayments([...payments]);
     }
+    
+    // Manual sorting for specific fields
+    return [...payments].sort((a, b) => {
 
     if (sortField === 'date') {
       const dateA = new Date(a.fdt).getTime();
@@ -159,7 +151,8 @@ const PaymentDetails = (props) => {
     }
 
     return 0;
-  });
+    });
+  })();
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) return <FiMove />;
