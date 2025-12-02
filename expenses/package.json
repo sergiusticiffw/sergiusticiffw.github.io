@@ -26,10 +26,10 @@
   "devDependencies": {
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react": "^5",
     "prettier": "^3.2.5",
     "typescript": "^5.4.2",
-    "vite": "^6.0.3",
+    "vite": "^7",
     "vite-plugin-pwa": "^1.0.0",
     "vite-tsconfig-paths": "^5.0.1"
   },
