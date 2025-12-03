@@ -486,7 +486,7 @@ export const deleteLoan = async (
 };
 
 // Process data using Web Worker
-function processDataWithWorker(
+export function processDataWithWorker(
   data: TransactionOrIncomeItem[],
   callback: (processedData: any) => void
 ) {
@@ -666,6 +666,11 @@ export function processDataSync(data: TransactionOrIncomeItem[]) {
   };
 }
 
+/**
+ * Fetch expenses data
+ * @deprecated Consider using fetchExpenses from @api/expenses directly with useApiClient hook
+ * This function now uses the centralized API client internally
+ */
 export const fetchData = async (
   token: string,
   dataDispatch: any,
@@ -674,92 +679,22 @@ export const fetchData = async (
   textFilter: string = '',
   showNotification?: (message: string, type: string) => void
 ) => {
-  // Try to load from IndexedDB first for instant display
-  if (isIndexedDBAvailable()) {
-    const cachedData = await getExpensesFromDB();
-    if (cachedData && cachedData.length > 0) {
-      // Ensure data is sorted before processing (by date descending, then by cr descending for same day)
-      const sortedCachedData = [...cachedData].sort((a, b) => {
-        const dateA = new Date(a.dt).getTime();
-        const dateB = new Date(b.dt).getTime();
-        const dateComparison = dateB - dateA;
-        
-        if (dateComparison !== 0) {
-          return dateComparison;
-        }
-        
-        // For same date, sort by created timestamp (descending - newest first, oldest last)
-        const crA = a.cr || new Date(a.dt).getTime();
-        const crB = b.cr || new Date(b.dt).getTime();
-        return crB - crA;
-      });
+  // Use centralized API client
+  const { createApiClient } = await import('../api/client');
+  const { fetchExpenses } = await import('../api/expenses');
+  
+  const apiClient = createApiClient({
+    token,
+    dataDispatch,
+    dispatch,
+    showNotification,
+  });
 
-      // Process cached data with worker
-      processDataWithWorker(sortedCachedData, (processedData) => {
-        dataDispatch({
-          type: 'SET_DATA',
-          raw: sortedCachedData,
-          ...processedData,
-          totals: processedData.monthsTotals, // Map monthsTotals to totals
-          loading: false,
-        });
-        if (category || textFilter) {
-          dataDispatch({
-            type: 'FILTER_DATA',
-            category: category,
-            textFilter,
-          });
-        }
-      });
-    }
-  }
-
-  // Fetch fresh data from API only if online
-  if (isOnline()) {
-    fetchFromAPI<TransactionOrIncomeItem[]>(
-      `${API_BASE_URL}/api/expenses`,
-      token,
-      dataDispatch,
-      dispatch,
-      async (data) => {
-        if (!data) return;
-
-        // Add created timestamp if not present for consistent sorting
-        const dataWithTimestamp = data.map((item) => {
-          if (!item.cr) {
-            // Use date as fallback for sorting
-            item.cr = new Date(item.dt).getTime();
-          }
-          return item;
-        });
-
-        // Save to IndexedDB for next time
-        if (isIndexedDBAvailable()) {
-          await saveExpensesToDB(dataWithTimestamp);
-        }
-
-        // Process data with Web Worker
-        processDataWithWorker(dataWithTimestamp, (processedData) => {
-          dataDispatch({
-            type: 'SET_DATA',
-            raw: dataWithTimestamp,
-            ...processedData,
-            totals: processedData.monthsTotals, // Map monthsTotals to totals
-            loading: false,
-          });
-          if (category || textFilter) {
-            dataDispatch({
-              type: 'FILTER_DATA',
-              category: category,
-              textFilter,
-            });
-          }
-        });
-      },
-      'GET',
-      showNotification
-    );
-  }
+  await fetchExpenses(apiClient, dataDispatch, {
+    category,
+    textFilter,
+    showNotification,
+  });
 };
 
 // Helper function to process and sort payments (exported for reuse)
@@ -840,6 +775,11 @@ const updateLoansUI = (
   });
 };
 
+/**
+ * Fetch loans data
+ * @deprecated Consider using fetchLoans from @api/loans directly with useApiClient hook
+ * This function now uses the centralized API client internally
+ */
 export const fetchLoans = async (
   token: string,
   dataDispatch: any,
@@ -847,66 +787,21 @@ export const fetchLoans = async (
 ) => {
   // Add null checks for dispatch functions
   if (!dataDispatch || !dispatch) {
-    console.error('Dispatch functions not available for fetch loans');
+    logger.error('Dispatch functions not available for fetch loans');
     return;
   }
 
-  // Try to load from IndexedDB first for instant display
-  if (isIndexedDBAvailable()) {
-    const cachedLoans = await getLoansFromDB();
-    const cachedPayments = await getPaymentsFromDB();
-    
-    if (cachedLoans && cachedLoans.length > 0) {
-      // Loans are already sorted by getLoansFromDB, no need to sort again
-      updateLoansUI(dataDispatch, cachedLoans, cachedPayments || []);
-      // Continue to fetch fresh data if online (don't return early)
-    }
-  }
-
-  // Fetch fresh data from API only if online
-  if (!isOnline()) return;
-
-  fetchFromAPI(
-    `${API_BASE_URL}/api/loans`,
+  // Use centralized API client
+  const { createApiClient } = await import('../api/client');
+  const { fetchLoans: fetchLoansService } = await import('../api/loans');
+  
+  const apiClient = createApiClient({
     token,
     dataDispatch,
     dispatch,
-    async (data) => {
-      if (!data || data.length === 0) {
-        // Clear IndexedDB if no loans
-        if (isIndexedDBAvailable()) {
-          await Promise.all([
-            saveLoansToDB([]),
-            savePaymentsToDB([])
-          ]);
-        }
-        updateLoansUI(dataDispatch, null, []);
-        return;
-      }
+  });
 
-      const fetchOptions = createAuthenticatedFetchOptions(token);
-      
-      // Fetch all payments in parallel with error handling
-      const paymentPromises = data.map((loan: any) =>
-        fetchLoanPayments(loan.id, fetchOptions)
-      );
-      const payments = await Promise.all(paymentPromises);
-
-      // Process and sort loans
-      const processedLoans = processLoans(data);
-
-      // Save to IndexedDB for next time (in parallel)
-      if (isIndexedDBAvailable()) {
-        await Promise.all([
-          saveLoansToDB(processedLoans),
-          savePaymentsToDB(payments)
-        ]);
-      }
-
-      // Update UI
-      updateLoansUI(dataDispatch, processedLoans, payments);
-    }
-  );
+  await fetchLoansService(apiClient, dataDispatch);
 };
 
 export const formatNumber = (value: unknown): string => {
