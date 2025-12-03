@@ -11,6 +11,7 @@ import {
   isIndexedDBAvailable,
   isOnline,
 } from './indexedDB';
+import { logger } from './logger';
 
 // API Configuration
 export const API_BASE_URL = 'https://dev-expenses-api.pantheonsite.io';
@@ -28,7 +29,7 @@ const handleErrors = (
         if (dispatch && dataDispatch) {
           logout(dispatch, dataDispatch);
         } else {
-          console.error('Dispatch functions not available for logout');
+          logger.error('Dispatch functions not available for logout');
         }
       }
     });
@@ -151,7 +152,7 @@ export const fetchRequest = (
 ) => {
   // Add null checks for dispatch functions
   if (!dataDispatch || !dispatch) {
-    console.error('Dispatch functions not available for fetch request');
+    logger.error('Dispatch functions not available for fetch request');
     return;
   }
 
@@ -178,7 +179,7 @@ export const fetchRequest = (
             const data = JSON.parse(text);
             return callback(data);
           } catch (error) {
-            console.warn('Failed to parse JSON response:', error);
+            logger.warn('Failed to parse JSON response:', error);
             return callback(null);
           }
         });
@@ -188,9 +189,9 @@ export const fetchRequest = (
       return callback(result);
     })
     .catch((error) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Fetch request error:', error);
-      }
+      logger.error('Fetch request error:', error);
+      // Call callback with error so caller can handle it
+      callback(null);
     });
 };
 

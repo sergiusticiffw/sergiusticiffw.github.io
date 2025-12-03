@@ -7,4 +7,5 @@ export { default as DeleteConfirmModal } from './DeleteConfirmModal';
 export { default as NoData } from './NoData';
 export { default as MonthChips } from './MonthChips';
 export { default as FormField } from './FormField';
+export { default as ErrorBoundary } from './ErrorBoundary';
 export type { FormFieldProps } from './FormField';

@@ -17,6 +17,7 @@ import {
   updateLoansUILocally,
 } from '@utils/offlineAPI';
 import { getPendingSyncOperations, removeSyncOperation } from '@utils/indexedDB';
+import { logger } from '@utils/logger';
 
 interface UseFormSubmitOptions<T> {
   formType: 'add' | 'edit';
@@ -172,7 +173,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               throw new Error('No ID returned from server');
             }
           } catch (error) {
-            console.error('Online request failed, falling back to offline:', error);
+            logger.error('Online request failed, falling back to offline:', error);
             
             // Fallback to offline save if online request fails
             const loanItem: any = {
@@ -293,7 +294,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               throw new Error('No ID returned from server');
             }
           } catch (error) {
-            console.error('Online request failed, falling back to offline:', error);
+            logger.error('Online request failed, falling back to offline:', error);
             
             // Fallback to offline save if online request fails
             const paymentItem: any = {
@@ -401,7 +402,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               throw new Error('No ID returned from server');
             }
           } catch (error) {
-            console.error('Online request failed, falling back to offline:', error);
+            logger.error('Online request failed, falling back to offline:', error);
             
             // Fallback to offline save if online request fails
             const savedItem: TransactionOrIncomeItem = {
@@ -506,14 +507,14 @@ export const useFormSubmit = <T extends Record<string, any>>({
               }
             })
             .catch((error) => {
-              console.error('Operation failed:', error);
+              logger.error('Operation failed:', error);
               showNotification(t('error.unknown'), notificationType.ERROR);
               setIsSubmitting(false);
             });
         }
       }
     } catch (error) {
-      console.error('Form submission error:', error);
+      logger.error('Form submission error:', error);
       showNotification(t('error.unknown'), notificationType.ERROR);
       setIsSubmitting(false);
       onSuccess(); // Close modal even on error

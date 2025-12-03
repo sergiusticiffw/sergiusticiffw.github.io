@@ -8,6 +8,7 @@ import {
   validateForm,
   getCurrentDate,
 } from '@utils/commonUtils';
+import { logger } from '@utils/logger';
 
 interface UseFormOptions<T> {
   initialValues: T;
@@ -104,7 +105,7 @@ export const useForm = <T extends Record<string, any>>(
           errorMessage
         );
       } catch (error) {
-        console.error('Form submission error:', error);
+        logger.error('Form submission error:', error);
         showNotification(errorMessage, 'error');
       } finally {
         stopLoading();

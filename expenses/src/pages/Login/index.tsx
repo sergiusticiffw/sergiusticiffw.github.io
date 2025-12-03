@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthState } from '@type/types';
 import { useGoogleLogin, TokenResponse } from '@react-oauth/google';
 import { FiLogIn } from 'react-icons/fi';
+import { logger } from '@utils/logger';
 import './Login.scss';
 
 const Login = () => {
@@ -28,17 +29,13 @@ const Login = () => {
         }
         navigate(`/expenses`);
       } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Login error:', error);
-        }
+        logger.error('Login error:', error);
       }
     }
   };
 
   const failedResponseGoogle = (response: Response) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Login response:', response);
-    }
+    logger.log('Login response:', response);
   };
 
   return (

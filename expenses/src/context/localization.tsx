@@ -379,6 +379,11 @@ const translations = {
     'error.unauthorized': 'Unauthorized. Please log in again.',
     'error.server': 'Server error. Please try again later.',
     'error.unknown': 'An unknown error occurred.',
+    'error.boundary.title': 'Something went wrong',
+    'error.boundary.message': 'We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.',
+    'error.boundary.details': 'Error Details (Development Only)',
+    'error.boundary.tryAgain': 'Try Again',
+    'error.boundary.reload': 'Reload Page',
     'error.validation': 'Please check your input and try again.',
 
     // Transaction Form
@@ -837,6 +842,11 @@ const translations = {
     'error.unauthorized': 'Neautorizat. Te rog să te conectezi din nou.',
     'error.server': 'Eroare de server. Te rog să încerci din nou mai târziu.',
     'error.unknown': 'A apărut o eroare necunoscută.',
+    'error.boundary.title': 'Ceva nu a mers bine',
+    'error.boundary.message': 'Am întâmpinat o eroare neașteptată. Te rugăm să reîncarci pagina sau să contactezi suportul dacă problema persistă.',
+    'error.boundary.details': 'Detalii Eroare (Doar în Development)',
+    'error.boundary.tryAgain': 'Încearcă din nou',
+    'error.boundary.reload': 'Reîncarcă Pagina',
     'error.validation':
       'Te rog să verifici datele introduse și să încerci din nou.',
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { notificationType } from './constants';
 import { AuthState, DataState, NodeData } from '../type/types';
+import { logger } from './logger';
 
 // Form validation utilities
 export const validateRequired = (value: string | number): boolean => {
@@ -106,7 +107,7 @@ export const handleFormSubmission = async (
       showNotification(errorMessage, notificationType.ERROR);
     }
   } catch (error) {
-    console.error('Form submission error:', error);
+    logger.error('Form submission error:', error);
     showNotification(errorMessage, notificationType.ERROR);
   }
 };
@@ -127,7 +128,7 @@ export const getFromLocalStorage = <T>(key: string, defaultValue: T): T => {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : defaultValue;
   } catch (error) {
-    console.error(`Error reading from localStorage key "${key}":`, error);
+    logger.error(`Error reading from localStorage key "${key}":`, error);
     return defaultValue;
   }
 };
@@ -136,7 +137,7 @@ export const setToLocalStorage = <T>(key: string, value: T): void => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
-    console.error(`Error writing to localStorage key "${key}":`, error);
+    logger.error(`Error writing to localStorage key "${key}":`, error);
   }
 };
 
@@ -200,13 +201,39 @@ export const throttle = <T extends (...args: any[]) => any>(
 
 // Error handling utilities
 export const handleApiError = (
-  error: any,
+  error: unknown,
   showNotification: (message: string, type: string) => void,
   customMessage?: string
 ): void => {
-  console.error('API Error:', error);
+  logger.error('API Error:', error);
   const message = customMessage || 'An error occurred. Please try again.';
   showNotification(message, notificationType.ERROR);
+};
+
+/**
+ * Enhanced error handler that logs error and shows user-friendly notification
+ * @param error - The error object
+ * @param showNotification - Notification function
+ * @param defaultMessage - Default error message if error doesn't have a message
+ */
+export const handleError = (
+  error: unknown,
+  showNotification: (message: string, type: string) => void,
+  defaultMessage: string = 'An unexpected error occurred. Please try again.'
+): void => {
+  // Log error for debugging
+  logger.error('Error occurred:', error);
+  
+  // Extract user-friendly error message
+  let errorMessage = defaultMessage;
+  if (error instanceof Error) {
+    errorMessage = error.message || defaultMessage;
+  } else if (typeof error === 'string') {
+    errorMessage = error;
+  }
+  
+  // Show notification to user
+  showNotification(errorMessage, notificationType.ERROR);
 };
 
 // Validation utilities

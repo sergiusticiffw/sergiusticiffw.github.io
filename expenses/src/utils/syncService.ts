@@ -17,6 +17,7 @@ import {
 } from './indexedDB';
 import { API_BASE_URL, createAuthenticatedFetchOptions, processDataSync, fetchLoans } from './utils';
 import { TransactionOrIncomeItem } from '@type/types';
+import { logger } from './logger';
 
 export interface SyncResult {
   success: number;
@@ -35,7 +36,7 @@ export async function syncPendingOperations(
   // Clean up invalid operations first
   const cleanedCount = await cleanupInvalidSyncOperations();
   if (cleanedCount > 0) {
-    console.log(`Cleaned up ${cleanedCount} invalid sync operations`);
+    logger.log(`Cleaned up ${cleanedCount} invalid sync operations`);
   }
 
   let pendingOperations = await getPendingSyncOperations();
@@ -155,7 +156,7 @@ export async function syncPendingOperations(
       // For update operations, skip if item doesn't exist in local DB
       // For delete operations, item might not exist (we deleted it locally), so allow sync
       if (op.type === 'update' && !itemExists && op.localId) {
-        console.warn(`Skipping sync operation ${op.id}: item ${op.localId} not found in local DB`);
+        logger.warn(`Skipping sync operation ${op.id}: item ${op.localId} not found in local DB`);
         await removeSyncOperation(op.id!);
         successCount++; // Count as success since we're cleaning up invalid operations
         continue;
@@ -172,7 +173,7 @@ export async function syncPendingOperations(
         if (syncUrl.includes('/node/temp_') || (op.localId && op.localId.startsWith('temp_'))) {
           if (!itemExists) {
             // Item doesn't exist - skip this operation
-            console.warn(`Skipping sync operation ${op.id}: URL contains temp ID and item not found`);
+            logger.warn(`Skipping sync operation ${op.id}: URL contains temp ID and item not found`);
             await removeSyncOperation(op.id!);
             successCount++;
             continue;
@@ -192,7 +193,7 @@ export async function syncPendingOperations(
           // If URL contains temp ID, try to find the server ID from local DB
           // For delete, if item was deleted locally, we might not find it
           // In this case, skip this operation (item was never synced to server)
-          console.warn(`Skipping delete operation ${op.id}: has temp ID and item not found in local DB`);
+          logger.warn(`Skipping delete operation ${op.id}: has temp ID and item not found in local DB`);
           await removeSyncOperation(op.id!);
           successCount++; // Count as success since item was never on server
           continue;
@@ -215,7 +216,7 @@ export async function syncPendingOperations(
 
       // If DELETE returns 404, treat as success
       if (op.type === 'delete' && response.status === 404) {
-        console.log(`Delete operation ${op.id}: item not found (404), treating as success`);
+        logger.log(`Delete operation ${op.id}: item not found (404), treating as success`);
         // Remove from sync queue and continue
         await removeSyncOperation(op.id!);
         successCount++;
@@ -234,7 +235,7 @@ export async function syncPendingOperations(
         } catch (e) {
           // If JSON parsing fails, log but don't throw for DELETE operations
           if (op.type === 'delete') {
-            console.warn(`Non-JSON response for delete operation ${op.id}, treating as success`);
+            logger.warn(`Non-JSON response for delete operation ${op.id}, treating as success`);
             result = null;
           } else {
             throw new Error(`Invalid JSON response: ${e}`);
@@ -365,7 +366,7 @@ export async function syncPendingOperations(
             }
           }
         } catch (error) {
-          console.error('Error updating local ID after sync:', error);
+          logger.error('Error updating local ID after sync:', error);
         }
       }
       
@@ -414,7 +415,7 @@ export async function syncPendingOperations(
       await removeSyncOperation(op.id!);
       successCount++;
     } catch (error) {
-      console.error(`Sync failed for operation ${op.id}:`, error);
+      logger.error(`Sync failed for operation ${op.id}:`, error);
       await updateSyncOperationStatus(op.id!, 'pending', (op.retries || 0) + 1);
       failCount++;
     }
@@ -453,7 +454,7 @@ export function setupNetworkListener(
         
         if (onSyncEnd) onSyncEnd();
         
-        console.log(`Sync complete: ${result.success} succeeded, ${result.failed} failed`);
+        logger.log(`Sync complete: ${result.success} succeeded, ${result.failed} failed`);
       }
     }
   };

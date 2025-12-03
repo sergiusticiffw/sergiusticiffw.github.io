@@ -1,5 +1,6 @@
 // IndexedDB utilities for caching expense data
 import { processLoans, processPayments } from './utils';
+import { logger } from './logger';
 
 const DB_NAME = 'expensesDB';
 const DB_VERSION = 3; // Incremented for sync queue store
@@ -72,7 +73,7 @@ export async function saveExpensesToDB(
     await Promise.all(addPromises);
     transaction.oncomplete = () => db.close();
   } catch (error) {
-    console.error('Error saving expenses to IndexedDB:', error);
+    logger.error('Error saving expenses to IndexedDB:', error);
   }
 }
 
@@ -119,7 +120,7 @@ export async function getExpensesFromDB(): Promise<any[] | null> {
       };
     });
   } catch (error) {
-    console.error('Error reading expenses from IndexedDB:', error);
+    logger.error('Error reading expenses from IndexedDB:', error);
     return null;
   }
 }
@@ -155,7 +156,7 @@ export async function saveLoansToDB(data: any[]): Promise<void> {
     await Promise.all(addPromises);
     transaction.oncomplete = () => db.close();
   } catch (error) {
-    console.error('Error saving loans to IndexedDB:', error);
+    logger.error('Error saving loans to IndexedDB:', error);
   }
 }
 
@@ -181,7 +182,7 @@ export async function getLoansFromDB(): Promise<any[] | null> {
       };
     });
   } catch (error) {
-    console.error('Error reading loans from IndexedDB:', error);
+    logger.error('Error reading loans from IndexedDB:', error);
     return null;
   }
 }
@@ -213,7 +214,7 @@ export async function savePaymentsToDB(payments: any[]): Promise<void> {
     await Promise.all(addPromises);
     transaction.oncomplete = () => db.close();
   } catch (error) {
-    console.error('Error saving payments to IndexedDB:', error);
+    logger.error('Error saving payments to IndexedDB:', error);
   }
 }
 
@@ -251,7 +252,7 @@ export async function getPaymentsFromDB(): Promise<any[] | null> {
       };
     });
   } catch (error) {
-    console.error('Error reading payments from IndexedDB:', error);
+    logger.error('Error reading payments from IndexedDB:', error);
     return null;
   }
 }
@@ -291,7 +292,7 @@ export async function clearExpensesDB(): Promise<void> {
       paymentsTransaction.oncomplete = () => db.close();
     });
   } catch (error) {
-    console.error('Error clearing IndexedDB:', error);
+    logger.error('Error clearing IndexedDB:', error);
   }
 }
 
@@ -332,7 +333,7 @@ export async function saveExpenseLocally(
       };
     });
   } catch (error) {
-    console.error('Error saving expense locally:', error);
+    logger.error('Error saving expense locally:', error);
     throw error;
   }
 }
@@ -356,7 +357,7 @@ export async function deleteExpenseLocally(id: string): Promise<void> {
       };
     });
   } catch (error) {
-    console.error('Error deleting expense locally:', error);
+    logger.error('Error deleting expense locally:', error);
     throw error;
   }
 }
@@ -388,7 +389,7 @@ export async function saveLoanLocally(
       };
     });
   } catch (error) {
-    console.error('Error saving loan locally:', error);
+    logger.error('Error saving loan locally:', error);
     throw error;
   }
 }
@@ -412,7 +413,7 @@ export async function deleteLoanLocally(id: string): Promise<void> {
       };
     });
   } catch (error) {
-    console.error('Error deleting loan locally:', error);
+    logger.error('Error deleting loan locally:', error);
     throw error;
   }
 }
@@ -474,7 +475,7 @@ export async function savePaymentLocally(
       };
     });
   } catch (error) {
-    console.error('Error saving payment locally:', error);
+    logger.error('Error saving payment locally:', error);
     throw error;
   }
 }
@@ -516,7 +517,7 @@ export async function deletePaymentLocally(
       });
     }
   } catch (error) {
-    console.error('Error deleting payment locally:', error);
+    logger.error('Error deleting payment locally:', error);
     throw error;
   }
 }
@@ -559,7 +560,7 @@ export async function addToSyncQueue(operation: SyncOperation): Promise<void> {
       };
     });
   } catch (error) {
-    console.error('Error adding to sync queue:', error);
+    logger.error('Error adding to sync queue:', error);
     throw error;
   }
 }
@@ -584,7 +585,7 @@ export async function getPendingSyncOperations(): Promise<SyncOperation[]> {
       };
     });
   } catch (error) {
-    console.error('Error getting pending sync operations:', error);
+    logger.error('Error getting pending sync operations:', error);
     return [];
   }
 }
@@ -608,7 +609,7 @@ export async function removeSyncOperation(id: number): Promise<void> {
       };
     });
   } catch (error) {
-    console.error('Error removing sync operation:', error);
+    logger.error('Error removing sync operation:', error);
     throw error;
   }
 }
@@ -653,7 +654,7 @@ export async function updateSyncOperationStatus(
       };
     });
   } catch (error) {
-    console.error('Error updating sync operation status:', error);
+    logger.error('Error updating sync operation status:', error);
     throw error;
   }
 }
@@ -710,7 +711,7 @@ export async function updateSyncOperationsWithNewId(
       };
     });
   } catch (error) {
-    console.error('Error updating sync operations with new ID:', error);
+    logger.error('Error updating sync operations with new ID:', error);
     throw error;
   }
 }
@@ -823,7 +824,7 @@ export async function cleanupInvalidSyncOperations(): Promise<number> {
       };
     });
   } catch (error) {
-    console.error('Error cleaning up invalid sync operations:', error);
+    logger.error('Error cleaning up invalid sync operations:', error);
     return 0;
   }
 }

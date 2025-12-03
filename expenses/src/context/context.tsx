@@ -8,6 +8,7 @@ import {
 import { AuthState, DataItems, DataState } from '@type/types';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { setupNetworkListener } from '@utils/syncService';
+import { logger } from '@utils/logger';
 
 const AuthStateContext = React.createContext<AuthState | null>(null);
 const AuthDispatchContext = React.createContext<React.Dispatch<any> | null>(
@@ -64,7 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       import('@utils/indexedDB').then(({ cleanupInvalidSyncOperations }) => {
         cleanupInvalidSyncOperations().then((count) => {
           if (count > 0) {
-            console.log(`Cleaned up ${count} invalid sync operations on mount`);
+            logger.log(`Cleaned up ${count} invalid sync operations on mount`);
           }
         });
       });
