@@ -477,6 +477,20 @@ const translations = {
     'suggestions.title': 'Suggestions',
     'suggestions.noSuggestions': 'No suggestions available',
     'suggestions.selectCategory': 'Select a category to see suggestions',
+
+    // Receipt Scanner
+    'receipt.scanTitle': 'Scan Receipt',
+    'receipt.takePhoto': 'Take Photo',
+    'receipt.uploadImage': 'Upload Image',
+    'receipt.hint': 'Take a photo or upload an image of your receipt',
+    'receipt.extractedData': 'Extracted Data',
+    'receipt.amount': 'Amount',
+    'receipt.date': 'Date',
+    'receipt.merchant': 'Merchant',
+    'receipt.description': 'Description',
+    'receipt.useData': 'Use This Data',
+    'receipt.scanAnother': 'Scan Another',
+    'receipt.scanReceipt': 'Scan Receipt',
   },
   ro: {
     // Common
@@ -943,6 +957,20 @@ const translations = {
     'suggestions.noSuggestions': 'Nu sunt sugestii disponibile',
     'suggestions.selectCategory':
       'Selectează o categorie pentru a vedea sugestiile',
+
+    // Receipt Scanner
+    'receipt.scanTitle': 'Scanează Chitanța',
+    'receipt.takePhoto': 'Fă o Fotografie',
+    'receipt.uploadImage': 'Încarcă Imagine',
+    'receipt.hint': 'Fă o fotografie sau încarcă o imagine a chitanței tale',
+    'receipt.extractedData': 'Date Extrase',
+    'receipt.amount': 'Suma',
+    'receipt.date': 'Data',
+    'receipt.merchant': 'Comerciant',
+    'receipt.description': 'Descriere',
+    'receipt.useData': 'Folosește Aceste Date',
+    'receipt.scanAnother': 'Scanează Altă Chitanță',
+    'receipt.scanReceipt': 'Scanează Chitanța',
   },
 };
 

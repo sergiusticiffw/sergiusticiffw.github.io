@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useData } from '@context/context';
 import { useLocalization } from '@context/localization';
 import { getCategories, getSuggestions } from '@utils/constants';
@@ -6,7 +6,10 @@ import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
 import { DataState } from '@type/types';
 import { FormField } from '@components/Common';
-import { FiPlus, FiEdit2 } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiCamera } from 'react-icons/fi';
+import ReceiptScanner from '@components/ReceiptScanner';
+import Modal from '@components/Modal';
+import { ExtractedReceiptData } from '@utils/receiptOCR';
 import './TransactionForm.scss';
 
 interface TransactionFormProps {
@@ -90,6 +93,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     ] || []
   );
   const [selectedIndices, setSelectedIndices] = useState<string[]>([]);
+  const [showReceiptScanner, setShowReceiptScanner] = useState(false);
 
   // Extended handleChange with suggestions logic
   const handleChange = (
@@ -120,8 +124,19 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     }
     setSelectedIndices([...selectedIndices, index]);
   };
+  // Handle receipt data extraction
+  const handleReceiptDataExtracted = (data: ExtractedReceiptData) => {
+    setFormState((prev) => ({
+      ...prev,
+      field_amount: data.amount || prev.field_amount,
+      field_description:
+        data.description || data.merchant || prev.field_description,
+    }));
+    setShowReceiptScanner(false);
+  };
+
   // Expose form submit handler and state to parent if needed
-  React.useEffect(() => {
+  useEffect(() => {
     if (onFormReady) {
       onFormReady(() => {
         const form = document.querySelector(
@@ -165,6 +180,21 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           isValid={getFieldValidation('field_date', formState)}
           ariaLabel={t('transactionForm.date')}
         />
+
+        {/* Receipt Scanner Button */}
+        {formType === 'add' && (
+          <div className="form-group">
+            <button
+              type="button"
+              className="receipt-scanner-button"
+              onClick={() => setShowReceiptScanner(true)}
+              title={t('receipt.scanReceipt') || 'Scan Receipt'}
+            >
+              <FiCamera />
+              <span>{t('receipt.scanReceipt') || 'Scan Receipt'}</span>
+            </button>
+          </div>
+        )}
 
         <div className="form-group required">
           <label htmlFor="field_category">
@@ -251,6 +281,17 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           </div>
         )}
       </form>
+
+      {/* Receipt Scanner Modal */}
+      <Modal
+        show={showReceiptScanner}
+        onClose={() => setShowReceiptScanner(false)}
+      >
+        <ReceiptScanner
+          onDataExtracted={handleReceiptDataExtracted}
+          onClose={() => setShowReceiptScanner(false)}
+        />
+      </Modal>
     </div>
   );
 };

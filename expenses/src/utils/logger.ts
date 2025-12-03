@@ -15,20 +15,23 @@ interface Logger {
 
 const isDevelopment = import.meta.env.DEV;
 const isProduction = import.meta.env.PROD;
+// Allow forcing logs for debugging (e.g., OCR debugging)
+const forceLogs = import.meta.env.VITE_FORCE_LOGS === 'true' || localStorage.getItem('forceLogs') === 'true';
 
 /**
  * Logger that conditionally outputs based on environment
  * - Development: All logs are shown
  * - Production: Only errors are shown
+ * - Force logs: Can be enabled via VITE_FORCE_LOGS or localStorage.setItem('forceLogs', 'true')
  */
 export const logger: Logger = {
   log: (...args: unknown[]) => {
-    if (isDevelopment) {
+    if (isDevelopment || forceLogs) {
       console.log(...args);
     }
   },
   warn: (...args: unknown[]) => {
-    if (isDevelopment) {
+    if (isDevelopment || forceLogs) {
       console.warn(...args);
     }
   },
@@ -37,12 +40,12 @@ export const logger: Logger = {
     console.error(...args);
   },
   info: (...args: unknown[]) => {
-    if (isDevelopment) {
+    if (isDevelopment || forceLogs) {
       console.info(...args);
     }
   },
   debug: (...args: unknown[]) => {
-    if (isDevelopment) {
+    if (isDevelopment || forceLogs) {
       console.debug(...args);
     }
   },
