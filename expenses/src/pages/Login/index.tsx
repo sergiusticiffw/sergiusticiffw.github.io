@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not needed with jsx: "react-jsx"
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useLocalization } from '@context/localization';
 import { loginUser } from '@context/actions';

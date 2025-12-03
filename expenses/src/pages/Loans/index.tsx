@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, FC } from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useLoan } from '@context/loan';
 import { useLocalization } from '@context/localization';
@@ -26,7 +26,7 @@ import LoanForm from '@components/Loan/LoanForm';
 import LoansList from '@components/Loan/LoansList';
 import './Loans.scss';
 
-const Loans: React.FC = () => {
+const Loans: FC = () => {
   const { data, dataDispatch } = useLoan();
   const { token } = useAuthState() as AuthState;
   const { t } = useLocalization();
