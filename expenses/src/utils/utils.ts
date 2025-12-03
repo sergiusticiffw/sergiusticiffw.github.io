@@ -12,6 +12,7 @@ import {
   isOnline,
 } from './indexedDB';
 import { logger } from './logger';
+import { retryWithBackoff, retryPresets } from './retry';
 
 // API Configuration
 export const API_BASE_URL = 'https://dev-expenses-api.pantheonsite.io';
@@ -74,6 +75,7 @@ export const createAuthenticatedFetchOptions = (
 /**
  * Generic API fetch wrapper
  * Handles common API call patterns with authentication and error handling
+ * @param showNotification - Optional notification function to show errors to user
  */
 export const fetchFromAPI = <T = any>(
   url: string,
@@ -81,10 +83,11 @@ export const fetchFromAPI = <T = any>(
   dataDispatch: any,
   dispatch: any,
   onSuccess: (data: T) => void,
-  method: string = 'GET'
+  method: string = 'GET',
+  showNotification?: (message: string, type: string) => void
 ) => {
   const fetchOptions = createAuthenticatedFetchOptions(token, method);
-  fetchRequest(url, fetchOptions, dataDispatch, dispatch, onSuccess);
+  fetchRequest(url, fetchOptions, dataDispatch, dispatch, onSuccess, showNotification);
 };
 
 export const formatDataForChart = (
@@ -143,24 +146,64 @@ export const formatDataForChart = (
   return seriesData;
 };
 
+/**
+ * Enhanced fetchRequest with retry logic and better error handling
+ */
 export const fetchRequest = (
   url: string,
   options: RequestInit,
   dataDispatch: any,
   dispatch: any,
-  callback: any
+  callback: any,
+  showNotification?: (message: string, type: string) => void
 ) => {
   // Add null checks for dispatch functions
   if (!dataDispatch || !dispatch) {
     logger.error('Dispatch functions not available for fetch request');
+    if (showNotification) {
+      showNotification('System error: Dispatch functions not available', 'error');
+    }
     return;
   }
 
-  fetch(url, options)
-    .then((response) => handleErrors(response, options, dataDispatch, dispatch))
-    .then((result) => {
+  // Use retry logic for fetch requests
+  retryWithBackoff(
+    async () => {
+      const response = await fetch(url, options);
+      return handleErrors(response, options, dataDispatch, dispatch);
+    },
+    {
+      ...retryPresets.standard,
+      onRetry: (attempt, error) => {
+        logger.warn(`Retrying fetch request (attempt ${attempt}):`, error);
+      },
+    }
+  )
+    .then((retryResult) => {
+      if (!retryResult.success) {
+        // All retries failed
+        logger.error('Fetch request failed after retries:', retryResult.error);
+        
+        // Show error to user if notification function is provided
+        if (showNotification) {
+          const errorMessage = retryResult.error instanceof Error
+            ? retryResult.error.message
+            : 'Network error. Please check your connection and try again.';
+          showNotification(errorMessage, 'error');
+        }
+        
+        // Call callback with error
+        callback(null);
+        return;
+      }
+
+      const result = retryResult.data;
+
       // If handleErrors returned a string (error), pass it to callback
       if (typeof result === 'string') {
+        if (showNotification) {
+          showNotification(result, 'error');
+        }
         return callback(result);
       }
 
@@ -180,6 +223,9 @@ export const fetchRequest = (
             return callback(data);
           } catch (error) {
             logger.warn('Failed to parse JSON response:', error);
+            if (showNotification) {
+              showNotification('Failed to parse server response', 'error');
+            }
             return callback(null);
           }
         });
@@ -190,6 +236,15 @@ export const fetchRequest = (
     })
     .catch((error) => {
       logger.error('Fetch request error:', error);
+      
+      // Show error to user if notification function is provided
+      if (showNotification) {
+        const errorMessage = error instanceof Error
+          ? error.message
+          : 'An unexpected error occurred. Please try again.';
+        showNotification(errorMessage, 'error');
+      }
+      
       // Call callback with error so caller can handle it
       callback(null);
     });
@@ -616,7 +671,8 @@ export const fetchData = async (
   dataDispatch: any,
   dispatch: any,
   category: string = '',
-  textFilter: string = ''
+  textFilter: string = '',
+  showNotification?: (message: string, type: string) => void
 ) => {
   // Try to load from IndexedDB first for instant display
   if (isIndexedDBAvailable()) {
@@ -666,40 +722,42 @@ export const fetchData = async (
       dataDispatch,
       dispatch,
       async (data) => {
-      if (!data) return;
+        if (!data) return;
 
-      // Add created timestamp if not present for consistent sorting
-      const dataWithTimestamp = data.map((item) => {
-        if (!item.cr) {
-          // Use date as fallback for sorting
-          item.cr = new Date(item.dt).getTime();
-        }
-        return item;
-      });
-
-      // Save to IndexedDB for next time
-      if (isIndexedDBAvailable()) {
-        await saveExpensesToDB(dataWithTimestamp);
-      }
-
-      // Process data with Web Worker
-      processDataWithWorker(dataWithTimestamp, (processedData) => {
-        dataDispatch({
-          type: 'SET_DATA',
-          raw: dataWithTimestamp,
-          ...processedData,
-          totals: processedData.monthsTotals, // Map monthsTotals to totals
-          loading: false,
+        // Add created timestamp if not present for consistent sorting
+        const dataWithTimestamp = data.map((item) => {
+          if (!item.cr) {
+            // Use date as fallback for sorting
+            item.cr = new Date(item.dt).getTime();
+          }
+          return item;
         });
-        if (category || textFilter) {
-          dataDispatch({
-            type: 'FILTER_DATA',
-            category: category,
-            textFilter,
-          });
+
+        // Save to IndexedDB for next time
+        if (isIndexedDBAvailable()) {
+          await saveExpensesToDB(dataWithTimestamp);
         }
-      });
-    }
+
+        // Process data with Web Worker
+        processDataWithWorker(dataWithTimestamp, (processedData) => {
+          dataDispatch({
+            type: 'SET_DATA',
+            raw: dataWithTimestamp,
+            ...processedData,
+            totals: processedData.monthsTotals, // Map monthsTotals to totals
+            loading: false,
+          });
+          if (category || textFilter) {
+            dataDispatch({
+              type: 'FILTER_DATA',
+              category: category,
+              textFilter,
+            });
+          }
+        });
+      },
+      'GET',
+      showNotification
     );
   }
 };

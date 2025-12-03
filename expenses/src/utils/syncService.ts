@@ -18,6 +18,7 @@ import {
 import { API_BASE_URL, createAuthenticatedFetchOptions, processDataSync, fetchLoans } from './utils';
 import { TransactionOrIncomeItem } from '@type/types';
 import { logger } from './logger';
+import { retryWithBackoff, retryPresets } from './retry';
 
 export interface SyncResult {
   success: number;
@@ -207,12 +208,31 @@ export async function syncPendingOperations(
       const fetchOptions = createAuthenticatedFetchOptions(token, op.method);
       const body = op.data ? JSON.stringify(op.data) : undefined;
       
-      const response = await fetch(syncUrl, { ...fetchOptions, body });
+      // Use retry logic for sync operations
+      const retryResult = await retryWithBackoff(
+        async () => {
+          const response = await fetch(syncUrl, { ...fetchOptions, body });
+          
+          // For DELETE operations, 404 is acceptable (item already deleted or doesn't exist)
+          if (!response.ok && !(op.type === 'delete' && response.status === 404)) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          return response;
+        },
+        {
+          ...retryPresets.sync,
+          onRetry: (attempt, error) => {
+            logger.warn(`Retrying sync operation ${op.id} (attempt ${attempt}):`, error);
+          },
+        }
+      );
 
-      // For DELETE operations, 404 is acceptable (item already deleted or doesn't exist)
-      if (!response.ok && !(op.type === 'delete' && response.status === 404)) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!retryResult.success) {
+        throw retryResult.error || new Error('Sync operation failed after retries');
       }
+
+      const response = retryResult.data!;
 
       // If DELETE returns 404, treat as success
       if (op.type === 'delete' && response.status === 404) {
