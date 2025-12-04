@@ -3,7 +3,7 @@
  * Centralized service for authentication operations
  */
 
-import { createApiClient, API_ENDPOINTS, ApiClient } from './client';
+import { createApiClient, API_ENDPOINTS, ApiClient } from '@api/client';
 import { LoginPayload, UserData } from '@type/types';
 
 /**
@@ -49,4 +49,3 @@ export async function refreshToken(
     error: response.error || undefined,
   };
 }
-

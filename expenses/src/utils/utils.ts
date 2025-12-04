@@ -1,18 +1,12 @@
 import { categories } from '@utils//constants';
 import { logout } from '@context/actions';
 import { DataStructure, ItemTotal, TransactionOrIncomeItem } from '@type/types';
-import {
-  getExpensesFromDB,
-  saveExpensesToDB,
-  getLoansFromDB,
-  saveLoansToDB,
-  getPaymentsFromDB,
-  savePaymentsToDB,
-  isIndexedDBAvailable,
-  isOnline,
-} from './indexedDB';
+import { isIndexedDBAvailable } from './indexedDB';
 import { logger } from './logger';
 import { retryWithBackoff, retryPresets } from './retry';
+import { createApiClient } from '@api/client';
+import { fetchExpenses } from '@api/expenses';
+import { fetchLoans as fetchLoansService } from '@api/loans';
 
 // API Configuration
 export const API_BASE_URL = 'https://dev-expenses-api.pantheonsite.io';
@@ -87,7 +81,14 @@ export const fetchFromAPI = <T = any>(
   showNotification?: (message: string, type: string) => void
 ) => {
   const fetchOptions = createAuthenticatedFetchOptions(token, method);
-  fetchRequest(url, fetchOptions, dataDispatch, dispatch, onSuccess, showNotification);
+  fetchRequest(
+    url,
+    fetchOptions,
+    dataDispatch,
+    dispatch,
+    onSuccess,
+    showNotification
+  );
 };
 
 export const formatDataForChart = (
@@ -161,7 +162,10 @@ export const fetchRequest = (
   if (!dataDispatch || !dispatch) {
     logger.error('Dispatch functions not available for fetch request');
     if (showNotification) {
-      showNotification('System error: Dispatch functions not available', 'error');
+      showNotification(
+        'System error: Dispatch functions not available',
+        'error'
+      );
     }
     return;
   }
@@ -183,15 +187,16 @@ export const fetchRequest = (
       if (!retryResult.success) {
         // All retries failed
         logger.error('Fetch request failed after retries:', retryResult.error);
-        
+
         // Show error to user if notification function is provided
         if (showNotification) {
-          const errorMessage = retryResult.error instanceof Error
-            ? retryResult.error.message
-            : 'Network error. Please check your connection and try again.';
+          const errorMessage =
+            retryResult.error instanceof Error
+              ? retryResult.error.message
+              : 'Network error. Please check your connection and try again.';
           showNotification(errorMessage, 'error');
         }
-        
+
         // Call callback with error
         callback(null);
         return;
@@ -236,15 +241,16 @@ export const fetchRequest = (
     })
     .catch((error) => {
       logger.error('Fetch request error:', error);
-      
+
       // Show error to user if notification function is provided
       if (showNotification) {
-        const errorMessage = error instanceof Error
-          ? error.message
-          : 'An unexpected error occurred. Please try again.';
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred. Please try again.';
         showNotification(errorMessage, 'error');
       }
-      
+
       // Call callback with error so caller can handle it
       callback(null);
     });
@@ -260,49 +266,58 @@ export const deleteNode = async (
   // For transactions/income/payments: implement offline-first approach
   if (dataDispatch && isIndexedDBAvailable()) {
     try {
-      const { 
-        deleteExpenseLocally, 
-        getExpensesFromDB, 
+      const {
+        deleteExpenseLocally,
+        getExpensesFromDB,
         getPaymentsFromDB,
-        isOnline 
+        isOnline,
       } = await import('./indexedDB');
-      const { 
-        deleteOffline, 
+      const {
+        deleteOffline,
         deletePaymentOffline,
         updateUILocally,
         updateLoansUILocally,
       } = await import('./offlineAPI');
-      
+
       // Check if it's a payment (has loanId)
       if (loanId) {
         // Handle payment deletion
-        const payments = await getPaymentsFromDB() || [];
+        const payments = (await getPaymentsFromDB()) || [];
         const loanPayments = payments.find((p: any) => p.loanId === loanId);
-        const paymentToDelete = loanPayments?.data?.find((p: any) => p.id === nid);
-        
+        const paymentToDelete = loanPayments?.data?.find(
+          (p: any) => p.id === nid
+        );
+
         if (paymentToDelete) {
           const url = `${API_BASE_URL}/node/${nid}?_format=json`;
-          
+
           // Delete offline (saves locally and adds to sync queue)
           await deletePaymentOffline(loanId, nid, url);
-          
+
           // Update UI with local data
           await updateLoansUILocally(dataDispatch);
-          
+
           // Call callback immediately
           callback({ ok: true } as Response);
-          
+
           // Try to sync if online
           if (isOnline()) {
-            const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
+            const fetchOptions = createAuthenticatedFetchOptions(
+              token,
+              'DELETE'
+            );
             fetch(url, fetchOptions)
               .then(async (response) => {
                 if (response.ok) {
                   // Remove from sync queue on success
-                  const { getPendingSyncOperations, removeSyncOperation } = await import('./indexedDB');
+                  const { getPendingSyncOperations, removeSyncOperation } =
+                    await import('./indexedDB');
                   const pendingOps = await getPendingSyncOperations();
                   const op = pendingOps.find(
-                    (o) => o.url === url && o.status === 'pending' && o.entityType === 'payment'
+                    (o) =>
+                      o.url === url &&
+                      o.status === 'pending' &&
+                      o.entityType === 'payment'
                   );
                   if (op && op.id) {
                     await removeSyncOperation(op.id);
@@ -324,31 +339,36 @@ export const deleteNode = async (
         }
       } else {
         // Handle expense/income deletion
-        const currentData = await getExpensesFromDB() || [];
+        const currentData = (await getExpensesFromDB()) || [];
         const itemToDelete = currentData.find((item: any) => item.id === nid);
-        
+
         if (itemToDelete) {
           // Determine entity type
-          const entityType = itemToDelete.type === 'transaction' ? 'expense' : 'income';
+          const entityType =
+            itemToDelete.type === 'transaction' ? 'expense' : 'income';
           const url = `${API_BASE_URL}/node/${nid}?_format=json`;
-          
+
           // Delete offline (saves locally and adds to sync queue)
           await deleteOffline(nid, entityType, url);
-          
+
           // Update UI with local data
           await updateUILocally(dataDispatch);
-          
+
           // Call callback immediately
           callback({ ok: true } as Response);
-          
+
           // Try to sync if online
           if (isOnline()) {
-            const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
+            const fetchOptions = createAuthenticatedFetchOptions(
+              token,
+              'DELETE'
+            );
             fetch(url, fetchOptions)
               .then(async (response) => {
                 if (response.ok) {
                   // Remove from sync queue on success
-                  const { getPendingSyncOperations, removeSyncOperation } = await import('./indexedDB');
+                  const { getPendingSyncOperations, removeSyncOperation } =
+                    await import('./indexedDB');
                   const pendingOps = await getPendingSyncOperations();
                   const op = pendingOps.find(
                     (o) => o.url === url && o.status === 'pending'
@@ -409,25 +429,27 @@ export const deleteLoan = async (
   // Implement offline-first approach for loans
   if (isIndexedDBAvailable()) {
     try {
-      const { deleteLoanLocally, getLoansFromDB, isOnline } = await import('./indexedDB');
-      const { deleteLoanOffline, updateLoansUILocally } = await import('./offlineAPI');
-      
+      const { deleteLoanLocally, getLoansFromDB, isOnline } =
+        await import('./indexedDB');
+      const { deleteLoanOffline, updateLoansUILocally } =
+        await import('./offlineAPI');
+
       // Check if loan exists in local DB
-      const currentLoans = await getLoansFromDB() || [];
+      const currentLoans = (await getLoansFromDB()) || [];
       const loanToDelete = currentLoans.find((loan: any) => loan.id === nid);
-      
+
       if (loanToDelete) {
         const url = `${API_BASE_URL}/node/${nid}?_format=json`;
-        
+
         // Delete offline (saves locally and adds to sync queue)
         await deleteLoanOffline(nid, url);
-        
+
         // Update UI with local data
         await updateLoansUILocally(dataDispatch);
-        
+
         // Call onSuccess immediately
         onSuccess();
-        
+
         // Try to sync if online
         if (isOnline()) {
           const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
@@ -435,10 +457,14 @@ export const deleteLoan = async (
             .then(async (response) => {
               if (response.ok) {
                 // Remove from sync queue on success
-                const { getPendingSyncOperations, removeSyncOperation } = await import('./indexedDB');
+                const { getPendingSyncOperations, removeSyncOperation } =
+                  await import('./indexedDB');
                 const pendingOps = await getPendingSyncOperations();
                 const op = pendingOps.find(
-                  (o) => o.url === url && o.status === 'pending' && o.entityType === 'loan'
+                  (o) =>
+                    o.url === url &&
+                    o.status === 'pending' &&
+                    o.entityType === 'loan'
                 );
                 if (op && op.id) {
                   await removeSyncOperation(op.id);
@@ -534,11 +560,11 @@ export function processDataSync(data: TransactionOrIncomeItem[]) {
     const dateA = new Date(a.dt).getTime();
     const dateB = new Date(b.dt).getTime();
     const dateComparison = dateB - dateA;
-    
+
     if (dateComparison !== 0) {
       return dateComparison;
     }
-    
+
     // For same date, sort by created timestamp (descending - newest first, oldest last)
     const crA = a.cr || new Date(a.dt).getTime();
     const crB = b.cr || new Date(b.dt).getTime();
@@ -557,8 +583,18 @@ export function processDataSync(data: TransactionOrIncomeItem[]) {
   let totalSpent = 0;
 
   const englishMonthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   sortedData.forEach((item) => {
@@ -596,22 +632,30 @@ export function processDataSync(data: TransactionOrIncomeItem[]) {
 
     const { cat, sum, type } = item;
     if (type === 'incomes') {
-      totalIncomePerYear[year] = (totalIncomePerYear[year] as number || 0) + parseFloat(sum);
+      totalIncomePerYear[year] =
+        ((totalIncomePerYear[year] as number) || 0) + parseFloat(sum);
       totalIncomePerYearAndMonth[year][month] += parseFloat(sum);
       incomeData.push(item);
-      incomeTotals[month] = parseFloat((incomeTotals[month] + parseFloat(sum)).toFixed(2));
+      incomeTotals[month] = parseFloat(
+        (incomeTotals[month] + parseFloat(sum)).toFixed(2)
+      );
     } else if (type === 'transaction') {
       groupedData[month].push(item);
-      monthsTotals[month] = parseFloat((monthsTotals[month] + parseFloat(sum)).toFixed(2));
+      monthsTotals[month] = parseFloat(
+        (monthsTotals[month] + parseFloat(sum)).toFixed(2)
+      );
       if (cat && !categoryTotals[cat]) {
         categoryTotals[cat] = { name: getCategory[cat] || '', y: 0 };
       }
       if (cat && categoryTotals[cat]) {
-        categoryTotals[cat].y = parseFloat((categoryTotals[cat].y + parseFloat(sum)).toFixed(2));
+        categoryTotals[cat].y = parseFloat(
+          (categoryTotals[cat].y + parseFloat(sum)).toFixed(2)
+        );
       }
       totalSpent += parseFloat(sum);
       totalsPerYearAndMonth[year][month] += parseFloat(sum);
-      totalPerYear[year] = (totalPerYear[year] as number || 0) + parseFloat(sum);
+      totalPerYear[year] =
+        ((totalPerYear[year] as number) || 0) + parseFloat(sum);
     }
   });
 
@@ -621,11 +665,11 @@ export function processDataSync(data: TransactionOrIncomeItem[]) {
       const dateA = new Date(a.dt).getTime();
       const dateB = new Date(b.dt).getTime();
       const dateComparison = dateB - dateA;
-      
+
       if (dateComparison !== 0) {
         return dateComparison;
       }
-      
+
       // For same date, sort by created timestamp (descending - newest first, oldest last)
       const crA = a.cr || new Date(a.dt).getTime();
       const crB = b.cr || new Date(b.dt).getTime();
@@ -638,11 +682,11 @@ export function processDataSync(data: TransactionOrIncomeItem[]) {
     const dateA = new Date(a.dt).getTime();
     const dateB = new Date(b.dt).getTime();
     const dateComparison = dateB - dateA;
-    
+
     if (dateComparison !== 0) {
       return dateComparison;
     }
-    
+
     // For same date, sort by created timestamp (descending - newest first, oldest last)
     const crA = a.cr || new Date(a.dt).getTime();
     const crB = b.cr || new Date(b.dt).getTime();
@@ -680,9 +724,6 @@ export const fetchData = async (
   showNotification?: (message: string, type: string) => void
 ) => {
   // Use centralized API client
-  const { createApiClient } = await import('../api/client');
-  const { fetchExpenses } = await import('../api/expenses');
-  
   const apiClient = createApiClient({
     token,
     dataDispatch,
@@ -710,9 +751,9 @@ export const processPayments = (payments: any[]): any[] => {
       const dateA = new Date(a.fdt || 0).getTime();
       const dateB = new Date(b.fdt || 0).getTime();
       const dateComparison = dateB - dateA;
-      
+
       if (dateComparison !== 0) return dateComparison;
-      
+
       // For same date, sort by created timestamp (descending - newest first)
       const crA = a.cr || new Date(a.fdt || 0).getTime();
       const crB = b.cr || new Date(b.fdt || 0).getTime();
@@ -742,18 +783,23 @@ const fetchLoanPayments = async (
   fetchOptions: RequestInit
 ): Promise<{ loanId: string; data: any[] }> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/payments/${loanId}`, fetchOptions);
-    
+    const response = await fetch(
+      `${API_BASE_URL}/api/payments/${loanId}`,
+      fetchOptions
+    );
+
     if (!response.ok) {
-      console.warn(`Failed to fetch payments for loan ${loanId}: ${response.status}`);
+      console.warn(
+        `Failed to fetch payments for loan ${loanId}: ${response.status}`
+      );
       return { loanId, data: [] };
     }
-    
+
     const responseData = await response.json();
-    const processedPayments = Array.isArray(responseData) 
+    const processedPayments = Array.isArray(responseData)
       ? processPayments(responseData)
       : [];
-    
+
     return { loanId, data: processedPayments };
   } catch (error) {
     console.error(`Error fetching payments for loan ${loanId}:`, error);
@@ -792,9 +838,6 @@ export const fetchLoans = async (
   }
 
   // Use centralized API client
-  const { createApiClient } = await import('../api/client');
-  const { fetchLoans: fetchLoansService } = await import('../api/loans');
-  
   const apiClient = createApiClient({
     token,
     dataDispatch,

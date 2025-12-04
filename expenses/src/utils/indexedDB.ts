@@ -1,6 +1,6 @@
 // IndexedDB utilities for caching expense data
-import { processLoans, processPayments } from './utils';
-import { logger } from './logger';
+import { processLoans, processPayments } from '@utils/utils';
+import { logger } from '@utils/logger';
 
 const DB_NAME = 'expensesDB';
 const DB_VERSION = 3; // Incremented for sync queue store
@@ -19,25 +19,28 @@ export function openDB(): Promise<IDBDatabase> {
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      
+
       // Create expenses store if it doesn't exist
       if (!db.objectStoreNames.contains(STORE_EXPENSES)) {
         db.createObjectStore(STORE_EXPENSES, { keyPath: 'id' });
       }
-      
+
       // Create loans store if it doesn't exist
       if (!db.objectStoreNames.contains(STORE_LOANS)) {
         db.createObjectStore(STORE_LOANS, { keyPath: 'id' });
       }
-      
+
       // Create payments store if it doesn't exist
       if (!db.objectStoreNames.contains(STORE_PAYMENTS)) {
         db.createObjectStore(STORE_PAYMENTS, { keyPath: 'loanId' });
       }
-      
+
       // Create sync queue store if it doesn't exist
       if (!db.objectStoreNames.contains(STORE_SYNC_QUEUE)) {
-        const syncStore = db.createObjectStore(STORE_SYNC_QUEUE, { keyPath: 'id', autoIncrement: true });
+        const syncStore = db.createObjectStore(STORE_SYNC_QUEUE, {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
         syncStore.createIndex('status', 'status', { unique: false });
       }
     };
@@ -45,9 +48,7 @@ export function openDB(): Promise<IDBDatabase> {
 }
 
 // Save expense data to IndexedDB
-export async function saveExpensesToDB(
-  data: any[]
-): Promise<void> {
+export async function saveExpensesToDB(data: any[]): Promise<void> {
   try {
     const db = await openDB();
     const transaction = db.transaction(STORE_EXPENSES, 'readwrite');
@@ -84,12 +85,12 @@ function sortExpenses(data: any[]): any[] {
     const dateA = new Date(a.dt).getTime();
     const dateB = new Date(b.dt).getTime();
     const dateComparison = dateB - dateA;
-    
+
     // If dates are different, return date comparison
     if (dateComparison !== 0) {
       return dateComparison;
     }
-    
+
     // For same date, sort by created timestamp (descending - newest first, oldest last)
     // This ensures new items appear at the beginning of the same day
     const crA = a.cr || new Date(a.dt).getTime();
@@ -261,7 +262,7 @@ export async function getPaymentsFromDB(): Promise<any[] | null> {
 export async function clearExpensesDB(): Promise<void> {
   try {
     const db = await openDB();
-    
+
     // Clear expenses
     const expensesTransaction = db.transaction(STORE_EXPENSES, 'readwrite');
     const expensesStore = expensesTransaction.objectStore(STORE_EXPENSES);
@@ -437,7 +438,7 @@ export async function savePaymentLocally(
     });
 
     let paymentsData = existingPayments?.data || [];
-    
+
     if (isNew) {
       // Add new payment
       if (!payment.id) {
@@ -679,7 +680,11 @@ export async function updateSyncOperationsWithNewId(
 
         operations.forEach((op: SyncOperation) => {
           // Update operations that reference the old temp ID
-          if (op.localId === oldLocalId && op.entityType === entityType && op.type !== 'create') {
+          if (
+            op.localId === oldLocalId &&
+            op.entityType === entityType &&
+            op.type !== 'create'
+          ) {
             op.localId = newLocalId;
             // Reconstruct URL with new ID (safer than replace)
             const API_BASE_URL = 'https://dev-expenses-api.pantheonsite.io';
@@ -720,7 +725,10 @@ export async function updateSyncOperationsWithNewId(
 export async function cleanupInvalidSyncOperations(): Promise<number> {
   try {
     const db = await openDB();
-    const transaction = db.transaction([STORE_SYNC_QUEUE, STORE_EXPENSES, STORE_LOANS, STORE_PAYMENTS], 'readwrite');
+    const transaction = db.transaction(
+      [STORE_SYNC_QUEUE, STORE_EXPENSES, STORE_LOANS, STORE_PAYMENTS],
+      'readwrite'
+    );
     const syncStore = transaction.objectStore(STORE_SYNC_QUEUE);
     const expensesStore = transaction.objectStore(STORE_EXPENSES);
     const loansStore = transaction.objectStore(STORE_LOANS);
@@ -752,7 +760,7 @@ export async function cleanupInvalidSyncOperations(): Promise<number> {
 
           // Check if item exists in local DB (only for update operations)
           let itemExists = false;
-          
+
           if (op.entityType === 'expense' || op.entityType === 'income') {
             const item = await new Promise<any>((resolve) => {
               const req = expensesStore.get(op.localId);
@@ -774,7 +782,7 @@ export async function cleanupInvalidSyncOperations(): Promise<number> {
               req.onsuccess = () => resolve(req.result || []);
               req.onerror = () => resolve([]);
             });
-            itemExists = payments.some((p: any) => 
+            itemExists = payments.some((p: any) =>
               p.data?.some((pay: any) => pay.id === op.localId)
             );
           }
@@ -794,29 +802,31 @@ export async function cleanupInvalidSyncOperations(): Promise<number> {
           return;
         }
 
-        Promise.all(operations.map((op, idx) => checkOperation(op, idx))).then(() => {
-          // Delete invalid operations
-          if (operationsToDelete.length > 0) {
-            operationsToDelete.forEach((id) => {
-              syncStore.delete(id);
-              cleanedCount++;
-            });
-          }
+        Promise.all(operations.map((op, idx) => checkOperation(op, idx)))
+          .then(() => {
+            // Delete invalid operations
+            if (operationsToDelete.length > 0) {
+              operationsToDelete.forEach((id) => {
+                syncStore.delete(id);
+                cleanedCount++;
+              });
+            }
 
-          transaction.oncomplete = () => {
-            db.close();
-            resolve(cleanedCount);
-          };
-          transaction.onerror = () => {
-            db.close();
-            reject(transaction.error);
-          };
-        }).catch((error) => {
-          transaction.oncomplete = () => {
-            db.close();
-            resolve(0);
-          };
-        });
+            transaction.oncomplete = () => {
+              db.close();
+              resolve(cleanedCount);
+            };
+            transaction.onerror = () => {
+              db.close();
+              reject(transaction.error);
+            };
+          })
+          .catch((error) => {
+            transaction.oncomplete = () => {
+              db.close();
+              resolve(0);
+            };
+          });
       };
       request.onerror = () => {
         transaction.oncomplete = () => db.close();
@@ -828,4 +838,3 @@ export async function cleanupInvalidSyncOperations(): Promise<number> {
     return 0;
   }
 }
-

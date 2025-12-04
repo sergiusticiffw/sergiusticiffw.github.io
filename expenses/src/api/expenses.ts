@@ -3,7 +3,7 @@
  * Centralized service for expense-related API operations
  */
 
-import { createApiClient, ApiClient, API_ENDPOINTS } from './client';
+import { ApiClient, API_ENDPOINTS } from '@api/client';
 import { TransactionOrIncomeItem } from '@type/types';
 import {
   getExpensesFromDB,
@@ -37,11 +37,11 @@ export async function fetchExpenses(
         const dateA = new Date(a.dt).getTime();
         const dateB = new Date(b.dt).getTime();
         const dateComparison = dateB - dateA;
-        
+
         if (dateComparison !== 0) {
           return dateComparison;
         }
-        
+
         const crA = a.cr || new Date(a.dt).getTime();
         const crB = b.cr || new Date(b.dt).getTime();
         return crB - crA;
@@ -56,7 +56,7 @@ export async function fetchExpenses(
           totals: processedData.monthsTotals,
           loading: false,
         });
-        
+
         if (category || textFilter) {
           dataDispatch({
             type: 'FILTER_DATA',
@@ -102,7 +102,7 @@ export async function fetchExpenses(
       totals: processedData.monthsTotals,
       loading: false,
     });
-    
+
     if (category || textFilter) {
       dataDispatch({
         type: 'FILTER_DATA',
@@ -121,7 +121,7 @@ export async function createExpense(
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
   const response = await apiClient.post(API_ENDPOINTS.CREATE_NODE, nodeData);
-  
+
   return {
     success: response.success,
     data: response.data,
@@ -138,7 +138,7 @@ export async function updateExpense(
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
   const response = await apiClient.patch(API_ENDPOINTS.EXPENSE(id), nodeData);
-  
+
   return {
     success: response.success,
     data: response.data,
@@ -154,10 +154,9 @@ export async function deleteExpense(
   id: string
 ): Promise<{ success: boolean; error?: Error }> {
   const response = await apiClient.delete(API_ENDPOINTS.EXPENSE(id));
-  
+
   return {
     success: response.success,
     error: response.error || undefined,
   };
 }
-

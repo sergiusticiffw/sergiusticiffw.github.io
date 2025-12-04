@@ -1,5 +1,5 @@
 import { LoginPayload, UserData } from '@type/types';
-import { clearExpensesDB } from '../utils/indexedDB';
+import { clearExpensesDB } from '@utils/indexedDB';
 
 const ROOT_URL = 'https://dev-expenses-api.pantheonsite.io';
 

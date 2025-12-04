@@ -2,21 +2,17 @@ import { useState } from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
-import { fetchRequest, API_BASE_URL, processDataSync } from '@utils/utils';
+import { fetchRequest, API_BASE_URL } from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import { AuthState, NodeData, TransactionOrIncomeItem } from '@type/types';
+import { isIndexedDBAvailable, isOnline } from '@utils/indexedDB';
 import {
-  isIndexedDBAvailable,
-  isOnline,
-} from '@utils/indexedDB';
-import { 
-  saveOffline, 
+  saveOffline,
   updateUILocally,
   saveLoanOffline,
   savePaymentOffline,
   updateLoansUILocally,
 } from '@utils/offlineAPI';
-import { getPendingSyncOperations, removeSyncOperation } from '@utils/indexedDB';
 import { logger } from '@utils/logger';
 
 interface UseFormSubmitOptions<T> {
@@ -104,7 +100,9 @@ export const useFormSubmit = <T extends Record<string, any>>({
       // Determine entity type
       const entityType =
         nodeType === 'transaction' || nodeType === 'incomes'
-          ? (nodeType === 'transaction' ? 'expense' : 'income')
+          ? nodeType === 'transaction'
+            ? 'expense'
+            : 'income'
           : null;
 
       // For loans: online-first approach when online, offline-first when offline
@@ -131,7 +129,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
           try {
             const response = await fetch(url, fetchOptions);
-            
+
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -139,9 +137,10 @@ export const useFormSubmit = <T extends Record<string, any>>({
             const data: NodeData = await response.json();
 
             if (data.nid) {
-              const serverId = data.nid[0]?.value?.toString() || data.nid.toString();
+              const serverId =
+                data.nid[0]?.value?.toString() || data.nid.toString();
               const { saveLoanLocally } = await import('@utils/indexedDB');
-              
+
               // Convert to loan format and save to local DB
               const loanToSave: any = {
                 id: serverId,
@@ -156,16 +155,16 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 fls: node.field_loan_status?.[0] || 'draft',
                 cr: formType === 'add' ? Date.now() : undefined,
               };
-              
+
               // Save to local DB with server data
               await saveLoanLocally(loanToSave, formType === 'add');
-              
+
               // Update UI immediately
               await updateLoansUILocally(dataDispatch);
-              
+
               // Show success notification
               showNotification(t(messageKey), notificationType.SUCCESS);
-              
+
               setIsSubmitting(false);
               setFormState(initialState);
               onSuccess();
@@ -173,8 +172,11 @@ export const useFormSubmit = <T extends Record<string, any>>({
               throw new Error('No ID returned from server');
             }
           } catch (error) {
-            logger.error('Online request failed, falling back to offline:', error);
-            
+            logger.error(
+              'Online request failed, falling back to offline:',
+              error
+            );
+
             // Fallback to offline save if online request fails
             const loanItem: any = {
               id: formType === 'add' ? undefined : values.nid,
@@ -192,8 +194,11 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
             await saveLoanOffline(loanItem, node, formType, url, method);
             await updateLoansUILocally(dataDispatch);
-            showNotification(t('notification.savedOffline') || 'Saved offline', notificationType.SUCCESS);
-            
+            showNotification(
+              t('notification.savedOffline') || 'Saved offline',
+              notificationType.SUCCESS
+            );
+
             setIsSubmitting(false);
             setFormState(initialState);
             onSuccess();
@@ -216,18 +221,28 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
           await saveLoanOffline(loanItem, node, formType, url, method);
           await updateLoansUILocally(dataDispatch);
-          showNotification(t('notification.savedOffline') || 'Saved offline', notificationType.SUCCESS);
-          
+          showNotification(
+            t('notification.savedOffline') || 'Saved offline',
+            notificationType.SUCCESS
+          );
+
           setIsSubmitting(false);
           setFormState(initialState);
           onSuccess();
         }
       }
       // For payments: online-first approach when online, offline-first when offline
-      else if (nodeType === 'payment' && dataDispatch && isIndexedDBAvailable()) {
+      else if (
+        nodeType === 'payment' &&
+        dataDispatch &&
+        isIndexedDBAvailable()
+      ) {
         // Get loan ID from node or additionalParams
-        const loanId = node.field_loan_reference?.[0] || additionalParams?.loanId || values.field_loan_reference;
-        
+        const loanId =
+          node.field_loan_reference?.[0] ||
+          additionalParams?.loanId ||
+          values.field_loan_reference;
+
         if (!loanId) {
           throw new Error('Loan ID is required for payment');
         }
@@ -254,7 +269,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
           try {
             const response = await fetch(url, fetchOptions);
-            
+
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -262,9 +277,10 @@ export const useFormSubmit = <T extends Record<string, any>>({
             const data: NodeData = await response.json();
 
             if (data.nid) {
-              const serverId = data.nid[0]?.value?.toString() || data.nid.toString();
+              const serverId =
+                data.nid[0]?.value?.toString() || data.nid.toString();
               const { savePaymentLocally } = await import('@utils/indexedDB');
-              
+
               // Convert to payment format and save to local DB
               const paymentToSave: any = {
                 id: serverId,
@@ -277,16 +293,20 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 fisp: node.field_is_simulated_payment?.[0] || 0,
                 cr: formType === 'add' ? Date.now() : undefined,
               };
-              
+
               // Save to local DB with server data
-              await savePaymentLocally(loanId, paymentToSave, formType === 'add');
-              
+              await savePaymentLocally(
+                loanId,
+                paymentToSave,
+                formType === 'add'
+              );
+
               // Update UI immediately
               await updateLoansUILocally(dataDispatch);
-              
+
               // Show success notification
               showNotification(t(messageKey), notificationType.SUCCESS);
-              
+
               setIsSubmitting(false);
               setFormState(initialState);
               onSuccess();
@@ -294,8 +314,11 @@ export const useFormSubmit = <T extends Record<string, any>>({
               throw new Error('No ID returned from server');
             }
           } catch (error) {
-            logger.error('Online request failed, falling back to offline:', error);
-            
+            logger.error(
+              'Online request failed, falling back to offline:',
+              error
+            );
+
             // Fallback to offline save if online request fails
             const paymentItem: any = {
               id: formType === 'add' ? undefined : values.nid,
@@ -309,10 +332,20 @@ export const useFormSubmit = <T extends Record<string, any>>({
               cr: formType === 'add' ? Date.now() : undefined,
             };
 
-            await savePaymentOffline(loanId, paymentItem, node, formType, url, method);
+            await savePaymentOffline(
+              loanId,
+              paymentItem,
+              node,
+              formType,
+              url,
+              method
+            );
             await updateLoansUILocally(dataDispatch);
-            showNotification(t('notification.savedOffline') || 'Saved offline', notificationType.SUCCESS);
-            
+            showNotification(
+              t('notification.savedOffline') || 'Saved offline',
+              notificationType.SUCCESS
+            );
+
             setIsSubmitting(false);
             setFormState(initialState);
             onSuccess();
@@ -331,17 +364,32 @@ export const useFormSubmit = <T extends Record<string, any>>({
             cr: formType === 'add' ? Date.now() : undefined,
           };
 
-          await savePaymentOffline(loanId, paymentItem, node, formType, url, method);
+          await savePaymentOffline(
+            loanId,
+            paymentItem,
+            node,
+            formType,
+            url,
+            method
+          );
           await updateLoansUILocally(dataDispatch);
-          showNotification(t('notification.savedOffline') || 'Saved offline', notificationType.SUCCESS);
-          
+          showNotification(
+            t('notification.savedOffline') || 'Saved offline',
+            notificationType.SUCCESS
+          );
+
           setIsSubmitting(false);
           setFormState(initialState);
           onSuccess();
         }
       }
       // For transactions/income: online-first approach when online, offline-first when offline
-      else if (useFetchRequest && dataDispatch && entityType && isIndexedDBAvailable()) {
+      else if (
+        useFetchRequest &&
+        dataDispatch &&
+        entityType &&
+        isIndexedDBAvailable()
+      ) {
         const messageKey = successMessageKeys
           ? formType === 'add'
             ? successMessageKeys.add
@@ -364,7 +412,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
           try {
             const response = await fetch(url, fetchOptions);
-            
+
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -372,29 +420,33 @@ export const useFormSubmit = <T extends Record<string, any>>({
             const data: NodeData = await response.json();
 
             if (data.nid) {
-              const serverId = data.nid[0]?.value?.toString() || data.nid.toString();
+              const serverId =
+                data.nid[0]?.value?.toString() || data.nid.toString();
               const { saveExpenseLocally } = await import('@utils/indexedDB');
-              
+
               // Convert to expense format and save to local DB
               const itemToSave: TransactionOrIncomeItem = {
                 id: serverId,
-                dt: node.field_date?.[0] || node.title?.[0] || new Date().toISOString().split('T')[0],
+                dt:
+                  node.field_date?.[0] ||
+                  node.title?.[0] ||
+                  new Date().toISOString().split('T')[0],
                 sum: node.field_amount?.[0] || '0',
                 type: nodeType === 'transaction' ? 'transaction' : 'incomes',
                 cat: node.field_category?.[0],
                 dsc: node.field_description?.[0],
                 cr: formType === 'add' ? Date.now() : undefined,
               };
-              
+
               // Save to local DB with server data
               await saveExpenseLocally(itemToSave, formType === 'add');
-              
+
               // Update UI immediately
               await updateUILocally(dataDispatch);
-              
+
               // Show success notification
               showNotification(t(messageKey), notificationType.SUCCESS);
-              
+
               setIsSubmitting(false);
               setFormState(initialState);
               onSuccess();
@@ -402,12 +454,18 @@ export const useFormSubmit = <T extends Record<string, any>>({
               throw new Error('No ID returned from server');
             }
           } catch (error) {
-            logger.error('Online request failed, falling back to offline:', error);
-            
+            logger.error(
+              'Online request failed, falling back to offline:',
+              error
+            );
+
             // Fallback to offline save if online request fails
             const savedItem: TransactionOrIncomeItem = {
               id: formType === 'add' ? undefined : values.nid,
-              dt: node.field_date?.[0] || node.title?.[0] || new Date().toISOString().split('T')[0],
+              dt:
+                node.field_date?.[0] ||
+                node.title?.[0] ||
+                new Date().toISOString().split('T')[0],
               sum: node.field_amount?.[0] || '0',
               type: nodeType === 'transaction' ? 'transaction' : 'incomes',
               cat: node.field_category?.[0],
@@ -415,10 +473,20 @@ export const useFormSubmit = <T extends Record<string, any>>({
               cr: formType === 'add' ? Date.now() : undefined,
             };
 
-            const savedId = await saveOffline(savedItem, node, formType, entityType, url, method);
+            const savedId = await saveOffline(
+              savedItem,
+              node,
+              formType,
+              entityType,
+              url,
+              method
+            );
             await updateUILocally(dataDispatch);
-            showNotification(t('notification.savedOffline') || 'Saved offline', notificationType.SUCCESS);
-            
+            showNotification(
+              t('notification.savedOffline') || 'Saved offline',
+              notificationType.SUCCESS
+            );
+
             setIsSubmitting(false);
             setFormState(initialState);
             onSuccess();
@@ -427,7 +495,10 @@ export const useFormSubmit = <T extends Record<string, any>>({
           // Offline: save locally and add to sync queue
           const savedItem: TransactionOrIncomeItem = {
             id: formType === 'add' ? undefined : values.nid,
-            dt: node.field_date?.[0] || node.title?.[0] || new Date().toISOString().split('T')[0],
+            dt:
+              node.field_date?.[0] ||
+              node.title?.[0] ||
+              new Date().toISOString().split('T')[0],
             sum: node.field_amount?.[0] || '0',
             type: nodeType === 'transaction' ? 'transaction' : 'incomes',
             cat: node.field_category?.[0],
@@ -437,8 +508,11 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
           await saveOffline(savedItem, node, formType, entityType, url, method);
           await updateUILocally(dataDispatch);
-          showNotification(t('notification.savedOffline') || 'Saved offline', notificationType.SUCCESS);
-          
+          showNotification(
+            t('notification.savedOffline') || 'Saved offline',
+            notificationType.SUCCESS
+          );
+
           setIsSubmitting(false);
           setFormState(initialState);
           onSuccess();

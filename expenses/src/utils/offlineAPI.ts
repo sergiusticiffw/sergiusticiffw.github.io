@@ -9,12 +9,9 @@ import {
   savePaymentLocally,
   deletePaymentLocally,
   getPaymentsFromDB,
-  savePaymentsToDB,
   addToSyncQueue,
-  isOnline,
-  SyncOperation,
-} from './indexedDB';
-import { processDataSync, processLoans } from './utils';
+} from '@utils/indexedDB';
+import { processDataSync, processLoans } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
 
 // Save transaction/income offline
@@ -163,12 +160,10 @@ export async function deletePaymentOffline(
 }
 
 // Update UI with local data (for expenses/income)
-export async function updateUILocally(
-  dataDispatch: any
-): Promise<void> {
-  const updatedData = await getExpensesFromDB() || [];
+export async function updateUILocally(dataDispatch: any): Promise<void> {
+  const updatedData = (await getExpensesFromDB()) || [];
   const processedData = processDataSync(updatedData);
-  
+
   dataDispatch({
     type: 'SET_DATA',
     raw: processedData.raw || updatedData, // Use sorted data from processDataSync
@@ -179,15 +174,13 @@ export async function updateUILocally(
 }
 
 // Update UI with local loans/payments data
-export async function updateLoansUILocally(
-  dataDispatch: any
-): Promise<void> {
-  const loans = await getLoansFromDB() || [];
-  const payments = await getPaymentsFromDB() || [];
-  
+export async function updateLoansUILocally(dataDispatch: any): Promise<void> {
+  const loans = (await getLoansFromDB()) || [];
+  const payments = (await getPaymentsFromDB()) || [];
+
   // Ensure loans are sorted consistently (by cr descending, newest first)
   const sortedLoans = loans.length > 0 ? processLoans(loans) : null;
-  
+
   dataDispatch({
     type: 'SET_DATA',
     loans: sortedLoans,
@@ -195,4 +188,3 @@ export async function updateLoansUILocally(
     loading: false,
   });
 }
-

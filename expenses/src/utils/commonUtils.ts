@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { notificationType } from './constants';
-import { AuthState, DataState, NodeData } from '../type/types';
-import { logger } from './logger';
+import { NodeData } from '@type/types';
+import { logger } from '@utils/logger';
 
 // Form validation utilities
 export const validateRequired = (value: string | number): boolean => {
@@ -223,7 +223,7 @@ export const handleError = (
 ): void => {
   // Log error for debugging
   logger.error('Error occurred:', error);
-  
+
   // Extract user-friendly error message
   let errorMessage = defaultMessage;
   if (error instanceof Error) {
@@ -231,7 +231,7 @@ export const handleError = (
   } else if (typeof error === 'string') {
     errorMessage = error;
   }
-  
+
   // Show notification to user
   showNotification(errorMessage, notificationType.ERROR);
 };

@@ -1,5 +1,4 @@
 import { useLocalization } from '@context/localization';
-import SavingsHistory from '../components/Charts/SavingsHistory';
 
 export const getCategories = () => {
   const { t } = useLocalization();

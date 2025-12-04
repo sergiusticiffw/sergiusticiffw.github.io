@@ -3,7 +3,7 @@
  * Centralized service for loan-related API operations
  */
 
-import { createApiClient, ApiClient, API_ENDPOINTS } from './client';
+import { ApiClient, API_ENDPOINTS } from '@api/client';
 import {
   getLoansFromDB,
   saveLoansToDB,
@@ -11,7 +11,7 @@ import {
   savePaymentsToDB,
   isIndexedDBAvailable,
 } from '@utils/indexedDB';
-import { processLoans, processPayments } from '@utils/utils';
+import { processLoans } from '@utils/utils';
 
 /**
  * Fetch payments for a loan
@@ -58,7 +58,7 @@ export async function fetchLoans(
   if (isIndexedDBAvailable()) {
     const cachedLoans = await getLoansFromDB();
     const cachedPayments = await getPaymentsFromDB();
-    
+
     if (cachedLoans && cachedLoans.length > 0) {
       updateLoansUI(dataDispatch, cachedLoans, cachedPayments || []);
     }
@@ -74,10 +74,7 @@ export async function fetchLoans(
   if (!response.data || response.data.length === 0) {
     // Clear IndexedDB if no loans
     if (isIndexedDBAvailable()) {
-      await Promise.all([
-        saveLoansToDB([]),
-        savePaymentsToDB([])
-      ]);
+      await Promise.all([saveLoansToDB([]), savePaymentsToDB([])]);
     }
     updateLoansUI(dataDispatch, null, []);
     return;
@@ -96,7 +93,7 @@ export async function fetchLoans(
   if (isIndexedDBAvailable()) {
     await Promise.all([
       saveLoansToDB(processedLoans),
-      savePaymentsToDB(payments)
+      savePaymentsToDB(payments),
     ]);
   }
 
@@ -112,7 +109,7 @@ export async function createLoan(
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
   const response = await apiClient.post(API_ENDPOINTS.CREATE_NODE, nodeData);
-  
+
   return {
     success: response.success,
     data: response.data,
@@ -129,7 +126,7 @@ export async function updateLoan(
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
   const response = await apiClient.patch(API_ENDPOINTS.LOAN(id), nodeData);
-  
+
   return {
     success: response.success,
     data: response.data,
@@ -145,7 +142,7 @@ export async function deleteLoan(
   id: string
 ): Promise<{ success: boolean; error?: Error }> {
   const response = await apiClient.delete(API_ENDPOINTS.LOAN(id));
-  
+
   return {
     success: response.success,
     error: response.error || undefined,
@@ -160,7 +157,7 @@ export async function createPayment(
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
   const response = await apiClient.post(API_ENDPOINTS.CREATE_NODE, nodeData);
-  
+
   return {
     success: response.success,
     data: response.data,
@@ -177,7 +174,7 @@ export async function updatePayment(
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
   const response = await apiClient.patch(API_ENDPOINTS.EXPENSE(id), nodeData);
-  
+
   return {
     success: response.success,
     data: response.data,
@@ -193,10 +190,9 @@ export async function deletePayment(
   id: string
 ): Promise<{ success: boolean; error?: Error }> {
   const response = await apiClient.delete(API_ENDPOINTS.EXPENSE(id));
-  
+
   return {
     success: response.success,
     error: response.error || undefined,
   };
 }
-

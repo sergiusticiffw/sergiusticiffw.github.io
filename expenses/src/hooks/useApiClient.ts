@@ -3,7 +3,7 @@
  */
 
 import { useMemo } from 'react';
-import { createApiClient, ApiClient, ApiClientConfig } from '../api/client';
+import { createApiClient, ApiClient } from '@api/client';
 import { useAuthState } from '@context/context';
 import { useNotification } from '@context/notification';
 import { useData } from '@context/context';
@@ -34,4 +34,3 @@ export function useApiClient(): ApiClient | null {
 
   return apiClient;
 }
-
