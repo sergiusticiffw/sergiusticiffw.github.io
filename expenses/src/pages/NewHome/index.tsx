@@ -131,20 +131,25 @@ const NewHome = () => {
 
   const handleDelete = (id: string, token: string) => {
     setIsSubmitting(true);
-    deleteNode(id, token, (response: Response) => {
-      if (response.ok) {
-        showNotification(
-          t('notification.transactionDeleted'),
-          notificationType.SUCCESS
-        );
-        setIsSubmitting(false);
-      } else {
-        showNotification(t('error.unknown'), notificationType.ERROR);
-        setIsSubmitting(false);
-      }
-      setShowDeleteModal(false);
-      // Don't fetch - UI already updated by deleteNode
-    }, dataDispatch);
+    deleteNode(
+      id,
+      token,
+      (response: Response) => {
+        if (response.ok) {
+          showNotification(
+            t('notification.transactionDeleted'),
+            notificationType.SUCCESS
+          );
+          setIsSubmitting(false);
+        } else {
+          showNotification(t('error.unknown'), notificationType.ERROR);
+          setIsSubmitting(false);
+        }
+        setShowDeleteModal(false);
+        // Don't fetch - UI already updated by deleteNode
+      },
+      dataDispatch
+    );
   };
 
   // Get transactions for current month

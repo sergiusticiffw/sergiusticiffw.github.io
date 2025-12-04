@@ -36,7 +36,7 @@ const SyncStatusIndicator: React.FC = () => {
     const handleSyncEnd = async (event?: CustomEvent) => {
       setIsSyncing(false);
       // Small delay to ensure IndexedDB operations are complete
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       // Refresh pending count after sync
       await checkPending();
     };
@@ -78,10 +78,10 @@ const SyncStatusIndicator: React.FC = () => {
         showOffline
           ? 'sync-status-indicator--offline'
           : showSyncing
-          ? 'sync-status-indicator--syncing'
-          : showPending
-          ? 'sync-status-indicator--pending'
-          : 'sync-status-indicator--success'
+            ? 'sync-status-indicator--syncing'
+            : showPending
+              ? 'sync-status-indicator--pending'
+              : 'sync-status-indicator--success'
       }`}
     >
       {showOffline ? (
@@ -97,7 +97,9 @@ const SyncStatusIndicator: React.FC = () => {
       ) : showPending ? (
         <>
           <FiWifiOff className="sync-status-indicator__icon" />
-          <span>{pendingCount} {t('syncStatus.pending')}</span>
+          <span>
+            {pendingCount} {t('syncStatus.pending')}
+          </span>
         </>
       ) : (
         <>
@@ -110,4 +112,3 @@ const SyncStatusIndicator: React.FC = () => {
 };
 
 export default SyncStatusIndicator;
-

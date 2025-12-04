@@ -39,7 +39,7 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log error to logger (will only log in development)
     logger.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+
     // Call optional error handler
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
@@ -71,7 +71,9 @@ class ErrorBoundary extends Component<Props, State> {
       }
 
       // Default error UI
-      return <ErrorFallback error={this.state.error} onReset={this.handleReset} />;
+      return (
+        <ErrorFallback error={this.state.error} onReset={this.handleReset} />
+      );
     }
 
     return this.props.children;
@@ -93,7 +95,8 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
   const getTranslation = (key: string): string => {
     const translations: Record<string, string> = {
       'error.boundary.title': 'Something went wrong',
-      'error.boundary.message': 'We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.',
+      'error.boundary.message':
+        'We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.',
       'error.boundary.details': 'Error Details (Development Only)',
       'error.boundary.tryAgain': 'Try Again',
       'error.boundary.reload': 'Reload Page',
@@ -123,14 +126,14 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
           </details>
         )}
         <div className="error-boundary__actions">
-          <button 
-            onClick={onReset} 
+          <button
+            onClick={onReset}
             className="error-boundary__button error-boundary__button--primary"
           >
             {getTranslation('error.boundary.tryAgain')}
           </button>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="error-boundary__button error-boundary__button--secondary"
           >
             {getTranslation('error.boundary.reload')}
@@ -142,4 +145,3 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
 };
 
 export default ErrorBoundary;
-

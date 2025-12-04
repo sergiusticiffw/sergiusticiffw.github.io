@@ -17,4 +17,3 @@ const ItemSyncIndicator: React.FC<ItemSyncIndicatorProps> = ({ show }) => {
 };
 
 export default ItemSyncIndicator;
-

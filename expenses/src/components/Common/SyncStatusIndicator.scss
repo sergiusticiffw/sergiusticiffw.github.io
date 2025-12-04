@@ -18,7 +18,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   animation: slideIn $transition-normal ease-out;
 
-
   @keyframes slideIn {
     from {
       opacity: 0;
@@ -56,7 +55,9 @@
     background: rgba(34, 197, 94, 0.15);
     border: 1px solid rgba(34, 197, 94, 0.3);
     color: #86efac;
-    animation: slideIn $transition-normal ease-out, slideOut $transition-normal ease-in 2.7s forwards;
+    animation:
+      slideIn $transition-normal ease-out,
+      slideOut $transition-normal ease-in 2.7s forwards;
   }
 
   @keyframes spin {
@@ -112,7 +113,5 @@
       width: 14px;
       height: 14px;
     }
-
   }
 }
-

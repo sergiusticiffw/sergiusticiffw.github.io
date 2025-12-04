@@ -23,9 +23,12 @@ const ReceiptScanner: FC<ReceiptScannerProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [extractedData, setExtractedData] = useState<ExtractedReceiptData | null>(null);
+  const [extractedData, setExtractedData] =
+    useState<ExtractedReceiptData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState<ExtractedReceiptData | null>(null);
+  const [editedData, setEditedData] = useState<ExtractedReceiptData | null>(
+    null
+  );
 
   const handleFileSelect = async (file: File | null) => {
     if (!file) return;
@@ -55,7 +58,7 @@ const ReceiptScanner: FC<ReceiptScannerProps> = ({
         setProgress(10 + Math.round((ocrProgress / 100) * 90));
       });
       setProgress(100);
-      
+
       // Log extracted data for debugging
       logger.log('Extracted receipt data:', processed);
 
@@ -141,7 +144,8 @@ const ReceiptScanner: FC<ReceiptScannerProps> = ({
               </button>
             </div>
             <p className="receipt-scanner__hint">
-              {t('receipt.hint') || 'Take a photo or upload an image of your receipt'}
+              {t('receipt.hint') ||
+                'Take a photo or upload an image of your receipt'}
             </p>
           </div>
         )}
@@ -342,4 +346,3 @@ const ReceiptScanner: FC<ReceiptScannerProps> = ({
 };
 
 export default ReceiptScanner;
-

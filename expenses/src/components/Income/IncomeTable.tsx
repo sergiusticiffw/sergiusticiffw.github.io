@@ -6,7 +6,13 @@ import React, {
   useCallback,
 } from 'react';
 import useSwipeActions from '@hooks/useSwipeActions';
-import { FiEdit2, FiTrash2, FiMove, FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import {
+  FiEdit2,
+  FiTrash2,
+  FiMove,
+  FiArrowUp,
+  FiArrowDown,
+} from 'react-icons/fi';
 import { formatNumber, getLocale } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
 import './IncomeTable.scss';

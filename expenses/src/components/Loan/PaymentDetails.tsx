@@ -13,7 +13,13 @@ import {
   FiArrowUp,
   FiArrowDown,
 } from 'react-icons/fi';
-import { deleteNode, fetchLoans, formatNumber, getLocale, processPayments } from '@utils/utils';
+import {
+  deleteNode,
+  fetchLoans,
+  formatNumber,
+  getLocale,
+  processPayments,
+} from '@utils/utils';
 import { notificationType } from '@utils/constants';
 import Modal from '@components/Modal/Modal';
 import PaymentForm from '@components/Loan/PaymentForm';
@@ -78,23 +84,29 @@ const PaymentDetails = (props) => {
 
   const handleDelete = (paymentId: string, token: string) => {
     setIsSubmitting(true);
-    deleteNode(paymentId, token, (response) => {
-      if (response.ok) {
-        showNotification(
-          t('notification.paymentDeleted'),
-          notificationType.SUCCESS
-        );
-        setIsSubmitting(false);
-      } else {
-        showNotification(t('error.unknown'), notificationType.ERROR);
-        setIsSubmitting(false);
-      }
-      setDeleteModalId(false);
-      // UI update is handled by deleteNode, only fetch if online
-      if (navigator.onLine) {
-        fetchLoans(token, dataDispatch, dispatch);
-      }
-    }, dataDispatch, loan?.id);
+    deleteNode(
+      paymentId,
+      token,
+      (response) => {
+        if (response.ok) {
+          showNotification(
+            t('notification.paymentDeleted'),
+            notificationType.SUCCESS
+          );
+          setIsSubmitting(false);
+        } else {
+          showNotification(t('error.unknown'), notificationType.ERROR);
+          setIsSubmitting(false);
+        }
+        setDeleteModalId(false);
+        // UI update is handled by deleteNode, only fetch if online
+        if (navigator.onLine) {
+          fetchLoans(token, dataDispatch, dispatch);
+        }
+      },
+      dataDispatch,
+      loan?.id
+    );
   };
 
   const handleDeleteClick = (paymentId: string) => {
@@ -116,41 +128,40 @@ const PaymentDetails = (props) => {
     if (!sortField) {
       return processPayments([...payments]);
     }
-    
+
     // Manual sorting for specific fields
     return [...payments].sort((a, b) => {
-
-    if (sortField === 'date') {
-      const dateA = new Date(a.fdt).getTime();
-      const dateB = new Date(b.fdt).getTime();
-      if (sortDirection === 'asc') {
-        // For ascending, if same date, sort by cr ascending (oldest first)
-        const dateComparison = dateA - dateB;
-        if (dateComparison !== 0) {
-          return dateComparison;
+      if (sortField === 'date') {
+        const dateA = new Date(a.fdt).getTime();
+        const dateB = new Date(b.fdt).getTime();
+        if (sortDirection === 'asc') {
+          // For ascending, if same date, sort by cr ascending (oldest first)
+          const dateComparison = dateA - dateB;
+          if (dateComparison !== 0) {
+            return dateComparison;
+          }
+          const crA = a.cr || new Date(a.fdt).getTime();
+          const crB = b.cr || new Date(b.fdt).getTime();
+          return crA - crB;
+        } else {
+          // For descending, if same date, sort by cr descending (newest first)
+          const dateComparison = dateB - dateA;
+          if (dateComparison !== 0) {
+            return dateComparison;
+          }
+          const crA = a.cr || new Date(a.fdt).getTime();
+          const crB = b.cr || new Date(b.fdt).getTime();
+          return crB - crA;
         }
-        const crA = a.cr || new Date(a.fdt).getTime();
-        const crB = b.cr || new Date(b.fdt).getTime();
-        return crA - crB;
-      } else {
-        // For descending, if same date, sort by cr descending (newest first)
-        const dateComparison = dateB - dateA;
-        if (dateComparison !== 0) {
-          return dateComparison;
-        }
-        const crA = a.cr || new Date(a.fdt).getTime();
-        const crB = b.cr || new Date(b.fdt).getTime();
-        return crB - crA;
       }
-    }
 
-    if (sortField === 'amount') {
-      const amountA = parseFloat(a.fpi || '0');
-      const amountB = parseFloat(b.fpi || '0');
-      return sortDirection === 'asc' ? amountA - amountB : amountB - amountA;
-    }
+      if (sortField === 'amount') {
+        const amountA = parseFloat(a.fpi || '0');
+        const amountB = parseFloat(b.fpi || '0');
+        return sortDirection === 'asc' ? amountA - amountB : amountB - amountA;
+      }
 
-    return 0;
+      return 0;
     });
   })();
 

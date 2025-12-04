@@ -77,18 +77,15 @@ class ApiClient {
     // Handle 403 - Unauthorized
     if (response.status === 403) {
       logger.error('API request unauthorized (403)');
-      
+
       // Try to refresh token or logout
       if (this.dispatch && this.dataDispatch) {
         try {
-          const refreshResponse = await fetch(
-            `${API_BASE_URL}/jwt/token`,
-            {
-              method: 'GET',
-              headers: this.createHeaders(),
-            }
-          );
-          
+          const refreshResponse = await fetch(`${API_BASE_URL}/jwt/token`, {
+            method: 'GET',
+            headers: this.createHeaders(),
+          });
+
           if (refreshResponse.status === 403) {
             logout(this.dispatch, this.dataDispatch);
             throw new Error('Session expired. Please log in again.');
@@ -105,7 +102,7 @@ class ApiClient {
     // Handle other errors
     const errorText = await response.text().catch(() => response.statusText);
     const errorMessage = errorText || `HTTP error! status: ${response.status}`;
-    
+
     throw new Error(errorMessage);
   }
 
@@ -146,17 +143,16 @@ class ApiClient {
     endpoint: string,
     options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
-    const {
-      skipRetry = false,
-      skipAuth = false,
-      ...fetchOptions
-    } = options;
+    const { skipRetry = false, skipAuth = false, ...fetchOptions } = options;
 
     // Check if online
     if (!isOnline()) {
       const error = new Error('No internet connection');
       if (this.showNotification) {
-        this.showNotification('No internet connection. Please check your network.', 'error');
+        this.showNotification(
+          'No internet connection. Please check your network.',
+          'error'
+        );
       }
       return {
         data: null,
@@ -165,12 +161,12 @@ class ApiClient {
       };
     }
 
-    const url = endpoint.startsWith('http') 
-      ? endpoint 
+    const url = endpoint.startsWith('http')
+      ? endpoint
       : `${API_BASE_URL}${endpoint}`;
 
     const headers = this.createHeaders(skipAuth);
-    
+
     // Merge custom headers
     if (fetchOptions.headers) {
       if (fetchOptions.headers instanceof Headers) {
@@ -208,18 +204,23 @@ class ApiClient {
           {
             ...this.retryConfig,
             onRetry: (attempt, error) => {
-              logger.warn(`Retrying API request to ${endpoint} (attempt ${attempt}):`, error);
+              logger.warn(
+                `Retrying API request to ${endpoint} (attempt ${attempt}):`,
+                error
+              );
             },
           }
         );
 
         if (!retryResult.success) {
-          const error = retryResult.error instanceof Error
-            ? retryResult.error
-            : new Error('Request failed after retries');
-          
+          const error =
+            retryResult.error instanceof Error
+              ? retryResult.error
+              : new Error('Request failed after retries');
+
           if (this.showNotification) {
-            const errorMessage = error.message || 'Network error. Please try again.';
+            const errorMessage =
+              error.message || 'Network error. Please try again.';
             this.showNotification(errorMessage, 'error');
           }
 
@@ -242,14 +243,16 @@ class ApiClient {
         success: true,
       };
     } catch (error) {
-      const apiError = error instanceof Error 
-        ? error 
-        : new Error('An unexpected error occurred');
+      const apiError =
+        error instanceof Error
+          ? error
+          : new Error('An unexpected error occurred');
 
       logger.error(`API request failed for ${endpoint}:`, apiError);
 
       if (this.showNotification) {
-        const errorMessage = apiError.message || 'An error occurred. Please try again.';
+        const errorMessage =
+          apiError.message || 'An error occurred. Please try again.';
         this.showNotification(errorMessage, 'error');
       }
 
@@ -264,7 +267,10 @@ class ApiClient {
   /**
    * GET request
    */
-  async get<T = any>(endpoint: string, options?: ApiRequestOptions): Promise<ApiResponse<T>> {
+  async get<T = any>(
+    endpoint: string,
+    options?: ApiRequestOptions
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { ...options, method: 'GET' });
   }
 
@@ -301,7 +307,10 @@ class ApiClient {
   /**
    * DELETE request
    */
-  async delete<T = any>(endpoint: string, options?: ApiRequestOptions): Promise<ApiResponse<T>> {
+  async delete<T = any>(
+    endpoint: string,
+    options?: ApiRequestOptions
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   }
 
@@ -315,7 +324,9 @@ class ApiClient {
   /**
    * Update notification handler
    */
-  updateNotificationHandler(handler: (message: string, type: string) => void): void {
+  updateNotificationHandler(
+    handler: (message: string, type: string) => void
+  ): void {
     this.showNotification = handler;
   }
 }
@@ -334,12 +345,12 @@ export const API_ENDPOINTS = {
   // Auth
   LOGIN: '/user/login/google?_format=json',
   TOKEN_REFRESH: '/jwt/token',
-  
+
   // Expenses & Income
   EXPENSES: '/api/expenses',
   EXPENSE: (id: string) => `/node/${id}?_format=json`,
   CREATE_NODE: '/node?_format=json',
-  
+
   // Loans
   LOANS: '/api/loans',
   LOAN: (id: string) => `/node/${id}?_format=json`,
@@ -347,4 +358,3 @@ export const API_ENDPOINTS = {
 } as const;
 
 export default ApiClient;
-

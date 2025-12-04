@@ -36,8 +36,14 @@ function enhanceImageForOCR(
   for (let i = 0; i < data.length; i += 4) {
     // Apply contrast
     data[i] = Math.min(255, Math.max(0, (data[i] - 128) * contrast + 128));
-    data[i + 1] = Math.min(255, Math.max(0, (data[i + 1] - 128) * contrast + 128));
-    data[i + 2] = Math.min(255, Math.max(0, (data[i + 2] - 128) * contrast + 128));
+    data[i + 1] = Math.min(
+      255,
+      Math.max(0, (data[i + 1] - 128) * contrast + 128)
+    );
+    data[i + 2] = Math.min(
+      255,
+      Math.max(0, (data[i + 2] - 128) * contrast + 128)
+    );
 
     // Apply brightness
     data[i] = Math.min(255, Math.max(0, data[i] + brightness));
@@ -126,4 +132,3 @@ export function compressImage(
     img.src = base64Image;
   });
 }
-

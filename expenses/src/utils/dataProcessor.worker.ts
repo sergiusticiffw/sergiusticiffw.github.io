@@ -75,11 +75,7 @@ self.onmessage = function (e: MessageEvent) {
     }
   };
 
-  const updateTotals = (
-    item: any,
-    year: number | string,
-    month: string
-  ) => {
+  const updateTotals = (item: any, year: number | string, month: string) => {
     const { cat, sum, type } = item;
     if (type === 'incomes') {
       totalIncomePerYear[year] =
@@ -112,11 +108,11 @@ self.onmessage = function (e: MessageEvent) {
       const dateA = new Date(a.dt).getTime();
       const dateB = new Date(b.dt).getTime();
       const dateComparison = dateB - dateA;
-      
+
       if (dateComparison !== 0) {
         return dateComparison;
       }
-      
+
       // For same date, sort by created timestamp (descending - newest first, oldest last)
       const crA = a.cr || new Date(a.dt).getTime();
       const crB = b.cr || new Date(b.dt).getTime();
@@ -145,11 +141,11 @@ self.onmessage = function (e: MessageEvent) {
         const dateA = new Date(a.dt).getTime();
         const dateB = new Date(b.dt).getTime();
         const dateComparison = dateB - dateA;
-        
+
         if (dateComparison !== 0) {
           return dateComparison;
         }
-        
+
         // For same date, sort by created timestamp (descending - newest first, oldest last)
         const crA = a.cr || new Date(a.dt).getTime();
         const crB = b.cr || new Date(b.dt).getTime();
@@ -162,11 +158,11 @@ self.onmessage = function (e: MessageEvent) {
       const dateA = new Date(a.dt).getTime();
       const dateB = new Date(b.dt).getTime();
       const dateComparison = dateB - dateA;
-      
+
       if (dateComparison !== 0) {
         return dateComparison;
       }
-      
+
       // For same date, sort by created timestamp (descending - newest first, oldest last)
       const crA = a.cr || new Date(a.dt).getTime();
       const crB = b.cr || new Date(b.dt).getTime();

@@ -1,4 +1,12 @@
-import { createContext, useContext, useState, useCallback, ReactNode, useRef, useEffect } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+  useRef,
+  useEffect,
+} from 'react';
 import Notification from '@components/Notification/Notification';
 import { notificationType, themeList } from '@utils/constants';
 import { useAuthState } from '@context/context';
@@ -33,7 +41,11 @@ interface NotificationContextProps {
 }
 
 interface NotificationContextType {
-  showNotification: (message: string, type: string, options?: NotificationOptions) => void;
+  showNotification: (
+    message: string,
+    type: string,
+    options?: NotificationOptions
+  ) => void;
   removeNotification: (id: string) => void;
   clearAllNotifications: () => void;
 }
@@ -55,7 +67,9 @@ export const NotificationProvider = ({
   children,
 }: NotificationContextProps) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const timeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const timeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map()
+  );
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect mobile
@@ -135,13 +149,12 @@ export const NotificationProvider = ({
       // Auto-dismiss logic
       // Error notifications are persistent by default (require manual dismissal)
       const isError = type === notificationType.ERROR || type === 'error';
-      const shouldBePersistent = options?.persistent !== undefined 
-        ? options.persistent 
-        : isError; // Errors are persistent by default
+      const shouldBePersistent =
+        options?.persistent !== undefined ? options.persistent : isError; // Errors are persistent by default
 
       if (!shouldBePersistent && options?.duration !== 0) {
         let timeout = options?.duration;
-        
+
         if (!timeout) {
           // Default timeouts based on type
           switch (type) {
@@ -179,7 +192,7 @@ export const NotificationProvider = ({
     const spacing = isMobile ? 80 : 88; // Height + gap
     const horizontalPadding = isMobile ? '16px' : '20px';
     const topPadding = isMobile ? '16px' : '20px';
-    
+
     return {
       top: `${parseInt(topPadding) + index * spacing}px`,
       right: horizontalPadding,

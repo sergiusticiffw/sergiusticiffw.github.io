@@ -73,18 +73,18 @@ const isRetryableError = (error: unknown): boolean => {
 
 /**
  * Retry a function with exponential backoff
- * 
+ *
  * @param fn - Function to retry (should return a Promise)
  * @param options - Retry configuration options
  * @returns Promise with retry result
- * 
+ *
  * @example
  * ```typescript
  * const result = await retryWithBackoff(
  *   () => fetch('/api/data'),
  *   { maxAttempts: 3, initialDelay: 1000 }
  * );
- * 
+ *
  * if (result.success) {
  *   console.log('Data:', result.data);
  * } else {
@@ -132,8 +132,13 @@ export async function retryWithBackoff<T>(
 
       // Don't wait after last attempt
       if (attempt < maxAttempts) {
-        const delay = calculateDelay(attempt, initialDelay, maxDelay, backoffMultiplier);
-        
+        const delay = calculateDelay(
+          attempt,
+          initialDelay,
+          maxDelay,
+          backoffMultiplier
+        );
+
         // Call onRetry callback if provided
         if (onRetry) {
           onRetry(attempt, error);
@@ -154,7 +159,7 @@ export async function retryWithBackoff<T>(
 
 /**
  * Retry a fetch request with exponential backoff
- * 
+ *
  * @param url - URL to fetch
  * @param options - Fetch options
  * @param retryOptions - Retry configuration
@@ -210,4 +215,3 @@ export const retryPresets = {
     backoffMultiplier: 2,
   },
 };
-

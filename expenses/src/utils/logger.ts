@@ -16,7 +16,9 @@ interface Logger {
 const isDevelopment = import.meta.env.DEV;
 const isProduction = import.meta.env.PROD;
 // Allow forcing logs for debugging (e.g., OCR debugging)
-const forceLogs = import.meta.env.VITE_FORCE_LOGS === 'true' || localStorage.getItem('forceLogs') === 'true';
+const forceLogs =
+  import.meta.env.VITE_FORCE_LOGS === 'true' ||
+  localStorage.getItem('forceLogs') === 'true';
 
 /**
  * Logger that conditionally outputs based on environment
@@ -92,4 +94,3 @@ export const groupLogger = {
 };
 
 export default logger;
-

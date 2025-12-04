@@ -6,7 +6,7 @@ import { useLocalization } from '@context/localization';
 import { logout } from '@context/actions';
 import { useNavigate } from 'react-router-dom';
 import { FiUser, FiLogOut, FiSettings, FiBarChart2 } from 'react-icons/fi';
-import { fetchRequest } from '@utils/utils';
+import { fetchRequest, API_BASE_URL } from '@utils/utils';
 import {
   notificationType,
   availableCharts,
@@ -60,7 +60,7 @@ const Profile = () => {
       }),
       body: JSON.stringify({ field_currency: [event.target.value] }),
     };
-    const url = `https://dev-expenses-api.pantheonsite.io/user/${userDetails.current_user.uid}?_format=json`;
+    const url = `${API_BASE_URL}/user/${userDetails.current_user.uid}?_format=json`;
     fetchRequest(url, fetchOptions, dataDispatch, dispatch, (data: any) => {
       if (data.uid) {
         userDetails.current_user.currency = data.field_currency[0].value;

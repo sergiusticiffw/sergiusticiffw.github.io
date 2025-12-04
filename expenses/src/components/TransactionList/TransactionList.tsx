@@ -3,7 +3,13 @@ import { getIconForCategory } from '@utils/helper';
 import { formatNumber, getLocale } from '@utils/utils';
 import { useLocalization } from '@context/localization';
 import useSwipeActions from '@hooks/useSwipeActions';
-import { FiEdit2, FiTrash2, FiMove, FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import {
+  FiEdit2,
+  FiTrash2,
+  FiMove,
+  FiArrowUp,
+  FiArrowDown,
+} from 'react-icons/fi';
 import './TransactionList.scss';
 
 interface Transaction {

@@ -246,7 +246,7 @@ const compareData = (oldData, newData) => {
   }
   const oldMap = new Map(oldData.map((item) => [item.id, item]));
   const newMap = new Map(newData.map((item) => [item.id, item]));
-  
+
   newData.forEach((item) => {
     const oldItem = oldMap.get(item.id);
     if (!oldItem) {
@@ -260,19 +260,19 @@ const compareData = (oldData, newData) => {
         item.cat !== oldItem.cat ||
         item.dsc !== oldItem.dsc ||
         item.cr !== oldItem.cr;
-      
+
       if (hasChanged) {
         changedItems[item.id] = { type: 'updated', data: item };
       }
     }
   });
-  
+
   oldData.forEach((item) => {
     if (!newMap.has(item.id)) {
       changedItems[item.id] = { type: 'removed', data: item };
     }
   });
-  
+
   return changedItems;
 };
 

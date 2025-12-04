@@ -347,9 +347,7 @@ const Loan: React.FC = () => {
         </div>
         <div className="loan-stat-item">
           <span className="loan-stat-label">{t('loan.remaining')}</span>
-          <span className="loan-stat-value">
-            {remainingDisplay}
-          </span>
+          <span className="loan-stat-value">{remainingDisplay}</span>
         </div>
         <div className="loan-stat-item">
           <span className="loan-stat-label">{t('loan.currentInterest')}</span>

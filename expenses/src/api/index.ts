@@ -1,6 +1,6 @@
 /**
  * API Module - Centralized API access
- * 
+ *
  * This module provides a unified API client and service functions
  * for all API operations in the application.
  */
@@ -12,4 +12,3 @@ export type { ApiClientConfig, ApiRequestOptions, ApiResponse } from './client';
 export * from './expenses';
 export * from './loans';
 export * from './auth';
-

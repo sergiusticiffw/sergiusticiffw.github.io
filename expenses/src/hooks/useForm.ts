@@ -9,6 +9,7 @@ import {
   getCurrentDate,
 } from '@utils/commonUtils';
 import { logger } from '@utils/logger';
+import { API_BASE_URL } from '@utils/utils';
 
 interface UseFormOptions<T> {
   initialValues: T;
@@ -170,8 +171,8 @@ export const useTransactionForm = (
 
   const apiUrl =
     formType === 'add'
-      ? 'https://dev-expenses-api.pantheonsite.io/node?_format=json'
-      : `https://dev-expenses-api.pantheonsite.io/node/${values?.nid}?_format=json`;
+      ? `${API_BASE_URL}/node?_format=json`
+      : `${API_BASE_URL}/node/${values?.nid}?_format=json`;
 
   return useForm({
     initialValues,
@@ -211,8 +212,8 @@ export const useIncomeForm = (
 
   const apiUrl =
     formType === 'add'
-      ? 'https://dev-expenses-api.pantheonsite.io/node?_format=json'
-      : `https://dev-expenses-api.pantheonsite.io/node/${values?.nid}?_format=json`;
+      ? `${API_BASE_URL}/node?_format=json`
+      : `${API_BASE_URL}/node/${values?.nid}?_format=json`;
 
   return useForm({
     initialValues,

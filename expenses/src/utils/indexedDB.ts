@@ -1,5 +1,5 @@
 // IndexedDB utilities for caching expense data
-import { processLoans, processPayments } from '@utils/utils';
+import { processLoans, processPayments, API_BASE_URL } from '@utils/utils';
 import { logger } from '@utils/logger';
 
 const DB_NAME = 'expensesDB';
@@ -687,7 +687,6 @@ export async function updateSyncOperationsWithNewId(
           ) {
             op.localId = newLocalId;
             // Reconstruct URL with new ID (safer than replace)
-            const API_BASE_URL = 'https://dev-expenses-api.pantheonsite.io';
             if (op.type === 'update' || op.type === 'delete') {
               op.url = `${API_BASE_URL}/node/${newLocalId}?_format=json`;
             }

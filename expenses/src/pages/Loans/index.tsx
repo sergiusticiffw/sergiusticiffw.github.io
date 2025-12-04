@@ -203,13 +203,11 @@ const Loans: FC = () => {
   const activeLoans =
     filteredLoans?.filter(
       (loan: any) => getLoanStatusForLoan(loan) === 'active'
-    )
-      .length || 0;
+    ).length || 0;
   const completedLoans =
     filteredLoans?.filter(
       (loan: any) => getLoanStatusForLoan(loan) === 'completed'
-    )
-      .length || 0;
+    ).length || 0;
 
   if (loading) {
     return (

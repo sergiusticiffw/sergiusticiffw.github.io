@@ -1,7 +1,6 @@
 import { LoginPayload, UserData } from '@type/types';
 import { clearExpensesDB } from '@utils/indexedDB';
-
-const ROOT_URL = 'https://dev-expenses-api.pantheonsite.io';
+import { API_BASE_URL } from '@utils/utils';
 
 export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
   const requestOptions = {
@@ -13,7 +12,7 @@ export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
   try {
     dispatch({ type: 'REQUEST_LOGIN' });
     const response = await fetch(
-      `${ROOT_URL}/user/login/google?_format=json`,
+      `${API_BASE_URL}/user/login/google?_format=json`,
       requestOptions
     );
     const data: UserData = await response.json();

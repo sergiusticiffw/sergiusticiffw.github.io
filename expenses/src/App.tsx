@@ -43,7 +43,11 @@ const App: React.FC = () => {
     <ErrorBoundary
       onError={(error, errorInfo) => {
         // Log error to error reporting service if needed
-        logger.error('Application error caught by ErrorBoundary:', error, errorInfo);
+        logger.error(
+          'Application error caught by ErrorBoundary:',
+          error,
+          errorInfo
+        );
       }}
     >
       <AuthProvider>

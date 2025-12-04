@@ -380,7 +380,8 @@ const translations = {
     'error.server': 'Server error. Please try again later.',
     'error.unknown': 'An unknown error occurred.',
     'error.boundary.title': 'Something went wrong',
-    'error.boundary.message': 'We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.',
+    'error.boundary.message':
+      'We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.',
     'error.boundary.details': 'Error Details (Development Only)',
     'error.boundary.tryAgain': 'Try Again',
     'error.boundary.reload': 'Reload Page',
@@ -774,7 +775,8 @@ const translations = {
     'notification.incomeAdded': 'Venitul a fost adăugat cu succes!',
     'notification.incomeUpdated': 'Venitul a fost actualizat cu succes!',
     'notification.incomeDeleted': 'Venitul a fost șters cu succes!',
-    'notification.savedOffline': 'Salvat offline - se va sincroniza când vei fi online',
+    'notification.savedOffline':
+      'Salvat offline - se va sincroniza când vei fi online',
     'notification.loanAdded': 'Împrumutul a fost adăugat cu succes!',
     'notification.loanUpdated': 'Împrumutul a fost actualizat cu succes!',
     'notification.loanDeleted': 'Împrumutul a fost șters cu succes!',
@@ -857,7 +859,8 @@ const translations = {
     'error.server': 'Eroare de server. Te rog să încerci din nou mai târziu.',
     'error.unknown': 'A apărut o eroare necunoscută.',
     'error.boundary.title': 'Ceva nu a mers bine',
-    'error.boundary.message': 'Am întâmpinat o eroare neașteptată. Te rugăm să reîncarci pagina sau să contactezi suportul dacă problema persistă.',
+    'error.boundary.message':
+      'Am întâmpinat o eroare neașteptată. Te rugăm să reîncarci pagina sau să contactezi suportul dacă problema persistă.',
     'error.boundary.details': 'Detalii Eroare (Doar în Development)',
     'error.boundary.tryAgain': 'Încearcă din nou',
     'error.boundary.reload': 'Reîncarcă Pagina',

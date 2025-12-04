@@ -31,7 +31,9 @@ const Notification: FC<NotificationProps> = ({
   const [progress, setProgress] = useState(100);
   const [isPaused, setIsPaused] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
-  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+    null
+  );
   const startTimeRef = useRef<number>(Date.now());
   const pausedTimeRef = useRef<number>(0);
 
@@ -173,8 +175,10 @@ const Notification: FC<NotificationProps> = ({
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       style={{
-        transform: swipeDistance !== 0 ? `translateX(${-swipeDistance}px)` : undefined,
-        opacity: swipeDistance !== 0 ? 1 - Math.abs(swipeDistance) / 200 : undefined,
+        transform:
+          swipeDistance !== 0 ? `translateX(${-swipeDistance}px)` : undefined,
+        opacity:
+          swipeDistance !== 0 ? 1 - Math.abs(swipeDistance) / 200 : undefined,
       }}
     >
       <div className="notification-content">
