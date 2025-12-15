@@ -1,12 +1,7 @@
 import React, { Suspense, useEffect, useState, useMemo } from 'react';
 import IncomeForm from '@components/Income/IncomeForm';
-import {
-  deleteNode,
-  fetchData,
-  formatNumber,
-  getMonthsPassed,
-} from '@utils/utils';
-import { useAuthDispatch, useAuthState, useData } from '@context/context';
+import { deleteNode, formatNumber, getMonthsPassed } from '@utils/utils';
+import { useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
 import Modal from '@components/Modal/Modal';
@@ -30,6 +25,8 @@ import {
   FiTrendingUp,
 } from 'react-icons/fi';
 import './Income.scss';
+import { fetchExpenses as fetchExpensesService } from '@api/expenses';
+import { useApiClient } from '@hooks/useApiClient';
 
 const Income = () => {
   const showNotification = useNotification();
@@ -42,19 +39,19 @@ const Income = () => {
   const { data, dataDispatch } = useData();
   const noData = data.groupedData === null;
   const loading = data.loading;
-  const dispatch = useAuthDispatch();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nrOfItemsToShow, setNrOfItemsToShow] = useState(20);
   const [filters, setFilters] = useState({
     textFilter: '',
     selectedMonth: '',
   });
+  const apiClient = useApiClient();
 
   useEffect(() => {
-    if (noData) {
-      fetchData(token, dataDispatch, dispatch);
+    if (noData && apiClient) {
+      fetchExpensesService(apiClient, dataDispatch);
     }
-  }, [data, dataDispatch, noData, token, dispatch]);
+  }, [data, dataDispatch, noData, apiClient]);
 
   const [focusedItem, setFocusedItem] = useState({
     nid: '',
@@ -318,8 +315,8 @@ const Income = () => {
             setShowEditModal(false);
             setIsNewModal(false);
             // UI update is handled by useFormSubmit, only fetch if online
-            if (navigator.onLine) {
-              fetchData(token, dataDispatch, dispatch);
+            if (navigator.onLine && apiClient) {
+              fetchExpensesService(apiClient, dataDispatch);
             }
           }}
         />
