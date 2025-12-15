@@ -15,11 +15,12 @@ import {
 } from 'react-icons/fi';
 import {
   deleteNode,
-  fetchLoans,
   formatNumber,
   getLocale,
   processPayments,
 } from '@utils/utils';
+import { fetchLoans as fetchLoansService } from '@api/loans';
+import { useApiClient } from '@hooks/useApiClient';
 import { notificationType } from '@utils/constants';
 import Modal from '@components/Modal/Modal';
 import PaymentForm from '@components/Loan/PaymentForm';
@@ -35,6 +36,7 @@ const PaymentDetails = (props) => {
   const listRef = useRef<any>(null);
   const showNotification = useNotification();
   const { t, language } = useLocalization();
+  const apiClient = useApiClient();
   const [showEditModal, setShowEditModal] = useState(false);
   const [isNewModal, setIsNewModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,8 +102,8 @@ const PaymentDetails = (props) => {
         }
         setDeleteModalId(false);
         // UI update is handled by deleteNode, only fetch if online
-        if (navigator.onLine) {
-          fetchLoans(token, dataDispatch, dispatch);
+        if (navigator.onLine && apiClient) {
+          fetchLoansService(apiClient, dataDispatch);
         }
       },
       dataDispatch,
@@ -252,7 +254,9 @@ const PaymentDetails = (props) => {
           onSuccess={() => {
             setIsNewModal(false);
             setShowEditModal(false);
-            fetchLoans(token, dataDispatch, dispatch);
+            if (navigator.onLine && apiClient) {
+              fetchLoansService(apiClient, dataDispatch);
+            }
           }}
         />
       </Modal>

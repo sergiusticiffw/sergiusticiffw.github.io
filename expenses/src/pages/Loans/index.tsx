@@ -4,13 +4,14 @@ import { useLoan } from '@context/loan';
 import { useLocalization } from '@context/localization';
 import { AuthState } from '@type/types';
 import {
-  fetchLoans,
   formatNumber,
   deleteLoan,
   transformDateFormat,
   transformToNumber,
   getLoanStatus,
 } from '@utils/utils';
+import { fetchLoans as fetchLoansService } from '@api/loans';
+import { useApiClient } from '@hooks/useApiClient';
 import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
 import Paydown from '@utils/paydown-node';
@@ -31,6 +32,7 @@ const Loans: FC = () => {
   const { token } = useAuthState() as AuthState;
   const { t } = useLocalization();
   const dispatch = useAuthDispatch();
+  const apiClient = useApiClient();
   const showNotification = useNotification();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -44,10 +46,10 @@ const Loans: FC = () => {
   const { loans, loading, payments } = data;
 
   useEffect(() => {
-    if (!loans) {
-      fetchLoans(token, dataDispatch, dispatch);
+    if (!loans && apiClient) {
+      fetchLoansService(apiClient, dataDispatch);
     }
-  }, [loans, token, dataDispatch, dispatch]);
+  }, [loans, apiClient, dataDispatch]);
 
   const handleEdit = (id: string) => {
     const item = loans?.find((loan: any) => loan.id === id);
@@ -80,7 +82,9 @@ const Loans: FC = () => {
       showNotification(t('notification.loanDeleted'), notificationType.SUCCESS);
       // UI update is handled by deleteLoan, only fetch if online
       if (navigator.onLine) {
-        fetchLoans(token, dataDispatch, dispatch);
+        if (apiClient) {
+          fetchLoansService(apiClient, dataDispatch);
+        }
       }
     });
   };
@@ -320,8 +324,8 @@ const Loans: FC = () => {
           onSuccess={() => {
             setShowAddModal(false);
             // UI update is handled by useFormSubmit, only fetch if online
-            if (navigator.onLine) {
-              fetchLoans(token, dataDispatch, dispatch);
+            if (navigator.onLine && apiClient) {
+              fetchLoansService(apiClient, dataDispatch);
             }
           }}
         />
@@ -364,8 +368,8 @@ const Loans: FC = () => {
           onSuccess={() => {
             setShowEditModal(false);
             // UI update is handled by useFormSubmit, only fetch if online
-            if (navigator.onLine) {
-              fetchLoans(token, dataDispatch, dispatch);
+            if (navigator.onLine && apiClient) {
+              fetchLoansService(apiClient, dataDispatch);
             }
           }}
         />

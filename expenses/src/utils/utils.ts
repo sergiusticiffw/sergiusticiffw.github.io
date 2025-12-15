@@ -6,7 +6,6 @@ import { logger } from './logger';
 import { retryWithBackoff, retryPresets } from './retry';
 import { createApiClient } from '@api/client';
 import { fetchExpenses } from '@api/expenses';
-import { fetchLoans as fetchLoansService } from '@api/loans';
 
 // API Configuration
 export const API_BASE_URL = 'https://dev-expenses-api.pantheonsite.io';
@@ -775,76 +774,6 @@ export const processLoans = (loans: any[]): any[] => {
       const crB = b.cr || (b.sdt ? new Date(b.sdt).getTime() : 0);
       return crB - crA; // Descending order (newest first)
     });
-};
-
-// Helper function to fetch payments for a single loan with error handling
-const fetchLoanPayments = async (
-  loanId: string,
-  fetchOptions: RequestInit
-): Promise<{ loanId: string; data: any[] }> => {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/api/payments/${loanId}`,
-      fetchOptions
-    );
-
-    if (!response.ok) {
-      console.warn(
-        `Failed to fetch payments for loan ${loanId}: ${response.status}`
-      );
-      return { loanId, data: [] };
-    }
-
-    const responseData = await response.json();
-    const processedPayments = Array.isArray(responseData)
-      ? processPayments(responseData)
-      : [];
-
-    return { loanId, data: processedPayments };
-  } catch (error) {
-    console.error(`Error fetching payments for loan ${loanId}:`, error);
-    return { loanId, data: [] };
-  }
-};
-
-// Helper function to update UI with loans and payments data
-const updateLoansUI = (
-  dataDispatch: any,
-  loans: any[] | null,
-  payments: any[]
-) => {
-  dataDispatch({
-    type: 'SET_DATA',
-    loans,
-    payments,
-    loading: false,
-  });
-};
-
-/**
- * Fetch loans data
- * @deprecated Consider using fetchLoans from @api/loans directly with useApiClient hook
- * This function now uses the centralized API client internally
- */
-export const fetchLoans = async (
-  token: string,
-  dataDispatch: any,
-  dispatch: any
-) => {
-  // Add null checks for dispatch functions
-  if (!dataDispatch || !dispatch) {
-    logger.error('Dispatch functions not available for fetch loans');
-    return;
-  }
-
-  // Use centralized API client
-  const apiClient = createApiClient({
-    token,
-    dataDispatch,
-    dispatch,
-  });
-
-  await fetchLoansService(apiClient, dataDispatch);
 };
 
 export const formatNumber = (value: unknown): string => {

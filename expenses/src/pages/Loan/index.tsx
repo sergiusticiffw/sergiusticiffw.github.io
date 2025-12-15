@@ -8,16 +8,15 @@ import PaymentDetails from '@components/Loan/PaymentDetails';
 import PaymentForm from '@components/Loan/PaymentForm';
 import { LoadingSpinner } from '@components/Common';
 import { useLoan } from '@context/loan';
-import { useAuthDispatch, useAuthState } from '@context/context';
-import { AuthState } from '@type/types';
 import {
   calculateDaysFrom,
-  fetchLoans,
   formatNumber,
   transformDateFormat,
   transformToNumber,
   getLoanStatus,
 } from '@utils/utils';
+import { fetchLoans as fetchLoansService } from '@api/loans';
+import { useApiClient } from '@hooks/useApiClient';
 import { FiTrendingUp, FiDollarSign, FiEdit2, FiPlus } from 'react-icons/fi';
 import Notification from '@components/Notification/Notification';
 import './Loan.scss';
@@ -26,8 +25,6 @@ import { useLocalization } from '@context/localization';
 const Loan: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { data, dataDispatch } = useLoan();
-  const { token } = useAuthState() as AuthState;
-  const dispatch = useAuthDispatch();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [loanFormEditSubmitting, setLoanFormEditSubmitting] = useState(false);
@@ -35,12 +32,13 @@ const Loan: React.FC = () => {
   const { loans } = data;
   const noData = data.loans === null;
   const { t } = useLocalization();
+  const apiClient = useApiClient();
 
   useEffect(() => {
-    if (noData) {
-      fetchLoans(token, dataDispatch, dispatch);
+    if (noData && apiClient) {
+      fetchLoansService(apiClient, dataDispatch);
     }
-  }, [data, dataDispatch, noData, token, dispatch]);
+  }, [data, dataDispatch, noData, apiClient]);
 
   const loan = loans?.find((item: any) => item.id === id);
   const loanStatus = getLoanStatus(loan?.fls);
@@ -475,8 +473,8 @@ const Loan: React.FC = () => {
           onSuccess={() => {
             setShowEditModal(false);
             // UI update is handled by useFormSubmit, only fetch if online
-            if (navigator.onLine) {
-              fetchLoans(token, dataDispatch, dispatch);
+            if (navigator.onLine && apiClient) {
+              fetchLoansService(apiClient, dataDispatch);
             }
           }}
         />
@@ -529,8 +527,8 @@ const Loan: React.FC = () => {
           onSuccess={() => {
             setShowAddPaymentModal(false);
             // UI update is handled by useFormSubmit, only fetch if online
-            if (navigator.onLine) {
-              fetchLoans(token, dataDispatch, dispatch);
+            if (navigator.onLine && apiClient) {
+              fetchLoansService(apiClient, dataDispatch);
             }
           }}
         />
