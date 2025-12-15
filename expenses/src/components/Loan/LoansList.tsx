@@ -97,11 +97,11 @@ const LoansList: React.FC<LoansListProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return '#4caf50';
+        return '#4CAF50';
       case 'active':
-        return '#5B8DEF';
+        return '#4F8CFF';
       case 'pending':
-        return '#ff9800';
+        return '#FFB020';
       default:
         return 'rgba(255, 255, 255, 0.6)';
     }
@@ -161,36 +161,43 @@ const LoansList: React.FC<LoansListProps> = ({
               to={`/expenses/loan/${loan.id}`}
               data-id={loan.id}
               className="loan-list-item"
-              onTouchStart={(e) => handleTouchStart(e, loan.id, listRef)}
-              onTouchMove={(e) => handleTouchMove(e, listRef)}
+              onTouchStart={(e) => handleTouchStart(e as any, loan.id, listRef)}
+              onTouchMove={(e) => handleTouchMove(e as any, listRef)}
               onTouchEnd={(e) =>
-                handleTouchEnd(e, listRef, loan.id, onEdit, onDelete)
+                handleTouchEnd(e as any, listRef, loan.id, onEdit, onDelete)
               }
             >
-              {/* Progress Background Fill */}
-              <div
-                className="loan-progress-bg"
-                style={{
-                  width: `${Math.min(progress, 100)}%`,
-                  background: `linear-gradient(90deg, ${statusColor}35 0%, ${statusColor}20 100%)`,
-                }}
-              />
-
-              {/* Content */}
               <div className="loan-content">
                 <div className="loan-header-row">
                   <div className="loan-title">{loan.title}</div>
                   <div
-                    className="loan-progress-badge"
-                    style={{ backgroundColor: statusColor }}
+                    className="loan-status-chip"
+                    style={{
+                      color: statusColor,
+                      borderColor: `${statusColor}55`,
+                    }}
                   >
-                    {Math.round(progress)}%
+                    {statusText}
                   </div>
                 </div>
-                <div className="loan-info-row">
-                  <div className="loan-amount">{formatNumber(loan.fp)}</div>
-                  <div className="loan-status" style={{ color: statusColor }}>
-                    {statusText}
+
+                <div className="loan-amount">{formatNumber(loan.fp)}</div>
+
+                <div className="loan-progress-row">
+                  <div className="loan-progress-bar">
+                    <span
+                      className="loan-progress-fill"
+                      style={{
+                        width: `${Math.min(progress, 100)}%`,
+                        backgroundColor: statusColor,
+                      }}
+                    />
+                  </div>
+                  <div
+                    className="loan-progress-percentage"
+                    style={{ color: statusColor }}
+                  >
+                    {Math.round(progress)}%
                   </div>
                 </div>
               </div>

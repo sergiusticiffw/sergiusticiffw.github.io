@@ -61,12 +61,12 @@
 .loan-item-wrapper {
   position: relative;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 16px;
   max-width: 100%;
   width: 100%;
 
   &:not(:last-child) {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.85rem; // ~13-14px gap
   }
 }
 
@@ -102,7 +102,7 @@
   align-items: stretch;
   gap: 1rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: #1e1f23;
   border-radius: 12px;
   position: relative;
   z-index: 2;
@@ -119,27 +119,12 @@
   -webkit-overflow-scrolling: touch;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-
-    .loan-progress-bg {
-      opacity: 1;
-    }
+    background: #202126;
   }
 
   &:active {
-    background: rgba(255, 255, 255, 0.06);
+    background: #23252a;
   }
-}
-
-.loan-progress-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  transition: all 0.3s ease;
-  z-index: 0;
-  border-radius: 12px;
-  opacity: 1;
 }
 
 .loan-content {
@@ -147,63 +132,72 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.55rem;
   position: relative;
   z-index: 1;
 
   .loan-header-row {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.75rem;
+    width: 100%;
+    justify-content: space-between;
   }
 
   .loan-title {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
-    line-height: 1.4;
+    font-size: 0.96rem;
+    font-weight: 600;
+    color: #f5f6f7;
+    line-height: 1.35;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    flex: 1;
   }
 
-  .loan-progress-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.25rem 0.625rem;
-    border-radius: 12px;
+  .loan-status-chip {
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 700;
-    color: #ffffff;
-    white-space: nowrap;
-    flex-shrink: 0;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    text-transform: uppercase;
     letter-spacing: 0.3px;
-  }
-
-  .loan-info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    background: transparent;
   }
 
   .loan-amount {
-    font-size: 1rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #f5f6f7;
   }
 
-  .loan-status {
-    font-size: 0.7rem;
+  .loan-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+  }
+
+  .loan-progress-bar {
+    flex: 1;
+    height: 4px;
+    background: #2a2c33;
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+
+    .loan-progress-fill {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.3s ease-out;
+    }
+  }
+
+  .loan-progress-percentage {
+    font-size: 0.76rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
     white-space: nowrap;
-    flex-shrink: 0;
-    opacity: 0.7;
   }
 }
 
@@ -223,33 +217,23 @@
   }
 
   .loan-list-item {
-    padding: 0.875rem;
+    padding: 0.95rem;
     gap: 0.75rem;
   }
 
   .loan-content {
-    gap: 0.4rem;
-
-    .loan-header-row {
-      gap: 0.625rem;
-    }
+    gap: 0.35rem;
 
     .loan-title {
-      font-size: 0.875rem;
-    }
-
-    .loan-progress-badge {
-      padding: 0.2rem 0.5rem;
-      font-size: 0.7rem;
-      border-radius: 10px;
+      font-size: 0.85rem;
     }
 
     .loan-amount {
-      font-size: 0.9rem;
+      font-size: 1.25rem;
     }
 
-    .loan-status {
-      font-size: 0.65rem;
+    .loan-progress-bar {
+      height: 4px;
     }
   }
 }
