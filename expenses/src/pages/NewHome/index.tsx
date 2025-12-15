@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useAuthDispatch, useAuthState, useData } from '@context/context';
+import { useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
 import {
@@ -45,7 +45,6 @@ const NewHome = () => {
   const { data, dataDispatch } = useData();
   const noData = data.groupedData === null;
   const loading = data.loading;
-  const dispatch = useAuthDispatch();
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
   const [selectedMonth, setSelectedMonth] = useState(data.selectedMonth ?? '');

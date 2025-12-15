@@ -709,34 +709,6 @@ export function processDataSync(data: TransactionOrIncomeItem[]) {
   };
 }
 
-/**
- * Fetch expenses data
- * @deprecated Consider using fetchExpenses from @api/expenses directly with useApiClient hook
- * This function now uses the centralized API client internally
- */
-export const fetchData = async (
-  token: string,
-  dataDispatch: any,
-  dispatch: any,
-  category: string = '',
-  textFilter: string = '',
-  showNotification?: (message: string, type: string) => void
-) => {
-  // Use centralized API client
-  const apiClient = createApiClient({
-    token,
-    dataDispatch,
-    dispatch,
-    showNotification,
-  });
-
-  await fetchExpenses(apiClient, dataDispatch, {
-    category,
-    textFilter,
-    showNotification,
-  });
-};
-
 // Helper function to process and sort payments (exported for reuse)
 export const processPayments = (payments: any[]): any[] => {
   return payments

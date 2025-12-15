@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useAuthDispatch, useAuthState, useData } from '@context/context';
+import { useData } from '@context/context';
 import { useLocalization } from '@context/localization';
-import { fetchData } from '@utils/utils';
 import { availableCharts } from '@utils/constants';
 import { getCategories } from '@utils/constants';
 import SearchBar from '@components/SearchBar/SearchBar';
@@ -9,8 +8,7 @@ import Modal from '@components/Modal';
 import TransactionForm from '@components/TransactionForm';
 import LoadingSpinner from '@components/Common/LoadingSpinner';
 import NoData from '@components/Common/NoData';
-import { AuthState } from '@type/types';
-import { FiPlus, FiEdit2, FiBarChart2 } from 'react-icons/fi';
+import { FiPlus, FiBarChart2 } from 'react-icons/fi';
 import MonthlySavingsTrend from '@components/Charts/MonthlySavingsTrend';
 import MonthlyTotals from '@components/Charts/MonthlyTotals';
 import SavingsHistory from '@components/Charts/SavingsHistory';
@@ -22,6 +20,8 @@ import MonthlyAverageTrend from '@components/Charts/MonthlyAverageTrend';
 import DailyAverage from '@components/DailyAverage/DailyAverage';
 import DailyAverageTrend from '@components/Charts/DailyAverageTrend';
 import LastTwoMonthsAverage from '@components/Home/LastTwoMonthsAverage';
+import { fetchExpenses as fetchExpensesService } from '@api/expenses';
+import { useApiClient } from '@hooks/useApiClient';
 import './Charts.scss';
 
 const componentMap = {
@@ -43,9 +43,7 @@ const Charts = () => {
   const { t } = useLocalization();
   const noData = data.groupedData === null;
   const noEntries = Object.keys(data.raw || {}).length === 0;
-  const { token } = useAuthState() as AuthState;
   const loading = data.loading;
-  const dispatch = useAuthDispatch();
 
   const [visibleCharts, setVisibleCharts] = useState<string[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -56,13 +54,13 @@ const Charts = () => {
 
   const categoryLabels = getCategories();
 
-  // Fetch data on mount if needed
+  const apiClient = useApiClient();
+
   useEffect(() => {
-    if (noData) {
-      fetchData(token, dataDispatch, dispatch);
+    if (noData && apiClient) {
+      fetchExpensesService(apiClient, dataDispatch);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [data, dataDispatch, noData, apiClient]);
 
   // Load visible charts from localStorage
   useEffect(() => {
@@ -171,10 +169,11 @@ const Charts = () => {
           }}
           onSuccess={() => {
             setShowAddModal(false);
-            // UI update is handled by useFormSubmit, only fetch if online
-            if (navigator.onLine) {
-              fetchData(token, dataDispatch, dispatch);
-            }
+            dataDispatch({
+              type: 'FILTER_DATA',
+              category: selectedCategory,
+              textFilter: searchText,
+            });
           }}
         />
       </Modal>
