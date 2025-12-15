@@ -148,12 +148,8 @@ class ApiClient {
     // Check if online
     if (!isOnline()) {
       const error = new Error('No internet connection');
-      if (this.showNotification) {
-        this.showNotification(
-          'No internet connection. Please check your network.',
-          'error'
-        );
-      }
+      // Don't spam global error notifications here; offline-first flows
+      // handle their own UX and we already have an offline indicator.
       return {
         data: null,
         error,
