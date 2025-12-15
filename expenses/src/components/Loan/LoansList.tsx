@@ -7,7 +7,10 @@ import {
   FiMove,
   FiArrowUp,
   FiArrowDown,
-  FiExternalLink,
+  FiType,
+  FiHash,
+  FiTag,
+  FiSliders,
 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import './LoansList.scss';
@@ -36,6 +39,7 @@ interface LoansListProps {
 
 type SortField = 'title' | 'principal' | 'status' | null;
 type SortDirection = 'asc' | 'desc';
+const statusOrder = ['active', 'pending', 'completed'];
 
 const LoansList: React.FC<LoansListProps> = ({
   loans,
@@ -48,6 +52,7 @@ const LoansList: React.FC<LoansListProps> = ({
   const listRef = useRef<any>(null);
   const [sortField, setSortField] = useState<SortField>('status');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const {
     handleTouchStart,
@@ -67,8 +72,12 @@ const LoansList: React.FC<LoansListProps> = ({
     }
   };
 
+  const filteredLoans = loans.filter((loan) =>
+    statusFilter === 'all' ? true : getStatus(loan) === statusFilter
+  );
+
   // Sort loans
-  const sortedLoans = [...loans].sort((a, b) => {
+  const sortedLoans = [...filteredLoans].sort((a, b) => {
     if (!sortField) return 0;
 
     let aValue: any, bValue: any;
@@ -80,8 +89,8 @@ const LoansList: React.FC<LoansListProps> = ({
       aValue = parseFloat(a.fp || '0');
       bValue = parseFloat(b.fp || '0');
     } else if (sortField === 'status') {
-      aValue = getStatus(a);
-      bValue = getStatus(b);
+      aValue = statusOrder.indexOf(getStatus(a));
+      bValue = statusOrder.indexOf(getStatus(b));
     }
 
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
@@ -109,26 +118,47 @@ const LoansList: React.FC<LoansListProps> = ({
 
   return (
     <div className="loans-list-component" ref={listRef}>
-      {/* Sort Controls */}
-      <div className="sort-controls">
-        <button
-          className={`sort-button ${sortField === 'title' ? 'active' : ''}`}
-          onClick={() => handleSort('title')}
-        >
-          Title {getSortIcon('title')}
-        </button>
-        <button
-          className={`sort-button ${sortField === 'principal' ? 'active' : ''}`}
-          onClick={() => handleSort('principal')}
-        >
-          Amount {getSortIcon('principal')}
-        </button>
-        <button
-          className={`sort-button ${sortField === 'status' ? 'active' : ''}`}
-          onClick={() => handleSort('status')}
-        >
-          Status {getSortIcon('status')}
-        </button>
+        {/* Sort & Filter Controls */}
+        <div className="sort-controls compact">
+          <div className="sort-buttons">
+            <button
+              className={`icon-button ${sortField === 'title' ? 'active' : ''}`}
+              onClick={() => handleSort('title')}
+              aria-label="Sort by title"
+            >
+              <FiType />
+              {sortField === 'title' && getSortIcon('title')}
+            </button>
+            <button
+              className={`icon-button ${sortField === 'principal' ? 'active' : ''}`}
+              onClick={() => handleSort('principal')}
+              aria-label="Sort by amount"
+            >
+              <FiHash />
+              {sortField === 'principal' && getSortIcon('principal')}
+            </button>
+            <button
+              className={`icon-button ${sortField === 'status' ? 'active' : ''}`}
+              onClick={() => handleSort('status')}
+              aria-label="Sort by status"
+            >
+              <FiTag />
+              {sortField === 'status' && getSortIcon('status')}
+            </button>
+          </div>
+          <div className="status-filter">
+            <FiSliders />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filter by status"
+            >
+              <option value="all">All</option>
+              <option value="active">Active</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
       </div>
 
       {sortedLoans.map((loan) => {

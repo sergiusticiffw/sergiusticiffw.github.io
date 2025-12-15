@@ -20,7 +20,7 @@ import {
   DeleteConfirmModal,
   NoData,
 } from '@components/Common';
-import { FiCreditCard, FiPlus, FiFilter } from 'react-icons/fi';
+import { FiCreditCard, FiPlus } from 'react-icons/fi';
 import Modal from '@components/Modal/Modal';
 import LoanForm from '@components/Loan/LoanForm';
 import LoansList from '@components/Loan/LoansList';
@@ -239,21 +239,6 @@ const Loans: FC = () => {
           <span className="stat-value">{formatNumber(completedLoans)}</span>
           <span className="stat-label">{t('common.completed')}</span>
         </div>
-      </div>
-
-      {/* Status Filter */}
-      <div className="loans-filter">
-        <FiFilter className="filter-icon" />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="filter-select"
-        >
-          <option value="all">{t('loans.allStatuses')}</option>
-          <option value="active">{t('loans.active')}</option>
-          <option value="completed">{t('common.completed')}</option>
-          <option value="pending">{t('loans.pending')}</option>
-        </select>
       </div>
 
       {/* Loans List Section */}
