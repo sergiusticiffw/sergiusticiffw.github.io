@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import IncomeForm from '@components/Income/IncomeForm';
 import { deleteNode, formatNumber, getMonthsPassed } from '@utils/utils';
 import { useAuthState, useData } from '@context/context';
@@ -314,10 +314,7 @@ const Income = () => {
           onSuccess={() => {
             setShowEditModal(false);
             setIsNewModal(false);
-            // UI update is handled by useFormSubmit, only fetch if online
-            if (navigator.onLine && apiClient) {
-              fetchExpensesService(apiClient, dataDispatch);
-            }
+            // Optimistic UI already applied by useFormSubmit; refetch not needed
           }}
         />
       </Modal>

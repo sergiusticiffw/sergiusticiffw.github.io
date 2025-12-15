@@ -4,7 +4,6 @@ import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
 import {
   deleteNode,
-  fetchData,
   formatNumber,
   extractMonthsFromRawData,
 } from '@utils/utils';
@@ -36,6 +35,8 @@ import {
 } from 'react-icons/fi';
 import { AuthState, TransactionOrIncomeItem } from '@type/types';
 import './NewHome.scss';
+import { fetchExpenses as fetchExpensesService } from '@api/expenses';
+import { useApiClient } from '@hooks/useApiClient';
 
 const NewHome = () => {
   const showNotification = useNotification();
@@ -57,11 +58,13 @@ const NewHome = () => {
     useState(false);
   const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
 
+  const apiClient = useApiClient();
+
   useEffect(() => {
-    if (noData) {
-      fetchData(token, dataDispatch, dispatch);
+    if (noData && apiClient) {
+      fetchExpensesService(apiClient, dataDispatch);
     }
-  }, [data, dataDispatch, token, noData, dispatch]);
+  }, [data, dataDispatch, noData, apiClient]);
 
   // Update filters in context
   useEffect(() => {
@@ -320,10 +323,6 @@ const NewHome = () => {
           }}
           onSuccess={() => {
             setShowEditModal(false);
-            // UI update is handled by useFormSubmit, only fetch if online
-            if (navigator.onLine) {
-              fetchData(token, dataDispatch, dispatch);
-            }
           }}
         />
       </Modal>
@@ -367,10 +366,6 @@ const NewHome = () => {
           }}
           onSuccess={() => {
             setShowAddModal(false);
-            // UI update is handled by useFormSubmit, only fetch if online
-            if (navigator.onLine) {
-              fetchData(token, dataDispatch, dispatch);
-            }
           }}
         />
       </Modal>
