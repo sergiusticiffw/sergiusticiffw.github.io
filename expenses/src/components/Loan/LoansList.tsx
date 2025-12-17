@@ -118,47 +118,47 @@ const LoansList: React.FC<LoansListProps> = ({
 
   return (
     <div className="loans-list-component" ref={listRef}>
-        {/* Sort & Filter Controls */}
-        <div className="sort-controls compact">
-          <div className="sort-buttons">
-            <button
-              className={`icon-button ${sortField === 'title' ? 'active' : ''}`}
-              onClick={() => handleSort('title')}
-              aria-label="Sort by title"
-            >
-              <FiType />
-              {sortField === 'title' && getSortIcon('title')}
-            </button>
-            <button
-              className={`icon-button ${sortField === 'principal' ? 'active' : ''}`}
-              onClick={() => handleSort('principal')}
-              aria-label="Sort by amount"
-            >
-              <FiHash />
-              {sortField === 'principal' && getSortIcon('principal')}
-            </button>
-            <button
-              className={`icon-button ${sortField === 'status' ? 'active' : ''}`}
-              onClick={() => handleSort('status')}
-              aria-label="Sort by status"
-            >
-              <FiTag />
-              {sortField === 'status' && getSortIcon('status')}
-            </button>
-          </div>
-          <div className="status-filter">
-            <FiSliders />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              aria-label="Filter by status"
-            >
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-            </select>
-          </div>
+      {/* Sort & Filter Controls */}
+      <div className="sort-controls compact">
+        <div className="sort-buttons">
+          <button
+            className={`icon-button ${sortField === 'title' ? 'active' : ''}`}
+            onClick={() => handleSort('title')}
+            aria-label="Sort by title"
+          >
+            <FiType />
+            {sortField === 'title' && getSortIcon('title')}
+          </button>
+          <button
+            className={`icon-button ${sortField === 'principal' ? 'active' : ''}`}
+            onClick={() => handleSort('principal')}
+            aria-label="Sort by amount"
+          >
+            <FiHash />
+            {sortField === 'principal' && getSortIcon('principal')}
+          </button>
+          <button
+            className={`icon-button ${sortField === 'status' ? 'active' : ''}`}
+            onClick={() => handleSort('status')}
+            aria-label="Sort by status"
+          >
+            <FiTag />
+            {sortField === 'status' && getSortIcon('status')}
+          </button>
+        </div>
+        <div className="status-filter">
+          <FiSliders />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            aria-label="Filter by status"
+          >
+            <option value="all">All</option>
+            <option value="active">Active</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
       </div>
 
       {sortedLoans.map((loan) => {

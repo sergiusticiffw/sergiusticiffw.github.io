@@ -244,7 +244,11 @@ const Loan: React.FC = () => {
 
   // Get correct values for display
   const totalPrincipal = parseFloat(loan.fp || '0');
-  const totalInstallments = paydown?.sum_of_installments || 0;
+  const totalInstallments =
+    paydown?.sum_of_installments +
+      paydown?.remaining_principal +
+      paydown?.unpaid_interest +
+      paydown?.sum_of_fees || 0;
   const remainingAmount = totalInstallments - (totalPaidAmount ?? 0);
   const daysCalculated = paydown?.days_calculated || 0;
 
