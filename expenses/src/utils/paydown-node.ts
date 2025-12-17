@@ -663,13 +663,58 @@ class PaydownCalculator {
     return true;
   };
 
-  private calculateRecurringAmount = (data: PaydownInit): number => {
-    const months = getNumberOfMonths(data.start_date, data.end_date);
-    const monthlyRate = data.rate / 12 / 100;
-    const monthlyPayment =
-      (data.principal * monthlyRate * Math.pow(1 + monthlyRate, months)) /
-      (Math.pow(1 + monthlyRate, months) - 1);
-    return monthlyPayment + 1;
+  /**
+   * Calculate recurring payment amount using standard annuity formula
+   * This is a robust, reusable function that handles all edge cases correctly
+   */
+  private calculateRecurringAmount = ({
+    principal,
+    rate,
+    startDate,
+    endDate,
+  }: {
+    principal: number;
+    rate: number;
+    startDate: string;
+    endDate: string;
+  }): number => {
+    const months = getNumberOfMonths(startDate, endDate);
+
+    if (months <= 0) {
+      return this.round(principal);
+    }
+
+    const monthlyRate = rate / 12 / 100;
+
+    // Handle zero interest rate
+    if (monthlyRate === 0 || rate === 0) {
+      return this.round(principal / months);
+    }
+
+    // Standard annuity formula: PMT = P * (r * (1 + r)^n) / ((1 + r)^n - 1)
+    const numerator = principal * monthlyRate * Math.pow(1 + monthlyRate, months);
+    const denominator = Math.pow(1 + monthlyRate, months) - 1;
+
+    if (denominator === 0) {
+      return this.round(principal / months);
+    }
+
+    const monthlyPayment = numerator / denominator;
+    return this.round(monthlyPayment);
+  };
+
+  /**
+   * Calculate initial recurring payment from PaydownInit
+   * Uses first_payment_date if available, otherwise start_date
+   */
+  private calculateInitialRecurringAmount = (data: PaydownInit): number => {
+    const startDate = data.recurring?.first_payment_date || data.start_date;
+    return this.calculateRecurringAmount({
+      principal: data.principal,
+      rate: data.rate,
+      startDate,
+      endDate: data.end_date,
+    });
   };
 
   private setInit = (data: PaydownInit): void => {
@@ -685,7 +730,7 @@ class PaydownCalculator {
     this.init.day_count_method = data.day_count_method || 'act/360';
 
     if (data.recurring) {
-      this.currentRecurringPayment = this.calculateRecurringAmount(data);
+      this.currentRecurringPayment = this.calculateInitialRecurringAmount(data);
 
       if (!data.recurring.first_payment_date) {
         throw new Error('setInit: missing first recurring payment date');
@@ -991,6 +1036,76 @@ class PaydownCalculator {
     for (let index = 0; index < this.eventArray.length; index++) {
       const event = this.eventArray[index];
 
+      // Handle rate change: if rate changes and recurring_amount is NOT manually specified,
+      // automatically recalculate the monthly payment based on current principal and new rate
+      // This must be processed BEFORE pay_recurring to ensure new payment is used
+      if (event.hasOwnProperty('rate')) {
+        const newRate = event.rate!;
+        
+        // Convert rates to numbers for comparison
+        const currentRateNum = typeof this.currentRate === 'string' 
+          ? parseFloat(String(this.currentRate)) 
+          : Number(this.currentRate);
+        const newRateNum = typeof newRate === 'number' ? newRate : parseFloat(String(newRate));
+        
+        // Check if rate actually changed
+        const rateChanged = !isNaN(currentRateNum) && 
+                          !isNaN(newRateNum) && 
+                          Math.abs(newRateNum - currentRateNum) > 0.001;
+        
+        // Recalculate monthly payment if:
+        // 1. Recurring payments are enabled
+        // 2. recurring_amount is NOT manually specified (undefined = AUTO mode)
+        // 3. Rate actually changed
+        if (
+          this.currentRecurringPayment !== null &&
+          !event.hasOwnProperty('recurring_amount') &&
+          rateChanged
+        ) {
+          try {
+            // Get current principal as number (remaining principal at this point)
+            const currentPrincipalNum = typeof this.currentPrincipal === 'number'
+              ? this.currentPrincipal
+              : parseFloat(String(this.currentPrincipal));
+            
+            if (isNaN(currentPrincipalNum) || currentPrincipalNum <= 0) {
+              throw new Error(`Invalid current principal: ${this.currentPrincipal}`);
+            }
+            
+            // Recalculate using remaining principal, new rate, and remaining period
+            const oldPayment = this.currentRecurringPayment;
+            const recalculatedPayment = this.calculateRecurringAmount({
+              principal: currentPrincipalNum,
+              rate: newRateNum,
+              startDate: event.date,
+              endDate: this.init.end_date!,
+            });
+            
+            // Update recurring payment amount - this will be used for all future payments
+            this.currentRecurringPayment = recalculatedPayment;
+            
+            if (this.debugLoggingEnabled) {
+              this.debugWrite(
+                `[RATE CHANGE] ${event.date}: Rate ${currentRateNum}% -> ${newRateNum}%. ` +
+                `Recalculated payment: ${oldPayment} -> ${recalculatedPayment}. ` +
+                `Remaining principal: ${currentPrincipalNum}, Remaining months: ${getNumberOfMonths(event.date, this.init.end_date!)}`
+              );
+            }
+          } catch (error) {
+            // If recalculation fails, keep existing payment amount
+            if (this.debugLoggingEnabled) {
+              this.debugWrite(
+                `[RATE CHANGE ERROR] ${event.date}: Failed to recalculate payment. Error: ${error}. Keeping: ${this.currentRecurringPayment}`
+              );
+            }
+          }
+        }
+        
+        // Update current rate
+        this.currentRate = newRate;
+      }
+
+      // If user manually specified recurring_amount, use that value (overrides auto-calculation)
       if (event.hasOwnProperty('recurring_amount')) {
         if (this.currentRecurringPayment === null) {
           throw new Error(
