@@ -692,7 +692,8 @@ class PaydownCalculator {
     }
 
     // Standard annuity formula: PMT = P * (r * (1 + r)^n) / ((1 + r)^n - 1)
-    const numerator = principal * monthlyRate * Math.pow(1 + monthlyRate, months);
+    const numerator =
+      principal * monthlyRate * Math.pow(1 + monthlyRate, months);
     const denominator = Math.pow(1 + monthlyRate, months) - 1;
 
     if (denominator === 0) {
@@ -708,11 +709,10 @@ class PaydownCalculator {
    * Uses first_payment_date if available, otherwise start_date
    */
   private calculateInitialRecurringAmount = (data: PaydownInit): number => {
-    const startDate = data.recurring?.first_payment_date || data.start_date;
     return this.calculateRecurringAmount({
       principal: data.principal,
       rate: data.rate,
-      startDate,
+      startDate: data.start_date,
       endDate: data.end_date,
     });
   };
@@ -1041,18 +1041,21 @@ class PaydownCalculator {
       // This must be processed BEFORE pay_recurring to ensure new payment is used
       if (event.hasOwnProperty('rate')) {
         const newRate = event.rate!;
-        
+
         // Convert rates to numbers for comparison
-        const currentRateNum = typeof this.currentRate === 'string' 
-          ? parseFloat(String(this.currentRate)) 
-          : Number(this.currentRate);
-        const newRateNum = typeof newRate === 'number' ? newRate : parseFloat(String(newRate));
-        
+        const currentRateNum =
+          typeof this.currentRate === 'string'
+            ? parseFloat(String(this.currentRate))
+            : Number(this.currentRate);
+        const newRateNum =
+          typeof newRate === 'number' ? newRate : parseFloat(String(newRate));
+
         // Check if rate actually changed
-        const rateChanged = !isNaN(currentRateNum) && 
-                          !isNaN(newRateNum) && 
-                          Math.abs(newRateNum - currentRateNum) > 0.001;
-        
+        const rateChanged =
+          !isNaN(currentRateNum) &&
+          !isNaN(newRateNum) &&
+          Math.abs(newRateNum - currentRateNum) > 0.001;
+
         // Recalculate monthly payment if:
         // 1. Recurring payments are enabled
         // 2. recurring_amount is NOT manually specified (undefined = AUTO mode)
@@ -1064,14 +1067,17 @@ class PaydownCalculator {
         ) {
           try {
             // Get current principal as number (remaining principal at this point)
-            const currentPrincipalNum = typeof this.currentPrincipal === 'number'
-              ? this.currentPrincipal
-              : parseFloat(String(this.currentPrincipal));
-            
+            const currentPrincipalNum =
+              typeof this.currentPrincipal === 'number'
+                ? this.currentPrincipal
+                : parseFloat(String(this.currentPrincipal));
+
             if (isNaN(currentPrincipalNum) || currentPrincipalNum <= 0) {
-              throw new Error(`Invalid current principal: ${this.currentPrincipal}`);
+              throw new Error(
+                `Invalid current principal: ${this.currentPrincipal}`
+              );
             }
-            
+
             // Recalculate using remaining principal, new rate, and remaining period
             const oldPayment = this.currentRecurringPayment;
             const recalculatedPayment = this.calculateRecurringAmount({
@@ -1080,15 +1086,15 @@ class PaydownCalculator {
               startDate: event.date,
               endDate: this.init.end_date!,
             });
-            
+
             // Update recurring payment amount - this will be used for all future payments
             this.currentRecurringPayment = recalculatedPayment;
-            
+
             if (this.debugLoggingEnabled) {
               this.debugWrite(
                 `[RATE CHANGE] ${event.date}: Rate ${currentRateNum}% -> ${newRateNum}%. ` +
-                `Recalculated payment: ${oldPayment} -> ${recalculatedPayment}. ` +
-                `Remaining principal: ${currentPrincipalNum}, Remaining months: ${getNumberOfMonths(event.date, this.init.end_date!)}`
+                  `Recalculated payment: ${oldPayment} -> ${recalculatedPayment}. ` +
+                  `Remaining principal: ${currentPrincipalNum}, Remaining months: ${getNumberOfMonths(event.date, this.init.end_date!)}`
               );
             }
           } catch (error) {
@@ -1100,7 +1106,7 @@ class PaydownCalculator {
             }
           }
         }
-        
+
         // Update current rate
         this.currentRate = newRate;
       }
