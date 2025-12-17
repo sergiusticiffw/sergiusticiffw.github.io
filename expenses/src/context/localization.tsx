@@ -328,6 +328,8 @@ const translations = {
     'loan.notStarted': 'Not started',
     'loan.currentInterest': 'Interest Paid',
     'loan.interestSavings': 'Interest Saved',
+    'loan.principalPaid': 'Principal Paid',
+    'loan.remainingPrincipal': 'Remaining Principal',
 
     // Loans Page
     'loans.title': 'Loans',
@@ -807,6 +809,8 @@ const translations = {
     'loan.notStarted': 'Nu a început',
     'loan.currentInterest': 'Dobândă Achitată',
     'loan.interestSavings': 'Dobândă Economisită',
+    'loan.principalPaid': 'Principal Achitat',
+    'loan.remainingPrincipal': 'Principal Rămas',
 
     // Loans Page
     'loans.title': 'Împrumuturi',

@@ -17,7 +17,21 @@ import {
 } from '@utils/utils';
 import { fetchLoans as fetchLoansService } from '@api/loans';
 import { useApiClient } from '@hooks/useApiClient';
-import { FiTrendingUp, FiDollarSign, FiEdit2, FiPlus } from 'react-icons/fi';
+import {
+  FiTrendingUp,
+  FiDollarSign,
+  FiEdit2,
+  FiPlus,
+  FiCheckCircle,
+  FiCreditCard,
+  FiBarChart2,
+  FiCheck,
+  FiClock,
+  FiPercent,
+  FiTrendingDown,
+  FiCalendar,
+  FiAlertCircle,
+} from 'react-icons/fi';
 import Notification from '@components/Notification/Notification';
 import './Loan.scss';
 import { useLocalization } from '@context/localization';
@@ -305,6 +319,28 @@ const Loan: React.FC = () => {
         ? formatNumber(interestSavingsValue)
         : formatNumber(0);
 
+  // Get principal paid from paydown calculation
+  const principalPaid =
+    loanStatus === 'pending' || !paydown
+      ? 0
+      : totalPaidAmount - interestPaid || 0;
+  const principalPaidDisplay =
+    loanStatus === 'pending'
+      ? t('loan.notStarted')
+      : formatNumber(principalPaid);
+
+  // Get remaining principal from paydown calculation
+  const remainingPrincipal =
+    loanStatus === 'pending' || !paydown
+      ? 0
+      : totalPrincipal - principalPaid || 0;
+  const remainingPrincipalDisplay =
+    loanStatus === 'pending' || loanStatus === 'completed'
+      ? loanStatus === 'completed'
+        ? t('common.completed')
+        : t('loan.notStarted')
+      : formatNumber(remainingPrincipal);
+
   return (
     <div className="page-container loan-container">
       {/* Header - same structure as NewHome */}
@@ -330,34 +366,82 @@ const Loan: React.FC = () => {
       {/* Loan Stats */}
       <div className="loan-stats-grid-2col">
         <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.principal')}</span>
+          <span className="loan-stat-label">
+            <FiCreditCard
+              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+            />
+            {t('loan.principal')}
+          </span>
           <span className="loan-stat-value">
             {formatNumber(totalPrincipal)}
           </span>
         </div>
         <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('common.total')}</span>
+          <span className="loan-stat-label">
+            <FiBarChart2
+              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+            />
+            {t('common.total')}
+          </span>
           <span className="loan-stat-value">
             {formatNumber(totalInstallments)}
           </span>
         </div>
         <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.paid')}</span>
+          <span className="loan-stat-label">
+            <FiCheck
+              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+            />
+            {t('loan.paid')}
+          </span>
           <span className="loan-stat-value">
             {formatNumber(totalPaidAmount)}
           </span>
         </div>
         <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.remaining')}</span>
+          <span className="loan-stat-label">
+            <FiClock
+              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+            />
+            {t('loan.remaining')}
+          </span>
           <span className="loan-stat-value">{remainingDisplay}</span>
         </div>
         <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.currentInterest')}</span>
+          <span className="loan-stat-label">
+            <FiPercent
+              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+            />
+            {t('loan.currentInterest')}
+          </span>
           <span className="loan-stat-value">{interestPaidDisplay}</span>
         </div>
         <div className="loan-stat-item">
-          <span className="loan-stat-label">{t('loan.interestSavings')}</span>
+          <span className="loan-stat-label">
+            <FiTrendingDown
+              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+            />
+            {t('loan.interestSavings')}
+          </span>
           <span className="loan-stat-value">{interestSavingsDisplay}</span>
+        </div>
+        <div className="loan-stat-item">
+          <span className="loan-stat-label">
+            <FiCheckCircle
+              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+            />
+            {t('loan.principalPaid')}
+          </span>
+          <span className="loan-stat-value">{principalPaidDisplay}</span>
+        </div>
+        <div className="loan-stat-item">
+          <span className="loan-stat-label">
+            <FiAlertCircle
+              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+            />
+            {t('loan.remainingPrincipal')}
+          </span>
+          <span className="loan-stat-value">{remainingPrincipalDisplay}</span>
         </div>
       </div>
 
@@ -387,12 +471,18 @@ const Loan: React.FC = () => {
             <div className="loan-stats-grid-2col">
               <div className="loan-stat-item">
                 <span className="loan-stat-label">
+                  <FiCalendar
+                    style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+                  />
                   {t('loan.monthsPassed')}
                 </span>
                 <span className="loan-stat-value">{monthsPassedDisplay}</span>
               </div>
               <div className="loan-stat-item">
                 <span className="loan-stat-label">
+                  <FiClock
+                    style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+                  />
                   {t('loan.daysRemaining')}
                 </span>
                 <span className="loan-stat-value">{daysRemainingDisplay}</span>
