@@ -1119,10 +1119,10 @@
     "@parcel/watcher-win32-ia32" "2.5.1"
     "@parcel/watcher-win32-x64" "2.5.1"
 
-"@react-oauth/google@^0.12.1":
-  version "0.12.2"
-  resolved "https://registry.npmjs.org/@react-oauth/google/-/google-0.12.2.tgz"
-  integrity sha512-d1GVm2uD4E44EJft2RbKtp8Z1fp/gK8Lb6KHgs3pHlM0PxCXGLaq8LLYQYENnN4xPWO1gkL4apBtlPKzpLvZwg==
+"@react-oauth/google@^0.13.0":
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/@react-oauth/google/-/google-0.13.0.tgz#c24dbf8222f495280d10343c1d24ae7c3e439e30"
+  integrity sha512-ukoKALR0VX9TmEGVHTDcRiCtJuNp+Zm8zxR+hm5KN+yON/lGHVzFlUIW1go0L8qHQZobbVZbDv40Eg+MVrWtnQ==
 
 "@rolldown/pluginutils@1.0.0-beta.53":
   version "1.0.0-beta.53"
