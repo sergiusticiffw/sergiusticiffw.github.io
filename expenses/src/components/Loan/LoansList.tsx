@@ -35,6 +35,8 @@ interface LoansListProps {
   getStatus: (loan: Loan) => string;
   getStatusText: (status: string) => string;
   getProgress: (loan: Loan) => number;
+  statusFilter?: string;
+  onStatusFilterChange?: (filter: string) => void;
 }
 
 type SortField = 'title' | 'principal' | 'status' | null;
@@ -48,11 +50,23 @@ const LoansList: React.FC<LoansListProps> = ({
   getStatus,
   getStatusText,
   getProgress,
+  statusFilter: externalStatusFilter,
+  onStatusFilterChange,
 }) => {
   const listRef = useRef<any>(null);
   const [sortField, setSortField] = useState<SortField>('status');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  // Use external filter if provided, otherwise use internal state
+  const [internalStatusFilter, setInternalStatusFilter] = useState<string>('all');
+  const statusFilter = externalStatusFilter !== undefined ? externalStatusFilter : internalStatusFilter;
+  
+  const handleStatusFilterChange = (filter: string) => {
+    if (onStatusFilterChange) {
+      onStatusFilterChange(filter);
+    } else {
+      setInternalStatusFilter(filter);
+    }
+  };
 
   const {
     handleTouchStart,
@@ -150,7 +164,7 @@ const LoansList: React.FC<LoansListProps> = ({
           <FiSliders />
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => handleStatusFilterChange(e.target.value)}
             aria-label="Filter by status"
           >
             <option value="all">All</option>

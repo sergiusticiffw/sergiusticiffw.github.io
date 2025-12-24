@@ -267,12 +267,14 @@ const Loans: FC = () => {
           />
         ) : (
           <LoansList
-            loans={filteredLoans}
+            loans={loans || []}
             onEdit={handleEdit}
             onDelete={handleDelete}
             getStatus={getLoanStatusForLoan}
             getStatusText={getStatusText}
             getProgress={calculateLoanProgress}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
           />
         )}
       </div>
