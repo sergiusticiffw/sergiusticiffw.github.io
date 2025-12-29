@@ -821,6 +821,63 @@ export const formatMonth = (date: Date) => {
   );
 };
 
+// Helper function to parse month string like "January 2024" or "Ianuarie 2024" back to Date
+// Safari is stricter with Date parsing, so we need a reliable method
+export const parseMonthString = (monthString: string): Date | null => {
+  if (!monthString || typeof monthString !== 'string') {
+    return null;
+  }
+
+  // Try Date.parse first (works in most browsers)
+  const parsed = Date.parse(monthString);
+  if (!isNaN(parsed)) {
+    return new Date(parsed);
+  }
+
+  // Fallback: manual parsing for Safari compatibility
+  // Format is "MonthName Year" (e.g., "January 2024" or "Ianuarie 2024")
+  const parts = monthString.trim().split(' ');
+  if (parts.length < 2) {
+    return null;
+  }
+
+  const year = parseInt(parts[parts.length - 1], 10);
+  if (isNaN(year) || year < 1900 || year > 2100) {
+    return null;
+  }
+
+  // Get month names for both languages
+  const language = localStorage.getItem('language') || 'en';
+  const englishMonthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const romanianMonthNames = [
+    'Ianuarie', 'Februarie', 'Martie', 'Aprilie', 'Mai', 'Iunie',
+    'Iulie', 'August', 'Septembrie', 'Octombrie', 'Noiembrie', 'Decembrie'
+  ];
+
+  const monthNames = language === 'ro' ? romanianMonthNames : englishMonthNames;
+  const monthName = parts.slice(0, -1).join(' '); // Handle multi-word months if any
+  const monthIndex = monthNames.findIndex(
+    (name) => name.toLowerCase() === monthName.toLowerCase()
+  );
+
+  if (monthIndex === -1) {
+    // Try the other language
+    const otherMonthNames = language === 'ro' ? englishMonthNames : romanianMonthNames;
+    const otherMonthIndex = otherMonthNames.findIndex(
+      (name) => name.toLowerCase() === monthName.toLowerCase()
+    );
+    if (otherMonthIndex !== -1) {
+      return new Date(year, otherMonthIndex, 1);
+    }
+    return null;
+  }
+
+  return new Date(year, monthIndex, 1);
+};
+
 // Helper function to format month option from YYYY-MM format
 export const formatMonthOption = (
   monthValue: string,

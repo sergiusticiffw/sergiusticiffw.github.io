@@ -5,7 +5,7 @@ import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { getCategories } from '@utils/constants';
 import { AuthState, DataState } from '@type/types';
-import { formatMonth } from '@utils/utils';
+import { formatMonth, parseMonthString } from '@utils/utils';
 
 const MonthlyTotals = () => {
   // All hooks must be called unconditionally at the top
@@ -52,12 +52,18 @@ const MonthlyTotals = () => {
   // Now fill in the totals for the available months
   items.totals &&
     Object.keys(items.totals).forEach((month) => {
-      const formattedMonth = formatMonth(new Date(month));
-      monthlyTotals[formattedMonth] = items.totals[month];
+      // Parse the month string (e.g., "January 2024") to Date
+      // Safari is stricter with Date parsing, so we use a helper function
+      const monthDate = parseMonthString(month);
+      
+      if (monthDate) {
+        const formattedMonth = formatMonth(monthDate);
+        monthlyTotals[formattedMonth] = items.totals[month];
+      }
     });
 
   // Prepare the data for the chart, ensuring every month is accounted for.
-  const seriesData = allMonths.map((month) => monthlyTotals[month]);
+  const seriesData = allMonths.map((month) => monthlyTotals[month] || 0);
 
   const allTimeOptions: Highcharts.Options = {
     chart: {
