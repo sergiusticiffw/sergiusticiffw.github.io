@@ -1038,7 +1038,6 @@ class PaydownCalculator {
 
       // Handle rate change: if rate changes and recurring_amount is NOT manually specified,
       // automatically recalculate the monthly payment based on current principal and new rate
-      // This must be processed BEFORE pay_recurring to ensure new payment is used
       if (event.hasOwnProperty('rate')) {
         const newRate = event.rate!;
 
@@ -1107,8 +1106,8 @@ class PaydownCalculator {
           }
         }
 
-        // Update current rate
-        this.currentRate = newRate;
+        // Note: this.currentRate is NOT updated here - it's updated in getPeriodInterests
+        // when interest is calculated for a period. This matches the original JavaScript code behavior.
       }
 
       // If user manually specified recurring_amount, use that value (overrides auto-calculation)
@@ -1175,6 +1174,7 @@ class PaydownCalculator {
             `invalid payment method: ${this.init.payment_method}`
           );
         }
+
       }
 
       if (this.currentSingleFee) {
