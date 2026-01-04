@@ -296,6 +296,7 @@ class PaydownCalculator {
   private currentSingleFee = 0;
   private recurringPaymentPeriod = 1;
   private rateHashMap: Record<string, number> = {};
+  private loggedRateChangeEvents: Set<number> = new Set();
   private annualSummaries: Record<string, AnnualSummary> = {};
   private paymentLoggingEnabled = false;
   private debugLoggingEnabled = false;
@@ -385,15 +386,20 @@ class PaydownCalculator {
 
     if (this.rateHashMap.hasOwnProperty(dateToInteger(startDate))) {
       rate = this.rateHashMap[dateToInteger(startDate)];
-      this.logPayment({
-        date: startDate,
-        rate,
-        installment: '-',
-        reduction: '-',
-        interest: '-',
-        principal: this.round(principal),
-        fee: '-',
-      });
+      const startDateInt = dateToInteger(startDate);
+      // Only log if not already logged (to avoid duplication)
+      if (!this.loggedRateChangeEvents.has(startDateInt)) {
+        this.logPayment({
+          date: startDate,
+          rate,
+          installment: '-',
+          reduction: '-',
+          interest: '-',
+          principal: this.round(principal),
+          fee: '-',
+        });
+        this.loggedRateChangeEvents.add(startDateInt);
+      }
     }
 
     if (this.debugLoggingEnabled) {
@@ -431,15 +437,20 @@ class PaydownCalculator {
         sumOfInterests += subperiodInterest;
         currentRate = rateEvent.rate;
 
-        this.logPayment({
-          date: rateEvent.date,
-          rate: rateEvent.rate,
-          installment: '-',
-          reduction: '-',
-          interest: '-',
-          principal: this.round(principal),
-          fee: '-',
-        });
+        const rateEventDateInt = dateToInteger(rateEvent.date);
+        // Only log if not already logged (to avoid duplication)
+        if (!this.loggedRateChangeEvents.has(rateEventDateInt)) {
+          this.logPayment({
+            date: rateEvent.date,
+            rate: rateEvent.rate,
+            installment: '-',
+            reduction: '-',
+            interest: '-',
+            principal: this.round(principal),
+            fee: '-',
+          });
+          this.loggedRateChangeEvents.add(rateEventDateInt);
+        }
 
         const nextRateEvent = this.getFirstEventAfterDate(
           'rate',
@@ -977,6 +988,7 @@ class PaydownCalculator {
     this.sumOfReductions = 0;
     this.gpiSumOfInterests = 0;
     this.annualSummaries = {};
+    this.loggedRateChangeEvents.clear();
 
     const dateObj = new Days();
 
@@ -1054,6 +1066,24 @@ class PaydownCalculator {
           !isNaN(currentRateNum) &&
           !isNaN(newRateNum) &&
           Math.abs(newRateNum - currentRateNum) > 0.001;
+
+        // Log rate change event immediately to maintain correct chronological order in payment log
+        // This ensures rate changes appear before fee events that occur later
+        if (!event.hasOwnProperty('pay_recurring')) {
+          const eventDateInt = dateToInteger(event.date);
+          if (!this.loggedRateChangeEvents.has(eventDateInt)) {
+            this.logPayment({
+              date: event.date,
+              rate: newRate,
+              installment: '-',
+              reduction: '-',
+              interest: '-',
+              principal: this.round(this.currentPrincipal),
+              fee: '-',
+            });
+            this.loggedRateChangeEvents.add(eventDateInt);
+          }
+        }
 
         // Recalculate monthly payment if:
         // 1. Recurring payments are enabled
@@ -1179,9 +1209,16 @@ class PaydownCalculator {
 
       if (this.currentSingleFee) {
         if (!event.hasOwnProperty('ending')) {
+          // Determine the correct rate at this date from the last rate event on or before this date
+          let rateForFeeEvent: number | string = this.currentRate;
+          const lastRateEvent = this.getLastRateEventOnOrBeforeDate(event.date);
+          if (lastRateEvent && lastRateEvent.rate !== undefined) {
+            rateForFeeEvent = lastRateEvent.rate;
+          }
+          
           this.logPayment({
             date: event.date,
-            rate: this.currentRate,
+            rate: rateForFeeEvent,
             installment: '-',
             reduction: '-',
             interest: '-',
