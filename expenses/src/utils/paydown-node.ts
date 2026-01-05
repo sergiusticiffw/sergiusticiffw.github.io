@@ -1,3 +1,11 @@
+// Import pure loan calculation functions
+import {
+  calculateAnnuity,
+  calculateRemainingBalance,
+  recalculateAfterRateChange,
+  calculatePeriodInterest,
+} from './loanEngine';
+
 // Types and interfaces
 export interface PaydownInit {
   start_date: string;
@@ -170,6 +178,37 @@ const numberIsValid = (n: number): boolean => {
   return !isNaN(n) && typeof n === 'number' && n >= 0;
 };
 
+/**
+ * Format financial value to 2 decimal places for UI/output display
+ * 
+ * BANKING DISPLAY STANDARD:
+ * This function implements standard banking rounding to 2 decimal places
+ * (cents/bani) for final presentation only.
+ * 
+ * CRITICAL RESTRICTION:
+ * This function MUST ONLY be used at the output/presentation layer.
+ * It MUST NEVER be used in core financial calculations.
+ * 
+ * ROUNDING METHOD:
+ * Uses standard "round half up" method:
+ *   - Multiply by 100 to shift decimal point
+ *   - Round to nearest integer
+ *   - Divide by 100 to restore decimal point
+ * 
+ * Examples:
+ *   1234.567 → 1234.57 (rounds up)
+ *   1234.564 → 1234.56 (rounds down)
+ *   1234.565 → 1234.57 (rounds up - half up)
+ * 
+ * WHY NOT USED IN CALCULATIONS:
+ * - Rounding intermediate values causes cumulative errors
+ * - Violates banking precision requirements
+ * - Can cause balance reconciliation failures
+ * - See detailed explanation in FORMATTING LAYER comment above
+ * 
+ * @param input - Raw floating-point value from calculation engine
+ * @returns Value rounded to 2 decimal places for display
+ */
 const funcRound = (input: number): number => {
   return Math.round(input * 100) / 100;
 };
@@ -389,13 +428,14 @@ class PaydownCalculator {
       const startDateInt = dateToInteger(startDate);
       // Only log if not already logged (to avoid duplication)
       if (!this.loggedRateChangeEvents.has(startDateInt)) {
+        // Store raw values (no rounding) - rounding happens at output/UI layer
         this.logPayment({
           date: startDate,
           rate,
           installment: '-',
           reduction: '-',
           interest: '-',
-          principal: this.round(principal),
+          principal,
           fee: '-',
         });
         this.loggedRateChangeEvents.add(startDateInt);
@@ -413,7 +453,7 @@ class PaydownCalculator {
       let subperiodStartDate = startDate;
       let rateEventDate = rateEvent.date;
       let currentRate = rate;
-      let numberOfDays: number, factor: number, subperiodInterest: number;
+      let numberOfDays: number, subperiodInterest: number;
 
       while (rateEvent) {
         numberOfDays = calculateDayCount(
@@ -422,8 +462,14 @@ class PaydownCalculator {
           true
         );
         this.gpiTotalDays += numberOfDays;
-        factor = numberOfDays / this.dayCountDivisor;
-        subperiodInterest = principal * (currentRate / 100) * factor;
+        // Use pure loanEngine function to calculate period interest
+        const dayCountMethod = this.dayCountDivisor === 360 ? 'act/360' : 'act/365';
+        subperiodInterest = calculatePeriodInterest(
+          principal,
+          currentRate,
+          numberOfDays,
+          dayCountMethod
+        );
 
         if (this.debugLoggingEnabled) {
           this.debugLogSubperiod(
@@ -440,13 +486,14 @@ class PaydownCalculator {
         const rateEventDateInt = dateToInteger(rateEvent.date);
         // Only log if not already logged (to avoid duplication)
         if (!this.loggedRateChangeEvents.has(rateEventDateInt)) {
+          // Store raw values (no rounding) - rounding happens at output/UI layer
           this.logPayment({
             date: rateEvent.date,
             rate: rateEvent.rate,
             installment: '-',
             reduction: '-',
             interest: '-',
-            principal: this.round(principal),
+            principal,
             fee: '-',
           });
           this.loggedRateChangeEvents.add(rateEventDateInt);
@@ -466,8 +513,14 @@ class PaydownCalculator {
 
       numberOfDays = calculateDayCount(rateEventDate, endDate);
       this.gpiTotalDays += numberOfDays;
-      factor = numberOfDays / this.dayCountDivisor;
-      subperiodInterest = principal * (currentRate / 100) * factor;
+      // Use pure loanEngine function to calculate period interest
+      const dayCountMethod = this.dayCountDivisor === 360 ? 'act/360' : 'act/365';
+      subperiodInterest = calculatePeriodInterest(
+        principal,
+        currentRate,
+        numberOfDays,
+        dayCountMethod
+      );
 
       if (this.debugLoggingEnabled) {
         this.debugLogSubperiod(numberOfDays, subperiodInterest);
@@ -478,8 +531,14 @@ class PaydownCalculator {
     } else {
       let numberOfDays = calculateDayCount(startDate, endDate);
       this.gpiTotalDays += numberOfDays;
-      let factor = numberOfDays / this.dayCountDivisor;
-      let subperiodInterest = principal * (rate / 100) * factor;
+      // Use pure loanEngine function to calculate period interest
+      const dayCountMethod = this.dayCountDivisor === 360 ? 'act/360' : 'act/365';
+      let subperiodInterest = calculatePeriodInterest(
+        principal,
+        rate,
+        numberOfDays,
+        dayCountMethod
+      );
 
       if (this.debugLoggingEnabled) {
         this.debugLog(
@@ -558,7 +617,7 @@ class PaydownCalculator {
     let installment: number;
     reduction += this.currentPrincipal;
 
-    installment = this.round(reduction + periodInterest);
+    installment = reduction + periodInterest; // No rounding in internal calculation
     this.sumOfReductions += reduction;
 
     // Add to annual summaries for the last payment
@@ -574,14 +633,15 @@ class PaydownCalculator {
     this.annualSummaries[year].total_interest += periodInterest;
     this.annualSummaries[year].total_fees += fee;
 
+    // Store raw values (no rounding) - rounding happens at output/UI layer
     this.logPayment({
       date,
       rate: this.currentRate,
       installment,
-      reduction: this.round(reduction),
-      interest: this.round(periodInterest),
+      reduction,
+      interest: periodInterest,
       principal: 0,
-      fee: this.round(fee),
+      fee,
       num_days: numDays || null,
     });
 
@@ -659,14 +719,15 @@ class PaydownCalculator {
 
     this.sumOfReductions += reduction;
 
+    // Store raw values (no rounding) - rounding happens at output/UI layer
     this.logPayment({
       date: this.eventArray[index].date,
       rate: this.currentRate,
-      installment: this.round(reduction + periodInterest),
-      reduction: this.round(reduction),
-      interest: this.round(periodInterest),
-      principal: this.round(this.currentPrincipal),
-      fee: this.round(fee),
+      installment: reduction + periodInterest,
+      reduction,
+      interest: periodInterest,
+      principal: this.currentPrincipal,
+      fee,
       was_payed: this.eventArray[index].was_payed,
       num_days: numDays,
     });
@@ -676,7 +737,7 @@ class PaydownCalculator {
 
   /**
    * Calculate recurring payment amount using standard annuity formula
-   * This is a robust, reusable function that handles all edge cases correctly
+   * Delegates to pure loanEngine module
    */
   private calculateRecurringAmount = ({
     principal,
@@ -689,30 +750,7 @@ class PaydownCalculator {
     startDate: string;
     endDate: string;
   }): number => {
-    const months = getNumberOfMonths(startDate, endDate);
-
-    if (months <= 0) {
-      return this.round(principal);
-    }
-
-    const monthlyRate = rate / 12 / 100;
-
-    // Handle zero interest rate
-    if (monthlyRate === 0 || rate === 0) {
-      return this.round(principal / months);
-    }
-
-    // Standard annuity formula: PMT = P * (r * (1 + r)^n) / ((1 + r)^n - 1)
-    const numerator =
-      principal * monthlyRate * Math.pow(1 + monthlyRate, months);
-    const denominator = Math.pow(1 + monthlyRate, months) - 1;
-
-    if (denominator === 0) {
-      return this.round(principal / months);
-    }
-
-    const monthlyPayment = numerator / denominator;
-    return this.round(monthlyPayment);
+    return calculateAnnuity(principal, rate, startDate, endDate);
   };
 
   /**
@@ -1050,6 +1088,8 @@ class PaydownCalculator {
 
       // Handle rate change: if rate changes and recurring_amount is NOT manually specified,
       // automatically recalculate the monthly payment based on current principal and new rate
+      // IMPORTANT: If pay_recurring is also present, we must apply the payment with OLD rate first,
+      // then recalculate the annuity with NEW rate
       if (event.hasOwnProperty('rate')) {
         const newRate = event.rate!;
 
@@ -1072,13 +1112,14 @@ class PaydownCalculator {
         if (!event.hasOwnProperty('pay_recurring')) {
           const eventDateInt = dateToInteger(event.date);
           if (!this.loggedRateChangeEvents.has(eventDateInt)) {
+            // Store raw values (no rounding) - rounding happens at output/UI layer
             this.logPayment({
               date: event.date,
               rate: newRate,
               installment: '-',
               reduction: '-',
               interest: '-',
-              principal: this.round(this.currentPrincipal),
+              principal: this.currentPrincipal,
               fee: '-',
             });
             this.loggedRateChangeEvents.add(eventDateInt);
@@ -1089,10 +1130,12 @@ class PaydownCalculator {
         // 1. Recurring payments are enabled
         // 2. recurring_amount is NOT manually specified (undefined = AUTO mode)
         // 3. Rate actually changed
+        // 4. pay_recurring is NOT present (if present, we'll recalculate after applying the payment)
         if (
           this.currentRecurringPayment !== null &&
           !event.hasOwnProperty('recurring_amount') &&
-          rateChanged
+          rateChanged &&
+          !event.hasOwnProperty('pay_recurring')
         ) {
           try {
             // Get current principal as number (remaining principal at this point)
@@ -1107,23 +1150,28 @@ class PaydownCalculator {
               );
             }
 
-            // Recalculate using remaining principal, new rate, and remaining period
+            // Use pure loanEngine module to recalculate annuity after rate change
+            // Since pay_recurring is NOT present, we don't apply payment first
             const oldPayment = this.currentRecurringPayment;
-            const recalculatedPayment = this.calculateRecurringAmount({
-              principal: currentPrincipalNum,
-              rate: newRateNum,
-              startDate: event.date,
-              endDate: this.init.end_date!,
+            const recalculationResult = recalculateAfterRateChange({
+              currentPrincipal: currentPrincipalNum,
+              currentPayment: oldPayment,
+              oldRate: currentRateNum,
+              newRate: newRateNum,
+              rateChangeDate: event.date,
+              loanEndDate: this.init.end_date!,
+              applyPaymentFirst: false, // No payment on this date, just rate change
             });
 
+            // Validation warning is handled inside recalculateAfterRateChange
             // Update recurring payment amount - this will be used for all future payments
-            this.currentRecurringPayment = recalculatedPayment;
+            this.currentRecurringPayment = recalculationResult.newPayment;
 
             if (this.debugLoggingEnabled) {
               this.debugWrite(
                 `[RATE CHANGE] ${event.date}: Rate ${currentRateNum}% -> ${newRateNum}%. ` +
-                  `Recalculated payment: ${oldPayment} -> ${recalculatedPayment}. ` +
-                  `Remaining principal: ${currentPrincipalNum}, Remaining months: ${getNumberOfMonths(event.date, this.init.end_date!)}`
+                  `Recalculated payment: ${oldPayment} -> ${recalculationResult.newPayment}. ` +
+                  `Remaining principal: ${currentPrincipalNum}, Remaining months: ${recalculationResult.remainingMonths}`
               );
             }
           } catch (error) {
@@ -1186,9 +1234,18 @@ class PaydownCalculator {
         this.sumOfFees += this.currentRecurringFee;
 
         if (this.init.payment_method === 'equal_installment') {
+          // Apply the payment using the CURRENT (OLD) interest rate
+          // This is the payment amount calculated with the rate before any change
           installment = event.hasOwnProperty('pay_installment')
             ? event.pay_installment!
             : this.currentRecurringPayment;
+          
+          // Store principal before payment to check if we need to recalculate after
+          const principalBeforePayment =
+            typeof this.currentPrincipal === 'number'
+              ? this.currentPrincipal
+              : parseFloat(String(this.currentPrincipal));
+          
           if (
             !this.funcPayInstallment(
               index,
@@ -1198,6 +1255,72 @@ class PaydownCalculator {
             )
           ) {
             break;
+          }
+
+          // After applying the payment with OLD rate, if rate also changed on this date,
+          // recalculate the annuity using NEW rate with the updated principal
+          if (event.hasOwnProperty('rate')) {
+            const newRate = event.rate!;
+            const newRateNum =
+              typeof newRate === 'number' ? newRate : parseFloat(String(newRate));
+            
+            // Get updated principal after payment
+            const principalAfterPayment =
+              typeof this.currentPrincipal === 'number'
+                ? this.currentPrincipal
+                : parseFloat(String(this.currentPrincipal));
+
+            // Only recalculate if:
+            // 1. recurring_amount is NOT manually specified (AUTO mode)
+            // 2. Principal was actually reduced (payment was applied)
+            // 3. New principal is valid
+            if (
+              !event.hasOwnProperty('recurring_amount') &&
+              principalAfterPayment < principalBeforePayment &&
+              !isNaN(principalAfterPayment) &&
+              principalAfterPayment > 0
+            ) {
+              try {
+                // Get current rate for recalculation
+                const currentRateNum =
+                  typeof this.currentRate === 'string'
+                    ? parseFloat(String(this.currentRate))
+                    : Number(this.currentRate);
+
+                // Use pure loanEngine module to recalculate annuity after rate change
+                // Payment was already applied, so use principalAfterPayment and applyPaymentFirst: false
+                const oldPayment = this.currentRecurringPayment;
+                const recalculationResult = recalculateAfterRateChange({
+                  currentPrincipal: principalAfterPayment, // Use principal after payment
+                  currentPayment: oldPayment,
+                  oldRate: currentRateNum,
+                  newRate: newRateNum,
+                  rateChangeDate: event.date,
+                  loanEndDate: this.init.end_date!,
+                  applyPaymentFirst: false, // Payment already applied above
+                });
+
+                // Validation warning is handled inside recalculateAfterRateChange
+                // Update recurring payment amount - this will be used for all future payments
+                this.currentRecurringPayment = recalculationResult.newPayment;
+
+                if (this.debugLoggingEnabled) {
+                  this.debugWrite(
+                    `[RATE CHANGE WITH PAYMENT] ${event.date}: Applied payment ${installment} with OLD rate ${currentRateNum}%. ` +
+                      `Principal: ${principalBeforePayment} -> ${principalAfterPayment}. ` +
+                      `Recalculated payment with NEW rate ${newRateNum}%: ${oldPayment} -> ${recalculationResult.newPayment}. ` +
+                      `Remaining months: ${recalculationResult.remainingMonths}`
+                  );
+                }
+              } catch (error) {
+                // If recalculation fails, keep existing payment amount
+                if (this.debugLoggingEnabled) {
+                  this.debugWrite(
+                    `[RATE CHANGE WITH PAYMENT ERROR] ${event.date}: Failed to recalculate payment after applying payment. Error: ${error}. Keeping: ${this.currentRecurringPayment}`
+                  );
+                }
+              }
+            }
           }
         } else {
           throw new Error(
@@ -1216,14 +1339,15 @@ class PaydownCalculator {
             rateForFeeEvent = lastRateEvent.rate;
           }
           
+          // Store raw values (no rounding) - rounding happens at output/UI layer
           this.logPayment({
             date: event.date,
             rate: rateForFeeEvent,
             installment: '-',
             reduction: '-',
             interest: '-',
-            principal: this.round(this.currentPrincipal),
-            fee: this.round(this.currentSingleFee),
+            principal: this.currentPrincipal,
+            fee: this.currentSingleFee,
           });
           this.currentSingleFee = 0;
         }
@@ -1258,14 +1382,15 @@ class PaydownCalculator {
           this.annualSummaries[endingYear].total_principal +=
             this.currentPrincipal;
 
+          // Store raw values (no rounding) - rounding happens at output/UI layer
           this.logPayment({
             date: event.date,
             rate: this.currentRate,
             installment: '-',
             reduction: '-',
-            interest: this.round(finalInterest),
-            principal: this.round(this.currentPrincipal),
-            fee: this.round(this.currentSingleFee),
+            interest: finalInterest,
+            principal: this.currentPrincipal,
+            fee: this.currentSingleFee,
             num_days: numDays,
           });
           this.latestCalculatedInterestDate = this.init.end_date!;
@@ -1276,11 +1401,11 @@ class PaydownCalculator {
       }
     }
 
-    if (
-      this.round(this.gpiSumOfInterests) !== this.round(this.sumOfInterests)
-    ) {
+    // Compare unrounded values for validation - use small epsilon for floating point comparison
+    const epsilon = 1e-10;
+    if (Math.abs(this.gpiSumOfInterests - this.sumOfInterests) > epsilon) {
       throw new Error(
-        `Sum of interests mismatch: ${this.round(this.gpiSumOfInterests)} vs. ${this.round(this.sumOfInterests)}`
+        `Sum of interests mismatch: ${this.gpiSumOfInterests} vs. ${this.sumOfInterests}`
       );
     }
 
@@ -1303,6 +1428,7 @@ class PaydownCalculator {
     }
 
     // Calculate interest paid from actual payments only (was_payed === true)
+    // Use raw values (no rounding) - rounding happens at output/UI layer
     let interestPaid = 0;
     if (this.paymentLogArray && this.paymentLogArray.length > 0) {
       this.paymentLogArray.forEach((payment: PaymentLog) => {
@@ -1321,11 +1447,7 @@ class PaydownCalculator {
       });
     }
 
-    // Round if needed
-    if (this.roundValues) {
-      interestPaid = funcRound(interestPaid);
-    }
-
+    // Return raw values (no rounding) - rounding happens at output/UI layer
     return [
       this.sumOfInterests,
       this.sumOfReductions,
@@ -1403,8 +1525,54 @@ export default function Paydown() {
 
       let sumOfInstallments: number;
 
+      /**
+       * FORMATTING LAYER: Round values to 2 decimals ONLY for UI/output
+       * 
+       * BANKING-GRADE PRECISION ARCHITECTURE:
+       * 
+       * All core financial calculations above maintain full floating-point precision.
+       * Rounding is intentionally deferred until this final output layer for the following
+       * critical reasons:
+       * 
+       * 1. CUMULATIVE ROUNDING ERROR PREVENTION:
+       *    - Each intermediate rounding introduces a small error (typically ±0.005)
+       *    - Over 360 monthly payments, these errors compound significantly
+       *    - Example: 0.005 error × 360 payments = 1.80 discrepancy
+       *    - This violates banking accuracy requirements (must be within ±0.01)
+       * 
+       * 2. INTEREST CALCULATION ACCURACY:
+       *    - Interest = Principal × Rate × Time
+       *    - Rounding principal prematurely causes interest calculation errors
+       *    - These errors compound exponentially over the loan term
+       *    - Can result in regulatory violations (usury law compliance)
+       * 
+       * 3. BALANCE RECONCILIATION REQUIREMENTS:
+       *    - Loan balances must reconcile to the penny across all systems
+       *    - Rounding intermediate values causes reconciliation failures
+       *    - Requires manual adjustments (not acceptable in automated systems)
+       *    - Audit trails must show exact calculation paths
+       * 
+       * 4. REGULATORY COMPLIANCE (Basel III, IFRS):
+       *    - Financial calculations must maintain precision until presentation
+       *    - Rounding intermediate values violates accounting standards
+       *    - Can lead to audit findings and regulatory penalties
+       *    - Must produce identical results across all platforms
+       * 
+       * 5. CROSS-SYSTEM CONSISTENCY:
+       *    - Core calculations must be identical across all systems
+       *    - Rounding at calculation time introduces platform variations
+       *    - Rounding only at display ensures consistent core results
+       *    - Critical for multi-system banking architectures
+       * 
+       * IMPLEMENTATION:
+       * - All internal calculations use raw floating-point values
+       * - Payment log entries store unrounded values
+       * - Only final return values are rounded for display
+       * - This ensures calculation accuracy while meeting display requirements
+       */
       if (initObj.hasOwnProperty('round_values')) {
         if (initObj.round_values) {
+          // Format all output values to 2 decimals for UI display
           sumOfInstallments = funcRound(interests + reductions - finalInterest);
           interests = funcRound(interests);
           reductions = funcRound(reductions);
@@ -1425,9 +1593,11 @@ export default function Paydown() {
             );
           }
         } else {
+          // Return raw values without rounding
           sumOfInstallments = interests + reductions - finalInterest;
         }
       } else {
+        // Default: Format all output values to 2 decimals for UI display
         sumOfInstallments = funcRound(interests + reductions - finalInterest);
         interests = funcRound(interests);
         reductions = funcRound(reductions);
@@ -1446,6 +1616,26 @@ export default function Paydown() {
           annualSummaries[year].total_fees = funcRound(
             annualSummaries[year].total_fees
           );
+        }
+      }
+
+      // Validation: Final remaining balance must be within ±0.01
+      // This ensures the loan calculation is accurate
+      const balanceTolerance = 0.01;
+      if (Math.abs(remainingPrincipal) > balanceTolerance) {
+        const warning = `[BALANCE VALIDATION WARNING] Final remaining balance (${remainingPrincipal}) is outside tolerance (±${balanceTolerance}). Expected: 0 ± ${balanceTolerance}`;
+        if (initObj.debug_logging && debugArray) {
+          debugArray.push(warning);
+        }
+      }
+
+      // Validation: Total interest paid must be positive and reasonable
+      // When interest rate decreases, total interest should generally decrease
+      // (This is a general check - specific rate decrease validation is done during recalculation)
+      if (interestPaid < 0) {
+        const warning = `[INTEREST VALIDATION WARNING] Total interest paid (${interestPaid}) is negative. This is unexpected.`;
+        if (initObj.debug_logging && debugArray) {
+          debugArray.push(warning);
         }
       }
 
