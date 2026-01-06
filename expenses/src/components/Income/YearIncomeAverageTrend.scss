@@ -120,9 +120,14 @@
             font-weight: 500;
             color: white;
             text-align: center;
+            transition: opacity 0.2s ease;
 
             &.total-amount {
               font-weight: 700;
+            }
+
+            &:hover {
+              opacity: 0.8;
             }
           }
         }
