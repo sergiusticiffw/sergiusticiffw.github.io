@@ -127,7 +127,7 @@ const YearAverageTrend = () => {
           <tr>
             <td>{t('charts.totalItems')}</td>
             <td>
-              {formatNumber(itms.length + 1)} {t('charts.items')}
+              {formatNumber(itms.length)} {t('charts.items')}
             </td>
           </tr>
         </tbody>
