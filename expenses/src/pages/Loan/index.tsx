@@ -124,9 +124,8 @@ const Loan: React.FC = () => {
   // 2. Interest with only scheduled payments (Regular + rate/fee changes)
   let interestSavings = 0;
 
-  // Check if there are any early payments
-  // Look for various keywords that indicate early/advance payments
-  const hasEarlyPayments = allPayments.some((payment: any) => {
+  // Helper function to check if a payment is an early/advance payment
+  const isEarlyPayment = (payment: any): boolean => {
     if (!payment.title) return false;
     const titleLower = payment.title.toLowerCase();
 
@@ -155,48 +154,34 @@ const Loan: React.FC = () => {
     }
 
     return false;
-  });
+  };
 
+  // Check if there are any early payments
+  const hasEarlyPayments = allPayments.some(isEarlyPayment);
+
+  // Calculate interest savings if:
+  // 1. Loan is active or completed
+  // 2. There are early payments detected
+  // 3. Paydown calculation succeeded
+  // Note: We removed the requirement for recurring config to allow calculation for all loans
   if (
     (loanStatus === 'active' || loanStatus === 'completed') &&
     hasEarlyPayments &&
-    paydown &&
-    loanData.recurring &&
-    loanData.recurring.first_payment_date &&
-    loanData.recurring.payment_day
+    paydown
   ) {
     try {
-      // Clone payments and filter out early payments
-      // Keep only:
-      // - Payments with title "Regular" (scheduled payments)
-      // - Payments that change rate (rate changes)
-      // - Payments that change fee (pay_single_fee changes)
-      // - Payments that change recurring_amount
+      // Filter out early payments to get scheduled payments only
+      // Scheduled payments include:
+      // - All payments that are NOT early payments (inverse logic)
+      // - This includes regular payments, rate changes, fee changes, recurring_amount changes
+      // - Basically everything except explicitly marked early payments
       const scheduledPayments = allPayments.filter((payment: any) => {
-        // Keep Regular payments
-        if (payment.title?.toLowerCase() === 'regular') {
-          return true;
+        // Exclude early payments
+        if (isEarlyPayment(payment)) {
+          return false;
         }
-        // Keep rate changes
-        if (payment.hasOwnProperty('rate') && payment.rate !== undefined) {
-          return true;
-        }
-        // Keep fee changes
-        if (
-          payment.hasOwnProperty('pay_single_fee') &&
-          payment.pay_single_fee !== undefined
-        ) {
-          return true;
-        }
-        // Keep recurring_amount changes
-        if (
-          payment.hasOwnProperty('recurring_amount') &&
-          payment.recurring_amount !== undefined
-        ) {
-          return true;
-        }
-        // Exclude all other payments (early payments)
-        return false;
+        // Include all other payments (regular, rate changes, fee changes, etc.)
+        return true;
       });
 
       // Calculate paydown with only scheduled payments
