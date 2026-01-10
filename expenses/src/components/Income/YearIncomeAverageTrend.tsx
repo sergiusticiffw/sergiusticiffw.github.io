@@ -1,28 +1,112 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuthState, useData } from '@context/context';
 import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { formatDataForChart, formatNumber } from '@utils/utils';
 import { getMonthNames } from '@utils/constants';
-import { AuthState, DataState } from '@type/types';
+import { AuthState, DataState, TransactionOrIncomeItem } from '@type/types';
 import { getFinancialStabilityIcon } from '@utils/helper';
 import './YearIncomeAverageTrend.scss';
 
-const YearIncomeAverageTrend: React.FC = () => {
+interface YearIncomeAverageTrendProps {
+  filteredIncomeData?: TransactionOrIncomeItem[];
+  filteredTransactionData?: TransactionOrIncomeItem[];
+  isFiltered?: boolean;
+}
+
+const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
+  filteredIncomeData,
+  filteredTransactionData,
+  isFiltered = false,
+}) => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
   const { t } = useLocalization();
   const [clickedCells, setClickedCells] = useState<Set<string>>(new Set());
 
-  const totalIncomePerYear = data?.totalIncomePerYear || {};
-  const totalPerYear = data?.totalPerYear || {};
-  const totalSpent = data?.totalSpent || 0;
+  // Calculate totals from filtered data if provided, otherwise use all data
+  const { totalIncomePerYear, totalPerYear, totalSpent, totalIncomePerYearAndMonth } = useMemo(() => {
+    // Use filtered data if provided, otherwise use all data
+    const incomeData = filteredIncomeData !== undefined ? filteredIncomeData : (data.incomeData || []);
+    const transactionData = filteredTransactionData !== undefined ? filteredTransactionData : (data.raw || []).filter((item: TransactionOrIncomeItem) => item.type === 'transaction');
+
+    const totals: {
+      totalIncomePerYear: Record<string, number>;
+      totalPerYear: Record<string, number>;
+      totalSpent: number;
+      totalIncomePerYearAndMonth: Record<string, Record<string, number>>;
+    } = {
+      totalIncomePerYear: {},
+      totalPerYear: {},
+      totalSpent: 0,
+      totalIncomePerYearAndMonth: {},
+    };
+
+    // Process income data
+    // English month names (must match formatDataForChart expectations)
+    const englishMonthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    incomeData.forEach((item: TransactionOrIncomeItem) => {
+      if (!item.dt) return;
+      const date = new Date(item.dt);
+      if (isNaN(date.getTime())) return;
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      // Use month name format like "January 2024" to match formatDataForChart expectations
+      const monthKey = `${englishMonthNames[month]} ${year}`;
+
+      if (!totals.totalIncomePerYear[year]) {
+        totals.totalIncomePerYear[year] = 0;
+      }
+      if (!totals.totalIncomePerYearAndMonth[year]) {
+        totals.totalIncomePerYearAndMonth[year] = {};
+      }
+      if (!totals.totalIncomePerYearAndMonth[year][monthKey]) {
+        totals.totalIncomePerYearAndMonth[year][monthKey] = 0;
+      }
+
+      const amount = parseFloat(item.sum || '0');
+      totals.totalIncomePerYear[year] += amount;
+      totals.totalIncomePerYearAndMonth[year][monthKey] += amount;
+    });
+
+    // Process transaction data
+    transactionData.forEach((item: TransactionOrIncomeItem) => {
+      if (!item.dt) return;
+      const date = new Date(item.dt);
+      if (isNaN(date.getTime())) return;
+      const year = date.getFullYear();
+
+      if (!totals.totalPerYear[year]) {
+        totals.totalPerYear[year] = 0;
+      }
+
+      const amount = parseFloat(item.sum || '0');
+      totals.totalPerYear[year] += amount;
+      totals.totalSpent += amount;
+    });
+
+    return totals;
+  }, [filteredIncomeData, filteredTransactionData, data.incomeData, data.raw]);
 
   // Get localized month names
   const monthNames = getMonthNames();
   const formattedIncomeData = formatDataForChart(
-    data?.totalIncomePerYearAndMonth || {},
+    totalIncomePerYearAndMonth,
     false,
     monthNames
   );
@@ -125,12 +209,16 @@ const YearIncomeAverageTrend: React.FC = () => {
         </div>
 
         <div className="card-content">
-          <div className="income-table-wrapper">
+          <div className={`income-table-wrapper ${isFiltered ? 'filtered' : ''}`}>
             <div className="table-header">
               <div className="header-cell year-header">{t('income.year')}</div>
               <div className="header-cell">{t('common.income')}</div>
-              <div className="header-cell">{t('income.spent')}</div>
-              <div className="header-cell">{t('income.savings')}</div>
+              {!isFiltered && (
+                <>
+                  <div className="header-cell">{t('income.spent')}</div>
+                  <div className="header-cell">{t('income.savings')}</div>
+                </>
+              )}
             </div>
 
             <div className="table-body">
@@ -139,7 +227,9 @@ const YearIncomeAverageTrend: React.FC = () => {
                 const spent = (totalPerYear[year] as number) || 0;
                 const diff: number = income - spent;
                 const savingsPercent = (spent / income - 1) * -100;
-                sumDiff += diff;
+                if (!isFiltered) {
+                  sumDiff += diff;
+                }
                 sumIncome += income;
 
                 // Get previous year's values for percentage calculation
@@ -171,9 +261,11 @@ const YearIncomeAverageTrend: React.FC = () => {
                   <div key={key} className="table-row">
                     <div className="table-cell year-cell">
                       <div className="year-content">
-                        <div className="year-icon">
-                          {getFinancialStabilityIcon(savingsPercent)}
-                        </div>
+                        {!isFiltered && (
+                          <div className="year-icon">
+                            {getFinancialStabilityIcon(savingsPercent)}
+                          </div>
+                        )}
                         <div className="year-label">{year}</div>
                       </div>
                     </div>
@@ -187,72 +279,78 @@ const YearIncomeAverageTrend: React.FC = () => {
                         }}
                       >
                         {formatNumber(income)}
-                        {showIncomeChange &&
+                        {!isFiltered && showIncomeChange &&
                           formatPercentageChange(incomeChange, false)}
                       </div>
                     </div>
-                    <div className="table-cell spent-cell">
-                      <div
-                        className="amount-value spent-value"
-                        onClick={() => toggleCell(spentCellId)}
-                        style={{
-                          cursor: 'pointer',
-                          userSelect: 'none',
-                        }}
-                      >
-                        {formatNumber(spent)}
-                        {showSpentChange &&
-                          formatPercentageChange(spentChange, true)}
-                      </div>
-                    </div>
-                    <div className="table-cell savings-cell">
-                      <div className="savings-content">
-                        <div className="savings-amount">
-                          {formatNumber(diff)}
+                    {!isFiltered && (
+                      <>
+                        <div className="table-cell spent-cell">
+                          <div
+                            className="amount-value spent-value"
+                            onClick={() => toggleCell(spentCellId)}
+                            style={{
+                              cursor: 'pointer',
+                              userSelect: 'none',
+                            }}
+                          >
+                            {formatNumber(spent)}
+                            {showSpentChange &&
+                              formatPercentageChange(spentChange, true)}
+                          </div>
                         </div>
-                        <div className="savings-percentage">
-                          {isFinite(savingsPercent)
-                            ? `(${formatNumber(savingsPercent)}%)`
-                            : ''}
+                        <div className="table-cell savings-cell">
+                          <div className="savings-content">
+                            <div className="savings-amount">
+                              {formatNumber(diff)}
+                            </div>
+                            <div className="savings-percentage">
+                              {isFinite(savingsPercent)
+                                ? `(${formatNumber(savingsPercent)}%)`
+                                : ''}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      </>
+                    )}
                   </div>
                 );
               })}
 
-              <div className="table-row total-row">
-                <div className="table-cell year-cell">
-                  <div className="year-content">
-                    <div className="year-icon">
-                      {getFinancialStabilityIcon(
-                        (totalSpent / sumIncome - 1) * -100
-                      )}
-                    </div>
-                    <div className="year-label total-label">Total</div>
-                  </div>
-                </div>
-                <div className="table-cell income-cell">
-                  <div className="amount-value income-value total-amount">
-                    {formatNumber(sumIncome)}
-                  </div>
-                </div>
-                <div className="table-cell spent-cell">
-                  <div className="amount-value spent-value total-amount">
-                    {formatNumber(totalSpent)}
-                  </div>
-                </div>
-                <div className="table-cell savings-cell">
-                  <div className="savings-content">
-                    <div className="savings-amount">
-                      {formatNumber(sumDiff)}
-                    </div>
-                    <div className="savings-percentage">
-                      ({formatNumber((totalSpent / sumIncome - 1) * -100)}%)
+              {!isFiltered && (
+                <div className="table-row total-row">
+                  <div className="table-cell year-cell">
+                    <div className="year-content">
+                      <div className="year-icon">
+                        {getFinancialStabilityIcon(
+                          (totalSpent / sumIncome - 1) * -100
+                        )}
+                      </div>
+                      <div className="year-label total-label">Total</div>
                     </div>
                   </div>
+                  <div className="table-cell income-cell">
+                    <div className="amount-value income-value total-amount">
+                      {formatNumber(sumIncome)}
+                    </div>
+                  </div>
+                  <div className="table-cell spent-cell">
+                    <div className="amount-value spent-value total-amount">
+                      {formatNumber(totalSpent)}
+                    </div>
+                  </div>
+                  <div className="table-cell savings-cell">
+                    <div className="savings-content">
+                      <div className="savings-amount">
+                        {formatNumber(sumDiff)}
+                      </div>
+                      <div className="savings-percentage">
+                        ({formatNumber((totalSpent / sumIncome - 1) * -100)}%)
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

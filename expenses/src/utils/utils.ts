@@ -946,3 +946,17 @@ export const getLoanStatus = (status?: string): LoanStatus => {
   if (status === 'in_progress') return 'active';
   return 'pending';
 };
+
+/**
+ * Check if an income item has a specific tag
+ * Tags are expected to be in the description field with format #tag
+ * @param item - Income item to check
+ * @param tag - Tag to search for (without #)
+ * @returns true if item has the tag
+ */
+export const hasTag = (item: TransactionOrIncomeItem, tag: string): boolean => {
+  if (!item.dsc) return false;
+  const description = item.dsc.toLowerCase();
+  const tagPattern = `#${tag.toLowerCase()}`;
+  return description.includes(tagPattern);
+};

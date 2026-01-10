@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import IncomeForm from '@components/Income/IncomeForm';
-import { deleteNode, formatNumber, getMonthsPassed } from '@utils/utils';
+import { deleteNode, formatNumber, getMonthsPassed, hasTag } from '@utils/utils';
 import { useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
@@ -8,6 +8,10 @@ import Modal from '@components/Modal/Modal';
 import IncomeTable from '@components/Income/IncomeTable';
 import IncomeFilters from '@components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
+
+const IncomeIntelligence = React.lazy(
+  () => import('@components/IncomeIntelligence')
+);
 import {
   PageHeader,
   LoadingSpinner,
@@ -44,6 +48,7 @@ const Income = () => {
   const [filters, setFilters] = useState({
     textFilter: '',
     selectedMonth: '',
+    selectedTag: '',
   });
   const apiClient = useApiClient();
 
@@ -88,6 +93,13 @@ const Income = () => {
         }
       }
 
+      // Tag filter
+      if (filters.selectedTag) {
+        if (!hasTag(item, filters.selectedTag)) {
+          return false;
+        }
+      }
+
       return true;
     });
   }, [data.incomeData, filters]);
@@ -95,12 +107,14 @@ const Income = () => {
   const handleFilterChange = (newFilters: {
     textFilter: string;
     selectedMonth: string;
+    selectedTag: string;
   }) => {
     setFilters(newFilters);
     // Only reset pagination if filters actually changed
     const hasFilterChanged =
       newFilters.textFilter !== filters.textFilter ||
-      newFilters.selectedMonth !== filters.selectedMonth;
+      newFilters.selectedMonth !== filters.selectedMonth ||
+      newFilters.selectedTag !== filters.selectedTag;
 
     if (hasFilterChanged) {
       setNrOfItemsToShow(20);
@@ -174,41 +188,47 @@ const Income = () => {
       {/* Header */}
       <PageHeader
         title={t('income.title')}
-        subtitle={`${totalRecords} ${totalRecords === 1 ? t('income.incomeRecord') : t('income.incomeRecords')}`}
+        subtitle={
+          filters.textFilter || filters.selectedMonth || filters.selectedTag
+            ? `${totalRecords} ${totalRecords === 1 ? t('income.incomeRecord') : t('income.incomeRecords')}`
+            : `${data.incomeData?.length || 0} ${(data.incomeData?.length || 0) === 1 ? t('income.incomeRecord') : t('income.incomeRecords')}`
+        }
       />
 
       {/* Filters */}
       <IncomeFilters
         textFilter={filters.textFilter}
         selectedMonth={filters.selectedMonth}
+        selectedTag={filters.selectedTag}
         onTextFilterChange={(textFilter) =>
           handleFilterChange({ ...filters, textFilter })
         }
         onMonthFilterChange={(selectedMonth) =>
           handleFilterChange({ ...filters, selectedMonth })
         }
+        onTagFilterChange={(selectedTag) =>
+          handleFilterChange({ ...filters, selectedTag })
+        }
         onClearFilters={() =>
-          handleFilterChange({ textFilter: '', selectedMonth: '' })
+          handleFilterChange({ textFilter: '', selectedMonth: '', selectedTag: '' })
         }
       />
 
       {/* Income Stats Cards */}
       <StatsGrid
         columns={2}
-        filtered={!!(filters.textFilter || filters.selectedMonth)}
+        filtered={false}
       >
         <StatCard
           icon={<FiDollarSign />}
           value={formatNumber(totalIncome)}
           label={t('income.totalIncome')}
         />
-        {!filters.textFilter && !filters.selectedMonth && (
-          <StatCard
-            icon={<FiTrendingUp />}
-            value={formatNumber(averageIncome)}
-            label={t('income.averageIncome')}
-          />
-        )}
+        <StatCard
+          icon={<FiTrendingUp />}
+          value={formatNumber(averageIncome)}
+          label={t('income.averageIncome')}
+        />
       </StatsGrid>
 
       {/* Income Table Section */}
@@ -254,9 +274,28 @@ const Income = () => {
 
       {/* Charts Section */}
       {data.incomeData?.length ? (
-        <div>
-          <YearIncomeAverageTrend />
-        </div>
+        <>
+          <div className="charts-section">
+            <YearIncomeAverageTrend
+              filteredIncomeData={filteredIncomeData}
+              filteredTransactionData={
+                data.filtered_raw
+                  ? data.filtered_raw.filter(
+                      (item: TransactionOrIncomeItem) => item.type === 'transaction'
+                    )
+                  : undefined
+              }
+              isFiltered={!!(filters.textFilter || filters.selectedMonth || filters.selectedTag)}
+            />
+          </div>
+          {filteredIncomeData && filteredIncomeData.length ? (
+            <div className="charts-section">
+              <Suspense fallback="">
+                <IncomeIntelligence />
+              </Suspense>
+            </div>
+          ) : null}
+        </>
       ) : null}
 
       {/* Modals */}

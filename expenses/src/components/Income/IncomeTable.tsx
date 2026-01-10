@@ -13,8 +13,9 @@ import {
   FiArrowUp,
   FiArrowDown,
 } from 'react-icons/fi';
-import { formatNumber, getLocale } from '@utils/utils';
+import { formatNumber, getLocale, hasTag } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
+import { incomeSuggestions, incomeSourceLabels } from '@utils/constants';
 import './IncomeTable.scss';
 import { useLocalization } from '@context/localization';
 
@@ -195,7 +196,43 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
 
                 {/* Content */}
                 <div className="income-content">
-                  <div className="income-description">{income.dsc}</div>
+                  <div className="income-description">
+                    {(() => {
+                      // Extract description without tags
+                      let description = income.dsc || '';
+                      
+                      // Extract tags from description
+                      const foundTags: string[] = [];
+                      incomeSuggestions.forEach((tag) => {
+                        const tagPattern = new RegExp(`#${tag}\\b`, 'gi');
+                        if (tagPattern.test(description)) {
+                          foundTags.push(tag);
+                          // Remove tag from description
+                          description = description.replace(tagPattern, '').trim();
+                        }
+                      });
+
+                      // Remove multiple spaces
+                      description = description.replace(/\s+/g, ' ').trim();
+
+                      return (
+                        <>
+                          {description && (
+                            <span className="description-text">{description}</span>
+                          )}
+                          {foundTags.length > 0 && (
+                            <div className="income-tags">
+                              {foundTags.map((tag) => (
+                                <span key={tag} className="income-tag">
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
                 </div>
 
                 {/* Amount */}

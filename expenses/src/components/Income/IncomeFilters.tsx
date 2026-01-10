@@ -1,4 +1,4 @@
-import React, { useMemo, memo } from 'react';
+import React, { useMemo, memo, useCallback } from 'react';
 import { useLocalization } from '@context/localization';
 import { useData } from '@context/context';
 import { FiCalendar, FiSearch, FiX } from 'react-icons/fi';
@@ -6,21 +6,27 @@ import { useFilterFocus } from '@hooks/useFilterFocus';
 import { useMonthFilter } from '@hooks/useMonthFilter';
 import { formatMonthOption } from '@utils/utils';
 import MonthChips from '@components/Common/MonthChips';
+import { incomeSuggestions, incomeSourceLabels } from '@utils/constants';
+import { hasTag } from '@utils/utils';
 import './IncomeFilters.scss';
 
 interface IncomeFiltersProps {
   textFilter: string;
   selectedMonth: string;
+  selectedTag: string;
   onTextFilterChange: (value: string) => void;
   onMonthFilterChange: (value: string) => void;
+  onTagFilterChange: (value: string) => void;
   onClearFilters: () => void;
 }
 
 const IncomeFilters: React.FC<IncomeFiltersProps> = ({
   textFilter,
   selectedMonth,
+  selectedTag,
   onTextFilterChange,
   onMonthFilterChange,
+  onTagFilterChange,
   onClearFilters,
 }) => {
   const { t, language } = useLocalization();
@@ -41,7 +47,25 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
     onSelection: handleSelection,
   });
 
-  const hasActiveFilters = textFilter || selectedMonth;
+  const hasActiveFilters = textFilter || selectedMonth || selectedTag;
+
+  // Get available tags from income data
+  const availableTags = useMemo(() => {
+    if (!data.incomeData || data.incomeData.length === 0) {
+      return [];
+    }
+
+    const tagsCount: Record<string, number> = {};
+    data.incomeData.forEach((item: any) => {
+      incomeSuggestions.forEach((tag) => {
+        if (hasTag(item, tag)) {
+          tagsCount[tag] = (tagsCount[tag] || 0) + 1;
+        }
+      });
+    });
+
+    return incomeSuggestions.filter((tag) => tagsCount[tag] > 0);
+  }, [data.incomeData]);
 
   // Generate list of available months from actual income data
   const availableMonths = useMemo(() => {
@@ -81,6 +105,24 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
     ? availableMonths.find((m) => m.value === selectedMonth)?.label
     : '';
 
+  // Get selected tag label
+  const selectedTagLabel = selectedTag
+    ? incomeSourceLabels[selectedTag] || selectedTag
+    : '';
+
+  // Handle tag click with selection handling
+  const handleTagClick = useCallback(
+    (tag: string) => {
+      if (tag === selectedTag) {
+        onTagFilterChange('');
+      } else {
+        onTagFilterChange(tag);
+        handleSelection();
+      }
+    },
+    [selectedTag, onTagFilterChange, handleSelection]
+  );
+
   return (
     <div className="income-filters-combined">
       {/* Combined Search Input */}
@@ -98,6 +140,16 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
           </div>
         )}
 
+        {/* Show selected tag as chip inside search - clickable to change */}
+        {selectedTag && !isFilterFocused && (
+          <div
+            className="selected-tag-chip clickable"
+            onClick={handleChipClick}
+          >
+            {selectedTagLabel}
+          </div>
+        )}
+
         <input
           type="text"
           value={textFilter}
@@ -105,7 +157,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={
-            selectedMonth && !isFilterFocused
+            (selectedMonth || selectedTag) && !isFilterFocused
               ? t('filters.searchInMonth')
               : t('filters.search')
           }
@@ -123,13 +175,49 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
         )}
       </div>
 
-      {/* Month Chips - Show when focused (to select or change month) */}
+      {/* Chips - Show when focused (both tags and months) */}
       {isFilterFocused && (
-        <MonthChips
-          months={availableMonths}
-          selectedMonth={selectedMonth}
-          onMonthClick={handleMonthClick}
-        />
+        <div className="filters-chips-container">
+          {/* Tag Chips Section */}
+          {availableTags.length > 0 && (
+            <div className="chips-section">
+              <div className="chips-section-title">
+                {t('filters.tags') || 'Tags'}
+              </div>
+              <div className="tag-chips">
+                <button
+                  type="button"
+                  onClick={() => handleTagClick('')}
+                  className={`tag-chip ${!selectedTag ? 'selected' : ''}`}
+                >
+                  {t('filters.all') || 'All'}
+                </button>
+                {availableTags.map((tag) => {
+                  const label = incomeSourceLabels[tag] || tag;
+                  const isSelected = selectedTag === tag;
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => handleTagClick(tag)}
+                      className={`tag-chip ${isSelected ? 'selected' : ''}`}
+                    >
+                      #{tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Month Chips Section */}
+          <MonthChips
+            months={availableMonths}
+            selectedMonth={selectedMonth}
+            onMonthClick={handleMonthClick}
+            className="chips-section"
+          />
+        </div>
       )}
     </div>
   );

@@ -63,6 +63,17 @@
     }
   }
 
+  // When filtered, show only 2 columns (Year and Income)
+  &.filtered {
+    .table-header {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .table-body .table-row {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
   .table-body {
     .table-row {
       display: grid;

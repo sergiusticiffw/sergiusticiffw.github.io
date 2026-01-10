@@ -356,6 +356,38 @@ export const notificationType = {
   ERROR: 'error',
 };
 
+// Income source tags for categorization
+export const incomeSuggestions = [
+  'salary',
+  'bonus',
+  'freelance',
+  'overtime',
+  'interest',
+  'gift',
+  'cashback',
+  'sale',
+  'loan',
+  'family',
+  'wedding',
+  'godparent',
+];
+
+// Map income suggestions to user-friendly labels
+export const incomeSourceLabels: Record<string, string> = {
+  salary: 'Salary',
+  bonus: 'Bonuses',
+  freelance: 'Freelance',
+  overtime: 'Overtime',
+  interest: 'Interest',
+  gift: 'Gifts',
+  cashback: 'Cashback',
+  sale: 'Sales',
+  loan: 'Loans',
+  family: 'From Family',
+  wedding: 'Wedding Gift',
+  godparent: 'Godparent Gift',
+};
+
 export const themeList = {
   'bondi-blue': 'Bondi blue',
   'maximum-green-yellow': 'Maximum green yellow',

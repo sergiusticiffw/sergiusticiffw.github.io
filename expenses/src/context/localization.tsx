@@ -454,6 +454,14 @@ const translations = {
     'incomeForm.description': 'Description',
     'incomeForm.enterDescription': 'Enter description...',
     'incomeForm.updateIncome': 'Update Income',
+    'incomeForm.tags': 'Income Tags',
+
+    // Income Intelligence
+    'income.incomeIntelligence': 'Income Intelligence',
+    'income.incomeBySource': 'Income by Source',
+    'income.incomeEvolutionBySource': 'Income Evolution by Source',
+    'income.noIncomeDataAvailable':
+      'No income data available. Add income entries with tags like #salary, #freelance, #bonus, #interest, or #gift.',
 
     // Filters
     'filters.search': 'Search transactions...',
@@ -465,6 +473,8 @@ const translations = {
     'filters.category': 'All Categories',
     'filters.categories': 'Categories',
     'filters.months': 'Months',
+    'filters.tags': 'Tags',
+    'filters.all': 'All',
     'filters.dateRange': 'Date Range',
     'filters.clear': 'Clear Filters',
 
@@ -937,6 +947,14 @@ const translations = {
     'incomeForm.description': 'Descriere',
     'incomeForm.enterDescription': 'Introdu descrierea...',
     'incomeForm.updateIncome': 'Actualizează Venitul',
+    'incomeForm.tags': 'Etichete Venit',
+
+    // Income Intelligence
+    'income.incomeIntelligence': 'Inteligența Veniturilor',
+    'income.incomeBySource': 'Venituri pe Sursă',
+    'income.incomeEvolutionBySource': 'Evoluția Veniturilor pe Sursă',
+    'income.noIncomeDataAvailable':
+      'Nu sunt date de venit disponibile. Adaugă intrări de venit cu etichete precum #salary, #freelance, #bonus, #interest sau #gift.',
 
     // Filters
     'filters.search': 'Caută tranzacții...',
@@ -947,6 +965,8 @@ const translations = {
     'filters.selectMonth': 'Selectează luna',
     'filters.category': 'Toate Categoriile',
     'filters.categories': 'Categorii',
+    'filters.tags': 'Etichete',
+    'filters.all': 'Toate',
     'filters.months': 'Luni',
     'filters.dateRange': 'Interval de Date',
     'filters.clear': 'Curăță Filtrele',

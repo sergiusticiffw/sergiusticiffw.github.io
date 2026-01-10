@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '@context/context';
 import { useLocalization } from '@context/localization';
 import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
 import { DataState } from '@type/types';
 import { FormField } from '@components/Common';
+import { incomeSuggestions, incomeSourceLabels } from '@utils/constants';
 import './IncomeForm.scss';
 
 interface IncomeFormProps {
@@ -53,8 +54,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
   const { getFieldValidation } = useFormValidation(validationRules);
 
-  const { formState, isSubmitting, handleChange, handleSubmit } = useFormSubmit(
-    {
+  const { formState, isSubmitting, handleChange, handleSubmit, setFormState } =
+    useFormSubmit({
       formType,
       initialState,
       values,
@@ -71,8 +72,58 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
         add: 'notification.incomeAdded',
         edit: 'notification.incomeUpdated',
       },
+    });
+
+  // Track selected tags
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  // Extract tags from description on mount or when values change
+  useEffect(() => {
+    const description = values.field_description || formState.field_description || '';
+    if (description) {
+      const tags: string[] = [];
+      incomeSuggestions.forEach((tag) => {
+        if (description.toLowerCase().includes(`#${tag}`)) {
+          tags.push(tag);
+        }
+      });
+      setSelectedTags(tags);
+    } else {
+      setSelectedTags([]);
     }
-  );
+  }, [values.field_description, formState.field_description]);
+
+  // Handle tag selection
+  const handleTagClick = (tag: string) => {
+    const newSelectedTags = selectedTags.includes(tag)
+      ? selectedTags.filter((t) => t !== tag)
+      : [...selectedTags, tag];
+
+    setSelectedTags(newSelectedTags);
+
+    // Update description with tags
+    let description = formState.field_description || '';
+    
+    // Remove all existing tags from description
+    incomeSuggestions.forEach((t) => {
+      const tagPattern = new RegExp(`#${t}\\b`, 'gi');
+      description = description.replace(tagPattern, '').trim();
+    });
+
+    // Add selected tags
+    const tagsToAdd = newSelectedTags.map((t) => `#${t}`).join(' ');
+    description = tagsToAdd
+      ? description
+        ? `${description} ${tagsToAdd}`
+        : tagsToAdd
+      : description;
+
+    // Update form state
+    setFormState({
+      ...formState,
+      field_description: description,
+    });
+  };
 
   // Expose form submit handler and state to parent if needed
   React.useEffect(() => {
@@ -129,6 +180,27 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
           isValid={getFieldValidation('field_description', formState)}
           ariaLabel={t('incomeForm.description')}
         />
+
+        {/* Income Tags */}
+        <div className="form-group">
+          <label>{t('incomeForm.tags') || 'Income Tags'}</label>
+          <div className="tags-container">
+            {incomeSuggestions.map((tag) => {
+              const label = incomeSourceLabels[tag] || tag;
+              const isSelected = selectedTags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => handleTagClick(tag)}
+                  className={`tag-chip ${isSelected ? 'selected' : ''}`}
+                >
+                  #{tag}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {!hideSubmitButton && (
           <div className="form-actions-sticky">
