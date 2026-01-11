@@ -91,8 +91,8 @@ export default function IncomeIntelligence() {
 
     // Sort months chronologically using parseMonthString utility
     const sortedMonths = Array.from(allMonths).sort((a, b) => {
-      const dateA = parseMonthString(a, language);
-      const dateB = parseMonthString(b, language);
+      const dateA = parseMonthString(a);
+      const dateB = parseMonthString(b);
       if (!dateA || !dateB || isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
         return 0;
       }
@@ -105,9 +105,11 @@ export default function IncomeIntelligence() {
         const label = incomeSourceLabels[tag] || tag;
         const data = sortedMonths.map((month) => {
           // Parse month string to get timestamp using parseMonthString utility
-          const monthDate = parseMonthString(month, language);
+          const monthDate = parseMonthString(month);
           if (monthDate && !isNaN(monthDate.getTime())) {
-            return [monthDate.getTime(), monthlyData[month]?.[label] || 0];
+            // Use UTC timestamp to avoid timezone issues
+            const timestamp = Date.UTC(monthDate.getFullYear(), monthDate.getMonth(), 1);
+            return [timestamp, monthlyData[month]?.[label] || 0];
           }
           return [0, 0];
         });
@@ -121,9 +123,11 @@ export default function IncomeIntelligence() {
         {
           name: 'Untagged',
           data: sortedMonths.map((month) => {
-            const monthDate = parseMonthString(month, language);
+            const monthDate = parseMonthString(month);
             if (monthDate && !isNaN(monthDate.getTime())) {
-              return [monthDate.getTime(), monthlyData[month]?.['Untagged'] || 0];
+              // Use UTC timestamp to avoid timezone issues
+              const timestamp = Date.UTC(monthDate.getFullYear(), monthDate.getMonth(), 1);
+              return [timestamp, monthlyData[month]?.['Untagged'] || 0];
             }
             return [0, 0];
           }),
