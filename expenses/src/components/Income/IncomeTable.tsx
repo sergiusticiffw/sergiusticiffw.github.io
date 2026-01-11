@@ -15,7 +15,7 @@ import {
 } from 'react-icons/fi';
 import { formatNumber, getLocale, hasTag } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
-import { incomeSuggestions, incomeSourceLabels } from '@utils/constants';
+import { incomeSuggestions } from '@utils/constants';
 import './IncomeTable.scss';
 import { useLocalization } from '@context/localization';
 
@@ -222,11 +222,14 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                           )}
                           {foundTags.length > 0 && (
                             <div className="income-tags">
-                              {foundTags.map((tag) => (
-                                <span key={tag} className="income-tag">
-                                  #{tag}
-                                </span>
-                              ))}
+                              {foundTags.map((tag) => {
+                                const label = t(`income.tags.${tag}`) || tag;
+                                return (
+                                  <span key={tag} className="income-tag">
+                                    {label}
+                                  </span>
+                                );
+                              })}
                             </div>
                           )}
                         </>

@@ -4,7 +4,7 @@ import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { AuthState, DataState, TransactionOrIncomeItem } from '@type/types';
-import { monthNames, incomeSuggestions, incomeSourceLabels } from '@utils/constants';
+import { monthNames, incomeSuggestions } from '@utils/constants';
 import { hasTag, formatNumber, parseMonthString } from '@utils/utils';
 
 export default function IncomeIntelligence() {
@@ -26,15 +26,14 @@ export default function IncomeIntelligence() {
       };
     }
 
-    // Initialize totals for pie chart
+    // Initialize totals for pie chart (using tags as keys for consistency)
     const sourceTotals: Record<string, number> = {};
     incomeSuggestions.forEach((tag) => {
-      const label = incomeSourceLabels[tag] || tag;
-      sourceTotals[label] = 0;
+      sourceTotals[tag] = 0;
     });
     let untaggedTotal = 0;
 
-    // Initialize monthly data for line chart
+    // Initialize monthly data for line chart (using tags as keys)
     const monthlyData: Record<string, Record<string, number>> = {};
     const allMonths = new Set<string>();
 
@@ -49,19 +48,17 @@ export default function IncomeIntelligence() {
       if (!monthlyData[month]) {
         monthlyData[month] = {};
         incomeSuggestions.forEach((tag) => {
-          const label = incomeSourceLabels[tag] || tag;
-          monthlyData[month][label] = 0;
+          monthlyData[month][tag] = 0;
         });
-        monthlyData[month]['Untagged'] = 0;
+        monthlyData[month]['untagged'] = 0;
       }
 
       // Check for tags and categorize
       let categorized = false;
       for (const tag of incomeSuggestions) {
         if (hasTag(item, tag)) {
-          const label = incomeSourceLabels[tag] || tag;
-          sourceTotals[label] = sourceTotals[label] + amount;
-          monthlyData[month][label] = monthlyData[month][label] + amount;
+          sourceTotals[tag] = sourceTotals[tag] + amount;
+          monthlyData[month][tag] = monthlyData[month][tag] + amount;
           categorized = true;
           break; // Only use first matching tag
         }
@@ -69,22 +66,22 @@ export default function IncomeIntelligence() {
 
       if (!categorized) {
         untaggedTotal += amount;
-        monthlyData[month]['Untagged'] =
-          (monthlyData[month]['Untagged'] || 0) + amount;
+        monthlyData[month]['untagged'] =
+          (monthlyData[month]['untagged'] || 0) + amount;
       }
     });
 
-    // Prepare pie chart data
+    // Prepare pie chart data (translate labels for display)
     const pieData = Object.entries(sourceTotals)
-      .map(([name, y]) => ({
-        name,
+      .map(([tag, y]) => ({
+        name: t(`income.tags.${tag}`) || tag,
         y,
       }))
       .filter((item) => item.y > 0);
 
     if (untaggedTotal > 0) {
       pieData.push({
-        name: 'Untagged',
+        name: t('income.tags.untagged'),
         y: untaggedTotal,
       });
     }
@@ -99,17 +96,17 @@ export default function IncomeIntelligence() {
       return dateA.getTime() - dateB.getTime();
     });
 
-    // Prepare line chart series with timestamps for Highcharts Stock
+    // Prepare line chart series with timestamps for Highcharts Stock (translate labels for display)
     const lineSeries = incomeSuggestions
       .map((tag) => {
-        const label = incomeSourceLabels[tag] || tag;
+        const label = t(`income.tags.${tag}`) || tag;
         const data = sortedMonths.map((month) => {
           // Parse month string to get timestamp using parseMonthString utility
           const monthDate = parseMonthString(month);
           if (monthDate && !isNaN(monthDate.getTime())) {
             // Use UTC timestamp to avoid timezone issues
             const timestamp = Date.UTC(monthDate.getFullYear(), monthDate.getMonth(), 1);
-            return [timestamp, monthlyData[month]?.[label] || 0];
+            return [timestamp, monthlyData[month]?.[tag] || 0];
           }
           return [0, 0];
         });
@@ -121,13 +118,13 @@ export default function IncomeIntelligence() {
       })
       .concat([
         {
-          name: 'Untagged',
+          name: t('income.tags.untagged'),
           data: sortedMonths.map((month) => {
             const monthDate = parseMonthString(month);
             if (monthDate && !isNaN(monthDate.getTime())) {
               // Use UTC timestamp to avoid timezone issues
               const timestamp = Date.UTC(monthDate.getFullYear(), monthDate.getMonth(), 1);
-              return [timestamp, monthlyData[month]?.['Untagged'] || 0];
+              return [timestamp, monthlyData[month]?.['untagged'] || 0];
             }
             return [0, 0];
           }),
@@ -145,7 +142,7 @@ export default function IncomeIntelligence() {
         months: sortedMonths,
         lineSeries,
       };
-  }, [incomeData, language]);
+  }, [incomeData, language, t]);
 
   const pieOptions: Highcharts.Options = {
     chart: {

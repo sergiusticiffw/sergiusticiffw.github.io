@@ -463,6 +463,20 @@ const translations = {
     'income.noIncomeDataAvailable':
       'No income data available. Add income entries with tags like #salary, #freelance, #bonus, #interest, or #gift.',
 
+    // Income Tags
+    'income.tags.salary': 'Salary',
+    'income.tags.bonus': 'Bonuses',
+    'income.tags.freelance': 'Freelance',
+    'income.tags.overtime': 'Overtime',
+    'income.tags.interest': 'Interest',
+    'income.tags.gift': 'Gifts',
+    'income.tags.cashback': 'Cashback',
+    'income.tags.sale': 'Sales',
+    'income.tags.family': 'From Family',
+    'income.tags.wedding': 'Wedding Gift',
+    'income.tags.godparent': 'Godparent Gift',
+    'income.tags.untagged': 'Untagged',
+
     // Filters
     'filters.search': 'Search transactions...',
     'filters.searchInMonth': 'Search in month...',
@@ -955,6 +969,20 @@ const translations = {
     'income.incomeEvolutionBySource': 'Evoluția Veniturilor pe Sursă',
     'income.noIncomeDataAvailable':
       'Nu sunt date de venit disponibile. Adaugă intrări de venit cu etichete precum #salary, #freelance, #bonus, #interest sau #gift.',
+
+    // Income Tags
+    'income.tags.salary': 'Salariu',
+    'income.tags.bonus': 'Bonusuri',
+    'income.tags.freelance': 'Freelance',
+    'income.tags.overtime': 'Ore Suplimentare',
+    'income.tags.interest': 'Dobândă',
+    'income.tags.gift': 'Cadouri',
+    'income.tags.cashback': 'Cashback',
+    'income.tags.sale': 'Vânzări',
+    'income.tags.family': 'De la Familie',
+    'income.tags.wedding': 'Cadou de Nuntă',
+    'income.tags.godparent': 'Cadou de Naș',
+    'income.tags.untagged': 'Fără Etichetă',
 
     // Filters
     'filters.search': 'Caută tranzacții...',

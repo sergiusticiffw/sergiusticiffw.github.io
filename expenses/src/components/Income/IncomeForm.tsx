@@ -5,7 +5,7 @@ import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
 import { DataState } from '@type/types';
 import { FormField } from '@components/Common';
-import { incomeSuggestions, incomeSourceLabels } from '@utils/constants';
+import { incomeSuggestions } from '@utils/constants';
 import './IncomeForm.scss';
 
 interface IncomeFormProps {
@@ -186,8 +186,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
           <label>{t('incomeForm.tags') || 'Income Tags'}</label>
           <div className="tags-container">
             {incomeSuggestions.map((tag) => {
-              const label = incomeSourceLabels[tag] || tag;
               const isSelected = selectedTags.includes(tag);
+              const label = t(`income.tags.${tag}`) || tag;
               return (
                 <button
                   key={tag}
@@ -195,7 +195,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
                   onClick={() => handleTagClick(tag)}
                   className={`tag-chip ${isSelected ? 'selected' : ''}`}
                 >
-                  #{tag}
+                  {label}
                 </button>
               );
             })}

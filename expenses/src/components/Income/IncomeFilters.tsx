@@ -6,7 +6,7 @@ import { useFilterFocus } from '@hooks/useFilterFocus';
 import { useMonthFilter } from '@hooks/useMonthFilter';
 import { formatMonthOption } from '@utils/utils';
 import MonthChips from '@components/Common/MonthChips';
-import { incomeSuggestions, incomeSourceLabels } from '@utils/constants';
+import { incomeSuggestions } from '@utils/constants';
 import { hasTag } from '@utils/utils';
 import './IncomeFilters.scss';
 
@@ -107,7 +107,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
 
   // Get selected tag label
   const selectedTagLabel = selectedTag
-    ? incomeSourceLabels[selectedTag] || selectedTag
+    ? t(`income.tags.${selectedTag}`) || selectedTag
     : '';
 
   // Handle tag click with selection handling
@@ -193,8 +193,8 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
                   {t('filters.all') || 'All'}
                 </button>
                 {availableTags.map((tag) => {
-                  const label = incomeSourceLabels[tag] || tag;
                   const isSelected = selectedTag === tag;
+                  const label = t(`income.tags.${tag}`) || tag;
                   return (
                     <button
                       key={tag}
@@ -202,7 +202,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
                       onClick={() => handleTagClick(tag)}
                       className={`tag-chip ${isSelected ? 'selected' : ''}`}
                     >
-                      #{tag}
+                      {label}
                     </button>
                   );
                 })}
