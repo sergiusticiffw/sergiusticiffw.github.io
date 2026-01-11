@@ -4,21 +4,8 @@ import { useLocalization } from '@context/localization';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { AuthState, DataState, TransactionOrIncomeItem } from '@type/types';
-import { monthNames, incomeSuggestions } from '@utils/constants';
+import { monthNames, incomeSuggestions, incomeSourceLabels } from '@utils/constants';
 import { hasTag, formatNumber, parseMonthString } from '@utils/utils';
-
-// Map income suggestions to user-friendly labels
-const incomeSourceLabels: Record<string, string> = {
-  salary: 'Salary',
-  bonus: 'Bonuses',
-  freelance: 'Freelance',
-  overtime: 'Overtime',
-  interest: 'Interest',
-  gift: 'Gifts',
-  cashback: 'Cashback',
-  sale: 'Sales',
-  loan: 'Loans',
-};
 
 export default function IncomeIntelligence() {
   const { data } = useData() as DataState;
@@ -73,9 +60,8 @@ export default function IncomeIntelligence() {
       for (const tag of incomeSuggestions) {
         if (hasTag(item, tag)) {
           const label = incomeSourceLabels[tag] || tag;
-          sourceTotals[label] = (sourceTotals[label] || 0) + amount;
-          monthlyData[month][label] =
-            (monthlyData[month][label] || 0) + amount;
+          sourceTotals[label] = sourceTotals[label] + amount;
+          monthlyData[month][label] = monthlyData[month][label] + amount;
           categorized = true;
           break; // Only use first matching tag
         }
@@ -114,9 +100,9 @@ export default function IncomeIntelligence() {
     });
 
     // Prepare line chart series with timestamps for Highcharts Stock
-    const lineSeries = Object.keys(incomeSourceLabels)
+    const lineSeries = incomeSuggestions
       .map((tag) => {
-        const label = incomeSourceLabels[tag];
+        const label = incomeSourceLabels[tag] || tag;
         const data = sortedMonths.map((month) => {
           // Parse month string to get timestamp using parseMonthString utility
           const monthDate = parseMonthString(month, language);
@@ -166,18 +152,33 @@ export default function IncomeIntelligence() {
     },
     title: {
       text: t('income.incomeBySource') || 'Income by Source',
+      verticalAlign: 'middle',
     },
     tooltip: {
-      pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b><br/>Amount: <b>{point.y}</b> {currency}',
+      pointFormat: '{point.y} {series.name} ({point.percentage:.2f}%)',
     },
     plotOptions: {
       pie: {
         allowPointSelect: true,
         cursor: 'pointer',
+        innerSize: '70%',
+        borderWidth: 2,
+        borderColor: '#1a1a1a',
         dataLabels: {
-          enabled: true,
-          format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+          enabled: false,
         },
+        states: {
+          hover: {
+            brightness: 0.1,
+            halo: {
+              size: 10,
+            },
+          },
+          select: {
+            brightness: 0.1,
+          },
+        },
+        slicedOffset: 10,
       },
     },
     credits: {
@@ -186,7 +187,7 @@ export default function IncomeIntelligence() {
     series: [
       {
         type: 'pie',
-        name: 'Income Source',
+        name: currency,
         data: chartData.pieData,
       },
     ],

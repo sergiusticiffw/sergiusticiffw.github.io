@@ -264,7 +264,7 @@ const Income = () => {
                   className="load-more-btn"
                 >
                   <FiChevronDown />
-                  {t('common.loading')}
+                  {t('common.loadMore')}
                 </button>
               </div>
             )}
