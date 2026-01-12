@@ -158,12 +158,12 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
         }
 
         if (action.selectedTag) {
-          // Import hasTag function inline to avoid circular dependency
+          // Use exact tag match with word boundaries to avoid partial matches
+          // e.g., "flori" should not match "#floristic" or "#floră"
           const hasTag = (item: TransactionOrIncomeItem, tag: string): boolean => {
-            if (!item.dsc) return false;
-            const description = item.dsc.toLowerCase();
-            const tagPattern = `#${tag.toLowerCase()}`;
-            return description.includes(tagPattern);
+            if (!item.dsc || !tag) return false;
+            const tagPattern = new RegExp(`#${tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+            return tagPattern.test(item.dsc);
           };
           filtered = filtered.filter((item: TransactionOrIncomeItem) => {
             return hasTag(item, action.selectedTag);
