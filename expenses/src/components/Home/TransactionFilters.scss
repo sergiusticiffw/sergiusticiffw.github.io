@@ -31,7 +31,8 @@
   }
 
   .selected-month-chip,
-  .selected-category-chip {
+  .selected-category-chip,
+  .selected-tag-chip {
     background: linear-gradient(135deg, #5b8def 0%, #4a7ddc 100%);
     color: #ffffff;
     font-size: 0.8rem;
@@ -64,6 +65,14 @@
 
     &.clickable:hover {
       background: linear-gradient(135deg, #ff7bad 0%, #fe6a9c 100%);
+    }
+  }
+
+  .selected-tag-chip {
+    background: linear-gradient(135deg, #9b59b6 0%, #8a48a5 100%);
+
+    &.clickable:hover {
+      background: linear-gradient(135deg, #ab69c6 0%, #9a58b5 100%);
     }
   }
 
@@ -158,7 +167,8 @@
 }
 
 .category-chips,
-.month-chips-list {
+.month-chips-list,
+.tag-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -167,7 +177,8 @@
   max-width: 100%;
 
   .category-chip,
-  .month-chip {
+  .month-chip,
+  .tag-chip {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
@@ -184,12 +195,22 @@
       color: rgba(255, 255, 255, 0.9);
     }
 
-    &.active {
+    &.active,
+    &.selected {
       background: linear-gradient(135deg, #5b8def 0%, #4a7ddc 100%);
       border-color: transparent;
       color: #ffffff;
       font-weight: 500;
       box-shadow: 0 2px 8px rgba(91, 141, 239, 0.3);
+    }
+  }
+
+  .tag-chip.selected {
+    background: linear-gradient(135deg, #9b59b6 0%, #8a48a5 100%);
+    box-shadow: 0 2px 8px rgba(155, 89, 182, 0.3);
+
+    &:hover {
+      background: linear-gradient(135deg, #ab69c6 0%, #9a58b5 100%);
     }
   }
 }
@@ -217,9 +238,11 @@
   }
 
   .category-chips,
-  .month-chips {
+  .month-chips,
+  .tag-chips {
     .category-chip,
-    .month-chip {
+    .month-chip,
+    .tag-chip {
       font-size: 0.8rem;
       padding: 0.4rem 0.875rem;
     }

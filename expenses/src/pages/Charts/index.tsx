@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useData } from '@context/context';
 import { useLocalization } from '@context/localization';
 import { availableCharts } from '@utils/constants';
 import { getCategories } from '@utils/constants';
-import SearchBar from '@components/SearchBar/SearchBar';
+import { TransactionFilters } from '@components/Home';
+import { extractMonthsFromRawData } from '@utils/utils';
 import Modal from '@components/Modal';
 import TransactionForm from '@components/TransactionForm';
 import LoadingSpinner from '@components/Common/LoadingSpinner';
@@ -51,6 +52,7 @@ const Charts = () => {
     useState(false);
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
+  const [selectedTag, setSelectedTag] = useState('');
 
   const categoryLabels = getCategories();
 
@@ -78,9 +80,17 @@ const Charts = () => {
         type: 'FILTER_DATA',
         category: selectedCategory,
         textFilter: searchText,
+        selectedTag: selectedTag,
       });
     }
-  }, [searchText, selectedCategory, loading, noData, dataDispatch]);
+  }, [
+    searchText,
+    selectedCategory,
+    selectedTag,
+    loading,
+    noData,
+    dataDispatch,
+  ]);
 
   return (
     <div className="charts-page-wrapper">
@@ -89,14 +99,25 @@ const Charts = () => {
         <h1>{t('charts.title')}</h1>
       </div>
 
-      {/* Search Bar */}
+      {/* Filters */}
       <div className="charts-search-wrapper">
-        <SearchBar
+        <TransactionFilters
           searchValue={searchText}
           categoryValue={selectedCategory}
+          selectedMonth=""
+          selectedTag={selectedTag}
           categories={categoryLabels}
+          availableMonths={[]}
           onSearchChange={setSearchText}
           onCategoryChange={setSelectedCategory}
+          onMonthChange={() => {}}
+          onTagChange={setSelectedTag}
+          onClearFilters={() => {
+            setSearchText('');
+            setSelectedCategory('');
+            setSelectedTag('');
+          }}
+          showMonthFilter={false}
         />
       </div>
 
@@ -173,6 +194,7 @@ const Charts = () => {
               type: 'FILTER_DATA',
               category: selectedCategory,
               textFilter: searchText,
+              selectedTag: selectedTag,
             });
           }}
         />

@@ -6,6 +6,7 @@ import {
   deleteNode,
   formatNumber,
   extractMonthsFromRawData,
+  hasTag,
 } from '@utils/utils';
 import { getCategories, notificationType } from '@utils/constants';
 import TransactionFilters from '@components/Home/TransactionFilters';
@@ -48,6 +49,7 @@ const NewHome = () => {
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
   const [selectedMonth, setSelectedMonth] = useState(data.selectedMonth ?? '');
+  const [selectedTag, setSelectedTag] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState<string | false>(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -72,8 +74,9 @@ const NewHome = () => {
       category: selectedCategory,
       textFilter: searchText,
       selectedMonth: selectedMonth,
+      selectedTag: selectedTag,
     });
-  }, [searchText, selectedCategory, selectedMonth, dataDispatch]);
+  }, [searchText, selectedCategory, selectedMonth, selectedTag, dataDispatch]);
 
   const items = data.filtered || data;
   const localizedCategories = getCategories();
@@ -102,10 +105,10 @@ const NewHome = () => {
 
   // Reset to most recent month when filters are applied
   useEffect(() => {
-    if (searchText !== '' || selectedCategory !== '' || selectedMonth !== '') {
+    if (searchText !== '' || selectedCategory !== '' || selectedMonth !== '' || selectedTag !== '') {
       setCurrentMonthIndex(0);
     }
-  }, [searchText, selectedCategory, selectedMonth]);
+  }, [searchText, selectedCategory, selectedMonth, selectedTag]);
 
   // Navigate to selected month
   useEffect(() => {
@@ -155,39 +158,45 @@ const NewHome = () => {
   };
 
   // Get transactions for current month
-  // Note: When category filter is applied, items.groupedData already contains only filtered transactions
+  // Note: When category/tag filter is applied, items.groupedData already contains only filtered transactions
   // So we only need to apply text search filter if it exists
   const filteredTransactions = useMemo(() => {
     const monthTransactions = items.groupedData?.[currentMonth] || [];
 
-    // If category is filtered in context, items.groupedData already contains only that category
-    // So we only need to filter by text search if it exists
-    if (searchText !== '') {
-      const searchLower = searchText.toLowerCase();
-      return monthTransactions.filter(
-        (transaction: TransactionOrIncomeItem) => {
-          const descriptionMatch =
-            transaction.dsc?.toLowerCase().includes(searchLower) || false;
+    return monthTransactions.filter((transaction: TransactionOrIncomeItem) => {
+      // Text filter
+      if (searchText !== '') {
+        const searchLower = searchText.toLowerCase();
+        const descriptionMatch =
+          transaction.dsc?.toLowerCase().includes(searchLower) || false;
 
-          // Get category label and check if it matches
-          const categoryLabel =
-            localizedCategories.find((cat) => cat.value === transaction.cat)
-              ?.label || '';
-          const categoryMatch = categoryLabel
-            .toLowerCase()
-            .includes(searchLower);
+        // Get category label and check if it matches
+        const categoryLabel =
+          localizedCategories.find((cat) => cat.value === transaction.cat)
+            ?.label || '';
+        const categoryMatch = categoryLabel
+          .toLowerCase()
+          .includes(searchLower);
 
-          return descriptionMatch || categoryMatch;
+        if (!descriptionMatch && !categoryMatch) {
+          return false;
         }
-      );
-    }
+      }
 
-    return monthTransactions;
-  }, [items.groupedData, currentMonth, searchText, localizedCategories]);
+      // Tag filter (applied locally since reducer handles category/text/month)
+      if (selectedTag) {
+        if (!hasTag(transaction, selectedTag)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [items.groupedData, currentMonth, searchText, selectedTag, localizedCategories]);
 
   // Check if any filters are active
   const hasFilters =
-    searchText !== '' || selectedCategory !== '' || selectedMonth !== '';
+    searchText !== '' || selectedCategory !== '' || selectedMonth !== '' || selectedTag !== '';
 
   // Auto-navigate to first month with filtered data
   useEffect(() => {
@@ -391,15 +400,18 @@ const NewHome = () => {
               searchValue={searchText}
               categoryValue={selectedCategory}
               selectedMonth={selectedMonth}
+              selectedTag={selectedTag}
               categories={localizedCategories}
               availableMonths={allMonths}
               onSearchChange={setSearchText}
               onCategoryChange={setSelectedCategory}
               onMonthChange={setSelectedMonth}
+              onTagChange={setSelectedTag}
               onClearFilters={() => {
                 setSearchText('');
                 setSelectedCategory('');
                 setSelectedMonth('');
+                setSelectedTag('');
                 setCurrentMonthIndex(0);
               }}
             />
@@ -468,6 +480,7 @@ const NewHome = () => {
                         setSearchText('');
                         setSelectedCategory('');
                         setSelectedMonth('');
+                        setSelectedTag('');
                         setCurrentMonthIndex(0); // Reset to current month
                       },
                     }

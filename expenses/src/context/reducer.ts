@@ -122,7 +122,8 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
       if (
         (action.category !== '' ||
           action.textFilter !== '' ||
-          action.selectedMonth !== '') &&
+          action.selectedMonth !== '' ||
+          action.selectedTag !== '') &&
         initialState.raw
       ) {
         const { raw } = initialState;
@@ -152,6 +153,19 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
             const selectedYear = selectedDate.getFullYear();
             const selectedMonthNum = selectedDate.getMonth();
             return itemYear === selectedYear && itemMonth === selectedMonthNum;
+          });
+        }
+
+        if (action.selectedTag) {
+          // Import hasTag function inline to avoid circular dependency
+          const hasTag = (item: TransactionOrIncomeItem, tag: string): boolean => {
+            if (!item.dsc) return false;
+            const description = item.dsc.toLowerCase();
+            const tagPattern = `#${tag.toLowerCase()}`;
+            return description.includes(tagPattern);
+          };
+          filtered = filtered.filter((item: TransactionOrIncomeItem) => {
+            return hasTag(item, action.selectedTag);
           });
         }
         const newState = filtered.reduce(
@@ -214,6 +228,7 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
           category: action.category,
           textFilter: action.textFilter,
           selectedMonth: action.selectedMonth,
+          selectedTag: action.selectedTag,
           filtered_raw: filtered,
         };
       }
@@ -223,6 +238,7 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
         category: '',
         textFilter: '',
         selectedMonth: '',
+        selectedTag: '',
         filtered_raw: null,
       };
 

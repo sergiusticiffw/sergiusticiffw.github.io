@@ -33,7 +33,7 @@ const MonthChips: React.FC<MonthChipsProps> = ({
   if (validMonths.length === 0) return null;
 
   return (
-    <div className={`month-chips ${className}`}>
+    <div className={`${className}`}>
       {showTitle && (
         <div className="chips-section-title">
           <FiCalendar />
