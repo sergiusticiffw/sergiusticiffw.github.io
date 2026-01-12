@@ -49,7 +49,7 @@ const NewHome = () => {
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
   const [selectedMonth, setSelectedMonth] = useState(data.selectedMonth ?? '');
-  const [selectedTag, setSelectedTag] = useState('');
+  const [selectedTag, setSelectedTag] = useState(data.selectedTag ?? '');
   const [showDeleteModal, setShowDeleteModal] = useState<string | false>(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);

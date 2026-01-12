@@ -52,7 +52,7 @@ const Charts = () => {
     useState(false);
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
-  const [selectedTag, setSelectedTag] = useState('');
+  const [selectedTag, setSelectedTag] = useState(data.selectedTag ?? '');
 
   const categoryLabels = getCategories();
 

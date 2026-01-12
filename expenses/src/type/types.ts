@@ -63,6 +63,7 @@ export interface DataItems {
   category?: string;
   textFilter?: string;
   selectedMonth?: string;
+  selectedTag?: string;
   totalsPerYearAndMonth?: DataStructure;
   totalIncomePerYear?: ItemTotal;
   changedItems: any;
@@ -94,6 +95,7 @@ export interface ActionType {
   category?: string;
   textFilter?: string;
   selectedMonth?: string;
+  selectedTag?: string;
   groupedData?: Record<string, TransactionOrIncomeItem[]>;
   totals?: Record<string, number>;
   raw?: any[];

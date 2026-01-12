@@ -48,6 +48,7 @@ export const initialData = {
   category: '',
   textFilter: '',
   selectedMonth: '',
+  selectedTag: '',
 };
 
 export const initialLoanData = {
