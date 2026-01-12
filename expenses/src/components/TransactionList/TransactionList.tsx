@@ -1,7 +1,10 @@
 import React, { useRef, useState, useMemo, useCallback } from 'react';
 import { getIconForCategory } from '@utils/helper';
-import { formatNumber, getLocale } from '@utils/utils';
+import { formatNumber, getLocale, getSuggestionTranslationKey } from '@utils/utils';
 import { useLocalization } from '@context/localization';
+import { getSuggestions } from '@utils/constants';
+import { normalizeTag } from '@hooks/useTags';
+import TagDisplay from '@components/Common/TagDisplay';
 import useSwipeActions from '@hooks/useSwipeActions';
 import {
   FiEdit2,
@@ -39,7 +42,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const listRef = useRef<HTMLDivElement>(null);
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const { language } = useLocalization();
+  const { language, t } = useLocalization();
 
   const {
     handleTouchStart,
@@ -166,7 +169,21 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
               {/* Content */}
               <div className="transaction-content">
-                <div className="transaction-name">{transaction.dsc}</div>
+                <div className="transaction-description">
+                  <TagDisplay
+                    description={transaction.dsc || ''}
+                    suggestions={(() => {
+                      const suggestions = getSuggestions();
+                      return suggestions[transaction.cat as keyof typeof suggestions] || [];
+                    })()}
+                    normalizeTag={normalizeTag}
+                    getTagLabel={(suggestion) => {
+                      const translationKey = getSuggestionTranslationKey(suggestion, transaction.cat);
+                      const translated = t(translationKey);
+                      return translated !== translationKey ? translated : suggestion;
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Price */}

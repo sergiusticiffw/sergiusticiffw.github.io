@@ -193,13 +193,14 @@
       flex: 1;
       min-width: 0;
 
-      .transaction-name {
+      .transaction-description {
         font-size: 1rem;
         font-weight: 500;
-        color: #ffffff;
+        color: rgba(255, 255, 255, 0.9);
         line-height: 1.4;
         word-wrap: break-word;
         overflow-wrap: break-word;
+        // Tag display styles are now in @components/Common/TagDisplay/TagDisplay.scss
       }
     }
 
@@ -243,7 +244,7 @@
       }
 
       .transaction-content {
-        .transaction-name {
+        .transaction-description {
           font-size: 0.95rem;
         }
       }

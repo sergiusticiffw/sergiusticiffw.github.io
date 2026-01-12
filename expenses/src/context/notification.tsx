@@ -8,9 +8,7 @@ import {
   useEffect,
 } from 'react';
 import Notification from '@components/Notification/Notification';
-import { notificationType, themeList } from '@utils/constants';
-import { useAuthState } from '@context/context';
-import { AuthState } from '@type/types';
+import { notificationType } from '@utils/constants';
 
 export interface NotificationAction {
   label: string;
@@ -81,13 +79,7 @@ export const NotificationProvider = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Add null check for auth state
-  const authState = useAuthState() as AuthState | null;
-  let theme = authState?.theme || 'blue-pink-gradient';
-  theme = themeList[theme as keyof typeof themeList]
-    ? theme
-    : 'blue-pink-gradient';
+  const theme = 'blue-pink-gradient';
   const gradientClass =
     theme === 'blue-pink-gradient' ? 'has-gradient-accent' : '';
 

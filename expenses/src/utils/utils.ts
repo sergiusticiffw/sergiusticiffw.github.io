@@ -960,3 +960,151 @@ export const hasTag = (item: TransactionOrIncomeItem, tag: string): boolean => {
   const tagPattern = `#${tag.toLowerCase()}`;
   return description.includes(tagPattern);
 };
+
+/**
+ * Extract hashtags from a text string
+ * @param text - Text to extract hashtags from
+ * @returns Array of hashtags (without #)
+ */
+export const extractHashtags = (text: string): string[] => {
+  if (!text) return [];
+  const hashtagRegex = /#(\w+)/g;
+  const matches = text.match(hashtagRegex);
+  if (!matches) return [];
+  return matches.map(match => match.substring(1)); // Remove #
+};
+
+/**
+ * Check if a text contains a specific tag (without #)
+ * @param text - Text to check
+ * @param tag - Tag to search for (without #)
+ * @returns true if tag exists in text
+ */
+export const hasTagInText = (text: string, tag: string): boolean => {
+  if (!text || !tag) return false;
+  const tagPattern = new RegExp(`#${tag}\\b`, 'gi');
+  return tagPattern.test(text);
+};
+
+/**
+ * Add a tag to text (at the end)
+ * @param text - Original text
+ * @param tag - Tag to add (without #)
+ * @returns Text with tag added
+ */
+export const addTagToText = (text: string, tag: string): string => {
+  if (!tag) return text;
+  const trimmedText = text.trim();
+  const tagWithHash = `#${tag}`;
+  if (!trimmedText) {
+    return tagWithHash;
+  }
+  // Check if tag already exists
+  if (hasTagInText(trimmedText, tag)) {
+    return trimmedText;
+  }
+  return `${trimmedText} ${tagWithHash}`;
+};
+
+/**
+ * Remove a tag from text
+ * @param text - Original text
+ * @param tag - Tag to remove (without #)
+ * @returns Text with tag removed
+ */
+export const removeTagFromText = (text: string, tag: string): string => {
+  if (!text || !tag) return text;
+  const tagPattern = new RegExp(`#${tag}\\b`, 'gi');
+  return text.replace(tagPattern, '').replace(/\s+/g, ' ').trim();
+};
+
+/**
+ * Maps category ID to category name for translation keys
+ */
+const categoryNameMap: Record<string, string> = {
+  '1': 'clothing',
+  '2': 'entertainment',
+  '3': 'food',
+  '4': 'gifts',
+  '5': 'household',
+  '6': 'housing',
+  '7': 'health',
+  '8': 'personal',
+  '9': 'transport',
+  '10': 'utilities',
+  '11': 'travel',
+  '12': 'family',
+  '13': 'investment',
+  '14': 'alcohol',
+};
+
+/**
+ * Maps suggestion text to translation key format
+ * This handles special cases where the translation key doesn't match a simple normalization
+ */
+const suggestionKeyMap: Record<string, Record<string, string>> = {
+  entertainment: {
+    'happy hour': 'happyHour',
+    'ceai/cafea': 'ceaiCafea',
+    'ingetata': 'ingetata',
+  },
+  food: {
+    'straus/glovo food': 'strausGlovo',
+    'inghetata': 'inghetata',
+  },
+  gifts: {
+    'zi de nastere': 'ziDeNastere',
+  },
+  household: {
+    'igiena/curatinie': 'igiena',
+  },
+  housing: {
+    'rata la jakala/ffw': 'rataJakala',
+    'rata la ipoteca': 'rataIpoteca',
+    'rata la cred de consum': 'rataCredConsum',
+    'apartment rent': 'apartmentRent',
+  },
+  transport: {
+    'car service': 'carService',
+    'lichid parbriz': 'lichidParbriz',
+    'car wash': 'carWash',
+  },
+  family: {
+    'gradinita': 'gradinita',
+    'jucarii': 'jucarii',
+    'teren de joaca': 'terenJoaca',
+  },
+};
+
+/**
+ * Normalizes suggestion text to match translation key format
+ * First checks the map, then falls back to camelCase conversion
+ */
+const normalizeSuggestionKey = (suggestion: string, categoryName: string): string => {
+  // Check if there's a direct mapping
+  const categoryMap = suggestionKeyMap[categoryName];
+  if (categoryMap && categoryMap[suggestion.toLowerCase()]) {
+    return categoryMap[suggestion.toLowerCase()];
+  }
+  
+  // Convert to camelCase: "happy hour" -> "happyHour", "ceai/cafea" -> "ceaiCafea"
+  return suggestion
+    .toLowerCase()
+    .split(/[\s\/]+/)
+    .map((word, index) => 
+      index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)
+    )
+    .join('')
+    .replace(/[^a-z0-9]/g, ''); // Remove any remaining special characters
+};
+
+/**
+ * Gets the translation key for a suggestion based on category
+ */
+export const getSuggestionTranslationKey = (suggestion: string, category: string | number): string => {
+  const categoryName = categoryNameMap[String(category)];
+  if (!categoryName) return suggestion;
+  
+  const normalizedKey = normalizeSuggestionKey(suggestion, categoryName);
+  return `suggestions.${categoryName}.${normalizedKey}`;
+};

@@ -180,31 +180,7 @@
     line-height: 1.4;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-
-    .description-text {
-      display: block;
-    }
-
-    .income-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.375rem;
-      margin-top: 0.25rem;
-    }
-
-    .income-tag {
-      display: inline-block;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 6px;
-      padding: 0.25rem 0.5rem;
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.6);
-      white-space: nowrap;
-    }
+    // Tag display styles are now in @components/Common/TagDisplay/TagDisplay.scss
   }
 }
 

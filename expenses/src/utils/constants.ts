@@ -303,54 +303,6 @@ export const getSuggestions = () => {
   };
 };
 
-// Fallback suggestions for when localization is not available
-export const suggestions = {
-  '': [],
-  1: ['haine', 'incaltaminte', 'pantaloni', 'tricouri', 'Nelea', 'Leo'],
-  2: [
-    'happy hour',
-    'benzinarie',
-    'ceai/cafea',
-    'restaurant',
-    'ingetata',
-    'parc',
-  ],
-  3: ['market', 'apa', 'lunch', 'inghetata', 'straus/glovo food'],
-  4: ['flori', 'Nelea', 'zi de nastere'],
-  5: ['igiena/curatinie', 'scutece', 'Leo'],
-  6: [
-    'house',
-    'rata la jakala/ffw',
-    'rata la ipoteca',
-    'rata la cred de consum',
-    'apartment rent',
-  ],
-  7: [
-    'farmacie',
-    'stomatolog',
-    'pediatru',
-    'Nelea',
-    'Leo',
-    'sport',
-    'asigurare',
-  ],
-  8: ['haircut', 'nails', 'Nelea'],
-  9: [
-    'benzina',
-    'motorina',
-    'car service',
-    'lichid parbriz',
-    'car wash',
-    'taxi',
-    'parcare',
-  ],
-  10: ['gaz', 'lumina', 'orange', 'bloc'],
-  11: ['Romania'],
-  12: ['Nelea', 'Leo', 'gradinita', 'jucarii', 'teren de joaca'],
-  13: [],
-  14: ['vin', 'bere', 'whiskey', 'cognac', 'gin', 'cocktails'],
-};
-
 export const notificationType = {
   SUCCESS: 'success',
   ERROR: 'error',
@@ -370,82 +322,6 @@ export const incomeSuggestions = [
   'wedding',
   'godparent',
 ];
-
-// Map income suggestions to user-friendly labels
-export const incomeSourceLabels: Record<string, string> = {
-  salary: 'Salary',
-  bonus: 'Bonuses',
-  freelance: 'Freelance',
-  overtime: 'Overtime',
-  interest: 'Interest',
-  gift: 'Gifts',
-  cashback: 'Cashback',
-  sale: 'Sales',
-  family: 'From Family',
-  wedding: 'Wedding Gift',
-  godparent: 'Godparent Gift',
-};
-
-export const themeList = {
-  'bondi-blue': 'Bondi blue',
-  'maximum-green-yellow': 'Maximum green yellow',
-  'indian-red': 'Indian red',
-  'carrot-orange': 'Carrot Orange',
-  saffron: 'Saffron',
-  inchworm: 'Inchworm',
-  cadetblue: 'Cadet blue',
-  'blue-pink-gradient': 'Blue pink gradient',
-  'pearl-aqua': 'Pearl Aqua',
-  'navy-blue': 'Navy Blue',
-  'cambridge-blue': 'Cambridge blue',
-};
-
-export const colorMap = {
-  'bondi-blue': {
-    accentColor: '#00a8ad',
-    textColor: '#ffffff', // White contrasts better on teal
-  },
-  'maximum-green-yellow': {
-    accentColor: '#cdf05d',
-    textColor: '#333333', // Dark gray for softer contrast on light green-yellow
-  },
-  'indian-red': {
-    accentColor: '#db5463',
-    textColor: '#ffffff', // White for high contrast on deep red
-  },
-  'carrot-orange': {
-    accentColor: '#ef9528',
-    textColor: '#333333', // Dark gray is softer and more readable on orange
-  },
-  saffron: {
-    accentColor: '#e9c12f',
-    textColor: '#333333', // Dark gray works well for a balanced contrast on saffron yellow
-  },
-  inchworm: {
-    accentColor: '#99de5d',
-    textColor: '#333333', // Dark gray improves readability on light green
-  },
-  cadetblue: {
-    accentColor: 'cadetblue',
-    textColor: '#ffffff', // White contrasts well on cadet blue
-  },
-  'blue-pink-gradient': {
-    accentColor: '#7c6ab9',
-    textColor: '#ffffff', // White provides high contrast on blue
-  },
-  'pearl-aqua': {
-    accentColor: '#7bd0c9',
-    textColor: '#333333', // Dark gray is more readable on light aqua
-  },
-  'navy-blue': {
-    accentColor: '#40739e',
-    textColor: '#ffffff', // White contrasts best on navy blue
-  },
-  'cambridge-blue': {
-    accentColor: '#a6c5a7',
-    textColor: '#333333', // Dark gray for better readability on soft green
-  },
-};
 
 export const availableCharts = [
   'MonthlyTotals',

@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useData } from '@context/context';
 import { useLocalization } from '@context/localization';
 import { getCategories, getSuggestions } from '@utils/constants';
+import { getSuggestionTranslationKey } from '@utils/utils';
 import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
+import { useTags, normalizeTag } from '@hooks/useTags';
 import { DataState } from '@type/types';
 import { FormField } from '@components/Common';
+import TagChips from '@components/Common/TagChips';
 import { FiPlus, FiEdit2, FiCamera } from 'react-icons/fi';
 import './TransactionForm.scss';
 
@@ -34,9 +37,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     field_description: '',
   };
 
-  // Get localized categories and suggestions
+  // Get localized categories
   const localizedCategories = getCategories();
-  const localizedSuggestions = getSuggestions();
 
   const validationRules = {
     field_amount: {
@@ -84,41 +86,53 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     },
   });
 
-  const [suggestionData, setSuggestionData] = useState<string[]>(
-    localizedSuggestions[
-      formState.field_category as keyof typeof localizedSuggestions
-    ] || []
-  );
-  const [selectedIndices, setSelectedIndices] = useState<string[]>([]);
+  // Get suggestions for current category (memoized to prevent infinite loops)
+  const category = formState.field_category || values.field_category || '';
+  const categorySuggestions = useMemo(() => {
+    if (!category) return [];
+    const suggestions = getSuggestions();
+    return suggestions[category as keyof typeof suggestions] || [];
+  }, [category]);
 
-  // Extended handleChange with suggestions logic
+  // Use tags hook for tag management
+  const { selectedTags, handleTagClick: handleTagClickInternal, isTagSelected } = useTags({
+    suggestions: categorySuggestions,
+    description: formState.field_description,
+    formType,
+    normalizeTag,
+  });
+
+  // Create display map for normalized tags
+  const tagDisplayMap: Record<string, string> = {};
+  categorySuggestions.forEach((suggestion) => {
+    const normalized = normalizeTag(suggestion);
+    tagDisplayMap[normalized] = suggestion;
+  });
+
+  // Extended handleChange
   const handleChange = (
     event: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
     baseHandleChange(event);
-    if (event.target.name === 'field_category') {
-      setSuggestionData(
-        localizedSuggestions[
-          event.target.value as keyof typeof localizedSuggestions
-        ] || []
-      );
-    }
   };
 
-  const handleSuggestionClick = (suggestion: string, index: string) => {
+  // Handle tag click and update form state
+  const handleTagClick = (tag: string) => {
+    const newDescription = handleTagClickInternal(tag);
     setFormState({
       ...formState,
-      field_description: formState?.field_description
-        ? formState.field_description + ` ${suggestion}`
-        : suggestion,
+      field_description: newDescription,
     });
-    const isSelected = selectedIndices.includes(index);
-    if (isSelected) {
-      return;
-    }
-    setSelectedIndices([...selectedIndices, index]);
+  };
+
+  // Get translated label for suggestion
+  const getSuggestionLabel = (suggestion: string): string => {
+    const translationKey = getSuggestionTranslationKey(suggestion, category);
+    const translated = t(translationKey);
+    // If translation key doesn't exist, return original suggestion
+    return translated !== translationKey ? translated : suggestion;
   };
 
   // Expose form submit handler and state to parent if needed
@@ -201,28 +215,16 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           ariaLabel={t('transactionForm.description')}
         />
 
-        {suggestionData.length ? (
-          <div className="form-group">
-            <label>{t('suggestions.title')}</label>
-            <ul className="suggestions">
-              {suggestionData.map((suggestion, index) => (
-                <li
-                  key={`${index}-${suggestion}`}
-                  onClick={() => {
-                    handleSuggestionClick(suggestion, `${index}-${suggestion}`);
-                  }}
-                  className={
-                    selectedIndices.includes(`${index}-${suggestion}`)
-                      ? 'selected-suggestion'
-                      : ''
-                  }
-                >
-                  {suggestion}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+        {/* Transaction Tags */}
+        <TagChips
+          suggestions={categorySuggestions}
+          selectedTags={selectedTags}
+          onTagClick={handleTagClick}
+          isTagSelected={isTagSelected}
+          getTagLabel={getSuggestionLabel}
+          normalizeTag={normalizeTag}
+          translationKey="suggestions.title"
+        />
 
         {!hideSubmitButton && (
           <div className="form-actions-sticky">
