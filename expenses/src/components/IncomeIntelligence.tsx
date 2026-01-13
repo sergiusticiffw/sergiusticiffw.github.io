@@ -90,7 +90,12 @@ export default function IncomeIntelligence() {
     const sortedMonths = Array.from(allMonths).sort((a, b) => {
       const dateA = parseMonthString(a);
       const dateB = parseMonthString(b);
-      if (!dateA || !dateB || isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+      if (
+        !dateA ||
+        !dateB ||
+        isNaN(dateA.getTime()) ||
+        isNaN(dateB.getTime())
+      ) {
         return 0;
       }
       return dateA.getTime() - dateB.getTime();
@@ -105,7 +110,11 @@ export default function IncomeIntelligence() {
           const monthDate = parseMonthString(month);
           if (monthDate && !isNaN(monthDate.getTime())) {
             // Use UTC timestamp to avoid timezone issues
-            const timestamp = Date.UTC(monthDate.getFullYear(), monthDate.getMonth(), 1);
+            const timestamp = Date.UTC(
+              monthDate.getFullYear(),
+              monthDate.getMonth(),
+              1
+            );
             return [timestamp, monthlyData[month]?.[tag] || 0];
           }
           return [0, 0];
@@ -123,7 +132,11 @@ export default function IncomeIntelligence() {
             const monthDate = parseMonthString(month);
             if (monthDate && !isNaN(monthDate.getTime())) {
               // Use UTC timestamp to avoid timezone issues
-              const timestamp = Date.UTC(monthDate.getFullYear(), monthDate.getMonth(), 1);
+              const timestamp = Date.UTC(
+                monthDate.getFullYear(),
+                monthDate.getMonth(),
+                1
+              );
               return [timestamp, monthlyData[month]?.['untagged'] || 0];
             }
             return [0, 0];
@@ -136,12 +149,12 @@ export default function IncomeIntelligence() {
         return series.data.some((value: any) => value[1] > 0);
       });
 
-      return {
-        pieData,
-        lineData: monthlyData,
-        months: sortedMonths,
-        lineSeries,
-      };
+    return {
+      pieData,
+      lineData: monthlyData,
+      months: sortedMonths,
+      lineSeries,
+    };
   }, [incomeData, language, t]);
 
   const pieOptions: Highcharts.Options = {
@@ -256,6 +269,9 @@ export default function IncomeIntelligence() {
         },
       ],
       allButtonsEnabled: true,
+    },
+    legend: {
+      enabled: true,
     },
     series: chartData.lineSeries as any,
   };
