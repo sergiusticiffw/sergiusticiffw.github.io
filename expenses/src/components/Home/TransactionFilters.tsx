@@ -7,7 +7,8 @@ import { useMonthOptions } from '@hooks/useMonthOptions';
 import { useMonthFilter } from '@hooks/useMonthFilter';
 import MonthChips from '@components/Common/MonthChips';
 import { getSuggestions } from '@utils/constants';
-import { hasTag, getSuggestionTranslationKey } from '@utils/utils';
+import { hasTag, getSuggestionTranslationKey, extractHashtags } from '@utils/utils';
+import { normalizeTag } from '@hooks/useTags';
 import './TransactionFilters.scss';
 
 interface TransactionFiltersProps {
@@ -82,7 +83,25 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
       return [];
     }
 
-    // Get all suggestions from all categories
+    // Extract all unique tags from transaction descriptions
+    const tagsCount: Record<string, number> = {};
+    const allExtractedTags = new Set<string>();
+    
+    data.raw.forEach((item: any) => {
+      if (item.type === 'transaction') {
+        // Check both field_description and dsc fields
+        const description = item.field_description || item.dsc || '';
+        if (description) {
+          const tags = extractHashtags(description);
+          tags.forEach((tag) => {
+            allExtractedTags.add(tag);
+            tagsCount[tag] = (tagsCount[tag] || 0) + 1;
+          });
+        }
+      }
+    });
+
+    // Get all suggestions from all categories for translation purposes
     const allSuggestions = new Set<string>();
     const suggestionsMap = getSuggestions();
     Object.values(suggestionsMap).forEach((suggestions) => {
@@ -91,41 +110,41 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
       });
     });
 
-    // Count tags in transaction data
-    const tagsCount: Record<string, number> = {};
-    data.raw.forEach((item: any) => {
-      if (item.type === 'transaction') {
-        allSuggestions.forEach((tag) => {
-          if (hasTag(item, tag)) {
-            tagsCount[tag] = (tagsCount[tag] || 0) + 1;
-          }
-        });
-      }
-    });
-
-    // Return tags that exist in data, sorted by count (most used first)
-    return Array.from(allSuggestions)
-      .filter((tag) => tagsCount[tag] > 0)
+    // Combine extracted tags with suggestions (for proper translation)
+    // Return tags sorted by count (most used first)
+    return Array.from(allExtractedTags)
       .sort((a, b) => (tagsCount[b] || 0) - (tagsCount[a] || 0));
   }, [data.raw]);
+
+  // Helper function to find the original suggestion from a normalized tag
+  const findOriginalSuggestion = (normalizedTag: string): { suggestion: string; category: string } | null => {
+    const suggestionsMap = getSuggestions();
+    for (const [category, suggestions] of Object.entries(suggestionsMap)) {
+      for (const suggestion of suggestions) {
+        if (normalizeTag(suggestion) === normalizedTag) {
+          return { suggestion, category };
+        }
+      }
+    }
+    return null;
+  };
 
   // Get selected tag label
   const selectedTagLabel = selectedTag
     ? (() => {
-        // Find which category this tag belongs to
-        const suggestionsMap = getSuggestions();
-        for (const [category, suggestions] of Object.entries(suggestionsMap)) {
-          if (suggestions.includes(selectedTag)) {
-            const translationKey = getSuggestionTranslationKey(
-              selectedTag,
-              category
-            );
-            return t(translationKey) !== translationKey
-              ? t(translationKey)
-              : selectedTag;
-          }
+        // Try to find original suggestion from normalized tag
+        const original = findOriginalSuggestion(selectedTag);
+        if (original) {
+          const translationKey = getSuggestionTranslationKey(
+            original.suggestion,
+            original.category
+          );
+          return t(translationKey) !== translationKey
+            ? t(translationKey)
+            : original.suggestion;
         }
-        return selectedTag;
+        // If not found, try to convert cratime to spaces for display
+        return selectedTag.replace(/-/g, ' ');
       })()
     : '';
 
@@ -254,23 +273,21 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                 </button>
                 {availableTags.map((tag) => {
                   const isSelected = selectedTag === tag;
-                  // Find which category this tag belongs to for translation
-                  const suggestionsMap = getSuggestions();
+                  // Find original suggestion from normalized tag for translation
+                  const original = findOriginalSuggestion(tag);
                   let label = tag;
-                  for (const [category, suggestions] of Object.entries(
-                    suggestionsMap
-                  )) {
-                    if (suggestions.includes(tag)) {
-                      const translationKey = getSuggestionTranslationKey(
-                        tag,
-                        category
-                      );
-                      label =
-                        t(translationKey) !== translationKey
-                          ? t(translationKey)
-                          : tag;
-                      break;
-                    }
+                  if (original) {
+                    const translationKey = getSuggestionTranslationKey(
+                      original.suggestion,
+                      original.category
+                    );
+                    label =
+                      t(translationKey) !== translationKey
+                        ? t(translationKey)
+                        : original.suggestion;
+                  } else {
+                    // If not found in suggestions, convert cratime to spaces for display
+                    label = tag.replace(/-/g, ' ');
                   }
                   return (
                     <button

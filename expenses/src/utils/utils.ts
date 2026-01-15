@@ -968,7 +968,9 @@ export const hasTag = (item: TransactionOrIncomeItem, tag: string): boolean => {
  */
 export const extractHashtags = (text: string): string[] => {
   if (!text) return [];
-  const hashtagRegex = /#(\w+)/g;
+  // Match # followed by word characters, hyphens, and underscores (e.g., #apartment-rent, #tag_name)
+  // Word boundary ensures we don't match in the middle of words
+  const hashtagRegex = /#([\w-]+)/g;
   const matches = text.match(hashtagRegex);
   if (!matches) return [];
   return matches.map(match => match.substring(1)); // Remove #
