@@ -123,6 +123,7 @@ export default function IncomeIntelligence() {
           name: label,
           data,
           type: 'line',
+          visible: tag === 'salary', // Only salary is visible by default
         };
       })
       .concat([
@@ -142,6 +143,7 @@ export default function IncomeIntelligence() {
             return [0, 0];
           }),
           type: 'line',
+          visible: false, // Untagged is hidden by default
         },
       ])
       .filter((series) => {
