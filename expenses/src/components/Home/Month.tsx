@@ -30,7 +30,7 @@ const Month: React.FC<MonthProps> = ({ month }) => {
     // @ts-expect-error
     const category = localizedCategories.find(
       (element) => element.value === item.cat
-    ).label;
+    )?.label;
     // @ts-expect-error
     if (!totals[category]) {
       // @ts-expect-error
