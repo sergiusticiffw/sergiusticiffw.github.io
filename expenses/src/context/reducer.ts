@@ -98,11 +98,134 @@ export const AuthReducer = (initialState: AuthState, action: ActionType) => {
   }
 };
 
+// Helper function to apply filters to raw data
+const applyFilters = (
+  raw: TransactionOrIncomeItem[],
+  category: string,
+  textFilter: string,
+  selectedMonth: string,
+  selectedTag: string
+) => {
+  if (
+    !(
+      category !== '' ||
+      textFilter !== '' ||
+      selectedMonth !== '' ||
+      selectedTag !== ''
+    ) ||
+    !raw
+  ) {
+    return null;
+  }
+
+  let filtered =
+    raw?.filter(
+      (item: TransactionOrIncomeItem) => item.type === 'transaction'
+    ) || [];
+
+  if (category) {
+    filtered = filtered.filter((item) => item.cat === category);
+  }
+
+  if (textFilter) {
+    const textFilterLower = textFilter.toLowerCase();
+    filtered = filtered.filter(
+      (item: TransactionOrIncomeItem) =>
+        item.dsc && item.dsc.toLowerCase().includes(textFilterLower)
+    );
+  }
+
+  if (selectedMonth) {
+    filtered = filtered.filter((item: TransactionOrIncomeItem) => {
+      const itemDate = new Date(item.dt);
+      const selectedDate = new Date(selectedMonth + '-01');
+      const itemYear = itemDate.getFullYear();
+      const itemMonth = itemDate.getMonth();
+      const selectedYear = selectedDate.getFullYear();
+      const selectedMonthNum = selectedDate.getMonth();
+      return itemYear === selectedYear && itemMonth === selectedMonthNum;
+    });
+  }
+
+  if (selectedTag) {
+    // Use exact tag match with word boundaries to avoid partial matches
+    const hasTag = (item: TransactionOrIncomeItem, tag: string): boolean => {
+      if (!item.dsc || !tag) return false;
+      const tagPattern = new RegExp(
+        `#${tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`,
+        'i'
+      );
+      return tagPattern.test(item.dsc);
+    };
+    filtered = filtered.filter((item: TransactionOrIncomeItem) => {
+      return hasTag(item, selectedTag);
+    });
+  }
+
+  const newState = filtered.reduce(
+    (accumulator: Accumulator, item: TransactionOrIncomeItem) => {
+      const date = new Date((item as TransactionOrIncomeItem).dt);
+      const year = date.getFullYear();
+      const month = `${monthNames[date.getMonth()]} ${year}`;
+      accumulator.groupedData[month] =
+        accumulator.groupedData[month] || [];
+      accumulator.groupedData[month].push(item as TransactionOrIncomeItem);
+
+      accumulator.totals[month] =
+        (accumulator.totals[month] || 0) +
+        parseFloat((item as TransactionOrIncomeItem).sum);
+      accumulator.totalSpent =
+        accumulator.totalSpent +
+        parseFloat((item as TransactionOrIncomeItem).sum);
+
+      accumulator.totalsPerYearAndMonth[year] =
+        accumulator.totalsPerYearAndMonth[year] || {};
+      accumulator.totalsPerYearAndMonth[year][month] =
+        (accumulator.totalsPerYearAndMonth[year][month] || 0) +
+        parseFloat(item.sum);
+
+      accumulator.totalPerYear[year] =
+        ((accumulator.totalPerYear[year] as number) || 0) +
+        parseFloat((item as TransactionOrIncomeItem).sum);
+
+      const cat = (item as TransactionOrIncomeItem).cat;
+      if (cat !== undefined) {
+        if (!accumulator.categoryTotals[cat]) {
+          accumulator.categoryTotals[cat] = {
+            name: '',
+            y: 0,
+          };
+        }
+        accumulator.categoryTotals[cat].name =
+          // @ts-expect-error YBC
+          categories[cat]?.label || '';
+        accumulator.categoryTotals[cat].y +=
+          parseFloat((item as TransactionOrIncomeItem).sum) || 0;
+      }
+
+      return accumulator;
+    },
+    {
+      groupedData: {},
+      totals: {},
+      totalsPerYearAndMonth: {},
+      totalPerYear: {},
+      totalSpent: 0,
+      categoryTotals: {},
+    }
+  );
+
+  return {
+    filtered: newState,
+    filtered_raw: filtered,
+  };
+};
+
 export const DataReducer = (initialState: DataItems, action: ActionType) => {
   switch (action.type) {
     case 'SET_DATA':
       const changedItems = compareData(initialState.raw, action.raw);
-      return {
+      const newState = {
         ...initialState,
         ...action,
         changedItems: {
@@ -110,6 +233,35 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
           ...changedItems,
         },
       };
+
+      // Reapply filters if they were active
+      if (
+        initialState.category ||
+        initialState.textFilter ||
+        initialState.selectedMonth ||
+        initialState.selectedTag
+      ) {
+        const filterResult = applyFilters(
+          action.raw || newState.raw || [],
+          initialState.category || '',
+          initialState.textFilter || '',
+          initialState.selectedMonth || '',
+          initialState.selectedTag || ''
+        );
+
+        if (filterResult) {
+          return {
+            ...newState,
+            ...filterResult,
+            category: initialState.category,
+            textFilter: initialState.textFilter,
+            selectedMonth: initialState.selectedMonth,
+            selectedTag: initialState.selectedTag,
+          };
+        }
+      }
+
+      return newState;
 
     case 'CLEAR_CHANGED_ITEM':
       const newChangedItems = { ...initialState.changedItems };
@@ -120,119 +272,25 @@ export const DataReducer = (initialState: DataItems, action: ActionType) => {
       };
 
     case 'FILTER_DATA':
-      if (
-        (action.category !== '' ||
-          action.textFilter !== '' ||
-          action.selectedMonth !== '' ||
-          action.selectedTag !== '') &&
-        initialState.raw
-      ) {
-        const { raw } = initialState;
-        let filtered =
-          raw?.filter(
-            (item: TransactionOrIncomeItem) => item.type === 'transaction'
-          ) || [];
+      const filterResult = applyFilters(
+        initialState.raw || [],
+        action.category || '',
+        action.textFilter || '',
+        action.selectedMonth || '',
+        action.selectedTag || ''
+      );
 
-        if (action.category) {
-          filtered = filtered.filter((item) => item.cat === action.category);
-        }
-
-        if (action.textFilter) {
-          const textFilterLower = action.textFilter.toLowerCase();
-          filtered = filtered.filter(
-            (item: TransactionOrIncomeItem) =>
-              item.dsc && item.dsc.toLowerCase().includes(textFilterLower)
-          );
-        }
-
-        if (action.selectedMonth) {
-          filtered = filtered.filter((item: TransactionOrIncomeItem) => {
-            const itemDate = new Date(item.dt);
-            const selectedDate = new Date(action.selectedMonth + '-01');
-            const itemYear = itemDate.getFullYear();
-            const itemMonth = itemDate.getMonth();
-            const selectedYear = selectedDate.getFullYear();
-            const selectedMonthNum = selectedDate.getMonth();
-            return itemYear === selectedYear && itemMonth === selectedMonthNum;
-          });
-        }
-
-        if (action.selectedTag) {
-          // Use exact tag match with word boundaries to avoid partial matches
-          // e.g., "flori" should not match "#floristic" or "#floră"
-          const hasTag = (item: TransactionOrIncomeItem, tag: string): boolean => {
-            if (!item.dsc || !tag) return false;
-            const tagPattern = new RegExp(`#${tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-            return tagPattern.test(item.dsc);
-          };
-          filtered = filtered.filter((item: TransactionOrIncomeItem) => {
-            return hasTag(item, action.selectedTag);
-          });
-        }
-        const newState = filtered.reduce(
-          (accumulator: Accumulator, item: TransactionOrIncomeItem) => {
-            const date = new Date((item as TransactionOrIncomeItem).dt);
-            const year = date.getFullYear();
-            const month = `${monthNames[date.getMonth()]} ${year}`;
-            accumulator.groupedData[month] =
-              accumulator.groupedData[month] || [];
-            accumulator.groupedData[month].push(
-              item as TransactionOrIncomeItem
-            );
-
-            accumulator.totals[month] =
-              (accumulator.totals[month] || 0) +
-              parseFloat((item as TransactionOrIncomeItem).sum);
-            accumulator.totalSpent =
-              accumulator.totalSpent +
-              parseFloat((item as TransactionOrIncomeItem).sum);
-
-            accumulator.totalsPerYearAndMonth[year] =
-              accumulator.totalsPerYearAndMonth[year] || {};
-            accumulator.totalsPerYearAndMonth[year][month] =
-              (accumulator.totalsPerYearAndMonth[year][month] || 0) +
-              parseFloat(item.sum);
-
-            accumulator.totalPerYear[year] =
-              ((accumulator.totalPerYear[year] as number) || 0) +
-              parseFloat((item as TransactionOrIncomeItem).sum);
-
-            const cat = (item as TransactionOrIncomeItem).cat;
-            if (cat !== undefined) {
-              if (!accumulator.categoryTotals[cat]) {
-                accumulator.categoryTotals[cat] = {
-                  name: '',
-                  y: 0,
-                };
-              }
-              accumulator.categoryTotals[cat].name =
-                // @ts-expect-error YBC
-                categories[cat]?.label || '';
-              accumulator.categoryTotals[cat].y +=
-                parseFloat((item as TransactionOrIncomeItem).sum) || 0;
-            }
-
-            return accumulator;
-          },
-          {
-            groupedData: {},
-            totals: {},
-            totalsPerYearAndMonth: {},
-            totalPerYear: {},
-            totalSpent: 0,
-            categoryTotals: {},
-          }
-        );
+      if (filterResult) {
         return {
           ...initialState,
-          filtered: newState,
+          ...filterResult,
           category: action.category,
           textFilter: action.textFilter,
           selectedMonth: action.selectedMonth,
           selectedTag: action.selectedTag,
-          filtered_raw: filtered,
         };
       }
+
       return {
         ...initialState,
         filtered: null,

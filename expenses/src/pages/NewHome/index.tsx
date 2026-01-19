@@ -298,6 +298,7 @@ const NewHome = () => {
         onClose={(e) => {
           e.preventDefault();
           setShowEditModal(false);
+          setFocusedItem({}); // Reset focused item when closing modal
         }}
         title={t('transactionForm.editTransaction')}
         footer={
@@ -331,6 +332,7 @@ const NewHome = () => {
           }}
           onSuccess={() => {
             setShowEditModal(false);
+            setFocusedItem({}); // Reset focused item after successful edit
           }}
         />
       </Modal>
