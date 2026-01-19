@@ -1,4 +1,4 @@
-// React import not needed with jsx: "react-jsx"
+import React from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useLocalization } from '@context/localization';
 import { loginUser } from '@context/actions';
@@ -7,6 +7,7 @@ import { AuthState } from '@type/types';
 import { useGoogleLogin, TokenResponse } from '@react-oauth/google';
 import { FiLogIn } from 'react-icons/fi';
 import { logger } from '@utils/logger';
+import { useNotificationManager } from '@context/notification';
 import './Login.scss';
 
 const Login = () => {
@@ -14,10 +15,15 @@ const Login = () => {
   const navigate = useNavigate();
   const { t } = useLocalization();
   const { loading, errorMessage, userIsLoggedIn } = useAuthState() as AuthState;
+  const { clearAllNotifications } = useNotificationManager();
 
-  if (userIsLoggedIn) {
-    navigate('/expenses');
-  }
+  // Clear all notifications when user successfully logs in
+  React.useEffect(() => {
+    if (userIsLoggedIn) {
+      clearAllNotifications();
+      navigate('/expenses');
+    }
+  }, [userIsLoggedIn, navigate, clearAllNotifications]);
 
   const handleLogin = async (googleResponse: TokenResponse) => {
     if ('access_token' in googleResponse) {
@@ -27,6 +33,8 @@ const Login = () => {
         if (response && !response.current_user) {
           return;
         }
+        // Clear notifications on successful login
+        clearAllNotifications();
         navigate(`/expenses`);
       } catch (error) {
         logger.error('Login error:', error);

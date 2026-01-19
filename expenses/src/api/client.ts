@@ -88,11 +88,27 @@ class ApiClient {
 
           if (refreshResponse.status === 403) {
             logout(this.dispatch, this.dataDispatch);
+            // Use groupId to replace previous session expired errors
+            if (this.showNotification) {
+              this.showNotification(
+                'Session expired. Please log in again.',
+                'error',
+                { groupId: 'session-expired', duration: 10000 } // Auto-dismiss after 10 seconds
+              );
+            }
             throw new Error('Session expired. Please log in again.');
           }
         } catch (error) {
           if (this.dispatch && this.dataDispatch) {
             logout(this.dispatch, this.dataDispatch);
+          }
+          // Use groupId to replace previous session expired errors
+          if (this.showNotification) {
+            this.showNotification(
+              'Session expired. Please log in again.',
+              'error',
+              { groupId: 'session-expired', duration: 10000 } // Auto-dismiss after 10 seconds
+            );
           }
           throw new Error('Session expired. Please log in again.');
         }

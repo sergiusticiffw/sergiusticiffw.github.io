@@ -52,7 +52,6 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, dispatch] = useReducer(AuthReducer, initialState);
-  // @ts-expect-error
   const [data, dataDispatch] = useReducer(
     DataReducer,
     initialData as DataItems

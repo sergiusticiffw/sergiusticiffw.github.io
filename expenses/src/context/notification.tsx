@@ -122,6 +122,18 @@ export const NotificationProvider = ({
             newNotification,
           ];
         }
+        
+        // For error notifications, remove previous error notifications with the same message
+        // This prevents duplicate error notifications from accumulating
+        const isError = type === notificationType.ERROR || type === 'error';
+        if (isError) {
+          // Remove previous error notifications with the same message
+          const filtered = prev.filter(
+            (n) => !(n.type === 'error' && n.message === message)
+          );
+          return [...filtered, newNotification];
+        }
+        
         return [...prev, newNotification];
       });
 
@@ -141,23 +153,32 @@ export const NotificationProvider = ({
       // Auto-dismiss logic
       // Error notifications are persistent by default (require manual dismissal)
       const isError = type === notificationType.ERROR || type === 'error';
+      // Session expired errors should auto-dismiss after 10 seconds
+      const isSessionError = isError && message.includes('Session expired');
       const shouldBePersistent =
-        options?.persistent !== undefined ? options.persistent : isError; // Errors are persistent by default
+        options?.persistent !== undefined
+          ? options.persistent
+          : isError && !isSessionError; // Session errors auto-dismiss, other errors are persistent
 
       if (!shouldBePersistent && options?.duration !== 0) {
         let timeout = options?.duration;
 
         if (!timeout) {
-          // Default timeouts based on type
-          switch (type) {
-            case 'success':
-              timeout = 3000; // 3 seconds for success
-              break;
-            case 'warning':
-              timeout = 5000; // 5 seconds for warnings
-              break;
-            default:
-              timeout = 4000; // 4 seconds default
+          // Session errors auto-dismiss after 10 seconds
+          if (isSessionError) {
+            timeout = 10000; // 10 seconds for session errors
+          } else {
+            // Default timeouts based on type
+            switch (type) {
+              case 'success':
+                timeout = 3000; // 3 seconds for success
+                break;
+              case 'warning':
+                timeout = 5000; // 5 seconds for warnings
+                break;
+              default:
+                timeout = 4000; // 4 seconds default
+            }
           }
         }
 

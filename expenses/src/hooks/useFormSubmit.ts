@@ -14,6 +14,7 @@ import {
   updateLoansUILocally,
 } from '@utils/offlineAPI';
 import { logger } from '@utils/logger';
+import { sanitizeFormField } from '@utils/sanitization';
 
 interface UseFormSubmitOptions<T> {
   formType: 'add' | 'edit';
@@ -70,10 +71,15 @@ export const useFormSubmit = <T extends Record<string, any>>({
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    const value =
-      event.target.type === 'checkbox'
-        ? (event.target as HTMLInputElement).checked
-        : event.target.value;
+    let value: string | boolean;
+    
+    if (event.target.type === 'checkbox') {
+      value = (event.target as HTMLInputElement).checked;
+    } else {
+      // Sanitize input based on field type
+      const fieldType = event.target.type as 'text' | 'number' | 'date' | 'email' | 'url';
+      value = sanitizeFormField(event.target.value, fieldType);
+    }
 
     setFormState({
       ...formState,

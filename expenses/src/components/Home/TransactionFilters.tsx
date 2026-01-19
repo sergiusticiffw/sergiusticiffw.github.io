@@ -7,8 +7,9 @@ import { useMonthOptions } from '@hooks/useMonthOptions';
 import { useMonthFilter } from '@hooks/useMonthFilter';
 import MonthChips from '@components/Common/MonthChips';
 import { getSuggestions } from '@utils/constants';
-import { hasTag, getSuggestionTranslationKey, extractHashtags } from '@utils/utils';
+import { getSuggestionTranslationKey, extractHashtags } from '@utils/utils';
 import { normalizeTag } from '@hooks/useTags';
+import { sanitizeText } from '@utils/sanitization';
 import './TransactionFilters.scss';
 
 interface TransactionFiltersProps {
@@ -86,7 +87,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     // Extract all unique tags from transaction descriptions
     const tagsCount: Record<string, number> = {};
     const allExtractedTags = new Set<string>();
-    
+
     data.raw.forEach((item: any) => {
       if (item.type === 'transaction') {
         // Check both field_description and dsc fields
@@ -112,12 +113,15 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
 
     // Combine extracted tags with suggestions (for proper translation)
     // Return tags sorted by count (most used first)
-    return Array.from(allExtractedTags)
-      .sort((a, b) => (tagsCount[b] || 0) - (tagsCount[a] || 0));
+    return Array.from(allExtractedTags).sort(
+      (a, b) => (tagsCount[b] || 0) - (tagsCount[a] || 0)
+    );
   }, [data.raw]);
 
   // Helper function to find the original suggestion from a normalized tag
-  const findOriginalSuggestion = (normalizedTag: string): { suggestion: string; category: string } | null => {
+  const findOriginalSuggestion = (
+    normalizedTag: string
+  ): { suggestion: string; category: string } | null => {
     const suggestionsMap = getSuggestions();
     for (const [category, suggestions] of Object.entries(suggestionsMap)) {
       for (const suggestion of suggestions) {
@@ -212,7 +216,11 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
         <input
           type="text"
           value={searchValue}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={(e) => {
+            // Sanitize search input before updating state
+            const sanitizedValue = sanitizeText(e.target.value);
+            onSearchChange(sanitizedValue);
+          }}
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={

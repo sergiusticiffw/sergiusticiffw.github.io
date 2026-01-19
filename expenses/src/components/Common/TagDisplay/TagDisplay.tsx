@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocalization } from '@context/localization';
 import { extractHashtags } from '@utils/utils';
 import { normalizeTag } from '@hooks/useTags';
+import { sanitizeForDisplay } from '@utils/sanitization';
 import './TagDisplay.scss';
 
 interface TagDisplayProps {
@@ -31,8 +32,11 @@ const TagDisplay: React.FC<TagDisplayProps> = ({
     return null;
   }
 
+  // Sanitize description before processing
+  const sanitizedDescription = sanitizeForDisplay(description);
+
   // Extract description without tags
-  let cleanDescription = description;
+  let cleanDescription = sanitizedDescription;
   const foundTags: string[] = [];
   
   // Get normalized suggestions for matching
@@ -44,7 +48,7 @@ const TagDisplay: React.FC<TagDisplayProps> = ({
   // Extract tags from description
   normalizedSuggestions.forEach(({ original, normalized }) => {
     const tagPattern = new RegExp(`#${normalized}\\b`, 'gi');
-    if (tagPattern.test(description)) {
+    if (tagPattern.test(sanitizedDescription)) {
       foundTags.push(normalized);
       // Remove tag from description
       cleanDescription = cleanDescription.replace(tagPattern, '').trim();

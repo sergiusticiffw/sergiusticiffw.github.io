@@ -10,6 +10,7 @@ import {
 } from '@utils/commonUtils';
 import { logger } from '@utils/logger';
 import { API_BASE_URL } from '@utils/utils';
+import { sanitizeFormField } from '@utils/sanitization';
 
 interface UseFormOptions<T> {
   initialValues: T;
@@ -50,9 +51,29 @@ export const useForm = <T extends Record<string, any>>(
       const { name, value, type } = event.target;
       const checked = (event.target as HTMLInputElement).checked;
 
+      // Sanitize input based on field type
+      let sanitizedValue: string | boolean = value;
+      
+      if (type !== 'checkbox') {
+        // Determine field type for sanitization
+        let fieldType: 'text' | 'number' | 'date' | 'email' | 'url' = 'text';
+        
+        if (type === 'number') {
+          fieldType = 'number';
+        } else if (type === 'date') {
+          fieldType = 'date';
+        } else if (type === 'email') {
+          fieldType = 'email';
+        } else if (type === 'url') {
+          fieldType = 'url';
+        }
+        
+        sanitizedValue = sanitizeFormField(value, fieldType);
+      }
+
       setFormData((prev) => ({
         ...prev,
-        [name]: type === 'checkbox' ? checked : value,
+        [name]: type === 'checkbox' ? checked : sanitizedValue,
       }));
     },
     []
