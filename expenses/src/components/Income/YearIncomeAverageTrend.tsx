@@ -103,7 +103,7 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
     return totals;
   }, [filteredIncomeData, filteredTransactionData, data.incomeData, data.raw]);
 
-  // Get localized month names
+  // Get localized month names - must be called unconditionally (getMonthNames uses useLocalization hook)
   const monthNames = getMonthNames();
   const formattedIncomeData = formatDataForChart(
     totalIncomePerYearAndMonth,

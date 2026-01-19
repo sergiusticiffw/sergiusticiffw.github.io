@@ -17,6 +17,10 @@ const YearAverageTrend = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
   const { t } = useLocalization();
+  
+  // Get localized month names - must be called unconditionally before any early returns
+  const monthNames = getMonthNames();
+
   const items =
     data?.filtered?.totalsPerYearAndMonth || data?.totalsPerYearAndMonth;
   const totalPerYear = data?.filtered?.totalPerYear || data?.totalPerYear;
@@ -30,9 +34,6 @@ const YearAverageTrend = () => {
   ]);
 
   const totalSpent = data.filtered?.totalSpent || data?.totalSpent;
-
-  // Get localized month names
-  const monthNames = getMonthNames();
   const formattedData = formatDataForChart(items, false, monthNames);
 
   const options: Highcharts.Options = {

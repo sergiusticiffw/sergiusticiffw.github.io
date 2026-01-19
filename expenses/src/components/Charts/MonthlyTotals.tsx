@@ -12,6 +12,9 @@ const MonthlyTotals = () => {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
   const { t } = useLocalization();
+  
+  // Get categories - must be called unconditionally before any early returns
+  const categories = getCategories();
 
   // Re-render the component only when dependencies are changed.
   useEffect(() => {}, [data, currency]);
@@ -98,7 +101,7 @@ const MonthlyTotals = () => {
     series: [
       {
         name: data.category
-          ? getCategories().find((element) => element.value === data.category)
+          ? categories.find((element) => element.value === data.category)
               ?.label
           : t('charts.monthlyTotals'),
         data: seriesData,
