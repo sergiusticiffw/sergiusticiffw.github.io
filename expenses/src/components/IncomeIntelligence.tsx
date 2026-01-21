@@ -7,7 +7,7 @@ import { AuthState, DataState, TransactionOrIncomeItem } from '@type/types';
 import { monthNames, incomeSuggestions } from '@utils/constants';
 import { hasTag, formatNumber, parseMonthString } from '@utils/utils';
 
-export default function IncomeIntelligence() {
+function IncomeIntelligence() {
   const { data } = useData() as DataState;
   const { currency } = useAuthState() as AuthState;
   const { t, language } = useLocalization();
@@ -248,7 +248,7 @@ export default function IncomeIntelligence() {
       enabled: false,
     },
     rangeSelector: {
-      selected: 1, // Default to "1 Year"
+      selected: 1, // Default to "1 Year" (Highcharts handles user changes)
       buttons: [
         {
           type: 'all',
@@ -305,3 +305,6 @@ export default function IncomeIntelligence() {
     </div>
   );
 }
+
+// Prevent rerenders from parent polling/state churn (keeps Highcharts range stable)
+export default React.memo(IncomeIntelligence);

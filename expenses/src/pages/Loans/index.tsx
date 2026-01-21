@@ -15,7 +15,7 @@ import { useApiClient } from '@hooks/useApiClient';
 import { useNotification } from '@context/notification';
 import { notificationType } from '@utils/constants';
 import Paydown from '@utils/paydown-node';
-import { getPendingSyncOperations } from '@utils/indexedDB';
+import { usePendingSyncIds } from '@hooks/usePendingSyncIds';
 import {
   PageHeader,
   LoadingSpinner,
@@ -43,65 +43,18 @@ const Loans: FC = () => {
   const [loanFormSubmitting, setLoanFormSubmitting] = useState(false);
   const [loanFormEditSubmitting, setLoanFormEditSubmitting] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [pendingLoanIds, setPendingLoanIds] = useState<Record<string, true>>({});
-  const [pendingPaymentIds, setPendingPaymentIds] = useState<Record<string, true>>(
-    {}
-  );
 
   const { loans, loading, payments } = data;
+
+  // Event-driven pending sync tracking (no polling) - for loans and payments
+  const pendingLoanIds = usePendingSyncIds(['loan']);
+  const pendingPaymentIds = usePendingSyncIds(['payment']);
 
   useEffect(() => {
     if (!loans && apiClient) {
       fetchLoansService(apiClient, dataDispatch);
     }
   }, [loans, apiClient, dataDispatch]);
-
-  // Track pending sync (loans + payments) for badges
-  useEffect(() => {
-    let mounted = true;
-
-    const refreshPending = async () => {
-      try {
-        const pending = await getPendingSyncOperations();
-        const loanIds: Record<string, true> = {};
-        const paymentIds: Record<string, true> = {};
-        pending.forEach((op) => {
-          if (op.localId) {
-            if (op.entityType === 'loan') {
-              loanIds[op.localId] = true;
-            }
-            if (op.entityType === 'payment') {
-              paymentIds[op.localId] = true;
-            }
-          }
-        });
-        if (mounted) {
-          setPendingLoanIds(loanIds);
-          setPendingPaymentIds(paymentIds);
-        }
-      } catch {
-        // ignore
-      }
-    };
-
-    const onSyncEnd = () => setTimeout(refreshPending, 200);
-
-    refreshPending();
-    const interval = setInterval(refreshPending, 2000);
-    window.addEventListener('sync-start', refreshPending as any);
-    window.addEventListener('sync-end', onSyncEnd as any);
-    window.addEventListener('online', refreshPending);
-    window.addEventListener('offline', refreshPending);
-
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-      window.removeEventListener('sync-start', refreshPending as any);
-      window.removeEventListener('sync-end', onSyncEnd as any);
-      window.removeEventListener('online', refreshPending);
-      window.removeEventListener('offline', refreshPending);
-    };
-  }, []);
 
   const handleEdit = (id: string) => {
     const item = loans?.find((loan: any) => loan.id === id);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, Suspense } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, Suspense } from 'react';
 import IncomeForm from '@components/Income/IncomeForm';
 import { deleteNode, formatNumber, getMonthsPassed, hasTag } from '@utils/utils';
 import { useAuthState, useData } from '@context/context';
@@ -8,7 +8,7 @@ import Modal from '@components/Modal/Modal';
 import IncomeTable from '@components/Income/IncomeTable';
 import IncomeFilters from '@components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
-import { getPendingSyncOperations } from '@utils/indexedDB';
+import { usePendingSyncIds } from '@hooks/usePendingSyncIds';
 
 const IncomeIntelligence = React.lazy(
   () => import('@components/IncomeIntelligence')
@@ -46,7 +46,6 @@ const Income = () => {
   const loading = data.loading;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nrOfItemsToShow, setNrOfItemsToShow] = useState(20);
-  const [pendingSyncIds, setPendingSyncIds] = useState<Record<string, true>>({});
   const [filters, setFilters] = useState({
     textFilter: '',
     selectedMonth: '',
@@ -54,49 +53,14 @@ const Income = () => {
   });
   const apiClient = useApiClient();
 
+  // Event-driven pending sync tracking (no polling)
+  const pendingSyncIds = usePendingSyncIds(['income']);
+
   useEffect(() => {
     if (noData && apiClient) {
       fetchExpensesService(apiClient, dataDispatch);
     }
-  }, [data, dataDispatch, noData, apiClient]);
-
-  // Track pending sync for incomes (including temp_* IDs) so they stay visible after refresh
-  useEffect(() => {
-    let mounted = true;
-
-    const refreshPending = async () => {
-      try {
-        const pending = await getPendingSyncOperations();
-        const ids: Record<string, true> = {};
-        pending.forEach((op) => {
-          if (op.entityType === 'income' && op.localId) {
-            ids[op.localId] = true;
-          }
-        });
-        if (mounted) setPendingSyncIds(ids);
-      } catch {
-        // ignore
-      }
-    };
-
-    const onSyncEnd = () => setTimeout(refreshPending, 200);
-
-    refreshPending();
-    const interval = setInterval(refreshPending, 2000);
-    window.addEventListener('sync-start', refreshPending as any);
-    window.addEventListener('sync-end', onSyncEnd as any);
-    window.addEventListener('online', refreshPending);
-    window.addEventListener('offline', refreshPending);
-
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-      window.removeEventListener('sync-start', refreshPending as any);
-      window.removeEventListener('sync-end', onSyncEnd as any);
-      window.removeEventListener('online', refreshPending);
-      window.removeEventListener('offline', refreshPending);
-    };
-  }, []);
+  }, [noData, apiClient, dataDispatch]);
 
   const [focusedItem, setFocusedItem] = useState({
     nid: '',
@@ -144,24 +108,26 @@ const Income = () => {
     });
   }, [data.incomeData, filters]);
 
-  const handleFilterChange = (newFilters: {
+  const handleFilterChange = useCallback((newFilters: {
     textFilter: string;
     selectedMonth: string;
     selectedTag: string;
   }) => {
-    setFilters(newFilters);
-    // Only reset pagination if filters actually changed
-    const hasFilterChanged =
-      newFilters.textFilter !== filters.textFilter ||
-      newFilters.selectedMonth !== filters.selectedMonth ||
-      newFilters.selectedTag !== filters.selectedTag;
+    setFilters((prev) => {
+      const hasFilterChanged =
+        newFilters.textFilter !== prev.textFilter ||
+        newFilters.selectedMonth !== prev.selectedMonth ||
+        newFilters.selectedTag !== prev.selectedTag;
 
-    if (hasFilterChanged) {
-      setNrOfItemsToShow(20);
-    }
-  };
+      if (hasFilterChanged) {
+        setNrOfItemsToShow(20);
+      }
 
-  const handleEdit = (id: string) => {
+      return newFilters;
+    });
+  }, []);
+
+  const handleEdit = useCallback((id: string) => {
     const item = data.incomeData.find(
       (item: TransactionOrIncomeItem) => item.id === id
     );
@@ -172,9 +138,9 @@ const Income = () => {
       field_description: item.dsc,
     });
     setShowEditModal(true);
-  };
+  }, [data.incomeData]);
 
-  const handleDelete = (id: string, token: string) => {
+  const handleDelete = useCallback((id: string, token: string) => {
     setIsSubmitting(true);
     deleteNode(
       id,
@@ -195,11 +161,11 @@ const Income = () => {
       },
       dataDispatch
     );
-  };
+  }, [dataDispatch, showNotification, t]);
 
-  const handleClearChangedItem = (id: string) => {
+  const handleClearChangedItem = useCallback((id: string) => {
     dataDispatch({ type: 'CLEAR_CHANGED_ITEM', id });
-  };
+  }, [dataDispatch]);
 
   // Calculate income statistics based on filtered data
   const totalIncome =
