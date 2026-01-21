@@ -17,6 +17,7 @@ import { formatNumber, getLocale, hasTag } from '@utils/utils';
 import { TransactionOrIncomeItem } from '@type/types';
 import { incomeSuggestions } from '@utils/constants';
 import TagDisplay from '@components/Common/TagDisplay';
+import ItemSyncIndicator from '@components/Common/ItemSyncIndicator';
 import './IncomeTable.scss';
 import { useLocalization } from '@context/localization';
 
@@ -26,6 +27,7 @@ interface IncomeTableProps {
   setShowDeleteModal: (id: string) => void;
   changedItems?: any;
   handleClearChangedItem?: any;
+  pendingSyncIds?: Record<string, true>;
 }
 
 type SortField = 'date' | 'amount' | null;
@@ -37,6 +39,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   setShowDeleteModal,
   handleClearChangedItem,
   changedItems,
+  pendingSyncIds,
 }) => {
   const listRef = useRef<any>(null);
   const [sortField, setSortField] = useState<SortField>('date');
@@ -150,6 +153,9 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
           const year = date.getFullYear();
 
           const isThisItemSwiped = swipedItemId === income.id;
+          const isPending =
+            !!pendingSyncIds?.[income.id] ||
+            (typeof income.id === 'string' && income.id.startsWith('temp_'));
 
           return (
             <div
@@ -208,7 +214,12 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                 </div>
 
                 {/* Amount */}
-                <div className="income-amount">{formatNumber(income.sum)}</div>
+                <div className="income-amount">
+                  {formatNumber(income.sum)}
+                  <ItemSyncIndicator
+                    status={isPending ? 'pending' : undefined}
+                  />
+                </div>
               </div>
             </div>
           );

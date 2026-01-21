@@ -8,6 +8,7 @@ import Modal from '@components/Modal/Modal';
 import IncomeTable from '@components/Income/IncomeTable';
 import IncomeFilters from '@components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
+import { getPendingSyncOperations } from '@utils/indexedDB';
 
 const IncomeIntelligence = React.lazy(
   () => import('@components/IncomeIntelligence')
@@ -45,6 +46,7 @@ const Income = () => {
   const loading = data.loading;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nrOfItemsToShow, setNrOfItemsToShow] = useState(20);
+  const [pendingSyncIds, setPendingSyncIds] = useState<Record<string, true>>({});
   const [filters, setFilters] = useState({
     textFilter: '',
     selectedMonth: '',
@@ -57,6 +59,44 @@ const Income = () => {
       fetchExpensesService(apiClient, dataDispatch);
     }
   }, [data, dataDispatch, noData, apiClient]);
+
+  // Track pending sync for incomes (including temp_* IDs) so they stay visible after refresh
+  useEffect(() => {
+    let mounted = true;
+
+    const refreshPending = async () => {
+      try {
+        const pending = await getPendingSyncOperations();
+        const ids: Record<string, true> = {};
+        pending.forEach((op) => {
+          if (op.entityType === 'income' && op.localId) {
+            ids[op.localId] = true;
+          }
+        });
+        if (mounted) setPendingSyncIds(ids);
+      } catch {
+        // ignore
+      }
+    };
+
+    const onSyncEnd = () => setTimeout(refreshPending, 200);
+
+    refreshPending();
+    const interval = setInterval(refreshPending, 2000);
+    window.addEventListener('sync-start', refreshPending as any);
+    window.addEventListener('sync-end', onSyncEnd as any);
+    window.addEventListener('online', refreshPending);
+    window.addEventListener('offline', refreshPending);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+      window.removeEventListener('sync-start', refreshPending as any);
+      window.removeEventListener('sync-end', onSyncEnd as any);
+      window.removeEventListener('online', refreshPending);
+      window.removeEventListener('offline', refreshPending);
+    };
+  }, []);
 
   const [focusedItem, setFocusedItem] = useState({
     nid: '',
@@ -248,6 +288,7 @@ const Income = () => {
                 setShowDeleteModal={setShowDeleteModal}
                 changedItems={data.changedItems}
                 handleClearChangedItem={handleClearChangedItem}
+                pendingSyncIds={pendingSyncIds}
               />
             ) : (
               <NoData

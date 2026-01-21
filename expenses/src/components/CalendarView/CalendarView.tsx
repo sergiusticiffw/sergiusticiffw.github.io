@@ -24,6 +24,7 @@ interface CalendarViewProps {
   onMonthChange: (direction: 'prev' | 'next') => void;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  pendingSyncIds?: Record<string, true>;
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({
@@ -33,6 +34,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   onMonthChange,
   onEdit,
   onDelete,
+  pendingSyncIds,
 }) => {
   const { language } = useLocalization();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -251,6 +253,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         <TransactionList
           transactions={selectedDayTransactions}
           categoryLabels={categoryLabels}
+          pendingSyncIds={pendingSyncIds}
           onEdit={(id) => {
             setShowDayModal(false);
             onEdit?.(id);

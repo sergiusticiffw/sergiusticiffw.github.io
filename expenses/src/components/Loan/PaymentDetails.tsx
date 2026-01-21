@@ -19,6 +19,7 @@ import {
   getLocale,
   processPayments,
 } from '@utils/utils';
+import ItemSyncIndicator from '@components/Common/ItemSyncIndicator';
 import { fetchLoans as fetchLoansService } from '@api/loans';
 import { useApiClient } from '@hooks/useApiClient';
 import { notificationType } from '@utils/constants';
@@ -33,6 +34,7 @@ type SortDirection = 'asc' | 'desc';
 const PaymentDetails = (props) => {
   const payments = props?.payments ?? [];
   const loan = props?.loan ?? {};
+  const pendingSyncIds = props?.pendingSyncIds ?? {};
   const listRef = useRef<any>(null);
   const showNotification = useNotification();
   const { t, language } = useLocalization();
@@ -302,6 +304,10 @@ const PaymentDetails = (props) => {
               const year = date.getFullYear();
 
               const isThisItemSwiped = swipedItemId === payment.id;
+              const isPending =
+                !!pendingSyncIds[payment.id] ||
+                (typeof payment.id === 'string' &&
+                  payment.id.startsWith('temp_'));
 
               return (
                 <div
@@ -364,6 +370,9 @@ const PaymentDetails = (props) => {
                     {/* Amount */}
                     <div className="payment-amount">
                       {formatNumber(payment.fpi)}
+                      <ItemSyncIndicator
+                        status={isPending ? 'pending' : undefined}
+                      />
                     </div>
                   </div>
                 </div>

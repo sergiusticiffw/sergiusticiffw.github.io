@@ -35,6 +35,7 @@ import {
 import Notification from '@components/Notification/Notification';
 import './Loan.scss';
 import { useLocalization } from '@context/localization';
+import { getPendingSyncOperations } from '@utils/indexedDB';
 
 const Loan: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +44,9 @@ const Loan: React.FC = () => {
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [loanFormEditSubmitting, setLoanFormEditSubmitting] = useState(false);
   const [paymentFormSubmitting, setPaymentFormSubmitting] = useState(false);
+  const [pendingPaymentIds, setPendingPaymentIds] = useState<Record<string, true>>(
+    {}
+  );
   const { loans } = data;
   const noData = data.loans === null;
   const { t } = useLocalization();
@@ -53,6 +57,40 @@ const Loan: React.FC = () => {
       fetchLoansService(apiClient, dataDispatch);
     }
   }, [data, dataDispatch, noData, apiClient]);
+
+  // Track pending sync for payments shown on this loan detail page
+  useEffect(() => {
+    let mounted = true;
+    const refreshPending = async () => {
+      try {
+        const pending = await getPendingSyncOperations();
+        const map: Record<string, true> = {};
+        pending.forEach((op) => {
+          if (op.entityType === 'payment' && op.localId) {
+            map[op.localId] = true;
+          }
+        });
+        if (mounted) setPendingPaymentIds(map);
+      } catch {
+        // ignore errors
+      }
+    };
+    const onSyncEnd = () => setTimeout(refreshPending, 200);
+    refreshPending();
+    const interval = setInterval(refreshPending, 2000);
+    window.addEventListener('sync-start', refreshPending as any);
+    window.addEventListener('sync-end', onSyncEnd as any);
+    window.addEventListener('online', refreshPending);
+    window.addEventListener('offline', refreshPending);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+      window.removeEventListener('sync-start', refreshPending as any);
+      window.removeEventListener('sync-end', onSyncEnd as any);
+      window.removeEventListener('online', refreshPending);
+      window.removeEventListener('offline', refreshPending);
+    };
+  }, []);
 
   const loan = loans?.find((item: any) => item.id === id);
   const loanStatus = getLoanStatus(loan?.fls);
@@ -486,6 +524,7 @@ const Loan: React.FC = () => {
             loan={loan}
             payments={filteredData?.data || []}
             totalPaidAmount={totalPaidAmount}
+            pendingSyncIds={pendingPaymentIds}
           />
         </div>
 

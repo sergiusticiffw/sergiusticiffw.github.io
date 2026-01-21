@@ -11,3 +11,15 @@
     height: 14px;
   }
 }
+
+.item-sync-indicator--pending {
+  color: #f59e0b;
+}
+
+.item-sync-indicator--failed {
+  color: #ef4444;
+}
+
+.item-sync-indicator--synced {
+  color: #22c55e;
+}

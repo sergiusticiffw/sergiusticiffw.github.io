@@ -6,6 +6,7 @@ import { getSuggestions } from '@utils/constants';
 import { normalizeTag } from '@hooks/useTags';
 import TagDisplay from '@components/Common/TagDisplay';
 import useSwipeActions from '@hooks/useSwipeActions';
+import ItemSyncIndicator from '@components/Common/ItemSyncIndicator';
 import {
   FiEdit2,
   FiTrash2,
@@ -28,6 +29,7 @@ interface TransactionListProps {
   categoryLabels: Array<{ value: string; label: string }>;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  pendingSyncIds?: Record<string, true>;
 }
 
 type SortField = 'date' | 'amount' | null;
@@ -38,6 +40,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   categoryLabels,
   onEdit,
   onDelete,
+  pendingSyncIds,
 }) => {
   const listRef = useRef<HTMLDivElement>(null);
   const [sortField, setSortField] = useState<SortField>(null);
@@ -122,6 +125,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
           .toUpperCase();
 
         const isThisItemSwiped = swipedItemId === transaction.id;
+        const isPending =
+          !!pendingSyncIds?.[transaction.id] ||
+          (typeof transaction.id === 'string' && transaction.id.startsWith('temp_'));
 
         return (
           <div key={transaction.id} className="transaction-item-wrapper">
@@ -189,6 +195,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
               {/* Price */}
               <div className="transaction-price">
                 {formatNumber(transaction.sum)}
+                <ItemSyncIndicator status={isPending ? 'pending' : undefined} />
               </div>
             </div>
           </div>

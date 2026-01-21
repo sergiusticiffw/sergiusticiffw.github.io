@@ -13,6 +13,7 @@ import {
   FiSliders,
 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
+import ItemSyncIndicator from '@components/Common/ItemSyncIndicator';
 import './LoansList.scss';
 
 interface Loan {
@@ -37,6 +38,7 @@ interface LoansListProps {
   getProgress: (loan: Loan) => number;
   statusFilter?: string;
   onStatusFilterChange?: (filter: string) => void;
+  pendingSyncIds?: Record<string, true>;
 }
 
 type SortField = 'title' | 'principal' | 'status' | null;
@@ -52,6 +54,7 @@ const LoansList: React.FC<LoansListProps> = ({
   getProgress,
   statusFilter: externalStatusFilter,
   onStatusFilterChange,
+  pendingSyncIds,
 }) => {
   const listRef = useRef<any>(null);
   const [sortField, setSortField] = useState<SortField>('status');
@@ -182,6 +185,9 @@ const LoansList: React.FC<LoansListProps> = ({
         const progress = getProgress(loan);
 
         const isThisItemSwiped = swipedItemId === loan.id;
+        const isPending =
+          !!pendingSyncIds?.[loan.id] ||
+          (typeof loan.id === 'string' && loan.id.startsWith('temp_'));
 
         return (
           <div key={loan.id} className="loan-item-wrapper">
@@ -226,6 +232,7 @@ const LoansList: React.FC<LoansListProps> = ({
                 </div>
 
                 <div className="loan-amount">{formatNumber(loan.fp)}</div>
+              <ItemSyncIndicator status={isPending ? 'pending' : undefined} />
 
                 <div className="loan-progress-row">
                   <div className="loan-progress-bar">

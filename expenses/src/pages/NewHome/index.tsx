@@ -9,6 +9,7 @@ import {
   hasTag,
 } from '@utils/utils';
 import { getCategories, notificationType } from '@utils/constants';
+import { getPendingSyncOperations } from '@utils/indexedDB';
 import TransactionFilters from '@components/Home/TransactionFilters';
 import TransactionList from '@components/TransactionList';
 import CalendarView from '@components/CalendarView';
@@ -58,6 +59,9 @@ const NewHome = () => {
   const [transactionFormSubmitting, setTransactionFormSubmitting] =
     useState(false);
   const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
+  const [pendingSyncIds, setPendingSyncIds] = useState<Record<string, true>>(
+    {}
+  );
 
   const apiClient = useApiClient();
 
@@ -66,6 +70,51 @@ const NewHome = () => {
       fetchExpensesService(apiClient, dataDispatch);
     }
   }, [data, dataDispatch, noData, apiClient]);
+
+  // Track pending sync items (so offline-created/edited items show a badge after refresh)
+  useEffect(() => {
+    let mounted = true;
+
+    const refreshPending = async () => {
+      try {
+        const pending = await getPendingSyncOperations();
+        const ids: Record<string, true> = {};
+        pending.forEach((op) => {
+          if (op.localId) {
+            ids[op.localId] = true;
+          }
+        });
+        if (mounted) setPendingSyncIds(ids);
+      } catch {
+        // ignore
+      }
+    };
+
+    const onSyncEnd = () => {
+      // small delay to let IndexedDB settle
+      setTimeout(() => {
+        refreshPending();
+      }, 200);
+    };
+
+    // initial + periodic refresh (same cadence as SyncStatusIndicator)
+    refreshPending();
+    const interval = setInterval(refreshPending, 2000);
+
+    window.addEventListener('sync-start', refreshPending as any);
+    window.addEventListener('sync-end', onSyncEnd as any);
+    window.addEventListener('online', refreshPending);
+    window.addEventListener('offline', refreshPending);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+      window.removeEventListener('sync-start', refreshPending as any);
+      window.removeEventListener('sync-end', onSyncEnd as any);
+      window.removeEventListener('online', refreshPending);
+      window.removeEventListener('offline', refreshPending);
+    };
+  }, []);
 
   // Update filters in context
   useEffect(() => {
@@ -494,6 +543,7 @@ const NewHome = () => {
               <TransactionList
                 transactions={filteredTransactions}
                 categoryLabels={localizedCategories}
+                pendingSyncIds={pendingSyncIds}
                 onEdit={handleEdit}
                 onDelete={(id) => setShowDeleteModal(id)}
               />
@@ -504,6 +554,7 @@ const NewHome = () => {
                 transactions={filteredTransactions}
                 currentMonth={currentMonth}
                 categoryLabels={localizedCategories}
+                pendingSyncIds={pendingSyncIds}
                 onMonthChange={(direction) => {
                   if (
                     direction === 'prev' &&
