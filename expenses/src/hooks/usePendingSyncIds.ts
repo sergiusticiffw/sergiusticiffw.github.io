@@ -55,6 +55,7 @@ export function usePendingSyncIds(
     window.addEventListener('sync-end', onSyncEnd);
     window.addEventListener('online', refreshPending);
     window.addEventListener('offline', refreshPending);
+    window.addEventListener('sync-queue-changed', refreshPending);
 
     return () => {
       mounted = false;
@@ -62,6 +63,7 @@ export function usePendingSyncIds(
       window.removeEventListener('sync-end', onSyncEnd);
       window.removeEventListener('online', refreshPending);
       window.removeEventListener('offline', refreshPending);
+      window.removeEventListener('sync-queue-changed', refreshPending);
     };
   }, [entityTypes.join(',')]); // Only re-run if entityTypes change
 

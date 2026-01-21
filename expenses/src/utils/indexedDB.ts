@@ -553,6 +553,8 @@ export async function addToSyncQueue(operation: SyncOperation): Promise<void> {
       const request = store.add(syncOp);
       request.onsuccess = () => {
         transaction.oncomplete = () => db.close();
+        // Notify UI that queue changed (so badges update immediately while offline)
+        window.dispatchEvent(new CustomEvent('sync-queue-changed'));
         resolve();
       };
       request.onerror = () => {
@@ -602,6 +604,8 @@ export async function removeSyncOperation(id: number): Promise<void> {
       const request = store.delete(id);
       request.onsuccess = () => {
         transaction.oncomplete = () => db.close();
+        // Notify UI that queue changed
+        window.dispatchEvent(new CustomEvent('sync-queue-changed'));
         resolve();
       };
       request.onerror = () => {
@@ -638,6 +642,8 @@ export async function updateSyncOperationStatus(
           const putRequest = store.put(operation);
           putRequest.onsuccess = () => {
             transaction.oncomplete = () => db.close();
+            // Notify UI that queue changed
+            window.dispatchEvent(new CustomEvent('sync-queue-changed'));
             resolve();
           };
           putRequest.onerror = () => {
