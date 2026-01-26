@@ -21,37 +21,30 @@
 // Import page styles
 @use 'pages/Login/Login' as *;
 
-// App-specific styles
 .app-container {
-  min-height: 100vh;
-  min-height: -webkit-fill-available; // Safari iOS fix
-  min-height: 100dvh; // Dynamic viewport height
+  height: 100dvh; // Forțează înălțimea exactă a ecranului
   display: flex;
   flex-direction: column;
   background: #1a1a1a;
-  position: relative;
-  width: 100%;
+  overflow: hidden; // Previne scroll-ul pe containerul tată
 }
 
 .main-content {
   flex: 1;
-  padding-bottom: 95px; // Space for navbar - default for Home page
-  overflow-y: auto;
+  min-height: 0; // REPARĂ BUG-UL DE SCROLL ÎN CHROME FLEXBOX
+  padding-bottom: 95px;
+  overflow-y: auto; // Permite scroll-ul doar aici
   overflow-x: hidden;
-  // Enable smooth scrolling on iOS
   -webkit-overflow-scrolling: touch;
-  // Prevent overscroll bounce on iOS
-  overscroll-behavior-y: contain;
-  // Fix for Safari iOS viewport calculations
-  min-height: calc(100vh - 70px);
-  min-height: calc(100dvh - 70px); // Dynamic viewport height
   background: #1a1a1a;
   width: 100%;
   position: relative;
 
-  // Reduced padding for non-Home pages
+  /* Adaugă asta pentru a forța un context de scroll curat */
+  display: block;
+
   &:not(:has(.month-stats)) {
-    padding-bottom: 60px; // Reduced space for other pages
+    padding-bottom: 60px;
   }
 }
 
