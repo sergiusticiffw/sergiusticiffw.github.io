@@ -24,8 +24,8 @@ body {
   -webkit-text-size-adjust: 100%;
   // Fix for iOS tap highlight
   -webkit-tap-highlight-color: transparent;
-  // Prevent pull-to-refresh on iOS (can be annoying)
-  overscroll-behavior-y: contain;
+  // Allow pull-to-refresh on Chrome Android (Chrome 144+ fix)
+  // overscroll-behavior-y: contain; // REMOVED - blocked pull-to-refresh
   // Optimize font rendering
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -48,8 +48,8 @@ body {
   overflow-y: auto;
   // Enable smooth scrolling on iOS
   -webkit-overflow-scrolling: touch;
-  // Prevent overscroll bounce on iOS
-  overscroll-behavior-y: contain;
+  // Allow pull-to-refresh on Chrome Android (Chrome 144+ fix)
+  // overscroll-behavior-y: contain; // REMOVED - blocked pull-to-refresh
   box-sizing: border-box;
   width: 100%;
   position: relative;
