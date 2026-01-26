@@ -1,5 +1,12 @@
 @use 'variables' as *;
 
+html, body {
+  overflow-y: visible !important;
+  height: auto !important;
+  min-height: 100dvh;
+  overscroll-behavior-y: contain;
+}
+
 // Base HTML and body styles
 html {
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
