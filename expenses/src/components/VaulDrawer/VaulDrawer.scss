@@ -100,22 +100,15 @@
     position: absolute;
     top: $spacing-md;
     right: $spacing-md;
-    background: none;
+    background: transparent;
     border: none;
     cursor: pointer;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 1.5rem;
-    padding: $spacing-sm;
-    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.4rem;
+    border-radius: 999px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-    &:hover {
-      color: rgba(255, 255, 255, 0.9);
-      background-color: rgba(0, 0, 0, 0.05);
-    }
   }
 }
 
@@ -241,7 +234,7 @@
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 1rem 1.4rem 0rem;
+  padding: 0.875rem 1rem 0rem;
   position: relative;
 
   // When keyboard is visible, allow more scrolling space
@@ -451,6 +444,11 @@
     .form-group {
       margin-bottom: 1.25rem;
     }
+  }
+
+  // Reduce padding for income form to match transaction form
+  .income-form {
+    padding-bottom: 1rem;
   }
 }
 

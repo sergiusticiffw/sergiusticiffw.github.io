@@ -1,3 +1,5 @@
+@use '../../styles/variables' as *;
+
 @keyframes deleteDrawerBounce {
   0%,
   80%,
@@ -76,11 +78,11 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-}
 
-.delete-drawer__close:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .delete-drawer__description {
