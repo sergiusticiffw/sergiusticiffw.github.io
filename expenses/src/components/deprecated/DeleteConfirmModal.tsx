@@ -1,5 +1,5 @@
 import React from 'react';
-import Modal from '@components/Modal/Modal';
+import Modal from '@components/deprecated/Modal/Modal';
 import { FiTrash2 } from 'react-icons/fi';
 import { useLocalization } from '@context/localization';
 

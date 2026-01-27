@@ -13,7 +13,7 @@ import { usePendingSyncIds } from '@hooks/usePendingSyncIds';
 import TransactionFilters from '@components/Home/TransactionFilters';
 import TransactionList from '@components/TransactionList';
 import CalendarView from '@components/CalendarView';
-import Modal from '@components/Modal';
+import VaulDrawer from '@components/VaulDrawer';
 import TransactionForm from '@components/TransactionForm';
 import EditTransactionDrawer from '@components/TransactionForm/EditTransactionDrawer';
 import {
@@ -305,8 +305,8 @@ const NewHome = () => {
         setIsSubmitting={setTransactionFormSubmitting}
       />
 
-      {/* Add Modal */}
-      <Modal
+      {/* Add Drawer */}
+      <VaulDrawer
         show={showAddModal}
         onClose={(e) => {
           e.preventDefault();
@@ -346,7 +346,7 @@ const NewHome = () => {
             setShowAddModal(false);
           }}
         />
-      </Modal>
+      </VaulDrawer>
 
       {loading ? (
         <LoadingSpinner />

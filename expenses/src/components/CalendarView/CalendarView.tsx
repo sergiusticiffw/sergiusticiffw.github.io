@@ -4,7 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { formatNumber, getLocale } from '@utils/utils';
 import { useLocalization } from '@context/localization';
-import Modal from '@components/Modal';
+import VaulDrawer from '@components/VaulDrawer';
 import TransactionList from '@components/TransactionList';
 import Month from '@components/Home/Month';
 import './CalendarView.scss';
@@ -227,8 +227,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         <Month month={currentMonth} />
       </div>
 
-      {/* Day Transactions Modal */}
-      <Modal
+      {/* Day Transactions Drawer */}
+      <VaulDrawer
         show={showDayModal && !!selectedDate}
         onClose={() => setShowDayModal(false)}
         title={
@@ -263,7 +263,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             onDelete?.(id);
           }}
         />
-      </Modal>
+      </VaulDrawer>
     </div>
   );
 };

@@ -86,4 +86,3 @@ const DeleteConfirmDrawer: React.FC<DeleteConfirmDrawerProps> = ({
 };
 
 export default DeleteConfirmDrawer;
-

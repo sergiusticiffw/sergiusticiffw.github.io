@@ -4,7 +4,7 @@ import { deleteNode, formatNumber, getMonthsPassed, hasTag } from '@utils/utils'
 import { useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
-import Modal from '@components/Modal/Modal';
+import VaulDrawer from '@components/VaulDrawer';
 import IncomeTable from '@components/Income/IncomeTable';
 import IncomeFilters from '@components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@components/Income/YearIncomeAverageTrend';
@@ -18,7 +18,7 @@ import {
   LoadingSpinner,
   StatCard,
   StatsGrid,
-  DeleteConfirmModal,
+  DeleteConfirmDrawer,
   NoData,
 } from '@components/Common';
 import { notificationType } from '@utils/constants';
@@ -305,13 +305,10 @@ const Income = () => {
         </>
       ) : null}
 
-      {/* Modals */}
-      <DeleteConfirmModal
-        show={!!showDeleteModal}
-        onClose={(e) => {
-          e.preventDefault();
-          setShowDeleteModal(false);
-        }}
+      {/* Delete Confirmation Drawer */}
+      <DeleteConfirmDrawer
+        open={!!showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
         onConfirm={() =>
           showDeleteModal && handleDelete(showDeleteModal, token)
         }
@@ -319,7 +316,7 @@ const Income = () => {
         isSubmitting={isSubmitting}
       />
 
-      <Modal
+      <VaulDrawer
         show={showEditModal}
         onClose={(e) => {
           e.preventDefault();
@@ -363,7 +360,7 @@ const Income = () => {
             // Optimistic UI already applied by useFormSubmit; refetch not needed
           }}
         />
-      </Modal>
+      </VaulDrawer>
 
       {/* Floating Action Button */}
       <button

@@ -5,7 +5,7 @@ import { availableCharts } from '@utils/constants';
 import { getCategories } from '@utils/constants';
 import { TransactionFilters } from '@components/Home';
 import { extractMonthsFromRawData } from '@utils/utils';
-import Modal from '@components/Modal';
+import VaulDrawer from '@components/VaulDrawer';
 import TransactionForm from '@components/TransactionForm';
 import LoadingSpinner from '@components/Common/LoadingSpinner';
 import NoData from '@components/Common/NoData';
@@ -151,8 +151,8 @@ const Charts = () => {
         </div>
       )}
 
-      {/* Add Transaction Modal */}
-      <Modal
+      {/* Add Transaction Drawer */}
+      <VaulDrawer
         show={showAddModal}
         onClose={(e) => {
           e.preventDefault();
@@ -198,7 +198,7 @@ const Charts = () => {
             });
           }}
         />
-      </Modal>
+      </VaulDrawer>
 
       {/* Floating Action Button */}
       <button

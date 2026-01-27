@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import LoanDetails from '@components/Loan/LoanDetails';
 import LoanForm from '@components/Loan/LoanForm';
 import Paydown from '@utils/paydown-node';
-import Modal from '@components/Modal/Modal';
+import VaulDrawer from '@components/VaulDrawer';
 import { useParams } from 'react-router-dom';
 import PaymentDetails from '@components/Loan/PaymentDetails';
 import PaymentForm from '@components/Loan/PaymentForm';
@@ -509,8 +509,8 @@ const Loan: React.FC = () => {
         </div>
       </div>
 
-      {/* Edit Loan Modal */}
-      <Modal
+      {/* Edit Loan Drawer */}
+      <VaulDrawer
         show={showEditModal}
         onClose={(e) => {
           e.preventDefault();
@@ -562,10 +562,10 @@ const Loan: React.FC = () => {
             }
           }}
         />
-      </Modal>
+      </VaulDrawer>
 
-      {/* Add Payment Modal */}
-      <Modal
+      {/* Add Payment Drawer */}
+      <VaulDrawer
         show={showAddPaymentModal}
         onClose={(e) => {
           e.preventDefault();
@@ -616,7 +616,7 @@ const Loan: React.FC = () => {
             }
           }}
         />
-      </Modal>
+      </VaulDrawer>
 
       {/* Floating Action Button */}
       <button

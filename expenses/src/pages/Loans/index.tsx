@@ -19,11 +19,11 @@ import { usePendingSyncIds } from '@hooks/usePendingSyncIds';
 import {
   PageHeader,
   LoadingSpinner,
-  DeleteConfirmModal,
+  DeleteConfirmDrawer,
   NoData,
 } from '@components/Common';
 import { FiCreditCard, FiPlus } from 'react-icons/fi';
-import Modal from '@components/Modal/Modal';
+import VaulDrawer from '@components/VaulDrawer';
 import LoanForm from '@components/Loan/LoanForm';
 import LoansList from '@components/Loan/LoansList';
 import './Loans.scss';
@@ -285,8 +285,8 @@ const Loans: FC = () => {
         )}
       </div>
 
-      {/* Add Loan Modal */}
-      <Modal
+      {/* Add Loan Drawer */}
+      <VaulDrawer
         show={showAddModal}
         onClose={(e) => {
           e.preventDefault();
@@ -337,10 +337,10 @@ const Loans: FC = () => {
             }
           }}
         />
-      </Modal>
+      </VaulDrawer>
 
-      {/* Edit Loan Modal */}
-      <Modal
+      {/* Edit Loan Drawer */}
+      <VaulDrawer
         show={showEditModal}
         onClose={(e) => {
           e.preventDefault();
@@ -381,15 +381,12 @@ const Loans: FC = () => {
             }
           }}
         />
-      </Modal>
+      </VaulDrawer>
 
-      {/* Delete Confirmation Modal */}
-      <DeleteConfirmModal
-        show={showDeleteModal}
-        onClose={(e) => {
-          e.preventDefault();
-          setShowDeleteModal(false);
-        }}
+      {/* Delete Confirmation Drawer */}
+      <DeleteConfirmDrawer
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
         title={t('loan.deleteLoan')}
         message={t('modal.deleteLoanMessage')}

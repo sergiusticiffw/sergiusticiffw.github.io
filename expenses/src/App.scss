@@ -6,7 +6,6 @@
 
 // Import component styles (only those not imported by components themselves)
 @use 'components/Navbar/Navbar' as *;
-@use 'components/Modal/Modal' as *;
 @use 'components/Charts/Charts' as *;
 @use 'components/Loan/Loan' as *;
 @use 'components/Home/Home' as *;

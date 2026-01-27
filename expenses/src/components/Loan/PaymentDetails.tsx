@@ -23,7 +23,7 @@ import ItemSyncIndicator from '@components/Common/ItemSyncIndicator';
 import { fetchLoans as fetchLoansService } from '@api/loans';
 import { useApiClient } from '@hooks/useApiClient';
 import { notificationType } from '@utils/constants';
-import Modal from '@components/Modal/Modal';
+import VaulDrawer from '@components/VaulDrawer';
 import PaymentForm from '@components/Loan/PaymentForm';
 import { useLoan } from '@context/loan';
 import './PaymentDetails.scss';
@@ -176,8 +176,8 @@ const PaymentDetails = (props) => {
 
   return (
     <div className="payment-history">
-      {/* Delete Modal */}
-      <Modal
+      {/* Delete Drawer */}
+      <VaulDrawer
         show={!!deleteModalId}
         onClose={(e) => {
           e.preventDefault();
@@ -212,10 +212,10 @@ const PaymentDetails = (props) => {
             </>
           )}
         </button>
-      </Modal>
+      </VaulDrawer>
 
-      {/* Edit Modal */}
-      <Modal
+      {/* Edit Drawer */}
+      <VaulDrawer
         show={showEditModal}
         onClose={(e) => {
           e.preventDefault();
@@ -261,7 +261,7 @@ const PaymentDetails = (props) => {
             }
           }}
         />
-      </Modal>
+      </VaulDrawer>
 
       {/* Payment List */}
       {payments.length ? (
