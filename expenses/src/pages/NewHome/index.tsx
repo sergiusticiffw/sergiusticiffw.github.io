@@ -15,12 +15,13 @@ import TransactionList from '@components/TransactionList';
 import CalendarView from '@components/CalendarView';
 import Modal from '@components/Modal';
 import TransactionForm from '@components/TransactionForm';
+import EditTransactionDrawer from '@components/TransactionForm/EditTransactionDrawer';
 import {
   PageHeader,
   LoadingSpinner,
   StatCard,
   StatsGrid,
-  DeleteConfirmModal,
+  DeleteConfirmDrawer,
   NoData,
 } from '@components/Common';
 import {
@@ -282,64 +283,27 @@ const NewHome = () => {
 
   return (
     <div className="page-container newhome-page">
-      {/* Delete Modal */}
-      <DeleteConfirmModal
-        show={!!showDeleteModal}
-        onClose={(e) => {
-          e.preventDefault();
-          setShowDeleteModal(false);
-        }}
-        onConfirm={() =>
-          showDeleteModal && handleDelete(showDeleteModal, token)
-        }
+      {/* Delete Drawer (Vaul) */}
+      <DeleteConfirmDrawer
+        open={!!showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={() => showDeleteModal && handleDelete(showDeleteModal, token)}
         title={t('transaction.deleteTransaction')}
+        message={t('modal.deleteTransaction')}
         isSubmitting={isSubmitting}
       />
 
-      {/* Edit Modal */}
-      <Modal
-        show={showEditModal}
-        onClose={(e) => {
-          e.preventDefault();
+      {/* Edit Transaction Drawer (Vaul) */}
+      <EditTransactionDrawer
+        open={showEditModal}
+        onClose={() => {
           setShowEditModal(false);
-          setFocusedItem({}); // Reset focused item when closing modal
+          setFocusedItem({});
         }}
-        title={t('transactionForm.editTransaction')}
-        footer={
-          <button
-            type="submit"
-            form="transaction-form-edit"
-            disabled={transactionFormSubmitting}
-            className="btn-submit"
-          >
-            {transactionFormSubmitting ? (
-              <div className="loader">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            ) : (
-              <>
-                <FiEdit2 />
-                <span>{t('transactionForm.editTitle')}</span>
-              </>
-            )}
-          </button>
-        }
-      >
-        <TransactionForm
-          formType="edit"
-          values={focusedItem}
-          hideSubmitButton={true}
-          onFormReady={(submitHandler, isSubmitting) => {
-            setTransactionFormSubmitting(isSubmitting);
-          }}
-          onSuccess={() => {
-            setShowEditModal(false);
-            setFocusedItem({}); // Reset focused item after successful edit
-          }}
-        />
-      </Modal>
+        values={focusedItem}
+        isSubmitting={transactionFormSubmitting}
+        setIsSubmitting={setTransactionFormSubmitting}
+      />
 
       {/* Add Modal */}
       <Modal

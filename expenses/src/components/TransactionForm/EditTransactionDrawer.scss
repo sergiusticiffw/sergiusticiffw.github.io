@@ -1,0 +1,53 @@
+.edit-transaction-drawer {
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  background: rgba(26, 26, 26, 0.98);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6);
+  max-width: 640px;
+  max-height: 90vh;
+  max-height: calc(
+    90vh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 1.5rem
+  );
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  outline: none;
+  padding-top: 0.5rem;
+
+  @supports (height: 100svh) {
+    max-height: 90svh;
+    max-height: calc(
+      90svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) -
+        1.5rem
+    );
+  }
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+  }
+
+  @media (max-width: 480px) {
+    border-radius: 12px 12px 0 0;
+  }
+}
+
+.edit-transaction-drawer__handle-wrap {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 0.25rem;
+}
+
+.edit-transaction-drawer__handle {
+  width: 46px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+

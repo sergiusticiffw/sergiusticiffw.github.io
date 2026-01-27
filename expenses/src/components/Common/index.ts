@@ -4,6 +4,7 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as StatCard } from './StatCard';
 export { default as StatsGrid } from './StatsGrid';
 export { default as DeleteConfirmModal } from './DeleteConfirmModal';
+export { default as DeleteConfirmDrawer } from './DeleteConfirmDrawer';
 export { default as NoData } from './NoData';
 export { default as MonthChips } from './MonthChips';
 export { default as FormField } from './FormField';
