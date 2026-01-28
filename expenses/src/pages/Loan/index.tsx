@@ -356,6 +356,37 @@ const Loan: React.FC = () => {
       <div className="loan-stats-grid-2col">
         <div className="loan-stat-item">
           <span className="loan-stat-label">
+            <FiCalendar
+              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+            />
+            {t('loan.startDate')}
+          </span>
+          <span className="loan-stat-value">
+            {loanData.start_date || '-'}
+          </span>
+        </div>
+        <div className="loan-stat-item">
+          <span className="loan-stat-label">
+            <FiCalendar
+              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
+            />
+            {t('loan.endDate')}
+          </span>
+          <span className="loan-stat-value">
+            {loanData.end_date ||
+              (amortizationSchedule.length > 0
+                ? (() => {
+                    const lastRow = amortizationSchedule[amortizationSchedule.length - 1];
+                    if (Array.isArray(lastRow)) {
+                      return lastRow[0] || '-';
+                    }
+                    return lastRow?.date || '-';
+                  })()
+                : '-')}
+          </span>
+        </div>
+        <div className="loan-stat-item">
+          <span className="loan-stat-label">
             <FiCreditCard
               style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
             />

@@ -15,7 +15,6 @@ import TransactionList from '@components/TransactionList';
 import CalendarView from '@components/CalendarView';
 import VaulDrawer from '@components/VaulDrawer';
 import TransactionForm from '@components/TransactionForm';
-import EditTransactionDrawer from '@components/TransactionForm/EditTransactionDrawer';
 import {
   PageHeader,
   LoadingSpinner,
@@ -293,17 +292,50 @@ const NewHome = () => {
         isSubmitting={isSubmitting}
       />
 
-      {/* Edit Transaction Drawer (Vaul) */}
-      <EditTransactionDrawer
-        open={showEditModal}
-        onClose={() => {
+      {/* Edit Transaction Drawer */}
+      <VaulDrawer
+        show={showEditModal}
+        onClose={(e) => {
+          e.preventDefault();
           setShowEditModal(false);
           setFocusedItem({});
         }}
-        values={focusedItem}
-        isSubmitting={transactionFormSubmitting}
-        setIsSubmitting={setTransactionFormSubmitting}
-      />
+        title={t('transactionForm.editTransaction')}
+        footer={
+          <button
+            type="submit"
+            form="transaction-form-edit"
+            disabled={transactionFormSubmitting}
+            className="btn-submit"
+          >
+            {transactionFormSubmitting ? (
+              <div className="loader">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            ) : (
+              <>
+                <FiEdit2 />
+                <span>{t('transactionForm.editTitle')}</span>
+              </>
+            )}
+          </button>
+        }
+      >
+        <TransactionForm
+          formType="edit"
+          values={focusedItem}
+          hideSubmitButton={true}
+          onFormReady={(_submitHandler, submitting) => {
+            setTransactionFormSubmitting(submitting);
+          }}
+          onSuccess={() => {
+            setShowEditModal(false);
+            setFocusedItem({});
+          }}
+        />
+      </VaulDrawer>
 
       {/* Add Drawer */}
       <VaulDrawer

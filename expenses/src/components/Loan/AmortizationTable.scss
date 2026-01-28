@@ -1,66 +1,128 @@
 @use '../../styles/variables' as *;
 
-/* Hybrid solution:
-   - header is sticky (vertical)
-   - body is horizontally scrollable
-   - header scrollLeft is synced with body via JS
-   This avoids the "sticky breaks because overflow-x container becomes the sticky ancestor". */
-.amortization-table-shell {
+/* TanStack Table + Virtualization Styles */
+.amortization-table-tanstack {
   width: 100%;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  overflow: hidden; /* keeps header corners clean */
+  background: #141414;
 }
 
-.amortization-table-header {
+/* Sticky Header - stays at top during vertical scroll */
+.amortization-table-header-sticky {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: #1a1a1a; /* opaque */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  /* reduce jitter */
-  transform: translate3d(0, 0, 0);
+  background: #171717;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transform: translate3d(0, 0, 0); /* Hardware acceleration */
 }
 
-/* Header scroll container: no user scrolling needed, just a viewport for the table */
-.amortization-table-header-scroll {
-  overflow: hidden;
+.amortization-table-header-split {
+  display: flex;
+  width: 100%;
 }
 
-/* Body scroll container: horizontal scroll lives here */
-.amortization-table-body-scroll {
+.amortization-table-first-col-header {
+  flex: 0 0 auto;
+  background: #171717;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 60;
+}
+
+.amortization-table-header-inner {
+  flex: 1 1 auto;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Webkit */
+  }
+
+  .amortization-table {
+    min-width: max-content; /* Ensure header table can expand */
+  }
+}
+
+/* Virtualized Body Container - Full screen height */
+.amortization-table-body-virtual {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  background: #141414;
+  /* Use viewport height minus header, chart, padding, navbar */
+  height: calc(100vh - 350px);
+  min-height: 500px;
+  max-height: 900px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+
+  &::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+.amortization-table-body-split {
+  display: flex;
+  width: 100%;
+}
+
+.amortization-table-first-col-body {
+  flex: 0 0 auto;
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background: #141414;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.amortization-table-body-horizontal {
+  flex: 1 1 auto;
+  overflow-x: auto;
+  overflow-y: hidden; /* vertical scroll is handled by parent */
   -webkit-overflow-scrolling: touch;
 }
 
-.sr-only {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
+/* Virtual Container - holds all virtualized rows */
+.amortization-table-virtual-container {
+  position: relative;
+  width: 100%;
+  min-width: max-content; /* Allow container to expand for horizontal scroll */
 }
 
+/* Table Styles */
 .amortization-table {
   width: 100%;
-  border-collapse: separate; /* Esențial pentru sticky borders */
+  border-collapse: separate;
   border-spacing: 0;
-  min-width: max-content; /* Permite tabelului să fie mai larg decât containerul */
-  display: table; /* Keep table display for proper layout */
+  min-width: max-content;
 
   th,
   td {
-    white-space: nowrap; /* Previne ruperea textului care ar strica alinierea */
-    padding: 12px 8px;
+    white-space: nowrap;
+    padding: 10px 12px;
     text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   th {
     color: rgba(255, 255, 255, 0.85);
     font-weight: 600;
     font-size: 0.9rem;
+    background: #171717;
+    letter-spacing: 0.2px;
   }
 
   td {
@@ -69,36 +131,69 @@
   }
 }
 
-/* Z-Index & Layers System:
-   .sticky-col (prima coloană): z-index: 10
-   header th: z-index: 20 (handled by sticky header container)
-   corner: z-index: 30
-*/
+/* Virtualized Row Container */
+.amortization-table-row {
+  width: 100%;
+  min-width: max-content; /* Allow row to expand beyond viewport */
 
-/* PRIMA COLOANĂ STICKY (Orizontal) - z-index: 10 (works inside body horizontal scroller) */
+  table {
+    width: 100%;
+    min-width: max-content; /* Ensure table can expand to fit all columns */
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  /* Zebra + hover like spreadsheets */
+  &:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+  &:hover td {
+    background: rgba(91, 141, 239, 0.08);
+  }
+}
+
+/* Sticky First Column (Horizontal) */
 .amortization-table .sticky-col {
-  position: -webkit-sticky; /* Safari support */
   position: sticky;
   left: 0;
-  background-color: #1a1a1a !important; /* Opaque background - critical */
-  z-index: 10; /* Base layer for sticky column */
+  background-color: #141414 !important;
+  z-index: 10;
   box-shadow: 2px 0 2px -1px rgba(0, 0, 0, 0.3);
   min-width: 100px;
+  /* Ensure sticky column covers overlapping content */
+  isolation: isolate;
+  /* Prevent content from showing through */
+  background-clip: padding-box;
 }
 
-/* COLȚUL (Intersecția între header și prima coloană) - z-index: 30 */
-.amortization-table-header .amortization-table thead th.sticky-col {
-  z-index: 30 !important; /* Highest z-index for corner cell */
-  background-color: #1a1a1a !important; /* Opaque background - critical */
+/* Ensure sticky column in body rows has proper background */
+.amortization-table-row td.sticky-col {
+  background-color: #141414 !important;
+}
+
+/* Ensure sticky column in even rows has proper background (more specific) */
+.amortization-table-row:nth-child(even) td.sticky-col {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Override for hover state */
+.amortization-table-row:hover td.sticky-col {
+  background-color: rgba(91, 141, 239, 0.08) !important;
+}
+
+/* Header Sticky Column (Corner) */
+.amortization-table-header-sticky .amortization-table th.sticky-col {
+  z-index: 30 !important;
+  background-color: #171717 !important;
   padding-left: $spacing-xl;
-  /* Prevent jitter on mobile - hardware acceleration */
   transform: translate3d(0, 0, 0);
-  -webkit-transform: translate3d(0, 0, 0);
+  /* Ensure header sticky column covers overlapping content */
+  isolation: isolate;
 }
 
-/* Design vizual pentru a separa coloana fixă */
+/* Visual separator for sticky column */
 .sticky-col::after {
-  content: "";
+  content: '';
   position: absolute;
   right: 0;
   top: 0;
@@ -108,28 +203,65 @@
   pointer-events: none;
 }
 
-/* Stiluri pentru rândurile de sumar (Total 2025 etc) */
-.annual-summary-row {
-  border-top: 2px solid #ccc;
-  border-bottom: 2px solid #ccc;
+/* Annual Summary Row */
+.amortization-table-row.annual-summary-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
 
   td {
-    background-color: rgba(36, 36, 36, 0.8) !important;
+    background: rgba(36, 36, 36, 0.9) !important;
     font-weight: bold;
 
     &:first-child {
       text-align: center;
     }
   }
+
+  .sticky-col {
+    background: rgba(36, 36, 36, 0.9) !important;
+    z-index: 11 !important; /* Higher z-index for summary rows */
+  }
 }
 
-/* Stiluri pentru rândurile plătite */
-.was-payed {
-  background-color: #1e3a2f;
+/* Was Paid Row */
+.amortization-table-row.was-payed {
   color: #d4edda;
 
   td {
-    background-color: #1e3a2f;
+    background: rgba(30, 58, 47, 0.55);
     color: #d4edda;
+  }
+
+  .sticky-col {
+    background: rgba(30, 58, 47, 0.7) !important;
+    z-index: 11 !important; /* Higher z-index for paid rows */
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .amortization-table-body-virtual {
+    height: calc(100vh - 280px) !important;
+    min-height: 400px;
+    max-height: 600px;
+  }
+
+  .amortization-table th,
+  .amortization-table td {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
+
+  .amortization-table-tanstack {
+    border-radius: 0;
+  }
+}
+
+/* Desktop - Larger screens get more space */
+@media (min-width: 1200px) {
+  .amortization-table-body-virtual {
+    height: calc(100vh - 300px);
+    min-height: 600px;
+    max-height: 1000px;
   }
 }
