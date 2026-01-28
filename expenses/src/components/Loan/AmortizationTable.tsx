@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useLocalization } from '@context/localization';
 import { formatNumber } from '@utils/utils';
+import './AmortizationTable.scss';
 
 interface PaymentLog {
   date: string;
@@ -31,84 +32,63 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
   amortizationSchedule,
 }) => {
   const { t } = useLocalization();
-  const tableRef = useRef<HTMLTableElement>(null);
-  const theadRef = useRef<HTMLTableSectionElement>(null);
-  const stickyHeaderRef = useRef<HTMLTableElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const stickyScrollRef = useRef<HTMLDivElement>(null);
 
-  const [showStickyHeader, setShowStickyHeader] = useState(false);
+  const bodyScrollRef = useRef<HTMLDivElement>(null);
+  const headerScrollRef = useRef<HTMLDivElement>(null);
+  const syncingRef = useRef(false);
 
-  const syncColumnWidths = () => {
-    if (!theadRef.current || !stickyHeaderRef.current) return;
-    const originalThs = theadRef.current.querySelectorAll('th');
-
-    const cloneThs = stickyHeaderRef.current.querySelectorAll('th');
-
-    if (originalThs.length !== cloneThs.length) return;
-
-    for (let i = 0; i < originalThs.length; i++) {
-      cloneThs[i].style.width = `${originalThs[i].offsetWidth}px`;
-    }
-  };
+  const syncScrollLeft = useCallback(
+    (source: HTMLDivElement | null, target: HTMLDivElement | null) => {
+      if (!source || !target) return;
+      if (syncingRef.current) return;
+      syncingRef.current = true;
+      target.scrollLeft = source.scrollLeft;
+      // next frame unlock
+      requestAnimationFrame(() => {
+        syncingRef.current = false;
+      });
+    },
+    []
+  );
 
   useEffect(() => {
-    const handleScroll = () => {
-      const rect = theadRef.current?.getBoundingClientRect();
-      const shouldShow = rect && rect.bottom <= 50;
-      setShowStickyHeader(shouldShow);
+    const body = bodyScrollRef.current;
+    const header = headerScrollRef.current;
+    if (!body || !header) return;
 
-      if (shouldShow && scrollContainerRef.current && stickyScrollRef.current) {
-        stickyScrollRef.current.scrollLeft =
-          scrollContainerRef.current.scrollLeft;
-      }
-    };
+    const onBodyScroll = () => syncScrollLeft(body, header);
+    const onHeaderScroll = () => syncScrollLeft(header, body);
 
-    const handleResize = () => {
-      syncColumnWidths();
-    };
+    body.addEventListener('scroll', onBodyScroll, { passive: true });
+    header.addEventListener('scroll', onHeaderScroll, { passive: true });
 
-    const syncScroll = (
-      source: HTMLElement | null,
-      target: HTMLElement | null
-    ) => {
-      if (target && source) {
-        target.scrollLeft = source.scrollLeft;
-      }
-    };
-
-    const handleMainScroll = () => {
-      syncScroll(scrollContainerRef.current, stickyScrollRef.current);
-    };
-
-    const handleStickyScroll = () => {
-      syncScroll(stickyScrollRef.current, scrollContainerRef.current);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleResize);
-    scrollContainerRef.current?.addEventListener('scroll', handleMainScroll);
-    stickyScrollRef.current?.addEventListener('scroll', handleStickyScroll);
+    // initial sync
+    header.scrollLeft = body.scrollLeft;
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
-      scrollContainerRef.current?.removeEventListener(
-        'scroll',
-        handleMainScroll
-      );
-      stickyScrollRef.current?.removeEventListener(
-        'scroll',
-        handleStickyScroll
-      );
+      body.removeEventListener('scroll', onBodyScroll);
+      header.removeEventListener('scroll', onHeaderScroll);
     };
-  }, []);
+  }, [syncScrollLeft]);
 
-  useEffect(() => {
-    if (showStickyHeader) {
-      syncColumnWidths();
-    }
-  }, [showStickyHeader]);
+  const colWidths = [
+    120, // date
+    100, // rate
+    80, // days
+    120, // installment
+    120, // reduction
+    120, // interest
+    120, // principal
+    100, // fee
+  ];
+
+  const ColGroup = () => (
+    <colgroup>
+      {colWidths.map((w, i) => (
+        <col key={i} style={{ width: `${w}px` }} />
+      ))}
+    </colgroup>
+  );
 
   const renderRow = (element: PaymentLog | AnnualSummary, index: number) => {
     // Check if this is an annual summary row
@@ -153,13 +133,21 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
   };
 
   return (
-    <div className="table-wrapper-loan">
-      {showStickyHeader && (
-        <div className="cloned-thead-wrapper" ref={stickyScrollRef}>
-          <table ref={stickyHeaderRef} cellSpacing="0" cellPadding="0">
+    <div className="amortization-table-shell">
+      {/* Sticky header (NOT inside horizontal overflow container) */}
+      <div className="amortization-table-header" aria-hidden="true">
+        <div className="amortization-table-header-scroll" ref={headerScrollRef}>
+          <table
+            className="amortization-table expenses-table"
+            cellSpacing="0"
+            cellPadding="0"
+          >
+            <ColGroup />
             <thead>
               <tr>
-                <th className="sticky-col">{t('amortization.date')}</th>
+                <th className="sticky-col first-header-cell">
+                  {t('amortization.date')}
+                </th>
                 <th>{t('amortization.rate')}</th>
                 <th>{t('amortization.days')}</th>
                 <th>{t('amortization.installment')}</th>
@@ -171,29 +159,16 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
             </thead>
           </table>
         </div>
-      )}
-      {/* Main scrollable table */}
-      <div className="horizontal-scroll-wrapper" ref={scrollContainerRef}>
+      </div>
+
+      {/* Body (horizontal scroll lives here) - NO thead, only sticky header above */}
+      <div className="amortization-table-body-scroll" ref={bodyScrollRef}>
         <table
-          ref={tableRef}
           className="amortization-table expenses-table"
           cellSpacing="0"
           cellPadding="0"
         >
-          <thead ref={theadRef}>
-            <tr>
-              <th className="sticky-col first-header-cell">
-                {t('amortization.date')}
-              </th>
-              <th>{t('amortization.rate')}</th>
-              <th>{t('amortization.days')}</th>
-              <th>{t('amortization.installment')}</th>
-              <th>{t('amortization.reduction')}</th>
-              <th>{t('amortization.interest')}</th>
-              <th>{t('amortization.principal')}</th>
-              <th>{t('amortization.fee')}</th>
-            </tr>
-          </thead>
+          <ColGroup />
           <tbody>
             {amortizationSchedule?.map((element, index) =>
               renderRow(element, index)
