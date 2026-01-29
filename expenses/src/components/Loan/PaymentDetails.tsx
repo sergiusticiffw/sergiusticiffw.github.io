@@ -46,7 +46,7 @@ const PaymentDetails = (props) => {
   const { dataDispatch } = useLoan();
   const { token } = useAuthState() as AuthState;
   const dispatch = useAuthDispatch();
-  const [nrOfItemsToShow, setNrOfItemsToShow] = useState(10);
+  const [nrOfItemsToShow, setNrOfItemsToShow] = useState(4);
   const [deleteModalId, setDeleteModalId] = useState<string | false>(false);
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
