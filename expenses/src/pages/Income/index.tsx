@@ -56,7 +56,7 @@ const Income = () => {
   const noData = data.groupedData === null;
   const loading = data.loading;
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [nrOfItemsToShow, setNrOfItemsToShow] = useState(20);
+  const [nrOfItemsToShow, setNrOfItemsToShow] = useState(10);
   const [filters, setFilters] = useState({
     textFilter: '',
     selectedMonth: '',
