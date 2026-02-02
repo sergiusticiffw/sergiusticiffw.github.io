@@ -1,6 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useState, Suspense } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  Suspense,
+} from 'react';
 import IncomeForm from '@components/Income/IncomeForm';
-import { deleteNode, formatNumber, getMonthsPassed, hasTag } from '@utils/utils';
+import {
+  deleteNode,
+  formatNumber,
+  getMonthsPassed,
+  hasTag,
+} from '@utils/utils';
 import { useAuthState, useData } from '@context/context';
 import { useNotification } from '@context/notification';
 import { useLocalization } from '@context/localization';
@@ -108,64 +119,76 @@ const Income = () => {
     });
   }, [data.incomeData, filters]);
 
-  const handleFilterChange = useCallback((newFilters: {
-    textFilter: string;
-    selectedMonth: string;
-    selectedTag: string;
-  }) => {
-    setFilters((prev) => {
-      const hasFilterChanged =
-        newFilters.textFilter !== prev.textFilter ||
-        newFilters.selectedMonth !== prev.selectedMonth ||
-        newFilters.selectedTag !== prev.selectedTag;
+  const handleFilterChange = useCallback(
+    (newFilters: {
+      textFilter: string;
+      selectedMonth: string;
+      selectedTag: string;
+    }) => {
+      setFilters((prev) => {
+        const hasFilterChanged =
+          newFilters.textFilter !== prev.textFilter ||
+          newFilters.selectedMonth !== prev.selectedMonth ||
+          newFilters.selectedTag !== prev.selectedTag;
 
-      if (hasFilterChanged) {
-        setNrOfItemsToShow(20);
-      }
-
-      return newFilters;
-    });
-  }, []);
-
-  const handleEdit = useCallback((id: string) => {
-    const item = data.incomeData.find(
-      (item: TransactionOrIncomeItem) => item.id === id
-    );
-    setFocusedItem({
-      nid: item.id,
-      field_date: item.dt,
-      field_amount: item.sum,
-      field_description: item.dsc,
-    });
-    setShowEditModal(true);
-  }, [data.incomeData]);
-
-  const handleDelete = useCallback((id: string, token: string) => {
-    setIsSubmitting(true);
-    deleteNode(
-      id,
-      token,
-      (response) => {
-        if (response.ok) {
-          showNotification(
-            t('notification.incomeDeleted'),
-            notificationType.SUCCESS
-          );
-          setIsSubmitting(false);
-        } else {
-          showNotification(t('error.unknown'), notificationType.ERROR);
-          setIsSubmitting(false);
+        if (hasFilterChanged) {
+          setNrOfItemsToShow(20);
         }
-        setShowDeleteModal(false);
-        // Don't fetch - UI already updated by deleteNode
-      },
-      dataDispatch
-    );
-  }, [dataDispatch, showNotification, t]);
 
-  const handleClearChangedItem = useCallback((id: string) => {
-    dataDispatch({ type: 'CLEAR_CHANGED_ITEM', id });
-  }, [dataDispatch]);
+        return newFilters;
+      });
+    },
+    []
+  );
+
+  const handleEdit = useCallback(
+    (id: string) => {
+      const item = data.incomeData.find(
+        (item: TransactionOrIncomeItem) => item.id === id
+      );
+      setFocusedItem({
+        nid: item.id,
+        field_date: item.dt,
+        field_amount: item.sum,
+        field_description: item.dsc,
+      });
+      setShowEditModal(true);
+    },
+    [data.incomeData]
+  );
+
+  const handleDelete = useCallback(
+    (id: string, token: string) => {
+      setIsSubmitting(true);
+      deleteNode(
+        id,
+        token,
+        (response) => {
+          if (response.ok) {
+            showNotification(
+              t('notification.incomeDeleted'),
+              notificationType.SUCCESS
+            );
+            setIsSubmitting(false);
+          } else {
+            showNotification(t('error.unknown'), notificationType.ERROR);
+            setIsSubmitting(false);
+          }
+          setShowDeleteModal(false);
+          // Don't fetch - UI already updated by deleteNode
+        },
+        dataDispatch
+      );
+    },
+    [dataDispatch, showNotification, t]
+  );
+
+  const handleClearChangedItem = useCallback(
+    (id: string) => {
+      dataDispatch({ type: 'CLEAR_CHANGED_ITEM', id });
+    },
+    [dataDispatch]
+  );
 
   // Calculate income statistics based on filtered data
   const totalIncome =
@@ -216,15 +239,16 @@ const Income = () => {
           handleFilterChange({ ...filters, selectedTag })
         }
         onClearFilters={() =>
-          handleFilterChange({ textFilter: '', selectedMonth: '', selectedTag: '' })
+          handleFilterChange({
+            textFilter: '',
+            selectedMonth: '',
+            selectedTag: '',
+          })
         }
       />
 
       {/* Income Stats Cards */}
-      <StatsGrid
-        columns={2}
-        filtered={false}
-      >
+      <StatsGrid columns={2} filtered={false}>
         <StatCard
           icon={<FiDollarSign />}
           value={formatNumber(totalIncome)}
@@ -285,14 +309,13 @@ const Income = () => {
           <div className="charts-section">
             <YearIncomeAverageTrend
               filteredIncomeData={filteredIncomeData}
-              filteredTransactionData={
-                data.filtered_raw
-                  ? data.filtered_raw.filter(
-                      (item: TransactionOrIncomeItem) => item.type === 'transaction'
-                    )
-                  : undefined
+              isFiltered={
+                !!(
+                  filters.textFilter ||
+                  filters.selectedMonth ||
+                  filters.selectedTag
+                )
               }
-              isFiltered={!!(filters.textFilter || filters.selectedMonth || filters.selectedTag)}
             />
           </div>
           {filteredIncomeData && filteredIncomeData.length ? (

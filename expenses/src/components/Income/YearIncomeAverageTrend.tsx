@@ -11,13 +11,11 @@ import './YearIncomeAverageTrend.scss';
 
 interface YearIncomeAverageTrendProps {
   filteredIncomeData?: TransactionOrIncomeItem[];
-  filteredTransactionData?: TransactionOrIncomeItem[];
   isFiltered?: boolean;
 }
 
 const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
   filteredIncomeData,
-  filteredTransactionData,
   isFiltered = false,
 }) => {
   const { data } = useData() as DataState;
@@ -26,10 +24,20 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
   const [clickedCells, setClickedCells] = useState<Set<string>>(new Set());
 
   // Calculate totals from filtered data if provided, otherwise use all data
-  const { totalIncomePerYear, totalPerYear, totalSpent, totalIncomePerYearAndMonth } = useMemo(() => {
+  const {
+    totalIncomePerYear,
+    totalPerYear,
+    totalSpent,
+    totalIncomePerYearAndMonth,
+  } = useMemo(() => {
     // Use filtered data if provided, otherwise use all data
-    const incomeData = filteredIncomeData !== undefined ? filteredIncomeData : (data.incomeData || []);
-    const transactionData = filteredTransactionData !== undefined ? filteredTransactionData : (data.raw || []).filter((item: TransactionOrIncomeItem) => item.type === 'transaction');
+    const incomeData =
+      filteredIncomeData !== undefined
+        ? filteredIncomeData
+        : data.incomeData || [];
+    const transactionData = (data.raw || []).filter(
+      (item: TransactionOrIncomeItem) => item.type === 'transaction'
+    );
 
     const totals: {
       totalIncomePerYear: Record<string, number>;
@@ -101,7 +109,7 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
     });
 
     return totals;
-  }, [filteredIncomeData, filteredTransactionData, data.incomeData, data.raw]);
+  }, [filteredIncomeData, data.incomeData, data.raw]);
 
   // Get localized month names - must be called unconditionally (getMonthNames uses useLocalization hook)
   const monthNames = getMonthNames();
@@ -147,8 +155,8 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
   let sumIncome: number = 0;
 
   // Sort years to calculate percentage changes correctly
-  const sortedYears = Object.keys(totalIncomePerYear).sort((a, b) =>
-    parseInt(a) - parseInt(b)
+  const sortedYears = Object.keys(totalIncomePerYear).sort(
+    (a, b) => parseInt(a) - parseInt(b)
   );
 
   // Helper function to calculate percentage change
@@ -176,7 +184,11 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
       color = percent >= 0 ? '#4ade80' : '#f87171'; // Normal for income
     }
     return (
-      <span style={{ color }}> ({sign}{formatNumber(percent)}%)</span>
+      <span style={{ color }}>
+        {' '}
+        ({sign}
+        {formatNumber(percent)}%)
+      </span>
     );
   };
 
@@ -209,7 +221,9 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
         </div>
 
         <div className="card-content">
-          <div className={`income-table-wrapper ${isFiltered ? 'filtered' : ''}`}>
+          <div
+            className={`income-table-wrapper ${isFiltered ? 'filtered' : ''}`}
+          >
             <div className="table-header">
               <div className="header-cell year-header">{t('income.year')}</div>
               <div className="header-cell">{t('common.income')}</div>
@@ -240,7 +254,7 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
                   ? (totalIncomePerYear[prevYear] as number)
                   : null;
                 const prevSpent = prevYear
-                  ? ((totalPerYear[prevYear] as number) || 0)
+                  ? (totalPerYear[prevYear] as number) || 0
                   : null;
 
                 const incomeChange =
@@ -279,7 +293,8 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
                         }}
                       >
                         {formatNumber(income)}
-                        {!isFiltered && showIncomeChange &&
+                        {!isFiltered &&
+                          showIncomeChange &&
                           formatPercentageChange(incomeChange, false)}
                       </div>
                     </div>
