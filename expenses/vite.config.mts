@@ -67,7 +67,7 @@ export default defineConfig({
         manualChunks: {
           // Code splitting for better caching
           'react-vendor': ['react', 'react-dom'],
-          'router-vendor': ['react-router-dom'],
+          'router-vendor': ['@tanstack/react-router'],
           'charts-vendor': ['highcharts', 'highcharts-react-official'],
         },
       },

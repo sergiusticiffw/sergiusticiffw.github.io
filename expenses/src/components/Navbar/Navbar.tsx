@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import { useAuthState } from '@context/context';
 import { useLocalization } from '@context/localization';
 import {
@@ -52,14 +52,14 @@ const Navbar = () => {
     >
       <ul>
         <li>
-          <NavLink to="/expenses/" end title={t('nav.home')}>
+          <Link to="/expenses" title={t('nav.home')} activeOptions={{ exact: true }} activeProps={{ className: 'active' }}>
             <FiHome />
-          </NavLink>
+          </Link>
         </li>
         <li>
-          <NavLink to="/expenses/charts" title={t('nav.charts')}>
+          <Link to="/expenses/charts" title={t('nav.charts')} activeProps={{ className: 'active' }}>
             <FiBarChart2 />
-          </NavLink>
+          </Link>
         </li>
         {/*<li>*/}
         {/*  <NavLink to="/expenses/add-transaction" title={t('common.add')}>*/}
@@ -67,20 +67,20 @@ const Navbar = () => {
         {/*  </NavLink>*/}
         {/*</li>*/}
         <li>
-          <NavLink to="/expenses/income" title={t('nav.income')}>
+          <Link to="/expenses/income" title={t('nav.income')} activeProps={{ className: 'active' }}>
             <FiDollarSign />
-          </NavLink>
+          </Link>
         </li>
         <li>
-          <NavLink to="/expenses/loans" title={t('nav.loans')}>
+          <Link to="/expenses/loans" title={t('nav.loans')} activeProps={{ className: 'active' }}>
             <FiCreditCard />
-          </NavLink>
+          </Link>
         </li>
         {userIsLoggedIn ? (
           <li>
-            <NavLink to="/expenses/user" title={t('nav.profile')}>
+            <Link to="/expenses/user" title={t('nav.profile')} activeProps={{ className: 'active' }}>
               <FiUser />
-            </NavLink>
+            </Link>
           </li>
         ) : (
           ''

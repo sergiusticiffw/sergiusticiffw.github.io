@@ -12,7 +12,7 @@ import {
   FiTag,
   FiSliders,
 } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { Link } from '@tanstack/react-router';
 import ItemSyncIndicator from '@components/Common/ItemSyncIndicator';
 import './LoansList.scss';
 
@@ -208,7 +208,8 @@ const LoansList: React.FC<LoansListProps> = ({
             </div>
 
             <Link
-              to={`/expenses/loan/${loan.id}`}
+              to="/expenses/loan/$id"
+              params={{ id: loan.id }}
               data-id={loan.id}
               className="loan-list-item"
               onTouchStart={(e) => handleTouchStart(e as any, loan.id, listRef)}

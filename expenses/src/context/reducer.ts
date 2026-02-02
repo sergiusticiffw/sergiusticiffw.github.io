@@ -1,4 +1,5 @@
 import { categories, monthNames } from '@utils/constants';
+import { getStoredCurrentUser, getStoredToken } from '@utils/authStorage';
 import {
   AuthState,
   ActionType,
@@ -7,12 +8,8 @@ import {
   DataItems,
 } from '@type/types';
 
-const user = localStorage.getItem('currentUser')
-  ? JSON.parse(localStorage.getItem('currentUser')!)
-  : '';
-const token = localStorage.getItem('currentUser')
-  ? JSON.parse(localStorage.getItem('currentUser')!).jwt_token
-  : '';
+const user = getStoredCurrentUser();
+const token = getStoredToken();
 const theme = localStorage.getItem('theme')
   ? JSON.parse(localStorage.getItem('theme')!)
   : '';

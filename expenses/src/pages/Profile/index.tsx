@@ -4,7 +4,7 @@ import { useNotification } from '@context/notification';
 import { useHighchartsContext } from '@context/highcharts';
 import { useLocalization } from '@context/localization';
 import { logout } from '@context/actions';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { FiUser, FiLogOut, FiSettings, FiBarChart2 } from 'react-icons/fi';
 import { fetchRequest, API_BASE_URL } from '@utils/utils';
 import {
@@ -47,7 +47,7 @@ const Profile = () => {
     event.preventDefault();
     googleLogout();
     logout(dispatch, dataDispatch);
-    navigate('/expenses/login'); //navigate to logout page on logout
+    navigate({ to: '/expenses/login' });
   };
 
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {

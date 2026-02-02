@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuthDispatch, useAuthState } from '@context/context';
 import { useLocalization } from '@context/localization';
 import { loginUser } from '@context/actions';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { AuthState } from '@type/types';
 import { useGoogleLogin, TokenResponse } from '@react-oauth/google';
 import { FiLogIn } from 'react-icons/fi';
@@ -21,7 +21,7 @@ const Login = () => {
   React.useEffect(() => {
     if (userIsLoggedIn) {
       clearAllNotifications();
-      navigate('/expenses');
+      navigate({ to: '/expenses' });
     }
   }, [userIsLoggedIn, navigate, clearAllNotifications]);
 
@@ -35,7 +35,7 @@ const Login = () => {
         }
         // Clear notifications on successful login
         clearAllNotifications();
-        navigate(`/expenses`);
+        navigate({ to: '/expenses' });
       } catch (error) {
         logger.error('Login error:', error);
       }

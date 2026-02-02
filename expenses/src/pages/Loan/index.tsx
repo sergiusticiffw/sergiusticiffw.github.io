@@ -3,7 +3,7 @@ import LoanDetails from '@components/Loan/LoanDetails';
 import LoanForm from '@components/Loan/LoanForm';
 import Paydown from '@utils/paydown-node';
 import VaulDrawer from '@components/VaulDrawer';
-import { useParams } from 'react-router-dom';
+import { useParams } from '@tanstack/react-router';
 import PaymentDetails from '@components/Loan/PaymentDetails';
 import PaymentForm from '@components/Loan/PaymentForm';
 import { LoadingSpinner } from '@components/Common';
@@ -38,7 +38,7 @@ import { useLocalization } from '@context/localization';
 import { usePendingSyncIds } from '@hooks/usePendingSyncIds';
 
 const Loan: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams({ from: '/expenses/loan/$id' });
   const { data, dataDispatch } = useLoan();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);

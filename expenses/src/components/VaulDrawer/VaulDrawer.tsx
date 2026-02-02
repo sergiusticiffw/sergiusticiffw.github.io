@@ -127,7 +127,10 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     <Drawer.Root open={show} onOpenChange={(open) => !open && handleClose()}>
       <Drawer.Portal>
         <Drawer.Overlay className="modal-window" />
-        <Drawer.Content className="vaul-drawer-content">
+        <Drawer.Content
+          className="vaul-drawer-content"
+          aria-describedby={undefined}
+        >
           <div className="vaul-drawer__handle-wrap">
             <Drawer.Handle className="vaul-drawer__handle" />
           </div>

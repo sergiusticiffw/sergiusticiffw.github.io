@@ -3,7 +3,7 @@ import { useLocalization } from '@context/localization';
 import { addOneDay } from '@utils/utils';
 import { useFormSubmit } from '@hooks/useFormSubmit';
 import { useFormValidation } from '@hooks/useFormValidation';
-import { useParams } from 'react-router-dom';
+import { useParams } from '@tanstack/react-router';
 import { FormField } from '@components/Common';
 import { useLoan } from '@context/loan';
 import './PaymentForm.scss';
@@ -27,7 +27,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   hideSubmitButton = false,
   onFormReady,
 }) => {
-  const { id } = useParams();
+  const { id } = useParams({ from: '/expenses/loan/$id' });
   const { t } = useLocalization();
   const { dataDispatch } = useLoan();
 
