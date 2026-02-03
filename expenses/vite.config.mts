@@ -14,8 +14,6 @@ export default defineConfig({
       workbox: {
         cleanupOutdatedCaches: true,
         skipWaiting: true,
-        // navigateFallback: '/expenses/index.html',
-        // navigateFallbackAllowlist: [/^\/expenses(\/.*)?$/],
       },
     }),
     tsconfigPaths(),
