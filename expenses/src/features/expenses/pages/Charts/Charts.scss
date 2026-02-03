@@ -1,0 +1,150 @@
+@use 'shared/styles/variables' as *;
+
+.charts-page-wrapper {
+  background: #1a1a1a;
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  padding-top: 0;
+  padding-bottom: 80px;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+
+  * {
+    box-sizing: border-box;
+  }
+
+  // Header
+  .charts-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-top: 1.5rem;
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0;
+      color: #ffffff;
+    }
+  }
+
+  // Search wrapper
+  .charts-search-wrapper {
+    margin-bottom: 1.5rem;
+  }
+
+  // Loading
+  .charts-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 0;
+
+    .loader {
+      display: flex;
+      gap: 0.5rem;
+
+      &__element {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #5b8def;
+        animation: bounce 1.4s infinite ease-in-out both;
+
+        &:nth-child(1) {
+          animation-delay: -0.32s;
+        }
+
+        &:nth-child(2) {
+          animation-delay: -0.16s;
+        }
+      }
+    }
+  }
+
+  // Charts content
+  .charts-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .charts-section {
+    padding: 0;
+    border: none;
+    background: transparent;
+
+    // Override any existing chart styles if needed
+    > div {
+      background: transparent;
+      border: none !important;
+      padding: 0 !important;
+    }
+
+    // Remove borders from charts
+    .spending-summary-container,
+    .most-expensive-table-container,
+    .year-income-average-trend-container,
+    .daily-average {
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      background: transparent !important;
+    }
+
+    // Table headers - improved styling
+    .heading {
+      display: block;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #ffffff; // White color as requested
+      margin: 2rem 0 1rem 0;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.2); // Subtle white border
+      letter-spacing: 0.5px;
+      text-transform: none;
+      text-align: center; // Centered as requested
+
+      // Better spacing on mobile
+      @media (max-width: 640px) {
+        font-size: 1.125rem;
+        margin: 1.5rem 0 0.75rem 0;
+        padding-bottom: 0.375rem;
+      }
+    }
+
+    // Highcharts container
+    .highcharts-container {
+      border: none !important;
+    }
+  }
+}
+
+@keyframes bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+// Mobile
+@media (max-width: 640px) {
+  .charts-page-wrapper {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+
+    .charts-header {
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+
+    .charts-section {
+      padding: 1rem;
+    }
+  }
+}

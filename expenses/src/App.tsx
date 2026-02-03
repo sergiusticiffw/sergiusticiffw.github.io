@@ -1,14 +1,12 @@
 import './App.scss';
-import { AuthProvider } from '@context/context';
-import { NotificationProvider } from '@context/notification';
-import { LoanProvider } from '@context/loan';
-import { HighchartsProvider } from '@context/highcharts';
-import { LocalizationProvider } from '@context/localization';
+import { AuthProvider, ThemeProvider } from '@shared/context';
+import { NotificationProvider } from '@shared/context/notification';
+import { LocalizationProvider } from '@shared/context/localization';
 import { RouterProvider } from '@tanstack/react-router';
-import { ErrorBoundary } from '@components/Common';
+import { ErrorBoundary } from '@shared/components/Common';
 import React from 'react';
-import { router } from '@config/router';
-import { logger } from '@utils/logger';
+import { router } from '@router';
+import { logger } from '@shared/utils/logger';
 
 const App: React.FC = () => {
   return (
@@ -22,15 +20,13 @@ const App: React.FC = () => {
       }}
     >
       <AuthProvider>
-        <LocalizationProvider>
-          <NotificationProvider>
-            <LoanProvider>
-              <HighchartsProvider>
-                <RouterProvider router={router} />
-              </HighchartsProvider>
-            </LoanProvider>
-          </NotificationProvider>
-        </LocalizationProvider>
+        <ThemeProvider>
+          <LocalizationProvider>
+            <NotificationProvider>
+              <RouterProvider router={router} />
+            </NotificationProvider>
+          </LocalizationProvider>
+        </ThemeProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

@@ -5,6 +5,14 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   base: '/expenses',
+  css: {
+    preprocessorOptions: {
+      scss: {
+        loadPaths: ['src'],
+        includePaths: ['src'],
+      } as Record<string, unknown>,
+    },
+  },
   plugins: [
     react(),
     VitePWA({

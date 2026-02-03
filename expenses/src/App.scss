@@ -1,24 +1,24 @@
 // Import base styles and variables
-@use 'styles/variables' as *;
-@use 'styles/base' as *;
-@use 'styles/mixins' as *;
-@use 'styles/swipe-actions' as *;
+@use 'shared/styles/variables' as *;
+@use 'shared/styles/base' as *;
+@use 'shared/styles/mixins' as *;
+@use 'shared/styles/swipe-actions' as *;
 
 // Import component styles (only those not imported by components themselves)
-@use 'components/Navbar/Navbar' as *;
-@use 'components/Charts/Charts' as *;
-@use 'components/Loan/Loan' as *;
-@use 'components/Home/Home' as *;
-@use 'components/Common/Common' as *;
-@use 'components/Common/PageHeader' as *;
-@use 'components/Common/LoadingSpinner' as *;
-@use 'components/Common/StatCard' as *;
-@use 'components/Common/StatsGrid' as *;
-@use 'components/Common/SyncStatusIndicator' as *;
-@use 'components/Common/ItemSyncIndicator' as *;
+@use 'shared/components/Navbar/Navbar' as *;
+@use 'features/expenses/components/Charts/Charts' as *;
+@use 'features/loans/components/Loan/Loan' as *;
+@use 'features/expenses/components/Home/Home' as *;
+@use 'shared/components/Common/Common' as *;
+@use 'shared/components/Common/PageHeader' as *;
+@use 'shared/components/Common/LoadingSpinner' as *;
+@use 'shared/components/Common/StatCard' as *;
+@use 'shared/components/Common/StatsGrid' as *;
+@use 'shared/components/Common/SyncStatusIndicator' as *;
+@use 'shared/components/Common/ItemSyncIndicator' as *;
 
 // Import page styles
-@use 'pages/Login/Login' as *;
+@use 'shared/pages/Login/Login' as *;
 
 .app-container {
   height: 100dvh; // Forțează înălțimea exactă a ecranului

@@ -1,0 +1,11 @@
+@use 'shared/styles/variables' as *;
+
+// Kept only for used components: AllTimeSpendings, MonthlyAverage, LastTwoMonthsAverage
+// All other styles have been removed as components were deleted
+
+.text-with-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+}

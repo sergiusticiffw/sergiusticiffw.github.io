@@ -4,14 +4,12 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "@utils/*": ["src/utils/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@type/*": ["src/type/*"],
-      "@config/*": ["src/config/*"],
-      "@pages/*": ["src/pages/*"],
-      "@components/*": ["src/components/*"],
-      "@context/*": ["src/context/*"],
-      "@api/*": ["src/api/*"]
+      "@shared/*": ["src/shared/*"],
+      "@features/expenses/*": ["src/features/expenses/*"],
+      "@features/incomes/*": ["src/features/incomes/*"],
+      "@features/loans/*": ["src/features/loans/*"],
+      "@stores/*": ["src/stores/*"],
+      "@router": ["src/router/index.tsx"]
     },
     "lib": ["dom", "dom.iterable", "esnext"],
     "module": "esnext",
