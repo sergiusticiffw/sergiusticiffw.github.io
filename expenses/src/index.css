@@ -1,17 +1,21 @@
+/* ==========================================================================
+   Tailwind v4 – Entry CSS
+   - @import "tailwindcss" loads Tailwind's base, components, utilities
+   - @theme defines design tokens (used by utilities and below)
+   - @layer base: document resets
+   - @layer components: app-specific component classes
+   - Keyframes at end: used by loader and animations
+   ========================================================================== */
 @import "tailwindcss";
 
-/* ---------------------------------------------------------------------------
-   Theme: design tokens from former _variables.scss (Tailwind v4 @theme)
-   Colors use oklch where useful; spacing/radius/breakpoints preserved.
---------------------------------------------------------------------------- */
 @theme {
-  /* Breakpoints (defaults already 640/768/1024/1280 - we override to match SCSS) */
+  /* Breakpoints */
   --breakpoint-sm: 600px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1200px;
 
-  /* Spacing (extend default scale) */
+  /* Spacing */
   --spacing-xs: 5px;
   --spacing-sm: 10px;
   --spacing-md: 15px;
@@ -27,9 +31,9 @@
   --radius-xl: 16px;
   --radius-xxl: 20px;
 
-  /* App palette - oklch for main UI */
+  /* App palette */
   --color-app-bg: oklch(0.145 0.005 264);
-  --color-app-accent: oklch(0.58 0.18 264);
+  --color-app-accent: #5b8def;
   --color-app-accent-hover: oklch(0.52 0.18 264);
   --color-white: #fff;
   --color-success: oklch(0.65 0.19 160);
@@ -48,9 +52,6 @@
   --z-fab: 1000;
 }
 
-/* ---------------------------------------------------------------------------
-   Base: html, body, form/button resets (from _base.scss)
---------------------------------------------------------------------------- */
 @layer base {
   html {
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
@@ -106,7 +107,7 @@
     height: 18px;
     min-width: 18px;
     min-height: 18px;
-    accent-color: #5b8def;
+    accent-color: var(--color-app-accent);
     cursor: pointer;
   }
 
@@ -120,10 +121,6 @@
   }
 }
 
-/* ---------------------------------------------------------------------------
-   Components: page container, row-action (swipe), btns-actions (from _base + swipe-actions)
-   Used by multiple pages/components until we migrate them to Tailwind classes.
---------------------------------------------------------------------------- */
 @layer components {
   .page-container {
     height: 100%;
@@ -165,12 +162,12 @@
 
   .row-action.delete {
     justify-content: left;
-    background: linear-gradient(90deg, rgba(255, 107, 250, 1) 0%, #5b8def 100%);
+    background: linear-gradient(90deg, rgba(255, 107, 250, 1) 0%, var(--color-app-accent) 100%);
   }
 
   .row-action.edit {
     justify-content: right;
-    background: linear-gradient(90deg, #5b8def 0%, #7bd0c9 100%);
+    background: linear-gradient(90deg, var(--color-app-accent) 0%, #7bd0c9 100%);
   }
 
   .swipe-actions-background {
@@ -258,14 +255,14 @@
 
   .btns-actions .action-btn:hover {
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.1));
-    border-color: #5b8def;
+    border-color: var(--color-app-accent);
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(91, 141, 239, 0.3);
   }
 
   .btns-actions .action-btn svg {
     font-size: 1.2rem;
-    color: #5b8def;
+    color: var(--color-app-accent);
   }
 
   /* Vaul Drawer (modal overlay + bottom sheet) */
@@ -482,7 +479,7 @@
   .modal-body .form-input:focus,
   .modal-body .form-textarea:focus {
     outline: none;
-    border-color: #5b8def;
+    border-color: var(--color-app-accent);
     background: rgba(255, 255, 255, 0.08);
     box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.15);
   }
@@ -545,7 +542,7 @@
 
   .modal-footer .btn-submit {
     width: 100%;
-    background: linear-gradient(135deg, #5b8def 0%, #4a7ddc 100%);
+    background: linear-gradient(135deg, var(--color-app-accent) 0%, #4a7ddc 100%);
     border: none;
     border-radius: 8px;
     color: #fff;
@@ -566,7 +563,7 @@
   .modal-footer .btn-submit:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(91, 141, 239, 0.5);
-    background: linear-gradient(135deg, #4a7ddc 0%, #5b8def 100%);
+    background: linear-gradient(135deg, #4a7ddc 0%, var(--color-app-accent) 100%);
   }
 
   .modal-footer .btn-submit:disabled {
@@ -666,7 +663,7 @@
     width: 56px;
     height: 56px;
     border-radius: 9999px;
-    background: linear-gradient(135deg, #5b8def 0%, #4a7ddc 100%);
+    background: linear-gradient(135deg, var(--color-app-accent) 0%, #4a7ddc 100%);
     color: white;
     border: none;
     box-shadow: 0 4px 16px rgba(91, 141, 239, 0.4);
@@ -1044,7 +1041,7 @@
   }
   .loan-section .section-header svg {
     font-size: 1.25rem;
-    color: #5b8def;
+    color: var(--color-app-accent);
   }
   .loan-section .section-header h2,
   .loan-section .section-header h3 {
@@ -1071,7 +1068,7 @@
     font-weight: 500;
   }
   .progress-container .progress-label span:last-child {
-    color: #5b8def;
+    color: var(--color-app-accent);
     font-weight: 700;
     font-size: 1rem;
   }
@@ -1085,7 +1082,7 @@
   }
   .progress-container .progress-bar .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #5b8def 0%, #4a7fdb 100%);
+    background: linear-gradient(90deg, var(--color-app-accent) 0%, #4a7fdb 100%);
     border-radius: 6px;
     position: relative;
   }
@@ -1344,7 +1341,7 @@
 
 }
 
-/* Keyframes used by loader and other components */
+/* Keyframes – used by .loader, .btn-submit .loader, and animation utilities */
 @keyframes loader-bounce {
   0%, 80%, 100% {
     transform: scale(0.6);
