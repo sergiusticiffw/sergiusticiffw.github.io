@@ -47,6 +47,9 @@ function updateLoansUI(
   });
 }
 
+// Prevent duplicate parallel fetches (e.g. React StrictMode double-effects in dev)
+let loansFetchInFlight: Promise<void> | null = null;
+
 /**
  * Fetch loans with offline-first approach
  */
@@ -54,51 +57,56 @@ export async function fetchLoans(
   apiClient: ApiClient,
   dataDispatch: (action: any) => void
 ): Promise<void> {
-  // Try to load from IndexedDB first
-  if (isIndexedDBAvailable()) {
-    const cachedLoans = await getLoansFromDB();
-    const cachedPayments = await getPaymentsFromDB();
-
-    if (cachedLoans && cachedLoans.length > 0) {
-      updateLoansUI(dataDispatch, cachedLoans, cachedPayments || []);
-    }
+  if (loansFetchInFlight) {
+    return loansFetchInFlight;
   }
 
-  // Fetch fresh data from API
-  const response = await apiClient.get<any[]>(API_ENDPOINTS.LOANS);
-
-  if (!response.success) {
-    return;
-  }
-
-  if (!response.data || response.data.length === 0) {
-    // Clear IndexedDB if no loans
+  loansFetchInFlight = (async () => {
+    // Try to load from IndexedDB first
     if (isIndexedDBAvailable()) {
-      await Promise.all([saveLoansToDB([]), savePaymentsToDB([])]);
+      const cachedLoans = await getLoansFromDB();
+      const cachedPayments = await getPaymentsFromDB();
+
+      if (cachedLoans && cachedLoans.length > 0) {
+        updateLoansUI(dataDispatch, cachedLoans, cachedPayments || []);
+      }
     }
-    updateLoansUI(dataDispatch, null, []);
-    return;
-  }
 
-  // Fetch all payments in parallel
-  const paymentPromises = response.data.map((loan: any) =>
-    fetchLoanPayments(apiClient, loan.id)
-  );
-  const payments = await Promise.all(paymentPromises);
+    // Fetch fresh data from API
+    const response = await apiClient.get<any[]>(API_ENDPOINTS.LOANS);
 
-  // Process and sort loans
-  const processedLoans = processLoans(response.data);
+    if (!response.success) {
+      return;
+    }
 
-  // Save to IndexedDB
-  if (isIndexedDBAvailable()) {
-    await Promise.all([
-      saveLoansToDB(processedLoans),
-      savePaymentsToDB(payments),
-    ]);
-  }
+    if (!response.data || response.data.length === 0) {
+      if (isIndexedDBAvailable()) {
+        await Promise.all([saveLoansToDB([]), savePaymentsToDB([])]);
+      }
+      updateLoansUI(dataDispatch, null, []);
+      return;
+    }
 
-  // Update UI
-  updateLoansUI(dataDispatch, processedLoans, payments);
+    const paymentPromises = response.data.map((loan: any) =>
+      fetchLoanPayments(apiClient, loan.id)
+    );
+    const payments = await Promise.all(paymentPromises);
+
+    const processedLoans = processLoans(response.data);
+
+    if (isIndexedDBAvailable()) {
+      await Promise.all([
+        saveLoansToDB(processedLoans),
+        savePaymentsToDB(payments),
+      ]);
+    }
+
+    updateLoansUI(dataDispatch, processedLoans, payments);
+  })().finally(() => {
+    loansFetchInFlight = null;
+  });
+
+  return loansFetchInFlight;
 }
 
 /**
