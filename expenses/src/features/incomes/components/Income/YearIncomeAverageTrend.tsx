@@ -207,20 +207,20 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
   };
 
   const tableWrapper =
-    'rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden';
+    'rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden w-full';
   const tableRow =
     'border-b border-white/5 last:border-b-0 hover:bg-white/[0.02]';
   const cellLeft =
-    'py-3 px-4 text-white font-medium text-[0.95rem] align-middle';
+    'py-3 px-3 sm:px-4 text-white font-medium text-[0.9rem] sm:text-[0.95rem] align-middle';
   const cellRight =
-    'py-3 px-4 text-right text-white font-medium text-[0.95rem] tabular-nums align-middle';
+    'py-3 px-3 sm:px-4 text-right text-white font-medium text-[0.9rem] sm:text-[0.95rem] tabular-nums align-middle';
   const headerCellLeft =
-    'py-3 px-4 text-white/60 text-xs font-bold uppercase tracking-wider align-middle';
+    'py-3 px-3 sm:px-4 text-white/60 text-xs font-bold uppercase tracking-wider align-middle';
   const headerCellRight =
-    'py-3 px-4 text-right text-white/60 text-xs font-bold uppercase tracking-wider align-middle';
+    'py-3 px-3 sm:px-4 text-right text-white/60 text-xs font-bold uppercase tracking-wider align-middle';
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 w-full min-w-0 max-w-full px-4 sm:px-0">
       <HighchartsReact
         highcharts={Highcharts}
         options={yearIncomeAverageOptions}
@@ -229,8 +229,22 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
       <span className="block text-[#e0e0e3] text-xl uppercase tracking-wide mt-5 mb-4 font-semibold">
         {t('income.totalIncomePerYear')}:
       </span>
-      <div className={tableWrapper}>
-        <table className="w-full border-collapse">
+      <div
+        className="w-full min-w-0 overflow-x-auto sm:overflow-visible"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        <div className={tableWrapper}>
+        <table className="w-full min-w-[320px] sm:min-w-0 border-collapse table-fixed sm:table-auto">
+          <colgroup>
+            <col className="w-[14%] sm:w-auto" />
+            <col className="w-[28%] sm:w-auto" />
+            {!isFiltered && (
+              <>
+                <col className="w-[28%] sm:w-auto" />
+                <col className="w-[30%] sm:w-auto" />
+              </>
+            )}
+          </colgroup>
           <thead>
             <tr className={tableRow}>
               <th className={headerCellLeft}>{t('income.year')}</th>
@@ -373,6 +387,7 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

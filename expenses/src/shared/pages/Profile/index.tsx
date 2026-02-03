@@ -150,7 +150,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="bg-[#1a1a1a] p-4 pb-[calc(80px+env(safe-area-inset-bottom,0))] max-w-full overflow-x-hidden overflow-y-auto -webkit-overflow-scrolling-touch box-border flex flex-col items-center min-h-dvh w-full [&_*]:box-border md:p-[0.875rem] md:pb-[calc(80px+env(safe-area-inset-bottom,0))]">
+    <div className="page-container flex flex-col items-center">
       {/* Header */}
       <div className="text-left mb-6 w-full max-w-[600px] md:mb-5">
         <h1 className="text-2xl md:text-xl font-semibold text-white m-0 tracking-tight">

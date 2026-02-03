@@ -92,7 +92,7 @@ const Charts = () => {
   ]);
 
   return (
-    <div className="min-h-full bg-[#1a1a1a] px-6 py-0 pb-20 max-w-full overflow-x-hidden box-border [&_*]:box-border md:px-6 max-sm:px-4">
+    <div className="page-container">
       {/* Header */}
       <div className="text-center mb-6 pt-6">
         <h1 className="text-2xl font-bold m-0 text-white md:text-2xl max-sm:text-xl">

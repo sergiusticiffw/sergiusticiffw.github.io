@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router';
-import { useAuthState } from '@shared/context/context';
 import { useLocalization } from '@shared/context/localization';
 import {
   FiHome,
@@ -11,7 +10,6 @@ import {
 import React, { useState } from 'react';
 
 const Navbar = () => {
-  const { userIsLoggedIn } = useAuthState();
   const { t } = useLocalization();
   const [cssClass, setCssClass] = useState('closed');
   // const [xDown, setXDown] = useState<number | null>(null);
@@ -89,20 +87,16 @@ const Navbar = () => {
             <FiCreditCard />
           </Link>
         </li>
-        {userIsLoggedIn ? (
-          <li className="h-full flex-1 flex items-center justify-center">
-            <Link
-              to="/expenses/user"
-              title={t('nav.profile')}
-              activeProps={{ className: 'active' }}
-              className="text-white/50 text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-white/70 hover:[&_svg]:scale-110 [&.active]:text-[#5b8def] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_rgba(91,141,239,0.4))]"
-            >
-              <FiUser />
-            </Link>
-          </li>
-        ) : (
-          ''
-        )}
+        <li className="h-full flex-1 flex items-center justify-center">
+          <Link
+            to="/expenses/user"
+            title={t('nav.profile')}
+            activeProps={{ className: 'active' }}
+            className="text-white/50 text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-white/70 hover:[&_svg]:scale-110 [&.active]:text-[#5b8def] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_rgba(91,141,239,0.4))]"
+          >
+            <FiUser />
+          </Link>
+        </li>
       </ul>
     </div>
   );
