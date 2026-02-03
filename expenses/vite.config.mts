@@ -11,6 +11,12 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        // navigateFallback: '/expenses/index.html',
+        // navigateFallbackAllowlist: [/^\/expenses(\/.*)?$/],
+      },
     }),
     tsconfigPaths(),
   ],
