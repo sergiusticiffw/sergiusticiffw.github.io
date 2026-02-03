@@ -9,8 +9,9 @@ import {
   getExpensesFromDB,
   saveExpensesToDB,
   isIndexedDBAvailable,
+  isOnline,
 } from '@shared/utils/indexedDB';
-import { processDataWithWorker } from '@shared/utils/utils';
+import { processDataWithWorker, processDataSync } from '@shared/utils/utils';
 
 export interface FetchExpensesOptions {
   category?: string;
@@ -76,7 +77,7 @@ export async function fetchExpenses(
       }
     }
 
-    // Fetch fresh data from API
+    // Fetch fresh data from API (when offline, get() returns success: false immediately)
     const response = await apiClient.get<TransactionOrIncomeItem[]>(
       API_ENDPOINTS.EXPENSES,
       {
@@ -85,6 +86,31 @@ export async function fetchExpenses(
     );
 
     if (!response.success || !response.data) {
+      // Offline or network error: ensure UI shows cached data and loading is false
+      if (isIndexedDBAvailable()) {
+        const cachedData = await getExpensesFromDB();
+        if (cachedData && cachedData.length > 0) {
+          const processedData = processDataSync(cachedData);
+          dataDispatch({
+            type: 'SET_DATA',
+            raw: cachedData,
+            ...processedData,
+            totals: processedData.monthsTotals,
+            loading: false,
+          });
+          if (category || textFilter) {
+            dataDispatch({
+              type: 'FILTER_DATA',
+              category,
+              textFilter,
+            });
+          }
+        } else {
+          dataDispatch({ type: 'SET_DATA', raw: [], loading: false });
+        }
+      } else {
+        dataDispatch({ type: 'SET_DATA', raw: [], loading: false });
+      }
       return;
     }
 
