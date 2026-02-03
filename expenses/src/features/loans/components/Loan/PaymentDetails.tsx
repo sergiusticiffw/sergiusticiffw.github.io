@@ -25,8 +25,6 @@ import { notificationType } from '@shared/utils/constants';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import PaymentForm from '@features/loans/components/Loan/PaymentForm';
 import { useLoan } from '@shared/context/loan';
-import './PaymentDetails.scss';
-
 type SortField = 'date' | 'amount' | null;
 type SortDirection = 'asc' | 'desc';
 
@@ -174,7 +172,7 @@ const PaymentDetails = (props) => {
   };
 
   return (
-    <div className="payment-history">
+    <div>
       {/* Delete Drawer */}
       <VaulDrawer
         show={!!deleteModalId}
@@ -262,40 +260,41 @@ const PaymentDetails = (props) => {
         />
       </VaulDrawer>
 
-      {/* Payment List */}
+      {/* Payment List – same pattern as IncomeTable / TransactionList */}
       {payments.length ? (
-        <div className="payment-list-component" ref={listRef}>
-          {/* Header with count */}
-          <div className="payment-list-header">
-            <p className="payment-count">
+        <div
+          className="w-full relative overflow-x-hidden overflow-y-auto touch-pan-y mt-4"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+          ref={listRef}
+        >
+          <div className="mb-6">
+            <p className="text-base text-white/50 m-0 mb-3">
               {Math.min(nrOfItemsToShow, payments.length)} of {payments.length}{' '}
               payments
             </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className={`flex items-center gap-1.5 py-2 px-4 bg-white/[0.05] border border-white/10 rounded-lg text-white/60 text-[0.85rem] font-medium cursor-pointer transition-all duration-200 [&_svg]:text-xs [&_svg]:opacity-70 hover:bg-white/10 hover:border-white/15 hover:text-white/80 ${sortField === 'date' ? 'bg-[rgba(91,141,239,0.15)] border-[rgba(91,141,239,0.3)] text-[#5b8def] [&_svg]:opacity-100' : ''}`}
+                onClick={() => handleSort('date')}
+              >
+                Date {getSortIcon('date')}
+              </button>
+              <button
+                type="button"
+                className={`flex items-center gap-1.5 py-2 px-4 bg-white/[0.05] border border-white/10 rounded-lg text-white/60 text-[0.85rem] font-medium cursor-pointer transition-all duration-200 [&_svg]:text-xs [&_svg]:opacity-70 hover:bg-white/10 hover:border-white/15 hover:text-white/80 ${sortField === 'amount' ? 'bg-[rgba(91,141,239,0.15)] border-[rgba(91,141,239,0.3)] text-[#5b8def] [&_svg]:opacity-100' : ''}`}
+                onClick={() => handleSort('amount')}
+              >
+                Amount {getSortIcon('amount')}
+              </button>
+            </div>
           </div>
 
-          {/* Sort Controls */}
-          <div className="sort-controls">
-            <button
-              className={`sort-button ${sortField === 'date' ? 'active' : ''}`}
-              onClick={() => handleSort('date')}
-            >
-              Date {getSortIcon('date')}
-            </button>
-            <button
-              className={`sort-button ${sortField === 'amount' ? 'active' : ''}`}
-              onClick={() => handleSort('amount')}
-            >
-              Amount {getSortIcon('amount')}
-            </button>
-          </div>
-
-          {/* Payment Items */}
-          <div className="payment-list-items">
+          <div className="flex flex-col gap-3">
             {sortedPayments.slice(0, nrOfItemsToShow).map((payment) => {
               const isSimulated = Number(payment.fisp) === 1;
               const date = new Date(payment.fdt);
               const day = date.getDate();
-              // Use user's language for month formatting
               const locale = getLocale(language);
               const month = date
                 .toLocaleDateString(locale, { month: 'short' })
@@ -311,9 +310,8 @@ const PaymentDetails = (props) => {
               return (
                 <div
                   key={payment.id}
-                  className={`payment-item-wrapper ${isSimulated ? 'simulated' : ''}`}
+                  className={`relative overflow-hidden rounded-xl ${isSimulated ? 'border-l-4 border-l-[#ff9800]' : ''}`}
                 >
-                  {/* Swipe Actions Background */}
                   <div
                     className={`swipe-actions-background ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}
                   >
@@ -329,10 +327,10 @@ const PaymentDetails = (props) => {
                     )}
                   </div>
 
-                  {/* Payment Item */}
                   <div
                     data-id={payment.id}
-                    className="payment-list-item"
+                    className="flex items-center gap-4 py-4 px-4 rounded-xl bg-white/[0.05] border border-white/10 cursor-pointer transition-all duration-200 relative z-[1] hover:bg-white/10 active:bg-white/[0.08]"
+                    style={{ touchAction: 'pan-y pan-x pinch-zoom' }}
                     onTouchStart={(e) =>
                       handleTouchStart(e, payment.id, listRef)
                     }
@@ -347,27 +345,28 @@ const PaymentDetails = (props) => {
                       )
                     }
                   >
-                    {/* Date Box */}
-                    <div className="payment-date-box">
-                      <div className="date-day">{day}</div>
-                      <div className="date-month">{month}</div>
-                      <div className="date-year">{year}</div>
+                    <div className="flex flex-col items-center shrink-0 min-w-[3rem]">
+                      <div className="text-lg font-bold text-white leading-none">
+                        {day}
+                      </div>
+                      <div className="text-xs font-semibold text-white/50 mt-0.5 tracking-wide">
+                        {month}
+                      </div>
+                      <div className="text-xs text-white/40 mt-0.5">{year}</div>
                     </div>
 
-                    {/* Content */}
-                    <div className="payment-content">
-                      <div className="payment-title">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap text-base font-medium text-white/90 leading-snug break-words">
                         {payment.title}
                         {isSimulated && (
-                          <span className="simulated-badge">
+                          <span className="inline-block text-[0.7rem] font-semibold text-[#ff9800] bg-[rgba(255,152,0,0.15)] px-2 py-0.5 rounded-full uppercase tracking-wide">
                             {t('payment.simulated')}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Amount */}
-                    <div className="payment-amount">
+                    <div className="text-lg font-bold text-white shrink-0 flex items-center gap-1 whitespace-nowrap">
                       {formatNumber(payment.fpi)}
                       <ItemSyncIndicator
                         status={isPending ? 'pending' : undefined}
@@ -379,12 +378,12 @@ const PaymentDetails = (props) => {
             })}
           </div>
 
-          {/* Load More */}
           {payments.length > nrOfItemsToShow && (
-            <div className="load-more">
+            <div className="flex justify-center items-center py-4 mt-1">
               <button
+                type="button"
                 onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
-                className="load-more-btn"
+                className="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-[rgba(91,141,239,0.2)] border border-[rgba(91,141,239,0.4)] text-[#5b8def] text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 hover:bg-[rgba(91,141,239,0.3)] hover:border-[rgba(91,141,239,0.5)] hover:-translate-y-0.5 active:translate-y-0 shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
               >
                 <FiChevronDown />
                 <span>
@@ -396,10 +395,14 @@ const PaymentDetails = (props) => {
           )}
         </div>
       ) : (
-        <div className="no-payments">
-          <FiDollarSign />
-          <h3>{t('payment.noPaymentsYet')}</h3>
-          <p>{t('payment.noPaymentsDesc')}</p>
+        <div className="text-center py-12 px-6">
+          <FiDollarSign className="w-12 h-12 text-[#5b8def]/70 mx-auto mb-4 opacity-70" />
+          <h3 className="text-xl font-semibold text-white m-0 mb-2">
+            {t('payment.noPaymentsYet')}
+          </h3>
+          <p className="text-white/50 text-sm m-0">
+            {t('payment.noPaymentsDesc')}
+          </p>
         </div>
       )}
     </div>

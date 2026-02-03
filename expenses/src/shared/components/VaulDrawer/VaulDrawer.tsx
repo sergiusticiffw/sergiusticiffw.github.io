@@ -1,7 +1,6 @@
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { Drawer } from 'vaul';
 import { FiX } from 'react-icons/fi';
-import './VaulDrawer.scss';
 
 interface VaulDrawerProps {
   show: boolean;

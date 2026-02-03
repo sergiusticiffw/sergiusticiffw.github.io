@@ -1,4 +1,3 @@
-import './App.scss';
 import { AuthProvider, ThemeProvider } from '@shared/context';
 import { NotificationProvider } from '@shared/context/notification';
 import { LocalizationProvider } from '@shared/context/localization';

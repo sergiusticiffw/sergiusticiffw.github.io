@@ -42,7 +42,6 @@ import {
   FiDollarSign,
   FiTrendingUp,
 } from 'react-icons/fi';
-import './Income.scss';
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
 import { useApiClient } from '@shared/hooks/useApiClient';
 
@@ -216,7 +215,7 @@ const Income = () => {
   }
 
   return (
-    <div className="page-container income-page">
+    <div className="page-container">
       {/* Header */}
       <PageHeader
         title={t('income.title')}
@@ -265,7 +264,7 @@ const Income = () => {
       </StatsGrid>
 
       {/* Income Table Section */}
-      <div className="income-table-section">
+      <div className="mb-8">
         {noData ? (
           <NoData
             icon={<FiDollarSign />}
@@ -292,10 +291,11 @@ const Income = () => {
             )}
 
             {filteredIncomeData?.length > nrOfItemsToShow && (
-              <div className="load-more">
+              <div className="text-center mt-6">
                 <button
+                  type="button"
                   onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
-                  className="load-more-btn"
+                  className="inline-flex items-center gap-2.5 py-3.5 px-7 rounded-xl bg-white/[0.05] border border-white/10 text-white text-[0.95rem] font-medium cursor-pointer transition-all duration-200 hover:bg-white/10 hover:border-white/15 hover:-translate-y-0.5 active:translate-y-0 [&_svg]:text-sm"
                 >
                   <FiChevronDown />
                   {t('common.loadMore')}
@@ -309,7 +309,7 @@ const Income = () => {
       {/* Charts Section */}
       {data.incomeData?.length ? (
         <>
-          <div className="charts-section">
+          <div className="mb-8">
             <YearIncomeAverageTrend
               filteredIncomeData={filteredIncomeData}
               isFiltered={
@@ -322,7 +322,7 @@ const Income = () => {
             />
           </div>
           {filteredIncomeData && filteredIncomeData.length ? (
-            <div className="charts-section">
+            <div className="mb-8">
               <Suspense fallback="">
                 <IncomeIntelligence />
               </Suspense>

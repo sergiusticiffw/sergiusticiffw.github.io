@@ -6,8 +6,6 @@ import { useFormSubmit } from '@shared/hooks/useFormSubmit';
 import { useFormValidation } from '@shared/hooks/useFormValidation';
 import { FormField } from '@shared/components/Common';
 import { useLoan } from '@shared/context/loan';
-import './LoanForm.scss';
-
 interface LoanFormProps {
   formType: 'add' | 'edit';
   values?: any;

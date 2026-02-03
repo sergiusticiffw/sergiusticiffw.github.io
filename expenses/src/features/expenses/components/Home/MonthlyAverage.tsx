@@ -7,7 +7,6 @@ import {
   useSortableData,
 } from '@shared/utils/useSortableData';
 import { getCategories } from '@shared/utils/constants';
-import './MonthlyAverage.scss';
 
 const MonthlyAverage = () => {
   const { data } = useExpenseData();
@@ -59,18 +58,22 @@ const MonthlyAverage = () => {
   const totalMonthly = data.totalSpent / monthsPassed;
 
   return (
-    <div className="monthly-average-balanced">
-      <div className="section-header">
-        <h3>{t('home.monthlyAveragePerCategory')}</h3>
+    <div className="my-6 md:my-6 overflow-hidden bg-transparent border-none shadow-none">
+      <div className="flex justify-start items-center p-0 mb-3 bg-transparent border-none">
+        <h3 className="m-0 text-[0.95rem] font-semibold text-white/70 uppercase tracking-wide">
+          {t('home.monthlyAveragePerCategory')}
+        </h3>
       </div>
 
-      <table className="balanced-table">
+      <table className="w-full border-collapse bg-transparent">
         <thead>
-          <tr>
-            <th>{t('common.category')}</th>
+          <tr className="border-b-0 bg-transparent">
+            <th className="py-0 pr-0 pb-2 pl-0 bg-transparent text-lg font-semibold text-white text-left tracking-tight">
+              {t('common.category')}
+            </th>
             <th
               onClick={() => requestSort('y')}
-              className={`sortable ${getClassNamesFor(sortConfig, 'y')}`}
+              className={`py-0 pr-0 pb-2 pl-0 bg-transparent font-semibold text-white/50 text-xs uppercase tracking-wider text-right md:text-[0.7rem] ${getClassNamesFor(sortConfig, 'y')} cursor-pointer hover:text-white/80`}
             >
               {t('home.monthlyAverage')}
             </th>
@@ -82,22 +85,23 @@ const MonthlyAverage = () => {
             const percentage = ((item.y / data.totalSpent) * 100).toFixed(1);
 
             return (
-              <tr key={key}>
-                <td className="category-cell">
-                  <span className="category-name">{item.name}</span>
-                  <span className="category-percentage">({percentage}%)</span>
+              <tr key={key} className="border-b border-white/5 bg-transparent last:border-b-0">
+                <td className="py-2.5 pt-4 first:pt-4 border-b-0 align-middle bg-transparent text-left first:text-left last:text-right">
+                  <span className="block text-white/90 text-base font-medium text-left">{item.name}</span>
+                  <span className="block text-white/50 text-sm font-normal mt-0.5 text-left">({percentage}%)</span>
                 </td>
-                <td className="amount-cell">
+                <td className="py-2.5 pt-4 border-b-0 align-middle bg-transparent text-white text-base font-semibold text-right">
                   {formatNumber(monthlyAmount)} / {t('home.month')}
                 </td>
               </tr>
             );
           })}
-          <tr className="total-row">
-            <td className="total-label">{t('common.total')}</td>
-            <td className="total-amount">
-              {formatNumber(parseFloat(totalMonthly.toFixed(2)))} /{' '}
-              {t('home.month')}
+          <tr className="border-t border-white/10 bg-transparent">
+            <td className="py-2.5 border-b-0 align-middle bg-transparent text-white text-base font-bold uppercase tracking-wide">
+              {t('common.total')}
+            </td>
+            <td className="py-2.5 border-b-0 align-middle bg-transparent text-white text-base font-bold text-right">
+              {formatNumber(parseFloat(totalMonthly.toFixed(2)))} / {t('home.month')}
             </td>
           </tr>
         </tbody>

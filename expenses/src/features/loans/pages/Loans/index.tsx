@@ -2,7 +2,11 @@ import { useEffect, useState, useMemo, FC } from 'react';
 import { useAuthDispatch, useAuthState } from '@shared/context/context';
 import { useLoan } from '@shared/context/loan';
 import { useLocalization } from '@shared/context/localization';
-import { deleteLoan, formatNumber, getLoanStatus } from '@shared/utils/utils';
+import {
+  deleteLoan,
+  formatNumber,
+  getLoanStatus,
+} from '@shared/utils/utils';
 import { fetchLoans as fetchLoansService } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useNotification } from '@shared/context/notification';
@@ -13,11 +17,7 @@ import {
   buildEventsFromApiPayments,
   calculateAmortization,
 } from '@features/loans/utils/amortization';
-import type {
-  ApiLoan,
-  ApiPaymentItem,
-  LoanPaymentsEntry,
-} from '@shared/type/types';
+import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
 import {
   PageHeader,
   LoadingSpinner,
@@ -28,7 +28,6 @@ import { FiCreditCard, FiPlus } from 'react-icons/fi';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import LoanForm from '@features/loans/components/Loan/LoanForm';
 import LoansList from '@features/loans/components/Loan/LoansList';
-import './Loans.scss';
 
 const Loans: FC = () => {
   const { data, dataDispatch } = useLoan();
@@ -40,9 +39,7 @@ const Loans: FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [focusedItem, setFocusedItem] = useState<
-    Partial<ApiLoan> & { nid?: string; [key: string]: unknown }
-  >({});
+  const [focusedItem, setFocusedItem] = useState<Partial<ApiLoan> & { nid?: string; [key: string]: unknown }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loanFormSubmitting, setLoanFormSubmitting] = useState(false);
   const [loanFormEditSubmitting, setLoanFormEditSubmitting] = useState(false);
@@ -125,35 +122,23 @@ const Loans: FC = () => {
     for (const loan of loans as ApiLoan[]) {
       const status = getLoanStatus(loan?.fls);
       if (status === 'completed') {
-        map.set(loan.id, {
-          paydown: { sum_of_installments: 1 },
-          totalPaidAmount: 1,
-        });
+        map.set(loan.id, { paydown: { sum_of_installments: 1 }, totalPaidAmount: 1 });
         continue;
       }
       if (status === 'pending') {
-        map.set(loan.id, {
-          paydown: { sum_of_installments: 0 },
-          totalPaidAmount: 0,
-        });
+        map.set(loan.id, { paydown: { sum_of_installments: 0 }, totalPaidAmount: 0 });
         continue;
       }
       const filteredData = paymentsList.find(
         (item) => item?.loanId === loan.id && item?.data?.length > 0
       );
       if (!filteredData?.data?.length) {
-        map.set(loan.id, {
-          paydown: { sum_of_installments: 0 },
-          totalPaidAmount: 0,
-        });
+        map.set(loan.id, { paydown: { sum_of_installments: 0 }, totalPaidAmount: 0 });
         continue;
       }
       const loanData = buildLoanDataFromApiLoan(loan);
       if (!loanData) {
-        map.set(loan.id, {
-          paydown: { sum_of_installments: 0 },
-          totalPaidAmount: 0,
-        });
+        map.set(loan.id, { paydown: { sum_of_installments: 0 }, totalPaidAmount: 0 });
         continue;
       }
       const events = buildEventsFromApiPayments(
@@ -169,10 +154,7 @@ const Loans: FC = () => {
         const sumInstallments = paydown.sum_of_installments || 0;
         map.set(loan.id, { paydown, totalPaidAmount });
       } catch {
-        map.set(loan.id, {
-          paydown: { sum_of_installments: 0 },
-          totalPaidAmount: 0,
-        });
+        map.set(loan.id, { paydown: { sum_of_installments: 0 }, totalPaidAmount: 0 });
       }
     }
     return map;
@@ -187,10 +169,7 @@ const Loans: FC = () => {
     const { paydown, totalPaidAmount } = entry;
     const sumInstallments = paydown.sum_of_installments || 0;
     if (sumInstallments === 0) return 0;
-    return Math.max(
-      0,
-      Math.min(100, (totalPaidAmount / sumInstallments) * 100)
-    );
+    return Math.max(0, Math.min(100, (totalPaidAmount / sumInstallments) * 100));
   };
 
   // Filter loans
@@ -229,15 +208,15 @@ const Loans: FC = () => {
   }
 
   return (
-    <div className="page-container loans-page">
+    <div className="page-container px-4 md:px-6">
       {/* Header */}
       <PageHeader
         title={t('loans.title')}
         subtitle={`${totalLoans} ${totalLoans === 1 ? t('loans.loan') : t('loans.loans')}`}
       />
 
-      {/* Simple Stats */}
-      <div className="loans-stats">
+      {/* Simple Stats (hidden, can be enabled later) */}
+      <div className="hidden">
         <div className="stat-item">
           <span className="stat-value">{formatNumber(totalLoans)}</span>
           <span className="stat-label">{t('common.total')}</span>
@@ -253,7 +232,7 @@ const Loans: FC = () => {
       </div>
 
       {/* Loans List Section */}
-      <div className="loans-table-section">
+      <div className="mb-8">
         {filteredLoans.length === 0 ? (
           <NoData
             icon={<FiCreditCard />}

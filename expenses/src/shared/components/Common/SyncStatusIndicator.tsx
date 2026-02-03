@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiWifi, FiWifiOff, FiLoader } from 'react-icons/fi';
 import { useLocalization } from '@shared/context/localization';
-import { isOnline, getPendingSyncOperations } from '@shared/utils/indexedDB';
-import './SyncStatusIndicator.scss';
+import { getPendingSyncOperations } from '@shared/utils/indexedDB';
 
 const SyncStatusIndicator: React.FC = () => {
   const [online, setOnline] = useState(navigator.onLine);
@@ -72,39 +71,39 @@ const SyncStatusIndicator: React.FC = () => {
   const showPending = online && !isSyncing && pendingCount > 0;
   const showSynced = online && !isSyncing && pendingCount === 0;
 
+  const baseClasses =
+    'flex items-center gap-2.5 py-1.5 px-4 rounded-xl text-xs font-medium transition-all duration-300 fixed top-5 right-5 z-[1030] backdrop-blur-[10px] shadow-md animate-[slideIn_0.3s_ease-out]';
+  const stateClasses = showOffline
+    ? 'bg-red-500/15 border border-red-500/30 text-red-300'
+    : showSyncing
+      ? 'bg-blue-500/15 border border-blue-500/30 text-blue-300'
+      : showPending
+        ? 'bg-amber-400/15 border border-amber-400/30 text-amber-300'
+        : 'bg-green-500/15 border border-green-500/30 text-green-300 animate-[slideIn_0.3s_ease-out,slideOut_0.3s_ease-in_2.7s_forwards]';
+
   return (
-    <div
-      className={`sync-status-indicator ${
-        showOffline
-          ? 'sync-status-indicator--offline'
-          : showSyncing
-            ? 'sync-status-indicator--syncing'
-            : showPending
-              ? 'sync-status-indicator--pending'
-              : 'sync-status-indicator--success'
-      }`}
-    >
+    <div className={`${baseClasses} ${stateClasses}`}>
       {showOffline ? (
         <>
-          <FiWifiOff className="sync-status-indicator__icon" />
-          <span>{t('offline.message')}</span>
+          <FiWifiOff className="shrink-0 w-4 h-4 [stroke-width:2.5]" />
+          <span className="whitespace-nowrap leading-snug">{t('offline.message')}</span>
         </>
       ) : showSyncing ? (
         <>
-          <FiLoader className="sync-status-indicator__icon sync-status-indicator__icon--spinning" />
-          <span>{t('syncStatus.syncing') || 'Syncing...'}</span>
+          <FiLoader className="shrink-0 w-4 h-4 [stroke-width:2.5] animate-spin" />
+          <span className="whitespace-nowrap leading-snug">{t('syncStatus.syncing') || 'Syncing...'}</span>
         </>
       ) : showPending ? (
         <>
-          <FiWifiOff className="sync-status-indicator__icon" />
-          <span>
+          <FiWifiOff className="shrink-0 w-4 h-4 [stroke-width:2.5]" />
+          <span className="whitespace-nowrap leading-snug">
             {pendingCount} {t('syncStatus.pending')}
           </span>
         </>
       ) : (
         <>
-          <FiWifi className="sync-status-indicator__icon" />
-          <span>{t('syncStatus.synced') || 'Synced'}</span>
+          <FiWifi className="shrink-0 w-4 h-4 [stroke-width:2.5]" />
+          <span className="whitespace-nowrap leading-snug">{t('syncStatus.synced') || 'Synced'}</span>
         </>
       )}
     </div>

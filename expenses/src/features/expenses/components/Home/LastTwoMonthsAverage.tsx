@@ -3,7 +3,6 @@ import { useExpenseData } from '@stores/expenseStore';
 import { useLocalization } from '@shared/context/localization';
 import { formatNumber } from '@shared/utils/utils';
 import { TransactionOrIncomeItem } from '@shared/type/types';
-import './LastTwoMonthsAverage.scss';
 
 const LastTwoMonthsAverage = () => {
   const { data } = useExpenseData();
@@ -37,12 +36,11 @@ const LastTwoMonthsAverage = () => {
     : timeDiff / (1000 * 3600 * 24);
 
   return (
-    <div className="last-two-months-average-balanced">
-      <div className="content">
-        <span>
+    <div className="my-3 md:my-2 bg-white/[0.05] border border-white/10 overflow-hidden rounded-xl">
+      <div className="p-4 md:p-3 text-center">
+        <span className="text-white text-base md:text-[0.9rem] font-medium leading-relaxed">
           {t('home.averageSpendingLast60Days')}:{' '}
-          {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} /{' '}
-          {t('home.day')}
+          {formatNumber(lastTwoMonthsTotal / Math.ceil(daysDiff))} / {t('home.day')}
         </span>
       </div>
     </div>

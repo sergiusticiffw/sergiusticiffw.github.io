@@ -18,7 +18,6 @@ import { TransactionOrIncomeItem } from '@shared/type/types';
 import { incomeSuggestions } from '@shared/utils/constants';
 import TagDisplay from '@shared/components/Common/TagDisplay';
 import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
-import './IncomeTable.scss';
 import { useLocalization } from '@shared/context/localization';
 
 interface IncomeTableProps {
@@ -117,21 +116,32 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
     return sortDirection === 'asc' ? <FiArrowUp /> : <FiArrowDown />;
   };
 
-  return (
-    <div className="income-list-component" ref={listRef}>
-      {/* Header with Sort Controls */}
-      <div className="income-list-header">
-        <h3 className="income-list-title">{t('income.incomeRecords')}</h3>
+  const sortBtn =
+    'flex items-center gap-1.5 py-2 px-4 bg-white/[0.05] border border-white/10 rounded-lg text-white/60 text-[0.85rem] font-medium cursor-pointer transition-all duration-200 [&_svg]:text-xs [&_svg]:opacity-70 hover:bg-white/10 hover:border-white/15 hover:text-white/80';
+  const sortBtnActive =
+    'bg-[rgba(91,141,239,0.15)] border-[rgba(91,141,239,0.3)] text-[#5b8def] [&_svg]:opacity-100';
 
-        <div className="sort-controls">
+  return (
+    <div
+      className="w-full relative overflow-x-hidden overflow-y-auto touch-pan-y"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+      ref={listRef}
+    >
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-white m-0 mb-4 tracking-tight">
+          {t('income.incomeRecords')}
+        </h3>
+        <div className="flex gap-3">
           <button
-            className={`sort-button ${sortField === 'date' ? 'active' : ''}`}
+            type="button"
+            className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
             onClick={() => handleSort('date')}
           >
             Date {getSortIcon('date')}
           </button>
           <button
-            className={`sort-button ${sortField === 'amount' ? 'active' : ''}`}
+            type="button"
+            className={`${sortBtn} ${sortField === 'amount' ? sortBtnActive : ''}`}
             onClick={() => handleSort('amount')}
           >
             Amount {getSortIcon('amount')}
@@ -139,13 +149,11 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
         </div>
       </div>
 
-      {/* Income List */}
-      <div className="income-list-items">
+      <div className="flex flex-col gap-3">
         {sortedItems.map((income) => {
           const changeType = changedItems[income.id]?.type;
           const date = new Date(income.dt);
           const day = date.getDate();
-          // Use user's language for month formatting
           const locale = getLocale(language);
           const month = date
             .toLocaleDateString(locale, { month: 'short' })
@@ -160,9 +168,8 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
           return (
             <div
               key={income.id}
-              className={`income-item-wrapper ${changeType || ''}`}
+              className={`relative overflow-hidden rounded-xl ${changeType === 'added' ? 'animate-[slideIn_0.3s_ease]' : ''} ${changeType === 'removed' ? 'animate-[slideOut_0.3s_ease] opacity-50' : ''}`}
             >
-              {/* Swipe Actions Background */}
               <div
                 className={`swipe-actions-background ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}
               >
@@ -178,10 +185,9 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                 )}
               </div>
 
-              {/* Income Item */}
               <div
                 data-id={income.id}
-                className="income-list-item"
+                className="flex items-center gap-4 py-4 px-4 rounded-xl bg-white/[0.05] cursor-pointer transition-all duration-200 relative z-[1] border border-white/10 hover:bg-white/10"
                 onTouchStart={(e) => handleTouchStart(e, income.id, listRef)}
                 onTouchMove={(e) => handleTouchMove(e, listRef)}
                 onTouchEnd={(e) =>
@@ -194,16 +200,14 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                   )
                 }
               >
-                {/* Date Box */}
-                <div className="income-date-box">
-                  <div className="date-day">{day}</div>
-                  <div className="date-month">{month}</div>
-                  <div className="date-year">{year}</div>
+                <div className="flex flex-col items-center shrink-0 min-w-[3rem]">
+                  <div className="text-lg font-bold text-white leading-none">{day}</div>
+                  <div className="text-xs font-semibold text-white/50 mt-0.5 tracking-wide">{month}</div>
+                  <div className="text-xs text-white/40 mt-0.5">{year}</div>
                 </div>
 
-                {/* Content */}
-                <div className="income-content">
-                  <div className="income-description">
+                <div className="flex-1 min-w-0">
+                  <div className="text-base font-medium text-white/90 leading-snug break-words">
                     <TagDisplay
                       description={income.dsc || ''}
                       suggestions={incomeSuggestions}
@@ -213,8 +217,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                   </div>
                 </div>
 
-                {/* Amount */}
-                <div className="income-amount">
+                <div className="text-lg font-bold text-white shrink-0 flex items-center gap-1">
                   {formatNumber(income.sum)}
                   <ItemSyncIndicator
                     status={isPending ? 'pending' : undefined}

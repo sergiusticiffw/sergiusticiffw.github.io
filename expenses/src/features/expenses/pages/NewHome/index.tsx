@@ -38,7 +38,6 @@ import {
   FiTrendingDown,
 } from 'react-icons/fi';
 import { TransactionOrIncomeItem } from '@shared/type/types';
-import './NewHome.scss';
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
 import { useApiClient } from '@shared/hooks/useApiClient';
 
@@ -112,12 +111,7 @@ const NewHome = () => {
 
   // Reset to most recent month when filters are applied
   useEffect(() => {
-    if (
-      searchText !== '' ||
-      selectedCategory !== '' ||
-      selectedMonth !== '' ||
-      selectedTag !== ''
-    ) {
+    if (searchText !== '' || selectedCategory !== '' || selectedMonth !== '' || selectedTag !== '') {
       setCurrentMonthIndex(0);
     }
   }, [searchText, selectedCategory, selectedMonth, selectedTag]);
@@ -186,7 +180,9 @@ const NewHome = () => {
         const categoryLabel =
           localizedCategories.find((cat) => cat.value === transaction.cat)
             ?.label || '';
-        const categoryMatch = categoryLabel.toLowerCase().includes(searchLower);
+        const categoryMatch = categoryLabel
+          .toLowerCase()
+          .includes(searchLower);
 
         if (!descriptionMatch && !categoryMatch) {
           return false;
@@ -202,20 +198,11 @@ const NewHome = () => {
 
       return true;
     });
-  }, [
-    items.groupedData,
-    currentMonth,
-    searchText,
-    selectedTag,
-    localizedCategories,
-  ]);
+  }, [items.groupedData, currentMonth, searchText, selectedTag, localizedCategories]);
 
   // Check if any filters are active
   const hasFilters =
-    searchText !== '' ||
-    selectedCategory !== '' ||
-    selectedMonth !== '' ||
-    selectedTag !== '';
+    searchText !== '' || selectedCategory !== '' || selectedMonth !== '' || selectedTag !== '';
 
   // Auto-navigate to first month with filtered data
   useEffect(() => {
@@ -296,14 +283,12 @@ const NewHome = () => {
       );
 
   return (
-    <div className="page-container newhome-page">
+    <div className="page-container">
       {/* Delete Drawer (Vaul) */}
       <DeleteConfirmDrawer
         open={!!showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        onConfirm={() =>
-          showDeleteModal && handleDelete(showDeleteModal, token)
-        }
+        onConfirm={() => showDeleteModal && handleDelete(showDeleteModal, token)}
         title={t('transaction.deleteTransaction')}
         message={t('modal.deleteTransaction')}
         isSubmitting={isSubmitting}
@@ -414,7 +399,7 @@ const NewHome = () => {
           />
 
           {/* Filters - For Both Views */}
-          <div className="newhome-search-wrapper">
+          <div className="mb-6">
             <TransactionFilters
               searchValue={searchText}
               categoryValue={selectedCategory}
@@ -464,16 +449,25 @@ const NewHome = () => {
           </StatsGrid>
 
           {/* View Tabs - Below Search */}
-          <div className="newhome-view-tabs">
+          <div className="flex gap-2 mb-6">
             <button
-              className={`tab-button ${activeView === 'list' ? 'active' : ''}`}
+              type="button"
+              className={`flex-1 rounded-xl py-3.5 px-4 text-[0.95rem] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 border-none ${
+                activeView === 'list'
+                  ? 'bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] text-white font-medium shadow-[0_2px_8px_rgba(91,141,239,0.3)]'
+                  : 'bg-white/[0.05] text-white/60 hover:bg-white/10 hover:text-white/80'
+              } [&_svg]:text-lg`}
               onClick={() => setActiveView('list')}
             >
               <FiList />
               <span>List</span>
             </button>
             <button
-              className={`tab-button ${activeView === 'calendar' ? 'active' : ''}`}
+              className={`flex-1 rounded-xl py-3.5 px-4 text-[0.95rem] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 border-none ${
+                activeView === 'calendar'
+                  ? 'bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] text-white font-medium shadow-[0_2px_8px_rgba(91,141,239,0.3)]'
+                  : 'bg-white/[0.05] text-white/60 hover:bg-white/10 hover:text-white/80'
+              } [&_svg]:text-lg`}
               onClick={() => setActiveView('calendar')}
             >
               <FiCalendar />
@@ -507,7 +501,7 @@ const NewHome = () => {
               }
             />
           ) : activeView === 'list' ? (
-            <div className="newhome-transaction-wrapper">
+            <div>
               <TransactionList
                 transactions={filteredTransactions.map((t) => ({
                   ...t,
@@ -520,7 +514,7 @@ const NewHome = () => {
               />
             </div>
           ) : (
-            <div className="newhome-calendar-wrapper">
+            <div className="mb-8">
               <CalendarView
                 transactions={filteredTransactions}
                 currentMonth={currentMonth}
@@ -544,18 +538,19 @@ const NewHome = () => {
 
           {/* Month Navigation - Sticky at Bottom (Only for List View) */}
           {activeView === 'list' && (
-            <div className="newhome-month-navigation-sticky">
+            <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 flex justify-center gap-4 z-[100] bg-[rgba(26,26,26,0.9)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5">
               <button
-                className="nav-button-sticky"
+                type="button"
+                className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-white/15 bg-white/10 cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-white/90 [&_svg]:text-[1.3rem] hover:not(:disabled):bg-white/[0.18] hover:not(:disabled):border-[#5b8def]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
                 onClick={() => setCurrentMonthIndex(currentMonthIndex + 1)}
                 disabled={currentMonthIndex >= months.length - 1}
                 aria-label="Previous month"
               >
                 <FiChevronLeft />
               </button>
-
               <button
-                className="nav-button-sticky"
+                type="button"
+                className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-white/15 bg-white/10 cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-white/90 [&_svg]:text-[1.3rem] hover:not(:disabled):bg-white/[0.18] hover:not(:disabled):border-[#5b8def]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
                 onClick={() => setCurrentMonthIndex(currentMonthIndex - 1)}
                 disabled={currentMonthIndex <= 0}
                 aria-label="Next month"
@@ -567,7 +562,7 @@ const NewHome = () => {
 
           {/* FAB */}
           <button
-            className="newhome-fab"
+            className="fab"
             onClick={() => setShowAddModal(true)}
             title="Add Transaction"
           >

@@ -23,7 +23,6 @@ import DailyAverageTrend from '@features/expenses/components/Charts/DailyAverage
 import LastTwoMonthsAverage from '@features/expenses/components/Home/LastTwoMonthsAverage';
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
 import { useApiClient } from '@shared/hooks/useApiClient';
-import './Charts.scss';
 
 const componentMap = {
   MonthlyTotals,
@@ -93,14 +92,16 @@ const Charts = () => {
   ]);
 
   return (
-    <div className="charts-page-wrapper">
+    <div className="min-h-full bg-[#1a1a1a] px-6 py-0 pb-20 max-w-full overflow-x-hidden box-border [&_*]:box-border md:px-6 max-sm:px-4">
       {/* Header */}
-      <div className="charts-header">
-        <h1>{t('charts.title')}</h1>
+      <div className="text-center mb-6 pt-6">
+        <h1 className="text-2xl font-bold m-0 text-white md:text-2xl max-sm:text-xl">
+          {t('charts.title')}
+        </h1>
       </div>
 
       {/* Filters */}
-      <div className="charts-search-wrapper">
+      <div className="mb-6">
         <TransactionFilters
           searchValue={searchText}
           categoryValue={selectedCategory}
@@ -139,11 +140,14 @@ const Charts = () => {
 
       {/* Charts Content */}
       {!loading && !noEntries && data.groupedData && (
-        <div className="charts-content">
+        <div className="flex flex-col gap-8">
           {visibleCharts.map((chartKey) => {
             const ChartComponent = componentMap[chartKey];
             return ChartComponent ? (
-              <div key={chartKey} className="charts-section">
+              <div
+                key={chartKey}
+                className="p-0 border-none bg-transparent [&>div]:bg-transparent [&>div]:border-none [&>div]:p-0 [&>div]:m-0 [&_.spending-summary-container]:border-none [&_.most-expensive-table-container]:border-none [&_.year-income-average-trend-container]:border-none [&_.daily-average]:border-none [&_.heading]:block [&_.heading]:text-xl [&_.heading]:font-semibold [&_.heading]:text-white [&_.heading]:my-4 [&_.heading]:mb-4 [&_.heading]:pb-2 [&_.heading]:border-b-2 [&_.heading]:border-white/20 [&_.heading]:tracking-wide [&_.heading]:text-center [&_.highcharts-container]:border-none max-sm:[&_.heading]:text-lg max-sm:[&_.heading]:my-3 max-sm:[&_.heading]:mb-3 max-sm:[&_.heading]:pb-1.5"
+              >
                 <ChartComponent />
               </div>
             ) : null;

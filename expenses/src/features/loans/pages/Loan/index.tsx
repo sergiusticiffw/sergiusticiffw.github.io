@@ -18,11 +18,7 @@ import { fetchLoans as fetchLoansService } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useAmortization } from '@features/loans/hooks/useAmortization';
 import { isEarlyPaymentFromApiItem } from '@features/loans/utils/amortization';
-import type {
-  ApiLoan,
-  ApiPaymentItem,
-  LoanPaymentsEntry,
-} from '@shared/type/types';
+import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
 import {
   FiTrendingUp,
   FiDollarSign,
@@ -39,7 +35,6 @@ import {
   FiAlertCircle,
 } from 'react-icons/fi';
 import Notification from '@shared/components/Notification/Notification';
-import './Loan.scss';
 import { useLocalization } from '@shared/context/localization';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import { useChartsThemeSync } from '@shared/context/highcharts';
@@ -67,9 +62,9 @@ const Loan: React.FC = () => {
   }, [noData, apiClient, dataDispatch]);
 
   const loan = loans?.find((l) => l.id === id) as ApiLoan | undefined;
-  const filteredData = (
-    data?.payments as LoanPaymentsEntry[] | undefined
-  )?.find((item) => item?.loanId === id && item?.data?.length > 0);
+  const filteredData = (data?.payments as LoanPaymentsEntry[] | undefined)?.find(
+    (item) => item?.loanId === id && item?.data?.length > 0
+  );
   const paymentsForLoan = useMemo(
     () => (filteredData?.data ?? []) as ApiPaymentItem[],
     [filteredData?.data]
@@ -260,7 +255,9 @@ const Loan: React.FC = () => {
             />
             {t('loan.startDate')}
           </span>
-          <span className="loan-stat-value">{loanData.start_date || '-'}</span>
+          <span className="loan-stat-value">
+            {loanData.start_date || '-'}
+          </span>
         </div>
         <div className="loan-stat-item">
           <span className="loan-stat-label">
@@ -273,8 +270,7 @@ const Loan: React.FC = () => {
             {loanData.end_date ||
               (amortizationSchedule.length > 0
                 ? (() => {
-                    const lastRow =
-                      amortizationSchedule[amortizationSchedule.length - 1];
+                    const lastRow = amortizationSchedule[amortizationSchedule.length - 1];
                     if (Array.isArray(lastRow)) {
                       return lastRow[0] || '-';
                     }

@@ -8,7 +8,6 @@ import { formatMonthOption } from '@shared/utils/utils';
 import MonthChips from '@shared/components/Common/MonthChips';
 import { incomeSuggestions } from '@shared/utils/constants';
 import { hasTag } from '@shared/utils/utils';
-import './IncomeFilters.scss';
 
 interface IncomeFiltersProps {
   textFilter: string;
@@ -123,29 +122,29 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
     [selectedTag, onTagFilterChange, handleSelection]
   );
 
-  return (
-    <div className="income-filters-combined">
-      {/* Combined Search Input */}
-      <div className="search-bar-component">
-        <FiSearch className="search-bar-icon" />
+  const searchBar =
+    'flex items-center bg-white/[0.05] rounded-xl px-4 gap-2 w-full transition-colors duration-200 focus-within:bg-white/[0.08]';
+  const chipBase =
+    'flex items-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-2xl whitespace-nowrap shrink-0 cursor-pointer bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] text-white [&_svg]:text-[0.75rem] hover:from-[#6b9dff] hover:to-[#5a8dec] hover:scale-105';
+  const chipInactive =
+    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-white/[0.05] border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white/90';
+  const chipSelected =
+    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] border-transparent text-white font-medium shadow-[0_2px_8px_rgba(91,141,239,0.3)]';
 
-        {/* Show selected month as chip inside search - clickable to change */}
+  return (
+    <div className="w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full">
+      <div className={searchBar}>
+        <FiSearch className="text-white/40 text-lg shrink-0" />
+
         {selectedMonth && !isFilterFocused && (
-          <div
-            className="selected-month-chip clickable"
-            onClick={handleChipClick}
-          >
+          <div className={chipBase} onClick={handleChipClick}>
             <FiCalendar />
             {selectedMonthLabel}
           </div>
         )}
 
-        {/* Show selected tag as chip inside search - clickable to change */}
         {selectedTag && !isFilterFocused && (
-          <div
-            className="selected-tag-chip clickable"
-            onClick={handleChipClick}
-          >
+          <div className={chipBase} onClick={handleChipClick}>
             {selectedTagLabel}
           </div>
         )}
@@ -161,13 +160,14 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
               ? t('filters.searchInMonth')
               : t('filters.search')
           }
-          className="search-bar-input"
+          className="flex-1 bg-transparent border-none py-4 text-white text-[0.95rem] outline-none min-w-0 placeholder:text-white/40"
         />
 
         {hasActiveFilters && (
           <button
+            type="button"
             onClick={onClearFilters}
-            className="clear-filters-btn"
+            className="bg-transparent border-none p-2 flex items-center justify-center shrink-0 cursor-pointer [&_svg]:text-white/40 hover:[&_svg]:text-white/70"
             title={t('filters.clearAll')}
           >
             <FiX />
@@ -175,47 +175,40 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
         )}
       </div>
 
-      {/* Chips - Show when focused (both tags and months) */}
       {isFilterFocused && (
-        <div className="filters-chips-container">
-          {/* Tag Chips Section */}
+        <div className="flex flex-col gap-4 mt-3 w-full animate-[slideDown_0.2s_ease]">
           {availableTags.length > 0 && (
-            <div className="chips-section">
-              <div className="chips-section-title">
+            <div className="flex flex-col gap-3">
+              <div className="text-white/50 text-xs font-semibold uppercase tracking-wider">
                 {t('filters.tags') || 'Tags'}
               </div>
-              <div className="tag-chips">
+              <div className="flex flex-wrap gap-2 overflow-x-hidden w-full max-w-full">
                 <button
                   type="button"
                   onClick={() => handleTagClick('')}
-                  className={`tag-chip ${!selectedTag ? 'selected' : ''}`}
+                  className={!selectedTag ? chipSelected : chipInactive}
                 >
                   {t('filters.all') || 'All'}
                 </button>
-                {availableTags.map((tag) => {
-                  const isSelected = selectedTag === tag;
-                  const label = t(`income.tags.${tag}`) || tag;
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => handleTagClick(tag)}
-                      className={`tag-chip ${isSelected ? 'selected' : ''}`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => handleTagClick(tag)}
+                    className={selectedTag === tag ? chipSelected : chipInactive}
+                  >
+                    {t(`income.tags.${tag}`) || tag}
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Month Chips Section */}
           <MonthChips
             months={availableMonths}
             selectedMonth={selectedMonth}
             onMonthClick={handleMonthClick}
-            className="chips-section"
+            className="flex flex-col gap-3 max-h-[200px] overflow-y-auto overflow-x-hidden w-full max-w-full [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/[0.05] [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded"
           />
         </div>
       )}

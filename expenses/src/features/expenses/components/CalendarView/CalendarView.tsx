@@ -7,7 +7,6 @@ import { useLocalization } from '@shared/context/localization';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionList from '@features/expenses/components/TransactionList';
 import Month from '@features/expenses/components/Home/Month';
-import './CalendarView.scss';
 
 interface Transaction {
   id: string;

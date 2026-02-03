@@ -26,10 +26,10 @@ function requireAuth() {
 
 function RootComponent() {
   return (
-    <div className="app-container">
+    <div className="h-dvh flex flex-col bg-[#1a1a1a] overflow-hidden">
       <SyncStatusIndicator />
       <Navbar />
-      <main className="main-content">
+      <main className="flex-1 min-h-0 pb-[95px] overflow-y-auto overflow-x-hidden bg-[#1a1a1a] w-full relative block [&:not(:has(.month-stats))]:pb-[60px]">
         <Suspense fallback={<LoadingSpinner />}>
           <ErrorBoundary
             onError={(error, errorInfo) => {

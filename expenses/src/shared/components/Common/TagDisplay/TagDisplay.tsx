@@ -3,7 +3,6 @@ import { useLocalization } from '@shared/context/localization';
 import { extractHashtags } from '@shared/utils/utils';
 import { normalizeTag } from '@shared/hooks/useTags';
 import { sanitizeForDisplay } from '@shared/utils/sanitization';
-import './TagDisplay.scss';
 
 interface TagDisplayProps {
   description: string;
@@ -38,9 +37,9 @@ const TagDisplay: React.FC<TagDisplayProps> = ({
   // Extract description without tags
   let cleanDescription = sanitizedDescription;
   const foundTags: string[] = [];
-
+  
   // Get normalized suggestions for matching
-  const normalizedSuggestions = suggestions.map((s) => ({
+  const normalizedSuggestions = suggestions.map(s => ({
     original: s,
     normalized: normalize(s),
   }));
@@ -64,21 +63,25 @@ const TagDisplay: React.FC<TagDisplayProps> = ({
     tagDisplayMap[normalized] = original;
   });
 
+  const tagsInline = 'inline-flex flex-wrap gap-1.5 items-center';
+  const tagInline =
+    'inline-block bg-white/10 rounded-md py-1 px-2 text-xs font-medium text-white/60 whitespace-nowrap';
+
   return (
-    <span className={`tag-display ${className}`}>
+    <span className={className}>
       {cleanDescription && (
-        <span className="description-text">
+        <span className="inline">
           {cleanDescription}
           {foundTags.length > 0 && (
-            <span className="tags-inline">
+            <span className={`${tagsInline} ml-2`}>
               {foundTags.map((tag) => {
                 const displayText = getTagLabel
                   ? getTagLabel(tagDisplayMap[tag] || tag)
-                  : translationKey
-                    ? t(`${translationKey}.${tagDisplayMap[tag] || tag}`)
-                    : tagDisplayMap[tag] || tag;
+                  : (translationKey 
+                      ? t(`${translationKey}.${tagDisplayMap[tag] || tag}`) 
+                      : (tagDisplayMap[tag] || tag));
                 return (
-                  <span key={tag} className="tag-inline">
+                  <span key={tag} className={tagInline}>
                     {displayText}
                   </span>
                 );
@@ -88,15 +91,15 @@ const TagDisplay: React.FC<TagDisplayProps> = ({
         </span>
       )}
       {!cleanDescription && foundTags.length > 0 && (
-        <span className="tags-inline">
+        <span className={tagsInline}>
           {foundTags.map((tag) => {
             const displayText = getTagLabel
               ? getTagLabel(tagDisplayMap[tag] || tag)
-              : translationKey
-                ? t(`${translationKey}.${tagDisplayMap[tag] || tag}`)
-                : tagDisplayMap[tag] || tag;
+              : (translationKey 
+                  ? t(`${translationKey}.${tagDisplayMap[tag] || tag}`) 
+                  : (tagDisplayMap[tag] || tag));
             return (
-              <span key={tag} className="tag-inline">
+              <span key={tag} className={tagInline}>
                 {displayText}
               </span>
             );

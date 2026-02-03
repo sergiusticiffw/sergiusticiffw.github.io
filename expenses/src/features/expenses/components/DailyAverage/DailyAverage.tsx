@@ -7,7 +7,6 @@ import {
   useSortableData,
 } from '@shared/utils/useSortableData';
 import { getCategories } from '@shared/utils/constants';
-import './DailyAverage.scss';
 
 const DailyAverage = () => {
   const { data } = useExpenseData();
@@ -59,18 +58,22 @@ const DailyAverage = () => {
   const totalDaily = data.totalSpent / daysPassed;
 
   return (
-    <div className="daily-average-balanced">
-      <div className="section-header">
-        <h3>{t('home.dailyAveragePerCategory')}</h3>
+    <div className="my-6 md:my-4 overflow-hidden bg-transparent border-none shadow-none">
+      <div className="flex justify-start items-center p-0 mb-3 bg-transparent border-none">
+        <h3 className="m-0 text-[0.95rem] font-semibold text-white/70 uppercase tracking-wide">
+          {t('home.dailyAveragePerCategory')}
+        </h3>
       </div>
 
-      <table className="balanced-table">
+      <table className="w-full border-collapse bg-transparent">
         <thead>
-          <tr>
-            <th>{t('common.category')}</th>
+          <tr className="border-b-0 bg-transparent">
+            <th className="py-0 pr-0 pb-2 pl-0 bg-transparent text-lg font-semibold text-white text-left tracking-tight md:text-base">
+              {t('common.category')}
+            </th>
             <th
               onClick={() => requestSort('y')}
-              className={`sortable ${getClassNamesFor(sortConfig, 'y')}`}
+              className={`py-0 pr-0 pb-2 pl-0 bg-transparent font-semibold text-white/50 text-xs uppercase tracking-wider text-right md:text-[0.7rem] cursor-pointer hover:text-white/80 ${getClassNamesFor(sortConfig, 'y')}`}
             >
               {t('home.dailyAverage')}
             </th>
@@ -84,22 +87,23 @@ const DailyAverage = () => {
             const percentage = ((item.y / data.totalSpent) * 100).toFixed(1);
 
             return (
-              <tr key={key}>
-                <td className="category-cell">
-                  <span className="category-name">{item.name}</span>
-                  <span className="category-percentage">({percentage}%)</span>
+              <tr key={key} className="border-b border-white/5 bg-transparent last:border-b-0">
+                <td className="py-2.5 pt-4 border-b-0 align-middle bg-transparent text-left last:text-right">
+                  <span className="block text-white/90 text-base font-medium text-left md:text-[0.9rem]">{item.name}</span>
+                  <span className="block text-white/50 text-sm font-normal mt-0.5 text-left md:text-xs">({percentage}%)</span>
                 </td>
-                <td className="amount-cell">
+                <td className="py-2.5 pt-4 border-b-0 align-middle bg-transparent text-white text-base font-semibold text-right md:text-[0.9rem]">
                   {formatNumber(parseFloat(dailyAmount))} / {t('home.day')}
                 </td>
               </tr>
             );
           })}
-          <tr className="total-row">
-            <td className="total-label">{t('common.total')}</td>
-            <td className="total-amount">
-              {formatNumber(parseFloat(totalDaily.toFixed(2)))} /{' '}
-              {t('home.day')}
+          <tr className="border-t border-white/10 bg-transparent">
+            <td className="py-2.5 border-b-0 align-middle bg-transparent text-white text-base font-bold uppercase tracking-wide md:text-[0.9rem]">
+              {t('common.total')}
+            </td>
+            <td className="py-2.5 border-b-0 align-middle bg-transparent text-white text-base font-bold text-right md:text-[0.9rem]">
+              {formatNumber(parseFloat(totalDaily.toFixed(2)))} / {t('home.day')}
             </td>
           </tr>
         </tbody>

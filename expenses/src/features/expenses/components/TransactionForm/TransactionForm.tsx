@@ -9,7 +9,6 @@ import { useTags, normalizeTag } from '@shared/hooks/useTags';
 import { FormField } from '@shared/components/Common';
 import TagChips from '@shared/components/Common/TagChips';
 import { FiPlus, FiEdit2, FiCamera } from 'react-icons/fi';
-import './TransactionForm.scss';
 
 interface TransactionFormProps {
   formType: 'add' | 'edit';

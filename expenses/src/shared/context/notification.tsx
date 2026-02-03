@@ -68,20 +68,6 @@ export const NotificationProvider = ({
   const timeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map()
   );
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Detect mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  const theme = 'blue-pink-gradient';
-  const gradientClass =
-    theme === 'blue-pink-gradient' ? 'has-gradient-accent' : '';
 
   const removeNotification = useCallback((id: string) => {
     // Clear timeout if exists
@@ -122,7 +108,7 @@ export const NotificationProvider = ({
             newNotification,
           ];
         }
-
+        
         // For error notifications, remove previous error notifications with the same message
         // This prevents duplicate error notifications from accumulating
         const isError = type === notificationType.ERROR || type === 'error';
@@ -133,7 +119,7 @@ export const NotificationProvider = ({
           );
           return [...filtered, newNotification];
         }
-
+        
         return [...prev, newNotification];
       });
 
@@ -200,49 +186,29 @@ export const NotificationProvider = ({
     };
   }, []);
 
-  // Calculate positions for notifications with better stacking
-  const getNotificationPosition = (index: number, total: number) => {
-    const spacing = isMobile ? 80 : 88; // Height + gap
-    const horizontalPadding = isMobile ? '16px' : '20px';
-    const topPadding = isMobile ? '16px' : '20px';
-
-    return {
-      top: `${parseInt(topPadding) + index * spacing}px`,
-      right: horizontalPadding,
-      left: isMobile ? horizontalPadding : 'auto',
-      bottom: 'auto',
-    };
-  };
-
   return (
-    <div className={`${theme} ${gradientClass}`}>
-      <NotificationContext.Provider
-        value={{ showNotification, removeNotification, clearAllNotifications }}
-      >
-        {children}
-        <div className="notifications-container">
-          {notifications.map((notification, index) => (
-            <div
-              key={notification.id}
-              className="notification-wrapper"
-              style={{
-                position: 'fixed',
-                zIndex: 9999 + index,
-                ...getNotificationPosition(index, notifications.length),
-              }}
-            >
-              <Notification
-                message={notification.message}
-                type={notification.type}
-                options={notification.options}
-                onClose={() => removeNotification(notification.id)}
-                duration={notification.options?.duration}
-                persistent={notification.options?.persistent}
-              />
-            </div>
-          ))}
-        </div>
-      </NotificationContext.Provider>
-    </div>
+    <NotificationContext.Provider
+      value={{ showNotification, removeNotification, clearAllNotifications }}
+    >
+      {children}
+      <div className="fixed inset-0 pt-[calc(0.75rem+env(safe-area-inset-top,0))] pr-[calc(0.75rem+env(safe-area-inset-right,0))] pl-[calc(0.75rem+env(safe-area-inset-left,0))] pointer-events-none z-[9999] flex flex-col gap-2 md:pt-[calc(1rem+env(safe-area-inset-top,0))] md:pr-[calc(1.25rem+env(safe-area-inset-right,0))] md:pl-[env(safe-area-inset-left,0)] md:items-end">
+        {notifications.map((notification, index) => (
+          <div
+            key={notification.id}
+            className="pointer-events-auto w-full max-w-full md:max-w-[420px]"
+            style={{ zIndex: index }}
+          >
+            <Notification
+              message={notification.message}
+              type={notification.type}
+              options={notification.options}
+              onClose={() => removeNotification(notification.id)}
+              duration={notification.options?.duration}
+              persistent={notification.options?.persistent}
+            />
+          </div>
+        ))}
+      </div>
+    </NotificationContext.Provider>
   );
 };

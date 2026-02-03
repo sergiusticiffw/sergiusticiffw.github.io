@@ -1,6 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { logger } from '@shared/utils/logger';
-import './ErrorBoundary.scss';
 
 interface Props {
   children: ReactNode;
@@ -105,36 +104,36 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
   };
 
   return (
-    <div className="error-boundary">
-      <div className="error-boundary__container">
-        <div className="error-boundary__icon">⚠️</div>
-        <h2 className="error-boundary__title">
+    <div className="flex items-center justify-center min-h-[60vh] p-8 bg-[var(--background-color,#f5f5f5)]">
+      <div className="max-w-[600px] w-full bg-white rounded-xl p-8 shadow-md text-center">
+        <div className="text-6xl mb-4">⚠️</div>
+        <h2 className="text-2xl font-semibold text-[var(--text-color,#333)] mb-4">
           {getTranslation('error.boundary.title')}
         </h2>
-        <p className="error-boundary__message">
+        <p className="text-[var(--text-secondary,#666)] mb-6 leading-relaxed">
           {getTranslation('error.boundary.message')}
         </p>
         {error && import.meta.env.DEV && (
-          <details className="error-boundary__details">
-            <summary className="error-boundary__summary">
+          <details className="my-6 text-left bg-[#f8f8f8] rounded-lg p-4">
+            <summary className="cursor-pointer font-semibold text-[var(--text-color,#333)] mb-2 select-none hover:text-[var(--primary-color,#667eea)]">
               {getTranslation('error.boundary.details')}
             </summary>
-            <pre className="error-boundary__stack">
+            <pre className="bg-[#1e1e1e] text-[#d4d4d4] p-4 rounded overflow-x-auto text-sm font-mono whitespace-pre-wrap break-all mt-2">
               {error.toString()}
               {error.stack && `\n\n${error.stack}`}
             </pre>
           </details>
         )}
-        <div className="error-boundary__actions">
+        <div className="flex gap-4 justify-center mt-8">
           <button
             onClick={onReset}
-            className="error-boundary__button error-boundary__button--primary"
+            className="px-6 py-3 rounded-lg text-base font-medium cursor-pointer transition-all bg-[var(--primary-color,#667eea)] text-white hover:bg-[var(--primary-hover,#5568d3)] hover:-translate-y-px hover:shadow-lg"
           >
             {getTranslation('error.boundary.tryAgain')}
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="error-boundary__button error-boundary__button--secondary"
+            className="px-6 py-3 rounded-lg text-base font-medium cursor-pointer transition-all bg-[var(--secondary-color,#e2e8f0)] text-[var(--text-color,#333)] hover:bg-[var(--secondary-hover,#cbd5e0)] hover:-translate-y-px"
           >
             {getTranslation('error.boundary.reload')}
           </button>

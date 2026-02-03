@@ -7,7 +7,6 @@ import { useTags } from '@shared/hooks/useTags';
 import { FormField } from '@shared/components/Common';
 import TagChips from '@shared/components/Common/TagChips';
 import { incomeSuggestions } from '@shared/utils/constants';
-import './IncomeForm.scss';
 
 interface IncomeFormProps {
   formType: 'add' | 'edit';

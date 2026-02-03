@@ -6,8 +6,6 @@ import { useFormValidation } from '@shared/hooks/useFormValidation';
 import { useParams } from '@tanstack/react-router';
 import { FormField } from '@shared/components/Common';
 import { useLoan } from '@shared/context/loan';
-import './PaymentForm.scss';
-
 interface PaymentFormProps {
   formType: 'add' | 'edit';
   values: any;
@@ -229,15 +227,19 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           ariaLabel={t('paymentForm.newRecurringAmount')}
         />
 
-        <div className="form-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              name="field_is_simulated_payment"
-              checked={formState.field_is_simulated_payment}
-              onChange={handleChange}
-            />
-            <span>{t('paymentForm.simulatedPayment')}</span>
+        <div className="flex items-center gap-3 py-3 px-0 [&_input]:w-5 [&_input]:h-5 [&_input]:min-w-5 [&_input]:min-h-5 [&_input]:accent-[#5b8def] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:rounded [&_input]:border-white/20">
+          <input
+            type="checkbox"
+            id="field_is_simulated_payment"
+            name="field_is_simulated_payment"
+            checked={formState.field_is_simulated_payment}
+            onChange={handleChange}
+          />
+          <label
+            htmlFor="field_is_simulated_payment"
+            className="text-sm text-white/90 cursor-pointer select-none m-0 flex-1"
+          >
+            {t('paymentForm.simulatedPayment')}
           </label>
         </div>
 

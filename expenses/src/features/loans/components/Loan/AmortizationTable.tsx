@@ -9,7 +9,6 @@ import {
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useLocalization } from '@shared/context/localization';
 import { formatNumber } from '@shared/utils/utils';
-import './AmortizationTable.scss';
 
 interface PaymentLog {
   date: string;

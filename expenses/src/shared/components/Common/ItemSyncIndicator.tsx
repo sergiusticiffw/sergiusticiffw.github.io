@@ -1,6 +1,5 @@
 import React from 'react';
 import { FiAlertCircle, FiCheckCircle, FiClock } from 'react-icons/fi';
-import './ItemSyncIndicator.scss';
 
 interface ItemSyncIndicatorProps {
   status?: 'pending' | 'synced' | 'failed';
@@ -16,9 +15,16 @@ const ItemSyncIndicator: React.FC<ItemSyncIndicatorProps> = ({ status }) => {
         ? 'Sync failed'
         : 'Synced';
 
+  const colorClass =
+    status === 'pending'
+      ? 'text-amber-500'
+      : status === 'failed'
+        ? 'text-red-500'
+        : 'text-green-500';
+
   return (
     <div
-      className={`item-sync-indicator item-sync-indicator--${status}`}
+      className={`inline-flex items-center justify-center ml-2 shrink-0 w-[14px] h-[14px] ${colorClass}`}
       title={title}
     >
       {status === 'pending' ? (

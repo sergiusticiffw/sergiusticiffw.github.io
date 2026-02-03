@@ -8,7 +8,6 @@ import { formatDataForChart, formatNumber } from '@shared/utils/utils';
 import { getMonthNames } from '@shared/utils/constants';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import { getFinancialStabilityIcon } from '@shared/utils/helper';
-import './YearIncomeAverageTrend.scss';
 
 interface YearIncomeAverageTrendProps {
   filteredIncomeData?: TransactionOrIncomeItem[];
@@ -207,170 +206,173 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
     });
   };
 
+  const tableWrapper =
+    'rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden';
+  const tableRow =
+    'border-b border-white/5 last:border-b-0 hover:bg-white/[0.02]';
+  const cellLeft =
+    'py-3 px-4 text-white font-medium text-[0.95rem] align-middle';
+  const cellRight =
+    'py-3 px-4 text-right text-white font-medium text-[0.95rem] tabular-nums align-middle';
+  const headerCellLeft =
+    'py-3 px-4 text-white/60 text-xs font-bold uppercase tracking-wider align-middle';
+  const headerCellRight =
+    'py-3 px-4 text-right text-white/60 text-xs font-bold uppercase tracking-wider align-middle';
+
   return (
-    <div className="income-summary-container">
+    <div className="mt-6">
       <HighchartsReact
         highcharts={Highcharts}
         options={yearIncomeAverageOptions}
       />
 
-      <div className="income-summary-card">
-        <div className="card-header">
-          <h3 className="card-title">{t('income.totalIncomePerYear')}</h3>
-          <div className="card-subtitle">
-            Annual income vs spending analysis
-          </div>
-        </div>
-
-        <div className="card-content">
-          <div
-            className={`income-table-wrapper ${isFiltered ? 'filtered' : ''}`}
-          >
-            <div className="table-header">
-              <div className="header-cell year-header">{t('income.year')}</div>
-              <div className="header-cell">{t('common.income')}</div>
+      <span className="block text-[#e0e0e3] text-xl uppercase tracking-wide mt-5 mb-4 font-semibold">
+        {t('income.totalIncomePerYear')}:
+      </span>
+      <div className={tableWrapper}>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className={tableRow}>
+              <th className={headerCellLeft}>{t('income.year')}</th>
+              <th className={headerCellRight}>{t('common.income')}</th>
               {!isFiltered && (
                 <>
-                  <div className="header-cell">{t('income.spent')}</div>
-                  <div className="header-cell">{t('income.savings')}</div>
+                  <th className={headerCellRight}>{t('income.spent')}</th>
+                  <th className={headerCellRight}>{t('income.savings')}</th>
                 </>
               )}
-            </div>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedYears.map((year, key) => {
+              const income = totalIncomePerYear[year] as number;
+              const spent = (totalPerYear[year] as number) || 0;
+              const diff: number = income - spent;
+              const savingsPercent = (spent / income - 1) * -100;
+              if (!isFiltered) {
+                sumDiff += diff;
+              }
+              sumIncome += income;
 
-            <div className="table-body">
-              {sortedYears.map((year, key) => {
-                const income = totalIncomePerYear[year] as number;
-                const spent = (totalPerYear[year] as number) || 0;
-                const diff: number = income - spent;
-                const savingsPercent = (spent / income - 1) * -100;
-                if (!isFiltered) {
-                  sumDiff += diff;
-                }
-                sumIncome += income;
-
-                // Get previous year's values for percentage calculation
-                const prevYearIndex = key - 1;
-                const prevYear =
-                  prevYearIndex >= 0 ? sortedYears[prevYearIndex] : null;
-                const prevIncome = prevYear
-                  ? (totalIncomePerYear[prevYear] as number)
+              const prevYearIndex = key - 1;
+              const prevYear =
+                prevYearIndex >= 0 ? sortedYears[prevYearIndex] : null;
+              const prevIncome = prevYear
+                ? (totalIncomePerYear[prevYear] as number)
+                : null;
+              const prevSpent = prevYear
+                ? (totalPerYear[prevYear] as number) || 0
+                : null;
+              const incomeChange =
+                prevIncome !== null
+                  ? calculatePercentageChange(income, prevIncome)
                   : null;
-                const prevSpent = prevYear
-                  ? (totalPerYear[prevYear] as number) || 0
+              const spentChange =
+                prevSpent !== null
+                  ? calculatePercentageChange(spent, prevSpent)
                   : null;
+              const incomeCellId = `income-${year}`;
+              const spentCellId = `spent-${year}`;
+              const showIncomeChange = clickedCells.has(incomeCellId);
+              const showSpentChange = clickedCells.has(spentCellId);
 
-                const incomeChange =
-                  prevIncome !== null
-                    ? calculatePercentageChange(income, prevIncome)
-                    : null;
-                const spentChange =
-                  prevSpent !== null
-                    ? calculatePercentageChange(spent, prevSpent)
-                    : null;
-
-                const incomeCellId = `income-${year}`;
-                const spentCellId = `spent-${year}`;
-                const showIncomeChange = clickedCells.has(incomeCellId);
-                const showSpentChange = clickedCells.has(spentCellId);
-
-                return (
-                  <div key={key} className="table-row">
-                    <div className="table-cell year-cell">
-                      <div className="year-content">
-                        {!isFiltered && (
-                          <div className="year-icon">
-                            {getFinancialStabilityIcon(savingsPercent)}
-                          </div>
-                        )}
-                        <div className="year-label">{year}</div>
-                      </div>
+              return (
+                <tr key={key} className={tableRow}>
+                  <td className={cellLeft}>
+                    <div className="flex items-center gap-2">
+                      {!isFiltered &&
+                        getFinancialStabilityIcon(savingsPercent)}
+                      <span>{year}</span>
                     </div>
-                    <div className="table-cell income-cell">
-                      <div
-                        className="amount-value income-value"
-                        onClick={() => toggleCell(incomeCellId)}
-                        style={{
-                          cursor: 'pointer',
-                          userSelect: 'none',
-                        }}
+                  </td>
+                  <td
+                    className={`${cellRight} cursor-pointer select-none`}
+                    onClick={() => toggleCell(incomeCellId)}
+                  >
+                    {formatNumber(income)}
+                    {!isFiltered &&
+                      showIncomeChange &&
+                      formatPercentageChange(incomeChange, false)}
+                  </td>
+                  {!isFiltered && (
+                    <>
+                      <td
+                        className={`${cellRight} cursor-pointer select-none`}
+                        onClick={() => toggleCell(spentCellId)}
                       >
-                        {formatNumber(income)}
-                        {!isFiltered &&
-                          showIncomeChange &&
-                          formatPercentageChange(incomeChange, false)}
-                      </div>
-                    </div>
-                    {!isFiltered && (
-                      <>
-                        <div className="table-cell spent-cell">
-                          <div
-                            className="amount-value spent-value"
-                            onClick={() => toggleCell(spentCellId)}
-                            style={{
-                              cursor: 'pointer',
-                              userSelect: 'none',
-                            }}
+                        {formatNumber(spent)}
+                        {showSpentChange &&
+                          formatPercentageChange(spentChange, true)}
+                      </td>
+                      <td className={cellRight}>
+                        <div className="flex flex-col items-end">
+                          <span
+                            className={
+                              diff < 0 ? 'text-red-400 font-semibold' : ''
+                            }
                           >
-                            {formatNumber(spent)}
-                            {showSpentChange &&
-                              formatPercentageChange(spentChange, true)}
-                          </div>
+                            {formatNumber(diff)}
+                          </span>
+                          {isFinite(savingsPercent) && (
+                            <span
+                              className={`text-[0.8rem] ${
+                                diff < 0 ? 'text-red-400' : 'text-white/70'
+                              }`}
+                            >
+                              ({formatNumber(savingsPercent)}%)
+                            </span>
+                          )}
                         </div>
-                        <div className="table-cell savings-cell">
-                          <div className="savings-content">
-                            <div className="savings-amount">
-                              {formatNumber(diff)}
-                            </div>
-                            <div className="savings-percentage">
-                              {isFinite(savingsPercent)
-                                ? `(${formatNumber(savingsPercent)}%)`
-                                : ''}
-                            </div>
-                          </div>
-                        </div>
-                      </>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              );
+            })}
+            {!isFiltered && (
+              <tr className={`${tableRow} bg-white/[0.02]`}>
+                <td className={cellLeft}>
+                  <div className="flex items-center gap-2">
+                    {getFinancialStabilityIcon(
+                      (totalSpent / sumIncome - 1) * -100
                     )}
+                    <span className="font-semibold uppercase tracking-wide">
+                      {t('common.total')}
+                    </span>
                   </div>
-                );
-              })}
-
-              {!isFiltered && (
-                <div className="table-row total-row">
-                  <div className="table-cell year-cell">
-                    <div className="year-content">
-                      <div className="year-icon">
-                        {getFinancialStabilityIcon(
-                          (totalSpent / sumIncome - 1) * -100
-                        )}
-                      </div>
-                      <div className="year-label total-label">Total</div>
-                    </div>
+                </td>
+                <td className="py-3 px-4 text-right text-white font-semibold text-[0.95rem] tabular-nums align-middle">
+                  {formatNumber(sumIncome)}
+                </td>
+                <td className="py-3 px-4 text-right text-white font-semibold text-[0.95rem] tabular-nums align-middle">
+                  {formatNumber(totalSpent)}
+                </td>
+                <td className="py-3 px-4 text-right align-middle">
+                  <div className="flex flex-col items-end">
+                    <span
+                      className={
+                        sumDiff < 0
+                          ? 'text-red-400 font-semibold text-[0.95rem]'
+                          : 'text-white font-semibold text-[0.95rem]'
+                      }
+                    >
+                      {formatNumber(sumDiff)}
+                    </span>
+                    <span
+                      className={
+                        sumDiff < 0
+                          ? 'text-red-400 text-[0.8rem]'
+                          : 'text-white/70 text-[0.8rem]'
+                      }
+                    >
+                      ({formatNumber((totalSpent / sumIncome - 1) * -100)}%)
+                    </span>
                   </div>
-                  <div className="table-cell income-cell">
-                    <div className="amount-value income-value total-amount">
-                      {formatNumber(sumIncome)}
-                    </div>
-                  </div>
-                  <div className="table-cell spent-cell">
-                    <div className="amount-value spent-value total-amount">
-                      {formatNumber(totalSpent)}
-                    </div>
-                  </div>
-                  <div className="table-cell savings-cell">
-                    <div className="savings-content">
-                      <div className="savings-amount">
-                        {formatNumber(sumDiff)}
-                      </div>
-                      <div className="savings-percentage">
-                        ({formatNumber((totalSpent / sumIncome - 1) * -100)}%)
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

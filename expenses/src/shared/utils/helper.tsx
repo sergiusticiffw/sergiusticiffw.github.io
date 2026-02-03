@@ -1,6 +1,5 @@
 import {
   FiCheckCircle,
-  FiAlertCircle,
   FiAlertTriangle,
   FiXCircle,
   FiShoppingBag,
@@ -18,15 +17,15 @@ import {
   FiTool,
 } from 'react-icons/fi';
 
+/** Red circle X = negative savings; green circle check = good positive; yellow triangle ! = low positive */
 export const getFinancialStabilityIcon = (
   savingsRate: number,
   isFiltered = false
 ) => {
   if (isFiltered) return null;
-  if (savingsRate > 20) return <FiCheckCircle color="green" />;
-  if (savingsRate > 10) return <FiAlertCircle color="yellow" />;
-  if (savingsRate > 0) return <FiAlertTriangle color="orange" />;
-  return <FiXCircle color="red" />;
+  if (savingsRate > 10) return <FiCheckCircle color="#16a34a" />;
+  if (savingsRate > 0) return <FiAlertTriangle color="#eab308" />;
+  return <FiXCircle color="#dc2626" />;
 };
 
 export const getIconForCategory = (category: string) => {

@@ -13,8 +13,6 @@ import {
 } from '@shared/utils/utils';
 import { normalizeTag } from '@shared/hooks/useTags';
 import { sanitizeText } from '@shared/utils/sanitization';
-import './TransactionFilters.scss';
-
 interface TransactionFiltersProps {
   searchValue: string;
   categoryValue: string;
@@ -179,39 +177,43 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   // Get selected month label
   const selectedMonthLabel = getSelectedMonthLabel(selectedMonth);
 
-  return (
-    <div className="transaction-filters-combined">
-      {/* Combined Search Input */}
-      <div className="search-bar-component">
-        <FiSearch className="search-bar-icon" />
+  const searchBar =
+    'flex items-center bg-white/[0.05] rounded-xl px-4 gap-2 w-full transition-colors duration-200 focus-within:bg-white/[0.08]';
+  const chipBase =
+    'flex items-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-2xl whitespace-nowrap shrink-0 cursor-pointer transition-all duration-200';
+  const monthChip =
+    'bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] text-white [&_svg]:text-[0.75rem] hover:from-[#6b9dff] hover:to-[#5a8dec] hover:scale-105';
+  const categoryChip =
+    'bg-gradient-to-br from-[#ff6b9d] to-[#ee5a8c] text-white hover:from-[#ff7bad] hover:to-[#fe6a9c] hover:scale-105';
+  const tagChipStyle =
+    'bg-gradient-to-br from-[#9b59b6] to-[#8a48a5] text-white hover:from-[#ab69c6] hover:to-[#9a58b5] hover:scale-105';
+  const chipActive =
+    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] border-transparent text-white font-medium shadow-[0_2px_8px_rgba(91,141,239,0.3)]';
+  const chipInactive =
+    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-white/[0.05] border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white/90';
+  const tagChipSelected =
+    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-gradient-to-br from-[#9b59b6] to-[#8a48a5] border-transparent text-white font-medium shadow-[0_2px_8px_rgba(155,89,182,0.3)] hover:from-[#ab69c6] hover:to-[#9a58b5]';
 
-        {/* Show selected month as chip inside search */}
+  return (
+    <div className="w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full">
+      <div className={searchBar}>
+        <FiSearch className="text-white/40 text-lg shrink-0" />
+
         {selectedMonth && !isFilterFocused && (
-          <div
-            className="selected-month-chip clickable"
-            onClick={handleChipClick}
-          >
+          <div className={`${chipBase} ${monthChip}`} onClick={handleChipClick}>
             <FiCalendar />
             {selectedMonthLabel}
           </div>
         )}
 
-        {/* Show selected category as chip */}
         {categoryValue && !isFilterFocused && (
-          <div
-            className="selected-category-chip clickable"
-            onClick={handleChipClick}
-          >
+          <div className={`${chipBase} ${categoryChip}`} onClick={handleChipClick}>
             {selectedCategoryLabel}
           </div>
         )}
 
-        {/* Show selected tag as chip */}
         {selectedTag && !isFilterFocused && (
-          <div
-            className="selected-tag-chip clickable"
-            onClick={handleChipClick}
-          >
+          <div className={`${chipBase} ${tagChipStyle}`} onClick={handleChipClick}>
             {selectedTagLabel}
           </div>
         )}
@@ -220,7 +222,6 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           type="text"
           value={searchValue}
           onChange={(e) => {
-            // Sanitize search input before updating state
             const sanitizedValue = sanitizeText(e.target.value);
             onSearchChange(sanitizedValue);
           }}
@@ -231,13 +232,13 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
               ? t('filters.searchInMonthCategory')
               : t('filters.search')
           }
-          className="search-bar-input"
+          className="flex-1 bg-transparent border-none py-4 text-white text-[0.95rem] outline-none min-w-0 placeholder:text-white/40"
         />
 
         {hasFilters && (
           <button
             onClick={onClearFilters}
-            className="clear-filters-btn"
+            className="bg-transparent border-none p-2 flex items-center justify-center shrink-0 cursor-pointer [&_svg]:text-white/40 hover:[&_svg]:text-white/70"
             title={t('filters.clearAll')}
           >
             <FiX />
@@ -245,21 +246,19 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
         )}
       </div>
 
-      {/* Chips - Show when focused (both categories, tags and months) */}
       {isFilterFocused && (
-        <div className="filters-chips-container">
-          {/* Category Chips Section */}
+        <div className="flex flex-col gap-6 max-h-[400px] overflow-x-hidden w-full max-w-full overflow-y-auto py-2 animate-[slideDown_0.2s_ease-out] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/[0.05] [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded hover:[&::-webkit-scrollbar-thumb]:bg-white/30">
           {categoryChips.length > 0 && (
-            <div className="chips-section">
-              <div className="chips-section-title">
+            <div className="flex flex-col gap-3">
+              <div className="text-white/50 text-xs font-semibold uppercase tracking-wider flex items-center gap-2 [&_svg]:text-sm">
                 {t('filters.categories')}
               </div>
-              <div className="category-chips">
+              <div className="flex flex-wrap gap-2 overflow-x-hidden w-full max-w-full">
                 {categoryChips.map((category) => (
                   <button
                     key={category.value}
                     onClick={() => handleCategoryClick(category.value)}
-                    className={`category-chip ${category.value === categoryValue ? 'active' : ''}`}
+                    className={category.value === categoryValue ? chipActive : chipInactive}
                   >
                     {category.label}
                   </button>
@@ -268,23 +267,21 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             </div>
           )}
 
-          {/* Tag Chips Section */}
           {availableTags.length > 0 && (
-            <div className="chips-section">
-              <div className="chips-section-title">
+            <div className="flex flex-col gap-3">
+              <div className="text-white/50 text-xs font-semibold uppercase tracking-wider flex items-center gap-2 [&_svg]:text-sm">
                 {t('filters.tags') || 'Tags'}
               </div>
-              <div className="tag-chips">
+              <div className="flex flex-wrap gap-2 overflow-x-hidden w-full max-w-full">
                 <button
                   type="button"
                   onClick={() => handleTagClick('')}
-                  className={`tag-chip ${!selectedTag ? 'selected' : ''}`}
+                  className={!selectedTag ? tagChipSelected : chipInactive}
                 >
                   {t('filters.all') || 'All'}
                 </button>
                 {availableTags.map((tag) => {
                   const isSelected = selectedTag === tag;
-                  // Find original suggestion from normalized tag for translation
                   const original = findOriginalSuggestion(tag);
                   let label = tag;
                   if (original) {
@@ -297,7 +294,6 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                         ? t(translationKey)
                         : original.suggestion;
                   } else {
-                    // If not found in suggestions, convert cratime to spaces for display
                     label = tag.replace(/-/g, ' ');
                   }
                   return (
@@ -305,7 +301,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                       key={tag}
                       type="button"
                       onClick={() => handleTagClick(tag)}
-                      className={`tag-chip ${isSelected ? 'selected' : ''}`}
+                      className={isSelected ? tagChipSelected : chipInactive}
                     >
                       {label}
                     </button>
@@ -315,12 +311,11 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             </div>
           )}
 
-          {/* Month Chips Section */}
           <MonthChips
             months={monthOptions}
             selectedMonth={selectedMonth}
             onMonthClick={handleMonthClick}
-            className="chips-section"
+            className="flex flex-col gap-3 mt-0"
           />
         </div>
       )}

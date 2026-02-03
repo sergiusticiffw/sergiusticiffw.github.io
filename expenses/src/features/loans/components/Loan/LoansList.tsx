@@ -15,7 +15,6 @@ import {
 import { Link } from '@tanstack/react-router';
 import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
 import type { ApiLoan } from '@shared/type/types';
-import './LoansList.scss';
 
 interface LoansListProps {
   loans: ApiLoan[];
@@ -48,13 +47,9 @@ const LoansList: React.FC<LoansListProps> = ({
   const [sortField, setSortField] = useState<SortField>('status');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   // Use external filter if provided, otherwise use internal state
-  const [internalStatusFilter, setInternalStatusFilter] =
-    useState<string>('all');
-  const statusFilter =
-    externalStatusFilter !== undefined
-      ? externalStatusFilter
-      : internalStatusFilter;
-
+  const [internalStatusFilter, setInternalStatusFilter] = useState<string>('all');
+  const statusFilter = externalStatusFilter !== undefined ? externalStatusFilter : internalStatusFilter;
+  
   const handleStatusFilterChange = (filter: string) => {
     if (onStatusFilterChange) {
       onStatusFilterChange(filter);
@@ -125,13 +120,22 @@ const LoansList: React.FC<LoansListProps> = ({
     }
   };
 
+  const iconBtn =
+    'inline-flex items-center justify-center gap-1.5 h-[38px] w-[38px] rounded-[10px] border border-white/[0.08] bg-transparent text-white/75 cursor-pointer transition-all duration-200 text-[0.9rem] [&_svg]:text-base hover:bg-white/[0.07]';
+  const iconBtnActive =
+    'border-white/[0.18] bg-white/[0.05] text-white';
+
   return (
-    <div className="loans-list-component" ref={listRef}>
+    <div
+      className="w-full max-w-full relative overflow-x-hidden overflow-y-auto touch-pan-y"
+      style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y pinch-zoom' }}
+      ref={listRef}
+    >
       {/* Sort & Filter Controls */}
-      <div className="sort-controls compact">
-        <div className="sort-buttons">
+      <div className="flex flex-wrap gap-3 mb-4 items-center justify-between rounded-xl py-2.5 px-3 bg-[#1b1d21]">
+        <div className="inline-flex gap-1.5 items-center">
           <button
-            className={`icon-button ${sortField === 'title' ? 'active' : ''}`}
+            className={`${iconBtn} ${sortField === 'title' ? iconBtnActive : ''}`}
             onClick={() => handleSort('title')}
             aria-label="Sort by title"
           >
@@ -139,7 +143,7 @@ const LoansList: React.FC<LoansListProps> = ({
             {sortField === 'title' && getSortIcon('title')}
           </button>
           <button
-            className={`icon-button ${sortField === 'principal' ? 'active' : ''}`}
+            className={`${iconBtn} ${sortField === 'principal' ? iconBtnActive : ''}`}
             onClick={() => handleSort('principal')}
             aria-label="Sort by amount"
           >
@@ -147,7 +151,7 @@ const LoansList: React.FC<LoansListProps> = ({
             {sortField === 'principal' && getSortIcon('principal')}
           </button>
           <button
-            className={`icon-button ${sortField === 'status' ? 'active' : ''}`}
+            className={`${iconBtn} ${sortField === 'status' ? iconBtnActive : ''}`}
             onClick={() => handleSort('status')}
             aria-label="Sort by status"
           >
@@ -155,12 +159,13 @@ const LoansList: React.FC<LoansListProps> = ({
             {sortField === 'status' && getSortIcon('status')}
           </button>
         </div>
-        <div className="status-filter">
+        <div className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-[10px] border border-white/[0.08] text-white/70 bg-white/[0.02] text-[0.9rem] [&_svg]:text-base [&_svg]:opacity-80">
           <FiSliders />
           <select
             value={statusFilter}
             onChange={(e) => handleStatusFilterChange(e.target.value)}
             aria-label="Filter by status"
+            className="bg-transparent border-none text-white text-[0.9rem] font-semibold outline-none cursor-pointer pr-1.5"
           >
             <option value="all">All</option>
             <option value="active">Active</option>
@@ -182,8 +187,10 @@ const LoansList: React.FC<LoansListProps> = ({
           (typeof loan.id === 'string' && loan.id.startsWith('temp_'));
 
         return (
-          <div key={loan.id} className="loan-item-wrapper">
-            {/* Swipe Actions Background */}
+          <div
+            key={loan.id}
+            className="relative overflow-hidden rounded-2xl max-w-full w-full [&:not(:last-child)]:mb-3.5"
+          >
             <div
               className={`swipe-actions-background ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}
             >
@@ -203,18 +210,21 @@ const LoansList: React.FC<LoansListProps> = ({
               to="/expenses/loan/$id"
               params={{ id: String(loan.id) }}
               data-id={loan.id}
-              className="loan-list-item"
+              className="flex items-stretch gap-4 p-4 bg-[#1e1f23] rounded-xl relative z-[2] transition-all duration-200 no-underline cursor-pointer max-w-full w-full overflow-hidden touch-pan-y overscroll-x-contain hover:bg-[#202126] active:bg-[#23252a]"
+              style={{ WebkitOverflowScrolling: 'touch' }}
               onTouchStart={(e) => handleTouchStart(e as any, loan.id, listRef)}
               onTouchMove={(e) => handleTouchMove(e as any, listRef)}
               onTouchEnd={(e) =>
                 handleTouchEnd(e as any, listRef, loan.id, onEdit, onDelete)
               }
             >
-              <div className="loan-content">
-                <div className="loan-header-row">
-                  <div className="loan-title">{loan.title ?? ''}</div>
+              <div className="flex-1 min-w-0 flex flex-col gap-2.5 relative z-[1]">
+                <div className="flex items-center gap-3 w-full justify-between">
+                  <div className="text-[0.96rem] font-semibold text-[#f5f6f7] leading-tight break-words">
+                    {loan.title ?? ''}
+                  </div>
                   <div
-                    className="loan-status-chip"
+                    className="py-0.5 px-2.5 rounded-full text-[0.75rem] font-bold uppercase tracking-wide whitespace-nowrap border bg-transparent"
                     style={{
                       color: statusColor,
                       borderColor: `${statusColor}55`,
@@ -224,13 +234,15 @@ const LoansList: React.FC<LoansListProps> = ({
                   </div>
                 </div>
 
-                <div className="loan-amount">{formatNumber(loan.fp ?? '')}</div>
+                <div className="text-[1.4rem] font-bold text-[#f5f6f7]">
+                  {formatNumber(loan.fp ?? '')}
+                </div>
                 <ItemSyncIndicator status={isPending ? 'pending' : undefined} />
 
-                <div className="loan-progress-row">
-                  <div className="loan-progress-bar">
+                <div className="flex items-center gap-2.5 w-full">
+                  <div className="flex-1 h-1 bg-[#2a2c33] rounded-full overflow-hidden relative">
                     <span
-                      className="loan-progress-fill"
+                      className="block h-full rounded-full transition-[width] duration-300 ease-out"
                       style={{
                         width: `${Math.min(progress, 100)}%`,
                         backgroundColor: statusColor,
@@ -238,7 +250,7 @@ const LoansList: React.FC<LoansListProps> = ({
                     />
                   </div>
                   <div
-                    className="loan-progress-percentage"
+                    className="text-[0.76rem] font-semibold whitespace-nowrap"
                     style={{ color: statusColor }}
                   >
                     {Math.round(progress)}%
