@@ -281,9 +281,9 @@ function IncomeIntelligence() {
 
   if (chartData.pieData.length === 0) {
     return (
-      <div>
-        <h3>{t('income.incomeIntelligence') || 'Income Intelligence'}</h3>
-        <p>
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-white m-0 mb-2">{t('income.incomeIntelligence') || 'Income Intelligence'}</h3>
+        <p className="text-white/70 m-0">
           {t('income.noIncomeDataAvailable') ||
             'No income data available. Add income entries with tags like #salary, #freelance, #bonus, #interest, or #gift.'}
         </p>

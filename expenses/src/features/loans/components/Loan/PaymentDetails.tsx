@@ -379,11 +379,11 @@ const PaymentDetails = (props) => {
           </div>
 
           {payments.length > nrOfItemsToShow && (
-            <div className="flex justify-center items-center py-4 mt-1">
+            <div className="flex justify-center items-center py-4 mt-2">
               <button
                 type="button"
                 onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
-                className="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-[rgba(91,141,239,0.2)] border border-[rgba(91,141,239,0.4)] text-[#5b8def] text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 hover:bg-[rgba(91,141,239,0.3)] hover:border-[rgba(91,141,239,0.5)] hover:-translate-y-0.5 active:translate-y-0 shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
+                className="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-[rgba(91,141,239,0.2)] border border-[rgba(91,141,239,0.4)] text-[#5b8def] text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 hover:bg-[rgba(91,141,239,0.3)] hover:border-[rgba(91,141,239,0.5)] hover:-translate-y-0.5 active:translate-y-0 shadow-[0_2px_8px_rgba(0,0,0,0.15)] [&_svg]:text-sm"
               >
                 <FiChevronDown />
                 <span>

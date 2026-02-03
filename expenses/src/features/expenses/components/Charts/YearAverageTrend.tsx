@@ -65,7 +65,7 @@ const YearAverageTrend = () => {
   return (
     <>
       <HighchartsReact highcharts={Highcharts} options={options} />
-      <span className="block text-[#e0e0e3] text-xl uppercase tracking-wide mt-5 mb-4 font-semibold">
+      <span className="block text-[#e0e0e3] text-xl uppercase tracking-wide mt-5 mb-4 font-semibold text-center">
         {t('charts.totalSpentPerYear')}:
       </span>
       <div className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">
@@ -136,7 +136,7 @@ const YearAverageTrend = () => {
           </tbody>
         </table>
       </div>
-      <span className="block text-[#e0e0e3] text-xl uppercase tracking-wide mt-6 mb-4 font-semibold">
+      <span className="block text-[#e0e0e3] text-xl uppercase tracking-wide mt-6 mb-4 font-semibold text-center">
         {t('charts.monthly')}
       </span>
       <div className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden">

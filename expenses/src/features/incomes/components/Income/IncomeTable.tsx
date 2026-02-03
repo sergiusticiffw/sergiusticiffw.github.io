@@ -127,11 +127,11 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
       style={{ WebkitOverflowScrolling: 'touch' }}
       ref={listRef}
     >
-      <div className="mb-6">
+      <div className="mb-6 text-center">
         <h3 className="text-lg font-semibold text-white m-0 mb-4 tracking-tight">
           {t('income.incomeRecords')}
         </h3>
-        <div className="flex gap-3">
+        <div className="flex justify-center gap-3 flex-wrap">
           <button
             type="button"
             className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}

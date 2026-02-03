@@ -226,7 +226,7 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
         options={yearIncomeAverageOptions}
       />
 
-      <span className="block text-[#e0e0e3] text-xl uppercase tracking-wide mt-5 mb-4 font-semibold">
+      <span className="block text-[#e0e0e3] text-xl uppercase tracking-wide mt-5 mb-4 font-semibold text-center">
         {t('income.totalIncomePerYear')}:
       </span>
       <div

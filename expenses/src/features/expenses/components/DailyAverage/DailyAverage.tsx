@@ -59,8 +59,8 @@ const DailyAverage = () => {
 
   return (
     <div className="my-6 md:my-4 overflow-hidden bg-transparent border-none shadow-none">
-      <div className="flex justify-start items-center p-0 mb-3 bg-transparent border-none">
-        <h3 className="m-0 text-[0.95rem] font-semibold text-white/70 uppercase tracking-wide">
+      <div className="flex justify-center items-center p-0 mb-3 bg-transparent border-none">
+        <h3 className="m-0 text-[0.95rem] font-semibold text-white/70 uppercase tracking-wide text-center">
           {t('home.dailyAveragePerCategory')}
         </h3>
       </div>
