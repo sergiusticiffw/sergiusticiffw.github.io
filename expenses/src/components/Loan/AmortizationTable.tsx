@@ -137,7 +137,7 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
         cell: (info) => {
           const row = info.row.original;
           if ('type' in row && row.type === 'annual_summary') {
-            return '-';
+            return formatNumber(row.totalPrincipal);
           }
           return formatNumber((row as PaymentLog).reduction);
         },
@@ -163,7 +163,7 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
         cell: (info) => {
           const row = info.row.original;
           if ('type' in row && row.type === 'annual_summary') {
-            return formatNumber(row.totalPrincipal);
+            return '-';
           }
           return formatNumber((row as PaymentLog).principal);
         },
@@ -257,7 +257,10 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
           </div>
 
           {/* Right (scrollable) header */}
-          <div ref={headerScrollRef} className="amortization-table-header-inner">
+          <div
+            ref={headerScrollRef}
+            className="amortization-table-header-inner"
+          >
             <table className="amortization-table amortization-table-rest">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
