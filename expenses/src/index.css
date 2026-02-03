@@ -149,27 +149,7 @@
     box-sizing: border-box;
   }
 
-  /* Swipe action row (TransactionList, IncomeTable, LoansList, PaymentDetails) */
-  .row-action {
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    box-shadow: inset 2px 5px 15px -5px rgba(0, 0, 0, 0.5), inset 2px -5px 15px -5px rgba(0, 0, 0, 0.5);
-    transition: all 0.15s ease-in-out;
-  }
-
-  .row-action.delete {
-    justify-content: left;
-    background: linear-gradient(90deg, rgba(255, 107, 250, 1) 0%, var(--color-app-accent) 100%);
-  }
-
-  .row-action.edit {
-    justify-content: right;
-    background: linear-gradient(90deg, var(--color-app-accent) 0%, #7bd0c9 100%);
-  }
-
+  /* Swipe actions (TransactionList, IncomeTable, LoansList, PaymentDetails) */
   .swipe-actions-background {
     position: absolute;
     top: 0;
@@ -991,11 +971,6 @@
     margin: 0 0 0.5rem 0;
     color: #fff;
   }
-  .loan-header .transaction-count {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin: 0;
-  }
   .loan-stats-grid-2col {
     display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
@@ -1087,53 +1062,17 @@
     border-radius: 6px;
     position: relative;
   }
-  .loan-progress-grid-2col {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 1rem;
-    width: 100%;
-    max-width: 100%;
-  }
-  .loan-progress-grid-2col .loan-progress-item {
-    padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .loan-progress-grid-2col .loan-progress-label,
-  .loan-progress-grid-2col .loan-progress-item .loan-progress-label {
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.6);
-    font-weight: 500;
-  }
-  .loan-progress-grid-2col .loan-progress-value,
-  .loan-progress-grid-2col .loan-progress-item .loan-progress-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #fff;
-  }
-  .loan-details-section {
-    margin-top: 2rem;
-  }
-  .payment-section {
-    margin-top: 2rem;
-  }
   .error-message {
     margin-bottom: 1.5rem;
   }
   @media (max-width: 640px) {
-    .loan-stats-grid-2col,
-    .loan-progress-grid-2col {
+    .loan-stats-grid-2col {
       gap: 0.75rem;
     }
-    .loan-stats-grid-2col .loan-stat-item,
-    .loan-progress-grid-2col .loan-progress-item {
+    .loan-stats-grid-2col .loan-stat-item {
       padding: 1rem;
     }
-    .loan-stats-grid-2col .loan-stat-value,
-    .loan-progress-grid-2col .loan-progress-item .loan-progress-value {
+    .loan-stats-grid-2col .loan-stat-value {
       font-size: 1.25rem;
     }
   }

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useExpenseData } from '@stores/expenseStore';
 import { useLocalization } from '@shared/context/localization';
 import { availableCharts } from '@shared/utils/constants';
@@ -189,7 +189,7 @@ const Charts = () => {
           formType="add"
           values={{}}
           hideSubmitButton={true}
-          onFormReady={(submitHandler, isSubmitting) => {
+          onFormReady={(_submitHandler, isSubmitting) => {
             setTransactionFormSubmitting(isSubmitting);
           }}
           onSuccess={() => {

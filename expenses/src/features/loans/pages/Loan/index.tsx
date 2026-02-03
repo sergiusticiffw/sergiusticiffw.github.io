@@ -476,7 +476,7 @@ const Loan: React.FC = () => {
             field_loan_status: loan.fls,
           }}
           hideSubmitButton={true}
-          onFormReady={(submitHandler, isSubmitting) => {
+          onFormReady={(_submitHandler, isSubmitting) => {
             setLoanFormEditSubmitting(isSubmitting);
           }}
           onSuccess={() => {
@@ -530,7 +530,7 @@ const Loan: React.FC = () => {
           startDate={loan.sdt}
           endDate={loan.edt}
           hideSubmitButton={true}
-          onFormReady={(submitHandler, isSubmitting) => {
+          onFormReady={(_submitHandler, isSubmitting) => {
             setPaymentFormSubmitting(isSubmitting);
           }}
           onSuccess={() => {

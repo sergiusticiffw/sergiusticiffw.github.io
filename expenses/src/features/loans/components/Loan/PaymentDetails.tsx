@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useAuthDispatch, useAuthState } from '@shared/context/context';
 import { useNotification } from '@shared/context/notification';
 import { useLocalization } from '@shared/context/localization';
@@ -42,7 +42,7 @@ const PaymentDetails = (props) => {
   const [paymentFormSubmitting, setPaymentFormSubmitting] = useState(false);
   const { dataDispatch } = useLoan();
   const { token } = useAuthState();
-  const dispatch = useAuthDispatch();
+  useAuthDispatch();
   const [nrOfItemsToShow, setNrOfItemsToShow] = useState(4);
   const [deleteModalId, setDeleteModalId] = useState<string | false>(false);
   const [sortField, setSortField] = useState<SortField>('date');
@@ -171,6 +171,11 @@ const PaymentDetails = (props) => {
     return sortDirection === 'asc' ? <FiArrowUp /> : <FiArrowDown />;
   };
 
+  const sortBtn =
+    'rounded-lg py-2 px-4 text-white/60 text-sm cursor-pointer flex items-center gap-2 transition-all duration-200 bg-white/[0.05] border-none hover:bg-white/10 hover:text-white/80 [&_svg]:text-sm';
+  const sortBtnActive =
+    'bg-[rgba(91,141,239,0.2)] text-[#5b8def] font-medium';
+
   return (
     <div>
       {/* Delete Drawer */}
@@ -247,7 +252,7 @@ const PaymentDetails = (props) => {
           startDate={loan.sdt}
           endDate={loan.edt}
           hideSubmitButton={true}
-          onFormReady={(submitHandler, isSubmitting) => {
+          onFormReady={(_submitHandler, isSubmitting) => {
             setPaymentFormSubmitting(isSubmitting);
           }}
           onSuccess={() => {
@@ -263,26 +268,26 @@ const PaymentDetails = (props) => {
       {/* Payment List – same pattern as IncomeTable / TransactionList */}
       {payments.length ? (
         <div
-          className="w-full relative overflow-x-hidden overflow-y-auto touch-pan-y mt-4"
+          className="flex flex-col gap-2 w-full relative overflow-x-hidden overflow-y-auto touch-pan-y mt-4"
           style={{ WebkitOverflowScrolling: 'touch' }}
           ref={listRef}
         >
-          <div className="mb-6">
-            <p className="text-base text-white/50 m-0 mb-3">
+          <div className="mb-3">
+            <p className="text-base text-white/50 m-0 mb-2">
               {Math.min(nrOfItemsToShow, payments.length)} of {payments.length}{' '}
               payments
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 type="button"
-                className={`flex items-center gap-1.5 py-2 px-4 bg-white/[0.05] border border-white/10 rounded-lg text-white/60 text-[0.85rem] font-medium cursor-pointer transition-all duration-200 [&_svg]:text-xs [&_svg]:opacity-70 hover:bg-white/10 hover:border-white/15 hover:text-white/80 ${sortField === 'date' ? 'bg-[rgba(91,141,239,0.15)] border-[rgba(91,141,239,0.3)] text-[#5b8def] [&_svg]:opacity-100' : ''}`}
+                className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
                 onClick={() => handleSort('date')}
               >
                 Date {getSortIcon('date')}
               </button>
               <button
                 type="button"
-                className={`flex items-center gap-1.5 py-2 px-4 bg-white/[0.05] border border-white/10 rounded-lg text-white/60 text-[0.85rem] font-medium cursor-pointer transition-all duration-200 [&_svg]:text-xs [&_svg]:opacity-70 hover:bg-white/10 hover:border-white/15 hover:text-white/80 ${sortField === 'amount' ? 'bg-[rgba(91,141,239,0.15)] border-[rgba(91,141,239,0.3)] text-[#5b8def] [&_svg]:opacity-100' : ''}`}
+                className={`${sortBtn} ${sortField === 'amount' ? sortBtnActive : ''}`}
                 onClick={() => handleSort('amount')}
               >
                 Amount {getSortIcon('amount')}
@@ -290,7 +295,7 @@ const PaymentDetails = (props) => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             {sortedPayments.slice(0, nrOfItemsToShow).map((payment) => {
               const isSimulated = Number(payment.fisp) === 1;
               const date = new Date(payment.fdt);
@@ -299,7 +304,6 @@ const PaymentDetails = (props) => {
               const month = date
                 .toLocaleDateString(locale, { month: 'short' })
                 .toUpperCase();
-              const year = date.getFullYear();
 
               const isThisItemSwiped = swipedItemId === payment.id;
               const isPending =
@@ -310,10 +314,10 @@ const PaymentDetails = (props) => {
               return (
                 <div
                   key={payment.id}
-                  className={`relative overflow-hidden rounded-xl ${isSimulated ? 'border-l-4 border-l-[#ff9800]' : ''}`}
+                  className={`relative w-full rounded-2xl overflow-hidden ${isSimulated ? 'border-l-4 border-l-[#ff9800]' : ''}`}
                 >
                   <div
-                    className={`swipe-actions-background ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}
+                    className={`swipe-actions-background rounded-2xl ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}
                   >
                     {isThisItemSwiped && deleteVisible && (
                       <div className="delete-action-bg">
@@ -329,7 +333,7 @@ const PaymentDetails = (props) => {
 
                   <div
                     data-id={payment.id}
-                    className="flex items-center gap-4 py-4 px-4 rounded-xl bg-white/[0.05] border border-white/10 cursor-pointer transition-all duration-200 relative z-[1] hover:bg-white/10 active:bg-white/[0.08]"
+                    className="bg-white/[0.05] rounded-2xl py-4 pr-6 pl-4 flex items-start gap-4 cursor-pointer transition-all duration-200 relative z-[1] w-full min-h-0 touch-pan-y overflow-hidden hover:bg-white/10 hover:translate-x-1 active:scale-[0.98]"
                     style={{ touchAction: 'pan-y pan-x pinch-zoom' }}
                     onTouchStart={(e) =>
                       handleTouchStart(e, payment.id, listRef)
@@ -345,14 +349,9 @@ const PaymentDetails = (props) => {
                       )
                     }
                   >
-                    <div className="flex flex-col items-center shrink-0 min-w-[3rem]">
-                      <div className="text-lg font-bold text-white leading-none">
-                        {day}
-                      </div>
-                      <div className="text-xs font-semibold text-white/50 mt-0.5 tracking-wide">
-                        {month}
-                      </div>
-                      <div className="text-xs text-white/40 mt-0.5">{year}</div>
+                    <div className="flex flex-col items-center justify-center min-w-[50px] shrink-0">
+                      <div className="text-2xl font-bold text-white leading-none">{day}</div>
+                      <div className="text-xs font-semibold text-white/50 mt-1 tracking-wide">{month}</div>
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -366,7 +365,7 @@ const PaymentDetails = (props) => {
                       </div>
                     </div>
 
-                    <div className="text-lg font-bold text-white shrink-0 flex items-center gap-1 whitespace-nowrap">
+                    <div className="text-lg font-bold text-white whitespace-nowrap pr-2 shrink-0 flex items-center gap-1">
                       {formatNumber(payment.fpi)}
                       <ItemSyncIndicator
                         status={isPending ? 'pending' : undefined}

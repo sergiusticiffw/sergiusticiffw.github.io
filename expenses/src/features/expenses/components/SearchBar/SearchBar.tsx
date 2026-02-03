@@ -57,13 +57,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
     ? categories.find((cat) => cat.value === categoryValue)?.label
     : '';
 
-  // Build display text
-  const displayText = selectedCategoryLabel
-    ? searchValue
-      ? `${selectedCategoryLabel}: ${searchValue}`
-      : selectedCategoryLabel
-    : searchValue;
-
   return (
     <div className="w-full flex flex-col gap-3">
       {/* Search Input */}

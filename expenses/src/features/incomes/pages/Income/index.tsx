@@ -3,7 +3,6 @@ import React, {
   useEffect,
   useMemo,
   useState,
-  Suspense,
 } from 'react';
 import IncomeForm from '@features/incomes/components/Income/IncomeForm';
 import {
@@ -21,11 +20,8 @@ import VaulDrawer from '@shared/components/VaulDrawer';
 import IncomeTable from '@features/incomes/components/Income/IncomeTable';
 import IncomeFilters from '@features/incomes/components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@features/incomes/components/Income/YearIncomeAverageTrend';
+import IncomeIntelligence from '@features/incomes/components/Income/IncomeIntelligence';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
-
-const IncomeIntelligence = React.lazy(
-  () => import('@features/incomes/components/Income/IncomeIntelligence')
-);
 import {
   PageHeader,
   LoadingSpinner,
@@ -325,9 +321,7 @@ const Income = () => {
           </div>
           {filteredIncomeData && filteredIncomeData.length ? (
             <div className="mb-8">
-              <Suspense fallback="">
-                <IncomeIntelligence />
-              </Suspense>
+              <IncomeIntelligence />
             </div>
           ) : null}
         </>
@@ -379,7 +373,7 @@ const Income = () => {
           formType={!isNewModal ? 'edit' : 'add'}
           values={focusedItem}
           hideSubmitButton={true}
-          onFormReady={(submitHandler, isSubmitting) => {
+          onFormReady={(_submitHandler, isSubmitting) => {
             setIncomeFormSubmitting(isSubmitting);
           }}
           onSuccess={() => {

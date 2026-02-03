@@ -340,8 +340,7 @@ export const recalculateAfterRateChange = (params: {
   if (newRate < oldRate && newPayment > currentPayment) {
     // This is a validation warning - log it but don't throw
     // The caller can handle this warning as needed
-    const warning = `Rate decreased from ${oldRate}% to ${newRate}%, but payment increased from ${currentPayment} to ${newPayment}`;
-    // Note: No console.log - caller should handle logging
+    // Rate decreased but payment increased - caller may log if needed
   }
 
   return {

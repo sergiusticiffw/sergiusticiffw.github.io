@@ -14,7 +14,7 @@ interface MonthProps {
 const Month: React.FC<MonthProps> = ({ month }) => {
   const { data } = useExpenseData();
   const currency = useSettingsCurrency();
-  const { t } = useLocalization();
+  useLocalization();
   const items: TransactionOrIncomeItem[] | undefined =
     data?.groupedData?.[month];
   if (!items) return null;

@@ -1,7 +1,6 @@
 // Import pure loan calculation functions
 import {
   calculateAnnuity,
-  calculateRemainingBalance,
   recalculateAfterRateChange,
   calculatePeriodInterest,
 } from './loanEngine';
@@ -140,19 +139,6 @@ const calculateDayCount = (
   return (
     Math.round((date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24)) +
     lastDay
-  );
-};
-
-const getNumberOfMonths = (firstDate: string, secondDate: string): number => {
-  const [day1, month1, year1] = splitDate(firstDate);
-  const [day2, month2, year2] = splitDate(secondDate);
-
-  const date1 = new Date(Number(year1), Number(month1) - 1, Number(day1));
-  const date2 = new Date(Number(year2), Number(month2) - 1, Number(day2));
-
-  return (
-    (date2.getFullYear() - date1.getFullYear()) * 12 +
-    (date2.getMonth() - date1.getMonth())
   );
 };
 
@@ -958,7 +944,7 @@ class PaydownCalculator {
     startDate: string,
     totalNumberOfDays: number,
     principal: number,
-    rate: number
+    _rate: number
   ): void => {
     this.debugWrite(`New period starts ${startDate}`);
     this.debugWrite(`Days in period: ${totalNumberOfDays}`);

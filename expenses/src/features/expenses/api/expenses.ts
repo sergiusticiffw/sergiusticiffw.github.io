@@ -9,7 +9,6 @@ import {
   getExpensesFromDB,
   saveExpensesToDB,
   isIndexedDBAvailable,
-  isOnline,
 } from '@shared/utils/indexedDB';
 import { processDataWithWorker, processDataSync } from '@shared/utils/utils';
 
@@ -35,7 +34,7 @@ export async function fetchExpenses(
   }
 
   expensesFetchInFlight = (async () => {
-    const { category = '', textFilter = '', showNotification } = options;
+    const { category = '', textFilter = '' } = options;
 
     // Try to load from IndexedDB first for instant display
     if (isIndexedDBAvailable()) {

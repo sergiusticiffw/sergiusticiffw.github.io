@@ -40,7 +40,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   onMonthChange,
   onTagChange,
   onClearFilters,
-  showMonthFilter = true, // Default to true for backward compatibility
+  showMonthFilter: _showMonthFilter = true,
 }) => {
   const { t } = useLocalization();
   const { data } = useExpenseData();

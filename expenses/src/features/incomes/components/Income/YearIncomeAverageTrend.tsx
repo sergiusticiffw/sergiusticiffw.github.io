@@ -207,9 +207,9 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
   };
 
   const tableWrapper =
-    'rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden w-full';
+    'overflow-hidden w-full';
   const tableRow =
-    'border-b border-white/5 last:border-b-0 hover:bg-white/[0.02]';
+    'hover:bg-white/[0.02]';
   const cellLeft =
     'py-3 px-3 sm:px-4 text-white font-medium text-[0.9rem] sm:text-[0.95rem] align-middle';
   const cellRight =
@@ -220,7 +220,7 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
     'py-3 px-3 sm:px-4 text-right text-white/60 text-xs font-bold uppercase tracking-wider align-middle';
 
   return (
-    <div className="mt-6 w-full min-w-0 max-w-full px-4 sm:px-0">
+    <div className="mt-6 w-full min-w-0 max-w-full -mx-1 sm:-mx-2 md:-mx-3">
       <HighchartsReact
         highcharts={Highcharts}
         options={yearIncomeAverageOptions}
@@ -234,7 +234,7 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div className={tableWrapper}>
-        <table className="w-full min-w-[320px] sm:min-w-0 border-collapse table-fixed sm:table-auto">
+        <table className="w-full min-w-[320px] sm:min-w-0 border-collapse sm:table-auto">
           <colgroup>
             <col className="w-[14%] sm:w-auto" />
             <col className="w-[28%] sm:w-auto" />

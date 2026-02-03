@@ -141,8 +141,7 @@ const LoanForm: React.FC<LoanFormProps> = ({
     },
   };
 
-  const { getFieldValidation, isFormValid } =
-    useFormValidation(validationRules);
+  const { getFieldValidation } = useFormValidation(validationRules);
 
   const options = [
     { value: 'in_progress', label: t('common.active') },

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSettingsCurrency } from '@stores/settingsStore';
 import { useLocalization } from '@shared/context/localization';
 import Highcharts from 'highcharts/highstock';

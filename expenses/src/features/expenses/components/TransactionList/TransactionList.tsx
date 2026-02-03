@@ -1,5 +1,4 @@
-import React, { useRef, useState, useMemo, useCallback } from 'react';
-import { getIconForCategory } from '@shared/utils/helper';
+import React, { useRef, useState } from 'react';
 import {
   formatNumber,
   getLocale,

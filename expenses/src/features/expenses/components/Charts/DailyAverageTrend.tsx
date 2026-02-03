@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { expenseStore, useExpenseChartView } from '@stores/expenseStore';
+import { expenseStore } from '@stores/expenseStore';
 import { useStore } from '@tanstack/react-store';
 import { useLocalization } from '@shared/context/localization';
 import Highcharts from 'highcharts/highstock';
@@ -7,7 +7,6 @@ import HighchartsReact from 'highcharts-react-official';
 import { TransactionOrIncomeItem, Daily } from '@shared/type/types';
 
 const DailyAverageTrend = () => {
-  const view = useExpenseChartView();
   const raw = useStore(expenseStore, (s) => s.raw);
   const filteredRaw = useStore(expenseStore, (s) => s.filtered_raw);
   const { t } = useLocalization();

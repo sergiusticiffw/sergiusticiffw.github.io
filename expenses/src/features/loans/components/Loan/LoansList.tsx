@@ -43,7 +43,7 @@ const LoansList: React.FC<LoansListProps> = ({
   onStatusFilterChange,
   pendingSyncIds,
 }) => {
-  const listRef = useRef<any>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const [sortField, setSortField] = useState<SortField>('status');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   // Use external filter if provided, otherwise use internal state
@@ -84,7 +84,7 @@ const LoansList: React.FC<LoansListProps> = ({
   const sortedLoans = [...filteredLoans].sort((a, b) => {
     if (!sortField) return 0;
 
-    let aValue: any, bValue: any;
+    let aValue: string | number, bValue: string | number;
 
     if (sortField === 'title') {
       aValue = a.title?.toLowerCase() || '';
@@ -95,6 +95,8 @@ const LoansList: React.FC<LoansListProps> = ({
     } else if (sortField === 'status') {
       aValue = statusOrder.indexOf(getStatus(a));
       bValue = statusOrder.indexOf(getStatus(b));
+    } else {
+      return 0;
     }
 
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
@@ -120,22 +122,23 @@ const LoansList: React.FC<LoansListProps> = ({
     }
   };
 
-  const iconBtn =
-    'inline-flex items-center justify-center gap-1.5 h-[38px] w-[38px] rounded-[10px] border border-white/[0.08] bg-transparent text-white/75 cursor-pointer transition-all duration-200 text-[0.9rem] [&_svg]:text-base hover:bg-white/[0.07]';
-  const iconBtnActive =
-    'border-white/[0.18] bg-white/[0.05] text-white';
+  const sortBtn =
+    'rounded-lg py-2 px-4 text-white/60 text-sm cursor-pointer flex items-center gap-2 transition-all duration-200 bg-white/[0.05] border-none hover:bg-white/10 hover:text-white/80 [&_svg]:text-sm';
+  const sortBtnActive =
+    'bg-[rgba(91,141,239,0.2)] text-[#5b8def] font-medium';
 
   return (
     <div
-      className="w-full max-w-full relative overflow-x-hidden overflow-y-auto touch-pan-y"
+      className="flex flex-col gap-2 w-full max-w-full relative overflow-x-hidden overflow-y-auto touch-pan-y"
       style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y pinch-zoom' }}
       ref={listRef}
     >
-      {/* Sort & Filter Controls */}
-      <div className="flex flex-wrap gap-3 mb-4 items-center justify-between rounded-xl py-2.5 px-3 bg-[#1b1d21]">
-        <div className="inline-flex gap-1.5 items-center">
+      {/* Sticky Sort & Filter – same button style as TransactionList */}
+      <div className="sticky top-0 z-10 flex flex-wrap gap-2 mb-3 items-center justify-between py-2 px-0 bg-transparent">
+        <div className="inline-flex gap-2 items-center">
           <button
-            className={`${iconBtn} ${sortField === 'title' ? iconBtnActive : ''}`}
+            type="button"
+            className={`${sortBtn} ${sortField === 'title' ? sortBtnActive : ''}`}
             onClick={() => handleSort('title')}
             aria-label="Sort by title"
           >
@@ -143,7 +146,8 @@ const LoansList: React.FC<LoansListProps> = ({
             {sortField === 'title' && getSortIcon('title')}
           </button>
           <button
-            className={`${iconBtn} ${sortField === 'principal' ? iconBtnActive : ''}`}
+            type="button"
+            className={`${sortBtn} ${sortField === 'principal' ? sortBtnActive : ''}`}
             onClick={() => handleSort('principal')}
             aria-label="Sort by amount"
           >
@@ -151,7 +155,8 @@ const LoansList: React.FC<LoansListProps> = ({
             {sortField === 'principal' && getSortIcon('principal')}
           </button>
           <button
-            className={`${iconBtn} ${sortField === 'status' ? iconBtnActive : ''}`}
+            type="button"
+            className={`${sortBtn} ${sortField === 'status' ? sortBtnActive : ''}`}
             onClick={() => handleSort('status')}
             aria-label="Sort by status"
           >
@@ -159,7 +164,7 @@ const LoansList: React.FC<LoansListProps> = ({
             {sortField === 'status' && getSortIcon('status')}
           </button>
         </div>
-        <div className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-[10px] border border-white/[0.08] text-white/70 bg-white/[0.02] text-[0.9rem] [&_svg]:text-base [&_svg]:opacity-80">
+        <div className="inline-flex items-center gap-1.5 py-2 px-4 rounded-lg text-white/60 text-sm bg-white/[0.05] border-none cursor-pointer hover:bg-white/10 hover:text-white/80 [&_svg]:text-sm">
           <FiSliders />
           <select
             value={statusFilter}
@@ -189,10 +194,10 @@ const LoansList: React.FC<LoansListProps> = ({
         return (
           <div
             key={loan.id}
-            className="relative overflow-hidden rounded-2xl max-w-full w-full [&:not(:last-child)]:mb-3.5"
+            className="relative w-full rounded-2xl overflow-hidden"
           >
             <div
-              className={`swipe-actions-background ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}
+              className={`swipe-actions-background rounded-2xl ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}
             >
               {isThisItemSwiped && deleteVisible && (
                 <div className="delete-action-bg">
@@ -210,8 +215,8 @@ const LoansList: React.FC<LoansListProps> = ({
               to="/expenses/loan/$id"
               params={{ id: String(loan.id) }}
               data-id={loan.id}
-              className="flex items-stretch gap-4 p-4 bg-[#1e1f23] rounded-xl relative z-[2] transition-all duration-200 no-underline cursor-pointer max-w-full w-full overflow-hidden touch-pan-y overscroll-x-contain hover:bg-[#202126] active:bg-[#23252a]"
-              style={{ WebkitOverflowScrolling: 'touch' }}
+              className="bg-white/[0.05] rounded-2xl py-4 pr-6 pl-4 flex items-stretch gap-4 relative z-[1] no-underline cursor-pointer w-full min-h-0 touch-pan-y overflow-hidden transition-all duration-200 hover:bg-white/10 hover:translate-x-1 active:scale-[0.98]"
+              style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y pan-x pinch-zoom' }}
               onTouchStart={(e) => handleTouchStart(e as any, loan.id, listRef)}
               onTouchMove={(e) => handleTouchMove(e as any, listRef)}
               onTouchEnd={(e) =>

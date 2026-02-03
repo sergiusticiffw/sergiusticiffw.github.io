@@ -6,7 +6,7 @@ import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import { monthNames, incomeSuggestions } from '@shared/utils/constants';
-import { hasTag, formatNumber, parseMonthString } from '@shared/utils/utils';
+import { hasTag, parseMonthString } from '@shared/utils/utils';
 
 function IncomeIntelligence() {
   const { data } = useExpenseData();

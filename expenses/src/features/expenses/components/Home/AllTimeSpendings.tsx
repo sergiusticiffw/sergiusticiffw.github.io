@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useExpenseData } from '@stores/expenseStore';
 import { useSettingsCurrency } from '@stores/settingsStore';
 import { useLocalization } from '@shared/context/localization';
@@ -10,7 +10,6 @@ const AllTimeSpendings = () => {
   // All time section
   const {
     data: { categoryTotals = {} },
-    data,
   } = useExpenseData();
   const currency = useSettingsCurrency();
   const { t } = useLocalization();

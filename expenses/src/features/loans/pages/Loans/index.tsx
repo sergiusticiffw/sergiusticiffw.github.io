@@ -49,7 +49,7 @@ const Loans: FC = () => {
 
   // Event-driven pending sync tracking (no polling) - for loans and payments
   const pendingLoanIds = usePendingSyncIds(['loan']);
-  const pendingPaymentIds = usePendingSyncIds(['payment']);
+  usePendingSyncIds(['payment']);
 
   useEffect(() => {
     if (!loans && apiClient) {
@@ -151,7 +151,6 @@ const Loans: FC = () => {
             sum + parseFloat(String(item.fpi ?? '0')),
           0
         );
-        const sumInstallments = paydown.sum_of_installments || 0;
         map.set(loan.id, { paydown, totalPaidAmount });
       } catch {
         map.set(loan.id, { paydown: { sum_of_installments: 0 }, totalPaidAmount: 0 });
@@ -307,7 +306,7 @@ const Loans: FC = () => {
             field_recurring_payment_day: 0,
           }}
           hideSubmitButton={true}
-          onFormReady={(submitHandler, isSubmitting) => {
+          onFormReady={(_submitHandler, isSubmitting) => {
             setLoanFormSubmitting(isSubmitting);
           }}
           onSuccess={() => {
@@ -351,7 +350,7 @@ const Loans: FC = () => {
           formType="edit"
           values={focusedItem}
           hideSubmitButton={true}
-          onFormReady={(submitHandler, isSubmitting) => {
+          onFormReady={(_submitHandler, isSubmitting) => {
             setLoanFormEditSubmitting(isSubmitting);
           }}
           onSuccess={() => {

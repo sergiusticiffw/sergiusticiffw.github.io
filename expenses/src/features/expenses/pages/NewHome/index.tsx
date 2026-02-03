@@ -373,7 +373,7 @@ const NewHome = () => {
           formType="add"
           values={{}}
           hideSubmitButton={true}
-          onFormReady={(submitHandler, isSubmitting) => {
+          onFormReady={(_submitHandler, isSubmitting) => {
             setTransactionFormSubmitting(isSubmitting);
           }}
           onSuccess={() => {

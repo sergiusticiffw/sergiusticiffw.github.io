@@ -1,4 +1,3 @@
-import React from 'react';
 import { HighchartsProvider } from '@shared/context/highcharts';
 import Charts from '@features/expenses/pages/Charts';
 

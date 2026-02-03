@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useExpenseData } from '@stores/expenseStore';
 import { useLocalization } from '@shared/context/localization';
 import { getCategories, getSuggestions } from '@shared/utils/constants';
@@ -8,7 +8,7 @@ import { useFormValidation } from '@shared/hooks/useFormValidation';
 import { useTags, normalizeTag } from '@shared/hooks/useTags';
 import { FormField } from '@shared/components/Common';
 import TagChips from '@shared/components/Common/TagChips';
-import { FiPlus, FiEdit2, FiCamera } from 'react-icons/fi';
+import { FiPlus, FiEdit2 } from 'react-icons/fi';
 
 interface TransactionFormProps {
   formType: 'add' | 'edit';

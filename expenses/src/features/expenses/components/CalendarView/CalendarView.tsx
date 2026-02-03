@@ -88,13 +88,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     return 'amount-high';
   };
 
-  // Get category label
-  const getCategoryLabel = (catValue: string) => {
-    return (
-      categoryLabels.find((cat) => cat.value === catValue)?.label || catValue
-    );
-  };
-
   // Get month index from name
   const getMonthIndex = (monthName: string) => {
     const months = [
