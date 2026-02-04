@@ -19,10 +19,11 @@ import {
   processPayments,
 } from '@shared/utils/utils';
 import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
+import DeleteConfirmDrawer from '@shared/components/VaulDrawer/DeleteConfirmDrawer';
+import VaulDrawer from '@shared/components/VaulDrawer';
 import { fetchLoans as fetchLoansService } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { notificationType } from '@shared/utils/constants';
-import VaulDrawer from '@shared/components/VaulDrawer';
 import PaymentForm from '@features/loans/components/Loan/PaymentForm';
 import { useLoan } from '@shared/context/loan';
 type SortField = 'date' | 'amount' | null;
@@ -178,45 +179,18 @@ const PaymentDetails = (props) => {
 
   return (
     <div>
-      {/* Delete Drawer */}
-      <VaulDrawer
-        show={!!deleteModalId}
-        onClose={(e) => {
-          e.preventDefault();
-          setDeleteModalId(false);
-        }}
+      <DeleteConfirmDrawer
+        open={!!deleteModalId}
+        onClose={() => setDeleteModalId(false)}
+        onConfirm={() =>
+          deleteModalId && handleDelete(deleteModalId, token)
+        }
         title={t('payment.deletePayment')}
-      >
-        <p
-          style={{
-            textAlign: 'center',
-            color: 'rgba(255, 255, 255, 0.7)',
-            marginBottom: '1.5rem',
-          }}
-        >
-          {t('modal.deleteMessage')}
-        </p>
-        <button
-          onClick={() => handleDelete(deleteModalId as string, token)}
-          className="button danger wide"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <div className="loader">
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-              <span className="loader__element"></span>
-            </div>
-          ) : (
-            <>
-              <FiTrash2 />
-              {t('common.delete')}
-            </>
-          )}
-        </button>
-      </VaulDrawer>
+        message={t('modal.deletePayment')}
+        isSubmitting={isSubmitting}
+      />
 
-      {/* Edit Drawer */}
+      {/* Edit / Add payment – same VaulDrawer + footer as Income */}
       <VaulDrawer
         show={showEditModal}
         onClose={(e) => {
