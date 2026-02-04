@@ -149,6 +149,14 @@
     box-sizing: border-box;
   }
 
+  /* Transaction filters expanded panel: prevent flex from collapsing MonthChips section */
+  .transaction-filters-expanded {
+    min-height: 0;
+  }
+  .transaction-filters-expanded > * {
+    flex-shrink: 0;
+  }
+
   /* Swipe actions (TransactionList, IncomeTable, LoansList, PaymentDetails) */
   .swipe-actions-background {
     position: absolute;

@@ -247,9 +247,9 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
       </div>
 
       {isFilterFocused && (
-        <div className="flex flex-col gap-6 max-h-[400px] overflow-x-hidden w-full max-w-full overflow-y-auto py-2 animate-[slideDown_0.2s_ease-out] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/[0.05] [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded hover:[&::-webkit-scrollbar-thumb]:bg-white/30">
+        <div className="transaction-filters-expanded flex flex-col gap-6 min-h-0 max-h-[400px] overflow-x-hidden w-full max-w-full overflow-y-auto py-2 animate-[slideDown_0.2s_ease-out] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/[0.05] [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded hover:[&::-webkit-scrollbar-thumb]:bg-white/30">
           {categoryChips.length > 0 && (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 flex-shrink-0">
               <div className="text-white/50 text-xs font-semibold uppercase tracking-wider flex items-center gap-2 [&_svg]:text-sm">
                 {t('filters.categories')}
               </div>
@@ -268,7 +268,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           )}
 
           {availableTags.length > 0 && (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 flex-shrink-0">
               <div className="text-white/50 text-xs font-semibold uppercase tracking-wider flex items-center gap-2 [&_svg]:text-sm">
                 {t('filters.tags') || 'Tags'}
               </div>
@@ -311,12 +311,14 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             </div>
           )}
 
-          <MonthChips
-            months={monthOptions}
-            selectedMonth={selectedMonth}
-            onMonthClick={handleMonthClick}
-            className="flex flex-col gap-3 mt-0"
-          />
+          <div className="flex-shrink-0">
+            <MonthChips
+              months={monthOptions}
+              selectedMonth={selectedMonth}
+              onMonthClick={handleMonthClick}
+              className="flex flex-col gap-3 mt-0"
+            />
+          </div>
         </div>
       )}
     </div>
