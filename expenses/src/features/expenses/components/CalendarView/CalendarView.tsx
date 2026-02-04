@@ -126,15 +126,18 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   let isSwiping = false;
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (showDayModal) return; // don't capture swipe when day drawer is open
     touchStartX = event.touches[0].clientX;
   };
 
   const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (showDayModal) return;
     touchEndX = event.touches[0].clientX;
     isSwiping = true;
   };
 
   const handleTouchEnd = () => {
+    if (showDayModal) return; // don't change month when day drawer is open
     if (isSwiping) {
       const deltaX = touchEndX - touchStartX;
       const thresholdPercentage = 0.25;
