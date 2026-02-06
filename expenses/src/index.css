@@ -116,6 +116,17 @@
     appearance: radio;
   }
 
+  /* Hide native clear button on search inputs so only our custom Clear shows */
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+  }
+  input[type="search"]::-moz-search-cancel-button {
+    display: none;
+  }
+
   table tr {
     z-index: 10;
   }
