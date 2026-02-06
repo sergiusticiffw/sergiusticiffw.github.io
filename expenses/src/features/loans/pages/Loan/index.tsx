@@ -456,7 +456,10 @@ const Loan: React.FC = () => {
                 <span className="loader__element"></span>
               </div>
             ) : (
-              t('common.save')
+              <>
+                <FiEdit2 />
+                <span>{t('loan.editLoan')}</span>
+              </>
             )}
           </button>
         }
@@ -511,7 +514,10 @@ const Loan: React.FC = () => {
                 <span className="loader__element"></span>
               </div>
             ) : (
-              t('common.add')
+              <>
+                <FiPlus />
+                <span>{t('loan.addPayment')}</span>
+              </>
             )}
           </button>
         }

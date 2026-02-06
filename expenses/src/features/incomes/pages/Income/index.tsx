@@ -34,6 +34,7 @@ import { notificationType } from '@shared/utils/constants';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import {
   FiPlus,
+  FiEdit2,
   FiChevronDown,
   FiDollarSign,
   FiTrendingUp,
@@ -362,9 +363,15 @@ const Income = () => {
                 <span className="loader__element"></span>
               </div>
             ) : !isNewModal ? (
-              t('common.save')
+              <>
+                <FiEdit2 />
+                <span>{t('incomeForm.editIncome')}</span>
+              </>
             ) : (
-              t('common.add')
+              <>
+                <FiPlus />
+                <span>{t('incomeForm.addIncome')}</span>
+              </>
             )}
           </button>
         }
@@ -384,14 +391,14 @@ const Income = () => {
         />
       </VaulDrawer>
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button – same pattern as transaction (Add Transaction) */}
       <button
         onClick={() => {
           setShowEditModal(true);
           setIsNewModal(true);
         }}
         className="fab"
-        title={t('income.addIncome')}
+        title={t('incomeForm.addIncome')}
       >
         <FiPlus />
       </button>

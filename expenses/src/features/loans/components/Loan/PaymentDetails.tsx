@@ -5,6 +5,7 @@ import { useLocalization } from '@shared/context/localization';
 import useSwipeActions from '@shared/hooks/useSwipeActions';
 import {
   FiEdit2,
+  FiPlus,
   FiTrash2,
   FiChevronDown,
   FiDollarSign,
@@ -213,9 +214,15 @@ const PaymentDetails = (props) => {
                 <span className="loader__element"></span>
               </div>
             ) : !isNewModal ? (
-              t('common.save')
+              <>
+                <FiEdit2 />
+                <span>{t('payment.editPayment')}</span>
+              </>
             ) : (
-              t('common.add')
+              <>
+                <FiPlus />
+                <span>{t('payment.addPayment')}</span>
+              </>
             )}
           </button>
         }

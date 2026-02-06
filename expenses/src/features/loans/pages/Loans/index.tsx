@@ -24,7 +24,7 @@ import {
   DeleteConfirmDrawer,
   NoData,
 } from '@shared/components/Common';
-import { FiCreditCard, FiPlus } from 'react-icons/fi';
+import { FiCreditCard, FiPlus, FiEdit2 } from 'react-icons/fi';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import LoanForm from '@features/loans/components/Loan/LoanForm';
 import LoansList from '@features/loans/components/Loan/LoansList';
@@ -287,7 +287,10 @@ const Loans: FC = () => {
                 <span className="loader__element"></span>
               </div>
             ) : (
-              t('common.add')
+              <>
+                <FiPlus />
+                <span>{t('loan.addLoan')}</span>
+              </>
             )}
           </button>
         }
@@ -341,7 +344,10 @@ const Loans: FC = () => {
                 <span className="loader__element"></span>
               </div>
             ) : (
-              t('common.save')
+              <>
+                <FiEdit2 />
+                <span>{t('loan.editLoan')}</span>
+              </>
             )}
           </button>
         }
@@ -373,11 +379,11 @@ const Loans: FC = () => {
         isSubmitting={isSubmitting}
       />
 
-      {/* Floating Action Button */}
+      {/* FAB – same pattern as transaction (Add Transaction) */}
       <button
         onClick={() => setShowAddModal(true)}
         className="fab"
-        title={t('loans.addLoan')}
+        title={t('loan.addLoan')}
       >
         <FiPlus />
       </button>

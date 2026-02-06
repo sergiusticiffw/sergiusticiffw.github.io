@@ -440,6 +440,7 @@ const translations = {
     // Payment
     'payment.simulated': 'Simulated',
     'payment.editPayment': 'Edit Payment',
+    'payment.addPayment': 'Add Payment',
     'payment.deletePayment': 'Delete Payment',
     'payment.noPaymentsYet': 'No Payments Yet',
     'payment.noPaymentsDesc':
@@ -966,6 +967,7 @@ const translations = {
     // Payment
     'payment.simulated': 'Simulat',
     'payment.editPayment': 'Editează Plata',
+    'payment.addPayment': 'Adaugă Plata',
     'payment.deletePayment': 'Șterge Plata',
     'payment.noPaymentsYet': 'Încă Nu Sunt Plăți',
     'payment.noPaymentsDesc':

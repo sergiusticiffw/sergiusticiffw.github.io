@@ -564,7 +564,7 @@ const NewHome = () => {
           <button
             className="fab"
             onClick={() => setShowAddModal(true)}
-            title="Add Transaction"
+            title={t('transactionForm.addTransaction')}
           >
             <FiPlus />
           </button>
