@@ -31,6 +31,9 @@ export const LoanCostBreakdown = ({ data }) => {
     tooltip: {
       valueDecimals: 2,
     },
+    legend: {
+      enabled: false,
+    },
     series: [
       {
         name: t('common.total'),

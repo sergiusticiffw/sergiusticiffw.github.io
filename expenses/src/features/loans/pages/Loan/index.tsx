@@ -5,7 +5,7 @@ import VaulDrawer from '@shared/components/VaulDrawer';
 import { useParams } from '@tanstack/react-router';
 import PaymentDetails from '@features/loans/components/Loan/PaymentDetails';
 import PaymentForm from '@features/loans/components/Loan/PaymentForm';
-import { LoadingSpinner } from '@shared/components/Common';
+import { LoadingSpinner, StatCard, StatsGrid } from '@shared/components/Common';
 import { useLoan } from '@shared/context/loan';
 import {
   calculateDaysFrom,
@@ -20,7 +20,6 @@ import { useAmortization } from '@features/loans/hooks/useAmortization';
 import { isEarlyPaymentFromApiItem } from '@features/loans/utils/amortization';
 import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
 import {
-  FiTrendingUp,
   FiDollarSign,
   FiEdit2,
   FiPlus,
@@ -224,192 +223,148 @@ const Loan: React.FC = () => {
         : t('loan.notStarted')
       : formatNumber(remainingPrincipal);
 
+  const iconTw = 'w-4 h-4 shrink-0 text-[#5b8def]';
+
   return (
     <div className="page-container loan-container">
-      {/* Header - same structure as NewHome */}
-      <div className="loan-header">
-        <h1>{loan?.title}</h1>
-      </div>
-
-      {/* Payment Actions */}
-      <div className="btns-actions">
-        <button onClick={() => setShowEditModal(true)} className="action-btn">
-          <FiEdit2 />
-          {t('loan.editLoan')}
+      {/* Header */}
+      <div className="w-full text-center mb-5 pt-6 flex flex-col items-center">
+        <h1 className="text-2xl font-bold text-white tracking-tight m-0">{loan?.title}</h1>
+        <button
+          type="button"
+          onClick={() => setShowEditModal(true)}
+          className="w-full inline-flex items-center justify-center gap-2 mt-4 py-3 px-6 min-h-12 text-base font-semibold text-white bg-white/10 border border-white/10 rounded-xl hover:bg-white/15 hover:border-[#5b8def] active:scale-[0.98] transition-all cursor-pointer"
+        >
+          <FiEdit2 className="w-5 h-5 shrink-0 text-[#5b8def]" />
+          <span>{t('loan.editLoan')}</span>
         </button>
       </div>
 
       {/* Error Message */}
       {errorMessage && (
-        <div className="error-message">
+        <div className="mb-6">
           <Notification message={errorMessage} type="error" />
         </div>
       )}
 
-      {/* Loan Stats */}
-      <div className="loan-stats-grid-2col">
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">
-            <FiCalendar
-              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-            />
-            {t('loan.startDate')}
-          </span>
-          <span className="loan-stat-value">
-            {loanData.start_date || '-'}
+      {/* HERO: Payment progress */}
+      <div className="bg-gradient-to-br from-white/[0.07] to-white/[0.03] border border-white/10 rounded-2xl p-6 pb-5 mb-5 shadow-lg">
+        <h2 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 m-0">
+          {t('loan.paymentProgress')}
+        </h2>
+        <div className="mb-3">
+          <span className="text-4xl font-extrabold text-white tracking-tight tabular-nums sm:text-3xl">
+            {formatNumber(progress)}%
           </span>
         </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">
-            <FiCalendar
-              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-            />
+        <div className="w-full h-3 rounded-md bg-black/20 overflow-hidden shadow-inner">
+          <div
+            className="h-full rounded-md bg-gradient-to-r from-[#5b8def] to-[#4a7fdb] transition-[width] duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-white/5 text-sm text-white/55">
+          <span className="inline-flex items-center gap-2">
+            <FiCalendar className={iconTw} />
+            <span>{t('loan.monthsPassed')}: <strong className="text-white font-semibold">{monthsPassedDisplay}</strong></span>
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <FiClock className={iconTw} />
+            <span>{t('loan.daysRemaining')}: <strong className="text-white font-semibold">{daysRemainingDisplay}</strong></span>
+          </span>
+        </div>
+      </div>
+
+      {/* KEY METRICS: 3 cards (shared StatCard) */}
+      <StatsGrid columns={3}>
+        <StatCard
+          icon={<FiCreditCard />}
+          value={formatNumber(totalPrincipal)}
+          label={t('loan.principal')}
+        />
+        <StatCard
+          icon={<FiCheck />}
+          value={formatNumber(totalPaidAmount)}
+          label={t('loan.paid')}
+          accent
+        />
+        <StatCard
+          icon={<FiClock />}
+          value={remainingDisplay}
+          label={t('loan.remaining')}
+        />
+      </StatsGrid>
+
+      {/* DETAIL ROWS: compact label/value */}
+      <div className="bg-white/[0.04] border border-white/5 rounded-xl overflow-hidden mb-6">
+        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+            <FiCalendar className={iconTw} />
+            {t('loan.startDate')}
+          </span>
+          <span className="text-sm font-semibold text-white tabular-nums text-right">{loanData.start_date || '-'}</span>
+        </div>
+        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+            <FiCalendar className={iconTw} />
             {t('loan.endDate')}
           </span>
-          <span className="loan-stat-value">
+          <span className="text-sm font-semibold text-white tabular-nums text-right">
             {loanData.end_date ||
               (amortizationSchedule.length > 0
                 ? (() => {
                     const lastRow = amortizationSchedule[amortizationSchedule.length - 1];
-                    if (Array.isArray(lastRow)) {
-                      return lastRow[0] || '-';
-                    }
+                    if (Array.isArray(lastRow)) return lastRow[0] || '-';
                     return lastRow?.date || '-';
                   })()
                 : '-')}
           </span>
         </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">
-            <FiCreditCard
-              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-            />
-            {t('loan.principal')}
-          </span>
-          <span className="loan-stat-value">
-            {formatNumber(totalPrincipal)}
-          </span>
-        </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">
-            <FiBarChart2
-              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-            />
+        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+            <FiBarChart2 className={iconTw} />
             {t('common.total')}
           </span>
-          <span className="loan-stat-value">
-            {formatNumber(totalInstallments)}
-          </span>
+          <span className="text-sm font-semibold text-white tabular-nums text-right">{formatNumber(totalInstallments)}</span>
         </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">
-            <FiCheck
-              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-            />
-            {t('loan.paid')}
-          </span>
-          <span className="loan-stat-value">
-            {formatNumber(totalPaidAmount)}
-          </span>
-        </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">
-            <FiClock
-              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-            />
-            {t('loan.remaining')}
-          </span>
-          <span className="loan-stat-value">{remainingDisplay}</span>
-        </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">
-            <FiPercent
-              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-            />
+        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+            <FiPercent className={iconTw} />
             {t('loan.currentInterest')}
           </span>
-          <span className="loan-stat-value">{interestPaidDisplay}</span>
+          <span className="text-sm font-semibold text-white tabular-nums text-right">{interestPaidDisplay}</span>
         </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">
-            <FiTrendingDown
-              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-            />
+        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+            <FiTrendingDown className={iconTw} />
             {t('loan.interestSavings')}
           </span>
-          <span className="loan-stat-value">{interestSavingsDisplay}</span>
+          <span className="text-sm font-semibold text-white tabular-nums text-right">{interestSavingsDisplay}</span>
         </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">
-            <FiCheckCircle
-              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-            />
+        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+            <FiCheckCircle className={iconTw} />
             {t('loan.principalPaid')}
           </span>
-          <span className="loan-stat-value">{principalPaidDisplay}</span>
+          <span className="text-sm font-semibold text-white tabular-nums text-right">{principalPaidDisplay}</span>
         </div>
-        <div className="loan-stat-item">
-          <span className="loan-stat-label">
-            <FiAlertCircle
-              style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-            />
+        <div className="flex items-center justify-between py-3 px-4">
+          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+            <FiAlertCircle className={iconTw} />
             {t('loan.remainingPrincipal')}
           </span>
-          <span className="loan-stat-value">{remainingPrincipalDisplay}</span>
+          <span className="text-sm font-semibold text-white tabular-nums text-right">{remainingPrincipalDisplay}</span>
         </div>
       </div>
 
       {/* Loan Sections */}
-      <div className="loan-sections">
-        {/* Progress Section */}
-        <div className="loan-section loan-progress-section">
-          <div className="section-header">
-            <FiTrendingUp />
-            <h3>{t('loan.paymentProgress')}</h3>
-          </div>
-
-          <div className="progress-container">
-            <div className="progress-bar-container">
-              <div className="progress-label">
-                <span>{t('loan.paymentProgress')}</span>
-                <span>{formatNumber(progress)}%</span>
-              </div>
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="loan-stats-grid-2col">
-              <div className="loan-stat-item">
-                <span className="loan-stat-label">
-                  <FiCalendar
-                    style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-                  />
-                  {t('loan.monthsPassed')}
-                </span>
-                <span className="loan-stat-value">{monthsPassedDisplay}</span>
-              </div>
-              <div className="loan-stat-item">
-                <span className="loan-stat-label">
-                  <FiClock
-                    style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}
-                  />
-                  {t('loan.daysRemaining')}
-                </span>
-                <span className="loan-stat-value">{daysRemainingDisplay}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="flex flex-col gap-8 w-full sm:gap-6">
 
         {/* Payment Details Section */}
-        <div className="loan-section">
-          <div className="section-header">
-            <FiDollarSign />
-            <h3>{t('loan.paymentHistory')}</h3>
+        <div className="w-full">
+          <div className="flex items-center justify-center gap-3 mb-4 pb-3 border-b border-white/5">
+            <FiDollarSign className="text-xl text-[#5b8def]" />
+            <h3 className="text-lg font-semibold text-white m-0">{t('loan.paymentHistory')}</h3>
           </div>
           <PaymentDetails
             loan={loan}
@@ -419,12 +374,8 @@ const Loan: React.FC = () => {
           />
         </div>
 
-        {/* Loan Details Section */}
-        <div className="loan-section">
-          <div className="section-header">
-            <FiTrendingUp />
-            <h3>{t('loan.amortizationSchedule')}</h3>
-          </div>
+        {/* Loan Details Section (Amortization) */}
+        <div className="w-full">
           <LoanDetails
             loanData={loanData}
             loan={paydown}

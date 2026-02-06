@@ -15,7 +15,7 @@ const StatsGrid: React.FC<StatsGridProps> = ({
 }) => {
   return (
     <div
-      className={`grid gap-2 mb-6 transition-all duration-300 ${filtered ? 'grid-cols-1 max-w-[300px] mx-auto' : columns === 2 ? 'grid-cols-2' : 'grid-cols-3'} sm:gap-1.5 ${className}`}
+      className={`grid gap-4 mb-6 transition-all duration-300 ${filtered ? 'grid-cols-1 max-w-[300px] mx-auto' : columns === 2 ? 'grid-cols-2' : 'grid-cols-3'} sm:gap-3 ${className}`}
     >
       {children}
     </div>
