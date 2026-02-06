@@ -4,14 +4,17 @@ import { useExpenseData } from '@stores/expenseStore';
 import {
   useSettingsCurrency,
   setSettingsCurrency,
+  useSettingsTheme,
+  setSettingsTheme,
   useChartsBackground,
   setChartsBackground,
 } from '@stores/settingsStore';
+import { APP_THEMES } from '@shared/constants/themes';
 import { useNotification } from '@shared/context/notification';
 import { useLocalization } from '@shared/context/localization';
 import { logout } from '@shared/context/actions';
 import { useNavigate } from '@tanstack/react-router';
-import { FiUser, FiLogOut, FiSettings, FiBarChart2 } from 'react-icons/fi';
+import { FiUser, FiLogOut, FiSettings, FiBarChart2, FiDroplet } from 'react-icons/fi';
 import { fetchRequest, API_BASE_URL } from '@shared/utils/utils';
 import {
   notificationType,
@@ -27,6 +30,7 @@ const Profile = () => {
   const { dataDispatch } = useExpenseData();
   const { userDetails, token } = useAuthState();
   const currency = useSettingsCurrency();
+  const currentTheme = useSettingsTheme();
   const useChartsBackgroundColor = useChartsBackground();
   const [state, setState] = useState({
     visibleCharts:
@@ -153,7 +157,7 @@ const Profile = () => {
     <div className="page-container flex flex-col items-center">
       {/* Header */}
       <div className="text-left mb-6 w-full max-w-[600px] md:mb-5">
-        <h1 className="text-2xl md:text-xl font-semibold text-white m-0 tracking-tight">
+        <h1 className="text-2xl md:text-xl font-semibold text-app-primary m-0 tracking-tight">
           {t('profile.title')}
         </h1>
       </div>
@@ -162,31 +166,80 @@ const Profile = () => {
       <div className="flex flex-col gap-4 w-full max-w-[600px] md:gap-3.5">
         {/* Account Section */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
-          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[#5b8def]">
+          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
             <FiUser />
-            <h3 className="text-base md:text-sm font-semibold text-white m-0 tracking-tight">
+            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
               {t('profile.account')}
             </h3>
           </div>
           <div className="flex items-center gap-3 py-3 md:py-2.5">
-            <div className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] shrink-0" />
-            <div className="text-[0.9rem] md:text-sm text-white/90 font-medium tracking-tight">
+            <div className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] shrink-0" />
+            <div className="text-[0.9rem] md:text-sm text-app-secondary font-medium tracking-tight">
               {userDetails.current_user.name}
             </div>
           </div>
         </div>
 
+        {/* Theme */}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
+          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
+            <FiDroplet />
+            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
+              {t('profile.theme')}
+            </h3>
+          </div>
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-2">
+            {APP_THEMES.map((theme) => {
+              const isActive = currentTheme === theme.id;
+              return (
+                <button
+                  key={theme.id}
+                  type="button"
+                  onClick={() => {
+                    setSettingsTheme(theme.id);
+                    window.dispatchEvent(
+                      new CustomEvent('localStorageChange', {
+                        detail: { key: 'theme', value: theme.id },
+                      })
+                    );
+                    showNotification(
+                      t('notification.profileUpdated'),
+                      notificationType.SUCCESS
+                    );
+                  }}
+                  className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                    isActive
+                      ? 'border-[var(--color-app-accent)] bg-[var(--color-app-accent)]/10'
+                      : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]'
+                  }`}
+                >
+                  <div
+                    className="w-10 h-10 rounded-lg shrink-0"
+                    style={{
+                      background: theme.bg,
+                      boxShadow: `inset 0 0 0 2px ${theme.accent}`,
+                    }}
+                  />
+                  <span className="text-xs font-medium text-app-secondary truncate w-full text-center">
+                    {t(theme.labelKey)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Language & Currency Settings */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
-          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[#5b8def]">
+          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
             <FiSettings />
-            <h3 className="text-base md:text-sm font-semibold text-white m-0 tracking-tight">
+            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
               {t('profile.personalInfo')}
             </h3>
           </div>
 
           <div className="mb-4 last:mb-0 md:mb-3.5">
-            <label htmlFor="language" className="block text-xs text-white/50 mb-2 md:mb-1.5 font-medium uppercase tracking-wider">
+            <label htmlFor="language" className="block text-xs text-app-muted mb-2 md:mb-1.5 font-medium uppercase tracking-wider">
               {t('profile.language')}
             </label>
             <select
@@ -194,7 +247,7 @@ const Profile = () => {
               value={language}
               name="language"
               onChange={handleLanguageChange}
-              className="w-full py-3 px-4 bg-white/[0.03] border border-white/[0.08] rounded-lg text-white text-sm md:text-[0.875rem] font-normal transition-all outline-none focus:border-[rgba(91,141,239,0.5)] focus:bg-[rgba(91,141,239,0.05)] [&_option]:bg-[#1a1a1a] [&_option]:text-white [&_option]:p-2"
+              className="w-full py-3 px-4 bg-app-surface border border-app-subtle rounded-lg text-app-primary text-sm md:text-[0.875rem] font-normal transition-all outline-none focus:border-[var(--color-app-accent)]/50 focus:bg-[var(--color-app-accent)]/5 [&_option]:bg-[var(--color-app-bg)] [&_option]:text-app-primary [&_option]:p-2"
             >
               <option value="en">{t('profile.english')}</option>
               <option value="ro">{t('profile.romanian')}</option>
@@ -202,7 +255,7 @@ const Profile = () => {
           </div>
 
           <div className="mb-4 last:mb-0 md:mb-3.5">
-            <label htmlFor="currency" className="block text-xs text-white/50 mb-2 md:mb-1.5 font-medium uppercase tracking-wider">
+            <label htmlFor="currency" className="block text-xs text-app-muted mb-2 md:mb-1.5 font-medium uppercase tracking-wider">
               {t('profile.currency')}
             </label>
             <select
@@ -210,7 +263,7 @@ const Profile = () => {
               value={currency}
               name="currency"
               onChange={handleChange}
-              className="w-full py-3 px-4 bg-white/[0.03] border border-white/[0.08] rounded-lg text-white text-sm md:text-[0.875rem] font-normal transition-all outline-none focus:border-[rgba(91,141,239,0.5)] focus:bg-[rgba(91,141,239,0.05)] [&_option]:bg-[#1a1a1a] [&_option]:text-white [&_option]:p-2"
+              className="w-full py-3 px-4 bg-app-surface border border-app-subtle rounded-lg text-app-primary text-sm md:text-[0.875rem] font-normal transition-all outline-none focus:border-[var(--color-app-accent)]/50 focus:bg-[var(--color-app-accent)]/5 [&_option]:bg-[var(--color-app-bg)] [&_option]:text-app-primary [&_option]:p-2"
             >
               {sortedCurrencies.map(([id, currency]) => (
                 <option key={id} value={id}>
@@ -223,14 +276,14 @@ const Profile = () => {
 
         {/* Charts Settings */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
-          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[#5b8def]">
+          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
             <FiBarChart2 />
-            <h3 className="text-base md:text-sm font-semibold text-white m-0 tracking-tight">
+            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
               {t('profile.chartsSettings')}
             </h3>
           </div>
 
-          <div className="flex items-center gap-2.5 mb-2 py-2 md:py-1.5 relative [&_input]:w-[18px] [&_input]:h-[18px] [&_input]:min-w-[18px] [&_input]:min-h-[18px] [&_input]:accent-[#5b8def] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:inline-block [&_input]:opacity-100 [&_input]:visible [&_label]:text-sm md:[&_label]:text-xs [&_label]:text-white/75 [&_label]:cursor-pointer [&_label]:flex-1 [&_label]:select-none [&_label]:m-0">
+          <div className="flex items-center gap-2.5 mb-2 py-2 md:py-1.5 relative [&_input]:w-[18px] [&_input]:h-[18px] [&_input]:min-w-[18px] [&_input]:min-h-[18px] [&_input]:accent-[var(--color-app-accent)] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:inline-block [&_input]:opacity-100 [&_input]:visible [&_label]:text-sm md:[&_label]:text-xs [&_label]:text-app-secondary [&_label]:cursor-pointer [&_label]:flex-1 [&_label]:select-none [&_label]:m-0">
             <input
               type="checkbox"
               name="useChartsBackgroundColor"
@@ -244,12 +297,12 @@ const Profile = () => {
           </div>
 
           <div className="mt-4 pt-4 border-t border-white/[0.05] md:mt-4 md:pt-4">
-            <h4 className="text-xs font-semibold text-white/50 m-0 mb-3 md:mb-2.5 uppercase tracking-wider">
+            <h4 className="text-xs font-semibold text-app-muted m-0 mb-3 md:mb-2.5 uppercase tracking-wider">
               {t('profile.chartsVisibility')}
             </h4>
             <div className="grid grid-cols-1 gap-0">
               {availableCharts.map((chart) => (
-                <div key={chart} className="flex items-center gap-2.5 mb-2 py-2 md:py-1.5 last:mb-0 [&_input]:w-[18px] [&_input]:h-[18px] [&_input]:min-w-[18px] [&_input]:min-h-[18px] [&_input]:accent-[#5b8def] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:inline-block [&_label]:text-sm md:[&_label]:text-xs [&_label]:text-white/75 [&_label]:cursor-pointer [&_label]:flex-1 [&_label]:select-none [&_label]:m-0">
+                <div key={chart} className="flex items-center gap-2.5 mb-2 py-2 md:py-1.5 last:mb-0 [&_input]:w-[18px] [&_input]:h-[18px] [&_input]:min-w-[18px] [&_input]:min-h-[18px] [&_input]:accent-[var(--color-app-accent)] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:inline-block [&_label]:text-sm md:[&_label]:text-xs [&_label]:text-app-secondary [&_label]:cursor-pointer [&_label]:flex-1 [&_label]:select-none [&_label]:m-0">
                   <input
                     type="checkbox"
                     id={chart}

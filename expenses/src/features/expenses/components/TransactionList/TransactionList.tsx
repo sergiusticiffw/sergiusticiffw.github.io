@@ -99,9 +99,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
   };
 
   const sortBtn =
-    'rounded-lg py-2 px-4 text-white/60 text-sm cursor-pointer flex items-center gap-2 transition-all duration-200 bg-white/[0.05] border-none hover:bg-white/10 hover:text-white/80 [&_svg]:text-sm';
+    'rounded-lg py-2 px-4 text-app-muted text-sm cursor-pointer flex items-center gap-2 transition-all duration-200 bg-app-surface border-none hover:bg-app-surface-hover hover:text-app-secondary [&_svg]:text-sm';
   const sortBtnActive =
-    'bg-[rgba(91,141,239,0.2)] text-[#5b8def] font-medium';
+    'bg-[var(--color-app-accent)]/20 text-[var(--color-app-accent)] font-medium';
 
   return (
     <div
@@ -175,18 +175,18 @@ const TransactionList: React.FC<TransactionListProps> = ({
               }
             >
               <div className="flex flex-col items-center justify-center min-w-[50px] shrink-0">
-                <div className="text-2xl font-bold text-white leading-none">{day}</div>
-                <div className="text-xs font-semibold text-white/50 mt-1 tracking-wide">{month}</div>
+                <div className="text-2xl font-bold text-app-primary leading-none">{day}</div>
+                <div className="text-xs font-semibold text-app-muted mt-1 tracking-wide">{month}</div>
               </div>
 
-              <div className="flex items-center justify-center min-w-[80px] max-w-[100px] bg-white/10 rounded-xl py-2 px-3 shrink-0">
-                <div className="text-xs font-medium text-white/70 text-center whitespace-nowrap overflow-hidden text-ellipsis">
+              <div className="flex items-center justify-center min-w-[80px] max-w-[100px] bg-app-surface-hover rounded-xl py-2 px-3 shrink-0">
+                <div className="text-xs font-medium text-app-secondary text-center whitespace-nowrap overflow-hidden text-ellipsis">
                   {categoryLabel}
                 </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="text-base font-medium text-white/90 leading-snug break-words">
+                <div className="text-base font-medium text-app-secondary leading-snug break-words">
                   <TagDisplay
                     description={transaction.dsc || ''}
                     suggestions={(() => {
@@ -212,7 +212,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 </div>
               </div>
 
-              <div className="text-lg font-bold text-white whitespace-nowrap pr-2 shrink-0 flex items-center gap-1">
+              <div className="text-lg font-bold text-app-primary whitespace-nowrap pr-2 shrink-0 flex items-center gap-1">
                 {formatNumber(transaction.sum)}
                 <ItemSyncIndicator status={isPending ? 'pending' : undefined} />
               </div>

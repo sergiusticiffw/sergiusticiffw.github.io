@@ -16,11 +16,11 @@ const baseCard =
   'sm:min-h-[105px] sm:py-4 sm:px-3';
 
 const accentCard =
-  'border border-[rgba(91,141,239,0.35)] bg-gradient-to-b from-[rgba(91,141,239,0.12)] to-[rgba(91,141,239,0.06)] shadow-md ' +
-  'hover:from-[rgba(91,141,239,0.16)] hover:to-[rgba(91,141,239,0.08)] hover:border-[rgba(91,141,239,0.45)] hover:shadow-lg';
+  'border border-[var(--color-app-accent)]/35 bg-gradient-to-b from-[var(--color-app-accent)]/12 to-[var(--color-app-accent)]/6 shadow-md ' +
+  'hover:from-[var(--color-app-accent)]/16 hover:to-[var(--color-app-accent)]/8 hover:border-[var(--color-app-accent)]/45 hover:shadow-lg';
 
 const iconBase =
-  'w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-[rgba(91,141,239,0.15)] text-[#5b8def] sm:w-9 sm:h-9 [&_svg]:w-5 [&_svg]:h-5 sm:[&_svg]:w-4 sm:[&_svg]:h-4';
+  'w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-[var(--color-app-accent)]/15 text-[var(--color-app-accent)] sm:w-9 sm:h-9 [&_svg]:w-5 [&_svg]:h-5 sm:[&_svg]:w-4 sm:[&_svg]:h-4';
 
 const StatCard: React.FC<StatCardProps> = memo(
   ({ icon, value, label, accent = false, className = '' }) => {

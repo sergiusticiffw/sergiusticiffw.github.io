@@ -223,7 +223,7 @@ const Loan: React.FC = () => {
         : t('loan.notStarted')
       : formatNumber(remainingPrincipal);
 
-  const iconTw = 'w-4 h-4 shrink-0 text-[#5b8def]';
+  const iconTw = 'w-4 h-4 shrink-0 text-[var(--color-app-accent)]';
 
   return (
     <div className="page-container loan-container">
@@ -233,9 +233,9 @@ const Loan: React.FC = () => {
         <button
           type="button"
           onClick={() => setShowEditModal(true)}
-          className="w-full inline-flex items-center justify-center gap-2 mt-4 py-3 px-6 min-h-12 text-base font-semibold text-white bg-white/10 border border-white/10 rounded-xl hover:bg-white/15 hover:border-[#5b8def] active:scale-[0.98] transition-all cursor-pointer"
+          className="w-full inline-flex items-center justify-center gap-2 mt-4 py-3 px-6 min-h-12 text-base font-semibold text-white bg-white/10 border border-white/10 rounded-xl hover:bg-white/15 hover:border-[var(--color-app-accent)] active:scale-[0.98] transition-all cursor-pointer"
         >
-          <FiEdit2 className="w-5 h-5 shrink-0 text-[#5b8def]" />
+          <FiEdit2 className="w-5 h-5 shrink-0 text-[var(--color-app-accent)]" />
           <span>{t('loan.editLoan')}</span>
         </button>
       </div>
@@ -259,7 +259,7 @@ const Loan: React.FC = () => {
         </div>
         <div className="w-full h-3 rounded-md bg-black/20 overflow-hidden shadow-inner">
           <div
-            className="h-full rounded-md bg-gradient-to-r from-[#5b8def] to-[#4a7fdb] transition-[width] duration-500"
+            className="h-full rounded-md bg-gradient-to-r from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] transition-[width] duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -363,7 +363,7 @@ const Loan: React.FC = () => {
         {/* Payment Details Section */}
         <div className="w-full">
           <div className="flex items-center justify-center gap-3 mb-4 pb-3 border-b border-white/5">
-            <FiDollarSign className="text-xl text-[#5b8def]" />
+            <FiDollarSign className="text-xl text-[var(--color-app-accent)]" />
             <h3 className="text-lg font-semibold text-white m-0">{t('loan.paymentHistory')}</h3>
           </div>
           <PaymentDetails

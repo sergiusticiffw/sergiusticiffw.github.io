@@ -3,6 +3,7 @@
  */
 import { Store, useStore } from '@tanstack/react-store';
 import type { SettingsState } from '@shared/type/types';
+import { DEFAULT_THEME_ID, normalizeThemeId } from '@shared/constants/themes';
 
 const THEME_KEY = 'theme';
 const CHARTS_BG_KEY = 'useChartsBackgroundColor';
@@ -10,9 +11,10 @@ const CHARTS_BG_KEY = 'useChartsBackgroundColor';
 function readTheme(): string {
   try {
     const v = localStorage.getItem(THEME_KEY);
-    return v ? JSON.parse(v) : 'blue-pink-gradient';
+    const raw = v ? JSON.parse(v) : DEFAULT_THEME_ID;
+    return normalizeThemeId(raw);
   } catch {
-    return 'blue-pink-gradient';
+    return DEFAULT_THEME_ID;
   }
 }
 

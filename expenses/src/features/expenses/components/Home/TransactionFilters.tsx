@@ -182,22 +182,22 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   const chipBase =
     'flex items-center gap-1.5 text-xs font-medium py-2 px-3 rounded-2xl whitespace-nowrap shrink-0 cursor-pointer transition-all duration-200 border border-white/20';
   const monthChip =
-    'bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] text-white [&_svg]:text-[0.75rem] hover:from-[#6b9dff] hover:to-[#5a8dec] hover:scale-[1.02] active:scale-[0.98]';
+    'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] [&_svg]:text-[0.75rem] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]';
   const categoryChip =
-    'bg-gradient-to-br from-[#ff6b9d] to-[#ee5a8c] text-white hover:from-[#ff7bad] hover:to-[#fe6a9c] hover:scale-[1.02] active:scale-[0.98]';
+    'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]';
   const tagChipStyle =
-    'bg-gradient-to-br from-[#9b59b6] to-[#8a48a5] text-white hover:from-[#ab69c6] hover:to-[#9a58b5] hover:scale-[1.02] active:scale-[0.98]';
+    'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]';
   const chipActive =
-    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] border-transparent text-white font-medium shadow-[0_2px_8px_rgba(91,141,239,0.3)] hover:shadow-[0_2px_12px_rgba(91,141,239,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80';
+    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] border-transparent text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)] hover:shadow-[0_2px_12px_var(--color-app-accent-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80';
   const chipInactive =
-    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-white/[0.05] border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80';
+    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-app-surface border-app-subtle text-app-secondary hover:bg-app-surface-hover hover:border-[var(--color-border-medium)] hover:text-app-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-app-accent)]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-app-bg)]';
   const tagChipSelected =
-    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-gradient-to-br from-[#9b59b6] to-[#8a48a5] border-transparent text-white font-medium shadow-[0_2px_8px_rgba(155,89,182,0.3)] hover:shadow-[0_2px_12px_rgba(155,89,182,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80';
+    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] border-transparent text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)] hover:shadow-[0_2px_12px_var(--color-app-accent-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80';
 
   return (
     <div className="w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full" role="search">
       <div className={searchBar}>
-        <FiSearch className="text-white/40 text-lg shrink-0" aria-hidden />
+        <FiSearch className="text-app-placeholder text-lg shrink-0" aria-hidden />
 
         {selectedMonth && !isFilterFocused && (
           <div
@@ -253,7 +253,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
               ? t('filters.searchInMonthCategory')
               : t('filters.search')
           }
-          className="flex-1 bg-transparent border-none py-4 text-white text-[0.95rem] outline-none min-w-0 placeholder:text-white/40 focus:outline-none"
+          className="flex-1 bg-transparent border-none py-4 text-app-primary text-[0.95rem] outline-none min-w-0 placeholder:text-app-placeholder focus:outline-none"
           aria-label={t('filters.search')}
           autoComplete="off"
         />
@@ -262,7 +262,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           <button
             type="button"
             onClick={onClearFilters}
-            className="flex items-center gap-1.5 shrink-0 py-2 px-3 rounded-xl border border-transparent text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
+            className="flex items-center gap-1.5 shrink-0 py-2 px-3 rounded-xl border border-transparent text-app-muted hover:text-app-primary hover:bg-app-surface-hover transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-app-accent)]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-app-bg)]"
             title={t('filters.clearAll')}
             aria-label={t('filters.clearAll')}
           >
@@ -280,7 +280,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
         >
           {categoryChips.length > 0 && (
             <div className="flex flex-col gap-3 flex-shrink-0">
-              <div className="text-white/50 text-xs font-semibold uppercase tracking-wider flex items-center gap-2 [&_svg]:text-sm shrink-0">
+              <div className="text-app-muted text-xs font-semibold uppercase tracking-wider flex items-center gap-2 [&_svg]:text-sm shrink-0">
                 <FiGrid aria-hidden />
                 {t('filters.categories')}
               </div>
@@ -302,7 +302,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
 
           {availableTags.length > 0 && (
             <div className="flex flex-col gap-3 flex-shrink-0">
-              <div className="text-white/50 text-xs font-semibold uppercase tracking-wider flex items-center gap-2 [&_svg]:text-sm shrink-0">
+              <div className="text-app-muted text-xs font-semibold uppercase tracking-wider flex items-center gap-2 [&_svg]:text-sm shrink-0">
                 <FiTag aria-hidden />
                 {t('filters.tags') || 'Tags'}
               </div>

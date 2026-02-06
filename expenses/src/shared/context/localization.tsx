@@ -165,6 +165,13 @@ const translations = {
     'profile.account': 'Account',
     'profile.signOut': 'Sign Out',
 
+    'theme.default': 'Default',
+    'theme.navy': 'Navy',
+    'theme.teal': 'Teal',
+    'theme.emerald': 'Emerald',
+    'theme.slate': 'Slate',
+    'theme.indigo': 'Indigo',
+
     // Login
     'login.pleaseLogin':
       'Please login using Google in order to access app functionality.',
@@ -686,6 +693,13 @@ const translations = {
     'profile.chartsVisibility': 'Vizibilitatea Graficelor',
     'profile.account': 'Cont',
     'profile.signOut': 'Deconectare',
+
+    'theme.default': 'Implicit',
+    'theme.navy': 'Marini',
+    'theme.teal': 'Turcoaz',
+    'theme.emerald': 'Smarald',
+    'theme.slate': 'Ardezie',
+    'theme.indigo': 'Indigo',
 
     // Login
     'login.pleaseLogin':

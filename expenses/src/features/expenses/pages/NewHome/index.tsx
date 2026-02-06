@@ -454,8 +454,8 @@ const NewHome = () => {
               type="button"
               className={`flex-1 rounded-xl py-3.5 px-4 text-[0.95rem] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 border-none ${
                 activeView === 'list'
-                  ? 'bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] text-white font-medium shadow-[0_2px_8px_rgba(91,141,239,0.3)]'
-                  : 'bg-white/[0.05] text-white/60 hover:bg-white/10 hover:text-white/80'
+                  ? 'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)]'
+                  : 'bg-app-surface text-app-muted hover:bg-app-surface-hover hover:text-app-secondary'
               } [&_svg]:text-lg`}
               onClick={() => setActiveView('list')}
             >
@@ -465,8 +465,8 @@ const NewHome = () => {
             <button
               className={`flex-1 rounded-xl py-3.5 px-4 text-[0.95rem] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 border-none ${
                 activeView === 'calendar'
-                  ? 'bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] text-white font-medium shadow-[0_2px_8px_rgba(91,141,239,0.3)]'
-                  : 'bg-white/[0.05] text-white/60 hover:bg-white/10 hover:text-white/80'
+                  ? 'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)]'
+                  : 'bg-app-surface text-app-muted hover:bg-app-surface-hover hover:text-app-secondary'
               } [&_svg]:text-lg`}
               onClick={() => setActiveView('calendar')}
             >
@@ -538,10 +538,10 @@ const NewHome = () => {
 
           {/* Month Navigation - Sticky at Bottom (Only for List View) */}
           {activeView === 'list' && (
-            <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 flex justify-center gap-4 z-[100] bg-[rgba(26,26,26,0.9)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5">
+            <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 flex justify-center gap-4 z-[100] bg-[var(--color-app-bg)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5">
               <button
                 type="button"
-                className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-white/15 bg-white/10 cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-white/90 [&_svg]:text-[1.3rem] hover:not(:disabled):bg-white/[0.18] hover:not(:disabled):border-[#5b8def]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
+                className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-app-subtle bg-app-surface-hover cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-app-secondary [&_svg]:text-[1.3rem] hover:not(:disabled):bg-app-surface-hover hover:not(:disabled):border-[var(--color-app-accent)]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
                 onClick={() => setCurrentMonthIndex(currentMonthIndex + 1)}
                 disabled={currentMonthIndex >= months.length - 1}
                 aria-label="Previous month"
@@ -550,7 +550,7 @@ const NewHome = () => {
               </button>
               <button
                 type="button"
-                className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-white/15 bg-white/10 cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-white/90 [&_svg]:text-[1.3rem] hover:not(:disabled):bg-white/[0.18] hover:not(:disabled):border-[#5b8def]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
+                className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-app-subtle bg-app-surface-hover cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-app-secondary [&_svg]:text-[1.3rem] hover:not(:disabled):bg-app-surface-hover hover:not(:disabled):border-[var(--color-app-accent)]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
                 onClick={() => setCurrentMonthIndex(currentMonthIndex - 1)}
                 disabled={currentMonthIndex <= 0}
                 aria-label="Next month"

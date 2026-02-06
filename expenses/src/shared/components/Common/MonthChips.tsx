@@ -34,7 +34,7 @@ const MonthChips: React.FC<MonthChipsProps> = ({
   return (
     <div className={`flex flex-col gap-3 mt-3 overflow-x-hidden w-full max-w-full ${className}`}>
       {showTitle && (
-        <div className="flex items-center gap-2 text-xs font-semibold text-white/50 uppercase tracking-wider [&_svg]:text-sm">
+        <div className="flex items-center gap-2 text-xs font-semibold text-app-muted uppercase tracking-wider [&_svg]:text-sm">
           <FiCalendar />
           {t('filters.months')}
         </div>
@@ -46,8 +46,8 @@ const MonthChips: React.FC<MonthChipsProps> = ({
             onClick={() => onMonthClick(month.value)}
             className={`rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all duration-200 whitespace-nowrap border ${
               month.value === selectedMonth
-                ? 'bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] border-transparent text-white font-medium shadow-[0_2px_8px_rgba(91,141,239,0.3)]'
-                : 'bg-white/[0.05] border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white/90'
+                ? 'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] border-transparent text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)]'
+                : 'bg-app-surface border-app-subtle text-app-secondary hover:bg-app-surface-hover hover:border-[var(--color-border-medium)] hover:text-app-primary'
             }`}
             aria-label={`Select ${month.label}`}
           >

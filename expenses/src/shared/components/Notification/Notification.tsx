@@ -164,14 +164,18 @@ const Notification: FC<NotificationProps> = ({
   const isClickable = options?.onClick || hasActions;
 
   const typeStyles = {
-    success: 'border-l-4 border-l-emerald-500 [&_.notification-icon-box]:bg-emerald-500/10 [&_.notification-icon-box]:text-emerald-500 [&_.notification-title-box]:text-emerald-600 dark:[&_.notification-title-box]:text-emerald-400 [&_.notification-progress-bar]:bg-gradient-to-r [&_.notification-progress-bar]:from-emerald-500 [&_.notification-progress-bar]:to-emerald-400',
-    error: 'border-l-4 border-l-red-500 [&_.notification-icon-box]:bg-red-500/10 [&_.notification-icon-box]:text-red-500 [&_.notification-title-box]:text-red-600 dark:[&_.notification-title-box]:text-red-400 [&_.notification-progress-bar]:bg-gradient-to-r [&_.notification-progress-bar]:from-red-500 [&_.notification-progress-bar]:to-red-400',
-    warning: 'border-l-4 border-l-amber-500 [&_.notification-icon-box]:bg-amber-500/10 [&_.notification-icon-box]:text-amber-500 [&_.notification-title-box]:text-amber-600 dark:[&_.notification-title-box]:text-amber-400 [&_.notification-progress-bar]:bg-gradient-to-r [&_.notification-progress-bar]:from-amber-500 [&_.notification-progress-bar]:to-amber-400',
-    info: 'border-l-4 border-l-blue-500 [&_.notification-icon-box]:bg-blue-500/10 [&_.notification-icon-box]:text-blue-500 [&_.notification-title-box]:text-blue-600 dark:[&_.notification-title-box]:text-blue-400 [&_.notification-progress-bar]:bg-gradient-to-r [&_.notification-progress-bar]:from-blue-500 [&_.notification-progress-bar]:to-blue-400',
+    success:
+      'border-l-4 border-l-[var(--color-success)] [&_.notification-icon-box]:bg-[var(--color-success)]/15 [&_.notification-icon-box]:text-[var(--color-success)] [&_.notification-title-box]:text-[var(--color-success)] [&_.notification-progress-bar]:bg-[var(--color-success)]',
+    error:
+      'border-l-4 border-l-[var(--color-error)] [&_.notification-icon-box]:bg-[var(--color-error)]/15 [&_.notification-icon-box]:text-[var(--color-error)] [&_.notification-title-box]:text-[var(--color-error)] [&_.notification-progress-bar]:bg-[var(--color-error)]',
+    warning:
+      'border-l-4 border-l-[var(--color-warning)] [&_.notification-icon-box]:bg-[var(--color-warning)]/15 [&_.notification-icon-box]:text-[var(--color-warning)] [&_.notification-title-box]:text-[var(--color-warning)] [&_.notification-progress-bar]:bg-[var(--color-warning)]',
+    info:
+      'border-l-4 border-l-[var(--color-app-accent)] [&_.notification-icon-box]:bg-[var(--color-app-accent)]/15 [&_.notification-icon-box]:text-[var(--color-app-accent)] [&_.notification-title-box]:text-[var(--color-app-accent)] [&_.notification-progress-bar]:bg-[var(--color-app-accent)]',
   };
 
   const cardBase =
-    'w-full bg-white/[0.98] backdrop-blur-[20px] border border-black/[0.08] rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden relative cursor-default transition-all duration-[0.4s] ease-[cubic-bezier(0.16,1,0.3,1)] dark:bg-[rgba(26,26,26,0.95)] dark:border-white/10 dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)]';
+    'w-full bg-white/[0.98] backdrop-blur-[20px] border border-black/[0.08] rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden relative cursor-default transition-all duration-[0.4s] ease-[cubic-bezier(0.16,1,0.3,1)] dark:bg-[var(--color-app-bg)] dark:border-[var(--color-border-subtle)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)]';
   const visibleClass = isVisible ? 'translate-x-0 opacity-100' : 'translate-x-[calc(100%+24px)] opacity-0';
   const closingClass = isClosing ? 'translate-x-[calc(100%+24px)] opacity-0 pointer-events-none' : '';
   const clickableClass = isClickable ? 'cursor-pointer hover:translate-x-0 hover:scale-[1.02] hover:shadow-[0_12px_48px_rgba(0,0,0,0.15)] active:scale-[0.98]' : '';
@@ -202,7 +206,7 @@ const Notification: FC<NotificationProps> = ({
           <div className="notification-title-box text-xs font-semibold uppercase tracking-wider leading-tight">
             {getTitle()}
           </div>
-          <div className="text-[0.9375rem] font-normal leading-normal text-black/85 break-words dark:text-white/90">
+          <div className="text-[0.9375rem] font-normal leading-normal text-black/85 break-words dark:text-[var(--color-text-primary)]">
             {message}
           </div>
           {hasActions && (
@@ -212,8 +216,8 @@ const Notification: FC<NotificationProps> = ({
                   key={index}
                   className={`px-3.5 py-1.5 rounded-lg text-[0.8125rem] font-medium border cursor-pointer transition-all ${
                     action.style === 'primary'
-                      ? 'bg-black/10 text-black/90 dark:bg-white/15 dark:text-white/95 hover:bg-black/12 dark:hover:bg-white/20'
-                      : 'bg-transparent text-black/60 border-black/20 dark:text-white/70 dark:border-white/20 hover:bg-black/5 hover:text-black/80 dark:hover:bg-white/10 dark:hover:text-white/90'
+                      ? 'bg-black/10 text-black/90 dark:bg-[var(--color-surface-hover)] dark:text-[var(--color-text-primary)] hover:bg-black/12 dark:hover:bg-[var(--color-surface-hover)]'
+                      : 'bg-transparent text-black/60 border-black/20 dark:text-[var(--color-text-secondary)] dark:border-[var(--color-border-subtle)] hover:bg-black/5 hover:text-black/80 dark:hover:bg-[var(--color-surface)] dark:hover:text-[var(--color-text-primary)]'
                   }`}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -230,7 +234,7 @@ const Notification: FC<NotificationProps> = ({
           )}
         </div>
         <button
-          className="shrink-0 w-8 h-8 md:w-[32px] md:h-[32px] bg-black/5 border border-black/8 rounded-lg text-black/50 flex items-center justify-center p-0 transition-all hover:bg-black/10 hover:text-black/80 dark:bg-white/10 dark:border-white/10 dark:text-white/60 dark:hover:bg-white/15 dark:hover:text-white/90 [&_svg]:w-4 [&_svg]:h-4"
+          className="shrink-0 w-8 h-8 md:w-[32px] md:h-[32px] bg-black/5 border border-black/8 rounded-lg text-black/50 flex items-center justify-center p-0 transition-all hover:bg-black/10 hover:text-black/80 dark:bg-[var(--color-surface)] dark:border-[var(--color-border-subtle)] dark:text-[var(--color-text-muted)] dark:hover:bg-[var(--color-surface-hover)] dark:hover:text-[var(--color-text-secondary)] [&_svg]:w-4 [&_svg]:h-4"
           onClick={(e) => {
             e.stopPropagation();
             handleClose();
@@ -241,7 +245,7 @@ const Notification: FC<NotificationProps> = ({
         </button>
       </div>
       {!isPersistent && actualDuration > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-black/5 dark:bg-white/5 overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-black/5 dark:bg-[var(--color-surface)] overflow-hidden">
           <div
             className="notification-progress-bar h-full transition-[width] duration-100 linear rounded-b-2xl"
             style={{ width: `${progress}%` }}

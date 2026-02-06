@@ -109,23 +109,26 @@ const LoansList: React.FC<LoansListProps> = ({
     return sortDirection === 'asc' ? <FiArrowUp /> : <FiArrowDown />;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return '#4CAF50';
-      case 'active':
-        return '#4F8CFF';
-      case 'pending':
-        return '#FFB020';
-      default:
-        return 'rgba(255, 255, 255, 0.6)';
-    }
-  };
-
   const sortBtn =
-    'rounded-lg py-2 px-4 text-white/60 text-sm cursor-pointer flex items-center gap-2 transition-all duration-200 bg-white/[0.05] border-none hover:bg-white/10 hover:text-white/80 [&_svg]:text-sm';
+    'rounded-lg py-2 px-4 text-app-muted text-sm cursor-pointer flex items-center gap-2 transition-all duration-200 bg-app-surface border-none hover:bg-app-surface-hover hover:text-app-secondary [&_svg]:text-sm';
   const sortBtnActive =
-    'bg-[rgba(91,141,239,0.2)] text-[#5b8def] font-medium';
+    'bg-[color-mix(in_srgb,var(--color-app-accent)_20%,transparent)] text-[var(--color-app-accent)] font-medium';
+
+  /* Culori fixe pentru status loan – nu se schimbă cu tema */
+  const STATUS_COLORS = {
+    active: '#4F8CFF',
+    completed: '#22c55e',
+    pending: '#94a3b8',
+  } as const;
+
+  const getStatusStyles = (key: string) => {
+    const color = STATUS_COLORS[key as keyof typeof STATUS_COLORS] ?? STATUS_COLORS.pending;
+    return {
+      color,
+      borderColor: `color-mix(in srgb, ${color} 55%, transparent)`,
+      backgroundColor: color,
+    };
+  };
 
   return (
     <div
@@ -164,13 +167,13 @@ const LoansList: React.FC<LoansListProps> = ({
             {sortField === 'status' && getSortIcon('status')}
           </button>
         </div>
-        <div className="inline-flex items-center gap-1.5 py-2 px-4 rounded-lg text-white/60 text-sm bg-white/[0.05] border-none cursor-pointer hover:bg-white/10 hover:text-white/80 [&_svg]:text-sm">
+        <div className="inline-flex items-center gap-1.5 py-2 px-4 rounded-lg text-app-muted text-sm bg-app-surface border-none cursor-pointer hover:bg-app-surface-hover hover:text-app-secondary [&_svg]:text-sm">
           <FiSliders />
           <select
             value={statusFilter}
             onChange={(e) => handleStatusFilterChange(e.target.value)}
             aria-label="Filter by status"
-            className="bg-transparent border-none text-white text-[0.9rem] font-semibold outline-none cursor-pointer pr-1.5"
+            className="bg-transparent border-none text-app-primary text-[0.9rem] font-semibold outline-none cursor-pointer pr-1.5"
           >
             <option value="all">All</option>
             <option value="active">Active</option>
@@ -183,7 +186,8 @@ const LoansList: React.FC<LoansListProps> = ({
       {sortedLoans.map((loan) => {
         const status = getStatus(loan);
         const statusText = getStatusText(status);
-        const statusColor = getStatusColor(status);
+        const statusKey = (status === 'active' || status === 'completed' || status === 'pending') ? status : 'pending';
+        const statusStyles = getStatusStyles(statusKey);
         const progress = getProgress(loan);
 
         const isThisItemSwiped = swipedItemId === loan.id;
@@ -215,7 +219,7 @@ const LoansList: React.FC<LoansListProps> = ({
               to="/expenses/loan/$id"
               params={{ id: String(loan.id) }}
               data-id={loan.id}
-              className="bg-white/[0.05] rounded-2xl py-4 pr-6 pl-4 flex items-stretch gap-4 relative z-[1] no-underline cursor-pointer w-full min-h-0 touch-pan-y overflow-hidden transition-all duration-200 hover:bg-white/10 hover:translate-x-1 active:scale-[0.98]"
+              className="bg-app-surface rounded-2xl py-4 pr-6 pl-4 flex items-stretch gap-4 relative z-[1] no-underline cursor-pointer w-full min-h-0 touch-pan-y overflow-hidden transition-all duration-200 hover:bg-app-surface-hover hover:translate-x-1 active:scale-[0.98]"
               style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y pan-x pinch-zoom' }}
               onTouchStart={(e) => handleTouchStart(e as any, loan.id, listRef)}
               onTouchMove={(e) => handleTouchMove(e as any, listRef)}
@@ -225,38 +229,38 @@ const LoansList: React.FC<LoansListProps> = ({
             >
               <div className="flex-1 min-w-0 flex flex-col gap-2.5 relative z-[1]">
                 <div className="flex items-center gap-3 w-full justify-between">
-                  <div className="text-[0.96rem] font-semibold text-[#f5f6f7] leading-tight break-words">
+                  <div className="text-[0.96rem] font-semibold text-app-primary leading-tight break-words">
                     {loan.title ?? ''}
                   </div>
                   <div
                     className="py-0.5 px-2.5 rounded-full text-[0.75rem] font-bold uppercase tracking-wide whitespace-nowrap border bg-transparent"
                     style={{
-                      color: statusColor,
-                      borderColor: `${statusColor}55`,
+                      color: statusStyles.color,
+                      borderColor: statusStyles.borderColor,
                     }}
                   >
                     {statusText}
                   </div>
                 </div>
 
-                <div className="text-[1.4rem] font-bold text-[#f5f6f7]">
+                <div className="text-[1.4rem] font-bold text-app-primary">
                   {formatNumber(loan.fp ?? '')}
                 </div>
                 <ItemSyncIndicator status={isPending ? 'pending' : undefined} />
 
                 <div className="flex items-center gap-2.5 w-full">
-                  <div className="flex-1 h-1 bg-[#2a2c33] rounded-full overflow-hidden relative">
+                  <div className="flex-1 h-1 bg-app-surface rounded-full overflow-hidden relative">
                     <span
                       className="block h-full rounded-full transition-[width] duration-300 ease-out"
                       style={{
                         width: `${Math.min(progress, 100)}%`,
-                        backgroundColor: statusColor,
+                        backgroundColor: statusStyles.backgroundColor,
                       }}
                     />
                   </div>
                   <div
                     className="text-[0.76rem] font-semibold whitespace-nowrap"
-                    style={{ color: statusColor }}
+                    style={{ color: statusStyles.color }}
                   >
                     {Math.round(progress)}%
                   </div>

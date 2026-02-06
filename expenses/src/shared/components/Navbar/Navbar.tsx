@@ -43,7 +43,7 @@ const Navbar = () => {
 
   return (
     <div
-      className={`fixed left-0 right-0 bottom-0 z-[9999] touch-none backdrop-blur-[12px] bg-[rgba(26,26,26,0.95)] border-t border-white/[0.08] shadow-[0_-4px_24px_rgba(0,0,0,0.3)] py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0))] h-[calc(64px+env(safe-area-inset-bottom,0))] w-full max-w-[100vw] transform-none ${cssClass}`}
+      className={`fixed left-0 right-0 bottom-0 z-[9999] touch-none backdrop-blur-[12px] bg-[var(--color-app-bg)] border-t border-white/[0.08] shadow-[0_-4px_24px_rgba(0,0,0,0.3)] py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0))] h-[calc(64px+env(safe-area-inset-bottom,0))] w-full max-w-[100vw] transform-none ${cssClass}`}
     >
       <ul className="m-0 list-none p-0 h-full flex items-center justify-around gap-2">
         <li className="h-full flex-1 flex items-center justify-center">
@@ -52,7 +52,7 @@ const Navbar = () => {
             title={t('nav.home')}
             activeOptions={{ exact: true }}
             activeProps={{ className: 'active' }}
-            className="text-white/50 text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-white/70 hover:[&_svg]:scale-110 [&.active]:text-[#5b8def] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_rgba(91,141,239,0.4))]"
+            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiHome />
           </Link>
@@ -62,7 +62,7 @@ const Navbar = () => {
             to="/expenses/charts"
             title={t('nav.charts')}
             activeProps={{ className: 'active' }}
-            className="text-white/50 text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-white/70 hover:[&_svg]:scale-110 [&.active]:text-[#5b8def] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_rgba(91,141,239,0.4))]"
+            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiBarChart2 />
           </Link>
@@ -72,7 +72,7 @@ const Navbar = () => {
             to="/expenses/income"
             title={t('nav.income')}
             activeProps={{ className: 'active' }}
-            className="text-white/50 text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-white/70 hover:[&_svg]:scale-110 [&.active]:text-[#5b8def] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_rgba(91,141,239,0.4))]"
+            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiDollarSign />
           </Link>
@@ -82,7 +82,7 @@ const Navbar = () => {
             to="/expenses/loans"
             title={t('nav.loans')}
             activeProps={{ className: 'active' }}
-            className="text-white/50 text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-white/70 hover:[&_svg]:scale-110 [&.active]:text-[#5b8def] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_rgba(91,141,239,0.4))]"
+            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiCreditCard />
           </Link>
@@ -92,7 +92,7 @@ const Navbar = () => {
             to="/expenses/user"
             title={t('nav.profile')}
             activeProps={{ className: 'active' }}
-            className="text-white/50 text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-white/70 hover:[&_svg]:scale-110 [&.active]:text-[#5b8def] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_rgba(91,141,239,0.4))]"
+            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiUser />
           </Link>

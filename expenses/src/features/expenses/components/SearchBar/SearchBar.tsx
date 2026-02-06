@@ -66,7 +66,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         {/* Show selected category as chip inside search - clickable to change */}
         {categoryValue && !isSearchFocused && (
           <div
-            className="bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] text-white text-xs font-medium py-1.5 px-3 rounded-2xl whitespace-nowrap shrink-0 cursor-pointer transition-all duration-200 hover:from-[#6b9dff] hover:to-[#5a8dec] hover:scale-105"
+            className="bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-white text-xs font-medium py-1.5 px-3 rounded-2xl whitespace-nowrap shrink-0 cursor-pointer transition-all duration-200 hover:opacity-90 hover:scale-105"
             onClick={() => setIsSearchFocused(true)}
           >
             {selectedCategoryLabel}
@@ -109,7 +109,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               onClick={() => handleCategoryClick(category.value)}
               className={`rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all duration-200 whitespace-nowrap border ${
                 category.value === categoryValue
-                  ? 'bg-gradient-to-br from-[#5b8def] to-[#4a7ddc] border-transparent text-white font-medium shadow-[0_2px_8px_rgba(91,141,239,0.3)]'
+                  ? 'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] border-transparent text-white font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)]'
                   : 'bg-white/[0.05] border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white/90'
               }`}
             >
