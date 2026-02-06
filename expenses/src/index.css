@@ -55,11 +55,6 @@
   --color-input-focus-ring: color-mix(in srgb, var(--color-app-accent) 28%, transparent);
   --color-btn-on-accent: #fff;
 
-  /* Loan status (overridden per theme; fallback so pending/active/completed always have a color) */
-  --color-status-active: #5b8def;
-  --color-status-completed: #22c55e;
-  --color-status-pending: #94a3b8;
-
   /* Z-index */
   --z-dropdown: 1000;
   --z-sticky: 1020;
@@ -183,26 +178,6 @@ html[data-theme="indigo"] {
   --color-app-accent: #4f46e5;
   --color-app-accent-hover: oklch(0.52 0.22 275);
 }
-
-/* Loan status badge & progress (use theme variables for contrast) */
-.loan-status-badge-active {
-  color: var(--color-status-active);
-  border-color: color-mix(in srgb, var(--color-status-active) 55%, transparent);
-}
-.loan-status-badge-completed {
-  color: var(--color-status-completed);
-  border-color: color-mix(in srgb, var(--color-status-completed) 55%, transparent);
-}
-.loan-status-badge-pending {
-  color: var(--color-status-pending);
-  border-color: color-mix(in srgb, var(--color-status-pending) 55%, transparent);
-}
-.loan-progress-fill-active { background-color: var(--color-status-active); }
-.loan-progress-fill-completed { background-color: var(--color-status-completed); }
-.loan-progress-fill-pending { background-color: var(--color-status-pending); }
-.loan-status-text-active { color: var(--color-status-active); }
-.loan-status-text-completed { color: var(--color-status-completed); }
-.loan-status-text-pending { color: var(--color-status-pending); }
 
 /* Accessibility utility classes (theme-aware text and surfaces) */
 .text-app-primary { color: var(--color-text-primary); }
@@ -614,23 +589,32 @@ html[data-theme="indigo"] {
     transform: none;
   }
 
-  .modal-footer .btn-submit .loader span,
-  .modal-footer .btn-submit .loader .loader__element {
+  /* Loader puncte: container + puncte; pe buton submit rămân albe pentru contrast */
+  .loader {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .loader span,
+  .loader .loader__element {
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: var(--color-btn-on-accent);
+    background: var(--color-app-accent);
     animation: loading-dots 1.4s infinite ease-in-out both;
   }
-
-  .modal-footer .btn-submit .loader span:nth-child(1),
-  .modal-footer .btn-submit .loader .loader__element:nth-child(1) {
+  .loader span:nth-child(1),
+  .loader .loader__element:nth-child(1) {
     animation-delay: -0.32s;
   }
-
-  .modal-footer .btn-submit .loader span:nth-child(2),
-  .modal-footer .btn-submit .loader .loader__element:nth-child(2) {
+  .loader span:nth-child(2),
+  .loader .loader__element:nth-child(2) {
     animation-delay: -0.16s;
+  }
+  .modal-footer .btn-submit .loader span,
+  .modal-footer .btn-submit .loader .loader__element {
+    background: var(--color-btn-on-accent);
   }
 
   @media (max-width: 768px) {

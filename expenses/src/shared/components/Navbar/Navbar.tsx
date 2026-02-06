@@ -52,7 +52,7 @@ const Navbar = () => {
             title={t('nav.home')}
             activeOptions={{ exact: true }}
             activeProps={{ className: 'active' }}
-            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiHome />
           </Link>
@@ -62,7 +62,7 @@ const Navbar = () => {
             to="/expenses/charts"
             title={t('nav.charts')}
             activeProps={{ className: 'active' }}
-            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiBarChart2 />
           </Link>
@@ -72,7 +72,7 @@ const Navbar = () => {
             to="/expenses/income"
             title={t('nav.income')}
             activeProps={{ className: 'active' }}
-            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiDollarSign />
           </Link>
@@ -82,7 +82,7 @@ const Navbar = () => {
             to="/expenses/loans"
             title={t('nav.loans')}
             activeProps={{ className: 'active' }}
-            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiCreditCard />
           </Link>
@@ -92,7 +92,7 @@ const Navbar = () => {
             to="/expenses/user"
             title={t('nav.profile')}
             activeProps={{ className: 'active' }}
-            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiUser />
           </Link>
