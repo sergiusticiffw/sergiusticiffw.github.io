@@ -100,8 +100,16 @@
     appearance: none;
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    /* Keep >= 16px to avoid Safari auto-zoom on focus (iOS) – same approach as sergiusticiffw.github.io */
     font-size: 16px;
     line-height: 1.4;
+  }
+
+  /* Prevent Safari auto-zoom: do not allow inputs/textarea/select to shrink below 16px (Tailwind overrides) */
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: 1rem !important;
   }
 
   button {
