@@ -43,7 +43,7 @@ const Navbar = () => {
 
   return (
     <div
-      className={`fixed left-0 right-0 bottom-0 z-[9999] isolate touch-none backdrop-blur-[12px] bg-[var(--color-app-bg)] border-t border-white/[0.08] shadow-[0_-4px_24px_rgba(0,0,0,0.3)] py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0))] h-[calc(64px+env(safe-area-inset-bottom,0))] w-full max-w-[100vw] [transform:translateZ(0)] ${cssClass}`}
+      className={`fixed left-0 right-0 bottom-0 z-[9999] isolate touch-none backdrop-blur-[12px] bg-[var(--color-app-bg)] border-t border-white/[0.08] shadow-[0_-4px_24px_rgba(0,0,0,0.3)] py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0))] h-[calc(64px+env(safe-area-inset-bottom,0))] w-full max-w-[100vw] [-webkit-backface-visibility:hidden] [backface-visibility:hidden] ${cssClass}`}
     >
       <ul className="m-0 list-none p-0 h-full flex items-center justify-around gap-2">
         <li className="h-full flex-1 flex items-center justify-center">

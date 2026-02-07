@@ -2,7 +2,7 @@ import React, { useMemo, memo, useCallback } from 'react';
 import { useLocalization } from '@shared/context/localization';
 import { useExpenseData } from '@stores/expenseStore';
 import { FiCalendar, FiSearch, FiTag, FiX } from 'react-icons/fi';
-import { useFilterFocus, nudgeViewportForFixedRepaint } from '@shared/hooks/useFilterFocus';
+import { useFilterFocus } from '@shared/hooks/useFilterFocus';
 import { useMonthFilter } from '@shared/hooks/useMonthFilter';
 import { formatMonthOption } from '@shared/utils/utils';
 import MonthChips from '@shared/components/Common/MonthChips';
@@ -182,10 +182,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
         {hasActiveFilters && (
           <button
             type="button"
-            onClick={() => {
-              onClearFilters();
-              nudgeViewportForFixedRepaint();
-            }}
+            onClick={onClearFilters}
             className="flex items-center gap-1.5 shrink-0 py-2 px-3 rounded-xl border border-transparent text-white/50 hover:text-white/90 hover:bg-white/10 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80"
             title={t('filters.clearAll')}
             aria-label={t('filters.clearAll')}
