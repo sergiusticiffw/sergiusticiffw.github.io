@@ -24,6 +24,7 @@ import {
   DeleteConfirmDrawer,
   NoData,
 } from '@shared/components/Common';
+import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 import { FiCreditCard, FiPlus, FiEdit2 } from 'react-icons/fi';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import LoanForm from '@features/loans/components/Loan/LoanForm';
@@ -200,14 +201,14 @@ const Loans: FC = () => {
 
   if (loading) {
     return (
-      <div className="page-container">
+      <div className={PAGE_CONTAINER_CLASS}>
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="page-container px-4 md:px-6">
+    <div className={PAGE_CONTAINER_CLASS}>
       {/* Header */}
       <PageHeader
         title={t('loans.title')}

@@ -179,51 +179,20 @@ html[data-theme="indigo"] {
   --color-app-accent-hover: oklch(0.52 0.22 275);
 }
 
-/* Accessibility utility classes (theme-aware text and surfaces) */
-.text-app-primary { color: var(--color-text-primary); }
-.text-app-secondary { color: var(--color-text-secondary); }
-.text-app-muted { color: var(--color-text-muted); }
-.text-app-placeholder { color: var(--color-text-placeholder); }
-.bg-app-surface { background: var(--color-surface); }
-.bg-app-surface-hover { background: var(--color-surface-hover); }
-.border-app-subtle { border-color: var(--color-border-subtle); }
+/* Tailwind @layer utilities – tema + overflow touch (Tailwind nu are -webkit-overflow-scrolling) */
+@layer utilities {
+  .text-app-primary { color: var(--color-text-primary); }
+  .text-app-secondary { color: var(--color-text-secondary); }
+  .text-app-muted { color: var(--color-text-muted); }
+  .text-app-placeholder { color: var(--color-text-placeholder); }
+  .bg-app-surface { background: var(--color-surface); }
+  .bg-app-surface-hover { background: var(--color-surface-hover); }
+  .border-app-subtle { border-color: var(--color-border-subtle); }
+  .overflow-touch { -webkit-overflow-scrolling: touch; }
+}
 
+/* Custom CSS doar unde Tailwind nu poate: third-party (Vaul, FullCalendar), swipe overlay, keyframes */
 @layer components {
-  .page-container {
-    height: 100%;
-    background: var(--color-app-bg);
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
-    padding-top: 0;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0));
-    max-width: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    box-sizing: border-box;
-    width: 100%;
-    position: relative;
-  }
-
-  @media (max-width: 768px) {
-    .page-container {
-      padding-left: 1rem !important;
-      padding-right: 1rem !important;
-    }
-  }
-
-  .page-container * {
-    box-sizing: border-box;
-  }
-
-  /* Transaction filters expanded panel: prevent flex from collapsing MonthChips section */
-  .transaction-filters-expanded {
-    min-height: 0;
-  }
-  .transaction-filters-expanded > * {
-    flex-shrink: 0;
-  }
-
   /* Swipe actions (TransactionList, IncomeTable, LoansList, PaymentDetails) */
   .swipe-actions-background {
     position: absolute;

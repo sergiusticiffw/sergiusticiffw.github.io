@@ -178,6 +178,8 @@ const translations = {
     'login.errors': 'We have some errors',
     'login.signingIn': 'Signing in...',
     'login.signInWithGoogle': 'Sign in with Google',
+    'login.subtitle':
+      'Sign in with Google to access expenses, income and loans.',
 
     // Charts Page
     'charts.title': 'Analytics & Charts',
@@ -707,6 +709,8 @@ const translations = {
     'login.errors': 'Avem câteva erori',
     'login.signingIn': 'Se conectează...',
     'login.signInWithGoogle': 'Conectare cu Google',
+    'login.subtitle':
+      'Conectează-te cu Google pentru a accesa cheltuielile, veniturile și împrumuturile.',
 
     // Charts Page
     'charts.title': 'Analize și Grafice',

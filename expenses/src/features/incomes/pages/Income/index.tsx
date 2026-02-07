@@ -30,6 +30,7 @@ import {
   DeleteConfirmDrawer,
   NoData,
 } from '@shared/components/Common';
+import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 import { notificationType } from '@shared/utils/constants';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import {
@@ -205,14 +206,14 @@ const Income = () => {
 
   if (loading) {
     return (
-      <div className="page-container">
+      <div className={PAGE_CONTAINER_CLASS}>
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="page-container">
+    <div className={PAGE_CONTAINER_CLASS}>
       {/* Header */}
       <PageHeader
         title={t('income.title')}

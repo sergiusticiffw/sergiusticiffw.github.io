@@ -274,7 +274,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
 
       {isFilterFocused && (
         <div
-          className="transaction-filters-expanded flex flex-col gap-5 min-h-0 max-h-[min(400px,60vh)] overflow-x-hidden w-full max-w-full overflow-y-auto py-3 px-4 rounded-xl border border-white/[0.08] bg-white/[0.03] animate-[slideDown_0.2s_ease-out] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/[0.05] [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded hover:[&::-webkit-scrollbar-thumb]:bg-white/30"
+          className="flex flex-col gap-5 min-h-0 [&>*]:shrink-0 max-h-[min(400px,60vh)] overflow-x-hidden w-full max-w-full overflow-y-auto py-3 px-4 rounded-xl border border-white/[0.08] bg-white/[0.03] animate-[slideDown_0.2s_ease-out] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/[0.05] [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded hover:[&::-webkit-scrollbar-thumb]:bg-white/30"
           role="region"
           aria-label={t('filters.categories')}
         >

@@ -37,6 +37,7 @@ import Notification from '@shared/components/Notification/Notification';
 import { useLocalization } from '@shared/context/localization';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import { useChartsThemeSync } from '@shared/context/highcharts';
+import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 
 const Loan: React.FC = () => {
   useChartsThemeSync();
@@ -77,7 +78,7 @@ const Loan: React.FC = () => {
 
   if (!loan) {
     return (
-      <div className="page-container">
+      <div className={PAGE_CONTAINER_CLASS}>
         <LoadingSpinner />
       </div>
     );
@@ -226,7 +227,7 @@ const Loan: React.FC = () => {
   const iconTw = 'w-4 h-4 shrink-0 text-[var(--color-app-accent)]';
 
   return (
-    <div className="page-container loan-container">
+    <div className={`${PAGE_CONTAINER_CLASS} loan-container`}>
       {/* Header */}
       <div className="w-full text-center mb-5 pt-6 flex flex-col items-center">
         <h1 className="text-2xl font-bold text-white tracking-tight m-0">{loan?.title}</h1>

@@ -23,6 +23,7 @@ import DailyAverageTrend from '@features/expenses/components/Charts/DailyAverage
 import LastTwoMonthsAverage from '@features/expenses/components/Home/LastTwoMonthsAverage';
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
 import { useApiClient } from '@shared/hooks/useApiClient';
+import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 
 const componentMap = {
   MonthlyTotals,
@@ -92,7 +93,7 @@ const Charts = () => {
   ]);
 
   return (
-    <div className="page-container">
+    <div className={PAGE_CONTAINER_CLASS}>
       {/* Header */}
       <div className="text-center mb-6 pt-6">
         <h1 className="text-2xl font-bold m-0 text-white md:text-2xl max-sm:text-xl">

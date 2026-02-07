@@ -21,6 +21,7 @@ import {
   availableCharts,
   currencies,
 } from '@shared/utils/constants';
+import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 import { googleLogout } from '@react-oauth/google';
 
 const Profile = () => {
@@ -154,7 +155,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="page-container flex flex-col items-center">
+    <div className={`${PAGE_CONTAINER_CLASS} flex flex-col items-center pt-5 md:pt-4`}>
       {/* Header */}
       <div className="text-left mb-6 w-full max-w-[600px] md:mb-5">
         <h1 className="text-2xl md:text-xl font-semibold text-app-primary m-0 tracking-tight">

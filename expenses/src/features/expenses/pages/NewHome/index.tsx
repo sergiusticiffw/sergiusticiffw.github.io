@@ -25,6 +25,7 @@ import {
   DeleteConfirmDrawer,
   NoData,
 } from '@shared/components/Common';
+import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 import {
   FiPlus,
   FiEdit2,
@@ -283,7 +284,7 @@ const NewHome = () => {
       );
 
   return (
-    <div className="page-container">
+    <div className={PAGE_CONTAINER_CLASS}>
       {/* Delete Drawer (Vaul) */}
       <DeleteConfirmDrawer
         open={!!showDeleteModal}
