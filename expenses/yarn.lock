@@ -1502,14 +1502,15 @@
   integrity sha512-xyIfof8eHBuub1CkBnbKNKQXeRZC4dClhmzePHVOEel4G7lk/dW+TQ16da7CFdeNLv6u6Owf5VoBQxoo6DFTSA==
 
 "@tanstack/react-router@^1.157.18":
-  version "1.158.0"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.158.0.tgz#a9546dc429df7d3541a0d8392dff33a618cb449c"
-  integrity sha512-kvTaO6zjq9WWPyo1wwSZx95AjJ9KOvu23cOMgKeDdDQWKF3Z9q3fwhToKMKJoC11T2Vuivz+o/anrxCcOvdRzw==
+  version "1.159.4"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.159.4.tgz#0e6ab4b8d7028e668c3701617fcee6f449f95d65"
+  integrity sha512-z3DhNkRh/joky5b+X4jEYOn9q4Jieie6mVFP62wgwM9pVlNRYh6aIroiU95ZyOwDXDijItVEZtvHuipbLHy4jw==
   dependencies:
     "@tanstack/history" "1.154.14"
     "@tanstack/react-store" "^0.8.0"
-    "@tanstack/router-core" "1.158.0"
+    "@tanstack/router-core" "1.159.4"
     isbot "^5.1.22"
+    srvx "^0.11.2"
     tiny-invariant "^1.3.3"
     tiny-warning "^1.0.3"
 
@@ -1535,10 +1536,10 @@
   dependencies:
     "@tanstack/virtual-core" "3.13.18"
 
-"@tanstack/router-core@1.158.0":
-  version "1.158.0"
-  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.158.0.tgz#332874d3b5dc70942fdb1a779fad6fe80301e821"
-  integrity sha512-dRMcWY0UB/6OZqSCx/7iUvom0ol18rHSQladygVT8mlth7uxYx3n5BNse8C03efIE8y1Bx+VDOBAKpAZ9BgKog==
+"@tanstack/router-core@1.159.4":
+  version "1.159.4"
+  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.159.4.tgz#9638076f0280a52a0969da0ce0005e561d9e26a1"
+  integrity sha512-MFzPH39ijNO83qJN3pe7x4iAlhZyqgao3sJIzv3SJ4Pnk12xMnzuDzIAQT/1WV6JolPQEcw0Wr4L5agF8yxoeg==
   dependencies:
     "@tanstack/history" "1.154.14"
     "@tanstack/store" "^0.8.0"
@@ -1626,9 +1627,9 @@
   integrity sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==
 
 "@types/react@^19.1.9":
-  version "19.2.10"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.2.10.tgz#f3ea799e6b4cebad6dfd231c238fc9de7652e2d2"
-  integrity sha512-WPigyYuGhgZ/cTPRXB2EwUw+XvsRA3GqHlsP4qteqrnnjDrApbS7MxcGr/hke5iUoeB7E/gQtrs9I37zAJ0Vjw==
+  version "19.2.13"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.2.13.tgz#7cea30d7f60a01d97e4ece039c04e9056682218a"
+  integrity sha512-KkiJeU6VbYbUOp5ITMIc7kBfqlYkKA5KhEHVrGMmUUMt7NeaZg65ojdPk+FtNrBAOXNVM5QM72jnADjM+XVRAQ==
   dependencies:
     csstype "^3.2.2"
 
@@ -3271,6 +3272,11 @@ sourcemap-codec@^1.4.8:
   resolved "https://registry.yarnpkg.com/sourcemap-codec/-/sourcemap-codec-1.4.8.tgz#ea804bd94857402e6992d05a38ef1ae35a9ab4c4"
   integrity sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==
 
+srvx@^0.11.2:
+  version "0.11.2"
+  resolved "https://registry.yarnpkg.com/srvx/-/srvx-0.11.2.tgz#b12db58a6127a173e5d3a07270250d571edfdc64"
+  integrity sha512-u6NbjE84IJwm1XUnJ53WqylLTQ3BdWRw03lcjBNNeMBD+EFjkl0Cnw1RVaGSqRAo38pOHOPXJH30M6cuTINUxw==
+
 stop-iteration-iterator@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/stop-iteration-iterator/-/stop-iteration-iterator-1.1.0.tgz#f481ff70a548f6124d0312c3aa14cbfa7aa542ad"
@@ -3619,9 +3625,9 @@ vite-plugin-pwa@^1.0.0:
     workbox-window "^7.4.0"
 
 vite-tsconfig-paths@^6.0.3:
-  version "6.0.5"
-  resolved "https://registry.yarnpkg.com/vite-tsconfig-paths/-/vite-tsconfig-paths-6.0.5.tgz#5bcbb44d6ae0d12fe42f5915a6ad9846b0ed7805"
-  integrity sha512-f/WvY6ekHykUF1rWJUAbCU7iS/5QYDIugwpqJA+ttwKbxSbzNlqlE8vZSrsnxNQciUW+z6lvhlXMaEyZn9MSig==
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/vite-tsconfig-paths/-/vite-tsconfig-paths-6.1.0.tgz#8c3b9ecb676571f7c8f7849d92cd7de3b50faf75"
+  integrity sha512-kpd3sY9glHIDaq4V/Tlc1Y8WaKtutoc3B525GHxEVKWX42FKfQsXvjFOemu1I8VIN8pNbrMLWVTbW79JaRUxKg==
   dependencies:
     debug "^4.1.1"
     globrex "^0.1.2"

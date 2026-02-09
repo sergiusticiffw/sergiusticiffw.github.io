@@ -27,7 +27,7 @@ const DeleteConfirmDrawer: React.FC<DeleteConfirmDrawerProps> = ({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/70 backdrop-blur-[4px] z-[9999]" />
         <Drawer.Content
-          className="fixed left-0 right-0 bottom-0 z-[10000] bg-[var(--color-app-bg)] rounded-t-2xl shadow-[0_-8px_32px_rgba(0,0,0,0.5)] p-2 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0))] max-h-[min(85svh,520px)] overflow-auto outline-none border-t-[3px] border-t-[var(--color-app-accent)]"
+          className="fixed left-0 right-0 bottom-0 z-[10000] bg-[var(--color-app-bg)] rounded-t-2xl shadow-[0_-8px_32px_rgba(0,0,0,0.5)] p-2 pt-2 pb-[calc(1rem+env(safe-area-inset-bottom,0))] max-h-[min(85svh,520px)] overflow-auto outline-none"
           aria-label={title}
         >
           <div className="flex justify-center pt-1.5 pb-2">
