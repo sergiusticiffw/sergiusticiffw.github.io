@@ -43,6 +43,7 @@ const Profile = () => {
       JSON.parse(localStorage.getItem('visibleCharts')) || availableCharts,
   });
   const [quickAddAccordionOpen, setQuickAddAccordionOpen] = useState(false);
+  const [chartsAccordionOpen, setChartsAccordionOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLanguageChange = (
@@ -329,47 +330,62 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Charts Settings */}
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
-          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
-            <FiBarChart2 />
-            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
-              {t('profile.chartsSettings')}
-            </h3>
-          </div>
-
-          <div className="flex items-center gap-2.5 mb-2 py-2 md:py-1.5 relative [&_input]:w-[18px] [&_input]:h-[18px] [&_input]:min-w-[18px] [&_input]:min-h-[18px] [&_input]:accent-[var(--color-app-accent)] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:inline-block [&_input]:opacity-100 [&_input]:visible [&_label]:text-sm md:[&_label]:text-xs [&_label]:text-app-secondary [&_label]:cursor-pointer [&_label]:flex-1 [&_label]:select-none [&_label]:m-0">
-            <input
-              type="checkbox"
-              name="useChartsBackgroundColor"
-              id="useChartsBackgroundColor"
-              checked={useChartsBackgroundColor}
-              onChange={handleCheckboxChange}
-            />
-            <label htmlFor="useChartsBackgroundColor">
-              {t('profile.useChartsBackgroundColor')}
-            </label>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-white/[0.05] md:mt-4 md:pt-4">
-            <h4 className="text-xs font-semibold text-app-muted m-0 mb-3 md:mb-2.5 uppercase tracking-wider">
-              {t('profile.chartsVisibility')}
-            </h4>
-            <div className="grid grid-cols-1 gap-0">
-              {availableCharts.map((chart) => (
-                <div key={chart} className="flex items-center gap-2.5 mb-2 py-2 md:py-1.5 last:mb-0 [&_input]:w-[18px] [&_input]:h-[18px] [&_input]:min-w-[18px] [&_input]:min-h-[18px] [&_input]:accent-[var(--color-app-accent)] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:inline-block [&_label]:text-sm md:[&_label]:text-xs [&_label]:text-app-secondary [&_label]:cursor-pointer [&_label]:flex-1 [&_label]:select-none [&_label]:m-0">
-                  <input
-                    type="checkbox"
-                    id={chart}
-                    name={chart}
-                    checked={state.visibleCharts.includes(chart)}
-                    onChange={handleChartVisibilityChange}
-                  />
-                  <label htmlFor={chart}>{chart}</label>
-                </div>
-              ))}
+        {/* Charts Settings (accordion, closed by default) */}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden md:rounded-[10px] transition-colors active:border-white/10">
+          <button
+            type="button"
+            onClick={() => setChartsAccordionOpen((o) => !o)}
+            className="w-full flex items-center justify-between gap-2.5 py-5 px-5 md:py-4 md:px-4 text-left bg-transparent border-none cursor-pointer [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:shrink-0"
+            aria-expanded={chartsAccordionOpen}
+          >
+            <div className="flex items-center gap-2.5 [&_svg]:text-[var(--color-app-accent)]">
+              <FiBarChart2 />
+              <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
+                {t('profile.chartsSettings')}
+              </h3>
             </div>
-          </div>
+            {chartsAccordionOpen ? (
+              <FiChevronUp className="text-app-muted" aria-hidden />
+            ) : (
+              <FiChevronDown className="text-app-muted" aria-hidden />
+            )}
+          </button>
+          {chartsAccordionOpen && (
+            <div className="px-5 pb-5 pt-0 md:px-4 md:pb-4 border-t border-white/[0.06]">
+              <div className="flex items-center gap-2.5 mb-2 py-2 md:py-1.5 relative [&_input]:w-[18px] [&_input]:h-[18px] [&_input]:min-w-[18px] [&_input]:min-h-[18px] [&_input]:accent-[var(--color-app-accent)] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:inline-block [&_input]:opacity-100 [&_input]:visible [&_label]:text-sm md:[&_label]:text-xs [&_label]:text-app-secondary [&_label]:cursor-pointer [&_label]:flex-1 [&_label]:select-none [&_label]:m-0">
+                <input
+                  type="checkbox"
+                  name="useChartsBackgroundColor"
+                  id="useChartsBackgroundColor"
+                  checked={useChartsBackgroundColor}
+                  onChange={handleCheckboxChange}
+                />
+                <label htmlFor="useChartsBackgroundColor">
+                  {t('profile.useChartsBackgroundColor')}
+                </label>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-white/[0.05] md:mt-4 md:pt-4">
+                <h4 className="text-xs font-semibold text-app-muted m-0 mb-3 md:mb-2.5 uppercase tracking-wider">
+                  {t('profile.chartsVisibility')}
+                </h4>
+                <div className="grid grid-cols-1 gap-0">
+                  {availableCharts.map((chart) => (
+                    <div key={chart} className="flex items-center gap-2.5 mb-2 py-2 md:py-1.5 last:mb-0 [&_input]:w-[18px] [&_input]:h-[18px] [&_input]:min-w-[18px] [&_input]:min-h-[18px] [&_input]:accent-[var(--color-app-accent)] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:inline-block [&_label]:text-sm md:[&_label]:text-xs [&_label]:text-app-secondary [&_label]:cursor-pointer [&_label]:flex-1 [&_label]:select-none [&_label]:m-0">
+                      <input
+                        type="checkbox"
+                        id={chart}
+                        name={chart}
+                        checked={state.visibleCharts.includes(chart)}
+                        onChange={handleChartVisibilityChange}
+                      />
+                      <label htmlFor={chart}>{chart}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Quick Add Suggestion (accordion, closed by default) */}
