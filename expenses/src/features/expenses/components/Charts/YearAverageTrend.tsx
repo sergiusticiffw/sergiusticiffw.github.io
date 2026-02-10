@@ -13,6 +13,11 @@ import {
 } from '@shared/utils/utils';
 import { getMonthNames } from '@shared/utils/constants';
 import { getFinancialStabilityIcon } from '@shared/utils/helper';
+import {
+  buildLogarithmicYAxisOptions,
+  buildSharedCurrencyTooltipOptions,
+  sanitizeCategorySeriesForLogScale,
+} from '@shared/utils/highchartsHelpers';
 
 const YearAverageTrend = () => {
   const view = useExpenseChartView();
@@ -26,10 +31,10 @@ const YearAverageTrend = () => {
   const items = view?.totalsPerYearAndMonth ?? null;
   const totalPerYear = view?.totalPerYear ?? {};
   const totalSpent = view?.totalSpent ?? 0;
-  const formattedData = useMemo(
-    () => formatDataForChart(items, false, monthNames, true),
-    [items, monthNames]
-  );
+  const formattedData = useMemo(() => {
+    const base = formatDataForChart(items, false, monthNames, true);
+    return sanitizeCategorySeriesForLogScale(base);
+  }, [items, monthNames]);
 
   const options: Highcharts.Options = useMemo(
     () => ({
@@ -44,8 +49,8 @@ const YearAverageTrend = () => {
         categories: monthNames,
         crosshair: true,
       },
-      yAxis: { title: { text: currency } },
-      tooltip: { shared: true },
+      yAxis: buildLogarithmicYAxisOptions(currency, formatNumber),
+      tooltip: buildSharedCurrencyTooltipOptions(currency, formatNumber),
       credits: { enabled: false },
       series: formattedData as Highcharts.SeriesOptionsType[],
     }),

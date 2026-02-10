@@ -8,6 +8,11 @@ import { formatDataForChart, formatNumber } from '@shared/utils/utils';
 import { getMonthNames } from '@shared/utils/constants';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import { getFinancialStabilityIcon } from '@shared/utils/helper';
+import {
+  buildLogarithmicYAxisOptions,
+  buildSharedCurrencyTooltipOptions,
+  sanitizeCategorySeriesForLogScale,
+} from '@shared/utils/highchartsHelpers';
 
 interface YearIncomeAverageTrendProps {
   filteredIncomeData?: TransactionOrIncomeItem[];
@@ -113,44 +118,44 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
 
   // Get localized month names - must be called unconditionally (getMonthNames uses useLocalization hook)
   const monthNames = getMonthNames();
-  const formattedIncomeData = formatDataForChart(
-    totalIncomePerYearAndMonth,
-    false,
-    monthNames,
-    true
-  );
+  const formattedIncomeData = useMemo(() => {
+    const base = formatDataForChart(
+      totalIncomePerYearAndMonth,
+      false,
+      monthNames,
+      true
+    );
+    return sanitizeCategorySeriesForLogScale(base);
+  }, [totalIncomePerYearAndMonth, monthNames]);
 
-  const yearIncomeAverageOptions: Highcharts.Options = {
-    chart: {
-      type: 'line',
-      zooming: {
-        type: 'x',
+  const yearIncomeAverageOptions: Highcharts.Options = useMemo(
+    () => ({
+      chart: {
+        type: 'line',
+        zooming: {
+          type: 'x',
+        },
       },
-    },
-    boost: {
-      useGPUTranslations: true,
-    },
-    title: {
-      text: t('charts.yearsInReview'),
-    },
-    xAxis: {
-      type: 'category',
-      categories: monthNames,
-      crosshair: true,
-    },
-    yAxis: {
+      boost: {
+        useGPUTranslations: true,
+      },
       title: {
-        text: currency,
+        text: t('charts.yearsInReview'),
       },
-    },
-    tooltip: {
-      shared: true,
-    },
-    credits: {
-      enabled: false,
-    },
-    series: formattedIncomeData as any,
-  };
+      xAxis: {
+        type: 'category',
+        categories: monthNames,
+        crosshair: true,
+      },
+      yAxis: buildLogarithmicYAxisOptions(currency, formatNumber),
+      tooltip: buildSharedCurrencyTooltipOptions(currency, formatNumber),
+      credits: {
+        enabled: false,
+      },
+      series: formattedIncomeData as any,
+    }),
+    [t, monthNames, currency, formattedIncomeData]
+  );
 
   let sumDiff: number = 0;
   let sumIncome: number = 0;
