@@ -21,7 +21,7 @@ import { logger } from '@shared/utils/logger';
 import { sanitizeFormField } from '@shared/utils/sanitization';
 
 interface UseFormSubmitOptions<T> {
-  formType: 'add' | 'edit';
+  formType: 'add' | 'edit' | 'quick-add';
   initialState: T;
   values: any;
   nodeType: string;
@@ -65,8 +65,14 @@ export const useFormSubmit = <T extends Record<string, any>>({
   const showNotification = useNotification();
   const { t } = useLocalization();
 
+  const isAdd = formType === 'add' || formType === 'quick-add';
+  // For 'add'/'quick-add', merge prefill values (e.g. quick-add suggestion) over initialState when values has no nid
+  const addInitialState =
+    isAdd && values && typeof values === 'object' && !values.nid
+      ? { ...initialState, ...values }
+      : initialState;
   const [formState, setFormState] = useState<T>(
-    formType === 'add' ? initialState : values
+    isAdd ? addInitialState : values
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -106,11 +112,10 @@ export const useFormSubmit = <T extends Record<string, any>>({
         ...buildNodeData(formState, additionalParams),
       };
 
-      const method = formType === 'add' ? 'POST' : 'PATCH';
-      const url =
-        formType === 'add'
-          ? `${API_BASE_URL}/node?_format=json`
-          : `${API_BASE_URL}/node/${values.nid}?_format=json`;
+      const method = isAdd ? 'POST' : 'PATCH';
+      const url = isAdd
+        ? `${API_BASE_URL}/node?_format=json`
+        : `${API_BASE_URL}/node/${values.nid}?_format=json`;
 
       // Determine entity type
       const entityType =
@@ -123,10 +128,10 @@ export const useFormSubmit = <T extends Record<string, any>>({
       // For loans: online-first approach when online, offline-first when offline
       if (nodeType === 'loan' && dataDispatch && isIndexedDBAvailable()) {
         const messageKey = successMessageKeys
-          ? formType === 'add'
+          ? isAdd
             ? successMessageKeys.add
             : successMessageKeys.edit
-          : formType === 'add'
+          : isAdd
             ? 'notification.added'
             : 'notification.updated';
 
@@ -169,11 +174,11 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 pdt: node.field_rec_first_payment_date?.[0] || '',
                 frpd: node.field_recurring_payment_day?.[0] || '',
                 fls: node.field_loan_status?.[0] || 'draft',
-                cr: formType === 'add' ? Date.now() : undefined,
+                cr: isAdd ? Date.now() : undefined,
               };
 
               // Save to local DB with server data
-              await saveLoanLocally(loanToSave, formType === 'add');
+              await saveLoanLocally(loanToSave, isAdd);
 
               // Update UI immediately
               await updateLoansUILocally(dataDispatch);
@@ -195,7 +200,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
             // Fallback to offline save if online request fails
             const loanItem: any = {
-              id: formType === 'add' ? undefined : values.nid,
+              id: isAdd ? undefined : values.nid,
               title: node.title?.[0] || '',
               fp: node.field_principal?.[0] || '',
               sdt: node.field_start_date?.[0] || '',
@@ -205,7 +210,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               pdt: node.field_rec_first_payment_date?.[0] || '',
               frpd: node.field_recurring_payment_day?.[0] || '',
               fls: node.field_loan_status?.[0] || 'draft',
-              cr: formType === 'add' ? Date.now() : undefined,
+              cr: isAdd ? Date.now() : undefined,
             };
 
             await saveLoanOffline(loanItem, node, formType, url, method);
@@ -222,7 +227,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
         } else {
           // Offline: save locally and add to sync queue
           const loanItem: any = {
-            id: formType === 'add' ? undefined : values.nid,
+            id: isAdd ? undefined : values.nid,
             title: node.title?.[0] || '',
             fp: node.field_principal?.[0] || '',
             sdt: node.field_start_date?.[0] || '',
@@ -232,7 +237,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
             pdt: node.field_rec_first_payment_date?.[0] || '',
             frpd: node.field_recurring_payment_day?.[0] || '',
             fls: node.field_loan_status?.[0] || 'draft',
-            cr: formType === 'add' ? Date.now() : undefined,
+            cr: isAdd ? Date.now() : undefined,
           };
 
           await saveLoanOffline(loanItem, node, formType, url, method);
@@ -264,10 +269,10 @@ export const useFormSubmit = <T extends Record<string, any>>({
         }
 
         const messageKey = successMessageKeys
-          ? formType === 'add'
+          ? isAdd
             ? successMessageKeys.add
             : successMessageKeys.edit
-          : formType === 'add'
+          : isAdd
             ? 'notification.added'
             : 'notification.updated';
 
@@ -308,14 +313,14 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 fpsf: node.field_pay_single_fee?.[0] || '',
                 fnra: node.field_new_recurring_amount?.[0] || '',
                 fisp: node.field_is_simulated_payment?.[0] || 0,
-                cr: formType === 'add' ? Date.now() : undefined,
+                cr: isAdd ? Date.now() : undefined,
               };
 
               // Save to local DB with server data
               await savePaymentLocally(
                 loanId,
                 paymentToSave,
-                formType === 'add'
+                isAdd
               );
 
               // Update UI immediately
@@ -338,7 +343,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
             // Fallback to offline save if online request fails
             const paymentItem: any = {
-              id: formType === 'add' ? undefined : values.nid,
+              id: isAdd ? undefined : values.nid,
               title: node.title?.[0] || '',
               fdt: node.field_date?.[0] || '',
               fr: node.field_rate?.[0] || '',
@@ -346,7 +351,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               fpsf: node.field_pay_single_fee?.[0] || '',
               fnra: node.field_new_recurring_amount?.[0] || '',
               fisp: node.field_is_simulated_payment?.[0] || 0,
-              cr: formType === 'add' ? Date.now() : undefined,
+              cr: isAdd ? Date.now() : undefined,
             };
 
             await savePaymentOffline(
@@ -370,7 +375,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
         } else {
           // Offline: save locally and add to sync queue
           const paymentItem: any = {
-            id: formType === 'add' ? undefined : values.nid,
+            id: isAdd ? undefined : values.nid,
             title: node.title?.[0] || '',
             fdt: node.field_date?.[0] || '',
             fr: node.field_rate?.[0] || '',
@@ -378,7 +383,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
             fpsf: node.field_pay_single_fee?.[0] || '',
             fnra: node.field_new_recurring_amount?.[0] || '',
             fisp: node.field_is_simulated_payment?.[0] || 0,
-            cr: formType === 'add' ? Date.now() : undefined,
+            cr: isAdd ? Date.now() : undefined,
           };
 
           await savePaymentOffline(
@@ -408,10 +413,10 @@ export const useFormSubmit = <T extends Record<string, any>>({
         isIndexedDBAvailable()
       ) {
         const messageKey = successMessageKeys
-          ? formType === 'add'
+          ? isAdd
             ? successMessageKeys.add
             : successMessageKeys.edit
-          : formType === 'add'
+          : isAdd
             ? 'notification.added'
             : 'notification.updated';
 
@@ -453,11 +458,11 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 type: nodeType === 'transaction' ? 'transaction' : 'incomes',
                 cat: node.field_category?.[0],
                 dsc: node.field_description?.[0],
-                cr: formType === 'add' ? Date.now() : undefined,
+                cr: isAdd ? Date.now() : undefined,
               };
 
               // Save to local DB with server data
-              await saveExpenseLocally(itemToSave, formType === 'add');
+              await saveExpenseLocally(itemToSave, isAdd);
 
               // Update UI immediately
               await updateUILocally(dataDispatch);
@@ -479,7 +484,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
             // Fallback to offline save if online request fails
             const savedItem: TransactionOrIncomeItem = {
-              id: formType === 'add' ? undefined : values.nid,
+              id: isAdd ? undefined : values.nid,
               dt:
                 node.field_date?.[0] ||
                 node.title?.[0] ||
@@ -488,7 +493,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               type: nodeType === 'transaction' ? 'transaction' : 'incomes',
               cat: node.field_category?.[0],
               dsc: node.field_description?.[0],
-              cr: formType === 'add' ? Date.now() : undefined,
+              cr: isAdd ? Date.now() : undefined,
             };
 
             const savedId = await saveOffline(
@@ -512,7 +517,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
         } else {
           // Offline: save locally and add to sync queue
           const savedItem: TransactionOrIncomeItem = {
-            id: formType === 'add' ? undefined : values.nid,
+            id: isAdd ? undefined : values.nid,
             dt:
               node.field_date?.[0] ||
               node.title?.[0] ||
@@ -521,7 +526,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
             type: nodeType === 'transaction' ? 'transaction' : 'incomes',
             cat: node.field_category?.[0],
             dsc: node.field_description?.[0],
-            cr: formType === 'add' ? Date.now() : undefined,
+            cr: isAdd ? Date.now() : undefined,
           };
 
           await saveOffline(savedItem, node, formType, entityType, url, method);
@@ -557,10 +562,10 @@ export const useFormSubmit = <T extends Record<string, any>>({
               if (data.nid) {
                 onSuccess();
                 const messageKey = successMessageKeys
-                  ? formType === 'add'
+                  ? isAdd
                     ? successMessageKeys.add
                     : successMessageKeys.edit
-                  : formType === 'add'
+                  : isAdd
                     ? 'notification.added'
                     : 'notification.updated';
                 showNotification(t(messageKey), notificationType.SUCCESS);
@@ -584,10 +589,10 @@ export const useFormSubmit = <T extends Record<string, any>>({
               if (data.nid) {
                 onSuccess();
                 const messageKey = successMessageKeys
-                  ? formType === 'add'
+                  ? isAdd
                     ? successMessageKeys.add
                     : successMessageKeys.edit
-                  : formType === 'add'
+                  : isAdd
                     ? 'notification.added'
                     : 'notification.updated';
                 showNotification(t(messageKey), notificationType.SUCCESS);

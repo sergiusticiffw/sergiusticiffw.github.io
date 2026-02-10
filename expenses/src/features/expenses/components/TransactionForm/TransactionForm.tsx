@@ -11,7 +11,7 @@ import TagChips from '@shared/components/Common/TagChips';
 import { FiPlus, FiEdit2 } from 'react-icons/fi';
 
 interface TransactionFormProps {
-  formType: 'add' | 'edit';
+  formType: 'add' | 'edit' | 'quick-add';
   values: any;
   onSuccess: () => void;
   hideSubmitButton?: boolean;
@@ -243,9 +243,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 </div>
               ) : (
                 <>
-                  {formType === 'add' ? <FiPlus /> : <FiEdit2 />}
+                  {(formType === 'add' || formType === 'quick-add') ? <FiPlus /> : <FiEdit2 />}
                   <span>
-                    {formType === 'add'
+                    {(formType === 'add' || formType === 'quick-add')
                       ? t('transactionForm.title')
                       : t('transactionForm.editTitle')}
                   </span>

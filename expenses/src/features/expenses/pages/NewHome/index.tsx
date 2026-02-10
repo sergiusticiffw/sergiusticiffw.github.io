@@ -1,9 +1,10 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useAuthState } from '@shared/context/context';
 import { useExpenseData } from '@stores/expenseStore';
 import { useNotification } from '@shared/context/notification';
 import { useLocalization } from '@shared/context/localization';
 import { useChartsThemeSync } from '@shared/context/highcharts';
+import { useQuickAddSuggestion } from '@stores/settingsStore';
 import {
   deleteNode,
   formatNumber,
@@ -62,8 +63,49 @@ const NewHome = () => {
   const [transactionFormSubmitting, setTransactionFormSubmitting] =
     useState(false);
   const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
+  const [showQuickAddSuggestionModal, setShowQuickAddSuggestionModal] =
+    useState(false);
+  const [quickAddFormSubmitting, setQuickAddFormSubmitting] = useState(false);
+  const quickAddSlotKeyRef = useRef<string | null>(null);
 
+  const quickAdd = useQuickAddSuggestion();
   const apiClient = useApiClient();
+
+  const QUICK_ADD_DONE_PREFIX = 'quickAddDone_';
+
+  const markQuickAddDoneForSlot = () => {
+    const key = quickAddSlotKeyRef.current;
+    if (key) {
+      sessionStorage.setItem(QUICK_ADD_DONE_PREFIX + key, '1');
+      quickAddSlotKeyRef.current = null;
+    }
+    setShowQuickAddSuggestionModal(false);
+  };
+
+  // Afișează sugestia când e activată, în zilele alese și (dacă există) în intervalele orare.
+  // Cu time slots: o dată per interval; după add/decline nu mai apare până la următorul interval.
+  // Fără time slots: apare la fiecare refresh; după add/decline nu mai apare până la următorul refresh.
+  useEffect(() => {
+    if (!quickAdd.enabled) return;
+    const now = new Date();
+    const day = now.getDay();
+    const daysOfWeek = quickAdd.daysOfWeek ?? [];
+    const timeSlots = quickAdd.timeSlots ?? [];
+    if (daysOfWeek.length > 0 && !daysOfWeek.includes(day)) return;
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const hm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    if (timeSlots.length > 0) {
+      const slot = timeSlots.find((s) => hm >= s.start && hm < s.end);
+      if (!slot) return;
+      const slotKey = `${dateStr}_${slot.start}`;
+      if (sessionStorage.getItem(QUICK_ADD_DONE_PREFIX + slotKey)) return;
+      quickAddSlotKeyRef.current = slotKey;
+    } else {
+      // Fără time slots: nu persistăm „done” → la fiecare refresh apare din nou
+      quickAddSlotKeyRef.current = null;
+    }
+    setShowQuickAddSuggestionModal(true);
+  }, [quickAdd.enabled, quickAdd.daysOfWeek, quickAdd.timeSlots]);
 
   // Event-driven pending sync tracking (no polling) - for expenses
   const pendingSyncIds = usePendingSyncIds(['expense']);
@@ -380,6 +422,52 @@ const NewHome = () => {
           onSuccess={() => {
             setShowAddModal(false);
           }}
+        />
+      </VaulDrawer>
+
+      {/* Quick Add Suggestion Drawer (on app enter) */}
+      <VaulDrawer
+        show={showQuickAddSuggestionModal}
+        onClose={(e) => {
+          e.preventDefault();
+          markQuickAddDoneForSlot();
+        }}
+        title={t('transactionForm.addTransaction')}
+        hideCloseButton
+        footer={
+          <button
+            type="submit"
+            form="transaction-form-quick-add"
+            disabled={quickAddFormSubmitting}
+            className="btn-submit"
+          >
+            {quickAddFormSubmitting ? (
+              <div className="loader">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            ) : (
+              <>
+                <FiPlus />
+                <span>{t('transactionForm.title')}</span>
+              </>
+            )}
+          </button>
+        }
+      >
+        <TransactionForm
+          formType="quick-add"
+          values={{
+            field_amount: quickAdd.amount,
+            field_category: quickAdd.category,
+            field_description: quickAdd.description,
+          }}
+          hideSubmitButton={true}
+          onFormReady={(_submitHandler, isSubmitting) => {
+            setQuickAddFormSubmitting(isSubmitting);
+          }}
+          onSuccess={markQuickAddDoneForSlot}
         />
       </VaulDrawer>
 

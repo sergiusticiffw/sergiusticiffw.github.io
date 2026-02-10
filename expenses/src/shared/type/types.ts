@@ -207,8 +207,25 @@ export type LoanAction = {
   loading?: boolean;
 };
 
+export interface TimeSlot {
+  start: string; // "08:00" (HH:mm)
+  end: string;   // "09:00" (HH:mm)
+}
+
+export interface QuickAddSuggestionConfig {
+  enabled: boolean;
+  amount: string;
+  category: string;
+  description: string;
+  /** 0=Sun, 1=Mon, ... 6=Sat. Empty = toate zilele */
+  daysOfWeek: number[];
+  /** Intervale orare în care să apară sugestia. Empty = la orice oră */
+  timeSlots: TimeSlot[];
+}
+
 export interface SettingsState {
   currency: string;
   theme: string;
   useChartsBackgroundColor: boolean;
+  quickAddSuggestion: QuickAddSuggestionConfig;
 }

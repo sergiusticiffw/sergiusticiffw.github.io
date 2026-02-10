@@ -14,6 +14,8 @@ interface VaulDrawerProps {
   headerContent?: ReactNode;
   topContent?: ReactNode;
   footer?: ReactNode;
+  /** Ascunde butonul X din header (ex. Quick Add) */
+  hideCloseButton?: boolean;
 }
 
 const VaulDrawer: React.FC<VaulDrawerProps> = ({
@@ -24,6 +26,7 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
   headerContent,
   topContent,
   footer,
+  hideCloseButton = false,
 }) => {
   const drawerBodyRef = useRef<HTMLDivElement>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -145,14 +148,16 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
                   <Drawer.Title asChild>
                     <h3>{title}</h3>
                   </Drawer.Title>
-                  <button
-                    className="modal-close-btn"
-                    onClick={handleClose}
-                    type="button"
-                    aria-label="Close"
-                  >
-                    <FiX />
-                  </button>
+                  {!hideCloseButton && (
+                    <button
+                      className="modal-close-btn"
+                      onClick={handleClose}
+                      type="button"
+                      aria-label="Close"
+                    >
+                      <FiX />
+                    </button>
+                  )}
                 </>
               )}
             </div>
