@@ -828,6 +828,14 @@ html[data-theme="indigo"] {
 
 }
 
+/* Vaul drawer: fallback când dvh nu e suportat */
+@supports not (height: 1dvh) {
+  .vaul-drawer-content-fallback {
+    height: 75vh;
+    max-height: 75vh;
+  }
+}
+
 /* Keyframes – used by .loader, .btn-submit .loader, and animation utilities */
 @keyframes loader-bounce {
   0%, 80%, 100% {
