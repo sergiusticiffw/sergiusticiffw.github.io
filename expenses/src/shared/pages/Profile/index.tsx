@@ -17,6 +17,7 @@ import { useLocalization } from '@shared/context/localization';
 import { logout } from '@shared/context/actions';
 import { useNavigate } from '@tanstack/react-router';
 import { FiUser, FiLogOut, FiSettings, FiBarChart2, FiDroplet, FiZap, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import ChartsVisibilityDnd from '@shared/components/ChartsVisibilityDnd';
 import { fetchRequest, API_BASE_URL } from '@shared/utils/utils';
 import {
   notificationType,
@@ -192,21 +193,15 @@ const Profile = () => {
     localStorage.setItem('visibleCharts', JSON.stringify(state.visibleCharts));
   }, [state.visibleCharts]);
 
-  const handleChartVisibilityChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, checked } = event.target;
-    setState((prevState) => {
-      let updatedCharts;
-      if (checked) {
-        updatedCharts = [...prevState.visibleCharts, name]; // Append at the end
-      } else {
-        updatedCharts = prevState.visibleCharts.filter(
-          (chart) => chart !== name
-        ); // Remove but keep order
-      }
-      return { ...prevState, visibleCharts: updatedCharts };
-    });
+  const visibleChartsOrdered = state.visibleCharts.filter((c) =>
+    availableCharts.includes(c)
+  );
+  const hiddenChartsOrdered = availableCharts.filter(
+    (c) => !state.visibleCharts.includes(c)
+  );
+
+  const handleVisibleChartsChange = (visible: string[]) => {
+    setState((prev) => ({ ...prev, visibleCharts: visible }));
   };
 
   return (
@@ -369,20 +364,15 @@ const Profile = () => {
                 <h4 className="text-xs font-semibold text-app-muted m-0 mb-3 md:mb-2.5 uppercase tracking-wider">
                   {t('profile.chartsVisibility')}
                 </h4>
-                <div className="grid grid-cols-1 gap-0">
-                  {availableCharts.map((chart) => (
-                    <div key={chart} className="flex items-center gap-2.5 mb-2 py-2 md:py-1.5 last:mb-0 [&_input]:w-[18px] [&_input]:h-[18px] [&_input]:min-w-[18px] [&_input]:min-h-[18px] [&_input]:accent-[var(--color-app-accent)] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:inline-block [&_label]:text-sm md:[&_label]:text-xs [&_label]:text-app-secondary [&_label]:cursor-pointer [&_label]:flex-1 [&_label]:select-none [&_label]:m-0">
-                      <input
-                        type="checkbox"
-                        id={chart}
-                        name={chart}
-                        checked={state.visibleCharts.includes(chart)}
-                        onChange={handleChartVisibilityChange}
-                      />
-                      <label htmlFor={chart}>{chart}</label>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-xs text-app-muted mb-3">
+                  {t('profile.chartsDragHint')}
+                </p>
+                <ChartsVisibilityDnd
+                  visibleCharts={visibleChartsOrdered}
+                  hiddenCharts={hiddenChartsOrdered}
+                  onVisibleChartsChange={handleVisibleChartsChange}
+                  t={t}
+                />
               </div>
             </div>
           )}
