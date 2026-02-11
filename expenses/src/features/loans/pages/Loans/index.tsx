@@ -301,13 +301,13 @@ const Loans: FC = () => {
           values={{
             nid: '',
             title: '',
-            field_principal: 0,
+            field_principal: '',
             field_start_date: '',
             field_end_date: '',
-            field_rate: 0,
-            field_initial_fee: 0,
+            field_rate: '',
+            field_initial_fee: '',
             field_rec_first_payment_date: '',
-            field_recurring_payment_day: 0,
+            field_recurring_payment_day: '',
           }}
           hideSubmitButton={true}
           onFormReady={(_submitHandler, isSubmitting) => {

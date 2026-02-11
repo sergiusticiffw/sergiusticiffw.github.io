@@ -480,10 +480,10 @@ const Loan: React.FC = () => {
             nid: '',
             title: '',
             field_date: new Date().toISOString().slice(0, 10),
-            field_rate: 0,
-            field_pay_installment: 0,
-            field_pay_single_fee: 0,
-            field_new_recurring_amount: 0,
+            field_rate: '',
+            field_pay_installment: '',
+            field_pay_single_fee: '',
+            field_new_recurring_amount: '',
           }}
           startDate={loan.sdt}
           endDate={loan.edt}

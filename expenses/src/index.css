@@ -1046,6 +1046,30 @@ html[data-theme="indigo"] {
   position: relative;
 }
 
+/* When keyboard is open: footer sticks to bottom of visible viewport so "Add Transaction" stays tappable */
+.vaul-drawer-content.keyboard-visible .modal-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--footer-bottom, 0);
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  z-index: 10001;
+  box-sizing: border-box;
+}
+
+.vaul-drawer-content.keyboard-visible .modal-body {
+  padding-bottom: calc(0.5rem + 80px);
+}
+
+@media (max-width: 480px) {
+  .vaul-drawer-content.keyboard-visible .modal-body {
+    padding-bottom: calc(0.4rem + 76px);
+  }
+}
+
+/* Fallback when drawer has no keyboard-visible class (body still gets class for small padding) */
 .modal-body.keyboard-visible {
   padding-bottom: calc(0.5rem + 16px);
 }

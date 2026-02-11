@@ -379,7 +379,9 @@ const Income = () => {
       >
         <IncomeForm
           formType={!isNewModal ? 'edit' : 'add'}
-          values={focusedItem}
+          // Pentru „Add income” nu vrem să preluăm datele ultimei intrări selectate.
+          // Când isNewModal === true, trimitem valori goale ca să folosim initialState (data = azi).
+          values={isNewModal ? {} : focusedItem}
           hideSubmitButton={true}
           onFormReady={(_submitHandler, isSubmitting) => {
             setIncomeFormSubmitting(isSubmitting);

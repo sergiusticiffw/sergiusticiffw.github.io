@@ -105,6 +105,11 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     onClose(syntheticEvent);
   };
 
+  const footerBottomPx =
+    typeof window !== 'undefined' && keyboardVisible
+      ? window.innerHeight - viewportRect.top - viewportRect.height
+      : 0;
+
   const drawerContentStyle: React.CSSProperties | undefined = keyboardVisible
     ? {
         position: 'fixed',
@@ -114,6 +119,7 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
         bottom: 'auto',
         left: 0,
         right: 0,
+        ['--footer-bottom' as string]: `${footerBottomPx}px`,
       }
     : undefined;
 
@@ -122,7 +128,7 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
       <Drawer.Portal>
         <Drawer.Overlay className="modal-window" />
         <Drawer.Content
-          className="vaul-drawer-content"
+          className={`vaul-drawer-content${keyboardVisible ? ' keyboard-visible' : ''}`}
           aria-describedby={undefined}
           style={drawerContentStyle}
         >
