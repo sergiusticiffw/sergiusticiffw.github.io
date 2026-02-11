@@ -844,10 +844,12 @@ html.vaul-drawer-open {
   overflow: hidden;
 }
 
-/* Forțează resetarea scroll-ului pe mobil */
+/* Scroll pe mobil: touch + overscroll doar când drawer e deschis (permite pull-to-refresh când e închis) */
 body {
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: none; /* Previne bounce-ul care lasă spații albe */
+}
+html.vaul-drawer-open body {
+  overscroll-behavior-y: none; /* Previne bounce-ul când drawer e deschis */
 }
 
 /* Keyframes – used by .loader, .btn-submit .loader, and animation utilities */
