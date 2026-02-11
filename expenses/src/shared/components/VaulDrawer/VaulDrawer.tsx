@@ -28,18 +28,6 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
   const drawerBodyRef = useRef<HTMLDivElement>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-  /* Clasa pe <html> pentru CSS: fix pe iOS + blocare scroll */
-  useEffect(() => {
-    if (show) {
-      document.documentElement.classList.add('vaul-drawer-open');
-    } else {
-      document.documentElement.classList.remove('vaul-drawer-open');
-    }
-    return () => {
-      document.documentElement.classList.remove('vaul-drawer-open');
-    };
-  }, [show]);
-
   useEffect(() => {
     if (!show) {
       setKeyboardVisible(false);
@@ -50,14 +38,17 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
       if (window.visualViewport) {
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
-        const threshold = 150;
-        const isNowVisible = viewportHeight < windowHeight - threshold;
+        const isNowVisible = viewportHeight < windowHeight - 150;
 
-        // FIX: Când tastatura tocmai s-a închis
         if (keyboardVisible && !isNowVisible) {
-          // Această linie forțează browserul să readucă layout-ul "la zero"
+          // 1. Resetăm scroll-ul
           window.scrollTo(0, 0);
-          document.body.scrollTo(0, 0);
+
+          // 2. FORȚĂM browserul să recalculeze dvh-ul
+          // Trimitem un eveniment de resize fals care forțează CSS-ul să se actualizeze
+          setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+          }, 100);
         }
 
         setKeyboardVisible(isNowVisible);
@@ -110,10 +101,10 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
         <Drawer.Overlay className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[6px] [-webkit-backdrop-filter:blur(6px)]" />
 
         <Drawer.Content
-          className="fixed left-0 right-0 bottom-0 z-[10000] mx-auto flex flex-col overflow-hidden rounded-t-2xl bg-[var(--color-app-bg)] outline-none max-[480px]:rounded-t-[14px]"
+          className="fixed left-0 right-0 bottom-0 z-[10000] mx-auto flex flex-col overflow-hidden rounded-t-2xl bg-[var(--color-app-bg)] outline-none transition-[height] duration-300 ease-in-out"
           style={{
-            height: '75dvh', // folosim dvh pentru a ne adapta la keyboard
-            maxHeight: '75dvh',
+            height: keyboardVisible ? 'calc(100dvh - 20px)' : '75dvh',
+            maxHeight: '94dvh',
             width: '100%',
             maxWidth: '640px',
           }}
