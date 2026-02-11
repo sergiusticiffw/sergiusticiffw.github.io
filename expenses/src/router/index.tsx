@@ -26,10 +26,10 @@ function requireAuth() {
 
 function RootComponent() {
   return (
-    <div className="h-dvh flex flex-col overflow-visible" style={{ background: 'var(--color-app-bg)' }}>
+    <div className="app-container" style={{ background: 'var(--color-app-bg)' }}>
       <SyncStatusIndicator />
       <Navbar />
-      <main className="flex-1 min-h-0 pb-[95px] overflow-y-auto overflow-x-hidden w-full relative block [&:not(:has(.month-stats))]:pb-[60px]" style={{ background: 'var(--color-app-bg)' }}>
+      <main className="main-content" style={{ background: 'var(--color-app-bg)' }}>
         <Suspense fallback={<LoadingSpinner />}>
           <ErrorBoundary
             onError={(error, errorInfo) => {

@@ -155,6 +155,28 @@
   }
 }
 
+/* Layout: app-container + main-content (comportament ca înainte de Tailwind – scroll doar în main) */
+.app-container {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.main-content {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 95px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  position: relative;
+  display: block;
+}
+.main-content:not(:has(.month-stats)) {
+  padding-bottom: 60px;
+}
+
 /* ═══ Theme overrides: background + accent (financial apps trend) ═══ */
 html[data-theme="default"] {
   --color-app-bg: oklch(0.145 0.005 264);
@@ -858,7 +880,6 @@ html[data-theme="indigo"] {
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
   max-width: 640px;
   width: 100%;
-  max-height: 90vh;
   max-height: calc(90vh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 1.5rem);
   display: flex;
   flex-direction: column;
@@ -870,7 +891,6 @@ html[data-theme="indigo"] {
 
 @supports (height: 100svh) {
   .vaul-drawer-content {
-    max-height: 90svh;
     max-height: calc(90svh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 1.5rem);
   }
 }
