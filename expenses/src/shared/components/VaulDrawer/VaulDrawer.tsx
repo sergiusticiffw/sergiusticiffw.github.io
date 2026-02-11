@@ -66,6 +66,19 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     };
   }, [show]);
 
+  // When keyboard closes, clear any inline height/bottom Vaul or the browser may have set,
+  // so the drawer returns to its initial size (CSS max-height).
+  useEffect(() => {
+    if (!show || keyboardVisible) return;
+    const drawerEl = document.querySelector('[data-vaul-drawer]');
+    if (!drawerEl) return;
+    const raf = requestAnimationFrame(() => {
+      (drawerEl as HTMLElement).style.removeProperty('height');
+      (drawerEl as HTMLElement).style.removeProperty('bottom');
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [show, keyboardVisible]);
+
   useEffect(() => {
     if (!show || !drawerBodyRef.current || !keyboardVisible) return;
 
