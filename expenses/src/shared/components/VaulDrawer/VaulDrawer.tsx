@@ -14,8 +14,6 @@ interface VaulDrawerProps {
   headerContent?: ReactNode;
   topContent?: ReactNode;
   footer?: ReactNode;
-  /** Ascunde butonul X din header (ex. Quick Add) */
-  hideCloseButton?: boolean;
 }
 
 const VaulDrawer: React.FC<VaulDrawerProps> = ({
@@ -26,11 +24,9 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
   headerContent,
   topContent,
   footer,
-  hideCloseButton = false,
 }) => {
   const drawerBodyRef = useRef<HTMLDivElement>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const [viewportRect, setViewportRect] = useState<{ top: number; height: number }>({ top: 0, height: 0 });
 
   useEffect(() => {
     if (!show) {
@@ -39,15 +35,11 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     }
 
     const handleViewportChange = () => {
-      if (!window.visualViewport || !window.innerHeight) return;
-      const vv = window.visualViewport;
-      const viewportHeight = vv.height;
-      const windowHeight = window.innerHeight;
-      const threshold = 150;
-      const keyboardOpen = viewportHeight < windowHeight - threshold;
-      setKeyboardVisible(keyboardOpen);
-      if (keyboardOpen) {
-        setViewportRect({ top: vv.offsetTop, height: viewportHeight });
+      if (window.visualViewport && window.innerHeight) {
+        const viewportHeight = window.visualViewport.height;
+        const windowHeight = window.innerHeight;
+        const threshold = 150;
+        setKeyboardVisible(viewportHeight < windowHeight - threshold);
       }
     };
 
@@ -60,8 +52,14 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
 
     return () => {
       if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleViewportChange);
-        window.visualViewport.removeEventListener('scroll', handleViewportChange);
+        window.visualViewport.removeEventListener(
+          'resize',
+          handleViewportChange
+        );
+        window.visualViewport.removeEventListener(
+          'scroll',
+          handleViewportChange
+        );
       }
       window.removeEventListener('resize', handleViewportChange);
     };
@@ -80,11 +78,18 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
         setTimeout(() => {
           if (target && drawerBodyRef.current) {
             const inputRect = target.getBoundingClientRect();
-            const drawerBodyRect = drawerBodyRef.current.getBoundingClientRect();
-            const footerEl = drawerBodyRef.current.parentElement?.querySelector('.modal-footer');
-            const footerHeight = footerEl ? (footerEl as HTMLElement).getBoundingClientRect().height : 0;
+            const drawerBodyRect =
+              drawerBodyRef.current.getBoundingClientRect();
+            const footerEl =
+              drawerBodyRef.current.parentElement?.querySelector(
+                '.modal-footer'
+              );
+            const footerHeight = footerEl
+              ? (footerEl as HTMLElement).getBoundingClientRect().height
+              : 0;
             if (inputRect.bottom > drawerBodyRect.bottom - footerHeight) {
-              const scrollOffset = inputRect.bottom - drawerBodyRect.bottom + footerHeight + 20;
+              const scrollOffset =
+                inputRect.bottom - drawerBodyRect.bottom + footerHeight + 20;
               drawerBodyRef.current.scrollTop += scrollOffset;
             }
           }
@@ -105,32 +110,13 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     onClose(syntheticEvent);
   };
 
-  const footerBottomPx =
-    typeof window !== 'undefined' && keyboardVisible
-      ? window.innerHeight - viewportRect.top - viewportRect.height
-      : 0;
-
-  const drawerContentStyle: React.CSSProperties | undefined = keyboardVisible
-    ? {
-        position: 'fixed',
-        top: `${viewportRect.top}px`,
-        height: `${Math.round(viewportRect.height * 0.92)}px`,
-        maxHeight: 'none',
-        bottom: 'auto',
-        left: 0,
-        right: 0,
-        ['--footer-bottom' as string]: `${footerBottomPx}px`,
-      }
-    : undefined;
-
   return (
     <Drawer.Root open={show} onOpenChange={(open) => !open && handleClose()}>
       <Drawer.Portal>
         <Drawer.Overlay className="modal-window" />
         <Drawer.Content
-          className={`vaul-drawer-content${keyboardVisible ? ' keyboard-visible' : ''}`}
+          className="vaul-drawer-content"
           aria-describedby={undefined}
-          style={drawerContentStyle}
         >
           <div className="vaul-drawer__handle-wrap">
             <Drawer.Handle className="vaul-drawer__handle" />
@@ -145,16 +131,6 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
                   <Drawer.Title asChild>
                     <h3>{title}</h3>
                   </Drawer.Title>
-                  {!hideCloseButton && (
-                    <button
-                      className="modal-close-btn"
-                      onClick={handleClose}
-                      type="button"
-                      aria-label="Close"
-                    >
-                      <FiX />
-                    </button>
-                  )}
                 </>
               )}
             </div>

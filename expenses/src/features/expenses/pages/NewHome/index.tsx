@@ -154,7 +154,12 @@ const NewHome = () => {
 
   // Reset to most recent month when filters are applied
   useEffect(() => {
-    if (searchText !== '' || selectedCategory !== '' || selectedMonth !== '' || selectedTag !== '') {
+    if (
+      searchText !== '' ||
+      selectedCategory !== '' ||
+      selectedMonth !== '' ||
+      selectedTag !== ''
+    ) {
       setCurrentMonthIndex(0);
     }
   }, [searchText, selectedCategory, selectedMonth, selectedTag]);
@@ -223,9 +228,7 @@ const NewHome = () => {
         const categoryLabel =
           localizedCategories.find((cat) => cat.value === transaction.cat)
             ?.label || '';
-        const categoryMatch = categoryLabel
-          .toLowerCase()
-          .includes(searchLower);
+        const categoryMatch = categoryLabel.toLowerCase().includes(searchLower);
 
         if (!descriptionMatch && !categoryMatch) {
           return false;
@@ -241,11 +244,20 @@ const NewHome = () => {
 
       return true;
     });
-  }, [items.groupedData, currentMonth, searchText, selectedTag, localizedCategories]);
+  }, [
+    items.groupedData,
+    currentMonth,
+    searchText,
+    selectedTag,
+    localizedCategories,
+  ]);
 
   // Check if any filters are active
   const hasFilters =
-    searchText !== '' || selectedCategory !== '' || selectedMonth !== '' || selectedTag !== '';
+    searchText !== '' ||
+    selectedCategory !== '' ||
+    selectedMonth !== '' ||
+    selectedTag !== '';
 
   // Auto-navigate to first month with filtered data
   useEffect(() => {
@@ -331,7 +343,9 @@ const NewHome = () => {
       <DeleteConfirmDrawer
         open={!!showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        onConfirm={() => showDeleteModal && handleDelete(showDeleteModal, token)}
+        onConfirm={() =>
+          showDeleteModal && handleDelete(showDeleteModal, token)
+        }
         title={t('transaction.deleteTransaction')}
         message={t('modal.deleteTransaction')}
         isSubmitting={isSubmitting}
@@ -433,7 +447,6 @@ const NewHome = () => {
           markQuickAddDoneForSlot();
         }}
         title={t('transactionForm.addTransaction')}
-        hideCloseButton
         footer={
           <button
             type="submit"
