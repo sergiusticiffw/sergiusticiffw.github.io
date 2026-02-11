@@ -30,6 +30,7 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
 }) => {
   const drawerBodyRef = useRef<HTMLDivElement>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [viewportRect, setViewportRect] = useState<{ top: number; height: number }>({ top: 0, height: 0 });
 
   useEffect(() => {
     if (!show) {
@@ -38,11 +39,15 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     }
 
     const handleViewportChange = () => {
-      if (window.visualViewport && window.innerHeight) {
-        const viewportHeight = window.visualViewport.height;
-        const windowHeight = window.innerHeight;
-        const threshold = 150;
-        setKeyboardVisible(viewportHeight < windowHeight - threshold);
+      if (!window.visualViewport || !window.innerHeight) return;
+      const vv = window.visualViewport;
+      const viewportHeight = vv.height;
+      const windowHeight = window.innerHeight;
+      const threshold = 150;
+      const keyboardOpen = viewportHeight < windowHeight - threshold;
+      setKeyboardVisible(keyboardOpen);
+      if (keyboardOpen) {
+        setViewportRect({ top: vv.offsetTop, height: viewportHeight });
       }
     };
 
@@ -100,6 +105,18 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     onClose(syntheticEvent);
   };
 
+  const drawerContentStyle: React.CSSProperties | undefined = keyboardVisible
+    ? {
+        position: 'fixed',
+        top: `${viewportRect.top}px`,
+        height: `${Math.round(viewportRect.height * 0.92)}px`,
+        maxHeight: 'none',
+        bottom: 'auto',
+        left: 0,
+        right: 0,
+      }
+    : undefined;
+
   return (
     <Drawer.Root open={show} onOpenChange={(open) => !open && handleClose()}>
       <Drawer.Portal>
@@ -107,6 +124,7 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
         <Drawer.Content
           className="vaul-drawer-content"
           aria-describedby={undefined}
+          style={drawerContentStyle}
         >
           <div className="vaul-drawer__handle-wrap">
             <Drawer.Handle className="vaul-drawer__handle" />
