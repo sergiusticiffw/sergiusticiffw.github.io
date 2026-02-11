@@ -40,34 +40,26 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     // Handle visual viewport changes (when keyboard appears/disappears)
     const handleViewportChange = () => {
       if (window.visualViewport && window.innerHeight) {
+        // Consider keyboard visible if viewport is significantly smaller than window
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
-        const threshold = 150;
+        const threshold = 150; // Keyboard typically reduces height by ~200-300px
+
         setKeyboardVisible(viewportHeight < windowHeight - threshold);
       }
     };
 
-    // Pe unele dispozitive (ex. Android) resize pe visualViewport nu se declanșează la închiderea tastaturii.
-    // La focusout de pe input/textarea re-verificăm viewportul după un scurt delay ca drawer-ul să se redimensioneze.
-    let viewportCheckTimeout: ReturnType<typeof setTimeout> | null = null;
-    const handleFocusOut = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA') {
-        if (viewportCheckTimeout) window.clearTimeout(viewportCheckTimeout);
-        viewportCheckTimeout = window.setTimeout(handleViewportChange, 350);
-      }
-    };
-
+    // Initial check
     if (window.visualViewport) {
       handleViewportChange();
       window.visualViewport.addEventListener('resize', handleViewportChange);
       window.visualViewport.addEventListener('scroll', handleViewportChange);
     }
+
+    // Also handle window resize as fallback
     window.addEventListener('resize', handleViewportChange);
-    document.addEventListener('focusout', handleFocusOut);
 
     return () => {
-      if (viewportCheckTimeout) window.clearTimeout(viewportCheckTimeout);
       if (window.visualViewport) {
         window.visualViewport.removeEventListener(
           'resize',
@@ -79,7 +71,6 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
         );
       }
       window.removeEventListener('resize', handleViewportChange);
-      document.removeEventListener('focusout', handleFocusOut);
     };
   }, [show]);
 
