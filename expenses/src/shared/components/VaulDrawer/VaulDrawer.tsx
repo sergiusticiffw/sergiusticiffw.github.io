@@ -1,6 +1,7 @@
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { Drawer } from 'vaul';
 import { FiX } from 'react-icons/fi';
+import './VaulDrawer.css';
 
 interface VaulDrawerProps {
   show: boolean;
@@ -65,7 +66,6 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     };
   }, [show]);
 
-  // Scroll to active input when keyboard appears
   useEffect(() => {
     if (!show || !drawerBodyRef.current || !keyboardVisible) return;
 
@@ -87,9 +87,13 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
             const footerHeight = footerEl
               ? (footerEl as HTMLElement).getBoundingClientRect().height
               : 0;
+
             if (inputRect.bottom > drawerBodyRect.bottom - footerHeight) {
               const scrollOffset =
-                inputRect.bottom - drawerBodyRect.bottom + footerHeight + 20;
+                inputRect.bottom -
+                drawerBodyRect.bottom +
+                footerHeight +
+                20;
               drawerBodyRef.current.scrollTop += scrollOffset;
             }
           }
@@ -114,10 +118,7 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     <Drawer.Root open={show} onOpenChange={(open) => !open && handleClose()}>
       <Drawer.Portal>
         <Drawer.Overlay className="modal-window" />
-        <Drawer.Content
-          className="vaul-drawer-content"
-          aria-describedby={undefined}
-        >
+        <Drawer.Content className="vaul-drawer-content">
           <div className="vaul-drawer__handle-wrap">
             <Drawer.Handle className="vaul-drawer__handle" />
           </div>
@@ -131,6 +132,14 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
                   <Drawer.Title asChild>
                     <h3>{title}</h3>
                   </Drawer.Title>
+                  <button
+                    className="modal-close-btn"
+                    onClick={handleClose}
+                    type="button"
+                    aria-label="Close"
+                  >
+                    <FiX />
+                  </button>
                 </>
               )}
             </div>
