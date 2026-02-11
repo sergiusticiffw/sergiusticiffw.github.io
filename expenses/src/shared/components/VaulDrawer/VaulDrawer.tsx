@@ -66,20 +66,6 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     };
   }, [show]);
 
-  // When keyboard closes, clear any inline height/bottom Vaul or the browser may have set,
-  // so the drawer returns to its initial size (CSS max-height).
-  // Clear ALL [data-vaul-drawer] nodes so every popup (add/edit transaction, income, loan, payment) is fixed.
-  useEffect(() => {
-    if (!show || keyboardVisible) return;
-    const raf = requestAnimationFrame(() => {
-      document.querySelectorAll('[data-vaul-drawer]').forEach((el) => {
-        (el as HTMLElement).style.removeProperty('height');
-        (el as HTMLElement).style.removeProperty('bottom');
-      });
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [show, keyboardVisible]);
-
   useEffect(() => {
     if (!show || !drawerBodyRef.current || !keyboardVisible) return;
 
@@ -129,7 +115,11 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
   };
 
   return (
-    <Drawer.Root open={show} onOpenChange={(open) => !open && handleClose()}>
+    <Drawer.Root
+      open={show}
+      onOpenChange={(open) => !open && handleClose()}
+      repositionInputs={false}
+    >
       <Drawer.Portal>
         <Drawer.Overlay className="modal-window" />
         <Drawer.Content className="vaul-drawer-content">
