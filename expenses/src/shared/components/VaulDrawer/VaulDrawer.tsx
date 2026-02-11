@@ -28,6 +28,7 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
   const drawerBodyRef = useRef<HTMLDivElement>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
+  // Modifică useEffect-ul de viewport astfel:
   useEffect(() => {
     if (!show) {
       setKeyboardVisible(false);
@@ -41,35 +42,23 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
         const threshold = 150;
         const isNowVisible = viewportHeight < windowHeight - threshold;
 
-        // FIX CRITIC: Dacă tastatura s-a închis (a fost vizibilă și acum nu mai este)
+        // FIX: Când tastatura tocmai s-a închis
         if (keyboardVisible && !isNowVisible) {
-          // Forțăm browserul să reseteze scroll-ul ferestrei la 0
-          // Aceasta elimină spațiul negru/gol de sub Drawer
+          // Această linie forțează browserul să readucă layout-ul "la zero"
           window.scrollTo(0, 0);
-          document.body.scrollTop = 0;
+          document.body.scrollTo(0, 0);
         }
 
         setKeyboardVisible(isNowVisible);
       }
     };
 
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleViewportChange);
-      window.visualViewport.addEventListener('scroll', handleViewportChange);
-    }
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener(
-          'resize',
-          handleViewportChange
-        );
-        window.visualViewport.removeEventListener(
-          'scroll',
-          handleViewportChange
-        );
-      }
-    };
+    window.visualViewport?.addEventListener('resize', handleViewportChange);
+    return () =>
+      window.visualViewport?.removeEventListener(
+        'resize',
+        handleViewportChange
+      );
   }, [show, keyboardVisible]);
 
   // Scroll automat în interiorul drawer-ului când dai click pe un input
