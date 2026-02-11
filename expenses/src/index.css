@@ -831,8 +831,8 @@ html[data-theme="indigo"] {
 /* Vaul drawer: fallback când dvh nu e suportat */
 @supports not (height: 1dvh) {
   .vaul-drawer-content-fallback {
-    height: 75vh;
-    max-height: 75vh;
+    height: 85vh;
+    max-height: 85vh;
   }
 }
 

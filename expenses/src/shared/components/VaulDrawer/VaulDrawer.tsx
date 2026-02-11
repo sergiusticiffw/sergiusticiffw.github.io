@@ -38,7 +38,7 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
     return () => document.documentElement.classList.remove('vaul-drawer-open');
   }, [show]);
 
-  /* Când tastatura se închide: curăță height/bottom setate de Vaul ca drawer-ul să revină la 75dvh */
+  /* Când tastatura se închide: curăță height/bottom setate de Vaul ca drawer-ul să revină la 85dvh */
   useEffect(() => {
     if (!show || keyboardVisible) return;
     const raf = requestAnimationFrame(() => {
@@ -124,7 +124,7 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
         <Drawer.Overlay className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[6px] [-webkit-backdrop-filter:blur(6px)]" />
 
         <Drawer.Content
-          className="fixed left-0 right-0 bottom-0 z-[10000] mx-auto flex h-[75dvh] max-h-[94dvh] w-full max-w-[640px] flex-col overflow-hidden rounded-t-2xl bg-[var(--color-app-bg)] outline-none transition-[height] duration-300 ease-in-out"
+          className="fixed left-0 right-0 bottom-0 z-[10000] mx-auto flex h-[85dvh] max-h-[94dvh] w-full max-w-[640px] flex-col overflow-hidden rounded-t-2xl bg-[var(--color-app-bg)] outline-none transition-[height] duration-300 ease-in-out"
           style={
             keyboardVisible
               ? { height: 'calc(100dvh - 20px)', maxHeight: '94dvh' }
