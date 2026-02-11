@@ -1,191 +1,14 @@
-/* ===============================
-   OVERLAY
-================================= */
-.modal-window {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 9999;
-}
-
-/* ===============================
-   DRAWER CONTENT
-================================= */
-.vaul-drawer-content {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  width: 100%;
-  max-width: 640px;
-  margin: 0 auto;
-
-  background: var(--color-app-bg, #1a1a1a);
-  border-radius: 16px 16px 0 0;
-
-  display: flex;
-  flex-direction: column;
-
-  /* 🔥 60% din viewport */
-  height: 75dvh;
-  max-height: 75dvh;
-
-  overflow: hidden;
-  outline: none;
-  z-index: 10000;
-}
-
-@supports not (height: 60dvh) {
-  .vaul-drawer-content {
-    height: 60vh;
-    max-height: 60vh;
+/* Fallback când dvh nu e suportat */
+@supports not (height: 1dvh) {
+  .vaul-drawer-content-fallback {
+    height: 75vh;
+    max-height: 75vh;
   }
 }
 
-
 /* ===============================
-   HANDLE
-================================= */
-.vaul-drawer__handle-wrap {
-  display: flex;
-  justify-content: center;
-  padding: 8px 0;
-}
-
-.vaul-drawer__handle {
-  width: 42px;
-  height: 5px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* ===============================
-   HEADER
-================================= */
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--color-border-subtle, rgba(255,255,255,0.1));
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--color-text-primary, #fff);
-}
-
-.modal-close-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-muted, rgba(255,255,255,0.6));
-  font-size: 1.4rem;
-  padding: 8px;
-  border-radius: 50%;
-  transition: 0.2s ease;
-}
-
-.modal-close-btn:hover {
-  background: rgba(255,255,255,0.08);
-  color: #fff;
-}
-
-/* ===============================
-   BODY
-================================= */
-.modal-body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  padding: 1.25rem;
-
-  -webkit-overflow-scrolling: touch;
-}
-
-/* important for footer space */
-.modal-body > *:last-child {
-  margin-bottom: 80px;
-}
-
-/* ===============================
-   FOOTER
-================================= */
-.modal-footer {
-  position: sticky;
-  bottom: 0;
-
-  background: var(--color-app-bg, #1a1a1a);
-  border-top: 1px solid var(--color-border-subtle, rgba(255,255,255,0.1));
-
-  padding: 1rem 1.25rem;
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
-
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-/* ===============================
-   BUTTON (submit din footer)
-================================= */
-.modal-footer .btn-submit {
-  width: 100%;
-  min-height: 48px;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-
-  border-radius: 10px;
-  border: none;
-
-  font-weight: 600;
-  font-size: 0.95rem;
-
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-
-  color: var(--color-btn-on-accent, #fff);
-
-  background: linear-gradient(
-    135deg,
-    var(--color-app-accent),
-    var(--color-app-accent-hover)
-  );
-
-  box-shadow: 0 4px 14px
-    var(--color-app-accent-shadow, rgba(91,141,239,0.35));
-}
-
-.modal-footer .btn-submit:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px
-    var(--color-app-accent-shadow, rgba(91,141,239,0.5));
-}
-
-.modal-footer .btn-submit:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 3px 10px
-    var(--color-app-accent-shadow, rgba(91,141,239,0.35));
-}
-
-.modal-footer .btn-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* ===============================
-   FORM STYLES (doar în drawer)
+   FORM STYLES (în .modal-body)
+   – required *, inputs, focus
 ================================= */
 .modal-body .form-group {
   display: flex;
@@ -199,7 +22,7 @@
   padding-left: 0.8rem;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--color-text-secondary, rgba(255,255,255,0.8));
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.8));
 }
 
 .modal-body .form-group.required label::before {
@@ -218,17 +41,13 @@
 .modal-body select.form-input {
   width: 100%;
   min-height: 48px;
-
   border-radius: 10px;
-  border: 1px solid var(--color-input-border, rgba(255,255,255,0.15));
-
-  background: var(--color-input-bg, rgba(255,255,255,0.06));
+  border: 1px solid var(--color-input-border, rgba(255, 255, 255, 0.15));
+  background: var(--color-input-bg, rgba(255, 255, 255, 0.06));
   color: var(--color-text-primary, #fff);
-
   padding: 0.85rem;
   font-size: 1rem;
-
-  transition: 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .modal-body .form-input:focus,
@@ -237,7 +56,7 @@
   outline: none;
   border-color: var(--color-app-accent);
   box-shadow: 0 0 0 3px
-    var(--color-input-focus-ring, rgba(91,141,239,0.3));
+    var(--color-input-focus-ring, rgba(91, 141, 239, 0.3));
 }
 
 .modal-body .form-textarea {
@@ -246,19 +65,46 @@
 }
 
 /* ===============================
-   MOBILE TWEAKS
+   SUBMIT BUTTON (în .modal-footer)
 ================================= */
-@media (max-width: 480px) {
-  .vaul-drawer-content {
-    border-radius: 14px 14px 0 0;
-  }
+.modal-footer .btn-submit {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  color: var(--color-btn-on-accent, #fff);
+  background: linear-gradient(
+    135deg,
+    var(--color-app-accent),
+    var(--color-app-accent-hover)
+  );
+  box-shadow: 0 4px 14px
+    var(--color-app-accent-shadow, rgba(91, 141, 239, 0.35));
+}
 
-  .modal-body {
-    padding: 1rem;
-  }
+.modal-footer .btn-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px
+    var(--color-app-accent-shadow, rgba(91, 141, 239, 0.5));
+}
 
-  .modal-footer {
-    padding: 0.9rem 1rem;
-    padding-bottom: calc(0.9rem + env(safe-area-inset-bottom));
-  }
+.modal-footer .btn-submit:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px
+    var(--color-app-accent-shadow, rgba(91, 141, 239, 0.35));
+}
+
+.modal-footer .btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
