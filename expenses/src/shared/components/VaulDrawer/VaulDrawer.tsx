@@ -28,7 +28,18 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
   const drawerBodyRef = useRef<HTMLDivElement>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-  // Modifică useEffect-ul de viewport astfel:
+  /* Clasa pe <html> pentru CSS: fix pe iOS + blocare scroll */
+  useEffect(() => {
+    if (show) {
+      document.documentElement.classList.add('vaul-drawer-open');
+    } else {
+      document.documentElement.classList.remove('vaul-drawer-open');
+    }
+    return () => {
+      document.documentElement.classList.remove('vaul-drawer-open');
+    };
+  }, [show]);
+
   useEffect(() => {
     if (!show) {
       setKeyboardVisible(false);
