@@ -64,6 +64,7 @@ const NewHome = () => {
   const [transactionFormSubmitting, setTransactionFormSubmitting] =
     useState(false);
   const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [showQuickAddSuggestionModal, setShowQuickAddSuggestionModal] =
     useState(false);
   const [quickAddFormSubmitting, setQuickAddFormSubmitting] = useState(false);
@@ -528,6 +529,7 @@ const NewHome = () => {
                 setDateRange(null);
                 setCurrentMonthIndex(0);
               }}
+              onFilterPanelOpenChange={setFilterPanelOpen}
             />
           </div>
 
@@ -646,8 +648,8 @@ const NewHome = () => {
             </div>
           )}
 
-          {/* Month Navigation - Sticky at Bottom (Only for List View) */}
-          {activeView === 'list' && (
+          {/* Month Navigation - hidden when filter panel is open to avoid overlap */}
+          {activeView === 'list' && !filterPanelOpen && (
             <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 flex justify-center gap-4 z-[100] bg-[var(--color-app-bg)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5">
               <button
                 type="button"
@@ -670,14 +672,16 @@ const NewHome = () => {
             </div>
           )}
 
-          {/* FAB */}
-          <button
-            className="fab"
-            onClick={() => setShowAddModal(true)}
-            title={t('transactionForm.addTransaction')}
-          >
-            <FiPlus />
-          </button>
+          {/* FAB - hidden when filter panel is open to avoid overlap */}
+          {!filterPanelOpen && (
+            <button
+              className="fab"
+              onClick={() => setShowAddModal(true)}
+              title={t('transactionForm.addTransaction')}
+            >
+              <FiPlus />
+            </button>
+          )}
         </>
       )}
     </div>

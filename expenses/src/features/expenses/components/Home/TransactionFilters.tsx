@@ -30,6 +30,7 @@ interface TransactionFiltersProps {
   onDateRangeChange: (value: DateRangeValue) => void;
   onClearFilters: () => void;
   showMonthFilter?: boolean; // Control whether month filter is displayed
+  onFilterPanelOpenChange?: (open: boolean) => void;
 }
 
 const TransactionFilters: React.FC<TransactionFiltersProps> = ({
@@ -47,6 +48,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   onDateRangeChange,
   onClearFilters,
   showMonthFilter: _showMonthFilter = true,
+  onFilterPanelOpenChange,
 }) => {
   const { t } = useLocalization();
   const { data } = useExpenseData();
@@ -89,6 +91,10 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [isFilterFocused, handleBlurFromHook]);
+
+  useEffect(() => {
+    onFilterPanelOpenChange?.(isFilterFocused);
+  }, [isFilterFocused, onFilterPanelOpenChange]);
 
   const { monthOptions, getSelectedMonthLabel } = useMonthOptions({
     availableMonths,
@@ -242,7 +248,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   return (
     <div
       ref={filterContainerRef}
-      className="relative z-[10000] w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full"
+      className="relative z-[1100] w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full"
       role="search"
     >
       <div className={searchBar}>
@@ -343,54 +349,6 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           role="region"
           aria-label={t('filters.categories')}
         >
-          {/* Date range */}
-          <div className="flex flex-col gap-3 flex-shrink-0 px-4 pt-4 pb-1 border-b border-white/[0.06]">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-app-muted [&_svg]:size-3.5 [&_svg]:text-[var(--color-app-accent)]">
-              <FiCalendar aria-hidden />
-              {t('filters.dateRange')}
-            </div>
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-app-secondary text-sm font-medium">
-                  {t('filters.dateFrom')}
-                </label>
-                <input
-                  type="date"
-                  value={dateRange?.start ?? ''}
-                  onChange={(e) => {
-                    const start = e.target.value;
-                    const end = dateRange?.end ?? '';
-                    if (!start && !end) onDateRangeChange(null);
-                    else {
-                      const defaultEnd = start ? (start > new Date().toISOString().slice(0, 10) ? start : new Date().toISOString().slice(0, 10)) : '';
-                      onDateRangeChange({ start, end: end || defaultEnd });
-                    }
-                  }}
-                  className="min-h-11 w-full rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 py-2.5 text-app-primary text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-app-accent)]/40 focus:border-white/20"
-                  aria-label={t('filters.dateFrom')}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-app-secondary text-sm font-medium">
-                  {t('filters.dateTo')}
-                </label>
-                <input
-                  type="date"
-                  value={dateRange?.end ?? ''}
-                  onChange={(e) => {
-                    const end = e.target.value;
-                    const start = dateRange?.start ?? '';
-                    if (!start && !end) onDateRangeChange(null);
-                    else onDateRangeChange({ start: start || end, end });
-                  }}
-                  min={dateRange?.start}
-                  className="min-h-11 w-full rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 py-2.5 text-app-primary text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-app-accent)]/40 focus:border-white/20"
-                  aria-label={t('filters.dateTo')}
-                />
-              </div>
-            </div>
-          </div>
-
           {categoryChips.length > 0 && (
             <div className="flex flex-col gap-3 flex-shrink-0 px-4 py-4 border-b border-white/[0.06]">
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-app-muted [&_svg]:size-3.5 [&_svg]:text-[var(--color-app-accent)]">
@@ -459,6 +417,54 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
               </div>
             </div>
           )}
+
+          {/* Date range - after Tags */}
+          <div className="flex flex-col gap-3 flex-shrink-0 px-4 py-4 border-b border-white/[0.06]">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-app-muted [&_svg]:size-3.5 [&_svg]:text-[var(--color-app-accent)]">
+              <FiCalendar aria-hidden />
+              {t('filters.dateRange')}
+            </div>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-app-secondary text-sm font-medium">
+                  {t('filters.dateFrom')}
+                </label>
+                <input
+                  type="date"
+                  value={dateRange?.start ?? ''}
+                  onChange={(e) => {
+                    const start = e.target.value;
+                    const end = dateRange?.end ?? '';
+                    if (!start && !end) onDateRangeChange(null);
+                    else {
+                      const defaultEnd = start ? (start > new Date().toISOString().slice(0, 10) ? start : new Date().toISOString().slice(0, 10)) : '';
+                      onDateRangeChange({ start, end: end || defaultEnd });
+                    }
+                  }}
+                  className="min-h-11 w-full rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 py-2.5 text-app-primary text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-app-accent)]/40 focus:border-white/20"
+                  aria-label={t('filters.dateFrom')}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-app-secondary text-sm font-medium">
+                  {t('filters.dateTo')}
+                </label>
+                <input
+                  type="date"
+                  value={dateRange?.end ?? ''}
+                  onChange={(e) => {
+                    const end = e.target.value;
+                    const start = dateRange?.start ?? '';
+                    if (!start && !end) onDateRangeChange(null);
+                    else onDateRangeChange({ start: start || end, end });
+                  }}
+                  min={dateRange?.start}
+                  className="min-h-11 w-full rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 py-2.5 text-app-primary text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-app-accent)]/40 focus:border-white/20"
+                  aria-label={t('filters.dateTo')}
+                />
+              </div>
+            </div>
+          </div>
 
           <div className="flex-shrink-0 px-4 py-4">
             <MonthChips

@@ -58,6 +58,7 @@ const Income = () => {
   const loading = data.loading;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nrOfItemsToShow, setNrOfItemsToShow] = useState(10);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [filters, setFilters] = useState<{
     textFilter: string;
     selectedMonth: string;
@@ -282,6 +283,7 @@ const Income = () => {
             dateRange: null,
           })
         }
+        onFilterPanelOpenChange={setFilterPanelOpen}
       />
 
       {/* Income Stats Cards */}
@@ -432,17 +434,19 @@ const Income = () => {
         />
       </VaulDrawer>
 
-      {/* Floating Action Button – same pattern as transaction (Add Transaction) */}
-      <button
-        onClick={() => {
-          setShowEditModal(true);
-          setIsNewModal(true);
-        }}
-        className="fab"
-        title={t('incomeForm.addIncome')}
-      >
-        <FiPlus />
-      </button>
+      {/* FAB - hidden when filter panel is open to avoid overlap */}
+      {!filterPanelOpen && (
+        <button
+          onClick={() => {
+            setShowEditModal(true);
+            setIsNewModal(true);
+          }}
+          className="fab"
+          title={t('incomeForm.addIncome')}
+        >
+          <FiPlus />
+        </button>
+      )}
     </div>
   );
 };

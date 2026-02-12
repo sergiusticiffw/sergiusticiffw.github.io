@@ -54,6 +54,7 @@ const Charts = () => {
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
   const [selectedTag, setSelectedTag] = useState(data.selectedTag ?? '');
   const [dateRange, setDateRange] = useState<DateRangeValue>(data.dateRange ?? null);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
 
   const categoryLabels = getCategories();
 
@@ -127,6 +128,7 @@ const Charts = () => {
             setDateRange(null);
           }}
           showMonthFilter={false}
+          onFilterPanelOpenChange={setFilterPanelOpen}
         />
       </div>
 
@@ -212,14 +214,16 @@ const Charts = () => {
         />
       </VaulDrawer>
 
-      {/* Floating Action Button */}
-      <button
-        onClick={() => setShowAddModal(true)}
-        className="fab"
-        title={t('transactionForm.addTransaction')}
-      >
-        <FiPlus />
-      </button>
+      {/* FAB - hidden when filter panel is open to avoid overlap */}
+      {!filterPanelOpen && (
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="fab"
+          title={t('transactionForm.addTransaction')}
+        >
+          <FiPlus />
+        </button>
+      )}
     </div>
   );
 };

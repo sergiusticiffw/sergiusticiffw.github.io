@@ -21,6 +21,7 @@ interface IncomeFiltersProps {
   onTagFilterChange: (value: string) => void;
   onDateRangeChange: (value: DateRangeValue) => void;
   onClearFilters: () => void;
+  onFilterPanelOpenChange?: (open: boolean) => void;
 }
 
 const IncomeFilters: React.FC<IncomeFiltersProps> = ({
@@ -33,6 +34,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
   onTagFilterChange,
   onDateRangeChange,
   onClearFilters,
+  onFilterPanelOpenChange,
 }) => {
   const { t, language } = useLocalization();
   const { data } = useExpenseData();
@@ -74,6 +76,10 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [isFilterFocused, handleBlurFromHook]);
+
+  useEffect(() => {
+    onFilterPanelOpenChange?.(isFilterFocused);
+  }, [isFilterFocused, onFilterPanelOpenChange]);
 
   const { handleMonthClick } = useMonthFilter({
     selectedMonth,
@@ -179,7 +185,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
   return (
     <div
       ref={filterContainerRef}
-      className="relative z-[10000] w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full"
+      className="relative z-[1100] w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full"
       role="search"
     >
       <div className={searchBar}>
@@ -264,8 +270,38 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
           role="region"
           aria-label={t('filters.tags')}
         >
-          {/* Date range */}
-          <div className="flex flex-col gap-3 flex-shrink-0 px-4 pt-4 pb-1 border-b border-white/[0.06]">
+          {availableTags.length > 0 && (
+            <div className="flex flex-col gap-3 flex-shrink-0 px-4 py-4 border-b border-white/[0.06]">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-white/50 [&_svg]:size-3.5 [&_svg]:text-[var(--color-app-accent)]">
+                <FiTag aria-hidden />
+                {t('filters.tags') || 'Tags'}
+              </div>
+              <div className="flex flex-wrap gap-2 overflow-x-hidden w-full max-w-full">
+                <button
+                  type="button"
+                  onClick={() => handleTagClick('')}
+                  className={!selectedTag ? chipSelected : chipInactive}
+                  aria-pressed={!selectedTag}
+                >
+                  {t('filters.all') || 'All'}
+                </button>
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => handleTagClick(tag)}
+                    className={selectedTag === tag ? chipSelected : chipInactive}
+                    aria-pressed={selectedTag === tag}
+                  >
+                    {t(`income.tags.${tag}`) || tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Date range - after Tags */}
+          <div className="flex flex-col gap-3 flex-shrink-0 px-4 py-4 border-b border-white/[0.06]">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-white/50 [&_svg]:size-3.5 [&_svg]:text-[var(--color-app-accent)]">
               <FiCalendar aria-hidden />
               {t('filters.dateRange')}
@@ -311,36 +347,6 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
               </div>
             </div>
           </div>
-
-          {availableTags.length > 0 && (
-            <div className="flex flex-col gap-3 flex-shrink-0 px-4 py-4 border-b border-white/[0.06]">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-white/50 [&_svg]:size-3.5 [&_svg]:text-[var(--color-app-accent)]">
-                <FiTag aria-hidden />
-                {t('filters.tags') || 'Tags'}
-              </div>
-              <div className="flex flex-wrap gap-2 overflow-x-hidden w-full max-w-full">
-                <button
-                  type="button"
-                  onClick={() => handleTagClick('')}
-                  className={!selectedTag ? chipSelected : chipInactive}
-                  aria-pressed={!selectedTag}
-                >
-                  {t('filters.all') || 'All'}
-                </button>
-                {availableTags.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => handleTagClick(tag)}
-                    className={selectedTag === tag ? chipSelected : chipInactive}
-                    aria-pressed={selectedTag === tag}
-                  >
-                    {t(`income.tags.${tag}`) || tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="flex-shrink-0 px-4 py-4">
             <MonthChips
