@@ -242,7 +242,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   return (
     <div
       ref={filterContainerRef}
-      className="relative z-[1100] w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full"
+      className="relative z-[10000] w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full"
       role="search"
     >
       <div className={searchBar}>
