@@ -71,6 +71,8 @@ export interface DataItems {
   textFilter?: string;
   selectedMonth?: string;
   selectedTag?: string;
+  /** ISO date strings YYYY-MM-DD; when both set, filter transactions within [start, end] */
+  dateRange?: { start: string; end: string } | null;
   totalsPerYearAndMonth?: DataStructure;
   totalIncomePerYear?: ItemTotal;
   changedItems: Record<string, ChangedItemEntry>;
@@ -99,6 +101,7 @@ export type ExpenseAction =
       textFilter?: string;
       selectedMonth?: string;
       selectedTag?: string;
+      dateRange?: { start: string; end: string } | null;
     }
   | { type: 'REMOVE_DATA' }
   | { type: 'CLEAR_CHANGED_ITEM'; id: string };

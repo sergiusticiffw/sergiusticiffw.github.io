@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { useLocalization } from '@shared/context/localization';
 import { useExpenseData } from '@stores/expenseStore';
 import { FiCalendar, FiGrid, FiSearch, FiTag, FiX } from 'react-icons/fi';
@@ -13,17 +13,21 @@ import {
 } from '@shared/utils/utils';
 import { normalizeTag } from '@shared/hooks/useTags';
 import { sanitizeText } from '@shared/utils/sanitization';
+export type DateRangeValue = { start: string; end: string } | null;
+
 interface TransactionFiltersProps {
   searchValue: string;
   categoryValue: string;
   selectedMonth: string;
   selectedTag: string;
+  dateRange: DateRangeValue;
   categories: Array<{ value: string; label: string }>;
   availableMonths: string[];
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onMonthChange: (value: string) => void;
   onTagChange: (value: string) => void;
+  onDateRangeChange: (value: DateRangeValue) => void;
   onClearFilters: () => void;
   showMonthFilter?: boolean; // Control whether month filter is displayed
 }
@@ -39,6 +43,8 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   onCategoryChange,
   onMonthChange,
   onTagChange,
+  dateRange,
+  onDateRangeChange,
   onClearFilters,
   showMonthFilter: _showMonthFilter = true,
 }) => {
@@ -46,13 +52,43 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   const { data } = useExpenseData();
 
   // Use reusable hooks
+  const filterContainerRef = useRef<HTMLDivElement>(null);
   const {
     isFilterFocused,
     handleFocus,
-    handleBlur,
+    handleBlur: handleBlurFromHook,
     handleChipClick,
     handleSelection,
   } = useFilterFocus();
+
+  const handleBlur = useCallback(
+    (e: React.FocusEvent) => {
+      const next = e.relatedTarget as Node | null;
+      if (next != null) {
+        if (filterContainerRef.current?.contains(next)) return;
+        handleBlurFromHook();
+        return;
+      }
+      setTimeout(() => {
+        const el = document.activeElement as Node | null;
+        if (filterContainerRef.current?.contains(el)) return;
+        handleBlurFromHook();
+      }, 200);
+    },
+    [handleBlurFromHook]
+  );
+
+  useEffect(() => {
+    if (!isFilterFocused) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null;
+      if (target && filterContainerRef.current && !filterContainerRef.current.contains(target)) {
+        handleBlurFromHook();
+      }
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+  }, [isFilterFocused, handleBlurFromHook]);
 
   const { monthOptions, getSelectedMonthLabel } = useMonthOptions({
     availableMonths,
@@ -76,8 +112,18 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     [categoryValue, onCategoryChange, handleSelection]
   );
 
+  const hasDateRange = !!(dateRange?.start && dateRange?.end);
   const hasFilters =
-    searchValue || categoryValue || selectedMonth || selectedTag;
+    searchValue || categoryValue || selectedMonth || selectedTag || hasDateRange;
+
+  const dateRangeLabel = useMemo(() => {
+    if (!dateRange?.start || !dateRange?.end) return '';
+    const fmt = (s: string) => {
+      const d = new Date(s + 'T12:00:00');
+      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    };
+    return `${fmt(dateRange.start)} – ${fmt(dateRange.end)}`;
+  }, [dateRange]);
 
   // Get all available tags from transaction data
   const availableTags = useMemo(() => {
@@ -188,14 +234,17 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   const tagChipStyle =
     'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]';
   const chipActive =
-    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] border-transparent text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)] hover:shadow-[0_2px_12px_var(--color-app-accent-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80';
+    'rounded-xl py-2.5 px-4 text-sm font-medium cursor-pointer transition-all duration-200 border-0 bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] shadow-[0_2px_8px_var(--color-app-accent-shadow)] hover:opacity-95 hover:shadow-[0_2px_12px_var(--color-app-accent-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-app-bg)]';
   const chipInactive =
-    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-app-surface border-app-subtle text-app-secondary hover:bg-app-surface-hover hover:border-[var(--color-border-medium)] hover:text-app-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-app-accent)]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-app-bg)]';
-  const tagChipSelected =
-    'rounded-[20px] py-2 px-4 text-sm cursor-pointer transition-all border bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] border-transparent text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)] hover:shadow-[0_2px_12px_var(--color-app-accent-shadow)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2 focus-visible:ring-offset-black/80';
+    'rounded-xl py-2.5 px-4 text-sm cursor-pointer transition-all duration-200 border border-white/[0.12] bg-white/[0.06] text-app-secondary hover:bg-white/[0.1] hover:text-app-primary hover:border-white/[0.18] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-app-accent)]/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-app-bg)]';
+  const tagChipSelected = chipActive;
 
   return (
-    <div className="w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full" role="search">
+    <div
+      ref={filterContainerRef}
+      className="w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full"
+      role="search"
+    >
       <div className={searchBar}>
         <FiSearch className="text-app-placeholder text-lg shrink-0" aria-hidden />
 
@@ -239,6 +288,21 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           </div>
         )}
 
+        {hasDateRange && !isFilterFocused && (
+          <div
+            className={`${chipBase} ${monthChip}`}
+            onClick={handleChipClick}
+            onKeyDown={(e) => e.key === 'Enter' && handleChipClick()}
+            role="button"
+            tabIndex={0}
+            aria-label={dateRangeLabel}
+            title={dateRangeLabel}
+          >
+            <FiCalendar aria-hidden />
+            <span className="truncate max-w-[140px]">{dateRangeLabel}</span>
+          </div>
+        )}
+
         <input
           type="search"
           value={searchValue}
@@ -249,7 +313,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={
-            selectedMonth || categoryValue || selectedTag
+            selectedMonth || categoryValue || selectedTag || hasDateRange
               ? t('filters.searchInMonthCategory')
               : t('filters.search')
           }
@@ -274,13 +338,62 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
 
       {isFilterFocused && (
         <div
-          className="flex flex-col gap-5 min-h-0 [&>*]:shrink-0 max-h-[min(400px,60vh)] overflow-x-hidden w-full max-w-full overflow-y-auto py-3 px-4 rounded-xl border border-white/[0.08] bg-white/[0.03] animate-[slideDown_0.2s_ease-out] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/[0.05] [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded hover:[&::-webkit-scrollbar-thumb]:bg-white/30"
+          className="flex flex-col gap-0 min-h-0 max-h-[min(480px,65vh)] overflow-x-hidden w-full max-w-full overflow-y-auto rounded-2xl border border-white/[0.1] bg-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.4)] animate-[slideDown_0.2s_ease-out]
+            [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/[0.04] [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/30"
           role="region"
           aria-label={t('filters.categories')}
         >
+          {/* Date range */}
+          <div className="flex flex-col gap-3 flex-shrink-0 px-4 pt-4 pb-1 border-b border-white/[0.06]">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-app-muted [&_svg]:size-3.5 [&_svg]:text-[var(--color-app-accent)]">
+              <FiCalendar aria-hidden />
+              {t('filters.dateRange')}
+            </div>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-app-secondary text-sm font-medium">
+                  {t('filters.dateFrom')}
+                </label>
+                <input
+                  type="date"
+                  value={dateRange?.start ?? ''}
+                  onChange={(e) => {
+                    const start = e.target.value;
+                    const end = dateRange?.end ?? '';
+                    if (!start && !end) onDateRangeChange(null);
+                    else {
+                      const defaultEnd = start ? (start > new Date().toISOString().slice(0, 10) ? start : new Date().toISOString().slice(0, 10)) : '';
+                      onDateRangeChange({ start, end: end || defaultEnd });
+                    }
+                  }}
+                  className="min-h-11 w-full rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 py-2.5 text-app-primary text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-app-accent)]/40 focus:border-white/20"
+                  aria-label={t('filters.dateFrom')}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-app-secondary text-sm font-medium">
+                  {t('filters.dateTo')}
+                </label>
+                <input
+                  type="date"
+                  value={dateRange?.end ?? ''}
+                  onChange={(e) => {
+                    const end = e.target.value;
+                    const start = dateRange?.start ?? '';
+                    if (!start && !end) onDateRangeChange(null);
+                    else onDateRangeChange({ start: start || end, end });
+                  }}
+                  min={dateRange?.start}
+                  className="min-h-11 w-full rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 py-2.5 text-app-primary text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-app-accent)]/40 focus:border-white/20"
+                  aria-label={t('filters.dateTo')}
+                />
+              </div>
+            </div>
+          </div>
+
           {categoryChips.length > 0 && (
-            <div className="flex flex-col gap-3 flex-shrink-0">
-              <div className="text-app-muted text-xs font-semibold uppercase tracking-wider flex items-center gap-2 [&_svg]:text-sm shrink-0">
+            <div className="flex flex-col gap-3 flex-shrink-0 px-4 py-4 border-b border-white/[0.06]">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-app-muted [&_svg]:size-3.5 [&_svg]:text-[var(--color-app-accent)]">
                 <FiGrid aria-hidden />
                 {t('filters.categories')}
               </div>
@@ -301,8 +414,8 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           )}
 
           {availableTags.length > 0 && (
-            <div className="flex flex-col gap-3 flex-shrink-0">
-              <div className="text-app-muted text-xs font-semibold uppercase tracking-wider flex items-center gap-2 [&_svg]:text-sm shrink-0">
+            <div className="flex flex-col gap-3 flex-shrink-0 px-4 py-4 border-b border-white/[0.06]">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-app-muted [&_svg]:size-3.5 [&_svg]:text-[var(--color-app-accent)]">
                 <FiTag aria-hidden />
                 {t('filters.tags') || 'Tags'}
               </div>
@@ -347,7 +460,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             </div>
           )}
 
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 px-4 py-4">
             <MonthChips
               months={monthOptions}
               selectedMonth={selectedMonth}

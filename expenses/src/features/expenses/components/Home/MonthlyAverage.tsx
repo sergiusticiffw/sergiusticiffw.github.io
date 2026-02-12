@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useExpenseData } from '@stores/expenseStore';
 import { useLocalization } from '@shared/context/localization';
-import { formatNumber, getMonthsPassed } from '@shared/utils/utils';
+import { formatNumber, getMonthsInRange, getMonthsPassed } from '@shared/utils/utils';
 import {
   getClassNamesFor,
   useSortableData,
@@ -15,7 +15,10 @@ const MonthlyAverage = () => {
   // Note: Component will re-render when data.raw or data.categoryTotals change naturally
 
   const firstDay = data.raw[data.raw.length - 1]?.dt;
-  const monthsPassed: number = getMonthsPassed(firstDay);
+  const monthsPassed: number =
+    data.dateRange?.start && data.dateRange?.end
+      ? getMonthsInRange(data.dateRange.start, data.dateRange.end)
+      : getMonthsPassed(firstDay);
   // Get localized categories
   const localizedCategories = getCategories();
 

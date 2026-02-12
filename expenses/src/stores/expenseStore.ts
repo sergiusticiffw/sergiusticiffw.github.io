@@ -33,8 +33,9 @@ export function useExpenseLoading(): boolean {
 /** Derived: whether any filter is active. */
 export function useHasActiveFilters(): boolean {
   return useStore(expenseStore, (s) => {
-    const { category, textFilter, selectedMonth, selectedTag } = s;
-    return !!(category || textFilter || selectedMonth || selectedTag);
+    const { category, textFilter, selectedMonth, selectedTag, dateRange } = s;
+    const hasDateRange = dateRange?.start && dateRange?.end;
+    return !!(category || textFilter || selectedMonth || selectedTag || hasDateRange);
   });
 }
 

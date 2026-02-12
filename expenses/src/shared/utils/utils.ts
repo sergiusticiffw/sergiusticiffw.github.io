@@ -801,6 +801,15 @@ export const getMonthsPassed = (firstDay: string | number | Date): number => {
   return daysPassed ? parseFloat(String(daysPassed / 30.42)) : 0;
 };
 
+/** Number of calendar months between start and end (YYYY-MM-DD), inclusive. Minimum 1. */
+export const getMonthsInRange = (start: string, end: string): number => {
+  const s = new Date(start + 'T12:00:00');
+  const e = new Date(end + 'T12:00:00');
+  if (isNaN(s.getTime()) || isNaN(e.getTime())) return 1;
+  const months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()) + 1;
+  return Math.max(1, months);
+};
+
 export const transformToNumber = (value: string | number): number => {
   if (typeof value === 'number') {
     return value;

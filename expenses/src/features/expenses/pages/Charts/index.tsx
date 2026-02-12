@@ -3,7 +3,7 @@ import { useExpenseData } from '@stores/expenseStore';
 import { useLocalization } from '@shared/context/localization';
 import { availableCharts } from '@shared/utils/constants';
 import { getCategories } from '@shared/utils/constants';
-import { TransactionFilters } from '@features/expenses/components/Home';
+import TransactionFilters, { DateRangeValue } from '@features/expenses/components/Home/TransactionFilters';
 import { extractMonthsFromRawData } from '@shared/utils/utils';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionForm from '@features/expenses/components/TransactionForm';
@@ -53,6 +53,7 @@ const Charts = () => {
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
   const [selectedTag, setSelectedTag] = useState(data.selectedTag ?? '');
+  const [dateRange, setDateRange] = useState<DateRangeValue>(data.dateRange ?? null);
 
   const categoryLabels = getCategories();
 
@@ -80,13 +81,16 @@ const Charts = () => {
         type: 'FILTER_DATA',
         category: selectedCategory,
         textFilter: searchText,
+        selectedMonth: '',
         selectedTag: selectedTag,
+        dateRange: dateRange ?? null,
       });
     }
   }, [
     searchText,
     selectedCategory,
     selectedTag,
+    dateRange,
     loading,
     noData,
     dataDispatch,
@@ -108,6 +112,8 @@ const Charts = () => {
           categoryValue={selectedCategory}
           selectedMonth=""
           selectedTag={selectedTag}
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
           categories={categoryLabels}
           availableMonths={[]}
           onSearchChange={setSearchText}
@@ -118,6 +124,7 @@ const Charts = () => {
             setSearchText('');
             setSelectedCategory('');
             setSelectedTag('');
+            setDateRange(null);
           }}
           showMonthFilter={false}
         />

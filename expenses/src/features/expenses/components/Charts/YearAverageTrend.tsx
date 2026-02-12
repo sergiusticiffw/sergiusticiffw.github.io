@@ -9,6 +9,7 @@ import {
   calculateDaysFrom,
   formatDataForChart,
   formatNumber,
+  getMonthsInRange,
   getMonthsPassed,
 } from '@shared/utils/utils';
 import { getMonthNames } from '@shared/utils/constants';
@@ -24,6 +25,7 @@ const YearAverageTrend = () => {
   const raw = useStore(expenseStore, (s) => s.raw);
   const totalIncomePerYear = useStore(expenseStore, (s) => s.totalIncomePerYear) ?? {};
   const filteredRaw = useStore(expenseStore, (s) => s.filtered_raw);
+  const dateRange = useStore(expenseStore, (s) => s.dateRange);
   const currency = useSettingsCurrency();
   const { t } = useLocalization();
   const monthNames = getMonthNames();
@@ -58,10 +60,14 @@ const YearAverageTrend = () => {
   );
 
   const firstDay = raw?.[raw.length - 1]?.dt;
+  const monthsForAverage =
+    dateRange?.start && dateRange?.end
+      ? getMonthsInRange(dateRange.start, dateRange.end)
+      : firstDay
+        ? getMonthsPassed(firstDay as string)
+        : 0;
   const monthlyAverage: number =
-    firstDay && totalSpent
-      ? totalSpent / getMonthsPassed(firstDay as string)
-      : 0;
+    totalSpent && monthsForAverage ? totalSpent / monthsForAverage : 0;
   let sumIncome = 0;
   const isFiltered = !!filteredRaw;
   const itms = Object.values(filteredRaw || raw || []).filter(
@@ -126,7 +132,10 @@ const YearAverageTrend = () => {
                 {t('charts.totalMonths')}
               </td>
               <td className="py-3 px-4 text-right text-white font-medium text-[0.95rem] tabular-nums align-middle">
-                {getMonthsPassed(firstDay as string).toFixed(2)}{' '}
+                {(dateRange?.start && dateRange?.end
+                  ? getMonthsInRange(dateRange.start, dateRange.end)
+                  : getMonthsPassed(firstDay as string)
+                ).toFixed(2)}{' '}
                 {t('charts.months')}
               </td>
             </tr>

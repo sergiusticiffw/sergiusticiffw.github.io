@@ -185,8 +185,10 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
           {footer && (
             <div
               className="modal-footer sticky bottom-0 shrink-0 border-t border-app-subtle bg-[var(--color-app-bg)] px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl max-[480px]:px-4
-                [&_.btn-submit]:inline-flex [&_.btn-submit]:min-h-12 [&_.btn-submit]:w-full [&_.btn-submit]:cursor-pointer [&_.btn-submit]:items-center [&_.btn-submit]:justify-center [&_.btn-submit]:rounded-lg [&_.btn-submit]:font-semibold [&_.btn-submit]:text-[var(--color-btn-on-accent)]
-                [&_.btn-submit]:bg-[linear-gradient(135deg,var(--color-app-accent),var(--color-app-accent-hover))]"
+                [&_.btn-submit]:inline-flex [&_.btn-submit]:min-h-12 [&_.btn-submit]:w-full [&_.btn-submit]:cursor-pointer [&_.btn-submit]:items-center [&_.btn-submit]:justify-center [&_.btn-submit]:gap-2 [&_.btn-submit]:rounded-lg [&_.btn-submit]:border-0 [&_.btn-submit]:px-4 [&_.btn-submit]:py-3 [&_.btn-submit]:text-base [&_.btn-submit]:font-semibold [&_.btn-submit]:text-[var(--color-btn-on-accent)]
+                [&_.btn-submit]:bg-[linear-gradient(135deg,var(--color-app-accent),var(--color-app-accent-hover))] [&_.btn-submit]:shadow-[0_2px_8px_var(--color-app-accent-shadow)]
+                [&_.btn-submit_svg]:size-5 [&_.btn-submit_svg]:shrink-0
+                [&_.btn-submit:hover]:opacity-90 [&_.btn-submit:disabled]:opacity-70 [&_.btn-submit:disabled]:cursor-not-allowed"
             >
               {footer}
             </div>

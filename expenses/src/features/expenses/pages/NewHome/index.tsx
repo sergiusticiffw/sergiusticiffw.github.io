@@ -13,7 +13,7 @@ import {
 } from '@shared/utils/utils';
 import { getCategories, notificationType } from '@shared/utils/constants';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
-import TransactionFilters from '@features/expenses/components/Home/TransactionFilters';
+import TransactionFilters, { DateRangeValue } from '@features/expenses/components/Home/TransactionFilters';
 import TransactionList from '@features/expenses/components/TransactionList';
 import CalendarView from '@features/expenses/components/CalendarView';
 import VaulDrawer from '@shared/components/VaulDrawer';
@@ -55,6 +55,7 @@ const NewHome = () => {
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
   const [selectedMonth, setSelectedMonth] = useState(data.selectedMonth ?? '');
   const [selectedTag, setSelectedTag] = useState(data.selectedTag ?? '');
+  const [dateRange, setDateRange] = useState<DateRangeValue>(data.dateRange ?? null);
   const [showDeleteModal, setShowDeleteModal] = useState<string | false>(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -124,8 +125,9 @@ const NewHome = () => {
       textFilter: searchText,
       selectedMonth: selectedMonth,
       selectedTag: selectedTag,
+      dateRange: dateRange ?? null,
     });
-  }, [searchText, selectedCategory, selectedMonth, selectedTag, dataDispatch]);
+  }, [searchText, selectedCategory, selectedMonth, selectedTag, dateRange, dataDispatch]);
 
   const items = data.filtered || data;
   const localizedCategories = getCategories();
@@ -153,16 +155,18 @@ const NewHome = () => {
   const currentMonth = months[currentMonthIndex] || months[0] || '';
 
   // Reset to most recent month when filters are applied
+  const hasDateRangeFilter = !!(dateRange?.start && dateRange?.end);
   useEffect(() => {
     if (
       searchText !== '' ||
       selectedCategory !== '' ||
       selectedMonth !== '' ||
-      selectedTag !== ''
+      selectedTag !== '' ||
+      hasDateRangeFilter
     ) {
       setCurrentMonthIndex(0);
     }
-  }, [searchText, selectedCategory, selectedMonth, selectedTag]);
+  }, [searchText, selectedCategory, selectedMonth, selectedTag, hasDateRangeFilter]);
 
   // Navigate to selected month
   useEffect(() => {
@@ -257,7 +261,8 @@ const NewHome = () => {
     searchText !== '' ||
     selectedCategory !== '' ||
     selectedMonth !== '' ||
-    selectedTag !== '';
+    selectedTag !== '' ||
+    hasDateRangeFilter;
 
   // Auto-navigate to first month with filtered data
   useEffect(() => {
@@ -507,6 +512,8 @@ const NewHome = () => {
               categoryValue={selectedCategory}
               selectedMonth={selectedMonth}
               selectedTag={selectedTag}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
               categories={localizedCategories}
               availableMonths={allMonths}
               onSearchChange={setSearchText}
@@ -518,6 +525,7 @@ const NewHome = () => {
                 setSelectedCategory('');
                 setSelectedMonth('');
                 setSelectedTag('');
+                setDateRange(null);
                 setCurrentMonthIndex(0);
               }}
             />

@@ -548,6 +548,8 @@ const translations = {
     'filters.tags': 'Tags',
     'filters.all': 'All',
     'filters.dateRange': 'Date Range',
+    'filters.dateFrom': 'From',
+    'filters.dateTo': 'To',
     'filters.clear': 'Clear Filters',
 
     // Calendar
@@ -1113,6 +1115,8 @@ const translations = {
     'filters.all': 'Toate',
     'filters.months': 'Luni',
     'filters.dateRange': 'Interval de Date',
+    'filters.dateFrom': 'De la',
+    'filters.dateTo': 'Până la',
     'filters.clear': 'Curăță Filtrele',
 
     // Calendar

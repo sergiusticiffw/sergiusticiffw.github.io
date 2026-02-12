@@ -8,6 +8,7 @@ import IncomeForm from '@features/incomes/components/Income/IncomeForm';
 import {
   deleteNode,
   formatNumber,
+  getMonthsInRange,
   getMonthsPassed,
   hasTag,
 } from '@shared/utils/utils';
@@ -57,10 +58,16 @@ const Income = () => {
   const loading = data.loading;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nrOfItemsToShow, setNrOfItemsToShow] = useState(10);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    textFilter: string;
+    selectedMonth: string;
+    selectedTag: string;
+    dateRange: { start: string; end: string } | null;
+  }>({
     textFilter: '',
     selectedMonth: '',
     selectedTag: '',
+    dateRange: null,
   });
   const apiClient = useApiClient();
 
@@ -115,6 +122,16 @@ const Income = () => {
         }
       }
 
+      // Date range filter
+      if (filters.dateRange?.start && filters.dateRange?.end) {
+        if (!item.dt) return false;
+        const y = new Date(item.dt).getFullYear();
+        const m = String(new Date(item.dt).getMonth() + 1).padStart(2, '0');
+        const d = String(new Date(item.dt).getDate()).padStart(2, '0');
+        const itemDate = `${y}-${m}-${d}`;
+        if (itemDate < filters.dateRange.start || itemDate > filters.dateRange.end) return false;
+      }
+
       return true;
     });
   }, [data.incomeData, filters]);
@@ -124,18 +141,25 @@ const Income = () => {
       textFilter: string;
       selectedMonth: string;
       selectedTag: string;
+      dateRange?: { start: string; end: string } | null;
     }) => {
       setFilters((prev) => {
         const hasFilterChanged =
           newFilters.textFilter !== prev.textFilter ||
           newFilters.selectedMonth !== prev.selectedMonth ||
-          newFilters.selectedTag !== prev.selectedTag;
+          newFilters.selectedTag !== prev.selectedTag ||
+          (newFilters.dateRange !== undefined && JSON.stringify(newFilters.dateRange) !== JSON.stringify(prev.dateRange));
 
         if (hasFilterChanged) {
           setNrOfItemsToShow(20);
         }
 
-        return newFilters;
+        return {
+          textFilter: newFilters.textFilter,
+          selectedMonth: newFilters.selectedMonth,
+          selectedTag: newFilters.selectedTag,
+          dateRange: newFilters.dateRange !== undefined ? newFilters.dateRange : prev.dateRange,
+        };
       });
     },
     []
@@ -198,11 +222,19 @@ const Income = () => {
       0
     ) || 0;
   const totalRecords = filteredIncomeData?.length || 0;
-  const firstDay = data.raw[data.raw.length - 1]?.dt;
-  const months = firstDay
-    ? parseFloat(getMonthsPassed(firstDay as string).toFixed(2))
-    : 1;
-  const averageIncome = totalIncome / months;
+
+  const months = useMemo(() => {
+    if (filters.dateRange?.start && filters.dateRange?.end) {
+      return getMonthsInRange(filters.dateRange.start, filters.dateRange.end);
+    }
+    if (filters.selectedMonth) return 1;
+    const firstDay = data.raw[data.raw.length - 1]?.dt;
+    return firstDay
+      ? parseFloat(getMonthsPassed(firstDay as string).toFixed(2))
+      : 1;
+  }, [filters.dateRange, filters.selectedMonth, data.raw]);
+
+  const averageIncome = totalIncome / Math.max(1, months);
 
   if (loading) {
     return (
@@ -218,7 +250,7 @@ const Income = () => {
       <PageHeader
         title={t('income.title')}
         subtitle={
-          filters.textFilter || filters.selectedMonth || filters.selectedTag
+          filters.textFilter || filters.selectedMonth || filters.selectedTag || (filters.dateRange?.start && filters.dateRange?.end)
             ? `${totalRecords} ${totalRecords === 1 ? t('income.incomeRecord') : t('income.incomeRecords')}`
             : `${data.incomeData?.length || 0} ${(data.incomeData?.length || 0) === 1 ? t('income.incomeRecord') : t('income.incomeRecords')}`
         }
@@ -229,6 +261,7 @@ const Income = () => {
         textFilter={filters.textFilter}
         selectedMonth={filters.selectedMonth}
         selectedTag={filters.selectedTag}
+        dateRange={filters.dateRange}
         onTextFilterChange={(textFilter) =>
           handleFilterChange({ ...filters, textFilter })
         }
@@ -238,11 +271,15 @@ const Income = () => {
         onTagFilterChange={(selectedTag) =>
           handleFilterChange({ ...filters, selectedTag })
         }
+        onDateRangeChange={(dateRange) =>
+          handleFilterChange({ ...filters, dateRange })
+        }
         onClearFilters={() =>
           handleFilterChange({
             textFilter: '',
             selectedMonth: '',
             selectedTag: '',
+            dateRange: null,
           })
         }
       />
@@ -316,7 +353,8 @@ const Income = () => {
                 !!(
                   filters.textFilter ||
                   filters.selectedMonth ||
-                  filters.selectedTag
+                  filters.selectedTag ||
+                  (filters.dateRange?.start && filters.dateRange?.end)
                 )
               }
             />

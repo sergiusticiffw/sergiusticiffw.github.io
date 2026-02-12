@@ -53,6 +53,7 @@ export const initialData = {
   textFilter: '',
   selectedMonth: '',
   selectedTag: '',
+  dateRange: null as { start: string; end: string } | null,
 };
 
 export const initialLoanData = {
@@ -102,20 +103,32 @@ export const AuthReducer = (initialState: AuthState, action: ActionType) => {
   }
 };
 
+// Normalize item date to YYYY-MM-DD for comparison
+const toDateOnly = (dt: string): string => {
+  const d = new Date(dt);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 // Helper function to apply filters to raw data
 const applyFilters = (
   raw: TransactionOrIncomeItem[],
   category: string,
   textFilter: string,
   selectedMonth: string,
-  selectedTag: string
+  selectedTag: string,
+  dateRange: { start: string; end: string } | null
 ) => {
+  const hasDateRange = dateRange?.start && dateRange?.end;
   if (
     !(
       category !== '' ||
       textFilter !== '' ||
       selectedMonth !== '' ||
-      selectedTag !== ''
+      selectedTag !== '' ||
+      hasDateRange
     ) ||
     !raw
   ) {
@@ -163,6 +176,16 @@ const applyFilters = (
     };
     filtered = filtered.filter((item: TransactionOrIncomeItem) => {
       return hasTag(item, selectedTag);
+    });
+  }
+
+  if (hasDateRange) {
+    const start = dateRange!.start;
+    const end = dateRange!.end;
+    filtered = filtered.filter((item: TransactionOrIncomeItem) => {
+      if (!item.dt) return false;
+      const itemDate = toDateOnly(item.dt);
+      return itemDate >= start && itemDate <= end;
     });
   }
 
@@ -243,14 +266,16 @@ export const DataReducer = (
         initialState.category ||
         initialState.textFilter ||
         initialState.selectedMonth ||
-        initialState.selectedTag
+        initialState.selectedTag ||
+        (initialState.dateRange?.start && initialState.dateRange?.end)
       ) {
         const filterResult = applyFilters(
           action.raw || newState.raw || [],
           initialState.category || '',
           initialState.textFilter || '',
           initialState.selectedMonth || '',
-          initialState.selectedTag || ''
+          initialState.selectedTag || '',
+          initialState.dateRange ?? null
         );
 
         if (filterResult) {
@@ -261,6 +286,7 @@ export const DataReducer = (
             textFilter: initialState.textFilter,
             selectedMonth: initialState.selectedMonth,
             selectedTag: initialState.selectedTag,
+            dateRange: initialState.dateRange ?? null,
           };
         }
       }
@@ -281,7 +307,8 @@ export const DataReducer = (
         action.category || '',
         action.textFilter || '',
         action.selectedMonth || '',
-        action.selectedTag || ''
+        action.selectedTag || '',
+        action.dateRange ?? null
       );
 
       if (filterResult) {
@@ -292,6 +319,7 @@ export const DataReducer = (
           textFilter: action.textFilter,
           selectedMonth: action.selectedMonth,
           selectedTag: action.selectedTag,
+          dateRange: action.dateRange ?? null,
         };
       }
 
@@ -302,6 +330,7 @@ export const DataReducer = (
         textFilter: '',
         selectedMonth: '',
         selectedTag: '',
+        dateRange: null,
         filtered_raw: null,
       };
 
