@@ -8,7 +8,6 @@ import { useQuickAddSuggestion } from '@stores/settingsStore';
 import {
   deleteNode,
   formatNumber,
-  extractMonthsFromRawData,
   hasTag,
 } from '@shared/utils/utils';
 import { getCategories, notificationType } from '@shared/utils/constants';
@@ -53,7 +52,6 @@ const NewHome = () => {
   const loading = data.loading;
   const [searchText, setSearchText] = useState(data.textFilter ?? '');
   const [selectedCategory, setSelectedCategory] = useState(data.category ?? '');
-  const [selectedMonth, setSelectedMonth] = useState(data.selectedMonth ?? '');
   const [selectedTag, setSelectedTag] = useState(data.selectedTag ?? '');
   const [dateRange, setDateRange] = useState<DateRangeValue>(data.dateRange ?? null);
   const [showDeleteModal, setShowDeleteModal] = useState<string | false>(false);
@@ -124,20 +122,15 @@ const NewHome = () => {
       type: 'FILTER_DATA',
       category: selectedCategory,
       textFilter: searchText,
-      selectedMonth: selectedMonth,
       selectedTag: selectedTag,
       dateRange: dateRange ?? null,
     });
-  }, [searchText, selectedCategory, selectedMonth, selectedTag, dateRange, dataDispatch]);
+  }, [searchText, selectedCategory, selectedTag, dateRange, dataDispatch]);
 
   const items = data.filtered || data;
   const localizedCategories = getCategories();
 
-  // Get ALL available months from UNFILTERED raw data in YYYY-MM format (for month picker)
-  const allMonths =
-    data.raw && data.raw.length > 0 ? extractMonthsFromRawData(data.raw) : [];
-
-  // Get months from current view (filtered or unfiltered)
+  // Get months from current view (filtered or unfiltered) for list navigation
   const months = items.groupedData ? Object.keys(items.groupedData) : [];
   const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
 
@@ -161,23 +154,12 @@ const NewHome = () => {
     if (
       searchText !== '' ||
       selectedCategory !== '' ||
-      selectedMonth !== '' ||
       selectedTag !== '' ||
       hasDateRangeFilter
     ) {
       setCurrentMonthIndex(0);
     }
-  }, [searchText, selectedCategory, selectedMonth, selectedTag, hasDateRangeFilter]);
-
-  // Navigate to selected month
-  useEffect(() => {
-    if (selectedMonth && months.length > 0) {
-      const monthIndex = months.findIndex((month) => month === selectedMonth);
-      if (monthIndex !== -1) {
-        setCurrentMonthIndex(monthIndex);
-      }
-    }
-  }, [selectedMonth, months]);
+  }, [searchText, selectedCategory, selectedTag, hasDateRangeFilter]);
 
   const handleEdit = (id: string) => {
     const item = items.groupedData[currentMonth].find(
@@ -261,7 +243,6 @@ const NewHome = () => {
   const hasFilters =
     searchText !== '' ||
     selectedCategory !== '' ||
-    selectedMonth !== '' ||
     selectedTag !== '' ||
     hasDateRangeFilter;
 
@@ -511,20 +492,16 @@ const NewHome = () => {
             <TransactionFilters
               searchValue={searchText}
               categoryValue={selectedCategory}
-              selectedMonth={selectedMonth}
               selectedTag={selectedTag}
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
               categories={localizedCategories}
-              availableMonths={allMonths}
               onSearchChange={setSearchText}
               onCategoryChange={setSelectedCategory}
-              onMonthChange={setSelectedMonth}
               onTagChange={setSelectedTag}
               onClearFilters={() => {
                 setSearchText('');
                 setSelectedCategory('');
-                setSelectedMonth('');
                 setSelectedTag('');
                 setDateRange(null);
                 setCurrentMonthIndex(0);
@@ -604,9 +581,9 @@ const NewHome = () => {
                       onClick: () => {
                         setSearchText('');
                         setSelectedCategory('');
-                        setSelectedMonth('');
                         setSelectedTag('');
-                        setCurrentMonthIndex(0); // Reset to current month
+                        setDateRange(null);
+                        setCurrentMonthIndex(0);
                       },
                     }
                   : undefined

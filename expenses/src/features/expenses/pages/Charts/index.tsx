@@ -4,7 +4,6 @@ import { useLocalization } from '@shared/context/localization';
 import { availableCharts } from '@shared/utils/constants';
 import { getCategories } from '@shared/utils/constants';
 import TransactionFilters, { DateRangeValue } from '@features/expenses/components/Home/TransactionFilters';
-import { extractMonthsFromRawData } from '@shared/utils/utils';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionForm from '@features/expenses/components/TransactionForm';
 import LoadingSpinner from '@shared/components/Common/LoadingSpinner';
@@ -82,7 +81,6 @@ const Charts = () => {
         type: 'FILTER_DATA',
         category: selectedCategory,
         textFilter: searchText,
-        selectedMonth: '',
         selectedTag: selectedTag,
         dateRange: dateRange ?? null,
       });
@@ -111,15 +109,12 @@ const Charts = () => {
         <TransactionFilters
           searchValue={searchText}
           categoryValue={selectedCategory}
-          selectedMonth=""
           selectedTag={selectedTag}
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
           categories={categoryLabels}
-          availableMonths={[]}
           onSearchChange={setSearchText}
           onCategoryChange={setSelectedCategory}
-          onMonthChange={() => {}}
           onTagChange={setSelectedTag}
           onClearFilters={() => {
             setSearchText('');
@@ -127,7 +122,6 @@ const Charts = () => {
             setSelectedTag('');
             setDateRange(null);
           }}
-          showMonthFilter={false}
           onFilterPanelOpenChange={setFilterPanelOpen}
         />
       </div>

@@ -61,12 +61,10 @@ const Income = () => {
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [filters, setFilters] = useState<{
     textFilter: string;
-    selectedMonth: string;
     selectedTag: string;
     dateRange: { start: string; end: string } | null;
   }>({
     textFilter: '',
-    selectedMonth: '',
     selectedTag: '',
     dateRange: null,
   });
@@ -101,21 +99,6 @@ const Income = () => {
         return false;
       }
 
-      // Month filter
-      if (filters.selectedMonth) {
-        const itemDate = new Date(item.dt);
-        const selectedDate = new Date(filters.selectedMonth + '-01'); // Add day to make it a valid date
-
-        const itemYear = itemDate.getFullYear();
-        const itemMonth = itemDate.getMonth();
-        const selectedYear = selectedDate.getFullYear();
-        const selectedMonth = selectedDate.getMonth();
-
-        if (itemYear !== selectedYear || itemMonth !== selectedMonth) {
-          return false;
-        }
-      }
-
       // Tag filter
       if (filters.selectedTag) {
         if (!hasTag(item, filters.selectedTag)) {
@@ -140,14 +123,12 @@ const Income = () => {
   const handleFilterChange = useCallback(
     (newFilters: {
       textFilter: string;
-      selectedMonth: string;
       selectedTag: string;
       dateRange?: { start: string; end: string } | null;
     }) => {
       setFilters((prev) => {
         const hasFilterChanged =
           newFilters.textFilter !== prev.textFilter ||
-          newFilters.selectedMonth !== prev.selectedMonth ||
           newFilters.selectedTag !== prev.selectedTag ||
           (newFilters.dateRange !== undefined && JSON.stringify(newFilters.dateRange) !== JSON.stringify(prev.dateRange));
 
@@ -157,7 +138,6 @@ const Income = () => {
 
         return {
           textFilter: newFilters.textFilter,
-          selectedMonth: newFilters.selectedMonth,
           selectedTag: newFilters.selectedTag,
           dateRange: newFilters.dateRange !== undefined ? newFilters.dateRange : prev.dateRange,
         };
@@ -228,12 +208,11 @@ const Income = () => {
     if (filters.dateRange?.start && filters.dateRange?.end) {
       return getMonthsInRange(filters.dateRange.start, filters.dateRange.end);
     }
-    if (filters.selectedMonth) return 1;
     const firstDay = data.raw[data.raw.length - 1]?.dt;
     return firstDay
       ? parseFloat(getMonthsPassed(firstDay as string).toFixed(2))
       : 1;
-  }, [filters.dateRange, filters.selectedMonth, data.raw]);
+  }, [filters.dateRange, data.raw]);
 
   const averageIncome = totalIncome / Math.max(1, months);
 
@@ -251,7 +230,7 @@ const Income = () => {
       <PageHeader
         title={t('income.title')}
         subtitle={
-          filters.textFilter || filters.selectedMonth || filters.selectedTag || (filters.dateRange?.start && filters.dateRange?.end)
+          filters.textFilter || filters.selectedTag || (filters.dateRange?.start && filters.dateRange?.end)
             ? `${totalRecords} ${totalRecords === 1 ? t('income.incomeRecord') : t('income.incomeRecords')}`
             : `${data.incomeData?.length || 0} ${(data.incomeData?.length || 0) === 1 ? t('income.incomeRecord') : t('income.incomeRecords')}`
         }
@@ -260,14 +239,10 @@ const Income = () => {
       {/* Filters */}
       <IncomeFilters
         textFilter={filters.textFilter}
-        selectedMonth={filters.selectedMonth}
         selectedTag={filters.selectedTag}
         dateRange={filters.dateRange}
         onTextFilterChange={(textFilter) =>
           handleFilterChange({ ...filters, textFilter })
-        }
-        onMonthFilterChange={(selectedMonth) =>
-          handleFilterChange({ ...filters, selectedMonth })
         }
         onTagFilterChange={(selectedTag) =>
           handleFilterChange({ ...filters, selectedTag })
@@ -278,7 +253,6 @@ const Income = () => {
         onClearFilters={() =>
           handleFilterChange({
             textFilter: '',
-            selectedMonth: '',
             selectedTag: '',
             dateRange: null,
           })
@@ -354,7 +328,6 @@ const Income = () => {
               isFiltered={
                 !!(
                   filters.textFilter ||
-                  filters.selectedMonth ||
                   filters.selectedTag ||
                   (filters.dateRange?.start && filters.dateRange?.end)
                 )

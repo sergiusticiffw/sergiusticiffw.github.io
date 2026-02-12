@@ -69,7 +69,6 @@ export interface DataItems {
   totalPerYear?: ItemTotal;
   category?: string;
   textFilter?: string;
-  selectedMonth?: string;
   selectedTag?: string;
   /** ISO date strings YYYY-MM-DD; when both set, filter transactions within [start, end] */
   dateRange?: { start: string; end: string } | null;
@@ -99,7 +98,6 @@ export type ExpenseAction =
       type: 'FILTER_DATA';
       category?: string;
       textFilter?: string;
-      selectedMonth?: string;
       selectedTag?: string;
       dateRange?: { start: string; end: string } | null;
     }
@@ -131,7 +129,6 @@ export interface ActionType {
   error?: any;
   category?: string;
   textFilter?: string;
-  selectedMonth?: string;
   selectedTag?: string;
   groupedData?: Record<string, TransactionOrIncomeItem[]>;
   totals?: Record<string, number>;

@@ -51,7 +51,6 @@ export const initialData = {
   changedItems: {},
   category: '',
   textFilter: '',
-  selectedMonth: '',
   selectedTag: '',
   dateRange: null as { start: string; end: string } | null,
 };
@@ -117,7 +116,6 @@ const applyFilters = (
   raw: TransactionOrIncomeItem[],
   category: string,
   textFilter: string,
-  selectedMonth: string,
   selectedTag: string,
   dateRange: { start: string; end: string } | null
 ) => {
@@ -126,7 +124,6 @@ const applyFilters = (
     !(
       category !== '' ||
       textFilter !== '' ||
-      selectedMonth !== '' ||
       selectedTag !== '' ||
       hasDateRange
     ) ||
@@ -150,18 +147,6 @@ const applyFilters = (
       (item: TransactionOrIncomeItem) =>
         item.dsc && item.dsc.toLowerCase().includes(textFilterLower)
     );
-  }
-
-  if (selectedMonth) {
-    filtered = filtered.filter((item: TransactionOrIncomeItem) => {
-      const itemDate = new Date(item.dt);
-      const selectedDate = new Date(selectedMonth + '-01');
-      const itemYear = itemDate.getFullYear();
-      const itemMonth = itemDate.getMonth();
-      const selectedYear = selectedDate.getFullYear();
-      const selectedMonthNum = selectedDate.getMonth();
-      return itemYear === selectedYear && itemMonth === selectedMonthNum;
-    });
   }
 
   if (selectedTag) {
@@ -265,7 +250,6 @@ export const DataReducer = (
       if (
         initialState.category ||
         initialState.textFilter ||
-        initialState.selectedMonth ||
         initialState.selectedTag ||
         (initialState.dateRange?.start && initialState.dateRange?.end)
       ) {
@@ -273,7 +257,6 @@ export const DataReducer = (
           action.raw || newState.raw || [],
           initialState.category || '',
           initialState.textFilter || '',
-          initialState.selectedMonth || '',
           initialState.selectedTag || '',
           initialState.dateRange ?? null
         );
@@ -284,7 +267,6 @@ export const DataReducer = (
             ...filterResult,
             category: initialState.category,
             textFilter: initialState.textFilter,
-            selectedMonth: initialState.selectedMonth,
             selectedTag: initialState.selectedTag,
             dateRange: initialState.dateRange ?? null,
           };
@@ -306,7 +288,6 @@ export const DataReducer = (
         initialState.raw || [],
         action.category || '',
         action.textFilter || '',
-        action.selectedMonth || '',
         action.selectedTag || '',
         action.dateRange ?? null
       );
@@ -317,7 +298,6 @@ export const DataReducer = (
           ...filterResult,
           category: action.category,
           textFilter: action.textFilter,
-          selectedMonth: action.selectedMonth,
           selectedTag: action.selectedTag,
           dateRange: action.dateRange ?? null,
         };
@@ -328,7 +308,6 @@ export const DataReducer = (
         filtered: null,
         category: '',
         textFilter: '',
-        selectedMonth: '',
         selectedTag: '',
         dateRange: null,
         filtered_raw: null,

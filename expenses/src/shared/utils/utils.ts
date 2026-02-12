@@ -810,6 +810,16 @@ export const getMonthsInRange = (start: string, end: string): number => {
   return Math.max(1, months);
 };
 
+/** Number of days between start and end (YYYY-MM-DD), inclusive. Minimum 1. */
+export const getDaysInRange = (start: string, end: string): number => {
+  const s = new Date(start + 'T12:00:00');
+  const e = new Date(end + 'T12:00:00');
+  if (isNaN(s.getTime()) || isNaN(e.getTime())) return 0;
+  const ms = e.getTime() - s.getTime();
+  const days = Math.floor(ms / (1000 * 60 * 60 * 24)) + 1;
+  return Math.max(1, days);
+};
+
 export const transformToNumber = (value: string | number): number => {
   if (typeof value === 'number') {
     return value;

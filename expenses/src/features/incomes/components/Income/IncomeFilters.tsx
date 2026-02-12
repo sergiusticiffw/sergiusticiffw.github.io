@@ -3,9 +3,6 @@ import { useLocalization } from '@shared/context/localization';
 import { useExpenseData } from '@stores/expenseStore';
 import { FiCalendar, FiSearch, FiTag, FiX } from 'react-icons/fi';
 import { useFilterFocus } from '@shared/hooks/useFilterFocus';
-import { useMonthFilter } from '@shared/hooks/useMonthFilter';
-import { formatMonthOption } from '@shared/utils/utils';
-import MonthChips from '@shared/components/Common/MonthChips';
 import { incomeSuggestions } from '@shared/utils/constants';
 import { hasTag } from '@shared/utils/utils';
 
@@ -13,11 +10,9 @@ export type DateRangeValue = { start: string; end: string } | null;
 
 interface IncomeFiltersProps {
   textFilter: string;
-  selectedMonth: string;
   selectedTag: string;
   dateRange: DateRangeValue;
   onTextFilterChange: (value: string) => void;
-  onMonthFilterChange: (value: string) => void;
   onTagFilterChange: (value: string) => void;
   onDateRangeChange: (value: DateRangeValue) => void;
   onClearFilters: () => void;
@@ -26,17 +21,15 @@ interface IncomeFiltersProps {
 
 const IncomeFilters: React.FC<IncomeFiltersProps> = ({
   textFilter,
-  selectedMonth,
   selectedTag,
   dateRange,
   onTextFilterChange,
-  onMonthFilterChange,
   onTagFilterChange,
   onDateRangeChange,
   onClearFilters,
   onFilterPanelOpenChange,
 }) => {
-  const { t, language } = useLocalization();
+  const { t } = useLocalization();
   const { data } = useExpenseData();
   const filterContainerRef = useRef<HTMLDivElement>(null);
 
@@ -81,14 +74,8 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
     onFilterPanelOpenChange?.(isFilterFocused);
   }, [isFilterFocused, onFilterPanelOpenChange]);
 
-  const { handleMonthClick } = useMonthFilter({
-    selectedMonth,
-    onMonthChange: onMonthFilterChange,
-    onSelection: handleSelection,
-  });
-
   const hasDateRange = !!(dateRange?.start && dateRange?.end);
-  const hasActiveFilters = textFilter || selectedMonth || selectedTag || hasDateRange;
+  const hasActiveFilters = textFilter || selectedTag || hasDateRange;
 
   const dateRangeLabel = useMemo(() => {
     if (!dateRange?.start || !dateRange?.end) return '';
@@ -116,44 +103,6 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
 
     return incomeSuggestions.filter((tag) => tagsCount[tag] > 0);
   }, [data.incomeData]);
-
-  // Generate list of available months from actual income data
-  const availableMonths = useMemo(() => {
-    if (!data.incomeData || data.incomeData.length === 0) {
-      return [];
-    }
-
-    // Extract unique months from income data with validation
-    const monthsSet = new Set<string>();
-    data.incomeData.forEach((item: any) => {
-      if (!item.dt) return; // Skip invalid dates
-      const date = new Date(item.dt);
-      // Validate date is valid
-      if (isNaN(date.getTime())) return;
-      const year = date.getFullYear();
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const monthValue = `${year}-${month}`;
-      // Additional validation: year should be reasonable (1900-2100)
-      if (year >= 1900 && year <= 2100) {
-        monthsSet.add(monthValue);
-      }
-    });
-
-    // Convert to array and sort descending (newest first)
-    const monthsArray = Array.from(monthsSet).sort((a, b) =>
-      b.localeCompare(a)
-    );
-
-    // Format for display using reusable utility, filter out invalid dates
-    return monthsArray
-      .map((monthValue) => formatMonthOption(monthValue, language))
-      .filter((option) => option.label !== '' && option.label !== option.value); // Filter out invalid formatted dates
-  }, [data.incomeData, language]);
-
-  // Get selected month label
-  const selectedMonthLabel = selectedMonth
-    ? availableMonths.find((m) => m.value === selectedMonth)?.label
-    : '';
 
   // Get selected tag label
   const selectedTagLabel = selectedTag
@@ -206,20 +155,6 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
           </div>
         )}
 
-        {selectedMonth && !isFilterFocused && (
-          <div
-            className={chipBase}
-            onClick={handleChipClick}
-            onKeyDown={(e) => e.key === 'Enter' && handleChipClick()}
-            role="button"
-            tabIndex={0}
-            aria-label={selectedMonthLabel}
-          >
-            <FiCalendar aria-hidden />
-            {selectedMonthLabel}
-          </div>
-        )}
-
         {selectedTag && !isFilterFocused && (
           <div
             className={chipBase}
@@ -240,7 +175,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={
-            (selectedMonth || selectedTag || hasDateRange) && !isFilterFocused
+            (selectedTag || hasDateRange) && !isFilterFocused
               ? t('filters.searchInMonth')
               : t('filters.search')
           }
@@ -346,15 +281,6 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
                 />
               </div>
             </div>
-          </div>
-
-          <div className="flex-shrink-0 px-4 py-4">
-            <MonthChips
-              months={availableMonths}
-              selectedMonth={selectedMonth}
-              onMonthClick={handleMonthClick}
-              className="flex flex-col gap-3 max-h-[200px] overflow-y-auto overflow-x-hidden w-full max-w-full [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-white/[0.05] [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded"
-            />
           </div>
         </div>
       )}

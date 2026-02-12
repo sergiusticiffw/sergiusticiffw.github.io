@@ -9,6 +9,7 @@ import {
   calculateDaysFrom,
   formatDataForChart,
   formatNumber,
+  getDaysInRange,
   getMonthsInRange,
   getMonthsPassed,
 } from '@shared/utils/utils';
@@ -124,7 +125,12 @@ const YearAverageTrend = () => {
                 {t('charts.totalDays')}
               </td>
               <td className="py-3 px-4 text-right text-white font-medium text-[0.95rem] tabular-nums align-middle">
-                {formatNumber(calculateDaysFrom(firstDay))} {t('charts.days')}
+                {formatNumber(
+                  dateRange?.start && dateRange?.end
+                    ? getDaysInRange(dateRange.start, dateRange.end)
+                    : calculateDaysFrom(firstDay)
+                )}{' '}
+                {t('charts.days')}
               </td>
             </tr>
             <tr className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02]">

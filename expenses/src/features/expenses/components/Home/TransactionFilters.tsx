@@ -3,9 +3,6 @@ import { useLocalization } from '@shared/context/localization';
 import { useExpenseData } from '@stores/expenseStore';
 import { FiCalendar, FiGrid, FiSearch, FiTag, FiX } from 'react-icons/fi';
 import { useFilterFocus } from '@shared/hooks/useFilterFocus';
-import { useMonthOptions } from '@shared/hooks/useMonthOptions';
-import { useMonthFilter } from '@shared/hooks/useMonthFilter';
-import MonthChips from '@shared/components/Common/MonthChips';
 import { getSuggestions } from '@shared/utils/constants';
 import {
   getSuggestionTranslationKey,
@@ -18,36 +15,28 @@ export type DateRangeValue = { start: string; end: string } | null;
 interface TransactionFiltersProps {
   searchValue: string;
   categoryValue: string;
-  selectedMonth: string;
   selectedTag: string;
   dateRange: DateRangeValue;
   categories: Array<{ value: string; label: string }>;
-  availableMonths: string[];
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
-  onMonthChange: (value: string) => void;
   onTagChange: (value: string) => void;
   onDateRangeChange: (value: DateRangeValue) => void;
   onClearFilters: () => void;
-  showMonthFilter?: boolean; // Control whether month filter is displayed
   onFilterPanelOpenChange?: (open: boolean) => void;
 }
 
 const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   searchValue,
   categoryValue,
-  selectedMonth,
   selectedTag,
   categories,
-  availableMonths,
   onSearchChange,
   onCategoryChange,
-  onMonthChange,
   onTagChange,
   dateRange,
   onDateRangeChange,
   onClearFilters,
-  showMonthFilter: _showMonthFilter = true,
   onFilterPanelOpenChange,
 }) => {
   const { t } = useLocalization();
@@ -96,16 +85,6 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     onFilterPanelOpenChange?.(isFilterFocused);
   }, [isFilterFocused, onFilterPanelOpenChange]);
 
-  const { monthOptions, getSelectedMonthLabel } = useMonthOptions({
-    availableMonths,
-  });
-
-  const { handleMonthClick } = useMonthFilter({
-    selectedMonth,
-    onMonthChange,
-    onSelection: handleSelection,
-  });
-
   const handleCategoryClick = useCallback(
     (value: string) => {
       if (value === categoryValue) {
@@ -120,7 +99,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
 
   const hasDateRange = !!(dateRange?.start && dateRange?.end);
   const hasFilters =
-    searchValue || categoryValue || selectedMonth || selectedTag || hasDateRange;
+    searchValue || categoryValue || selectedTag || hasDateRange;
 
   const dateRangeLabel = useMemo(() => {
     if (!dateRange?.start || !dateRange?.end) return '';
@@ -226,9 +205,6 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     ? categories.find((cat) => cat.value === categoryValue)?.label
     : '';
 
-  // Get selected month label
-  const selectedMonthLabel = getSelectedMonthLabel(selectedMonth);
-
   const searchBar =
     'flex items-center bg-white/[0.05] rounded-2xl px-4 gap-3 w-full transition-all duration-200 focus-within:bg-white/[0.08] focus-within:ring-2 focus-within:ring-white/20 focus-within:ring-inset border border-white/[0.08] focus-within:border-white/20';
   const chipBase =
@@ -253,20 +229,6 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     >
       <div className={searchBar}>
         <FiSearch className="text-app-placeholder text-lg shrink-0" aria-hidden />
-
-        {selectedMonth && !isFilterFocused && (
-          <div
-            className={`${chipBase} ${monthChip}`}
-            onClick={handleChipClick}
-            onKeyDown={(e) => e.key === 'Enter' && handleChipClick()}
-            role="button"
-            tabIndex={0}
-            aria-label={selectedMonthLabel}
-          >
-            <FiCalendar aria-hidden />
-            {selectedMonthLabel}
-          </div>
-        )}
 
         {categoryValue && !isFilterFocused && (
           <div
@@ -319,7 +281,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={
-            selectedMonth || categoryValue || selectedTag || hasDateRange
+            categoryValue || selectedTag || hasDateRange
               ? t('filters.searchInMonthCategory')
               : t('filters.search')
           }
@@ -464,15 +426,6 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
                 />
               </div>
             </div>
-          </div>
-
-          <div className="flex-shrink-0 px-4 py-4">
-            <MonthChips
-              months={monthOptions}
-              selectedMonth={selectedMonth}
-              onMonthClick={handleMonthClick}
-              className="flex flex-col gap-3 mt-0"
-            />
           </div>
         </div>
       )}
