@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Variants Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e1f29 0%, #282a36 100%);
+            color: #f8f8f2;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 50px;
+            font-size: 2.5rem;
+            color: #50fa7b;
+        }
+        
+        .variants-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .variant-card {
+            background: rgba(40, 42, 54, 0.8);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid rgba(80, 250, 123, 0.2);
+        }
+        
+        .variant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(80, 250, 123, 0.3);
+            border-color: rgba(80, 250, 123, 0.5);
+        }
+        
+        .variant-title {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #bd93f9;
+        }
+        
+        .variant-description {
+            font-size: 0.9rem;
+            color: #6272a4;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .icon-preview {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            border-radius: 24px;
+            background: #282a36;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+        
+        .icon-preview img {
+            width: 100%;
+            height: 100%;
+            border-radius: 24px;
+        }
+        
+        .current {
+            background: rgba(80, 250, 123, 0.1);
+            border-color: #50fa7b;
+        }
+        
+        .current .variant-title::before {
+            content: "✓ Current: ";
+            color: #50fa7b;
+        }
+        
+        .file-name {
+            font-size: 0.8rem;
+            color: #6272a4;
+            font-family: 'Courier New', monospace;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Expenses App Icon Variants</h1>
+        
+        <div class="variants-grid">
+            <div class="variant-card current">
+                <div class="variant-title">Simple Dollar Sign</div>
+                <div class="variant-description">
+                    Clean and minimal design with just a dollar sign ($) on gradient background. 
+                    Very simple and recognizable.
+                </div>
+                <div class="icon-preview">
+                    <img src="app-icon.svg" alt="Variant 1">
+                </div>
+                <div class="file-name">app-icon.svg (current)</div>
+            </div>
+            
+            <div class="variant-card">
+                <div class="variant-title">Chart Bars + Dollar</div>
+                <div class="variant-description">
+                    Modern bar chart with subtle dollar sign overlay. 
+                    Represents both data visualization and financial tracking.
+                </div>
+                <div class="icon-preview">
+                    <img src="app-icon-variant-1.svg" alt="Variant 1">
+                </div>
+                <div class="file-name">app-icon-variant-1.svg</div>
+            </div>
+            
+            <div class="variant-card">
+                <div class="variant-title">Circle with Dollar</div>
+                <div class="variant-description">
+                    Dollar sign inside a modern circular frame. 
+                    Clean geometric design with subtle ring accent.
+                </div>
+                <div class="icon-preview">
+                    <img src="app-icon-variant-2.svg" alt="Variant 2">
+                </div>
+                <div class="file-name">app-icon-variant-2.svg</div>
+            </div>
+            
+            <div class="variant-card">
+                <div class="variant-title">Trend Line + Dollar</div>
+                <div class="variant-description">
+                    Ascending trend line chart with dollar sign. 
+                    Shows growth and financial progress visually.
+                </div>
+                <div class="icon-preview">
+                    <img src="app-icon-variant-3.svg" alt="Variant 3">
+                </div>
+                <div class="file-name">app-icon-variant-3.svg</div>
+            </div>
+            
+            <div class="variant-card">
+                <div class="variant-title">Rounded Square</div>
+                <div class="variant-description">
+                    Dollar sign in a modern rounded square frame. 
+                    Contemporary design with soft corners.
+                </div>
+                <div class="icon-preview">
+                    <img src="app-icon-variant-4.svg" alt="Variant 4">
+                </div>
+                <div class="file-name">app-icon-variant-4.svg</div>
+            </div>
+            
+            <div class="variant-card">
+                <div class="variant-title">Gradient Dollar + Accents</div>
+                <div class="variant-description">
+                    Dollar sign with multi-color gradient and subtle corner accents. 
+                    Modern and vibrant design.
+                </div>
+                <div class="icon-preview">
+                    <img src="app-icon-variant-5.svg" alt="Variant 5">
+                </div>
+                <div class="file-name">app-icon-variant-5.svg</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
