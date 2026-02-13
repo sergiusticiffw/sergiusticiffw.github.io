@@ -154,6 +154,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
           const changeType = changedItems[income.id]?.type;
           const date = new Date(income.dt);
           const day = date.getDate();
+          const year = date.getFullYear();
           const locale = getLocale(language);
           const month = date
             .toLocaleDateString(locale, { month: 'short' })
@@ -203,6 +204,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                 <div className="flex flex-col items-center justify-center min-w-[50px] shrink-0">
                   <div className="text-2xl font-bold text-white leading-none">{day}</div>
                   <div className="text-xs font-semibold text-white/50 mt-1 tracking-wide">{month}</div>
+                  <div className="text-xs font-semibold text-white/50 tracking-wide">{year}</div>
                 </div>
 
                 <div className="flex-1 min-w-0">
