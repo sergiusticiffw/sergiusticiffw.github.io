@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import { useAuthState } from '@shared/context/context';
 import { useExpenseData } from '@stores/expenseStore';
 import { useNotification } from '@shared/context/notification';
@@ -83,9 +83,9 @@ const NewHome = () => {
   };
 
   // Afișează sugestia când e activată, în zilele alese și (dacă există) în intervalele orare.
-  // Cu time slots: o dată per interval; după add/decline nu mai apare până la următorul interval.
-  // Fără time slots: apare la fiecare refresh; după add/decline nu mai apare până la următorul refresh.
-  useEffect(() => {
+  // Cu time slots: o dată per zi per interval; după add/decline nu mai apare până ziua următoare în același slot.
+  // Re-verificare la revenirea pe tab (visibilitychange) ca să apară și în zilele următoare fără refresh.
+  const tryShowQuickAddSuggestion = useCallback(() => {
     if (!quickAdd.enabled) return;
     const now = new Date();
     const day = now.getDay();
@@ -101,11 +101,23 @@ const NewHome = () => {
       if (sessionStorage.getItem(QUICK_ADD_DONE_PREFIX + slotKey)) return;
       quickAddSlotKeyRef.current = slotKey;
     } else {
-      // Fără time slots: nu persistăm „done” → la fiecare refresh apare din nou
       quickAddSlotKeyRef.current = null;
     }
     setShowQuickAddSuggestionModal(true);
   }, [quickAdd.enabled, quickAdd.daysOfWeek, quickAdd.timeSlots]);
+
+  useEffect(() => {
+    tryShowQuickAddSuggestion();
+  }, [tryShowQuickAddSuggestion]);
+
+  useEffect(() => {
+    if (!quickAdd.enabled) return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') tryShowQuickAddSuggestion();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [quickAdd.enabled, tryShowQuickAddSuggestion]);
 
   // Event-driven pending sync tracking (no polling) - for expenses
   const pendingSyncIds = usePendingSyncIds(['expense']);
