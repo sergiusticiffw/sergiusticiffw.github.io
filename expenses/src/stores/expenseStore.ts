@@ -18,7 +18,7 @@ export function expenseDispatch(action: ExpenseAction): void {
 }
 
 export function useExpenseData(): DataState {
-  const data = useStore(expenseStore);
+  const data = useStore(expenseStore, (s) => s);
   return { data, dataDispatch: expenseDispatch };
 }
 

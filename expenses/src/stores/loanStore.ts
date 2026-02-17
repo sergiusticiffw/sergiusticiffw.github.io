@@ -17,7 +17,7 @@ export function useLoan(): {
   data: LoanState;
   dataDispatch: typeof loanDispatch;
 } {
-  const data = useStore(loanStore);
+  const data = useStore(loanStore, (s) => s);
   return { data, dataDispatch: loanDispatch };
 }
 

@@ -31,11 +31,13 @@
   --radius-xl: 16px;
   --radius-xxl: 20px;
 
-  /* App palette (accent/shadow follow theme) */
+  /* App palette (accent/shadow/glow follow theme) */
   --color-app-bg: oklch(0.145 0.005 264);
   --color-app-accent: #5b8def;
   --color-app-accent-hover: oklch(0.52 0.18 264);
   --color-app-accent-shadow: color-mix(in srgb, var(--color-app-accent) 35%, transparent);
+  /** Softer glow for FAB / primary buttons (ultra-modern look) */
+  --color-app-glow: color-mix(in srgb, var(--color-app-accent) 22%, transparent);
   --color-white: #fff;
   --color-success: oklch(0.65 0.19 160);
   --color-error: oklch(0.58 0.22 25);
@@ -209,6 +211,20 @@ html[data-theme="indigo"] {
   --color-app-accent-hover: oklch(0.52 0.22 275);
 }
 
+/* Ultra-modern themes */
+html[data-theme="violet"] {
+  --color-app-bg: oklch(0.12 0.03 300);
+  --color-app-accent: #a855f7;
+  --color-app-accent-hover: oklch(0.65 0.22 305);
+  --color-app-accent-shadow: color-mix(in srgb, #a855f7 38%, transparent);
+}
+html[data-theme="aurora"] {
+  --color-app-bg: oklch(0.11 0.025 195);
+  --color-app-accent: #06b6d4;
+  --color-app-accent-hover: oklch(0.62 0.14 195);
+  --color-app-accent-shadow: color-mix(in srgb, #06b6d4 36%, transparent);
+}
+
 /* Tailwind @layer utilities – tema + overflow touch (Tailwind nu are -webkit-overflow-scrolling) */
 @layer utilities {
   .text-app-primary { color: var(--color-text-primary); }
@@ -320,7 +336,7 @@ html[data-theme="indigo"] {
     background: linear-gradient(135deg, var(--color-app-accent) 0%, var(--color-app-accent-hover) 100%);
     color: var(--color-btn-on-accent);
     border: none;
-    box-shadow: 0 4px 16px var(--color-app-accent-shadow);
+    box-shadow: 0 4px 16px var(--color-app-accent-shadow), 0 0 32px var(--color-app-glow);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -337,7 +353,7 @@ html[data-theme="indigo"] {
 
   .fab:hover {
     transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 6px 20px var(--color-app-accent-shadow);
+    box-shadow: 0 6px 24px var(--color-app-accent-shadow), 0 0 40px var(--color-app-glow);
   }
 
   .fab:active {

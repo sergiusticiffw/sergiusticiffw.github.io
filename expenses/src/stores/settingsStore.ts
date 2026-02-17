@@ -85,7 +85,7 @@ const initialState: SettingsState = {
 const settingsStore = new Store<SettingsState>(initialState);
 
 export function useSettings(): SettingsState {
-  return useStore(settingsStore);
+  return useStore(settingsStore, (s) => s);
 }
 
 export function useSettingsCurrency(): string {

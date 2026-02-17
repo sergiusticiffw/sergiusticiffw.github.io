@@ -20,6 +20,8 @@ export const APP_THEMES: ThemeDefinition[] = [
   { id: 'emerald', labelKey: 'theme.emerald', bg: 'oklch(0.12 0.02 165)', accent: '#10b981', accentHover: 'oklch(0.55 0.16 165)' },
   { id: 'slate', labelKey: 'theme.slate', bg: 'oklch(0.14 0.008 260)', accent: '#64748b', accentHover: 'oklch(0.55 0.04 260)' },
   { id: 'indigo', labelKey: 'theme.indigo', bg: 'oklch(0.13 0.025 275)', accent: '#4f46e5', accentHover: 'oklch(0.52 0.22 275)' },
+  { id: 'violet', labelKey: 'theme.violet', bg: 'oklch(0.12 0.03 300)', accent: '#a855f7', accentHover: 'oklch(0.65 0.22 305)' },
+  { id: 'aurora', labelKey: 'theme.aurora', bg: 'oklch(0.11 0.025 195)', accent: '#06b6d4', accentHover: 'oklch(0.62 0.14 195)' },
 ];
 
 export const DEFAULT_THEME_ID = 'default';

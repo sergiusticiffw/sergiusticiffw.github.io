@@ -200,6 +200,8 @@ const translations = {
     'theme.emerald': 'Emerald',
     'theme.slate': 'Slate',
     'theme.indigo': 'Indigo',
+    'theme.violet': 'Violet',
+    'theme.aurora': 'Aurora',
 
     // Login
     'login.pleaseLogin':
@@ -762,6 +764,8 @@ const translations = {
     'theme.emerald': 'Smarald',
     'theme.slate': 'Ardezie',
     'theme.indigo': 'Indigo',
+    'theme.violet': 'Violet',
+    'theme.aurora': 'Aurora',
 
     // Login
     'login.pleaseLogin':
