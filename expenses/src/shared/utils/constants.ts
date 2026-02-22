@@ -263,6 +263,7 @@ export const getSuggestions = () => {
       'restaurant',
       'ingetata',
       'parc',
+      'alcool',
     ],
     3: ['market', 'apa', 'lunch', 'inghetata', 'straus/glovo food'],
     4: ['flori', 'Nelea', 'Sergiu', 'zi de nastere'],
