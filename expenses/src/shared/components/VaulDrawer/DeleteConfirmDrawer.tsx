@@ -2,6 +2,7 @@ import React from 'react';
 import { Drawer } from 'vaul';
 import { FiTrash2, FiX } from 'react-icons/fi';
 import { useLocalization } from '@shared/context/localization';
+import { Loader } from '@shared/components/Common';
 
 interface DeleteConfirmDrawerProps {
   open: boolean;
@@ -77,17 +78,7 @@ const DeleteConfirmDrawer: React.FC<DeleteConfirmDrawerProps> = ({
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <div className="inline-flex gap-1" aria-label="Loading">
-                  <span
-                    className="w-1.5 h-1.5 rounded-full bg-white animate-[loader-bounce_1.4s_ease-in-out_infinite_both]"
-                    style={{ animationDelay: '-0.32s' }}
-                  />
-                  <span
-                    className="w-1.5 h-1.5 rounded-full bg-white animate-[loader-bounce_1.4s_ease-in-out_infinite_both]"
-                    style={{ animationDelay: '-0.16s' }}
-                  />
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-[loader-bounce_1.4s_ease-in-out_infinite_both]" />
-                </div>
+                <Loader variant="on-button" />
               ) : (
                 <>
                   <FiTrash2 />

@@ -4,7 +4,8 @@ import { useNotification } from '@shared/context/notification';
 import { notificationType } from '@shared/utils/constants';
 import { useFormSubmit } from '@shared/hooks/useFormSubmit';
 import { useFormValidation } from '@shared/hooks/useFormValidation';
-import { FormField } from '@shared/components/Common';
+import { FormField, Loader } from '@shared/components/Common';
+import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
 import { useLoan } from '@shared/context/loan';
 interface LoanFormProps {
   formType: 'add' | 'edit';
@@ -355,14 +356,10 @@ const LoanForm: React.FC<LoanFormProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="btn-submit"
+              className={BTN_SUBMIT_CLASS}
             >
               {isSubmitting ? (
-                <div className="loader">
-                  <span className="loader__element"></span>
-                  <span className="loader__element"></span>
-                  <span className="loader__element"></span>
-                </div>
+                <Loader variant="on-button" />
               ) : formType === 'add' ? (
                 t('common.add')
               ) : (

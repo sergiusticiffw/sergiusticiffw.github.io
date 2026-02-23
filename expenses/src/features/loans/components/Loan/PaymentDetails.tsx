@@ -20,7 +20,9 @@ import {
   processPayments,
 } from '@shared/utils/utils';
 import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
+import { Loader } from '@shared/components/Common';
 import DeleteConfirmDrawer from '@shared/components/VaulDrawer/DeleteConfirmDrawer';
+import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import { fetchLoans as fetchLoansService } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
@@ -205,14 +207,10 @@ const PaymentDetails = (props) => {
             type="submit"
             form={`payment-form-${!isNewModal ? 'edit' : 'add'}`}
             disabled={paymentFormSubmitting}
-            className="btn-submit"
+            className={BTN_SUBMIT_CLASS}
           >
             {paymentFormSubmitting ? (
-              <div className="loader">
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-              </div>
+              <Loader variant="on-button" />
             ) : !isNewModal ? (
               <>
                 <FiEdit2 />

@@ -1,4 +1,5 @@
 export { default as PageHeader } from './PageHeader';
+export { default as Loader } from './Loader';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as StatCard } from './StatCard';
 export { default as StatsGrid } from './StatsGrid';

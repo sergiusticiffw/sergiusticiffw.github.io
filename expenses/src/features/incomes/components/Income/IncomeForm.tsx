@@ -4,7 +4,8 @@ import { useLocalization } from '@shared/context/localization';
 import { useFormSubmit } from '@shared/hooks/useFormSubmit';
 import { useFormValidation } from '@shared/hooks/useFormValidation';
 import { useTags } from '@shared/hooks/useTags';
-import { FormField } from '@shared/components/Common';
+import { FormField, Loader } from '@shared/components/Common';
+import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
 import TagChips from '@shared/components/Common/TagChips';
 import { incomeSuggestions } from '@shared/utils/constants';
 
@@ -164,15 +165,11 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
           <div className="form-actions-sticky">
             <button
               type="submit"
-              className="btn-submit"
+              className={BTN_SUBMIT_CLASS}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <div className="loader">
-                  <span className="loader__element"></span>
-                  <span className="loader__element"></span>
-                  <span className="loader__element"></span>
-                </div>
+                <Loader variant="on-button" />
               ) : formType === 'add' ? (
                 t('common.add')
               ) : (

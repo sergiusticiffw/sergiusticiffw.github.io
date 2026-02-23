@@ -25,13 +25,14 @@ import IncomeIntelligence from '@features/incomes/components/Income/IncomeIntell
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import {
   PageHeader,
+  Loader,
   LoadingSpinner,
   StatCard,
   StatsGrid,
   DeleteConfirmDrawer,
   NoData,
 } from '@shared/components/Common';
-import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
+import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils/layoutClasses';
 import { notificationType } from '@shared/utils/constants';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import {
@@ -368,14 +369,10 @@ const Income = () => {
             type="submit"
             form={`income-form-${!isNewModal ? 'edit' : 'add'}`}
             disabled={incomeFormSubmitting}
-            className="btn-submit"
+            className={BTN_SUBMIT_CLASS}
           >
             {incomeFormSubmitting ? (
-              <div className="loader">
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-              </div>
+              <Loader variant="on-button" />
             ) : !isNewModal ? (
               <>
                 <FiEdit2 />
@@ -414,7 +411,7 @@ const Income = () => {
             setShowEditModal(true);
             setIsNewModal(true);
           }}
-          className="fab"
+          className={FAB_CLASS}
           title={t('incomeForm.addIncome')}
         >
           <FiPlus />

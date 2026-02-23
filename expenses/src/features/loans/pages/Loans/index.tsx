@@ -20,11 +20,12 @@ import {
 import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
 import {
   PageHeader,
+  Loader,
   LoadingSpinner,
   DeleteConfirmDrawer,
   NoData,
 } from '@shared/components/Common';
-import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
+import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils/layoutClasses';
 import { FiCreditCard, FiPlus, FiEdit2 } from 'react-icons/fi';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import LoanForm from '@features/loans/components/Loan/LoanForm';
@@ -279,14 +280,10 @@ const Loans: FC = () => {
             type="submit"
             form="loan-form-add"
             disabled={loanFormSubmitting}
-            className="btn-submit"
+            className={BTN_SUBMIT_CLASS}
           >
             {loanFormSubmitting ? (
-              <div className="loader">
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-              </div>
+              <Loader variant="on-button" />
             ) : (
               <>
                 <FiPlus />
@@ -336,14 +333,10 @@ const Loans: FC = () => {
             type="submit"
             form="loan-form-edit"
             disabled={loanFormEditSubmitting}
-            className="btn-submit"
+            className={BTN_SUBMIT_CLASS}
           >
             {loanFormEditSubmitting ? (
-              <div className="loader">
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-              </div>
+              <Loader variant="on-button" />
             ) : (
               <>
                 <FiEdit2 />
@@ -383,7 +376,7 @@ const Loans: FC = () => {
       {/* FAB – same pattern as transaction (Add Transaction) */}
       <button
         onClick={() => setShowAddModal(true)}
-        className="fab"
+        className={FAB_CLASS}
         title={t('loan.addLoan')}
       >
         <FiPlus />

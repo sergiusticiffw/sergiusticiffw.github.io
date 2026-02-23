@@ -6,8 +6,9 @@ import { getSuggestionTranslationKey } from '@shared/utils/utils';
 import { useFormSubmit } from '@shared/hooks/useFormSubmit';
 import { useFormValidation } from '@shared/hooks/useFormValidation';
 import { useTags, normalizeTag } from '@shared/hooks/useTags';
-import { FormField } from '@shared/components/Common';
+import { FormField, Loader } from '@shared/components/Common';
 import TagChips from '@shared/components/Common/TagChips';
+import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
 import { FiPlus, FiEdit2 } from 'react-icons/fi';
 
 interface TransactionFormProps {
@@ -232,15 +233,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           <div className="form-actions-sticky">
             <button
               type="submit"
-              className="btn-submit"
+              className={BTN_SUBMIT_CLASS}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <div className="loader">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
+                <Loader variant="on-button" />
               ) : (
                 <>
                   {(formType === 'add' || formType === 'quick-add') ? <FiPlus /> : <FiEdit2 />}

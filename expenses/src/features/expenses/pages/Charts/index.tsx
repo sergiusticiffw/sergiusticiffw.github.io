@@ -22,7 +22,8 @@ import DailyAverageTrend from '@features/expenses/components/Charts/DailyAverage
 import LastTwoMonthsAverage from '@features/expenses/components/Home/LastTwoMonthsAverage';
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
 import { useApiClient } from '@shared/hooks/useApiClient';
-import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
+import { Loader } from '@shared/components/Common';
+import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils/layoutClasses';
 
 const componentMap = {
   MonthlyTotals,
@@ -172,14 +173,10 @@ const Charts = () => {
             type="submit"
             form="transaction-form-add"
             disabled={transactionFormSubmitting}
-            className="btn-submit"
+            className={BTN_SUBMIT_CLASS}
           >
             {transactionFormSubmitting ? (
-              <div className="loader">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
+              <Loader variant="on-button" />
             ) : (
               <>
                 <FiPlus />
@@ -212,7 +209,7 @@ const Charts = () => {
       {!filterPanelOpen && (
         <button
           onClick={() => setShowAddModal(true)}
-          className="fab"
+          className={FAB_CLASS}
           title={t('transactionForm.addTransaction')}
         >
           <FiPlus />

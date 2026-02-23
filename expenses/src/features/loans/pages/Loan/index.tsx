@@ -5,7 +5,8 @@ import VaulDrawer from '@shared/components/VaulDrawer';
 import { useParams } from '@tanstack/react-router';
 import PaymentDetails from '@features/loans/components/Loan/PaymentDetails';
 import PaymentForm from '@features/loans/components/Loan/PaymentForm';
-import { LoadingSpinner, StatCard, StatsGrid } from '@shared/components/Common';
+import { Loader, LoadingSpinner, StatCard, StatsGrid } from '@shared/components/Common';
+import { BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils/layoutClasses';
 import { useLoan } from '@shared/context/loan';
 import {
   calculateDaysFrom,
@@ -399,14 +400,10 @@ const Loan: React.FC = () => {
             type="submit"
             form="loan-form-edit"
             disabled={loanFormEditSubmitting}
-            className="btn-submit"
+            className={BTN_SUBMIT_CLASS}
           >
             {loanFormEditSubmitting ? (
-              <div className="loader">
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-              </div>
+              <Loader variant="on-button" />
             ) : (
               <>
                 <FiEdit2 />
@@ -457,14 +454,10 @@ const Loan: React.FC = () => {
             type="submit"
             form="payment-form-add"
             disabled={paymentFormSubmitting}
-            className="btn-submit"
+            className={BTN_SUBMIT_CLASS}
           >
             {paymentFormSubmitting ? (
-              <div className="loader">
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-                <span className="loader__element"></span>
-              </div>
+              <Loader variant="on-button" />
             ) : (
               <>
                 <FiPlus />
@@ -504,7 +497,7 @@ const Loan: React.FC = () => {
       {/* Floating Action Button */}
       <button
         onClick={() => setShowAddPaymentModal(true)}
-        className="fab"
+        className={FAB_CLASS}
         title={t('loan.addPayment')}
       >
         <FiPlus />

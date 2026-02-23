@@ -19,13 +19,14 @@ import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionForm from '@features/expenses/components/TransactionForm';
 import {
   PageHeader,
+  Loader,
   LoadingSpinner,
   StatCard,
   StatsGrid,
   DeleteConfirmDrawer,
   NoData,
 } from '@shared/components/Common';
-import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
+import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils/layoutClasses';
 import {
   FiPlus,
   FiEdit2,
@@ -364,14 +365,10 @@ const NewHome = () => {
             type="submit"
             form="transaction-form-edit"
             disabled={transactionFormSubmitting}
-            className="btn-submit"
+            className={BTN_SUBMIT_CLASS}
           >
             {transactionFormSubmitting ? (
-              <div className="loader">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
+              <Loader variant="on-button" />
             ) : (
               <>
                 <FiEdit2 />
@@ -408,14 +405,10 @@ const NewHome = () => {
             type="submit"
             form="transaction-form-add"
             disabled={transactionFormSubmitting}
-            className="btn-submit"
+            className={BTN_SUBMIT_CLASS}
           >
             {transactionFormSubmitting ? (
-              <div className="loader">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
+              <Loader variant="on-button" />
             ) : (
               <>
                 <FiPlus />
@@ -451,14 +444,10 @@ const NewHome = () => {
             type="submit"
             form="transaction-form-quick-add"
             disabled={quickAddFormSubmitting}
-            className="btn-submit"
+            className={BTN_SUBMIT_CLASS}
           >
             {quickAddFormSubmitting ? (
-              <div className="loader">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
+              <Loader variant="on-button" />
             ) : (
               <>
                 <FiPlus />
@@ -664,7 +653,7 @@ const NewHome = () => {
           {/* FAB - hidden when filter panel is open to avoid overlap */}
           {!filterPanelOpen && (
             <button
-              className="fab"
+              className={FAB_CLASS}
               onClick={() => setShowAddModal(true)}
               title={t('transactionForm.addTransaction')}
             >
