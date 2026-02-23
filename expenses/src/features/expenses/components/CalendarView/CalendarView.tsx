@@ -168,7 +168,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
   return (
     <div
-      className="calendar-view-component"
+      className="calendar-view-component w-full relative"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -199,11 +199,27 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           const amount = eventInfo.event.extendedProps.total;
           const count = eventInfo.event.extendedProps.count;
           const colorClass = getColorClass(amount);
+          const baseClasses =
+            'px-3 py-2 rounded-lg flex flex-col items-center justify-center min-h-10 border-0 outline-none text-center font-semibold leading-tight shadow-[0_1px_3px_rgba(0,0,0,0.2)] box-border ';
+          const colorClasses =
+            colorClass === 'amount-low'
+              ? 'bg-green-500/90 text-white'
+              : colorClass === 'amount-medium'
+                ? 'bg-amber-400/90 text-stone-900'
+                : 'bg-red-600/90 text-white';
+          const responsiveClasses =
+            'max-[640px]:px-2.5 max-[640px]:py-1.5 max-[640px]:min-h-9 max-[640px]:rounded-md';
 
           return (
-            <div className={`calendar-event ${colorClass}`}>
-              <div className="event-amount">{eventInfo.event.title}</div>
-              <div className="event-count">{count} items</div>
+            <div
+              className={`${baseClasses} ${colorClasses} ${responsiveClasses}`}
+            >
+              <div className="text-[0.95rem] font-bold mb-0.5 leading-tight tracking-wide max-[640px]:text-[0.8rem]">
+                {eventInfo.event.title}
+              </div>
+              <div className="text-[0.65rem] font-medium opacity-95 max-[640px]:text-[0.58rem]">
+                {count} items
+              </div>
             </div>
           );
         }}
@@ -218,7 +234,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       />
 
       {/* Month Chart */}
-      <div className="month-chart-wrapper">
+      <div className="month-chart-wrapper mt-6 p-0">
         <Month month={currentMonth} />
       </div>
 
