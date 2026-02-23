@@ -37,6 +37,45 @@ interface AmortizationTableProps {
   amortizationSchedule: AmortizationRow[];
 }
 
+/* Tailwind classes (Etapa 6 – replace amortization-table-* CSS) */
+const AMORT_ROOT =
+  'w-full relative border border-app-subtle overflow-hidden bg-[var(--color-app-bg)] rounded-none';
+const AMORT_HEADER_STICKY =
+  'sticky top-0 z-50 bg-[var(--color-app-bg)] border-b border-app-subtle [transform:translateZ(0)]';
+const AMORT_HEADER_SPLIT = 'flex w-full';
+const AMORT_FIRST_COL_HEADER =
+  'shrink-0 bg-[var(--color-app-bg)] border-r border-app-subtle z-[60]';
+const AMORT_HEADER_INNER =
+  'flex-1 overflow-x-auto overflow-y-hidden overflow-touch min-w-0';
+const AMORT_BODY_VIRTUAL =
+  'overflow-y-auto overflow-touch relative bg-[var(--color-app-bg)] h-[calc(100vh-350px)] min-h-[500px] max-h-[900px] max-md:h-[calc(100vh-280px)] max-md:min-h-[400px] max-md:max-h-[600px] min-xl:h-[calc(100vh-300px)] min-xl:min-h-[600px] min-xl:max-h-[1000px]';
+const AMORT_BODY_SPLIT = 'flex w-full';
+const AMORT_FIRST_COL_BODY =
+  'shrink-0 sticky left-0 z-20 bg-[var(--color-app-bg)] border-r border-app-subtle';
+const AMORT_BODY_HORIZONTAL =
+  'flex-1 overflow-x-auto overflow-y-hidden overflow-touch min-w-0';
+const AMORT_VIRTUAL_CONTAINER = 'relative min-w-max';
+const AMORT_TABLE =
+  'w-full border-separate border-spacing-0 min-w-max';
+const AMORT_TH =
+  'whitespace-nowrap px-3 py-2.5 text-center border-b border-app-subtle text-[var(--color-text-secondary)] font-semibold text-[0.9rem] bg-[var(--color-app-bg)] tracking-wide max-md:px-2.5 max-md:py-2 max-md:text-[0.85rem]';
+const AMORT_TD =
+  'whitespace-nowrap px-3 py-2.5 text-center border-b border-app-subtle text-[var(--color-text-secondary)] text-[0.9rem] max-md:px-2.5 max-md:py-2 max-md:text-[0.85rem]';
+const STICKY_COL_BODY =
+  'sticky left-0 z-10 bg-[var(--color-app-bg)] shadow-[2px_0_2px_-1px_rgba(0,0,0,0.3)] min-w-[100px] isolate pl-3 [transform:translateZ(0)]';
+const STICKY_COL_HEADER =
+  'sticky left-0 z-[30] bg-[var(--color-app-bg)] shadow-[2px_0_2px_-1px_rgba(0,0,0,0.3)] min-w-[100px] isolate pl-3 [transform:translateZ(0)]';
+const AMORT_ROW = 'w-full min-w-max';
+const AMORT_ROW_TABLE =
+  'w-full min-w-max border-separate border-spacing-0 [&_td]:hover:bg-[color-mix(in_srgb,var(--color-app-accent)_8%,transparent)]';
+const ROW_ANNUAL_BORDERS = 'border-t border-b border-[var(--color-border-medium)]';
+const TD_ANNUAL =
+  '!bg-[color-mix(in_srgb,var(--color-app-bg)_85%,black)] font-bold text-[var(--color-text-primary)]';
+const TD_ANNUAL_STICKY =
+  '!bg-[color-mix(in_srgb,var(--color-app-bg)_85%,black)] font-bold text-[var(--color-text-primary)] z-[11]';
+const TD_WAS_PAYED = 'bg-[rgba(30,58,47,0.55)] text-[#d4edda]';
+const TD_WAS_PAYED_STICKY = '!bg-[rgba(30,58,47,0.7)] text-[#d4edda] z-[11]';
+
 const AmortizationTable: React.FC<AmortizationTableProps> = ({
   amortizationSchedule,
 }) => {
@@ -204,39 +243,49 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
     overscan: 5, // Render 5 extra rows outside viewport for smooth scrolling
   });
 
-  // Get row class name
-  const getRowClassName = (row: Row<AmortizationRow>): string => {
+  const getRowKind = (row: Row<AmortizationRow>): 'annual' | 'was-payed' | '' => {
     const original = row.original;
-    if ('type' in original && original.type === 'annual_summary') {
-      return 'annual-summary-row';
-    }
-    if ('was_payed' in original && original.was_payed) {
-      return 'was-payed';
-    }
+    if ('type' in original && original.type === 'annual_summary') return 'annual';
+    if ('was_payed' in original && original.was_payed) return 'was-payed';
     return '';
   };
 
-  const getFirstColRowClassName = (row: Row<AmortizationRow>): string => {
-    const className = getRowClassName(row);
-    // Keep annual summaries styling, but don't tint the first column for paid rows
-    return className === 'was-payed' ? '' : className;
+  const getRowDivClasses = (row: Row<AmortizationRow>): string => {
+    const kind = getRowKind(row);
+    return kind === 'annual' ? ROW_ANNUAL_BORDERS : '';
+  };
+
+  const getFirstColRowDivClasses = (row: Row<AmortizationRow>): string => {
+    const kind = getRowKind(row);
+    return kind === 'annual' ? ROW_ANNUAL_BORDERS : '';
+  };
+
+  const getTdExtraClasses = (row: Row<AmortizationRow>): string => {
+    const kind = getRowKind(row);
+    if (kind === 'annual') return TD_ANNUAL;
+    if (kind === 'was-payed') return TD_WAS_PAYED;
+    return '';
+  };
+
+  const getStickyTdExtraClassesFirstCol = (row: Row<AmortizationRow>): string => {
+    const kind = getRowKind(row);
+    return kind === 'annual' ? TD_ANNUAL_STICKY : '';
   };
 
   return (
-    <div className="amortization-table-tanstack">
+    <div className={AMORT_ROOT}>
       {/* Sticky Header */}
-      <div className="amortization-table-header-sticky">
-        <div className="amortization-table-header-split">
-          {/* Left (fixed) header */}
-          <div className="amortization-table-first-col-header">
-            <table className="amortization-table amortization-table-first-col">
+      <div className={AMORT_HEADER_STICKY}>
+        <div className={AMORT_HEADER_SPLIT}>
+          <div className={AMORT_FIRST_COL_HEADER}>
+            <table className={`${AMORT_TABLE} min-w-0`}>
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.slice(0, 1).map((header) => (
                       <th
                         key={header.id}
-                        className="sticky-col"
+                        className={`sticky-col ${STICKY_COL_HEADER} ${AMORT_TH}`}
                         style={{
                           width: firstColWidth,
                           minWidth: firstColWidth,
@@ -255,18 +304,18 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
             </table>
           </div>
 
-          {/* Right (scrollable) header */}
           <div
             ref={headerScrollRef}
-            className="amortization-table-header-inner"
+            className={`amort-header-inner ${AMORT_HEADER_INNER}`}
           >
-            <table className="amortization-table amortization-table-rest">
+            <table className={AMORT_TABLE}>
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.slice(1).map((header) => (
                       <th
                         key={header.id}
+                        className={AMORT_TH}
                         style={{
                           width: header.getSize(),
                           minWidth: header.getSize(),
@@ -287,16 +336,17 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
         </div>
       </div>
 
-      {/* Virtualized Body */}
-      <div ref={bodyVerticalRef} className="amortization-table-body-virtual">
-        <div className="amortization-table-body-split">
-          {/* Left (fixed) first column */}
+      <div
+        ref={bodyVerticalRef}
+        className={`amort-body-virtual ${AMORT_BODY_VIRTUAL}`}
+      >
+        <div className={AMORT_BODY_SPLIT}>
           <div
-            className="amortization-table-first-col-body"
+            className={AMORT_FIRST_COL_BODY}
             style={{ width: firstColWidth }}
           >
             <div
-              className="amortization-table-virtual-container"
+              className={AMORT_VIRTUAL_CONTAINER}
               style={{
                 height: `${getTotalSize()}px`,
                 width: firstColWidth,
@@ -312,7 +362,7 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
                 return (
                   <div
                     key={`${row.id}-first`}
-                    className={`amortization-table-row amortization-table-first-col-row ${getFirstColRowClassName(row)}`}
+                    className={`${AMORT_ROW} ${getFirstColRowDivClasses(row)}`}
                     style={{
                       position: 'absolute',
                       top: 0,
@@ -322,11 +372,11 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                   >
-                    <table className="amortization-table amortization-table-first-col">
+                    <table className={`${AMORT_ROW_TABLE} min-w-0 [&_td]:hover:!bg-[color-mix(in_srgb,var(--color-app-accent)_8%,transparent)]`}>
                       <tbody>
                         <tr>
                           <td
-                            className="sticky-col"
+                            className={`sticky-col ${STICKY_COL_BODY} ${AMORT_TD} ${getStickyTdExtraClassesFirstCol(row)}`}
                             style={{
                               width: firstColWidth,
                               minWidth: firstColWidth,
@@ -347,13 +397,9 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
             </div>
           </div>
 
-          {/* Right (scrollable) rest of columns */}
-          <div
-            ref={bodyHorizontalRef}
-            className="amortization-table-body-horizontal"
-          >
+          <div ref={bodyHorizontalRef} className={AMORT_BODY_HORIZONTAL}>
             <div
-              className="amortization-table-virtual-container"
+              className={AMORT_VIRTUAL_CONTAINER}
               style={{
                 height: `${getTotalSize()}px`,
                 width: '100%',
@@ -367,7 +413,7 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
                 return (
                   <div
                     key={row.id}
-                    className={`amortization-table-row ${getRowClassName(row)}`}
+                    className={`${AMORT_ROW} ${getRowDivClasses(row)}`}
                     style={{
                       position: 'absolute',
                       top: 0,
@@ -377,7 +423,7 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                   >
-                    <table className="amortization-table amortization-table-rest">
+                    <table className={AMORT_ROW_TABLE}>
                       <tbody>
                         <tr>
                           {row
@@ -386,6 +432,7 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
                             .map((cell) => (
                               <td
                                 key={cell.id}
+                                className={`${AMORT_TD} ${getTdExtraClasses(row)}`}
                                 style={{
                                   width: cell.column.getSize(),
                                   minWidth: cell.column.getSize(),

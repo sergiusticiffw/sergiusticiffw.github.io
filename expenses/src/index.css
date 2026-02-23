@@ -412,146 +412,24 @@ html[data-theme="aurora"] {
     }
   }
 
-  /* Amortization table (TanStack + virtual) */
-  .amortization-table-tanstack {
-    width: 100%;
-    position: relative;
-    border: 1px solid var(--color-border-subtle);
-    border-radius: 0;
-    overflow: hidden;
-    background: var(--color-app-bg);
-  }
-  .amortization-table-header-sticky {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: var(--color-app-bg);
-    border-bottom: 1px solid var(--color-border-subtle);
-    transform: translate3d(0, 0, 0);
-  }
-  .amortization-table-header-split {
-    display: flex;
-    width: 100%;
-  }
-  .amortization-table-first-col-header {
-    flex: 0 0 auto;
-    background: var(--color-app-bg);
-    border-right: 1px solid var(--color-border-subtle);
-    z-index: 60;
-  }
-  .amortization-table-header-inner {
-    flex: 1 1 auto;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
+  /* Amortization table: scrollbar + sticky-col::after (layout via Tailwind in AmortizationTable.tsx) */
+  .amort-header-inner {
     scrollbar-width: none;
   }
-  .amortization-table-header-inner::-webkit-scrollbar {
+  .amort-header-inner::-webkit-scrollbar {
     display: none;
   }
-  .amortization-table-header-inner .amortization-table {
-    min-width: max-content;
-  }
-  .amortization-table-body-virtual {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    position: relative;
-    background: var(--color-app-bg);
-    height: calc(100vh - 350px);
-    min-height: 500px;
-    max-height: 900px;
+  .amort-body-virtual {
     scrollbar-width: thin;
     scrollbar-color: var(--color-border-medium) transparent;
   }
-  .amortization-table-body-virtual::-webkit-scrollbar {
+  .amort-body-virtual::-webkit-scrollbar {
     height: 10px;
     width: 10px;
   }
-  .amortization-table-body-virtual::-webkit-scrollbar-thumb {
+  .amort-body-virtual::-webkit-scrollbar-thumb {
     background: var(--color-surface-hover);
     border-radius: 999px;
-  }
-  .amortization-table-body-split {
-    display: flex;
-    width: 100%;
-  }
-  .amortization-table-first-col-body {
-    flex: 0 0 auto;
-    position: sticky;
-    left: 0;
-    z-index: 20;
-    background: var(--color-app-bg);
-    border-right: 1px solid var(--color-border-subtle);
-  }
-  .amortization-table-body-horizontal {
-    flex: 1 1 auto;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
-  .amortization-table-virtual-container {
-    position: relative;
-    width: 100%;
-    min-width: max-content;
-  }
-  .amortization-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    min-width: max-content;
-  }
-  .amortization-table th,
-  .amortization-table td {
-    white-space: nowrap;
-    padding: 10px 12px;
-    text-align: center;
-    border-bottom: 1px solid var(--color-border-subtle);
-  }
-  .amortization-table th {
-    color: var(--color-text-secondary);
-    font-weight: 600;
-    font-size: 0.9rem;
-    background: var(--color-app-bg);
-    letter-spacing: 0.2px;
-  }
-  .amortization-table td {
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-  }
-  .amortization-table-row {
-    width: 100%;
-    min-width: max-content;
-  }
-  .amortization-table-row table {
-    width: 100%;
-    min-width: max-content;
-    border-collapse: separate;
-    border-spacing: 0;
-  }
-  .amortization-table-row:hover td {
-    background: color-mix(in srgb, var(--color-app-accent) 8%, transparent);
-  }
-  .amortization-table .sticky-col {
-    position: sticky;
-    left: 0;
-    background-color: var(--color-app-bg) !important;
-    z-index: 10;
-    box-shadow: 2px 0 2px -1px rgba(0, 0, 0, 0.3);
-    min-width: 100px;
-    isolation: isolate;
-  }
-  .amortization-table-row td.sticky-col {
-    background-color: var(--color-app-bg) !important;
-  }
-  .amortization-table-row:hover td.sticky-col {
-    background-color: color-mix(in srgb, var(--color-app-accent) 8%, transparent) !important;
-  }
-  .amortization-table-header-sticky .amortization-table th.sticky-col {
-    z-index: 30 !important;
-    background-color: var(--color-app-bg) !important;
-    padding-left: 15px;
-    transform: translate3d(0, 0, 0);
-    isolation: isolate;
   }
   .sticky-col::after {
     content: '';
@@ -562,46 +440,6 @@ html[data-theme="aurora"] {
     width: 2px;
     background: linear-gradient(to right, rgba(0, 0, 0, 0.3), transparent);
     pointer-events: none;
-  }
-  .amortization-table-row.annual-summary-row {
-    border-top: 1px solid var(--color-border-medium);
-    border-bottom: 1px solid var(--color-border-medium);
-  }
-  .amortization-table-row.annual-summary-row td {
-    background: color-mix(in srgb, var(--color-app-bg) 85%, black) !important;
-    font-weight: bold;
-    color: var(--color-text-primary);
-  }
-  .amortization-table-row.annual-summary-row .sticky-col {
-    background: color-mix(in srgb, var(--color-app-bg) 85%, black) !important;
-    z-index: 11 !important;
-  }
-  .amortization-table-row.was-payed td {
-    background: rgba(30, 58, 47, 0.55);
-    color: #d4edda;
-  }
-  .amortization-table-row.was-payed .sticky-col {
-    background: rgba(30, 58, 47, 0.7) !important;
-    z-index: 11 !important;
-  }
-  @media (max-width: 768px) {
-    .amortization-table-body-virtual {
-      height: calc(100vh - 280px) !important;
-      min-height: 400px;
-      max-height: 600px;
-    }
-    .amortization-table th,
-    .amortization-table td {
-      padding: 8px 10px;
-      font-size: 0.85rem;
-    }
-  }
-  @media (min-width: 1200px) {
-    .amortization-table-body-virtual {
-      height: calc(100vh - 300px);
-      min-height: 600px;
-      max-height: 1000px;
-    }
   }
 
 }
