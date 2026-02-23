@@ -26,10 +26,12 @@ function requireAuth() {
 
 function RootComponent() {
   return (
-    <div className="app-container" style={{ background: 'var(--color-app-bg)' }}>
+    <div className="h-dvh w-full max-w-full flex flex-col overflow-hidden bg-[var(--color-app-bg)]">
       <SyncStatusIndicator />
       <Navbar />
-      <main className="main-content" style={{ background: 'var(--color-app-bg)' }}>
+      <main
+        className="main-content flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-[95px] w-full relative block scroll-smooth bg-[var(--color-app-bg)] overflow-touch"
+      >
         <Suspense fallback={<LoadingSpinner />}>
           <ErrorBoundary
             onError={(error, errorInfo) => {

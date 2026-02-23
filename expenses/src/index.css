@@ -166,24 +166,7 @@
   }
 }
 
-/* Layout: app-container + main-content (comportament ca înainte de Tailwind – scroll doar în main) */
-.app-container {
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.main-content {
-  flex: 1;
-  min-height: 0;
-  padding-bottom: 95px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  width: 100%;
-  position: relative;
-  display: block;
-}
+/* Layout: padding-bottom override when main has no .month-stats (Tailwind has no :has() for this) */
 .main-content:not(:has(.month-stats)) {
   padding-bottom: 60px;
 }
