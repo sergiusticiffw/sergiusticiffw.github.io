@@ -162,7 +162,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
         />
 
         {!hideSubmitButton && (
-          <div className="form-actions-sticky">
+          <div className="sticky bottom-0 left-0 right-0 z-10 bg-[var(--color-app-bg)] pt-3">
             <button
               type="submit"
               className={BTN_SUBMIT_CLASS}

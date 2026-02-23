@@ -1,0 +1,182 @@
+/* FullCalendar + Highcharts (month chart) overrides – importat după Tailwind */
+
+.calendar-view-component .month-chart-wrapper .highcharts-container {
+  width: 100% !important;
+}
+@media (max-width: 640px) {
+  .calendar-view-component .month-chart-wrapper .highcharts-container {
+    height: 350px !important;
+  }
+  .calendar-view-component .month-chart-wrapper svg {
+    height: 350px !important;
+  }
+  .calendar-view-component .month-chart-wrapper text {
+    font-size: 13px !important;
+  }
+}
+.calendar-view-component .fc {
+  position: relative;
+  z-index: 1;
+  touch-action: pan-y;
+  background: transparent;
+  font-size: 0.85rem;
+}
+.calendar-view-component .fc .fc-scrollgrid,
+.calendar-view-component .fc .fc-scrollgrid-section table,
+.calendar-view-component .fc table {
+  border: none !important;
+}
+.calendar-view-component .fc .fc-scrollgrid td,
+.calendar-view-component .fc .fc-scrollgrid th {
+  border: none !important;
+  outline: none;
+  box-shadow: none;
+}
+.calendar-view-component .fc .fc-theme-standard td,
+.calendar-view-component .fc .fc-theme-standard th {
+  border: none !important;
+  border-color: transparent;
+  outline: none;
+  box-shadow: none;
+}
+.calendar-view-component .fc .fc-daygrid-body,
+.calendar-view-component .fc .fc-scrollgrid-sync-table,
+.calendar-view-component .fc .fc-scrollgrid-section-body table {
+  border: none !important;
+}
+.calendar-view-component .fc .fc-col-header {
+  background: color-mix(in srgb, var(--color-app-bg) 60%, black);
+}
+.calendar-view-component .fc .fc-col-header th {
+  background: color-mix(in srgb, var(--color-app-bg) 60%, black);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  padding: 0.6rem 0.2rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}
+@media (max-width: 640px) {
+  .calendar-view-component .fc .fc-col-header th {
+    padding: 0.45rem 0.1rem;
+    font-size: 0.65rem;
+  }
+}
+.calendar-view-component .fc .fc-daygrid-day {
+  background: transparent;
+  border: none;
+  border-color: transparent;
+  min-height: 72px;
+  pointer-events: auto;
+  position: relative;
+  vertical-align: top;
+}
+.calendar-view-component .fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
+  color: var(--color-text-placeholder);
+}
+@media (max-width: 640px) {
+  .calendar-view-component .fc .fc-daygrid-day {
+    min-height: 58px;
+  }
+}
+.calendar-view-component .fc .fc-daygrid-day .fc-daygrid-day-frame {
+  position: relative;
+  min-height: 100%;
+  border: none !important;
+  outline: none;
+  box-shadow: none;
+}
+.calendar-view-component .fc .fc-daygrid-day .fc-daygrid-day-number {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  left: auto;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 0.15rem 0.35rem;
+  pointer-events: auto;
+  background: transparent;
+}
+@media (max-width: 640px) {
+  .calendar-view-component .fc .fc-daygrid-day .fc-daygrid-day-number {
+    font-size: 0.7rem;
+    top: 0.15rem;
+    right: 0.15rem;
+    padding: 0.1rem 0.25rem;
+  }
+}
+.calendar-view-component .fc .fc-daygrid-day.calendar-day-today {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none;
+}
+.calendar-view-component .fc .fc-daygrid-day.calendar-day-today .fc-daygrid-day-number {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  color: var(--color-text-primary) !important;
+  font-weight: 600;
+  background: transparent;
+  width: auto;
+  height: auto;
+  display: block;
+  margin: 0;
+  padding: 0.15rem 0.35rem;
+  box-shadow: none;
+}
+@media (max-width: 640px) {
+  .calendar-view-component .fc .fc-daygrid-day.calendar-day-today .fc-daygrid-day-number {
+    font-size: 0.7rem;
+    top: 0.15rem;
+    right: 0.15rem;
+    padding: 0.1rem 0.25rem;
+  }
+}
+.calendar-view-component .fc .fc-daygrid-day-events {
+  margin-top: 1.5rem;
+  margin-left: 0.15rem;
+  margin-right: 0.15rem;
+  margin-bottom: 0.25rem;
+  border: none !important;
+  outline: none;
+}
+.calendar-view-component .fc .fc-event,
+.calendar-view-component .fc a.fc-event,
+.calendar-view-component .fc .fc-event-main,
+.calendar-view-component .fc .fc-event-main-frame {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  padding: 0 !important;
+  pointer-events: auto;
+  box-shadow: none !important;
+}
+.calendar-view-component .fc .fc-daygrid-event {
+  margin: 0.2rem 0;
+  pointer-events: auto;
+  border: none !important;
+  outline: none;
+}
+.calendar-view-component .fc .fc-daygrid-event-harness {
+  border: none !important;
+  outline: none;
+}
+.calendar-view-component .fc .fc-daygrid-event-harness .fc-event {
+  border: none !important;
+  box-shadow: none !important;
+}
+.calendar-view-component .fc .fc-event .fc-event-main,
+.calendar-view-component .fc .fc-event .fc-event-main > div {
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+}
+.calendar-view-component .fc .fc-event-time {
+  display: none;
+}
+@media (max-width: 640px) {
+  .calendar-view-component .fc {
+    font-size: 0.75rem;
+  }
+}
