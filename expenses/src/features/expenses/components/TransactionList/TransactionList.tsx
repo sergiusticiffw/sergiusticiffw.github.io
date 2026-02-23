@@ -144,15 +144,16 @@ const TransactionList: React.FC<TransactionListProps> = ({
         return (
           <div key={transaction.id} className="relative w-full rounded-2xl overflow-hidden">
             <div
-              className={`swipe-actions-background rounded-2xl ${isThisItemSwiped && (deleteVisible || editVisible) ? 'visible' : ''}`}
+              data-swipe-actions
+              className={`absolute inset-0 flex items-center justify-between pointer-events-none z-[1] rounded-2xl opacity-0 transition-opacity duration-200 ${isThisItemSwiped && (deleteVisible || editVisible) ? 'opacity-100' : ''}`}
             >
               {isThisItemSwiped && deleteVisible && (
-                <div className="delete-action-bg">
+                <div className="absolute left-5 w-[50px] h-[50px] rounded-full flex items-center justify-center text-white text-lg bg-gradient-to-br from-red-500 to-red-600 shadow-[0_2px_12px_rgba(239,68,68,0.4)] transition-transform duration-300 [&_svg]:text-[1.25rem] [&_svg]:text-white">
                   <FiTrash2 />
                 </div>
               )}
               {isThisItemSwiped && editVisible && (
-                <div className="edit-action-bg">
+                <div className="absolute right-5 w-[50px] h-[50px] rounded-full flex items-center justify-center text-white text-lg bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] shadow-[0_2px_12px_var(--color-app-accent-shadow)] transition-transform duration-300 [&_svg]:text-[1.25rem] [&_svg]:text-white">
                   <FiEdit2 />
                 </div>
               )}
