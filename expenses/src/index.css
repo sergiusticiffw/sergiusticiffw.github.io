@@ -57,6 +57,15 @@
   --color-input-focus-ring: color-mix(in srgb, var(--color-app-accent) 28%, transparent);
   --color-btn-on-accent: #fff;
 
+  /* Aliases for Tailwind utilities (text-app-primary, bg-app-surface, border-app-subtle, etc.) */
+  --color-app-primary: var(--color-text-primary);
+  --color-app-secondary: var(--color-text-secondary);
+  --color-app-muted: var(--color-text-muted);
+  --color-app-placeholder: var(--color-text-placeholder);
+  --color-app-surface: var(--color-surface);
+  --color-app-surface-hover: var(--color-surface-hover);
+  --color-app-subtle: var(--color-border-subtle);
+
   /* Z-index */
   --z-dropdown: 1000;
   --z-sticky: 1020;
@@ -225,15 +234,8 @@ html[data-theme="aurora"] {
   --color-app-accent-shadow: color-mix(in srgb, #06b6d4 36%, transparent);
 }
 
-/* Tailwind @layer utilities – tema + overflow touch (Tailwind nu are -webkit-overflow-scrolling) */
+/* Tailwind @layer utilities – overflow-touch (Tailwind nu are -webkit-overflow-scrolling); culorile app-* sunt generate din @theme */
 @layer utilities {
-  .text-app-primary { color: var(--color-text-primary); }
-  .text-app-secondary { color: var(--color-text-secondary); }
-  .text-app-muted { color: var(--color-text-muted); }
-  .text-app-placeholder { color: var(--color-text-placeholder); }
-  .bg-app-surface { background: var(--color-surface); }
-  .bg-app-surface-hover { background: var(--color-surface-hover); }
-  .border-app-subtle { border-color: var(--color-border-subtle); }
   .overflow-touch { -webkit-overflow-scrolling: touch; }
 }
 
