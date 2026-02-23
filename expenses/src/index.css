@@ -444,15 +444,13 @@ html[data-theme="aurora"] {
 
 }
 
-/* Vaul drawer: fallback când dvh nu e suportat */
+/* Vaul: fallback fără dvh + blocare scroll când drawer deschis */
 @supports not (height: 1dvh) {
   .vaul-drawer-content-fallback {
     height: 85vh;
     max-height: 85vh;
   }
 }
-
-/* Previne deplasarea nedorită a elementelor fixe pe iOS */
 html.vaul-drawer-open {
   position: fixed;
   width: 100%;
