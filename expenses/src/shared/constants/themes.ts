@@ -22,6 +22,9 @@ export const APP_THEMES: ThemeDefinition[] = [
   { id: 'indigo', labelKey: 'theme.indigo', bg: 'oklch(0.13 0.025 275)', accent: '#4f46e5', accentHover: 'oklch(0.52 0.22 275)' },
   { id: 'violet', labelKey: 'theme.violet', bg: 'oklch(0.12 0.03 300)', accent: '#a855f7', accentHover: 'oklch(0.65 0.22 305)' },
   { id: 'aurora', labelKey: 'theme.aurora', bg: 'oklch(0.11 0.025 195)', accent: '#06b6d4', accentHover: 'oklch(0.62 0.14 195)' },
+  { id: 'rose', labelKey: 'theme.rose', bg: 'oklch(0.14 0.02 350)', accent: '#e11d48', accentHover: 'oklch(0.6 0.22 350)' },
+  { id: 'amber', labelKey: 'theme.amber', bg: 'oklch(0.13 0.02 70)', accent: '#f59e0b', accentHover: 'oklch(0.72 0.18 70)' },
+  { id: 'sky', labelKey: 'theme.sky', bg: 'oklch(0.14 0.02 230)', accent: '#0ea5e9', accentHover: 'oklch(0.65 0.15 230)' },
 ];
 
 export const DEFAULT_THEME_ID = 'default';

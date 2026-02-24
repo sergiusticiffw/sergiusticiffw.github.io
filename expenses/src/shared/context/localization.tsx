@@ -202,6 +202,9 @@ const translations = {
     'theme.indigo': 'Indigo',
     'theme.violet': 'Violet',
     'theme.aurora': 'Aurora',
+    'theme.rose': 'Rose',
+    'theme.amber': 'Amber',
+    'theme.sky': 'Sky',
 
     // Login
     'login.pleaseLogin':
@@ -767,6 +770,9 @@ const translations = {
     'theme.indigo': 'Indigo',
     'theme.violet': 'Violet',
     'theme.aurora': 'Aurora',
+    'theme.rose': 'Roz',
+    'theme.amber': 'Chihlimbar',
+    'theme.sky': 'Cer',
 
     // Login
     'login.pleaseLogin':
