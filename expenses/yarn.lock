@@ -1533,13 +1533,13 @@
   integrity sha512-Kp/WSt411ZWYvgXy6uiv5RmhHrz9cAml05AQPrtdAp7eUqvIDbMGPnML25OKbzR3RJ1q4wgENxDTvlGPa9+Mww==
 
 "@tanstack/react-router@^1.157.18":
-  version "1.162.4"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.162.4.tgz#b7daf6c00db02f7d69f0f609cdfe0a66750857aa"
-  integrity sha512-FMUMoTVZk+gFn1upTSxr7LenD3LK5Gi+pjSLf5IB2aT1uutHiFYEYWV0JunPry4Ac4OPOxMf9G0YM3Yyd8iSFw==
+  version "1.162.8"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.162.8.tgz#0ef84dd38fd3798e0d7313bbb2fa48f6671f13b1"
+  integrity sha512-WunoknGI5ielJ833yl/F7Vq4nv/OWzrJVBsMgyxX16Db1DwVvX/B5zTg8EMjdZUOJ7ONpvur3t4aq7KQiYRagQ==
   dependencies:
     "@tanstack/history" "1.161.4"
     "@tanstack/react-store" "^0.9.1"
-    "@tanstack/router-core" "1.162.2"
+    "@tanstack/router-core" "1.162.6"
     isbot "^5.1.22"
     tiny-invariant "^1.3.3"
     tiny-warning "^1.0.3"
@@ -1560,16 +1560,16 @@
     "@tanstack/table-core" "8.21.3"
 
 "@tanstack/react-virtual@^3.13.18":
-  version "3.13.18"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-virtual/-/react-virtual-3.13.18.tgz#9124ee9f08b2ca3c67ffd508dae3732328983362"
-  integrity sha512-dZkhyfahpvlaV0rIKnvQiVoWPyURppl6w4m9IwMDpuIjcJ1sD9YGWrt0wISvgU7ewACXx2Ct46WPgI6qAD4v6A==
+  version "3.13.19"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-virtual/-/react-virtual-3.13.19.tgz#969466d6260daa8bc9e1d2bf0711510f34f0fe93"
+  integrity sha512-KzwmU1IbE0IvCZSm6OXkS+kRdrgW2c2P3Ho3NC+zZXWK6oObv/L+lcV/2VuJ+snVESRlMJ+w/fg4WXI/JzoNGQ==
   dependencies:
-    "@tanstack/virtual-core" "3.13.18"
+    "@tanstack/virtual-core" "3.13.19"
 
-"@tanstack/router-core@1.162.2":
-  version "1.162.2"
-  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.162.2.tgz#d9e935765824e3c45c19484814f65fd671d103fb"
-  integrity sha512-su/X6YP7LIhiy3FWkvCb5JL2LVmfupMXavvfyuPQayWb+E1NJQhYU8dbEcSGB0sNIMZeAmz0iIBSV2MVvuzQ8g==
+"@tanstack/router-core@1.162.6":
+  version "1.162.6"
+  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.162.6.tgz#6f4078d2e5f2762cc40c103af43b8860b6fc20af"
+  integrity sha512-WFMNysDsDtnlM0G0L4LPWJuvpGatlPvBLGlPnieWYKem/Ed4mRHu7Hqw78MR/CMuFSRi9Gvv91/h8F3EVswAJw==
   dependencies:
     "@tanstack/history" "1.161.4"
     "@tanstack/store" "^0.9.1"
@@ -1589,10 +1589,10 @@
   resolved "https://registry.yarnpkg.com/@tanstack/table-core/-/table-core-8.21.3.tgz#2977727d8fc8dfa079112d9f4d4c019110f1732c"
   integrity sha512-ldZXEhOBb8Is7xLs01fR3YEc3DERiz5silj8tnGkFZytt1abEvl/GhUmCE0PMLaMPTa3Jk4HbKmRlHmu+gCftg==
 
-"@tanstack/virtual-core@3.13.18":
-  version "3.13.18"
-  resolved "https://registry.yarnpkg.com/@tanstack/virtual-core/-/virtual-core-3.13.18.tgz#586e3c1fe08547ee6abf87e8fb7c99087b9c47ff"
-  integrity sha512-Mx86Hqu1k39icq2Zusq+Ey2J6dDWTjDvEv43PJtRCoEYTLyfaPnxIQ6iy7YAOK0NV/qOEmZQ/uCufrppZxTgcg==
+"@tanstack/virtual-core@3.13.19":
+  version "3.13.19"
+  resolved "https://registry.yarnpkg.com/@tanstack/virtual-core/-/virtual-core-3.13.19.tgz#ab7b5de0b7ba17f22530f4efda5bf2b771fbda9d"
+  integrity sha512-/BMP7kNhzKOd7wnDeB8NrIRNLwkf5AhCYCvtfZV2GXWbBieFm/el0n6LOAXlTi6ZwHICSNnQcIxRCWHrLzDY+g==
 
 "@tybys/wasm-util@^0.10.1":
   version "0.10.1"
