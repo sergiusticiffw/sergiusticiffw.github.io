@@ -25,6 +25,8 @@ export interface ApiClientConfig {
   dataDispatch?: (action: any) => void;
   dispatch?: (action: any) => void;
   retryConfig?: typeof retryPresets.standard;
+  /** Called when session expires (403); use to redirect to login */
+  onSessionExpired?: () => void;
 }
 
 export interface ApiRequestOptions extends RequestInit {
@@ -52,6 +54,7 @@ class ApiClient {
   private dataDispatch?: (action: any) => void;
   private dispatch?: (action: any) => void;
   private retryConfig: typeof retryPresets.standard;
+  private onSessionExpired?: () => void;
 
   constructor(config: ApiClientConfig) {
     this.token = config.token;
@@ -60,6 +63,7 @@ class ApiClient {
     this.dataDispatch = config.dataDispatch;
     this.dispatch = config.dispatch;
     this.retryConfig = config.retryConfig || retryPresets.standard;
+    this.onSessionExpired = config.onSessionExpired;
   }
 
   /**
@@ -85,7 +89,7 @@ class ApiClient {
     response: Response,
     url: string
   ): Promise<never> {
-    // Handle 403 - Unauthorized
+    // Handle 403 - Unauthorized (session expired)
     if (response.status === 403) {
       logger.error('API request unauthorized (403)');
 
@@ -99,30 +103,35 @@ class ApiClient {
 
           if (refreshResponse.status === 403) {
             logout(this.dispatch, this.dataDispatch);
-            // Use groupId to replace previous session expired errors
             if (this.showNotification) {
               this.showNotification(
                 'Session expired. Please log in again.',
                 'error',
-                { groupId: 'session-expired', duration: 10000 } // Auto-dismiss after 10 seconds
+                { groupId: 'session-expired', duration: 10000 }
               );
             }
+            this.onSessionExpired?.();
             throw new Error('Session expired. Please log in again.');
           }
         } catch (error) {
           if (this.dispatch && this.dataDispatch) {
             logout(this.dispatch, this.dataDispatch);
           }
-          // Use groupId to replace previous session expired errors
           if (this.showNotification) {
             this.showNotification(
               'Session expired. Please log in again.',
               'error',
-              { groupId: 'session-expired', duration: 10000 } // Auto-dismiss after 10 seconds
+              { groupId: 'session-expired', duration: 10000 }
             );
           }
+          this.onSessionExpired?.();
           throw new Error('Session expired. Please log in again.');
         }
+      } else {
+        // No dispatch: clear storage so login page shows correctly, then redirect
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
+        this.onSessionExpired?.();
       }
     }
 

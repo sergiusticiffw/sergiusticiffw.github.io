@@ -254,15 +254,9 @@ html[data-theme="sky"] {
 
 @import "./fullcalendar-overrides.css";
 
-/* Custom CSS doar unde Tailwind nu poate: swipe overlay, amort scrollbar, keyframes */
+/* Custom CSS doar unde Tailwind nu poate: amort scrollbar */
 @layer components {
-  /* Swipe actions: scale effect when user is actively swiping (useSwipeActions sets body.action-active) */
-  body.action-active [data-swipe-actions] > div {
-    transform: scale(1.3);
-    transition: transform 0.2s ease-out;
-  }
-
-  /* Amortization table: scrollbar + sticky-col::after (layout via Tailwind in AmortizationTable.tsx) */
+  /* Amortization table: scrollbar (sticky-col::after moved to Tailwind in AmortizationTable.tsx) */
   .amort-header-inner {
     scrollbar-width: none;
   }

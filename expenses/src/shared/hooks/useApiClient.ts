@@ -3,6 +3,7 @@
  */
 
 import { useMemo } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { createApiClient, ApiClient } from '@shared/api/client';
 import { useAuthState, useAuthDispatch } from '@shared/context/context';
 import { useNotification } from '@shared/context/notification';
@@ -16,6 +17,7 @@ export function useApiClient(): ApiClient | null {
   const showNotification = useNotification();
   const { dataDispatch } = useExpenseData();
   const dispatch = useAuthDispatch();
+  const navigate = useNavigate();
 
   const apiClient = useMemo(() => {
     if (!authState?.token) {
@@ -27,8 +29,9 @@ export function useApiClient(): ApiClient | null {
       showNotification,
       dataDispatch,
       dispatch,
+      onSessionExpired: () => navigate({ to: '/expenses/login' }),
     });
-  }, [authState?.token, showNotification, dataDispatch, dispatch]);
+  }, [authState?.token, showNotification, dataDispatch, dispatch, navigate]);
 
   return apiClient;
 }
