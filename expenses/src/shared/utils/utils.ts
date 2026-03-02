@@ -8,12 +8,14 @@ import {
 import { isIndexedDBAvailable } from './indexedDB';
 import { logger } from './logger';
 import { retryWithBackoff, retryPresets } from './retry';
-import { createApiClient } from '@shared/api/client';
-import { fetchExpenses } from '@features/expenses/api/expenses';
+import { getApiBaseUrl, fetchWithFallback } from './apiBase';
 
-// API Configuration
-export const API_BASE_URL =
-  'https://expenses-api-proxy.sergiustici1993.workers.dev';
+/** Build API URL without double slashes */
+function buildApiUrl(path: string): string {
+  const base = getApiBaseUrl().replace(/\/+$/, '');
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${p}`.replace(/([^:]\/)\/+/g, '$1');
+}
 
 const handleErrors = (
   response: Response,
@@ -22,16 +24,18 @@ const handleErrors = (
   dispatch: any
 ) => {
   if (!response.ok) {
-    fetch(`${API_BASE_URL}/jwt/token`, options).then((response) => {
-      if (response.status === 403) {
-        // Add null checks before calling logout
-        if (dispatch && dataDispatch) {
-          logout(dispatch, dataDispatch);
-        } else {
-          logger.error('Dispatch functions not available for logout');
+    fetchWithFallback(`${getApiBaseUrl()}/jwt/token`, options).then(
+      (response) => {
+        if (response.status === 403) {
+          // Add null checks before calling logout
+          if (dispatch && dataDispatch) {
+            logout(dispatch, dataDispatch);
+          } else {
+            logger.error('Dispatch functions not available for logout');
+          }
         }
       }
-    });
+    );
     return response.statusText;
   }
 
@@ -183,10 +187,10 @@ export const fetchRequest = (
     return;
   }
 
-  // Use retry logic for fetch requests
+  // Use retry logic for fetch requests (fetchWithFallback = Pantheon → Cloudflare)
   retryWithBackoff(
     async () => {
-      const response = await fetch(url, options);
+      const response = await fetchWithFallback(url, options);
       return handleErrors(response, options, dataDispatch, dispatch);
     },
     {
@@ -302,7 +306,7 @@ export const deleteNode = async (
         );
 
         if (paymentToDelete) {
-          const url = `${API_BASE_URL}/node/${nid}?_format=json`;
+          const url = `${getApiBaseUrl()}/node/${nid}?_format=json`;
 
           // Delete offline (saves locally and adds to sync queue)
           await deletePaymentOffline(loanId, nid, url);
@@ -344,11 +348,12 @@ export const deleteNode = async (
         } else {
           // Payment not found locally, try to delete from server
           const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
-          fetch(`${API_BASE_URL}/node/${nid}?_format=json`, fetchOptions).then(
-            (response) => {
-              callback(response);
-            }
-          );
+          fetch(
+            `${getApiBaseUrl()}/node/${nid}?_format=json`,
+            fetchOptions
+          ).then((response) => {
+            callback(response);
+          });
         }
       } else {
         // Handle expense/income deletion
@@ -359,7 +364,7 @@ export const deleteNode = async (
           // Determine entity type
           const entityType =
             itemToDelete.type === 'transaction' ? 'expense' : 'income';
-          const url = `${API_BASE_URL}/node/${nid}?_format=json`;
+          const url = `${getApiBaseUrl()}/node/${nid}?_format=json`;
 
           // Delete offline (saves locally and adds to sync queue)
           await deleteOffline(nid, entityType, url);
@@ -398,18 +403,19 @@ export const deleteNode = async (
         } else {
           // Item not found locally, try to delete from server
           const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
-          fetch(`${API_BASE_URL}/node/${nid}?_format=json`, fetchOptions).then(
-            (response) => {
-              callback(response);
-            }
-          );
+          fetch(
+            `${getApiBaseUrl()}/node/${nid}?_format=json`,
+            fetchOptions
+          ).then((response) => {
+            callback(response);
+          });
         }
       }
     } catch (error) {
       console.error('Error in offline delete:', error);
       // Fallback to original behavior
       const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
-      fetch(`${API_BASE_URL}/node/${nid}?_format=json`, fetchOptions).then(
+      fetch(`${getApiBaseUrl()}/node/${nid}?_format=json`, fetchOptions).then(
         (response) => {
           callback(response);
         }
@@ -418,7 +424,7 @@ export const deleteNode = async (
   } else {
     // Original behavior if no dataDispatch or IndexedDB not available
     const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
-    fetch(`${API_BASE_URL}/node/${nid}?_format=json`, fetchOptions).then(
+    fetch(`${getApiBaseUrl()}/node/${nid}?_format=json`, fetchOptions).then(
       (response) => {
         callback(response);
       }
@@ -452,7 +458,7 @@ export const deleteLoan = async (
       const loanToDelete = currentLoans.find((loan: any) => loan.id === nid);
 
       if (loanToDelete) {
-        const url = `${API_BASE_URL}/node/${nid}?_format=json`;
+        const url = `${getApiBaseUrl()}/node/${nid}?_format=json`;
 
         // Delete offline (saves locally and adds to sync queue)
         await deleteLoanOffline(nid, url);
@@ -491,7 +497,7 @@ export const deleteLoan = async (
       } else {
         // Loan not found locally, try to delete from server
         fetchFromAPI(
-          `${API_BASE_URL}/node/${nid}?_format=json`,
+          `${getApiBaseUrl()}/node/${nid}?_format=json`,
           token,
           dataDispatch,
           dispatch,
@@ -503,7 +509,7 @@ export const deleteLoan = async (
       console.error('Error in offline delete loan:', error);
       // Fallback to original behavior
       fetchFromAPI(
-        `${API_BASE_URL}/node/${nid}?_format=json`,
+        `${getApiBaseUrl()}/node/${nid}?_format=json`,
         token,
         dataDispatch,
         dispatch,
@@ -514,7 +520,7 @@ export const deleteLoan = async (
   } else {
     // Original behavior if IndexedDB not available
     fetchFromAPI(
-      `${API_BASE_URL}/node/${nid}?_format=json`,
+      `${getApiBaseUrl()}/node/${nid}?_format=json`,
       token,
       dataDispatch,
       dispatch,
@@ -1171,3 +1177,5 @@ export const getSuggestionTranslationKey = (
   const normalizedKey = normalizeSuggestionKey(suggestion, categoryName);
   return `suggestions.${categoryName}.${normalizedKey}`;
 };
+
+export { getApiBaseUrl, buildApiUrl };

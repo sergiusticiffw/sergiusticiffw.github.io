@@ -12,10 +12,11 @@ import {
   getPaymentsFromDB,
 } from '@shared/utils/indexedDB';
 import {
-  API_BASE_URL,
+  buildApiUrl,
   createAuthenticatedFetchOptions,
   processDataSync,
 } from '@shared/utils/utils';
+import { fetchWithFallback } from '@shared/utils/apiBase';
 import { logger } from '@shared/utils/logger';
 import { retryWithBackoff, retryPresets } from '@shared/utils/retry';
 
@@ -60,7 +61,8 @@ export async function syncPendingOperations(
 
     try {
       // Check if item exists in local DB before syncing
-      let syncUrl = op.url;
+      // Normalize // in path (fixes old ops saved with trailing slash in base URL)
+      let syncUrl = (op.url || '').replace(/([^:]\/)\/+/g, '$1');
       let itemExists = false;
 
       if (op.localId) {
@@ -107,7 +109,7 @@ export async function syncPendingOperations(
             // If item has server ID (not temp), update URL
             if (localItem.id && !localItem.id.startsWith('temp_')) {
               // Reconstruct URL with server ID instead of replacing (safer)
-              syncUrl = `${API_BASE_URL}/node/${localItem.id}?_format=json`;
+              syncUrl = buildApiUrl(`/node/${localItem.id}?_format=json`);
               op.localId = localItem.id;
             }
           }
@@ -153,7 +155,7 @@ export async function syncPendingOperations(
             itemExists = true;
             if (localItem.id && !localItem.id.startsWith('temp_')) {
               // Reconstruct URL with server ID instead of replacing (safer)
-              syncUrl = `${API_BASE_URL}/node/${localItem.id}?_format=json`;
+              syncUrl = buildApiUrl(`/node/${localItem.id}?_format=json`);
               op.localId = localItem.id;
             }
           }
@@ -186,7 +188,7 @@ export async function syncPendingOperations(
           syncUrl.includes('/node/temp_') ||
           syncUrl.includes(`/node/${op.localId}`)
         ) {
-          syncUrl = `${API_BASE_URL}/node?_format=json`;
+          syncUrl = buildApiUrl('/node?_format=json');
         }
       } else if (op.type === 'update') {
         // For update, ensure URL doesn't contain temp ID and item exists
@@ -205,11 +207,11 @@ export async function syncPendingOperations(
           }
           // Item exists, reconstruct URL with server ID
           if (op.localId && !op.localId.startsWith('temp_')) {
-            syncUrl = `${API_BASE_URL}/node/${op.localId}?_format=json`;
+            syncUrl = buildApiUrl(`/node/${op.localId}?_format=json`);
           }
         } else if (op.localId && !syncUrl.includes(op.localId)) {
           // Ensure URL is properly constructed with the correct ID
-          syncUrl = `${API_BASE_URL}/node/${op.localId}?_format=json`;
+          syncUrl = buildApiUrl(`/node/${op.localId}?_format=json`);
         }
       } else if (op.type === 'delete') {
         // For delete operations, item might not exist (we deleted it locally)
@@ -230,7 +232,7 @@ export async function syncPendingOperations(
         }
         // Ensure URL is properly constructed
         if (op.localId && !syncUrl.includes(op.localId)) {
-          syncUrl = `${API_BASE_URL}/node/${op.localId}?_format=json`;
+          syncUrl = buildApiUrl(`/node/${op.localId}?_format=json`);
         }
       }
 
@@ -240,7 +242,7 @@ export async function syncPendingOperations(
       // Use retry logic for sync operations
       const retryResult = await retryWithBackoff(
         async () => {
-          const response = await fetch(syncUrl, { ...fetchOptions, body });
+          const response = await fetchWithFallback(syncUrl, { ...fetchOptions, body });
 
           // For DELETE operations, 404 is acceptable (item already deleted or doesn't exist)
           if (

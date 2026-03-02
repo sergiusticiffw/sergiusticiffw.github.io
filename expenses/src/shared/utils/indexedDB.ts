@@ -2,7 +2,7 @@
 import {
   processLoans,
   processPayments,
-  API_BASE_URL,
+  buildApiUrl,
 } from '@shared/utils/utils';
 import { logger } from '@shared/utils/logger';
 
@@ -698,7 +698,7 @@ export async function updateSyncOperationsWithNewId(
             op.localId = newLocalId;
             // Reconstruct URL with new ID (safer than replace)
             if (op.type === 'update' || op.type === 'delete') {
-              op.url = `${API_BASE_URL}/node/${newLocalId}?_format=json`;
+              op.url = buildApiUrl(`/node/${newLocalId}?_format=json`);
             }
             store.put(op);
             updated = true;

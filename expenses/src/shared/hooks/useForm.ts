@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAuthState } from '@shared/context/context';
 import { useNotification } from '@shared/context/notification';
-import { AuthState } from '@shared/type/types';
 import {
   handleFormSubmission,
   createLoadingState,
@@ -9,7 +8,7 @@ import {
   getCurrentDate,
 } from '@shared/utils/commonUtils';
 import { logger } from '@shared/utils/logger';
-import { API_BASE_URL } from '@shared/utils/utils';
+import { buildApiUrl } from '@shared/utils/utils';
 import { sanitizeFormField } from '@shared/utils/sanitization';
 
 interface UseFormOptions<T> {
@@ -192,8 +191,8 @@ export const useTransactionForm = (
 
   const apiUrl =
     formType === 'add'
-      ? `${API_BASE_URL}/node?_format=json`
-      : `${API_BASE_URL}/node/${values?.nid}?_format=json`;
+      ? buildApiUrl('/node?_format=json')
+      : buildApiUrl(`/node/${values?.nid}?_format=json`);
 
   return useForm({
     initialValues,
@@ -233,8 +232,8 @@ export const useIncomeForm = (
 
   const apiUrl =
     formType === 'add'
-      ? `${API_BASE_URL}/node?_format=json`
-      : `${API_BASE_URL}/node/${values?.nid}?_format=json`;
+      ? buildApiUrl('/node?_format=json')
+      : buildApiUrl(`/node/${values?.nid}?_format=json`);
 
   return useForm({
     initialValues,

@@ -16,7 +16,7 @@ import { logout } from '@shared/context/actions';
 import { useNavigate } from '@tanstack/react-router';
 import { FiUser, FiLogOut, FiSettings, FiBarChart2, FiDroplet, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import ChartsVisibilityDnd from '@shared/components/ChartsVisibilityDnd';
-import { fetchRequest, API_BASE_URL } from '@shared/utils/utils';
+import { fetchRequest, buildApiUrl } from '@shared/utils/utils';
 import {
   notificationType,
   availableCharts,
@@ -73,7 +73,7 @@ const Profile = () => {
       }),
       body: JSON.stringify({ field_currency: [event.target.value] }),
     };
-    const url = `${API_BASE_URL}/user/${userDetails.current_user.uid}?_format=json`;
+    const url = buildApiUrl(`/user/${userDetails.current_user.uid}?_format=json`);
     fetchRequest(
       url,
       fetchOptions,

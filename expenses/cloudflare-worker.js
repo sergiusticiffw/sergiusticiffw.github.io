@@ -1,15 +1,15 @@
 /**
- * Cloudflare Worker - Proxy pentru API-ul Drupal
- * Redirecționează request-urile de la frontend către backend-ul Pantheon.
- * Folosit când DNS-ul pentru backend nu s-a propagat încă (fallback la schimbare IP).
+ * Cloudflare Worker - Proxy for Drupal API
+ * Forwards requests from frontend to Pantheon backend.
+ * Used when backend DNS hasn't propagated yet (fallback on IP change).
  */
 
-// URL-ul backend-ului Drupal (Pantheon)
+// Drupal backend URL (Pantheon)
 const API_BASE = 'https://dev-expenses-api.pantheonsite.io';
 
 export default {
   async fetch(request, env, ctx) {
-    // CORS preflight - browserul trimite OPTIONS înainte de request-uri cross-origin
+    // CORS preflight - browser sends OPTIONS before cross-origin requests
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         headers: {
@@ -21,47 +21,47 @@ export default {
       });
     }
 
-    // Parse URL-ul request-ului primit de la frontend
+    // Parse request URL from frontend
     const url = new URL(request.url);
 
-    // Normalizează path-ul: elimina slash-uri duble (ex: //node -> /node)
-    // Necesar dacă frontend-ul trimite accidental URL-uri cu path duplicat
+    // Normalize path: remove double slashes (e.g. //node -> /node)
+    // Needed if frontend accidentally sends URLs with duplicated path
     let path = url.pathname.replace(/\/+/g, '/');
     if (path === '') path = '/';
 
-    // Construiește URL-ul complet către backend (path + query string)
+    // Build full backend URL (path + query string)
     const backendUrl = `${API_BASE}${path}${url.search}`;
 
-    // Copiază header-ele din request, dar elimină cele care pot cauza probleme
+    // Copy request headers, remove those that may cause issues
     const headers = new Headers(request.headers);
-    headers.delete('Host');      // Backend-ul așteaptă propriul Host
-    headers.delete('Origin');    // Request-ul vine de la Worker, nu de la frontend
-    headers.delete('Referer');  // Nu expune URL-ul frontend-ului
+    headers.delete('Host');      // Backend expects its own Host
+    headers.delete('Origin');    // Request comes from Worker, not frontend
+    headers.delete('Referer');  // Don't expose frontend URL
 
-    // Creează request-ul nou către backend
+    // Create new request to backend
     const modifiedRequest = new Request(backendUrl, {
       method: request.method,
       headers,
-      // Pentru GET/HEAD nu trimitem body-ul
+      // Don't send body for GET/HEAD
       body: request.method !== 'GET' && request.method !== 'HEAD' ? request.body : undefined,
     });
 
     try {
-      // Trimite request-ul către backend
+      // Send request to backend
       const response = await fetch(modifiedRequest);
 
-      // Adaugă CORS la răspuns ca frontend-ul să poată citi datele
+      // Add CORS to response so frontend can read the data
       const newHeaders = new Headers(response.headers);
       newHeaders.set('Access-Control-Allow-Origin', '*');
 
-      // Returnează răspunsul backend-ului către frontend
+      // Return backend response to frontend
       return new Response(response.body, {
         status: response.status,
         statusText: response.statusText,
         headers: newHeaders,
       });
     } catch (error) {
-      // Eroare la conectare (ex: DNS, timeout) - returnează 502
+      // Connection error (e.g. DNS, timeout) - return 502
       return new Response(
         JSON.stringify({ error: 'Proxy request failed', message: error.message }),
         { status: 502, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }

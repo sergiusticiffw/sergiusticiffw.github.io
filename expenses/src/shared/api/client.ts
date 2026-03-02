@@ -8,7 +8,15 @@
  * - Type safety
  */
 
-import { API_BASE_URL } from '@shared/utils/utils';
+import {
+  getApiBaseUrl,
+  getUseProxyFallback,
+  setUseProxyFallback,
+  isNetworkError,
+  toProxyUrl,
+  isPrimaryUrl,
+  fetchWithFallback,
+} from '@shared/utils/apiBase';
 import { retryWithBackoff, retryPresets } from '@shared/utils/retry';
 import { logger } from '@shared/utils/logger';
 import { isOnline } from '@shared/utils/indexedDB';
@@ -96,10 +104,10 @@ class ApiClient {
       // Try to refresh token or logout
       if (this.dispatch && this.dataDispatch) {
         try {
-          const refreshResponse = await fetch(`${API_BASE_URL}/jwt/token`, {
-            method: 'GET',
-            headers: this.createHeaders(),
-          });
+          const refreshResponse = await fetchWithFallback(
+            `${getApiBaseUrl()}/jwt/token`,
+            { method: 'GET', headers: this.createHeaders() }
+          );
 
           if (refreshResponse.status === 403) {
             logout(this.dispatch, this.dataDispatch);
@@ -193,9 +201,9 @@ class ApiClient {
       };
     }
 
-    const url = endpoint.startsWith('http')
+    let url = endpoint.startsWith('http')
       ? endpoint
-      : `${API_BASE_URL}${endpoint}`;
+      : `${getApiBaseUrl()}${endpoint}`.replace(/([^:]\/)\/+/g, '$1');
 
     const headers = this.createHeaders(skipAuth);
 
@@ -222,7 +230,20 @@ class ApiClient {
 
       if (skipRetry) {
         // Direct fetch without retry
-        response = await fetch(url, requestOptions);
+        try {
+          response = await fetch(url, requestOptions);
+        } catch (directError) {
+          if (
+            isNetworkError(directError) &&
+            isPrimaryUrl(url) &&
+            !getUseProxyFallback()
+          ) {
+            setUseProxyFallback(true);
+            response = await fetch(toProxyUrl(url), requestOptions);
+          } else {
+            throw directError;
+          }
+        }
       } else {
         // Use retry logic
         const retryResult = await retryWithBackoff(
@@ -250,20 +271,52 @@ class ApiClient {
               ? retryResult.error
               : new Error('Request failed after retries');
 
-          if (this.showNotification) {
-            const errorMessage =
-              error.message || 'Network error. Please try again.';
-            this.showNotification(errorMessage, 'error');
+          // Fallback: if Pantheon is inaccessible (DNS/network), try Cloudflare proxy
+          if (
+            isNetworkError(error) &&
+            isPrimaryUrl(url) &&
+            !getUseProxyFallback()
+          ) {
+            setUseProxyFallback(true);
+            const proxyUrl = toProxyUrl(url);
+            try {
+              const proxyRes = await fetch(proxyUrl, requestOptions);
+              if (!proxyRes.ok) {
+                await this.handleErrorResponse(proxyRes, proxyUrl);
+              }
+              response = proxyRes;
+            } catch (proxyError) {
+              const proxyErr =
+                proxyError instanceof Error
+                  ? proxyError
+                  : new Error('Proxy request failed');
+              if (this.showNotification) {
+                this.showNotification(
+                  proxyErr.message || 'Network error. Please try again.',
+                  'error'
+                );
+              }
+              return {
+                data: null,
+                error: proxyErr,
+                success: false,
+              };
+            }
+          } else {
+            if (this.showNotification) {
+              const errorMessage =
+                error.message || 'Network error. Please try again.';
+              this.showNotification(errorMessage, 'error');
+            }
+            return {
+              data: null,
+              error,
+              success: false,
+            };
           }
-
-          return {
-            data: null,
-            error,
-            success: false,
-          };
+        } else {
+          response = retryResult.data!;
         }
-
-        response = retryResult.data!;
       }
 
       // Parse response

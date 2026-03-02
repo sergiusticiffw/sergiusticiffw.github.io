@@ -1,6 +1,6 @@
 import { LoginPayload, UserData } from '@shared/type/types';
 import { clearExpensesDB } from '@shared/utils/indexedDB';
-import { API_BASE_URL } from '@shared/utils/utils';
+import { buildApiUrl } from '@shared/utils/utils';
 import { hydrateSettings } from '@stores/settingsStore';
 
 export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
@@ -13,7 +13,7 @@ export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
   try {
     dispatch({ type: 'REQUEST_LOGIN' });
     const response = await fetch(
-      `${API_BASE_URL}/user/login/google?_format=json`,
+      buildApiUrl('/user/login/google?_format=json'),
       requestOptions
     );
     const data: UserData = await response.json();

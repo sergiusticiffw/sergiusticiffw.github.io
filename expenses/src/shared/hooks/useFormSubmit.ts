@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuthDispatch, useAuthState } from '@shared/context/context';
 import { useNotification } from '@shared/context/notification';
 import { useLocalization } from '@shared/context/localization';
-import { fetchRequest, API_BASE_URL } from '@shared/utils/utils';
+import { fetchRequest, buildApiUrl } from '@shared/utils/utils';
 import { notificationType } from '@shared/utils/constants';
 import {
   AuthState,
@@ -114,8 +114,8 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
       const method = isAdd ? 'POST' : 'PATCH';
       const url = isAdd
-        ? `${API_BASE_URL}/node?_format=json`
-        : `${API_BASE_URL}/node/${values.nid}?_format=json`;
+        ? buildApiUrl('/node?_format=json')
+        : buildApiUrl(`/node/${values.nid}?_format=json`);
 
       // Determine entity type
       const entityType =
