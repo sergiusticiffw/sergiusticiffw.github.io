@@ -12,7 +12,7 @@ import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
 import { FiPlus, FiEdit2 } from 'react-icons/fi';
 
 interface TransactionFormProps {
-  formType: 'add' | 'edit' | 'quick-add';
+  formType: 'add' | 'edit';
   values: any;
   onSuccess: () => void;
   hideSubmitButton?: boolean;
@@ -240,9 +240,9 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
                 <Loader variant="on-button" />
               ) : (
                 <>
-                  {(formType === 'add' || formType === 'quick-add') ? <FiPlus /> : <FiEdit2 />}
+                  {formType === 'add' ? <FiPlus /> : <FiEdit2 />}
                   <span>
-                    {(formType === 'add' || formType === 'quick-add')
+                    {formType === 'add'
                       ? t('transactionForm.title')
                       : t('transactionForm.editTitle')}
                   </span>

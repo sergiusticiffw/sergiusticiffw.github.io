@@ -21,7 +21,7 @@ import { logger } from '@shared/utils/logger';
 import { sanitizeFormField } from '@shared/utils/sanitization';
 
 interface UseFormSubmitOptions<T> {
-  formType: 'add' | 'edit' | 'quick-add';
+  formType: 'add' | 'edit';
   initialState: T;
   values: any;
   nodeType: string;
@@ -65,8 +65,8 @@ export const useFormSubmit = <T extends Record<string, any>>({
   const showNotification = useNotification();
   const { t } = useLocalization();
 
-  const isAdd = formType === 'add' || formType === 'quick-add';
-  // For 'add'/'quick-add', merge prefill values (e.g. quick-add suggestion) over initialState when values has no nid
+  const isAdd = formType === 'add';
+  // For 'add', merge prefill values over initialState when values has no nid
   const addInitialState =
     isAdd && values && typeof values === 'object' && !values.nid
       ? { ...initialState, ...values }
