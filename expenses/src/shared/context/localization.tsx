@@ -517,6 +517,7 @@ const translations = {
     'income.tags.family': 'From Family',
     'income.tags.wedding': 'Wedding Gift',
     'income.tags.godparent': 'Godparent Gift',
+    'income.tags.up-dejun': 'Up dejun',
     'income.tags.untagged': 'Untagged',
 
     // Filters
@@ -1068,6 +1069,7 @@ const translations = {
     'income.tags.family': 'De la Familie',
     'income.tags.wedding': 'Cadou de Nuntă',
     'income.tags.godparent': 'Cadou de Naș',
+    'income.tags.up-dejun': 'Up dejun',
     'income.tags.untagged': 'Fără Etichetă',
 
     // Filters

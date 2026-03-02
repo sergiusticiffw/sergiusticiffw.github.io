@@ -12,7 +12,8 @@ import { createApiClient } from '@shared/api/client';
 import { fetchExpenses } from '@features/expenses/api/expenses';
 
 // API Configuration
-export const API_BASE_URL = 'https://dev-expenses-api.pantheonsite.io';
+export const API_BASE_URL =
+  'https://expenses-api-proxy.sergiustici1993.workers.dev';
 
 const handleErrors = (
   response: Response,
@@ -806,7 +807,10 @@ export const getMonthsInRange = (start: string, end: string): number => {
   const s = new Date(start + 'T12:00:00');
   const e = new Date(end + 'T12:00:00');
   if (isNaN(s.getTime()) || isNaN(e.getTime())) return 1;
-  const months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()) + 1;
+  const months =
+    (e.getFullYear() - s.getFullYear()) * 12 +
+    (e.getMonth() - s.getMonth()) +
+    1;
   return Math.max(1, months);
 };
 

@@ -322,6 +322,7 @@ export const incomeSuggestions = [
   'family',
   'wedding',
   'godparent',
+  'up-dejun',
 ];
 
 export const availableCharts = [
