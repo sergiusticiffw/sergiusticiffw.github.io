@@ -1533,13 +1533,13 @@
   integrity sha512-Kp/WSt411ZWYvgXy6uiv5RmhHrz9cAml05AQPrtdAp7eUqvIDbMGPnML25OKbzR3RJ1q4wgENxDTvlGPa9+Mww==
 
 "@tanstack/react-router@^1.157.18":
-  version "1.163.3"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.163.3.tgz#e414a11107c6c046c7d1ae32816c88cf0f162885"
-  integrity sha512-hheBbFVb+PbxtrWp8iy6+TTRTbhx3Pn6hKo8Tv/sWlG89ZMcD1xpQWzx8ukHN9K8YWbh5rdzt4kv6u8X4kB28Q==
+  version "1.166.2"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.166.2.tgz#ca719afc1bb675b77fd3e82dc7611ec35f59719c"
+  integrity sha512-pKhUtrvVLlhjWhsHkJSuIzh1J4LcP+8ErbIqRLORX9Js8dUFMKoT0+8oFpi+P8QRpuhm/7rzjYiWfcyTsqQZtA==
   dependencies:
     "@tanstack/history" "1.161.4"
     "@tanstack/react-store" "^0.9.1"
-    "@tanstack/router-core" "1.163.3"
+    "@tanstack/router-core" "1.166.2"
     isbot "^5.1.22"
     tiny-invariant "^1.3.3"
     tiny-warning "^1.0.3"
@@ -1560,16 +1560,16 @@
     "@tanstack/table-core" "8.21.3"
 
 "@tanstack/react-virtual@^3.13.18":
-  version "3.13.19"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-virtual/-/react-virtual-3.13.19.tgz#969466d6260daa8bc9e1d2bf0711510f34f0fe93"
-  integrity sha512-KzwmU1IbE0IvCZSm6OXkS+kRdrgW2c2P3Ho3NC+zZXWK6oObv/L+lcV/2VuJ+snVESRlMJ+w/fg4WXI/JzoNGQ==
+  version "3.13.21"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-virtual/-/react-virtual-3.13.21.tgz#4e6feb326d2fc57f591046bad372ef4ff7d6d82f"
+  integrity sha512-SYXFrmrbPgXBvf+HsOsKhFgqSe4M6B29VHOsX9Jih9TlNkNkDWx0hWMiMLUghMEzyUz772ndzdEeCEBx+3GIZw==
   dependencies:
-    "@tanstack/virtual-core" "3.13.19"
+    "@tanstack/virtual-core" "3.13.21"
 
-"@tanstack/router-core@1.163.3":
-  version "1.163.3"
-  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.163.3.tgz#095e7b623caa3e06b15ec22633259141c808f6e4"
-  integrity sha512-jPptiGq/w3nuPzcMC7RNa79aU+b6OjaDzWJnBcV2UAwL4ThJamRS4h42TdhJE+oF5yH9IEnCOGQdfnbw45LbfA==
+"@tanstack/router-core@1.166.2":
+  version "1.166.2"
+  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.166.2.tgz#925e0b4c0814e5edbc8221143e3e0d91ec053828"
+  integrity sha512-zn3NhENOAX9ToQiX077UV2OH3aJKOvV2ZMNZZxZ3gDG3i3WqL8NfWfEgetEAfMN37/Mnt90PpotYgf7IyuoKqQ==
   dependencies:
     "@tanstack/history" "1.161.4"
     "@tanstack/store" "^0.9.1"
@@ -1589,10 +1589,10 @@
   resolved "https://registry.yarnpkg.com/@tanstack/table-core/-/table-core-8.21.3.tgz#2977727d8fc8dfa079112d9f4d4c019110f1732c"
   integrity sha512-ldZXEhOBb8Is7xLs01fR3YEc3DERiz5silj8tnGkFZytt1abEvl/GhUmCE0PMLaMPTa3Jk4HbKmRlHmu+gCftg==
 
-"@tanstack/virtual-core@3.13.19":
-  version "3.13.19"
-  resolved "https://registry.yarnpkg.com/@tanstack/virtual-core/-/virtual-core-3.13.19.tgz#ab7b5de0b7ba17f22530f4efda5bf2b771fbda9d"
-  integrity sha512-/BMP7kNhzKOd7wnDeB8NrIRNLwkf5AhCYCvtfZV2GXWbBieFm/el0n6LOAXlTi6ZwHICSNnQcIxRCWHrLzDY+g==
+"@tanstack/virtual-core@3.13.21":
+  version "3.13.21"
+  resolved "https://registry.yarnpkg.com/@tanstack/virtual-core/-/virtual-core-3.13.21.tgz#925eec83d17d28a30ad4c3645d54d5fbe797bbb3"
+  integrity sha512-ww+fmLHyCbPSf7JNbWZP3g7wl6SdNo3ah5Aiw+0e9FDErkVHLKprYUrwTm7dF646FtEkN/KkAKPYezxpmvOjxw==
 
 "@tybys/wasm-util@^0.10.1":
   version "0.10.1"
@@ -1985,10 +1985,17 @@ detect-node-es@^1.1.0:
   resolved "https://registry.yarnpkg.com/detect-node-es/-/detect-node-es-1.1.0.tgz#163acdf643330caa0b4cd7c21e7ee7755d6fa493"
   integrity sha512-ypdmJU/TbBby2Dxibuv7ZLW3Bs1QEmM7nHjEANfohJLvE0XVujisn1qPJcZxg+qDucsr+bP6fLD1rPS3AhJ7EQ==
 
-dompurify@*, dompurify@^3.3.1:
+dompurify@*:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.3.1.tgz#c7e1ddebfe3301eacd6c0c12a4af284936dbbb86"
   integrity sha512-qkdCKzLNtrgPFP1Vo+98FRzJnBRGe4ffyCea9IwHB1fyxPOeNTHpLKYGd4Uk9xvNoH0ZoOjwZxNptyMwqrId1Q==
+  optionalDependencies:
+    "@types/trusted-types" "^2.0.7"
+
+dompurify@^3.3.1:
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.3.2.tgz#58c515d0f8508b8749452a028aa589ad80b36325"
+  integrity sha512-6obghkliLdmKa56xdbLOpUZ43pAR6xFy1uOrxBaIDjT+yaRuuybLjGS9eVBoSR/UPU5fq3OXClEHLJNGvbxKpQ==
   optionalDependencies:
     "@types/trusted-types" "^2.0.7"
 
