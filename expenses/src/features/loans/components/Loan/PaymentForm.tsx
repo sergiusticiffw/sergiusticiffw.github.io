@@ -144,12 +144,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           field_loan_reference: [id],
         };
 
-        if (state.field_new_principal !== '') {
-          nodeData.field_new_principal = [state.field_new_principal];
-        }
-        if (state.field_payment_method !== '') {
-          nodeData.field_payment_method = [state.field_payment_method];
-        }
+        // Always include field_new_principal and field_payment_method - send empty [] to clear on edit
+        nodeData.field_new_principal =
+          state.field_new_principal !== '' ? [state.field_new_principal] : [];
+        nodeData.field_payment_method =
+          state.field_payment_method !== '' ? [state.field_payment_method] : [];
 
         return nodeData;
       },

@@ -129,7 +129,8 @@ export const calculateAnnuity = (
   }
 
   // Calculate number of remaining payment periods (months)
-  const n = getNumberOfMonths(startDate, endDate);
+  // Use inclusive count: payments on both start and end month = getNumberOfMonths + 1
+  const n = Math.max(1, getNumberOfMonths(startDate, endDate) + 1);
 
   // Edge case: If loan is at maturity or invalid period, return principal as final payment
   if (n <= 0) {
@@ -199,7 +200,9 @@ export const calculateLinearPrincipal = (
     throw new Error('calculateLinearPrincipal: principal must be positive');
   }
 
-  const n = getNumberOfMonths(startDate, endDate);
+  // Use inclusive count: payments on both start and end month = getNumberOfMonths + 1
+  const rawMonths = getNumberOfMonths(startDate, endDate);
+  const n = Math.max(1, rawMonths + 1);
 
   if (n <= 0) {
     return principal;
@@ -327,7 +330,11 @@ export const recalculateAfterRateChange = (params: {
   }
 
   // Calculate remaining months from rate change date to loan end date
-  const remainingMonths = getNumberOfMonths(rateChangeDate, loanEndDate);
+  // Use inclusive count: payments on both start and end month = getNumberOfMonths + 1
+  const remainingMonths = Math.max(
+    1,
+    getNumberOfMonths(rateChangeDate, loanEndDate) + 1
+  );
 
   if (remainingMonths <= 0) {
     return {
@@ -365,20 +372,15 @@ export const recalculateAfterRateChange = (params: {
   // Step 3 & 4: Recalculate payment using NEW interest rate with updated principal
   const newPayment =
     method === 'equal_installment'
-      ? calculateAnnuity(
-          updatedPrincipal,
-          newRate,
-          rateChangeDate,
-          loanEndDate
-        )
-      : calculateLinearPrincipal(
-          updatedPrincipal,
-          rateChangeDate,
-          loanEndDate
-        );
+      ? calculateAnnuity(updatedPrincipal, newRate, rateChangeDate, loanEndDate)
+      : calculateLinearPrincipal(updatedPrincipal, rateChangeDate, loanEndDate);
 
   // Validation: When interest rate decreases, monthly payment must decrease (only applies to equal installment)
-  if (method === 'equal_installment' && newRate < oldRate && newPayment > currentPayment) {
+  if (
+    method === 'equal_installment' &&
+    newRate < oldRate &&
+    newPayment > currentPayment
+  ) {
     // This is a validation warning - log it but don't throw
     // The caller can handle this warning as needed
     // Rate decreased but payment increased - caller may log if needed

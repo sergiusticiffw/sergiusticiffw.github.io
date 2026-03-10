@@ -1231,19 +1231,29 @@ class PaydownCalculator {
       }
 
       if (event.hasOwnProperty('payment_method')) {
-        if (event.payment_method === 'equal_installment' || event.payment_method === 'equal_principal') {
+        if (
+          event.payment_method === 'equal_installment' ||
+          event.payment_method === 'equal_principal'
+        ) {
           this.init.payment_method = event.payment_method;
           if (
             this.currentRecurringPayment !== null &&
             !event.hasOwnProperty('recurring_amount')
           ) {
-            const currentRateNum =
-              typeof this.currentRate === 'string'
-                ? parseFloat(String(this.currentRate))
-                : Number(this.currentRate);
+            // Use new rate from event if present (rate+payment_method on same date), else currentRate
+            const rateFromEvent =
+              event.hasOwnProperty('rate') && event.rate != null && event.rate !== ''
+                ? (typeof event.rate === 'number' ? event.rate : parseFloat(String(event.rate)))
+                : NaN;
+            const rateForCalc = !isNaN(rateFromEvent)
+              ? rateFromEvent
+              : (typeof this.currentRate === 'string'
+                  ? parseFloat(String(this.currentRate))
+                  : Number(this.currentRate));
+            const principalForCalc = Number(this.currentPrincipal);
             this.currentRecurringPayment = this.calculateRecurringAmount({
-              principal: Number(this.currentPrincipal),
-              rate: currentRateNum,
+              principal: principalForCalc,
+              rate: rateForCalc,
               startDate: event.date,
               endDate: this.init.end_date!,
               method: this.init.payment_method,
@@ -1282,13 +1292,19 @@ class PaydownCalculator {
           this.currentRecurringPayment !== null &&
           !event.hasOwnProperty('recurring_amount')
         ) {
-          const currentRateNum =
-            typeof this.currentRate === 'string'
-              ? parseFloat(String(this.currentRate))
-              : Number(this.currentRate);
+          // Use new rate from event if present (rate+new_principal on same date), else currentRate
+          const rateFromEvent =
+            event.hasOwnProperty('rate') && event.rate != null && event.rate !== ''
+              ? (typeof event.rate === 'number' ? event.rate : parseFloat(String(event.rate)))
+              : NaN;
+          const rateForNewPrincipal = !isNaN(rateFromEvent)
+            ? rateFromEvent
+            : (typeof this.currentRate === 'string'
+                ? parseFloat(String(this.currentRate))
+                : Number(this.currentRate));
           this.currentRecurringPayment = this.calculateRecurringAmount({
             principal: Number(this.currentPrincipal),
-            rate: currentRateNum,
+            rate: rateForNewPrincipal,
             startDate: event.date,
             endDate: this.init.end_date!,
             method: this.init.payment_method,
@@ -1304,13 +1320,22 @@ class PaydownCalculator {
         }
         this.sumOfFees += this.currentRecurringFee;
 
-        if (this.init.payment_method === 'equal_installment' || this.init.payment_method === 'equal_principal') {
-          const isFixedPrincipal = this.init.payment_method === 'equal_principal';
-          // Apply the payment using the CURRENT (OLD) interest rate
-          // This is the payment amount calculated with the rate before any change
-          installment = event.hasOwnProperty('pay_installment')
-            ? event.pay_installment!
-            : this.currentRecurringPayment;
+        if (
+          this.init.payment_method === 'equal_installment' ||
+          this.init.payment_method === 'equal_principal'
+        ) {
+          const isFixedPrincipal =
+            this.init.payment_method === 'equal_principal';
+          // Apply the payment: use recalculated amount when terms changed (new_principal/payment_method),
+          // otherwise use stored pay_installment (actual paid) or currentRecurringPayment
+          const termsChangedOnThisEvent =
+            event.hasOwnProperty('new_principal') ||
+            event.hasOwnProperty('payment_method');
+          const useRecalculatedAmount =
+            termsChangedOnThisEvent || !event.hasOwnProperty('pay_installment');
+          installment = useRecalculatedAmount
+            ? this.currentRecurringPayment
+            : event.pay_installment!;
 
           // Store principal before payment to check if we need to recalculate after
           const principalBeforePayment =
@@ -1324,7 +1349,7 @@ class PaydownCalculator {
               dateObj,
               installment,
               this.currentRecurringFee,
-              isFixedPrincipal && !event.hasOwnProperty('pay_installment')
+              isFixedPrincipal && useRecalculatedAmount
             )
           ) {
             break;
