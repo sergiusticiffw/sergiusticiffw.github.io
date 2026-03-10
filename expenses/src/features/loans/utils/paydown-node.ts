@@ -61,6 +61,12 @@ export interface PaydownResult {
   sum_of_reductions: number;
   sum_of_installments: number;
   remaining_principal: number;
+  /** Principal for display: new_principal if refinanced, else init principal */
+  effective_principal: number;
+  /** Remaining principal after last actual payment (not simulated future) */
+  remaining_principal_after_paid: number;
+  /** Sum of principal reductions from actual payments only (not simulated) */
+  sum_of_reductions_after_paid: number;
   days_calculated: number;
   actual_end_date: string;
   latest_payment_date: string;
@@ -335,6 +341,10 @@ class PaydownCalculator {
   private paymentLoggingEnabled = false;
   private debugLoggingEnabled = false;
   private debugPrintToConsole = true;
+  /** Principal for display: new_principal if refinanced, else init principal */
+  private effectivePrincipal = 0;
+  /** Remaining principal after last actual payment (was_payed) */
+  private remainingPrincipalAfterPaid = 0;
 
   // Helper to parse date strings into Date objects
   private parseDate = (dateStr: string): Date => {
@@ -348,6 +358,15 @@ class PaydownCalculator {
     }
     return this.roundValues ? funcRound(input) : input;
   };
+
+  getEffectivePrincipal(): number {
+    return this.effectivePrincipal;
+  }
+
+  getRemainingPrincipalAfterPaid(): number {
+    return this.remainingPrincipalAfterPaid;
+  }
+
 
   private logPayment = (payment: PaymentLog): void => {
     if (this.paymentLoggingEnabled) {
@@ -1094,6 +1113,8 @@ class PaydownCalculator {
     this.annualSummaries[startYear].total_fees += this.initialFee;
 
     this.currentPrincipal = this.init.principal!;
+    this.effectivePrincipal = this.init.principal!;
+    this.remainingPrincipalAfterPaid = this.init.principal!;
     this.currentRate = this.init.rate!;
     this.sumOfFees = this.initialFee;
 
@@ -1276,11 +1297,17 @@ class PaydownCalculator {
         }
 
         this.currentPrincipal = event.new_principal;
-
+        this.effectivePrincipal = event.new_principal;
+        this.remainingPrincipalAfterPaid = event.new_principal;
         // Store principal reset event in payment log for auditability.
+        // Use new rate from event if present (rate+new_principal on same date), else currentRate
+        const rateForLog =
+          event.hasOwnProperty('rate') && event.rate != null && event.rate !== ''
+            ? (typeof event.rate === 'number' ? event.rate : parseFloat(String(event.rate)))
+            : NaN;
         this.logPayment({
           date: event.date,
-          rate: this.currentRate,
+          rate: !isNaN(rateForLog) ? rateForLog : this.currentRate,
           installment: '-',
           reduction: '-',
           interest: '-',
@@ -1623,6 +1650,44 @@ export default function Paydown() {
         throw err;
       }
 
+      // Sum reduction and get last principal from payment log (graph) where was_payed === true
+      let sumOfReductionsAfterPaid = 0;
+      let remainingPrincipalAfterPaid = remainingPrincipal;
+      if (paymentsArray && paymentsArray.length > 0) {
+        paymentsArray.forEach((p: PaymentLog) => {
+          if (
+            p.was_payed === true &&
+            p.reduction !== undefined &&
+            p.reduction !== null &&
+            p.reduction !== '-'
+          ) {
+            const r =
+              typeof p.reduction === 'string'
+                ? parseFloat(p.reduction) || 0
+                : p.reduction || 0;
+            sumOfReductionsAfterPaid += r;
+          }
+        });
+        // Last principal from last was_payed entry (chronological order)
+        for (let i = paymentsArray.length - 1; i >= 0; i--) {
+          const p = paymentsArray[i] as PaymentLog;
+          if (p.was_payed === true) {
+            if (
+              p.principal !== undefined &&
+              p.principal !== null &&
+              p.principal !== '-'
+            ) {
+              const pr =
+                typeof p.principal === 'string'
+                  ? parseFloat(p.principal) || 0
+                  : p.principal || 0;
+              remainingPrincipalAfterPaid = pr;
+            }
+            break;
+          }
+        }
+      }
+
       let sumOfInstallments: number;
 
       /**
@@ -1744,6 +1809,9 @@ export default function Paydown() {
         sum_of_reductions: reductions,
         sum_of_installments: sumOfInstallments,
         remaining_principal: remainingPrincipal,
+        effective_principal: paydown.getEffectivePrincipal() || initObj.principal!,
+        remaining_principal_after_paid: remainingPrincipalAfterPaid,
+        sum_of_reductions_after_paid: sumOfReductionsAfterPaid,
         days_calculated: paydown.totalNumberOfDays,
         actual_end_date: zeroFillDate(actualEndDate),
         latest_payment_date: zeroFillDate(latestPaymentDate),

@@ -140,11 +140,14 @@ const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
   const sumOfInterest =
     (loan?.sum_of_interests ?? 0) + (loan?.unpaid_interest ?? 0);
 
+  // Use effective_principal from paydown (new_principal if refinanced, else init)
+  const principalForChart = loan?.effective_principal ?? props.loanData.principal;
+
   return (
     <div className="charts-page amortization-schedule">
       <LoanCostBreakdown
         data={{
-          principal: props.loanData.principal,
+          principal: principalForChart,
           sumOfInterest,
           sumInstallments,
         }}

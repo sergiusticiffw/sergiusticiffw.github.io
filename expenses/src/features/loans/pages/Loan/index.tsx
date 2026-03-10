@@ -140,8 +140,10 @@ const Loan: React.FC = () => {
 
   const progress = calculateProgress();
 
-  // Get correct values for display
-  const totalPrincipal = parseFloat(String(loan.fp ?? '0'));
+  // Use effective_principal from paydown (new_principal if refinanced, else init)
+  const totalPrincipal =
+    (paydown?.effective_principal ?? parseFloat(String(loan.fp ?? '0'))) ||
+    parseFloat(String(loan.fp ?? '0'));
   const totalInstallments =
     paydown?.sum_of_installments +
       paydown?.remaining_principal +
@@ -203,21 +205,21 @@ const Loan: React.FC = () => {
         ? formatNumber(interestSavingsValue)
         : formatNumber(0);
 
-  // Get principal paid from paydown calculation
+  // Principal paid from actual payments only (not simulated future)
   const principalPaid =
     loanStatus === 'pending' || !paydown
       ? 0
-      : totalPaidAmount - interestPaid || 0;
+      : paydown.sum_of_reductions_after_paid ?? paydown.sum_of_reductions ?? 0;
   const principalPaidDisplay =
     loanStatus === 'pending'
       ? t('loan.notStarted')
       : formatNumber(principalPaid);
 
-  // Get remaining principal from paydown calculation
+  // Remaining principal after last actual payment (not simulated future)
   const remainingPrincipal =
     loanStatus === 'pending' || !paydown
       ? 0
-      : totalPrincipal - principalPaid || 0;
+      : paydown.remaining_principal_after_paid ?? paydown.remaining_principal ?? 0;
   const remainingPrincipalDisplay =
     loanStatus === 'pending' || loanStatus === 'completed'
       ? loanStatus === 'completed'
