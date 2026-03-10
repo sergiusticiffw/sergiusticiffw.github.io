@@ -37,6 +37,8 @@ export function buildLoanDataFromApiLoan(
     base.recurring = {
       first_payment_date: transformDateFormat(loan.pdt),
       payment_day: transformToNumber(loan.frpd),
+      method:
+        loan.fpm === 'equal_principal' ? 'equal_principal' : 'equal_installment',
     };
   }
   return base;
@@ -60,6 +62,11 @@ export function buildEventsFromApiPayments(
       event.pay_single_fee = transformToNumber(item.fpsf);
     if (item.fnra != null && item.fnra !== '')
       event.recurring_amount = transformToNumber(item.fnra);
+    if (item.fnp != null && item.fnp !== '')
+      event.new_principal = transformToNumber(item.fnp);
+    if (item.fpm === 'equal_installment' || item.fpm === 'equal_principal') {
+      event.payment_method = item.fpm;
+    }
     if (item.title != null)
       (event as PaydownEvent & { title?: string }).title = item.title;
     return event;

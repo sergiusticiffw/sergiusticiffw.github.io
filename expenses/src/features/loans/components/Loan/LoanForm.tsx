@@ -35,6 +35,7 @@ const LoanForm: React.FC<LoanFormProps> = ({
     field_initial_fee: '',
     field_rec_first_payment_date: '',
     field_recurring_payment_day: '',
+    field_payment_method: 'equal_installment',
     field_loan_status: 'draft',
   };
 
@@ -56,6 +57,7 @@ const LoanForm: React.FC<LoanFormProps> = ({
         field_initial_fee: [state.field_initial_fee],
         field_rec_first_payment_date: [state.field_rec_first_payment_date],
         field_recurring_payment_day: [state.field_recurring_payment_day],
+        field_payment_method: [state.field_payment_method],
         field_loan_status: [state.field_loan_status],
       }),
       successMessageKeys: {
@@ -138,6 +140,9 @@ const LoanForm: React.FC<LoanFormProps> = ({
       },
     },
     field_loan_status: {
+      required: true,
+    },
+    field_payment_method: {
       required: true,
     },
   };
@@ -330,6 +335,26 @@ const LoanForm: React.FC<LoanFormProps> = ({
               formState
             )}
           />
+        </div>
+
+        <div className="form-group required">
+          <label>{t('loanForm.paymentMethod')}</label>
+          <div className="input-wrapper">
+            <select
+              required
+              name="field_payment_method"
+              value={formState.field_payment_method}
+              onChange={handleChange}
+              className={`form-input ${getFieldValidation('field_payment_method', formState) ? 'valid' : ''}`}
+            >
+              <option value="equal_installment">
+                {t('loanForm.methodEqualInstallment')}
+              </option>
+              <option value="equal_principal">
+                {t('loanForm.methodEqualPrincipal')}
+              </option>
+            </select>
+          </div>
         </div>
 
         <div className="form-group required">

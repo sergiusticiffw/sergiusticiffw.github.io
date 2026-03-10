@@ -422,6 +422,7 @@ const Loan: React.FC = () => {
             field_start_date: loan.sdt,
             field_end_date: loan.edt,
             field_rate: loan.fr,
+            field_payment_method: loan.fpm || 'equal_installment',
             field_initial_fee: loan.fif,
             field_rec_first_payment_date: loan.pdt,
             field_recurring_payment_day: loan.frpd,
@@ -477,6 +478,8 @@ const Loan: React.FC = () => {
             field_pay_installment: '',
             field_pay_single_fee: '',
             field_new_recurring_amount: '',
+            field_new_principal: '',
+            field_payment_method: '',
           }}
           startDate={loan.sdt}
           endDate={loan.edt}

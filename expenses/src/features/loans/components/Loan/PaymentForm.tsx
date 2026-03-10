@@ -36,6 +36,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     field_pay_installment: '',
     field_pay_single_fee: '',
     field_new_recurring_amount: '',
+    field_new_principal: '',
+    field_payment_method: '',
     field_loan_reference: id,
     field_is_simulated_payment: false,
   };
@@ -47,6 +49,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     field_pay_installment: values.field_pay_installment || '',
     field_pay_single_fee: values.field_pay_single_fee || '',
     field_new_recurring_amount: values.field_new_recurring_amount || '',
+    field_new_principal: values.field_new_principal || '',
+    field_payment_method: values.field_payment_method || '',
     field_loan_reference: id,
     field_is_simulated_payment: values.field_is_simulated_payment || false,
   };
@@ -104,6 +108,16 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         return !isNaN(num) && num > 0;
       },
     },
+    field_new_principal: {
+      required: false,
+      custom: (value: any) => {
+        if (!value) return false;
+        const strValue = String(value).trim();
+        if (strValue === '') return false;
+        const num = parseFloat(strValue);
+        return !isNaN(num) && num >= 0;
+      },
+    },
   };
 
   const { getFieldValidation } = useFormValidation(validationRules);
@@ -118,16 +132,27 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       dataDispatch,
       useFetchRequest: false,
       additionalParams: { loanId: id },
-      buildNodeData: (state) => ({
-        title: [state.title],
-        field_date: [state.field_date],
-        field_rate: [state.field_rate],
-        field_pay_installment: [state.field_pay_installment],
-        field_pay_single_fee: [state.field_pay_single_fee],
-        field_new_recurring_amount: [state.field_new_recurring_amount],
-        field_is_simulated_payment: [state.field_is_simulated_payment ? 1 : 0],
-        field_loan_reference: [id],
-      }),
+      buildNodeData: (state) => {
+        const nodeData: Record<string, unknown> = {
+          title: [state.title],
+          field_date: [state.field_date],
+          field_rate: [state.field_rate],
+          field_pay_installment: [state.field_pay_installment],
+          field_pay_single_fee: [state.field_pay_single_fee],
+          field_new_recurring_amount: [state.field_new_recurring_amount],
+          field_is_simulated_payment: [state.field_is_simulated_payment ? 1 : 0],
+          field_loan_reference: [id],
+        };
+
+        if (state.field_new_principal !== '') {
+          nodeData.field_new_principal = [state.field_new_principal];
+        }
+        if (state.field_payment_method !== '') {
+          nodeData.field_payment_method = [state.field_payment_method];
+        }
+
+        return nodeData;
+      },
       successMessageKeys: {
         add: 'notification.paymentAdded',
         edit: 'notification.paymentUpdated',
@@ -226,6 +251,38 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           isValid={getFieldValidation('field_new_recurring_amount', formState)}
           ariaLabel={t('paymentForm.newRecurringAmount')}
         />
+
+        <FormField
+          name="field_new_principal"
+          type="number"
+          label={t('paymentForm.newPrincipalBalance')}
+          value={formState.field_new_principal}
+          onChange={handleChange}
+          step="0.01"
+          min="0"
+          isValid={getFieldValidation('field_new_principal', formState)}
+          ariaLabel={t('paymentForm.newPrincipalBalance')}
+        />
+
+        <div className="form-group">
+          <label>{t('paymentForm.newPaymentMethod')}</label>
+          <div className="input-wrapper">
+            <select
+              name="field_payment_method"
+              value={formState.field_payment_method}
+              onChange={handleChange}
+              className="form-input"
+            >
+              <option value="">{t('paymentForm.keepCurrentMethod')}</option>
+              <option value="equal_installment">
+                {t('loanForm.methodEqualInstallment')}
+              </option>
+              <option value="equal_principal">
+                {t('loanForm.methodEqualPrincipal')}
+              </option>
+            </select>
+          </div>
+        </div>
 
         <div className="flex items-center gap-3 py-3 px-0 [&_input]:w-5 [&_input]:h-5 [&_input]:min-w-5 [&_input]:min-h-5 [&_input]:accent-[#5b8def] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:rounded [&_input]:border-white/20">
           <input

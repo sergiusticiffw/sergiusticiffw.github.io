@@ -69,6 +69,8 @@ const PaymentDetails = (props) => {
     field_pay_installment: undefined as number | undefined,
     field_pay_single_fee: undefined as number | undefined,
     field_new_recurring_amount: undefined as number | undefined,
+    field_new_principal: undefined as number | undefined,
+    field_payment_method: '',
     field_is_simulated_payment: false,
   });
 
@@ -82,6 +84,8 @@ const PaymentDetails = (props) => {
       field_pay_installment: item.fpi ? Number(item.fpi) : undefined,
       field_pay_single_fee: item.fpsf ? Number(item.fpsf) : undefined,
       field_new_recurring_amount: item.fnra ? Number(item.fnra) : undefined,
+      field_new_principal: item.fnp ? Number(item.fnp) : undefined,
+      field_payment_method: item.fpm || '',
       field_is_simulated_payment: Boolean(Number(item.fisp)),
     });
     setShowEditModal(true);

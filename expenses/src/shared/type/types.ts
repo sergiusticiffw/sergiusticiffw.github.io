@@ -169,6 +169,7 @@ export interface ApiLoan {
   edt?: string;
   fp?: string | number;
   fr?: string | number;
+  fpm?: string;
   fif?: string | number;
   pdt?: string;
   frpd?: string | number;
@@ -182,6 +183,8 @@ export interface ApiPaymentItem {
   fpi?: string | number;
   fpsf?: string | number;
   fnra?: string | number;
+  fnp?: string | number;
+  fpm?: string;
   fr?: string | number;
   title?: string;
   fisp?: string | number;

@@ -71,8 +71,13 @@ export const useFormSubmit = <T extends Record<string, any>>({
     isAdd && values && typeof values === 'object' && !values.nid
       ? { ...initialState, ...values }
       : initialState;
+  // For 'edit', preserve defaults for newly added fields while keeping existing values.
+  const editInitialState =
+    !isAdd && values && typeof values === 'object'
+      ? { ...initialState, ...values }
+      : initialState;
   const [formState, setFormState] = useState<T>(
-    isAdd ? addInitialState : values
+    isAdd ? addInitialState : (editInitialState as T)
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -170,6 +175,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 sdt: node.field_start_date?.[0] || '',
                 edt: node.field_end_date?.[0] || '',
                 fr: node.field_rate?.[0] || '',
+                fpm: node.field_payment_method?.[0] || 'equal_installment',
                 fif: node.field_initial_fee?.[0] || '',
                 pdt: node.field_rec_first_payment_date?.[0] || '',
                 frpd: node.field_recurring_payment_day?.[0] || '',
@@ -206,6 +212,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               sdt: node.field_start_date?.[0] || '',
               edt: node.field_end_date?.[0] || '',
               fr: node.field_rate?.[0] || '',
+              fpm: node.field_payment_method?.[0] || 'equal_installment',
               fif: node.field_initial_fee?.[0] || '',
               pdt: node.field_rec_first_payment_date?.[0] || '',
               frpd: node.field_recurring_payment_day?.[0] || '',
@@ -233,6 +240,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
             sdt: node.field_start_date?.[0] || '',
             edt: node.field_end_date?.[0] || '',
             fr: node.field_rate?.[0] || '',
+            fpm: node.field_payment_method?.[0] || 'equal_installment',
             fif: node.field_initial_fee?.[0] || '',
             pdt: node.field_rec_first_payment_date?.[0] || '',
             frpd: node.field_recurring_payment_day?.[0] || '',
@@ -312,6 +320,8 @@ export const useFormSubmit = <T extends Record<string, any>>({
                 fpi: node.field_pay_installment?.[0] || '',
                 fpsf: node.field_pay_single_fee?.[0] || '',
                 fnra: node.field_new_recurring_amount?.[0] || '',
+                fnp: node.field_new_principal?.[0] || '',
+                fpm: node.field_payment_method?.[0] || '',
                 fisp: node.field_is_simulated_payment?.[0] || 0,
                 cr: isAdd ? Date.now() : undefined,
               };
@@ -350,6 +360,8 @@ export const useFormSubmit = <T extends Record<string, any>>({
               fpi: node.field_pay_installment?.[0] || '',
               fpsf: node.field_pay_single_fee?.[0] || '',
               fnra: node.field_new_recurring_amount?.[0] || '',
+              fnp: node.field_new_principal?.[0] || '',
+              fpm: node.field_payment_method?.[0] || '',
               fisp: node.field_is_simulated_payment?.[0] || 0,
               cr: isAdd ? Date.now() : undefined,
             };
@@ -382,6 +394,8 @@ export const useFormSubmit = <T extends Record<string, any>>({
             fpi: node.field_pay_installment?.[0] || '',
             fpsf: node.field_pay_single_fee?.[0] || '',
             fnra: node.field_new_recurring_amount?.[0] || '',
+            fnp: node.field_new_principal?.[0] || '',
+            fpm: node.field_payment_method?.[0] || '',
             fisp: node.field_is_simulated_payment?.[0] || 0,
             cr: isAdd ? Date.now() : undefined,
           };

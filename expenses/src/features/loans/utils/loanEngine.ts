@@ -177,6 +177,38 @@ export const calculateAnnuity = (
 };
 
 /**
+ * Calculate fixed monthly principal reduction (Linear/Equal Principal method)
+ *
+ * MATHEMATICAL FOUNDATION:
+ * In a decreasing installment loan (equal principal method), the principal
+ * is paid down in equal chunks over the life of the loan.
+ *
+ *   PrincipalPayment = TotalPrincipal / TotalMonths
+ *
+ * @param principal - Remaining principal balance
+ * @param startDate - Start date for calculation period
+ * @param endDate - End date for calculation period
+ * @returns Monthly principal payment
+ */
+export const calculateLinearPrincipal = (
+  principal: number,
+  startDate: string,
+  endDate: string
+): number => {
+  if (principal <= 0) {
+    throw new Error('calculateLinearPrincipal: principal must be positive');
+  }
+
+  const n = getNumberOfMonths(startDate, endDate);
+
+  if (n <= 0) {
+    return principal;
+  }
+
+  return principal / n;
+};
+
+/**
  * Calculate remaining balance after a payment
  *
  * @param currentPrincipal - Current principal balance
@@ -262,6 +294,7 @@ export const recalculateAfterRateChange = (params: {
   rateChangeDate: string;
   loanEndDate: string;
   applyPaymentFirst?: boolean;
+  method?: 'equal_installment' | 'equal_principal';
 }): {
   newPayment: number;
   updatedPrincipal: number;
@@ -275,6 +308,7 @@ export const recalculateAfterRateChange = (params: {
     rateChangeDate,
     loanEndDate,
     applyPaymentFirst = true,
+    method = 'equal_installment',
   } = params;
 
   // Validate inputs
@@ -328,16 +362,23 @@ export const recalculateAfterRateChange = (params: {
     }
   }
 
-  // Step 3 & 4: Recalculate annuity using NEW interest rate with updated principal
-  const newPayment = calculateAnnuity(
-    updatedPrincipal,
-    newRate,
-    rateChangeDate,
-    loanEndDate
-  );
+  // Step 3 & 4: Recalculate payment using NEW interest rate with updated principal
+  const newPayment =
+    method === 'equal_installment'
+      ? calculateAnnuity(
+          updatedPrincipal,
+          newRate,
+          rateChangeDate,
+          loanEndDate
+        )
+      : calculateLinearPrincipal(
+          updatedPrincipal,
+          rateChangeDate,
+          loanEndDate
+        );
 
-  // Validation: When interest rate decreases, monthly payment must decrease
-  if (newRate < oldRate && newPayment > currentPayment) {
+  // Validation: When interest rate decreases, monthly payment must decrease (only applies to equal installment)
+  if (method === 'equal_installment' && newRate < oldRate && newPayment > currentPayment) {
     // This is a validation warning - log it but don't throw
     // The caller can handle this warning as needed
     // Rate decreased but payment increased - caller may log if needed

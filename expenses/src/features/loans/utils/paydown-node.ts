@@ -1,6 +1,7 @@
 // Import pure loan calculation functions
 import {
   calculateAnnuity,
+  calculateLinearPrincipal,
   recalculateAfterRateChange,
   calculatePeriodInterest,
 } from './loanEngine';
@@ -15,6 +16,7 @@ export interface PaydownInit {
   recurring?: {
     first_payment_date: string;
     payment_day: number;
+    method?: 'equal_installment' | 'equal_principal';
   };
   round_values?: boolean;
   debug_logging?: boolean;
@@ -25,9 +27,10 @@ export interface PaydownEvent {
   date: string;
   rate?: number;
   recurring_amount?: number;
+  new_principal?: number;
   pay_installment?: number;
   pay_single_fee?: number;
-  payment_method?: 'equal_installment';
+  payment_method?: 'equal_installment' | 'equal_principal';
   pay_recurring?: boolean;
   ending?: boolean;
   was_payed?: boolean;
@@ -80,6 +83,12 @@ export interface PaydownCalculationResult {
   current_interest_due: number;
   interest_paid: number;
 }
+
+type InternalPaydownInit = Partial<PaydownInit> & {
+  first_payment_date?: string;
+  payment_day?: number;
+  payment_method?: 'equal_installment' | 'equal_principal';
+};
 
 // Utility functions
 const zeroFill = (i: number): string => (i < 10 ? '0' : '') + i;
@@ -313,7 +322,7 @@ class PaydownCalculator {
   private debugLogArray: string[] = [];
   private dayCountDivisor = 0;
   private latestPeriodEndDate = '';
-  private init: Partial<PaydownInit> = {};
+  private init: InternalPaydownInit = {};
   private roundValues = true;
   private initialFee = 0;
   private sumOfFees = 0;
@@ -641,8 +650,9 @@ class PaydownCalculator {
   private funcPayInstallment = (
     index: number,
     dateObj: Days,
-    installment: number,
-    fee = 0
+    installmentOrPrincipal: number,
+    fee = 0,
+    isFixedPrincipal = false
   ): boolean => {
     let periodInterest: number;
     let reduction: number;
@@ -663,15 +673,17 @@ class PaydownCalculator {
       );
     }
 
-    if (installment === 0) {
+    if (installmentOrPrincipal === 0) {
       reduction = 0;
+    } else if (isFixedPrincipal) {
+      reduction = installmentOrPrincipal;
     } else {
-      reduction = installment - periodInterest;
+      reduction = installmentOrPrincipal - periodInterest;
     }
 
     if (reduction < 0) {
       throw new Error(
-        `Exception: installment ${this.round(installment)} is too small to cover the interest ${this.round(periodInterest)}: ${startDate} - ${endDate}`
+        `Exception: installment ${this.round(installmentOrPrincipal)} is too small to cover the interest ${this.round(periodInterest)}: ${startDate} - ${endDate}`
       );
     }
 
@@ -725,7 +737,7 @@ class PaydownCalculator {
   };
 
   /**
-   * Calculate recurring payment amount using standard annuity formula
+   * Calculate recurring payment amount using standard annuity formula or linear principal
    * Delegates to pure loanEngine module
    */
   private calculateRecurringAmount = ({
@@ -733,13 +745,17 @@ class PaydownCalculator {
     rate,
     startDate,
     endDate,
+    method,
   }: {
     principal: number;
     rate: number;
     startDate: string;
     endDate: string;
+    method?: 'equal_installment' | 'equal_principal';
   }): number => {
-    return calculateAnnuity(principal, rate, startDate, endDate);
+    return method === 'equal_principal'
+      ? calculateLinearPrincipal(principal, startDate, endDate)
+      : calculateAnnuity(principal, rate, startDate, endDate);
   };
 
   /**
@@ -752,6 +768,7 @@ class PaydownCalculator {
       rate: data.rate,
       startDate: data.start_date,
       endDate: data.end_date,
+      method: data.recurring?.method,
     });
   };
 
@@ -784,7 +801,7 @@ class PaydownCalculator {
         throw new Error('setInit: invalid or missing first payment_day number');
       }
       this.init.payment_day = data.recurring.payment_day;
-      this.init.payment_method = 'equal_installment';
+      this.init.payment_method = data.recurring.method || 'equal_installment';
     } else {
       this.currentRecurringPayment = null;
     }
@@ -837,6 +854,14 @@ class PaydownCalculator {
       if (!numberIsValid(event.pay_single_fee!)) {
         throw new Error(
           `checkAndAddEvent: invalid pay_single_fee in event ${event.date}`
+        );
+      }
+    }
+
+    if (event.hasOwnProperty('new_principal')) {
+      if (!numberIsValid(event.new_principal!)) {
+        throw new Error(
+          `checkAndAddEvent: invalid new_principal in event ${event.date}`
         );
       }
     }
@@ -1150,6 +1175,7 @@ class PaydownCalculator {
               rateChangeDate: event.date,
               loanEndDate: this.init.end_date!,
               applyPaymentFirst: false, // No payment on this date, just rate change
+              method: this.init.payment_method,
             });
 
             // Validation warning is handled inside recalculateAfterRateChange
@@ -1205,12 +1231,68 @@ class PaydownCalculator {
       }
 
       if (event.hasOwnProperty('payment_method')) {
-        if (event.payment_method === 'equal_installment') {
-          this.init.payment_method = 'equal_installment';
+        if (event.payment_method === 'equal_installment' || event.payment_method === 'equal_principal') {
+          this.init.payment_method = event.payment_method;
+          if (
+            this.currentRecurringPayment !== null &&
+            !event.hasOwnProperty('recurring_amount')
+          ) {
+            const currentRateNum =
+              typeof this.currentRate === 'string'
+                ? parseFloat(String(this.currentRate))
+                : Number(this.currentRate);
+            this.currentRecurringPayment = this.calculateRecurringAmount({
+              principal: Number(this.currentPrincipal),
+              rate: currentRateNum,
+              startDate: event.date,
+              endDate: this.init.end_date!,
+              method: this.init.payment_method,
+            });
+          }
         } else {
           throw new Error(
             `invalid payment method in event: ${event.payment_method}`
           );
+        }
+      }
+
+      if (event.hasOwnProperty('new_principal')) {
+        if (
+          typeof event.new_principal !== 'number' ||
+          isNaN(event.new_principal) ||
+          event.new_principal < 0
+        ) {
+          throw new Error(`invalid new_principal in event: ${event.date}`);
+        }
+
+        this.currentPrincipal = event.new_principal;
+
+        // Store principal reset event in payment log for auditability.
+        this.logPayment({
+          date: event.date,
+          rate: this.currentRate,
+          installment: '-',
+          reduction: '-',
+          interest: '-',
+          principal: this.currentPrincipal,
+          fee: '-',
+        });
+
+        if (
+          this.currentRecurringPayment !== null &&
+          !event.hasOwnProperty('recurring_amount')
+        ) {
+          const currentRateNum =
+            typeof this.currentRate === 'string'
+              ? parseFloat(String(this.currentRate))
+              : Number(this.currentRate);
+          this.currentRecurringPayment = this.calculateRecurringAmount({
+            principal: Number(this.currentPrincipal),
+            rate: currentRateNum,
+            startDate: event.date,
+            endDate: this.init.end_date!,
+            method: this.init.payment_method,
+          });
         }
       }
 
@@ -1222,7 +1304,8 @@ class PaydownCalculator {
         }
         this.sumOfFees += this.currentRecurringFee;
 
-        if (this.init.payment_method === 'equal_installment') {
+        if (this.init.payment_method === 'equal_installment' || this.init.payment_method === 'equal_principal') {
+          const isFixedPrincipal = this.init.payment_method === 'equal_principal';
           // Apply the payment using the CURRENT (OLD) interest rate
           // This is the payment amount calculated with the rate before any change
           installment = event.hasOwnProperty('pay_installment')
@@ -1240,7 +1323,8 @@ class PaydownCalculator {
               index,
               dateObj,
               installment,
-              this.currentRecurringFee
+              this.currentRecurringFee,
+              isFixedPrincipal && !event.hasOwnProperty('pay_installment')
             )
           ) {
             break;
@@ -1289,6 +1373,7 @@ class PaydownCalculator {
                   rateChangeDate: event.date,
                   loanEndDate: this.init.end_date!,
                   applyPaymentFirst: false, // Payment already applied above
+                  method: this.init.payment_method,
                 });
 
                 // Validation warning is handled inside recalculateAfterRateChange
