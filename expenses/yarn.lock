@@ -1533,13 +1533,13 @@
   integrity sha512-Kp/WSt411ZWYvgXy6uiv5RmhHrz9cAml05AQPrtdAp7eUqvIDbMGPnML25OKbzR3RJ1q4wgENxDTvlGPa9+Mww==
 
 "@tanstack/react-router@^1.157.18":
-  version "1.166.6"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.166.6.tgz#32c7300b212c9f6f43587f3522020e85eeca1587"
-  integrity sha512-lfymPCfTkLQaNj/KIPElt+6B9REwPw2/Of3KtMwhNINs7h2xFQMSAOYk+ItCv8i93lBczlg89BRHtRS99qmzyA==
+  version "1.166.7"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.166.7.tgz#8e58b1ee16d5f398d1b6c4c43404f10c7a293d1b"
+  integrity sha512-LLcXu2nrCn2WL+w0YAbg3CRZIIO2cYVSC3y+ZYlFBxBs4hh8eoNP1EWFvRLZGCFYpqON7x6qUf1u0W7tH0cJJw==
   dependencies:
     "@tanstack/history" "1.161.4"
     "@tanstack/react-store" "^0.9.1"
-    "@tanstack/router-core" "1.166.6"
+    "@tanstack/router-core" "1.166.7"
     isbot "^5.1.22"
     tiny-invariant "^1.3.3"
     tiny-warning "^1.0.3"
@@ -1566,10 +1566,10 @@
   dependencies:
     "@tanstack/virtual-core" "3.13.21"
 
-"@tanstack/router-core@1.166.6":
-  version "1.166.6"
-  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.166.6.tgz#8c8225d672da12b8e62f9cb85114f8e5d8f9655e"
-  integrity sha512-SwVPMQxjoY4jwiNgD9u5kDFp/iSaf3wgf1t93xRCC6qDHmv/xLaawhvwEPNIJaPepWuSYRpywpJWH9hGlBqVbw==
+"@tanstack/router-core@1.166.7":
+  version "1.166.7"
+  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.166.7.tgz#8345fe22fdb957b016697dc9a0b9e6098e9e59d6"
+  integrity sha512-MCc8wYIIcxmbeidM8PL2QeaAjUIHyhEDIZPW6NGfn/uwvyi+K2ucn3AGCxxcXl4JGGm0Mx9+7buYl1v3HdcFrg==
   dependencies:
     "@tanstack/history" "1.161.4"
     "@tanstack/store" "^0.9.1"
@@ -1993,9 +1993,9 @@ dompurify@*:
     "@types/trusted-types" "^2.0.7"
 
 dompurify@^3.3.1:
-  version "3.3.2"
-  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.3.2.tgz#58c515d0f8508b8749452a028aa589ad80b36325"
-  integrity sha512-6obghkliLdmKa56xdbLOpUZ43pAR6xFy1uOrxBaIDjT+yaRuuybLjGS9eVBoSR/UPU5fq3OXClEHLJNGvbxKpQ==
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.3.3.tgz#680cae8af3e61320ddf3666a3bc843f7b291b2b6"
+  integrity sha512-Oj6pzI2+RqBfFG+qOaOLbFXLQ90ARpcGG6UePL82bJLtdsa6CYJD7nmiU8MW9nQNOtCHV3lZ/Bzq1X0QYbBZCA==
   optionalDependencies:
     "@types/trusted-types" "^2.0.7"
 
@@ -2617,9 +2617,9 @@ isarray@^2.0.5:
   integrity sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==
 
 isbot@^5.1.22:
-  version "5.1.35"
-  resolved "https://registry.yarnpkg.com/isbot/-/isbot-5.1.35.tgz#a120bac86f23318397955890e178e118b0ef151a"
-  integrity sha512-waFfC72ZNfwLLuJ2iLaoVaqcNo+CAaLR7xCpAn0Y5WfGzkNHv7ZN39Vbi1y+kb+Zs46XHOX3tZNExroFUPX+Kg==
+  version "5.1.36"
+  resolved "https://registry.yarnpkg.com/isbot/-/isbot-5.1.36.tgz#139dcc056f0a4042f3d7f39f011a1e328e9c7863"
+  integrity sha512-C/ZtXyJqDPZ7G7JPr06ApWyYoHjYexQbS6hPYD4WYCzpv2Qes6Z+CCEfTX4Owzf+1EJ933PoI2p+B9v7wpGZBQ==
 
 isexe@^2.0.0:
   version "2.0.0"
