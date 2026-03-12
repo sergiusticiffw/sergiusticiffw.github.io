@@ -1,7 +1,11 @@
 import React from 'react';
 import { useLocalization } from '@shared/context/localization';
 
-import { LoanCostBreakdown } from '@features/loans/components/Loan/LoanCharts';
+import {
+  LoanCostBreakdown,
+  LoanPrincipalOverTime,
+  LoanAnnualBreakdown,
+} from '@features/loans/components/Loan/LoanCharts';
 import AmortizationTable from '@features/loans/components/Loan/AmortizationTable';
 import type {
   PaydownResult,
@@ -152,6 +156,16 @@ const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
           sumInstallments,
         }}
       />
+      <br />
+
+      {loan?.annual_summaries && Object.keys(loan.annual_summaries).length > 0 ? (
+        <>
+          <LoanAnnualBreakdown annualSummaries={loan.annual_summaries} />
+          <br />
+        </>
+      ) : null}
+
+      <LoanPrincipalOverTime schedule={amortizationSchedule as any} />
       <br />
 
       <AmortizationTable amortizationSchedule={processedAmortizationSchedule} />

@@ -260,7 +260,7 @@ const PaymentDetails = (props) => {
               {Math.min(nrOfItemsToShow, payments.length)} of {payments.length}{' '}
               payments
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button
                 type="button"
                 className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
@@ -372,7 +372,8 @@ const PaymentDetails = (props) => {
               >
                 <FiChevronDown />
                 <span>
-                  {t('common.loadMore')} ({payments.length - nrOfItemsToShow}{' '}
+                  {t('common.loadMore')} (
+                  {payments.length - nrOfItemsToShow}{' '}
                   {t('common.remaining')})
                 </span>
               </button>

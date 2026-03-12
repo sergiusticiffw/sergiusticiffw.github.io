@@ -597,6 +597,13 @@ export async function getPendingSyncOperations(): Promise<SyncOperation[]> {
   }
 }
 
+export async function hasPendingSyncOperations(
+  entityTypes: Array<SyncOperation['entityType']>
+): Promise<boolean> {
+  const pending = await getPendingSyncOperations();
+  return pending.some((op) => entityTypes.includes(op.entityType));
+}
+
 // Remove sync operation
 export async function removeSyncOperation(id: number): Promise<void> {
   try {

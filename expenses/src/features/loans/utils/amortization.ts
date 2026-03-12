@@ -114,3 +114,14 @@ export function calculateAmortization(
   const paydown = calculator.calculate(loanData, events, schedule);
   return { paydown, schedule };
 }
+
+/**
+ * Run Paydown once, but without building the schedule (much faster for list views).
+ */
+export function calculatePaydownOnly(
+  loanData: PaydownInit,
+  events: PaydownEvent[]
+): PaydownResult {
+  const calculator = Paydown();
+  return calculator.calculate(loanData, events);
+}

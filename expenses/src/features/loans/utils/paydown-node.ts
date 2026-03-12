@@ -77,18 +77,17 @@ export interface PaydownResult {
   annual_summaries: Record<string, AnnualSummary>;
 }
 
-export interface PaydownCalculationResult {
-  interests: number;
-  reductions: number;
-  remaining_principal: number;
-  actual_end_date: string;
-  latest_payment_date: string;
-  final_interest: number;
-  fees: number;
-  annual_summaries: Record<string, AnnualSummary>;
-  current_interest_due: number;
-  interest_paid: number;
-}
+type PaydownCalculationResult = [
+  interests: number,
+  reductions: number,
+  remaining_principal: number,
+  actual_end_date: string,
+  latest_payment_date: string,
+  final_interest: number,
+  fees: number,
+  annual_summaries: Record<string, AnnualSummary>,
+  interest_paid: number
+];
 
 type InternalPaydownInit = Partial<PaydownInit> & {
   first_payment_date?: string;
@@ -318,9 +317,9 @@ class PaydownCalculator {
   private sumOfReductions = 0;
   private latestCalculatedInterestDate = '';
   private latestPaymentDate = '';
-  private currentRate = '';
+  private currentRate = 0;
   private currentRecurringPayment: number | null = null;
-  private currentPrincipal = '';
+  private currentPrincipal = 0;
   private gpiSumOfInterests = 0;
   private totalNumberOfDays = 0;
   private gpiTotalDays = 0;
@@ -347,7 +346,7 @@ class PaydownCalculator {
   private remainingPrincipalAfterPaid = 0;
 
   // Helper to parse date strings into Date objects
-  private parseDate = (dateStr: string): Date => {
+  public parseDate = (dateStr: string): Date => {
     const [day, month, year] = dateStr.split('.').map(Number);
     return new Date(year, month - 1, day);
   };
@@ -359,12 +358,38 @@ class PaydownCalculator {
     return this.roundValues ? funcRound(input) : input;
   };
 
+  /**
+   * Accrue interest from the day after latestCalculatedInterestDate up to boundaryDate (inclusive),
+   * using the CURRENT principal/rate. This is used for events like new_principal (refinance) where
+   * we must account for interest up to the event date BEFORE mutating principal.
+   */
+  private accrueInterestUntil = (dateObj: Days, boundaryDate: string): void => {
+    if (this.latestCalculatedInterestDate === boundaryDate) return;
+
+    const startDate = dateObj.setCurrent(this.latestCalculatedInterestDate).getNext();
+    const endDate = boundaryDate;
+    const accrued = this.getPeriodInterests(
+      this.currentPrincipal,
+      this.currentRate,
+      startDate,
+      endDate
+    );
+
+    this.sumOfInterests += accrued;
+    this.latestCalculatedInterestDate = boundaryDate;
+    this.latestPeriodEndDate = boundaryDate;
+  };
+
   getEffectivePrincipal(): number {
     return this.effectivePrincipal;
   }
 
   getRemainingPrincipalAfterPaid(): number {
     return this.remainingPrincipalAfterPaid;
+  }
+
+  getTotalNumberOfDays(): number {
+    return this.totalNumberOfDays;
   }
 
 
@@ -676,6 +701,7 @@ class PaydownCalculator {
     let periodInterest: number;
     let reduction: number;
     let startDate: string, endDate: string;
+    let numDays = 0;
 
     if (this.latestCalculatedInterestDate === this.eventArray[index].date) {
       periodInterest = 0;
@@ -690,6 +716,7 @@ class PaydownCalculator {
         startDate,
         endDate
       );
+      numDays = calculateDayCount(startDate, endDate, false);
     }
 
     if (installmentOrPrincipal === 0) {
@@ -710,8 +737,6 @@ class PaydownCalculator {
     this.currentPrincipal -= reduction;
     this.latestCalculatedInterestDate = this.eventArray[index].date;
     this.latestPaymentDate = this.eventArray[index].date;
-
-    const numDays = calculateDayCount(startDate, endDate, false);
 
     if (this.currentPrincipal <= 0) {
       this.handleLastPayment(
@@ -791,7 +816,7 @@ class PaydownCalculator {
     });
   };
 
-  private setInit = (data: PaydownInit): void => {
+  public setInit = (data: PaydownInit): void => {
     if (!(typeof data === 'object' && data !== null)) {
       throw new Error('setInit: invalid or missing init_obj');
     }
@@ -831,7 +856,7 @@ class PaydownCalculator {
     this.initialFee = data.initial_fee || 0;
   };
 
-  private checkAndAddEvent = (event: PaydownEvent): void => {
+  public checkAndAddEvent = (event: PaydownEvent): void => {
     if (!event.hasOwnProperty('date')) {
       throw new Error('checkAndAddEvent: date missing from event');
     }
@@ -864,7 +889,8 @@ class PaydownCalculator {
           `checkAndAddEvent: invalid pay_installment in event ${event.date}`
         );
       } else {
-        event.was_payed = true;
+        // Paid means: actual installment AND not simulated
+        event.was_payed = event.isSimulatedPayment ? false : true;
         event.pay_recurring = true;
       }
     }
@@ -1023,9 +1049,12 @@ class PaydownCalculator {
 
   private debugWrite = (string: string, number: number | string = ''): void => {
     if (this.debugPrintToConsole) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(string, number);
-      }
+      const env = (
+        globalThis as unknown as {
+          process?: { env?: { NODE_ENV?: string } };
+        }
+      ).process?.env?.NODE_ENV;
+      if (env === 'development') console.log(string, number);
     } else {
       this.debugLogArray.push(string + number);
     }
@@ -1129,10 +1158,7 @@ class PaydownCalculator {
         const newRate = event.rate!;
 
         // Convert rates to numbers for comparison
-        const currentRateNum =
-          typeof this.currentRate === 'string'
-            ? parseFloat(String(this.currentRate))
-            : Number(this.currentRate);
+        const currentRateNum = this.currentRate;
         const newRateNum =
           typeof newRate === 'number' ? newRate : parseFloat(String(newRate));
 
@@ -1174,10 +1200,7 @@ class PaydownCalculator {
         ) {
           try {
             // Get current principal as number (remaining principal at this point)
-            const currentPrincipalNum =
-              typeof this.currentPrincipal === 'number'
-                ? this.currentPrincipal
-                : parseFloat(String(this.currentPrincipal));
+            const currentPrincipalNum = this.currentPrincipal;
 
             if (isNaN(currentPrincipalNum) || currentPrincipalNum <= 0) {
               throw new Error(
@@ -1266,11 +1289,7 @@ class PaydownCalculator {
               event.hasOwnProperty('rate') && event.rate != null && event.rate !== ''
                 ? (typeof event.rate === 'number' ? event.rate : parseFloat(String(event.rate)))
                 : NaN;
-            const rateForCalc = !isNaN(rateFromEvent)
-              ? rateFromEvent
-              : (typeof this.currentRate === 'string'
-                  ? parseFloat(String(this.currentRate))
-                  : Number(this.currentRate));
+            const rateForCalc = !isNaN(rateFromEvent) ? rateFromEvent : this.currentRate;
             const principalForCalc = Number(this.currentPrincipal);
             this.currentRecurringPayment = this.calculateRecurringAmount({
               principal: principalForCalc,
@@ -1295,6 +1314,10 @@ class PaydownCalculator {
         ) {
           throw new Error(`invalid new_principal in event: ${event.date}`);
         }
+
+        // Accrue interest up to this date BEFORE changing principal.
+        // This prevents the period interest (since last calculation) from being computed on the new principal.
+        this.accrueInterestUntil(dateObj, event.date);
 
         this.currentPrincipal = event.new_principal;
         this.effectivePrincipal = event.new_principal;
@@ -1324,11 +1347,7 @@ class PaydownCalculator {
             event.hasOwnProperty('rate') && event.rate != null && event.rate !== ''
               ? (typeof event.rate === 'number' ? event.rate : parseFloat(String(event.rate)))
               : NaN;
-          const rateForNewPrincipal = !isNaN(rateFromEvent)
-            ? rateFromEvent
-            : (typeof this.currentRate === 'string'
-                ? parseFloat(String(this.currentRate))
-                : Number(this.currentRate));
+          const rateForNewPrincipal = !isNaN(rateFromEvent) ? rateFromEvent : this.currentRate;
           this.currentRecurringPayment = this.calculateRecurringAmount({
             principal: Number(this.currentPrincipal),
             rate: rateForNewPrincipal,

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, FC } from 'react';
+import { useEffect, useState, useMemo, FC, useRef } from 'react';
 import { useAuthDispatch, useAuthState } from '@shared/context/context';
 import { useLoan } from '@shared/context/loan';
 import { useLocalization } from '@shared/context/localization';
@@ -15,7 +15,7 @@ import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import {
   buildLoanDataFromApiLoan,
   buildEventsFromApiPayments,
-  calculateAmortization,
+  calculatePaydownOnly,
 } from '@features/loans/utils/amortization';
 import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
 import {
@@ -51,7 +51,7 @@ const Loans: FC = () => {
 
   // Event-driven pending sync tracking (no polling) - for loans and payments
   const pendingLoanIds = usePendingSyncIds(['loan']);
-  usePendingSyncIds(['payment']);
+  // Payments pending IDs are not used on this page; avoid extra listeners/work.
 
   useEffect(() => {
     if (!loans && apiClient) {
@@ -102,6 +102,19 @@ const Loans: FC = () => {
 
   const getLoanStatusForLoan = (loan: ApiLoan) => getLoanStatus(loan?.fls);
 
+  const paydownCacheRef = useRef(
+    new Map<string, { sumOfInstallments: number; totalPaidAmount: number }>()
+  );
+
+  const hashString = (input: string): string => {
+    // djb2
+    let h = 5381;
+    for (let i = 0; i < input.length; i++) {
+      h = (h * 33) ^ input.charCodeAt(i);
+    }
+    return (h >>> 0).toString(16);
+  };
+
   const getStatusText = (status: string) => {
     switch (status) {
       case 'completed':
@@ -118,7 +131,7 @@ const Loans: FC = () => {
   const amortizationByLoanId = useMemo(() => {
     const map = new Map<
       string,
-      { paydown: { sum_of_installments: number }; totalPaidAmount: number }
+      { paydown: any; totalPaidAmount: number }
     >();
     if (!loans?.length || !payments?.length) return map;
     const paymentsList = payments as LoanPaymentsEntry[];
@@ -144,17 +157,58 @@ const Loans: FC = () => {
         map.set(loan.id, { paydown: { sum_of_installments: 0 }, totalPaidAmount: 0 });
         continue;
       }
-      const events = buildEventsFromApiPayments(
-        filteredData.data as ApiPaymentItem[]
+
+      const paymentItems = filteredData.data as ApiPaymentItem[];
+      const events = buildEventsFromApiPayments(paymentItems);
+      const totalPaidAmount = paymentItems.reduce(
+        (sum: number, item: ApiPaymentItem) =>
+          sum + parseFloat(String(item.fpi ?? '0')),
+        0
       );
+
+      const loanKey = hashString(
+        [
+          loan.id,
+          loan.sdt,
+          loan.edt,
+          loan.fp,
+          loan.fr,
+          loan.fif,
+          loan.pdt,
+          loan.frpd,
+          loan.fpm,
+          loan.fls,
+        ]
+          .map((v) => String(v ?? ''))
+          .join('|')
+      );
+
+      const paymentsKey = hashString(
+        paymentItems
+          .map(
+            (p) =>
+              `${p.id}|${p.cr ?? ''}|${p.fdt ?? ''}|${p.fpi ?? ''}|${p.fr ?? ''}|${p.fnp ?? ''}|${p.fpm ?? ''}|${p.fisp ?? ''}`
+          )
+          .join('~')
+      );
+
+      const cacheKey = `${loanKey}:${paymentsKey}`;
+      const cached = paydownCacheRef.current.get(cacheKey);
+      if (cached) {
+        map.set(loan.id, {
+          paydown: { sum_of_installments: cached.sumOfInstallments },
+          totalPaidAmount: cached.totalPaidAmount,
+        });
+        continue;
+      }
+
       try {
-        const { paydown } = calculateAmortization(loanData, events);
-        const totalPaidAmount = filteredData.data.reduce(
-          (sum: number, item: ApiPaymentItem) =>
-            sum + parseFloat(String(item.fpi ?? '0')),
-          0
-        );
+        const paydown = calculatePaydownOnly(loanData, events);
         map.set(loan.id, { paydown, totalPaidAmount });
+        paydownCacheRef.current.set(cacheKey, {
+          sumOfInstallments: paydown.sum_of_installments ?? 0,
+          totalPaidAmount,
+        });
       } catch {
         map.set(loan.id, { paydown: { sum_of_installments: 0 }, totalPaidAmount: 0 });
       }

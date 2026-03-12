@@ -10,6 +10,7 @@ import {
   getPaymentsFromDB,
   savePaymentsToDB,
   isIndexedDBAvailable,
+  hasPendingSyncOperations,
 } from '@shared/utils/indexedDB';
 import { processLoans } from '@shared/utils/utils';
 
@@ -95,6 +96,12 @@ export async function fetchLoans(
     const processedLoans = processLoans(response.data);
 
     if (isIndexedDBAvailable()) {
+      // If there are pending local changes, don't overwrite local cache/UI with server snapshot.
+      // Local cache was already loaded above; sync will reconcile when online.
+      const hasPending = await hasPendingSyncOperations(['loan', 'payment']);
+      if (hasPending) {
+        return;
+      }
       await Promise.all([
         saveLoansToDB(processedLoans),
         savePaymentsToDB(payments),

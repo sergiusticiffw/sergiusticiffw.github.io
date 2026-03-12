@@ -491,7 +491,6 @@ const Loan: React.FC = () => {
           }}
           onSuccess={() => {
             setShowAddPaymentModal(false);
-            // UI update is handled by useFormSubmit, only fetch if online
             if (navigator.onLine && apiClient) {
               fetchLoansService(apiClient, dataDispatch);
             }
@@ -507,6 +506,7 @@ const Loan: React.FC = () => {
       >
         <FiPlus />
       </button>
+
     </div>
   );
 };

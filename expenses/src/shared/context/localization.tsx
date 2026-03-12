@@ -360,6 +360,7 @@ const translations = {
     'loan.loanCostBreakdown': 'Loan Cost Breakdown',
     'loan.interests': 'Interests',
     'loan.installments': 'Installments',
+    'loan.fees': 'Fees',
     'loan.startDate': 'Start date',
     'loan.endDate': 'End date',
     'loan.noAmortizationData': 'No amortization schedule data available.',
@@ -915,6 +916,7 @@ const translations = {
     'loan.loanCostBreakdown': 'Detalierea Costului Împrumutului',
     'loan.interests': 'Dobânzi',
     'loan.installments': 'Rate',
+    'loan.fees': 'Comisioane',
     'loan.startDate': 'Data de început',
     'loan.endDate': 'Data de sfârșit',
     'loan.noAmortizationData':
