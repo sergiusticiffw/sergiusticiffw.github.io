@@ -18,18 +18,6 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Code splitting for better caching
-          'react-vendor': ['react', 'react-dom'],
-          'router-vendor': ['@tanstack/react-router'],
-          'charts-vendor': ['highcharts', 'highcharts-react-official'],
-        },
-      },
-    },
-  },
   worker: {
     format: 'es',
   },
