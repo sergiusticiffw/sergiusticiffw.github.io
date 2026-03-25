@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Access Groups - Implementation Board</title>
+    <style>
+      :root {
+        --bg: #070f1a;
+        --panel: rgba(255, 255, 255, 0.07);
+        --panel-2: rgba(255, 255, 255, 0.05);
+        --text: rgba(234, 250, 255, 0.94);
+        --muted: rgba(234, 250, 255, 0.72);
+        --border: rgba(100, 210, 255, 0.25);
+        --accent: #56d6ff;
+        --accent-2: rgba(86, 214, 255, 0.35);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Helvetica, Arial;
+        background:
+          radial-gradient(1000px 650px at 18% 0%, rgba(86, 214, 255, 0.22), transparent 55%),
+          radial-gradient(820px 520px at 90% 14%, rgba(122, 217, 255, 0.12), transparent 60%),
+          var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .topBar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: rgba(7, 15, 26, 0.75);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .topBar .left {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .topBar .title {
+        font-weight: 900;
+        letter-spacing: 0.2px;
+        font-size: 16px;
+        line-height: 1.15;
+      }
+
+      .topBar .sub {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.25;
+      }
+
+      .btnRow {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      button {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-weight: 750;
+        cursor: pointer;
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .board {
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 64px);
+        overflow: auto;
+      }
+
+      .stage {
+        position: relative;
+        width: 1400px;
+        height: 900px;
+        margin: 16px auto;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        background:
+          linear-gradient(transparent 0, transparent 28px, rgba(255, 255, 255, 0.03) 28px, rgba(255, 255, 255, 0.03) 29px),
+          linear-gradient(90deg, transparent 0, transparent 28px, rgba(255, 255, 255, 0.03) 28px, rgba(255, 255, 255, 0.03) 29px);
+        background-size: 29px 29px, 29px 29px;
+        box-shadow: 0 18px 70px rgba(0, 0, 0, 0.25);
+      }
+
+      #svg {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .node {
+        position: absolute;
+        z-index: 2;
+        width: 310px;
+        padding: 16px 16px 14px;
+        background: linear-gradient(180deg, var(--panel), var(--panel-2));
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+        cursor: grab;
+        user-select: none;
+      }
+
+      .node:active {
+        cursor: grabbing;
+      }
+
+      .node .kicker {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 14px;
+        color: var(--muted);
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        margin-bottom: 12px;
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 4px rgba(86, 214, 255, 0.15);
+      }
+
+      .node h3 {
+        margin: 0 0 8px;
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 900;
+      }
+
+      .node ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .node li {
+        margin: 6px 0;
+        font-size: 14px;
+        line-height: 1.4;
+        color: rgba(234, 250, 255, 0.88);
+      }
+
+      .node.note {
+        width: 360px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.04));
+      }
+
+      @media (max-width: 900px) {
+        .stage {
+          width: 1180px;
+        }
+        .node {
+          width: 260px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topBar">
+      <div class="left">
+        <div class="title">Access Groups - Visual Implementation Board</div>
+        <div class="sub">Drag cards. Connections show how the app pieces work together.</div>
+      </div>
+      <div class="btnRow">
+        <button id="resetBtn" type="button">Reset layout</button>
+      </div>
+    </div>
+
+    <div class="board" aria-label="Miro-like board">
+      <div class="stage" id="stage">
+        <svg id="svg" width="1100" height="720" aria-hidden="true"></svg>
+
+        <div class="node" id="nodeConcept" data-x="40" data-y="60">
+          <div class="kicker"><span class="dot"></span> Inspiration</div>
+          <h3>Drupal Groups concept</h3>
+          <ul>
+            <li>Group-based editorial access</li>
+            <li>Consistent permissions + tagging</li>
+          </ul>
+        </div>
+
+        <div class="node" id="nodeConfig" data-x="340" data-y="60">
+          <div class="kicker"><span class="dot"></span> App Config</div>
+          <h3>Access Group (UI model)</h3>
+          <ul>
+            <li>Access tag per group</li>
+            <li>Nested roles: Author / Editor</li>
+            <li>Permission matrix per content type</li>
+          </ul>
+        </div>
+
+        <div class="node" id="nodeSync" data-x="650" data-y="150">
+          <div class="kicker"><span class="dot"></span> Compilation</div>
+          <h3>permissionsSync → Contentful role policies</h3>
+          <ul>
+            <li>Generates JSON constraints</li>
+            <li>One-way sync to Contentful</li>
+            <li>Scoping is tag-driven</li>
+          </ul>
+        </div>
+
+        <div class="node" id="nodeGuardrails" data-x="420" data-y="250">
+          <div class="kicker"><span class="dot"></span> Safety</div>
+          <h3>Deny tag editing (guardrail)</h3>
+          <ul>
+            <li>Prevents self-lockout scenarios</li>
+            <li>Deny rules injected from role spec</li>
+            <li>Tag membership stays authoritative</li>
+          </ul>
+        </div>
+
+        <div class="node" id="nodeHome" data-x="40" data-y="300">
+          <div class="kicker"><span class="dot"></span> Runtime</div>
+          <h3>Home: “Create Page” workflow</h3>
+          <ul>
+            <li>UI filters eligible content types</li>
+            <li>Backend re-checks create permission</li>
+            <li>Entry gets correct access-tag flow</li>
+          </ul>
+        </div>
+
+        <div class="node" id="nodeSidebar" data-x="40" data-y="520">
+          <div class="kicker"><span class="dot"></span> Runtime</div>
+          <h3>Sidebar auto-tagging (server-side)</h3>
+          <ul>
+            <li>Linked entries/assets get tagged</li>
+            <li>Uses server API: /api/apply-access-tag</li>
+            <li>Editors stay locked down safely</li>
+          </ul>
+        </div>
+
+        <div class="node" id="nodeSlug" data-x="650" data-y="350">
+          <div class="kicker"><span class="dot"></span> Business rule</div>
+          <h3>Slug-pattern validation flow</h3>
+          <ul>
+            <li>Patterns configured per group</li>
+            <li>Hidden validation field blocks publish</li>
+          </ul>
+        </div>
+
+        <div class="node note" id="nodeUnified" data-x="980" data-y="200">
+          <div class="kicker"><span class="dot"></span> Unification</div>
+          <h3>Unified slug-validation + auto-tagging</h3>
+          <ul>
+            <li>Centralized existing module behavior into `access-groups`</li>
+            <li>Business adaptations: access-tag scoping + guardrails</li>
+            <li>Reduced separate maintenance/configuration overhead</li>
+          </ul>
+        </div>
+
+        <div class="node note" id="nodeOps" data-x="980" data-y="460">
+          <div class="kicker"><span class="dot"></span> Orchestration</div>
+          <h3>Save app config → roles/tags/policies sync</h3>
+          <ul>
+            <li>Ensures “Access Group User” role</li>
+            <li>Creates group Editor/Author roles</li>
+            <li>Ensures tags exist, then syncs permissions</li>
+          </ul>
+        </div>
+
+        <div class="node note" id="nodeRisks" data-x="420" data-y="560">
+          <div class="kicker"><span class="dot"></span> Transparency</div>
+          <h3>Known limitations / risks</h3>
+          <ul>
+            <li>Tasks behavior may depend on token-owner behavior</li>
+            <li>UI filtering isn’t security; policies enforce access</li>
+            <li>Tag consistency is critical for scoping</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const stage = document.getElementById("stage");
+      const svg = document.getElementById("svg");
+
+      const resetLayout = () => {
+        document.querySelectorAll(".node").forEach((node) => {
+          const x = Number(node.dataset.x);
+          const y = Number(node.dataset.y);
+          node.style.left = x + "px";
+          node.style.top = y + "px";
+        });
+        draw();
+      };
+
+      // Init positions from data-x/data-y
+      document.querySelectorAll(".node").forEach((node) => {
+        node.style.left = node.dataset.x + "px";
+        node.style.top = node.dataset.y + "px";
+      });
+
+      function centerOf(node) {
+        const r = node.getBoundingClientRect();
+        const sr = stage.getBoundingClientRect();
+        return {
+          x: (r.left - sr.left) + r.width / 2,
+          y: (r.top - sr.top) + r.height / 2
+        };
+      }
+
+      // Edges: from node id -> to node id
+      const edges = [
+        ["nodeConcept", "nodeConfig"],
+        ["nodeConfig", "nodeSync"],
+        ["nodeConfig", "nodeGuardrails"],
+        ["nodeSync", "nodeHome"],
+        ["nodeSync", "nodeSidebar"],
+        ["nodeConfig", "nodeSlug"],
+        ["nodeSlug", "nodeUnified"],
+        ["nodeSidebar", "nodeUnified"],
+        ["nodeUnified", "nodeOps"],
+        ["nodeOps", "nodeSync"],
+        ["nodeHome", "nodeSidebar"],
+        ["nodeHome", "nodeRisks"],
+        ["nodeSidebar", "nodeRisks"],
+      ];
+
+      function clearSvg() {
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+      }
+
+      function draw() {
+        clearSvg();
+        const sr = stage.getBoundingClientRect();
+        svg.setAttribute("width", String(stage.clientWidth));
+        svg.setAttribute("height", String(stage.clientHeight));
+
+        for (const [fromId, toId] of edges) {
+          const from = document.getElementById(fromId);
+          const to = document.getElementById(toId);
+          if (!from || !to) continue;
+
+          const a = centerOf(from);
+          const b = centerOf(to);
+
+          const dx = Math.abs(b.x - a.x);
+          const dy = Math.abs(b.y - a.y);
+          const curvature = Math.min(120, Math.max(40, Math.floor((dx + dy) / 4)));
+          const mx = (a.x + b.x) / 2;
+          const my = (a.y + b.y) / 2;
+
+          // Simple bezier curve control points
+          const c1x = mx;
+          const c1y = a.y + (b.y > a.y ? curvature : -curvature);
+          const c2x = mx;
+          const c2y = b.y + (a.y > b.y ? curvature : -curvature);
+
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          const d = `M ${a.x} ${a.y} C ${c1x} ${c1y} ${c2x} ${c2y} ${b.x} ${b.y}`;
+          path.setAttribute("d", d);
+          path.setAttribute("fill", "none");
+          path.setAttribute("stroke", "rgba(86, 214, 255, 0.45)");
+          path.setAttribute("stroke-width", "3");
+          path.setAttribute("stroke-linecap", "round");
+
+          svg.appendChild(path);
+        }
+      }
+
+      function enableDrag(node) {
+        let startX = 0;
+        let startY = 0;
+        let origLeft = 0;
+        let origTop = 0;
+        let dragging = false;
+
+        const onPointerDown = (e) => {
+          // Only primary button / touch
+          dragging = true;
+          node.setPointerCapture(e.pointerId);
+
+          const rect = node.getBoundingClientRect();
+          const sr = stage.getBoundingClientRect();
+          startX = e.clientX;
+          startY = e.clientY;
+          origLeft = rect.left - sr.left;
+          origTop = rect.top - sr.top;
+        };
+
+        const onPointerMove = (e) => {
+          if (!dragging) return;
+          const sr = stage.getBoundingClientRect();
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          const nextLeft = origLeft + dx;
+          const nextTop = origTop + dy;
+
+          node.style.left = nextLeft + "px";
+          node.style.top = nextTop + "px";
+          draw();
+        };
+
+        const onPointerUp = () => {
+          dragging = false;
+        };
+
+        node.addEventListener("pointerdown", onPointerDown);
+        node.addEventListener("pointermove", onPointerMove);
+        node.addEventListener("pointerup", onPointerUp);
+        node.addEventListener("pointercancel", onPointerUp);
+      }
+
+      document.querySelectorAll(".node").forEach(enableDrag);
+
+      draw();
+
+      document.getElementById("resetBtn").addEventListener("click", resetLayout);
+
+      // Intentionally no print/export helper to keep the board minimal.
+    </script>
+  </body>
+</html>
+
