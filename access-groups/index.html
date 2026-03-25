@@ -1,511 +1,534 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Access Groups App - Team Presentation</title>
-    <style>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Access Groups App - Team Presentation</title>
+  <style>
       :root {
-        /* Cooler palette (more contrast, less “warm”) */
-        --bg: #060e16;
-        --card: rgba(122, 217, 255, 0.13);
-        --card-2: rgba(122, 217, 255, 0.07);
-        --text: rgba(234, 250, 255, 0.94);
-        --muted: rgba(234, 250, 255, 0.72);
-        --accent: #56d6ff;
-        --border: rgba(100, 210, 255, 0.24);
-        --shadow: 0 16px 52px rgba(0, 0, 0, 0.5);
+          /* Cooler palette (more contrast, less “warm”) */
+          --bg: #060e16;
+          --card: rgba(122, 217, 255, 0.13);
+          --card-2: rgba(122, 217, 255, 0.07);
+          --text: rgba(234, 250, 255, 0.94);
+          --muted: rgba(234, 250, 255, 0.72);
+          --accent: #56d6ff;
+          --border: rgba(100, 210, 255, 0.24);
+          --shadow: 0 16px 52px rgba(0, 0, 0, 0.5);
       }
       * {
-        box-sizing: border-box;
+          box-sizing: border-box;
       }
       body {
-        margin: 0;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          margin: 0;
+          font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
           Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-        background:
-          radial-gradient(1000px 650px at 18% 0%, rgba(86, 214, 255, 0.22), transparent 55%),
-          radial-gradient(820px 520px at 90% 14%, rgba(122, 217, 255, 0.14), transparent 60%),
-          var(--bg);
-        color: var(--text);
-        min-height: 100vh;
+          background:
+                  radial-gradient(1000px 650px at 18% 0%, rgba(86, 214, 255, 0.22), transparent 55%),
+                  radial-gradient(820px 520px at 90% 14%, rgba(122, 217, 255, 0.14), transparent 60%),
+                  var(--bg);
+          color: var(--text);
+          min-height: 100vh;
       }
       html,
       body {
-        height: 100%;
+          height: 100%;
       }
       .wrap {
-        max-width: 980px;
-        margin: 0 auto;
-        padding: 18px 14px 28px;
+          max-width: 980px;
+          margin: 0 auto;
+          padding: 18px 14px 28px;
       }
       header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 14px;
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 14px;
       }
       .brand {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
       }
       .title {
-        font-size: 22px;
-        font-weight: 760;
-        letter-spacing: 0.2px;
-        line-height: 1.15;
+          font-size: 22px;
+          font-weight: 760;
+          letter-spacing: 0.2px;
+          line-height: 1.15;
       }
       .subtitle {
-        color: var(--muted);
-        font-size: 15px;
-        line-height: 1.25;
+          color: var(--muted);
+          font-size: 15px;
+          line-height: 1.25;
       }
       .controls {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+          justify-content: flex-end;
       }
       button {
-        appearance: none;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--text);
-        padding: 12px 14px;
-        border-radius: 12px;
-        font-weight: 650;
-        cursor: pointer;
-        transition: transform 80ms ease, background 120ms ease;
+          appearance: none;
+          border: 1px solid var(--border);
+          background: rgba(255, 255, 255, 0.06);
+          color: var(--text);
+          padding: 12px 14px;
+          border-radius: 12px;
+          font-weight: 650;
+          cursor: pointer;
+          transition: transform 80ms ease, background 120ms ease;
       }
       button:active {
-        transform: translateY(1px);
+          transform: translateY(1px);
       }
       button.primary {
-        border-color: rgba(86, 214, 255, 0.5);
-        background: rgba(86, 214, 255, 0.18);
+          border-color: rgba(86, 214, 255, 0.5);
+          background: rgba(86, 214, 255, 0.18);
       }
       button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+          opacity: 0.5;
+          cursor: not-allowed;
       }
       select {
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--text);
-        padding: 10px 12px;
-        border-radius: 12px;
-        font-weight: 650;
+          border: 1px solid var(--border);
+          background: rgba(255, 255, 255, 0.06);
+          color: var(--text);
+          padding: 10px 12px;
+          border-radius: 12px;
+          font-weight: 650;
       }
       .progress {
-        height: 10px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.05);
-        overflow: hidden;
-        margin: 12px 0 18px;
+          height: 10px;
+          border-radius: 999px;
+          border: 1px solid var(--border);
+          background: rgba(255, 255, 255, 0.05);
+          overflow: hidden;
+          margin: 12px 0 18px;
       }
       .progress > div {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, rgba(102, 227, 255, 0.2), rgba(102, 227, 255, 0.75));
+          height: 100%;
+          width: 0%;
+          background: linear-gradient(90deg, rgba(102, 227, 255, 0.2), rgba(102, 227, 255, 0.75));
       }
       .card {
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.05));
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        box-shadow: var(--shadow);
-        padding: 18px 16px;
-        min-height: 520px;
-        display: flex;
-        flex-direction: column;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.05));
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          box-shadow: var(--shadow);
+          padding: 18px 16px;
+          min-height: 520px;
+          display: flex;
+          flex-direction: column;
       }
       .slideMeta {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 10px;
       }
       .chip {
-        display: inline-flex;
-        gap: 8px;
-        align-items: center;
-        padding: 7px 10px;
-        border-radius: 999px;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.06);
-        font-weight: 700;
-        font-size: 13px;
-        color: var(--muted);
+          display: inline-flex;
+          gap: 8px;
+          align-items: center;
+          padding: 7px 10px;
+          border-radius: 999px;
+          border: 1px solid var(--border);
+          background: rgba(255, 255, 255, 0.06);
+          font-weight: 700;
+          font-size: 13px;
+          color: var(--muted);
       }
       .chip strong {
-        color: var(--text);
+          color: var(--text);
       }
       .slideTitle {
-        font-size: 40px;
-        font-weight: 800;
-        margin: 0 0 10px;
-        line-height: 1.25;
+          font-size: 40px;
+          font-weight: 800;
+          margin: 0 0 10px;
+          line-height: 1.25;
       }
       .bullets {
-        margin: 0;
-        padding-left: 18px;
-        flex: 1;
+          margin: 0;
+          padding-left: 18px;
+          flex: 1;
       }
       .bullets li {
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 22px;
-        line-height: 1.45;
-        margin: 8px 0;
+          color: rgba(255, 255, 255, 0.92);
+          font-size: 22px;
+          line-height: 1.45;
+          margin: 8px 0;
       }
       .finePrint {
-        margin-top: 14px;
-        padding: 12px 12px;
-        border-radius: 14px;
-        background: var(--card-2);
-        border: 1px solid var(--border);
-        color: var(--muted);
-        font-size: 16px;
-        line-height: 1.35;
+          margin-top: 14px;
+          padding: 12px 12px;
+          border-radius: 14px;
+          background: var(--card-2);
+          border: 1px solid var(--border);
+          color: var(--muted);
+          font-size: 16px;
+          line-height: 1.35;
       }
       /* Speaker notes are intentionally hidden (viewer-only presentation). */
       .footerHint {
-        margin-top: 12px;
-        text-align: center;
-        color: var(--muted);
-        font-size: 12px;
+          margin-top: 12px;
+          text-align: center;
+          color: var(--muted);
+          font-size: 12px;
       }
       @media (min-width: 720px) {
-        .wrap {
-          padding: 26px 18px 40px;
-        }
-        .card {
-          padding: 20px 20px;
-        }
-        .slideTitle {
-          font-size: 46px;
-        }
-        .bullets li {
-          font-size: 24px;
-        }
+          .wrap {
+              padding: 26px 18px 40px;
+          }
+          .card {
+              padding: 20px 20px;
+          }
+          .slideTitle {
+              font-size: 46px;
+          }
+          .bullets li {
+              font-size: 24px;
+          }
       }
       @media (max-width: 719px) {
-        .wrap {
-          padding: 12px 12px 18px;
-        }
-        header {
-          margin-bottom: 10px;
-        }
-        .card {
-          /* Use more of the screen on mobile */
-          min-height: calc(100vh - 165px);
-          padding: 16px 14px;
-        }
-        .slideTitle {
-          font-size: 34px;
-        }
-        .bullets li {
-          font-size: 20px;
-          margin: 7px 0;
-        }
-        .footerHint {
-          display: none;
-        }
+          .wrap {
+              padding: 12px 12px 18px;
+          }
+          header {
+              margin-bottom: 10px;
+          }
+          .card {
+              /* Use more of the screen on mobile */
+              min-height: calc(100vh - 165px);
+              padding: 16px 14px;
+          }
+          .slideTitle {
+              font-size: 34px;
+          }
+          .bullets li {
+              font-size: 20px;
+              margin: 7px 0;
+          }
+          .footerHint {
+              display: none;
+          }
       }
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <header>
-        <div class="brand">
-          <div class="title">Access Groups App for Contentful</div>
-          <div class="subtitle">Drupal Groups-style editorial scoping.</div>
-        </div>
-        <div class="controls">
-          <button id="prevBtn" aria-label="Previous slide">Prev</button>
-          <select id="slideSelect" aria-label="Select slide"></select>
-          <button id="nextBtn" class="primary" aria-label="Next slide">Next</button>
-        </div>
-      </header>
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="title">Access Groups App for Contentful</div>
+      <div class="subtitle">Drupal Groups-style editorial scoping.</div>
+    </div>
+    <div class="controls">
+      <button id="prevBtn" aria-label="Previous slide">Prev</button>
+      <select id="slideSelect" aria-label="Select slide"></select>
+      <button id="nextBtn" class="primary" aria-label="Next slide">Next</button>
+    </div>
+  </header>
 
-      <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+  <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
 
-      <main class="card">
-        <div class="slideMeta">
-          <div class="chip">
-            Slide <strong id="slideIndex">1</strong>/<span id="slideTotal">15</span>
-          </div>
-        </div>
-        <h1 class="slideTitle" id="slideTitle"></h1>
-        <ul class="bullets" id="slideBullets"></ul>
-        <div id="finePrint" class="finePrint" style="display:none;"></div>
-      </main>
-
-      <div class="footerHint">
-        Tip: Use keyboard arrows (left/right) to change slides.
+  <main class="card">
+    <div class="slideMeta">
+      <div class="chip">
+        Slide <strong id="slideIndex">1</strong>/<span id="slideTotal">15</span>
       </div>
     </div>
+    <h1 class="slideTitle" id="slideTitle"></h1>
+    <ul class="bullets" id="slideBullets"></ul>
+    <div id="finePrint" class="finePrint" style="display:none;"></div>
+  </main>
 
-    <script>
-      const slides = [
-        {
-          title: "Access Groups App for Contentful: Drupal Groups-style editorial scoping",
-          bullets: [
-            "UI-friendly access groups compiled into real Contentful role policies.",
-            "Manual RBAC in Contentful is powerful but easy to misconfigure.",
-            "Editorial “groups” require consistency across permissions, tagging, and workflows.",
-            "We needed one approach admins can use safely."
-          ],
-          notes:
-            "Set context: we built an app so editorial access behaves like “groups” (Drupal Groups concept), but using Contentful’s RBAC primitives.\n\nThis deck is meant for a mixed audience: explain, don’t dive into JSON."
-        },
-        {
-          title: "What “Group access” means in our implementation",
-          bullets: [
-            "Access Group: configured in App Config.",
-            "Membership: space membership + nested role (Author/Editor).",
-            "Scoping primitive: one access tag per group."
-          ],
-          finePrint:
-            "Source of truth: app installation parameters + access-group-user.role.json spec.",
-          notes:
-            "Explain the mental model first. Then connect it to enforcement: tag + policies.\n\nYou can mention: tag consistency is essential."
-        },
-        {
-          title: "How it works (architecture overview)",
-          bullets: [
-            "App Config UI defines a simplified permission matrix.",
-            "permissionsSync compiles JSON policies into Contentful roles.",
-            "Home + Sidebar flows rely on tags and safe server-side enforcement."
-          ],
-          notes:
-            "Keep this high level. The key idea: app config -> generated Contentful policies.\n\nOptional: while speaking, reference the diagram A from your deck/markdown."
-        },
-        {
-          title: "New functionality #1: Admin-defined permission matrix",
-          bullets: [
-            "Admins edit simplified values per content type (read/create/edit/etc.).",
-            "These values map to Contentful role actions + constraints."
-          ],
-          finePrint:
-            "UI reference: components/configScreens/ManageAccessGroup.tsx",
-          notes:
-            "Explain why it helps non-technical admins: fewer mistakes + consistent UI.\n\nMention restricted content types defaults."
-        },
-        {
-          title: "New functionality #2: Automatic policy compilation & sync",
-          bullets: [
-            "On save, the app creates/updates Contentful roles.",
-            "It pushes compiled permissions and policies automatically."
-          ],
-          finePrint:
-            "Sync reference: pages/api/sync-group-role-permissions.ts",
-          notes:
-            "Argumentation: one-way sync prevents drift between what UI shows and what Contentful enforces.\n\nTie it back to reliability."
-        },
-        {
-          title: "New functionality #3: “Deny tag editing” guardrail",
-          bullets: [
-            "Tags define access-group membership in this model.",
-            "So we prevent restricted users from directly editing metadata.tags.",
-            "Deny rules are injected from access-group-user.role.json spec."
-          ],
-          finePrint:
-            "Spec + injection: helpers/accessGroupUserRoleSpec.ts, helpers/permissionsSync.ts",
-          notes:
-            "This is the safety feature. Explain it in plain words: “We stop users from breaking the group model by editing the membership tags manually.”\n\nThis reduces self-lockout incidents."
-        },
-        {
-          title: "New functionality #4: Home “Create Page” with enforcement",
-          bullets: [
-            "Users create pages via the Home screen’s Create Page form.",
-            "The UI shows eligible content types based on role permissions.",
-            "The backend re-checks create permission before creating entries."
-          ],
-          finePrint:
-            "Create flow: components/locations/Home.tsx + pages/api/create-entry.ts",
-          notes:
-            "Explain the double-enforcement idea: UI is helpful, backend is authoritative."
-        },
-        {
-          title: "New functionality #5: Sidebar auto-tagging (server-side enforcement)",
-          bullets: [
-            "Even when editors are locked down, linked entities get the right access tag.",
-            "This is done through server API tagging, not manual user tag edits."
-          ],
-          finePrint:
-            "Tag API: pages/api/apply-access-tag.ts",
-          notes:
-            "Connect it to the operational outcome: editing stays possible while scoping remains correct.\n\nUse diagram B from your markdown when presenting."
-        },
-        {
-          title: "New functionality #6: Slug-pattern validation flow",
-          bullets: [
-            "Each group can define allowed slug patterns per content type.",
-            "A hidden validation field blocks invalid publish flows."
-          ],
-          finePrint:
-            "Validation logic: helpers/slugValidation.ts",
-          notes:
-            "Explain why it matters: it enforces business rules consistently per group.\n\nKeep it practical: “publish is blocked if slug doesn’t match.”"
-        },
-        {
-          title: "Unified modules & client needs",
-          bullets: [
-            "Centralized slug-validation and auto-tagging inside `access-groups`.",
-            "Reused existing logic (slug-validation + autotag) and adapted it to our access-tag model.",
-            "Consolidated previously separate client-maintained apps into one configuration + maintenance path.",
-            "Applied business-specific behavior: group scoping, guardrails, and compiled Contentful policies."
-          ],
-          finePrint:
-            "Sources: helpers/slugValidation.ts + helpers/autotagFromParent.ts + server tagging",
-          notes:
-            "This slide explains why we reduced operational complexity: fewer deployments/configs, more consistent behavior.\n\nKeep it high level; don’t overpromise beyond what the app enforces."
-        },
-        {
-          title: "Operational flow: what happens on “Save app config”",
-          bullets: [
-            "Ensure placeholder role “Access Group User” exists.",
-            "Unassign removed memberships; create missing Author/Editor roles for groups.",
-            "Create/ensure group tags and sync generated permissions."
-          ],
-          finePrint:
-            "Orchestration: helpers/appConfig.ts",
-          notes:
-            "Emphasize reliability and idempotency: save triggers setup so spaces don’t require manual admin steps."
-        },
-        {
-          title: "Live demo (5–7 minutes)",
-          bullets: [
-            "App Config: open/create an Access Group (with nested Author).",
-            "Home: log in as a non-admin assigned to that group+role.",
-            "Verify Create Page shows only eligible content types; create a page.",
-            "Open a linked component/image flow; show the server applies the access-group tag.",
-            "Optional: show Needs Review via /api/tasks (if Tasks app/Premium is available)."
-          ],
-          notes:
-            "Keep the demo outcome-driven:\n- Users can create what permissions allow.\n- Tag scoping is applied server-side (not manual).\n- Guardrails prevent accidental tag edits/self-lockout.\n\nIf Tasks isn’t available: say so quickly and continue."
-        },
-        {
-          title: "Known limitations / risks (transparent)",
-          bullets: [
-            "Tasks may not perfectly match the logged-in user in all environments (token-owner behavior).",
-            "UI filtering is not security by itself; Contentful policies enforce access.",
-            "Tag consistency matters; the model assumes the access tag is applied according to the scoping rules.",
-            "We generate complex role policies; editing them manually in Contentful is not the intended workflow."
-          ],
-          finePrint:
-            "Reference: apps/access-groups/README.md (Caveats section)",
-          notes:
-            "Present this calmly. The goal is trust: show that you know the boundaries and you plan mitigations."
-        },
-        {
-          title: "Why we chose these implementation paths",
-          bullets: [
-            "Compile policies from a matrix: consistency + fewer human mistakes.",
-            "Deny tag editing and apply tags via server: prevents group-lockout and keeps scoping authoritative.",
-            "Add Home/Sidebar flows: make the safe workflow the default for editors."
-          ],
-          notes:
-            "This slide is the “engineering justification” for the non-technical audience.\n\nReinforce the principles: source of truth, automation, and guardrails."
-        },
-        {
-          title: "Wrap-up & next steps",
-          bullets: [
-            "We ported a Drupal Groups-like concept into Contentful using tag scoping + generated role policies.",
-            "Next: acceptance tests, configuration docs, and hardening the known limitations."
-          ],
-          notes:
-            "End with confidence and clear ownership.\n\nPropose acceptance tests: create flow, tag scoping, and locked-down editing behavior."
-        }
-      ];
+  <div class="footerHint">
+    Tip: Use keyboard arrows (left/right) to change slides.
+  </div>
+</div>
 
-      const els = {
-        title: document.getElementById("slideTitle"),
-        bullets: document.getElementById("slideBullets"),
-        finePrint: document.getElementById("finePrint"),
-        idx: document.getElementById("slideIndex"),
-        total: document.getElementById("slideTotal"),
-        prevBtn: document.getElementById("prevBtn"),
-        nextBtn: document.getElementById("nextBtn"),
-        slideSelect: document.getElementById("slideSelect"),
-        progressBar: document.getElementById("progressBar"),
-      };
+<script>
+  const slides = [
+    {
+      title: "Access Groups App for Contentful: Drupal Groups-style editorial scoping",
+      bullets: [
+        "UI-friendly access groups compiled into real Contentful role policies.",
+        "Manual RBAC in Contentful is powerful but easy to misconfigure.",
+        "Editorial “groups” require consistency across permissions, tagging, and workflows.",
+        "We needed one approach admins can use safely."
+      ],
+      notes:
+        "Set context: we built an app so editorial access behaves like “groups” (Drupal Groups concept), but using Contentful’s RBAC primitives.\n\nThis deck is meant for a mixed audience: explain, don’t dive into JSON."
+    },
+    {
+      title: "What “Group access” means in our implementation",
+      bullets: [
+        "Access Group: configured in App Config.",
+        "Membership: space membership + nested role (Author/Editor).",
+        "Scoping primitive: one access tag per group."
+      ],
+      finePrint:
+        "Source of truth: app installation parameters + access-group-user.role.json spec.",
+      notes:
+        "Explain the mental model first. Then connect it to enforcement: tag + policies.\n\nYou can mention: tag consistency is essential."
+    },
+    {
+      title: "How it works (architecture overview)",
+      bullets: [
+        "App Config UI defines a simplified permission matrix.",
+        "permissionsSync compiles JSON policies into Contentful roles.",
+        "Home + Sidebar flows rely on tags and safe server-side enforcement."
+      ],
+      notes:
+        "Keep this high level. The key idea: app config -> generated Contentful policies.\n\nOptional: while speaking, reference the diagram A from your deck/markdown."
+    },
+    {
+      title: "New functionality #1: Admin-defined permission matrix",
+      bullets: [
+        "Admins edit simplified values per content type (read/create/edit/etc.).",
+        "These values map to Contentful role actions + constraints."
+      ],
+      finePrint:
+        "UI reference: components/configScreens/ManageAccessGroup.tsx",
+      notes:
+        "Explain why it helps non-technical admins: fewer mistakes + consistent UI.\n\nMention restricted content types defaults."
+    },
+    {
+      title: "New functionality #2: Automatic policy compilation & sync",
+      bullets: [
+        "On save, the app creates/updates Contentful roles.",
+        "It pushes compiled permissions and policies automatically."
+      ],
+      finePrint:
+        "Sync reference: pages/api/sync-group-role-permissions.ts",
+      notes:
+        "Argumentation: one-way sync prevents drift between what UI shows and what Contentful enforces.\n\nTie it back to reliability."
+    },
+    {
+      title: "New functionality #3: “Deny tag editing” guardrail",
+      bullets: [
+        "Tags define access-group membership in this model.",
+        "So we prevent restricted users from directly editing metadata.tags.",
+        "Deny rules are injected from access-group-user.role.json spec."
+      ],
+      finePrint:
+        "Spec + injection: helpers/accessGroupUserRoleSpec.ts, helpers/permissionsSync.ts",
+      notes:
+        "This is the safety feature. Explain it in plain words: “We stop users from breaking the group model by editing the membership tags manually.”\n\nThis reduces self-lockout incidents."
+    },
+    {
+      title: "Home: Create Page (permission + slug enforcement)",
+      bullets: [
+        "Users create pages via the Home screen’s Create Page form.",
+        "The UI shows eligible content types based on role permissions.",
+        "The backend re-checks create permission before creating entries."
+      ],
+      finePrint:
+        "Create flow: components/locations/Home.tsx + pages/api/create-entry.ts",
+      notes:
+        "Explain the double-enforcement idea: UI is helpful, backend is authoritative."
+    },
+    {
+      title: "Needs Review: Tasks assigned to you",
+      bullets: [
+        "Home shows a table of pending tasks from the Tasks app.",
+        "We filter tasks by `assignedTo.sys.id` for the active user.",
+        "Tasks are fetched server-side using the app CMA token."
+      ],
+      finePrint:
+        "Source: pages/api/tasks.ts + Home tasks UI in components/locations/Home.tsx",
+      notes:
+        "This slide is the user-facing explanation. Keep it focused on expected behavior: “you see your tasks”.\n\nIf Tasks/Premium isn’t available, the table shows an error."
+    },
+    {
+      title: "My Recent Edits: pages you updated",
+      bullets: [
+        "Home lists recently updated page-level entries.",
+        "Only entries with `sys.updatedBy.sys.id` matching the active user are included.",
+        "Used for quick re-entry into pages you worked on."
+      ],
+      finePrint:
+        "Source: components/locations/Home.tsx (fetchEditedPagesForUser)",
+      notes:
+        "Emphasize: this is based on “updated by” in Contentful, not on permissions UI state.\n\nIt’s convenient but not a full activity feed."
+    },
+    {
+      title: "Sidebar auto-tagging (server-side)",
+      bullets: [
+        "Even when editors are locked down, linked entities get the right access tag.",
+        "This is done through server API tagging, not manual user tag edits."
+      ],
+      finePrint:
+        "Tag API: pages/api/apply-access-tag.ts",
+      notes:
+        "Connect it to the operational outcome: editing stays possible while scoping remains correct.\n\nUse diagram B from your markdown when presenting."
+    },
+    {
+      title: "Slug-pattern validation (group-aware)",
+      bullets: [
+        "Each group can define allowed slug patterns per content type.",
+        "A hidden validation field blocks invalid publish flows."
+      ],
+      finePrint:
+        "Validation logic: helpers/slugValidation.ts",
+      notes:
+        "Explain why it matters: it enforces business rules consistently per group.\n\nKeep it practical: “publish is blocked if slug doesn’t match.”"
+    },
+    {
+      title: "Unified modules & client needs",
+      bullets: [
+        "Centralized slug-validation and auto-tagging inside `access-groups`.",
+        "Reused existing logic (slug-validation + autotag) and adapted it to our access-tag model.",
+        "Consolidated previously separate client-maintained apps into one configuration + maintenance path.",
+        "Applied business-specific behavior: group scoping, guardrails, and compiled Contentful policies."
+      ],
+      finePrint:
+        "Sources: helpers/slugValidation.ts + helpers/autotagFromParent.ts + server tagging",
+      notes:
+        "This slide explains why we reduced operational complexity: fewer deployments/configs, more consistent behavior.\n\nKeep it high level; don’t overpromise beyond what the app enforces."
+    },
+    {
+      title: "Operational flow: what happens on “Save app config”",
+      bullets: [
+        "Ensure placeholder role “Access Group User” exists.",
+        "Unassign removed memberships; create missing Author/Editor roles for groups.",
+        "Create/ensure group tags and sync generated permissions."
+      ],
+      finePrint:
+        "Orchestration: helpers/appConfig.ts",
+      notes:
+        "Emphasize reliability and idempotency: save triggers setup so spaces don’t require manual admin steps."
+    },
+    {
+      title: "Live demo (5–7 minutes)",
+      bullets: [
+        "App Config: open/create an Access Group (with nested Author).",
+        "Home: log in as a non-admin assigned to that group+role.",
+        "Verify Create Page shows only eligible content types; create a page.",
+        "Open a linked component/image flow; show the server applies the access-group tag.",
+        "Optional: show Needs Review (Tasks) if the Tasks app/Premium is enabled."
+      ],
+      notes:
+        "Keep the demo outcome-driven:\n- Users can create what permissions allow.\n- Tag scoping is applied server-side (not manual).\n- Guardrails prevent accidental tag edits/self-lockout.\n\nIf Tasks isn’t available: say so quickly and continue."
+    },
+    {
+      title: "Known limitations / risks (transparent)",
+      bullets: [
+        "Tasks are fetched via the app CMA token and filtered by assignee; results depend on what CMA can access.",
+        "UI filtering is not security by itself; Contentful policies enforce access.",
+        "Tag consistency matters; the model assumes the access tag is applied according to the scoping rules.",
+        "We generate complex role policies; editing them manually in Contentful is not the intended workflow."
+      ],
+      finePrint:
+        "Reference: apps/access-groups/README.md (Caveats section)",
+      notes:
+        "Present this calmly. The goal is trust: show that you know the boundaries and you plan mitigations."
+    },
+    {
+      title: "Why we chose these implementation paths",
+      bullets: [
+        "Compile policies from a matrix: consistency + fewer human mistakes.",
+        "Deny tag editing and apply tags via server: prevents group-lockout and keeps scoping authoritative.",
+        "Add Home/Sidebar flows: make the safe workflow the default for editors."
+      ],
+      notes:
+        "This slide is the “engineering justification” for the non-technical audience.\n\nReinforce the principles: source of truth, automation, and guardrails."
+    },
+    {
+      title: "Wrap-up & next steps",
+      bullets: [
+        "We ported a Drupal Groups-like concept into Contentful using tag scoping + generated role policies.",
+        "Next: acceptance tests, configuration docs, and hardening the known limitations."
+      ],
+      notes:
+        "End with confidence and clear ownership.\n\nPropose acceptance tests: create flow, tag scoping, and locked-down editing behavior."
+    }
+  ];
 
-      let current = 0;
-      els.total.textContent = String(slides.length);
+  const els = {
+    title: document.getElementById("slideTitle"),
+    bullets: document.getElementById("slideBullets"),
+    finePrint: document.getElementById("finePrint"),
+    idx: document.getElementById("slideIndex"),
+    total: document.getElementById("slideTotal"),
+    prevBtn: document.getElementById("prevBtn"),
+    nextBtn: document.getElementById("nextBtn"),
+    slideSelect: document.getElementById("slideSelect"),
+    progressBar: document.getElementById("progressBar"),
+  };
 
-      function renderSelect() {
-        els.slideSelect.innerHTML = "";
-        slides.forEach((s, i) => {
-          const opt = document.createElement("option");
-          opt.value = String(i);
-          opt.textContent = `Slide ${i + 1}`;
-          els.slideSelect.appendChild(opt);
-        });
-        els.slideSelect.value = String(current);
-      }
+  let current = 0;
+  els.total.textContent = String(slides.length);
 
-      function setFinePrint(text) {
-        if (!text) {
-          els.finePrint.style.display = "none";
-          els.finePrint.textContent = "";
-          return;
-        }
-        els.finePrint.style.display = "block";
-        els.finePrint.textContent = text;
-      }
+  function renderSelect() {
+    els.slideSelect.innerHTML = "";
+    slides.forEach((s, i) => {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = `Slide ${i + 1}`;
+      els.slideSelect.appendChild(opt);
+    });
+    els.slideSelect.value = String(current);
+  }
 
-      function renderSlide(i) {
-        const s = slides[i];
-        current = i;
+  function setFinePrint(text) {
+    if (!text) {
+      els.finePrint.style.display = "none";
+      els.finePrint.textContent = "";
+      return;
+    }
+    els.finePrint.style.display = "block";
+    els.finePrint.textContent = text;
+  }
 
-        els.idx.textContent = String(i + 1);
-        els.title.textContent = s.title;
+  function renderSlide(i) {
+    const s = slides[i];
+    current = i;
 
-        els.bullets.innerHTML = "";
-        for (const b of s.bullets) {
-          const li = document.createElement("li");
-          li.textContent = b;
-          els.bullets.appendChild(li);
-        }
+    els.idx.textContent = String(i + 1);
+    els.title.textContent = s.title;
 
-        setFinePrint(s.finePrint);
+    els.bullets.innerHTML = "";
+    for (const b of s.bullets) {
+      const li = document.createElement("li");
+      li.textContent = b;
+      els.bullets.appendChild(li);
+    }
 
-        els.prevBtn.disabled = i === 0;
-        els.nextBtn.disabled = i === slides.length - 1;
+    setFinePrint(s.finePrint);
 
-        const pct = ((i + 1) / slides.length) * 100;
-        els.progressBar.style.width = `${pct}%`;
+    els.prevBtn.disabled = i === 0;
+    els.nextBtn.disabled = i === slides.length - 1;
 
-        els.slideSelect.value = String(i);
-      }
+    const pct = ((i + 1) / slides.length) * 100;
+    els.progressBar.style.width = `${pct}%`;
 
-      function next() {
-        if (current < slides.length - 1) renderSlide(current + 1);
-      }
-      function prev() {
-        if (current > 0) renderSlide(current - 1);
-      }
+    els.slideSelect.value = String(i);
+  }
 
-      els.prevBtn.addEventListener("click", prev);
-      els.nextBtn.addEventListener("click", next);
-      els.slideSelect.addEventListener("change", (e) => {
-        const i = Number(e.target.value);
-        renderSlide(i);
-      });
+  function next() {
+    if (current < slides.length - 1) renderSlide(current + 1);
+  }
+  function prev() {
+    if (current > 0) renderSlide(current - 1);
+  }
 
-      window.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowLeft") prev();
-        if (e.key === "ArrowRight") next();
-      });
+  els.prevBtn.addEventListener("click", prev);
+  els.nextBtn.addEventListener("click", next);
+  els.slideSelect.addEventListener("change", (e) => {
+    const i = Number(e.target.value);
+    renderSlide(i);
+  });
 
-      renderSelect();
-      renderSlide(0);
-    </script>
-  </body>
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft") prev();
+    if (e.key === "ArrowRight") next();
+  });
+
+  renderSelect();
+  renderSlide(0);
+</script>
+</body>
 </html>
-
