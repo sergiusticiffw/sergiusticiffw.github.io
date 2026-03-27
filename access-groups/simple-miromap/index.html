@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Access Groups - Implementation Board</title>
+    <style>
+      :root {
+        --bg: #070f1a;
+        --panel: rgba(255, 255, 255, 0.07);
+        --panel-2: rgba(255, 255, 255, 0.05);
+        --text: rgba(234, 250, 255, 0.94);
+        --muted: rgba(234, 250, 255, 0.72);
+        --border: rgba(100, 210, 255, 0.25);
+        --accent: #56d6ff;
+        --accent-2: rgba(86, 214, 255, 0.35);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Helvetica, Arial;
+        background:
+          radial-gradient(1000px 650px at 18% 0%, rgba(86, 214, 255, 0.22), transparent 55%),
+          radial-gradient(820px 520px at 90% 14%, rgba(122, 217, 255, 0.12), transparent 60%),
+          var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .topBar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: rgba(7, 15, 26, 0.75);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .topBar .left {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .topBar .title {
+        font-weight: 900;
+        letter-spacing: 0.2px;
+        font-size: 16px;
+        line-height: 1.15;
+      }
+
+      .topBar .sub {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.25;
+      }
+
+      .btnRow {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      button {
+        appearance: none;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-weight: 750;
+        cursor: pointer;
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .board {
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 64px);
+        overflow: auto;
+      }
+
+      .stage {
+        position: relative;
+        width: 1250px;
+        height: 700px;
+        margin: 16px auto;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        background:
+          linear-gradient(transparent 0, transparent 28px, rgba(255, 255, 255, 0.03) 28px, rgba(255, 255, 255, 0.03) 29px),
+          linear-gradient(90deg, transparent 0, transparent 28px, rgba(255, 255, 255, 0.03) 28px, rgba(255, 255, 255, 0.03) 29px);
+        background-size: 29px 29px, 29px 29px;
+        box-shadow: 0 18px 70px rgba(0, 0, 0, 0.25);
+      }
+
+      #svg {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .node {
+        position: absolute;
+        z-index: 2;
+        width: 310px;
+        padding: 16px 16px 14px;
+        background: linear-gradient(180deg, var(--panel), var(--panel-2));
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+        cursor: grab;
+        user-select: none;
+      }
+
+      .node:active {
+        cursor: grabbing;
+      }
+
+      .node .kicker {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 14px;
+        color: var(--muted);
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        margin-bottom: 12px;
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 4px rgba(86, 214, 255, 0.15);
+      }
+
+      .node h3 {
+        margin: 0 0 8px;
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 900;
+      }
+
+      .node ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .node li {
+        margin: 6px 0;
+        font-size: 14px;
+        line-height: 1.4;
+        color: rgba(234, 250, 255, 0.88);
+      }
+
+      .node.note {
+        width: 360px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.04));
+      }
+      .node.bad {
+        background: linear-gradient(180deg, rgba(255, 120, 120, 0.16), rgba(255, 120, 120, 0.08));
+        border-color: rgba(255, 120, 120, 0.35);
+      }
+      .node.good {
+        background: linear-gradient(180deg, rgba(120, 255, 170, 0.14), rgba(120, 255, 170, 0.08));
+        border-color: rgba(120, 255, 170, 0.35);
+      }
+      .node.rule {
+        background: linear-gradient(180deg, rgba(255, 226, 120, 0.16), rgba(255, 226, 120, 0.08));
+        border-color: rgba(255, 226, 120, 0.4);
+      }
+
+      @media (max-width: 900px) {
+        .stage {
+          width: 1180px;
+        }
+        .node {
+          width: 260px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topBar">
+      <div class="left">
+        <div class="title">Access Groups - Visual Implementation Board</div>
+        <div class="sub">Simple model: before (chaos) vs after (clean group-based access).</div>
+      </div>
+      <div class="btnRow">
+        <button id="resetBtn" type="button">Reset layout</button>
+      </div>
+    </div>
+
+    <div class="board" aria-label="Miro-like board">
+      <div class="stage" id="stage">
+        <svg id="svg" width="1100" height="720" aria-hidden="true"></svg>
+
+        <div class="node bad" id="nodeWithoutGroups" data-x="60" data-y="140">
+          <div class="kicker"><span class="dot"></span> Problem</div>
+          <h3>Without groups</h3>
+          <ul>
+            <li>User -> Resource</li>
+            <li>User -> Resource</li>
+            <li>User -> Resource (chaos)</li>
+          </ul>
+        </div>
+
+        <div class="node" id="nodeUser" data-x="430" data-y="240">
+          <div class="kicker"><span class="dot"></span> After</div>
+          <h3>User</h3>
+          <ul>
+            <li>No direct content permissions</li>
+          </ul>
+        </div>
+
+        <div class="node" id="nodeGroup" data-x="760" data-y="240">
+          <div class="kicker"><span class="dot"></span> After</div>
+          <h3>Group</h3>
+          <ul>
+            <li>Role + policy boundary</li>
+          </ul>
+        </div>
+
+        <div class="node" id="nodeResource" data-x="1090" data-y="240">
+          <div class="kicker"><span class="dot"></span> After</div>
+          <h3>Resource</h3>
+          <ul>
+            <li>Entries/assets scoped by group rules</li>
+          </ul>
+        </div>
+
+        <div class="node good" id="nodeWithGroups" data-x="430" data-y="470">
+          <div class="kicker"><span class="dot"></span> Solution</div>
+          <h3>With Access Groups</h3>
+          <ul>
+            <li>User -> Group -> Resource</li>
+            <li>Clean, repeatable access model</li>
+          </ul>
+        </div>
+
+        <div class="node note" id="nodeEdgeCaseMultiGroup" data-x="760" data-y="470">
+          <div class="kicker"><span class="dot"></span> Edge case</div>
+          <h3>User in Group A + Group B</h3>
+          <ul>
+            <li>Group A + Group B assignments can coexist</li>
+            <li>Effective behavior comes from composed role policies</li>
+          </ul>
+        </div>
+
+        <div class="node rule" id="nodeRuleOfThumb" data-x="1090" data-y="470">
+          <div class="kicker"><span class="dot"></span> Architecture rule</div>
+          <h3>Never assign permissions directly to users</h3>
+          <ul>
+            <li>Assign users to groups</li>
+            <li>Keep policy generation centralized</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const stage = document.getElementById("stage");
+      const svg = document.getElementById("svg");
+
+      const resetLayout = () => {
+        document.querySelectorAll(".node").forEach((node) => {
+          const x = Number(node.dataset.x);
+          const y = Number(node.dataset.y);
+          node.style.left = x + "px";
+          node.style.top = y + "px";
+        });
+        draw();
+      };
+
+      // Init positions from data-x/data-y
+      document.querySelectorAll(".node").forEach((node) => {
+        node.style.left = node.dataset.x + "px";
+        node.style.top = node.dataset.y + "px";
+      });
+
+      function centerOf(node) {
+        const r = node.getBoundingClientRect();
+        const sr = stage.getBoundingClientRect();
+        return {
+          x: (r.left - sr.left) + r.width / 2,
+          y: (r.top - sr.top) + r.height / 2
+        };
+      }
+
+      // Edges: from node id -> to node id
+      const edges = [
+        ["nodeUser", "nodeGroup"],
+        ["nodeGroup", "nodeResource"],
+        ["nodeWithoutGroups", "nodeWithGroups"],
+        ["nodeWithGroups", "nodeUser"],
+        ["nodeWithGroups", "nodeGroup"],
+        ["nodeWithGroups", "nodeResource"],
+        ["nodeEdgeCaseMultiGroup", "nodeGroup"],
+        ["nodeRuleOfThumb", "nodeWithGroups"],
+      ];
+
+      function clearSvg() {
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+      }
+
+      function draw() {
+        clearSvg();
+        const sr = stage.getBoundingClientRect();
+        svg.setAttribute("width", String(stage.clientWidth));
+        svg.setAttribute("height", String(stage.clientHeight));
+
+        for (const [fromId, toId] of edges) {
+          const from = document.getElementById(fromId);
+          const to = document.getElementById(toId);
+          if (!from || !to) continue;
+
+          const a = centerOf(from);
+          const b = centerOf(to);
+
+          const dx = Math.abs(b.x - a.x);
+          const dy = Math.abs(b.y - a.y);
+          const curvature = Math.min(120, Math.max(40, Math.floor((dx + dy) / 4)));
+          const mx = (a.x + b.x) / 2;
+          const my = (a.y + b.y) / 2;
+
+          // Simple bezier curve control points
+          const c1x = mx;
+          const c1y = a.y + (b.y > a.y ? curvature : -curvature);
+          const c2x = mx;
+          const c2y = b.y + (a.y > b.y ? curvature : -curvature);
+
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          const d = `M ${a.x} ${a.y} C ${c1x} ${c1y} ${c2x} ${c2y} ${b.x} ${b.y}`;
+          path.setAttribute("d", d);
+          path.setAttribute("fill", "none");
+          path.setAttribute("stroke", "rgba(86, 214, 255, 0.45)");
+          path.setAttribute("stroke-width", "3");
+          path.setAttribute("stroke-linecap", "round");
+
+          svg.appendChild(path);
+        }
+      }
+
+      function enableDrag(node) {
+        let startX = 0;
+        let startY = 0;
+        let origLeft = 0;
+        let origTop = 0;
+        let dragging = false;
+
+        const onPointerDown = (e) => {
+          // Only primary button / touch
+          dragging = true;
+          node.setPointerCapture(e.pointerId);
+
+          const rect = node.getBoundingClientRect();
+          const sr = stage.getBoundingClientRect();
+          startX = e.clientX;
+          startY = e.clientY;
+          origLeft = rect.left - sr.left;
+          origTop = rect.top - sr.top;
+        };
+
+        const onPointerMove = (e) => {
+          if (!dragging) return;
+          const sr = stage.getBoundingClientRect();
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          const nextLeft = origLeft + dx;
+          const nextTop = origTop + dy;
+
+          node.style.left = nextLeft + "px";
+          node.style.top = nextTop + "px";
+          draw();
+        };
+
+        const onPointerUp = () => {
+          dragging = false;
+        };
+
+        node.addEventListener("pointerdown", onPointerDown);
+        node.addEventListener("pointermove", onPointerMove);
+        node.addEventListener("pointerup", onPointerUp);
+        node.addEventListener("pointercancel", onPointerUp);
+      }
+
+      document.querySelectorAll(".node").forEach(enableDrag);
+
+      draw();
+
+      document.getElementById("resetBtn").addEventListener("click", resetLayout);
+
+      // Intentionally no print/export helper to keep the board minimal.
+    </script>
+  </body>
+</html>
+
