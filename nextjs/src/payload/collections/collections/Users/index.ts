@@ -1,10 +1,12 @@
-import type { Access, CollectionConfig } from 'payload'
+import type { Access, CollectionConfig, PayloadRequest } from 'payload'
 
 import { authenticated } from '@/payload/access/authenticated'
 
 import { isAdmin } from '@/shared/utilities/payload/common'
 
 const adminOnly: Access = ({ req: { user } }) => isAdmin(user)
+
+const adminDashboardOnly = ({ req }: { req: PayloadRequest }) => isAdmin(req.user)
 
 const ownUserOnly: Access = ({ req: { user } }) => {
   if (!user) return false
@@ -20,9 +22,8 @@ const ownUserOnly: Access = ({ req: { user } }) => {
 export const Users: CollectionConfig = {
   slug: 'users',
   access: {
-    // Non-admin users can still access the collection in admin UI,
-    // but read/update/delete are constrained below.
-    admin: authenticated,
+    // Restrict Payload Admin dashboard to admins only.
+    admin: adminDashboardOnly,
     create: adminOnly,
     delete: adminOnly,
     read: ownUserOnly,

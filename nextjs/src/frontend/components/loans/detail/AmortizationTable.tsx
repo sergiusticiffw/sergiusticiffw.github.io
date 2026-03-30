@@ -81,7 +81,7 @@ export default function AmortizationTable({ amortizationSchedule }: { amortizati
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">{row.date}</td>
                 <td className="px-3 py-2">{fmt(row.rate)}</td>
-                <td className="px-3 py-2">{fmt(row.num_days ?? '-')}</td>
+                <td className="px-3 py-2">{row.num_days ?? '-'}</td>
                 <td className="px-3 py-2">{fmt(row.installment)}</td>
                 <td className="px-3 py-2">{fmt(row.reduction)}</td>
                 <td className="px-3 py-2">{fmt(row.interest)}</td>
