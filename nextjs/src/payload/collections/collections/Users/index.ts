@@ -1,8 +1,8 @@
 import type { Access, CollectionConfig } from 'payload'
 
-import { authenticated } from '@/access/authenticated'
+import { authenticated } from '@/payload/access/authenticated'
 
-import { isAdmin } from '@/utilities/payload/common'
+import { isAdmin } from '@/shared/utilities/payload/common'
 
 const adminOnly: Access = ({ req: { user } }) => isAdmin(user)
 

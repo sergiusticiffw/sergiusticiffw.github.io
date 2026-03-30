@@ -1,9 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { requireAuthedPayloadReqFromServer } from './payloadAuth'
-import type { ApiLoan, ApiPaymentItem } from '../types'
-import { mapPayloadLoanToApiLoan, mapPayloadPaymentToApiPaymentItem } from './mappers'
+import { requireAuthedPayloadReqFromServer } from '@/frontend/server/loans/payloadAuth'
+import type { ApiLoan, ApiPaymentItem } from '@/shared/types/loans'
+import { mapPayloadLoanToApiLoan, mapPayloadPaymentToApiPaymentItem } from '@/frontend/server/loans/mappers'
 
 type LoanCreateInput = {
   title: string

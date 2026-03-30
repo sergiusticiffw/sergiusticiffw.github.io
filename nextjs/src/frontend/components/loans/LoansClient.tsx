@@ -4,10 +4,10 @@ import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-import type { ApiLoan } from '../types'
+import type { ApiLoan } from '@/shared/types/loans'
 import { LoanForm } from './LoanForm'
-import { getLoanStatus } from '@/utilities/loans/status'
-import { createLoanAction, deleteLoanAction, updateLoanAction } from '@/utilities/loans/server/actions'
+import { getLoanStatus } from '@/shared/domain/loans/status'
+import { createLoanAction, deleteLoanAction, updateLoanAction } from '@/frontend/actions/loans'
 
 type Props = {
   initialLoans: ApiLoan[]

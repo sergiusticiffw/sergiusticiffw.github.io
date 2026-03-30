@@ -1,7 +1,7 @@
 import type { Access, CollectionConfig } from 'payload'
 
-import { authenticated } from '@/access/authenticated'
-import { isAdmin, toISODate } from '@/utilities/payload/common'
+import { authenticated } from '@/payload/access/authenticated'
+import { isAdmin, toISODate } from '@/shared/utilities/payload/common'
 
 const ownLoansOnly: Access = ({ req: { user } }) => {
   if (!user) return false

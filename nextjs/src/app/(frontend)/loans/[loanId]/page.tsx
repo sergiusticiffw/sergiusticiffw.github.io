@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation'
 
-import LoanDetailClient from '@/components/loans/components/Loan/LoanDetailClient'
+import LoanDetailClient from '@/frontend/components/loans/Loan/LoanDetailClient'
 
-import type { ApiLoan, ApiPaymentItem } from '@/components/loans/types'
-import { requireAuthedPayloadReqFromServer } from '@/utilities/loans/server/payloadAuth'
-import { mapPayloadLoanToApiLoan, mapPayloadPaymentToApiPaymentItem } from '@/utilities/loans/server/mappers'
+import type { ApiLoan, ApiPaymentItem } from '@/shared/types/loans'
+import { requireAuthedPayloadReqFromServer } from '@/frontend/server/loans/payloadAuth'
+import { mapPayloadLoanToApiLoan, mapPayloadPaymentToApiPaymentItem } from '@/frontend/server/loans/mappers'
 
 export default async function LoanDetailPage({
   params,

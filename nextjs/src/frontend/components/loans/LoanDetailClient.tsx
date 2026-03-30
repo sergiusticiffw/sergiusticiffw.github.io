@@ -3,20 +3,22 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import type { ApiLoan, ApiPaymentItem } from '../types'
+import type { ApiLoan, ApiPaymentItem } from '@/shared/types/loans'
 import { PaymentForm } from './PaymentForm'
 import {
   buildLoanDataFromApiLoan,
   buildEventsFromApiPayments,
   calculateAmortization,
   isEarlyPaymentFromApiItem,
-} from '@/utilities/loans/amortization'
-import { getLoanStatus } from '@/utilities/loans/status'
+} from '@/shared/domain/loans/amortization'
+import { getLoanStatus } from '@/shared/domain/loans/status'
 import {
   createPaymentAction,
   deletePaymentAction,
   updatePaymentAction,
-} from '@/utilities/loans/server/actions'
+} from '@/frontend/actions/loans'
+import LoanDetails from './detail/LoanDetails'
+import LoanOverview from './detail/LoanOverview'
 
 function sortPaymentsByDate(items: ApiPaymentItem[]) {
   return [...items].sort((a, b) => {
@@ -52,17 +54,19 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
     setLoading(false)
   }, [initialLoan, initialPayments])
 
-  const scheduledPayments = useMemo(() => {
-    return sortPaymentsByDate(payments).filter((p) => !isEarlyPaymentFromApiItem(p))
+  const paymentsByDate = useMemo(() => {
+    return sortPaymentsByDate(payments)
   }, [payments])
 
   const amort = useMemo(() => {
     if (!loan) return null
     const loanData = buildLoanDataFromApiLoan(loan)
     if (!loanData) return null
-    const events = buildEventsFromApiPayments(scheduledPayments)
+    const events = buildEventsFromApiPayments(paymentsByDate)
     return calculateAmortization(loanData, events)
-  }, [loan, scheduledPayments])
+  }, [loan, paymentsByDate])
+
+  const loanData = useMemo(() => (loan ? buildLoanDataFromApiLoan(loan) : null), [loan])
 
   const totalPaidAmount = useMemo(() => {
     return payments.reduce(
@@ -133,22 +137,18 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <div className="p-4 rounded border border-white/10 bg-white/5">
-          <h2 className="font-semibold mb-2">Amortization summary</h2>
-          {amort ? (
-            <div className="space-y-1 text-sm">
-              <div>Principal paid: {amort.paydown.sum_of_reductions ?? 0}</div>
-              <div>Interests paid: {amort.paydown.sum_of_interests ?? 0}</div>
-              <div>Fees: {amort.paydown.sum_of_fees ?? 0}</div>
-              <div>Effective principal: {amort.paydown.effective_principal ?? 0}</div>
-              <div>Total paid (actual payments only): {totalPaidAmount}</div>
-            </div>
-          ) : (
-            <div className="text-white/70">Not enough data to calculate.</div>
-          )}
+      {amort && loanData ? (
+        <div className="mb-6">
+          <LoanOverview
+            loanTitle={loan.title ?? `Loan ${loanId}`}
+            loanData={loanData}
+            paydown={amort.paydown}
+            totalPaidAmount={totalPaidAmount}
+          />
         </div>
+      ) : null}
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         <div className="p-4 rounded border border-white/10 bg-white/5">
           <div className="flex items-center justify-between gap-3 mb-3">
             <h2 className="font-semibold">Payments</h2>
@@ -230,36 +230,13 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
         </div>
       </div>
 
-      {amort?.schedule?.length ? (
+      {amort && loanData ? (
         <div className="p-4 rounded border border-white/10 bg-white/5">
-          <h2 className="font-semibold mb-2">Schedule preview</h2>
-          <div className="text-white/60 text-sm mb-2">First 12 periods (scheduled)</div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead>
-                <tr className="text-white/60">
-                  <th className="py-2 pr-3">Date</th>
-                  <th className="py-2 pr-3">Installment</th>
-                  <th className="py-2 pr-3">Reduction</th>
-                  <th className="py-2 pr-3">Interest</th>
-                  <th className="py-2 pr-3">Principal</th>
-                  <th className="py-2 pr-3">Fee</th>
-                </tr>
-              </thead>
-              <tbody>
-                {amort.schedule.slice(0, 12).map((row, idx) => (
-                  <tr key={idx} className="border-t border-white/10">
-                    <td className="py-2 pr-3">{row.date}</td>
-                    <td className="py-2 pr-3">{row.installment}</td>
-                    <td className="py-2 pr-3">{row.reduction}</td>
-                    <td className="py-2 pr-3">{row.interest}</td>
-                    <td className="py-2 pr-3">{row.principal}</td>
-                    <td className="py-2 pr-3">{row.fee}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <LoanDetails
+            loan={amort.paydown}
+            loanData={{ principal: loanData.principal, start_date: loanData.start_date }}
+            amortizationSchedule={amort.schedule}
+          />
         </div>
       ) : null}
     </div>

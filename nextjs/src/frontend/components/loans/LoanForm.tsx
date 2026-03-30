@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 
-import type { ApiLoan } from '../types'
+import type { ApiLoan } from '@/shared/types/loans'
 
 type Props = {
   mode: 'create' | 'edit'

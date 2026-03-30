@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation'
 
-import LoansClient from '@/components/loans/components/Loans/LoansClient'
+import LoansClient from '@/frontend/components/loans/Loans/LoansClient'
 
-import type { ApiLoan } from '@/components/loans/types'
-import { requireAuthedPayloadReqFromServer } from '@/utilities/loans/server/payloadAuth'
-import { mapPayloadLoanToApiLoan } from '@/utilities/loans/server/mappers'
+import type { ApiLoan } from '@/shared/types/loans'
+import { requireAuthedPayloadReqFromServer } from '@/frontend/server/loans/payloadAuth'
+import { mapPayloadLoanToApiLoan } from '@/frontend/server/loans/mappers'
 
 export default async function LoansPage() {
   let initialLoans: ApiLoan[] = []

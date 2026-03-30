@@ -1,6 +1,6 @@
-import type { ApiLoan, ApiPaymentItem } from '../types'
+import type { ApiLoan, ApiPaymentItem } from '@/shared/types/loans'
 
-import { transformToNumber } from '../date'
+import { transformToNumber } from '@/shared/domain/loans/date'
 
 const toISODate = (value: unknown): string | undefined => {
   if (!value) return undefined

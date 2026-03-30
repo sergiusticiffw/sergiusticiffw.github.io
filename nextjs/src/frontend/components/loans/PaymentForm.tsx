@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 
-import type { ApiPaymentItem } from '../types'
+import type { ApiPaymentItem } from '@/shared/types/loans'
 
 type Props = {
   mode: 'create' | 'edit'

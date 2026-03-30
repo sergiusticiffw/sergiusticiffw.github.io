@@ -4,9 +4,9 @@ import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
-import { Users } from './collections/Users'
-import { Loans } from './collections/Loans'
-import { Payments } from './collections/Payments'
+import { Users } from './payload/collections/collections/Users'
+import { Loans } from './payload/collections/collections/Loans'
+import { Payments } from './payload/collections/collections/Payments'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
@@ -19,10 +19,10 @@ export default buildConfig({
     components: {
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
-      beforeLogin: ['@/components/BeforeLogin'],
+      beforeLogin: ['@/payload/components/BeforeLogin'],
       // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
-      beforeDashboard: ['@/components/BeforeDashboard'],
+      beforeDashboard: ['@/payload/components/BeforeDashboard'],
     },
     importMap: {
       baseDir: path.resolve(dirname),
