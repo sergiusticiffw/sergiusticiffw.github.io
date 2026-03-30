@@ -2,7 +2,7 @@ import type { Access, CollectionConfig } from 'payload'
 
 import { authenticated } from '@/access/authenticated'
 
-const isAdmin = (user: any) => Boolean(user?.roles?.includes('admin'))
+import { isAdmin } from '@/utilities/payload/common'
 
 const adminOnly: Access = ({ req: { user } }) => isAdmin(user)
 

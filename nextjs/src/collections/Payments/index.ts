@@ -2,8 +2,7 @@ import type { Access, CollectionConfig } from 'payload'
 import { APIError } from 'payload'
 
 import { authenticated } from '@/access/authenticated'
-
-const isAdmin = (user: any) => Boolean(user?.roles?.includes('admin'))
+import { isAdmin, toISODate } from '@/utilities/payload/common'
 
 const ownPaymentsOnly: Access = ({ req: { user } }) => {
   if (!user) return false
@@ -14,14 +13,6 @@ const ownPaymentsOnly: Access = ({ req: { user } }) => {
       equals: user.id,
     },
   }
-}
-
-// Helper: normalize Payload `date` field to `YYYY-MM-DD`.
-const toISODate = (value: unknown): string | undefined => {
-  if (!value) return undefined
-  if (typeof value === 'string') return value.slice(0, 10)
-  if (value instanceof Date) return value.toISOString().slice(0, 10)
-  return undefined
 }
 
 export const Payments: CollectionConfig<'payments'> = {
