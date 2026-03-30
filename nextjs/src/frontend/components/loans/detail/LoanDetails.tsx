@@ -89,8 +89,6 @@ export default function LoanDetails({
       ) : null}
 
       <LoanPrincipalOverTime schedule={amortizationSchedule as any} />
-
-      <AmortizationTable amortizationSchedule={processedAmortizationSchedule} />
     </div>
   )
 }

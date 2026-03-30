@@ -10,12 +10,22 @@ import { Providers } from '@/providers'
 import { InitTheme } from '@/providers/Theme/InitTheme'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import { draftMode } from 'next/headers'
+import { AppShell } from '@/frontend/components/ui/AppShell'
+import { requireAuthedPayloadReqFromServer } from '@/frontend/server/loans/payloadAuth'
+import { isAdmin as isAdminUser } from '@/shared/utilities/payload/common'
 
 import './globals.css'
 import { getServerSideURL } from '@/utilities/getURL'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { isEnabled } = await draftMode()
+  let isAdmin = false
+  try {
+    const { req } = await requireAuthedPayloadReqFromServer()
+    isAdmin = isAdminUser((req as any)?.user)
+  } catch {
+    // not logged in - keep isAdmin false
+  }
 
   return (
     <html className={cn(GeistSans.variable, GeistMono.variable)} lang="en" suppressHydrationWarning>
@@ -31,7 +41,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               preview: isEnabled,
             }}
           />
-          {children}
+          <AppShell isAdmin={isAdmin}>{children}</AppShell>
         </Providers>
       </body>
     </html>

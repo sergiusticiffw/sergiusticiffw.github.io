@@ -16,6 +16,76 @@ const fmt = (v: unknown) => {
   return Number.isFinite(n) ? nf.format(n) : String(v)
 }
 
+function Chip({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean
+  children: React.ReactNode
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'px-3 py-1.5 rounded-full text-sm border transition',
+        active ? 'bg-white/10 border-white/15 text-white' : 'bg-transparent border-white/10 text-white/70 hover:text-white hover:bg-white/5',
+      ].join(' ')}
+    >
+      {children}
+    </button>
+  )
+}
+
+function StatusPill({ status }: { status: string }) {
+  const cls =
+    status === 'active'
+      ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20'
+      : status === 'pending'
+        ? 'bg-amber-500/10 text-amber-300 border-amber-400/20'
+        : 'bg-white/5 text-white/70 border-white/10'
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-xs ${cls}`}>{status}</span>
+}
+
+function LoanCard({ loan }: { loan: ApiLoan }) {
+  const status = getLoanStatus(String(loan.field_loan_status ?? ''))
+  return (
+    <Link
+      href={`/loans/${loan.id}`}
+      className="block rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] hover:from-white/[0.08] hover:to-white/[0.03] transition overflow-hidden"
+    >
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-xs uppercase tracking-widest text-white/60">Loan</div>
+            <div className="text-lg font-semibold mt-1">{loan.title}</div>
+          </div>
+          <StatusPill status={status} />
+        </div>
+        <div className="grid grid-cols-2 gap-3 mt-4">
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+            <div className="text-[11px] uppercase tracking-widest text-white/60">Principal</div>
+            <div className="text-base font-semibold tabular-nums mt-1">{fmt(loan.field_principal)}</div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+            <div className="text-[11px] uppercase tracking-widest text-white/60">Rate</div>
+            <div className="text-base font-semibold tabular-nums mt-1">{loan.field_rate ?? '-'}</div>
+          </div>
+        </div>
+        <div className="mt-4 text-sm text-white/60">
+          <span className="uppercase tracking-widest text-[11px]">Start</span>{' '}
+          <span className="tabular-nums text-white/80">{loan.field_start_date ?? '-'}</span>
+          <span className="mx-2">•</span>
+          <span className="uppercase tracking-widest text-[11px]">End</span>{' '}
+          <span className="tabular-nums text-white/80">{loan.field_end_date ?? '-'}</span>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
 type Props = {
   initialLoans: ApiLoan[]
 }
@@ -30,6 +100,7 @@ export default function LoansClient({ initialLoans }: Props) {
   const [showForm, setShowForm] = useState(false)
 
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'completed'>('all')
+  const [query, setQuery] = useState('')
 
   const router = useRouter()
 
@@ -39,9 +110,12 @@ export default function LoansClient({ initialLoans }: Props) {
 
   const filteredLoans = useMemo(() => {
     if (!loans?.length) return []
-    if (statusFilter === 'all') return loans
-    return loans.filter((l) => getLoanStatus(String(l.field_loan_status ?? '')) === statusFilter)
-  }, [loans, statusFilter])
+    const byStatus =
+      statusFilter === 'all' ? loans : loans.filter((l) => getLoanStatus(String(l.field_loan_status ?? '')) === statusFilter)
+    const q = query.trim().toLowerCase()
+    if (!q) return byStatus
+    return byStatus.filter((l) => (l.title ?? '').toLowerCase().includes(q))
+  }, [loans, query, statusFilter])
 
   const submitLoan = async (values: ApiLoan) => {
     setLoading(true)
@@ -86,33 +160,65 @@ export default function LoansClient({ initialLoans }: Props) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <div>
-          <h1 className="text-2xl font-bold">Loans</h1>
-          <div className="text-sm text-white/60 mt-1">Manage your loans and payment schedules.</div>
-        </div>
-        <div className="flex items-center gap-3">
-          <select
-            className="rounded border border-white/15 bg-white/5 px-3 py-2"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-          >
-            <option value="all">all</option>
-            <option value="active">active</option>
-            <option value="pending">pending</option>
-            <option value="completed">completed</option>
-          </select>
-          <button
-            className="rounded bg-[var(--color-app-accent)] px-4 py-2 font-medium hover:opacity-90 transition"
-            onClick={() => {
-              setMode('create')
-              setFocused(undefined)
-              setShowForm(true)
-            }}
-          >
-            Create loan
-          </button>
+    <div className="max-w-5xl mx-auto px-4 pt-6 pb-6">
+      <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.02] overflow-hidden mb-5">
+        <div className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-xs uppercase tracking-widest text-white/60">Dashboard</div>
+              <h1 className="text-2xl font-bold mt-1">Loans</h1>
+              <div className="text-sm text-white/60 mt-1">Mobile-first loan tracking with banking-style cards.</div>
+            </div>
+            <button
+              className="rounded-2xl bg-[var(--color-app-accent,#3b82f6)] px-4 py-2 font-medium hover:opacity-90 transition"
+              onClick={() => {
+                setMode('create')
+                setFocused(undefined)
+                setShowForm(true)
+              }}
+            >
+              + New loan
+            </button>
+          </div>
+
+          <div className="mt-5">
+            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 flex items-center gap-3">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-white/60">
+                <path
+                  d="M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                />
+                <path
+                  d="M21 21l-4.3-4.3"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search loans…"
+                className="bg-transparent outline-none w-full text-sm placeholder:text-white/40"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Chip active={statusFilter === 'all'} onClick={() => setStatusFilter('all')}>
+              All
+            </Chip>
+            <Chip active={statusFilter === 'active'} onClick={() => setStatusFilter('active')}>
+              Active
+            </Chip>
+            <Chip active={statusFilter === 'pending'} onClick={() => setStatusFilter('pending')}>
+              Pending
+            </Chip>
+            <Chip active={statusFilter === 'completed'} onClick={() => setStatusFilter('completed')}>
+              Completed
+            </Chip>
+          </div>
         </div>
       </div>
 
@@ -120,7 +226,7 @@ export default function LoansClient({ initialLoans }: Props) {
       {error && <div className="text-red-400 mb-4">{error}</div>}
 
       {showForm && (
-        <div className="mb-6 p-4 rounded border border-white/10 bg-white/5">
+        <div className="mb-6 p-4 rounded-3xl border border-white/10 bg-white/[0.04]">
           <LoanForm
             mode={mode}
             initial={focused}
@@ -131,80 +237,11 @@ export default function LoansClient({ initialLoans }: Props) {
       )}
 
       {!loading && loans && (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-x-auto">
-          <table className="min-w-full text-left">
-            <thead className="bg-white/[0.04]">
-              <tr className="text-white/60 text-sm">
-                <th className="py-2 pr-3">Title</th>
-                <th className="py-2 pr-3">Principal</th>
-                <th className="py-2 pr-3">Rate</th>
-                <th className="py-2 pr-3">Status</th>
-                <th className="py-2 pr-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredLoans.map((loan) => {
-                const status = getLoanStatus(String(loan.field_loan_status ?? ''))
-                const statusClass =
-                  status === 'active'
-                    ? 'bg-emerald-500/10 text-emerald-300 border-emerald-400/20'
-                    : status === 'pending'
-                      ? 'bg-amber-500/10 text-amber-300 border-amber-400/20'
-                      : 'bg-white/5 text-white/70 border-white/10'
-                return (
-                  <tr key={loan.id} className="border-t border-white/10 hover:bg-white/[0.03] transition">
-                    <td className="py-3 pr-3">
-                      <Link className="text-[var(--color-app-accent)] hover:underline" href={`/loans/${loan.id}`}>
-                        {loan.title}
-                      </Link>
-                    </td>
-                    <td className="py-3 pr-3">{fmt(loan.field_principal)}</td>
-                    <td className="py-3 pr-3">{loan.field_rate ?? '-'}</td>
-                    <td className="py-3 pr-3">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-xs ${statusClass}`}>
-                        {status}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-3">
-                      <div className="flex gap-2">
-                      <button
-                        className="rounded border border-white/15 bg-white/5 px-3 py-1.5 hover:bg-white/10 transition"
-                        onClick={() => {
-                          setMode('edit')
-                          setFocused(loan)
-                          setShowForm(true)
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="rounded border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-red-300 hover:bg-red-500/15 transition"
-                        onClick={async () => {
-                          if (!loan.id) return
-                          const ok = confirm('Delete this loan?')
-                          if (!ok) return
-                          setLoading(true)
-                          setError(null)
-                          try {
-                            await deleteLoanAction(String(loan.id))
-                            router.refresh()
-                          } catch (e) {
-                            setError(e instanceof Error ? e.message : 'Failed to delete loan')
-                          } finally {
-                            setLoading(false)
-                          }
-                        }}
-                      >
-                        Delete
-                      </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-          {filteredLoans.length === 0 && <div className="text-white/60 mt-4">No loans found.</div>}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredLoans.map((loan) => (
+            <LoanCard key={loan.id} loan={loan} />
+          ))}
+          {filteredLoans.length === 0 && <div className="text-white/60">No loans found.</div>}
         </div>
       )}
     </div>

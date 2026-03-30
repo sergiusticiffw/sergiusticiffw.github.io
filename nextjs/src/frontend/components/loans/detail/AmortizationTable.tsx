@@ -38,9 +38,9 @@ const fmt = (v: unknown) => {
 
 export default function AmortizationTable({ amortizationSchedule }: { amortizationSchedule: AmortizationRow[] }) {
   return (
-    <div className="overflow-x-auto rounded border border-white/10">
+    <div className="overflow-x-auto rounded-2xl border border-white/10 bg-black/20">
       <table className="min-w-full text-left text-sm">
-        <thead className="bg-white/5 text-white/70">
+        <thead className="bg-white/[0.04] text-white/70">
           <tr>
             <th className="px-3 py-2">Paid</th>
             <th className="px-3 py-2">Date</th>

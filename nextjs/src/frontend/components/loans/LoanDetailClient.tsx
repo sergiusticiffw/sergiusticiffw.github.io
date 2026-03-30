@@ -9,7 +9,6 @@ import {
   buildLoanDataFromApiLoan,
   buildEventsFromApiPayments,
   calculateAmortization,
-  isEarlyPaymentFromApiItem,
 } from '@/shared/domain/loans/amortization'
 import { getLoanStatus } from '@/shared/domain/loans/status'
 import {
@@ -19,6 +18,9 @@ import {
 } from '@/frontend/actions/loans'
 import LoanDetails from './detail/LoanDetails'
 import LoanOverview from './detail/LoanOverview'
+import { BottomSheet } from '@/frontend/components/ui/BottomSheet'
+import { AccordionSection } from '@/frontend/components/ui/Accordion'
+import AmortizationTable from './detail/AmortizationTable'
 
 const nf = new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 const fmt = (v: unknown) => {
@@ -136,19 +138,25 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
   if (!loan) return <div className="max-w-5xl mx-auto px-4 py-8 text-white/70">Loan not found.</div>
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <div className="mb-4">
+    <div className="max-w-5xl mx-auto px-4 pt-4 pb-6">
+      <div className="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4 bg-background/80 backdrop-blur-xl border-b border-white/5">
         <button
           type="button"
-          className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition mb-3"
+          className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
           onClick={() => router.push('/loans')}
         >
           <span aria-hidden="true">←</span>
-          Back to loans
+          Back
         </button>
-        <h1 className="text-2xl font-bold">{loan.title}</h1>
-        <div className="text-white/70 mt-1">
-          Status: {status} | Principal: {loan.field_principal ?? '-'} | Rate: {loan.field_rate ?? '-'}
+        <div className="flex items-end justify-between gap-4 mt-3">
+          <div>
+            <div className="text-xs uppercase tracking-widest text-white/60">Loan</div>
+            <h1 className="text-2xl font-bold mt-1">{loan.title}</h1>
+          </div>
+          <div className="text-right">
+            <div className="text-xs uppercase tracking-widest text-white/60">Status</div>
+            <div className="text-sm font-semibold">{status}</div>
+          </div>
         </div>
       </div>
 
@@ -164,11 +172,11 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
       ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <div className="p-4 rounded-2xl border border-white/10 bg-white/[0.03]">
+        <div className="p-4 rounded-3xl border border-white/10 bg-white/[0.03]">
           <div className="flex items-center justify-between gap-3 mb-3">
             <h2 className="font-semibold">Payments</h2>
             <button
-              className="rounded bg-[var(--color-app-accent)] px-4 py-2 font-medium hover:opacity-90 transition"
+              className="rounded-2xl bg-[var(--color-app-accent,#3b82f6)] px-4 py-2 font-medium hover:opacity-90 transition"
               onClick={() => {
                 setMode('create')
                 setFocusedPayment(undefined)
@@ -178,18 +186,6 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
               Add payment
             </button>
           </div>
-
-          {showPaymentForm && (
-            <div className="mb-4 p-3 rounded-xl border border-white/10 bg-white/5">
-              <PaymentForm
-                mode={mode}
-                loanId={loanId}
-                initial={focusedPayment}
-                onCancel={() => setShowPaymentForm(false)}
-                onSubmit={handleSubmitPayment}
-              />
-            </div>
-          )}
 
           <div className="space-y-2">
             {payments.length === 0 && <div className="text-white/70 text-sm">No payments yet.</div>}
@@ -248,14 +244,45 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
       </div>
 
       {amort && loanData ? (
-        <div className="p-4 rounded border border-white/10 bg-white/5">
-          <LoanDetails
-            loan={amort.paydown}
-            loanData={{ principal: loanData.principal, start_date: loanData.start_date }}
-            amortizationSchedule={amort.schedule}
-          />
+        <div className="space-y-4">
+          <AccordionSection title="Insights (charts)" defaultOpen={false}>
+            <LoanDetails
+              loan={amort.paydown}
+              loanData={{ principal: loanData.principal, start_date: loanData.start_date }}
+              amortizationSchedule={amort.schedule}
+            />
+          </AccordionSection>
+          <AccordionSection title="Amortization table" defaultOpen={false}>
+            <AmortizationTable amortizationSchedule={amort.schedule as any} />
+          </AccordionSection>
         </div>
       ) : null}
+
+      <BottomSheet
+        open={showPaymentForm}
+        title={mode === 'create' ? 'New payment' : 'Edit payment'}
+        onClose={() => setShowPaymentForm(false)}
+      >
+        <PaymentForm
+          mode={mode}
+          loanId={loanId}
+          initial={focusedPayment}
+          onCancel={() => setShowPaymentForm(false)}
+          onSubmit={handleSubmitPayment}
+        />
+      </BottomSheet>
+
+      <button
+        type="button"
+        className="fixed right-4 bottom-24 z-50 rounded-2xl bg-[var(--color-app-accent,#3b82f6)] px-4 py-3 font-medium shadow-[0_20px_60px_rgba(0,0,0,0.45)] hover:opacity-90 transition lg:hidden"
+        onClick={() => {
+          setMode('create')
+          setFocusedPayment(undefined)
+          setShowPaymentForm(true)
+        }}
+      >
+        + Payment
+      </button>
     </div>
   )
 }
