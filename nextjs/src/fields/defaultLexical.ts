@@ -16,7 +16,8 @@ export const defaultLexical = lexicalEditor({
     BoldFeature(),
     ItalicFeature(),
     LinkFeature({
-      enabledCollections: ['pages', 'posts'],
+      // Internal links are only relevant for collections that still exist.
+      enabledCollections: ['loans', 'payments'],
       fields: ({ defaultFields }) => {
         const defaultFieldsWithoutUrl = defaultFields.filter((field) => {
           if ('name' in field && field.name === 'url') return false

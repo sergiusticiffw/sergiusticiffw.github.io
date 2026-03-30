@@ -3,8 +3,6 @@ import { cn } from '@/utilities/ui'
 import Link from 'next/link'
 import React from 'react'
 
-import type { Page, Post } from '@/payload-types'
-
 type CMSLinkType = {
   appearance?: 'inline' | ButtonProps['variant']
   children?: React.ReactNode
@@ -12,8 +10,10 @@ type CMSLinkType = {
   label?: string | null
   newTab?: boolean | null
   reference?: {
-    relationTo: 'pages' | 'posts'
-    value: Page | Post | string | number
+    relationTo: string
+    // `payload-types.ts` may vary depending on which collections are enabled.
+    // We only need enough information to build an href.
+    value: unknown
   } | null
   size?: ButtonProps['size'] | null
   type?: 'custom' | 'reference' | null
@@ -34,10 +34,23 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
   } = props
 
   const href =
-    type === 'reference' && typeof reference?.value === 'object' && reference.value.slug
-      ? `${reference?.relationTo !== 'pages' ? `/${reference?.relationTo}` : ''}/${
-          reference.value.slug
-        }`
+    type === 'reference' && reference
+      ? (() => {
+          const { relationTo, value } = reference
+          if (value && typeof value === 'object') {
+            const maybeSlug = (value as { slug?: unknown }).slug
+            const maybeId = (value as { id?: unknown }).id
+
+            if (typeof maybeSlug === 'string' && maybeSlug.length > 0) return `/${relationTo}/${maybeSlug}`
+            if (typeof maybeId === 'string' && maybeId.length > 0) return `/${relationTo}/${maybeId}`
+          }
+
+          if (typeof value === 'string' || typeof value === 'number') {
+            return `/${relationTo}/${value}`
+          }
+
+          return undefined
+        })()
       : url
 
   if (!href) return null

@@ -1,3 +1,6 @@
+/* eslint-disable react/no-danger */
+'use client'
+
 import { Banner } from '@payloadcms/ui/elements/Banner'
 import React from 'react'
 
