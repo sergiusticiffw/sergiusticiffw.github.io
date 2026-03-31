@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation'
 import type { ApiLoan } from '@/shared/types/loans'
 import { LoanForm } from './LoanForm'
 import { getLoanStatus } from '@/shared/domain/loans/status'
-import { createLoanAction, deleteLoanAction, updateLoanAction } from '@/frontend/actions/loans'
+import { createLoanAction, updateLoanAction } from '@/frontend/actions/loans'
+import { BottomSheet } from '@/frontend/components/ui/BottomSheet'
 
 const nf = new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 const fmt = (v: unknown) => {
@@ -49,20 +50,37 @@ function StatusPill({ status }: { status: string }) {
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-xs ${cls}`}>{status}</span>
 }
 
-function LoanCard({ loan }: { loan: ApiLoan }) {
+function LoanCard({
+  loan,
+  onEdit,
+}: {
+  loan: ApiLoan
+  onEdit: (loan: ApiLoan) => void
+}) {
   const status = getLoanStatus(String(loan.field_loan_status ?? ''))
   return (
-    <Link
-      href={`/loans/${loan.id}`}
-      className="block rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] hover:from-white/[0.08] hover:to-white/[0.03] transition overflow-hidden"
-    >
+    <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] hover:from-white/[0.08] hover:to-white/[0.03] transition overflow-hidden">
       <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-xs uppercase tracking-widest text-white/60">Loan</div>
             <div className="text-lg font-semibold mt-1">{loan.title}</div>
           </div>
-          <StatusPill status={status} />
+          <div className="flex items-center gap-2">
+            <StatusPill status={status} />
+            <button
+              type="button"
+              className="h-9 w-9 rounded-2xl border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 transition"
+              aria-label="Edit loan"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onEdit(loan)
+              }}
+            >
+              ✎
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3 mt-4">
           <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
@@ -74,15 +92,23 @@ function LoanCard({ loan }: { loan: ApiLoan }) {
             <div className="text-base font-semibold tabular-nums mt-1">{loan.field_rate ?? '-'}</div>
           </div>
         </div>
-        <div className="mt-4 text-sm text-white/60">
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="text-sm text-white/60">
           <span className="uppercase tracking-widest text-[11px]">Start</span>{' '}
           <span className="tabular-nums text-white/80">{loan.field_start_date ?? '-'}</span>
           <span className="mx-2">•</span>
           <span className="uppercase tracking-widest text-[11px]">End</span>{' '}
           <span className="tabular-nums text-white/80">{loan.field_end_date ?? '-'}</span>
+          </div>
+          <Link
+            href={`/loans/${loan.id}`}
+            className="text-sm text-[var(--color-app-accent,#3b82f6)] hover:opacity-90 transition"
+          >
+            View →
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   )
 }
 
@@ -98,6 +124,7 @@ export default function LoansClient({ initialLoans }: Props) {
   const [mode, setMode] = useState<'create' | 'edit'>('create')
   const [focused, setFocused] = useState<Partial<ApiLoan> | undefined>(undefined)
   const [showForm, setShowForm] = useState(false)
+  const [showEditSheet, setShowEditSheet] = useState(false)
 
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'pending' | 'completed'>('all')
   const [query, setQuery] = useState('')
@@ -239,11 +266,32 @@ export default function LoansClient({ initialLoans }: Props) {
       {!loading && loans && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredLoans.map((loan) => (
-            <LoanCard key={loan.id} loan={loan} />
+            <LoanCard
+              key={loan.id}
+              loan={loan}
+              onEdit={(l) => {
+                setMode('edit')
+                setFocused(l)
+                setShowEditSheet(true)
+              }}
+            />
           ))}
           {filteredLoans.length === 0 && <div className="text-white/60">No loans found.</div>}
         </div>
       )}
+
+      <BottomSheet
+        open={showEditSheet}
+        title={mode === 'edit' ? 'Edit loan' : 'Loan'}
+        onClose={() => setShowEditSheet(false)}
+      >
+        <LoanForm
+          mode="edit"
+          initial={focused}
+          onCancel={() => setShowEditSheet(false)}
+          onSubmit={submitLoan}
+        />
+      </BottomSheet>
     </div>
   )
 }

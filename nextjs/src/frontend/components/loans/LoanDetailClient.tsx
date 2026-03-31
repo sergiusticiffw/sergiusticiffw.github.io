@@ -9,18 +9,22 @@ import {
   buildLoanDataFromApiLoan,
   buildEventsFromApiPayments,
   calculateAmortization,
+  calculatePaydownOnly,
+  isEarlyPaymentFromApiItem,
 } from '@/shared/domain/loans/amortization'
 import { getLoanStatus } from '@/shared/domain/loans/status'
 import {
   createPaymentAction,
   deletePaymentAction,
   updatePaymentAction,
+  updateLoanAction,
 } from '@/frontend/actions/loans'
 import LoanDetails from './detail/LoanDetails'
 import LoanOverview from './detail/LoanOverview'
 import { BottomSheet } from '@/frontend/components/ui/BottomSheet'
 import { AccordionSection } from '@/frontend/components/ui/Accordion'
 import AmortizationTable from './detail/AmortizationTable'
+import { LoanForm } from './LoanForm'
 
 const nf = new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 const fmt = (v: unknown) => {
@@ -53,6 +57,7 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
   const [showPaymentForm, setShowPaymentForm] = useState(false)
   const [mode, setMode] = useState<'create' | 'edit'>('create')
   const [focusedPayment, setFocusedPayment] = useState<Partial<ApiPaymentItem> | undefined>(undefined)
+  const [showLoanEdit, setShowLoanEdit] = useState(false)
 
   const router = useRouter()
 
@@ -77,6 +82,29 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
 
   const loanData = useMemo(() => (loan ? buildLoanDataFromApiLoan(loan) : null), [loan])
 
+  const status = getLoanStatus(String(loan?.field_loan_status ?? ''))
+
+  const interestSaved = useMemo(() => {
+    if (!loan || !loanData || !amort?.paydown) return 0
+    if (status !== 'active' && status !== 'completed') return 0
+
+    const hasEarly = paymentsByDate.some(isEarlyPaymentFromApiItem)
+    if (!hasEarly) return 0
+
+    const scheduledPaymentItems = paymentsByDate.filter((p) => !isEarlyPaymentFromApiItem(p))
+
+    try {
+      const scheduledPaydown = calculatePaydownOnly(loanData, buildEventsFromApiPayments(scheduledPaymentItems))
+      const interestWithoutEarly = scheduledPaydown.sum_of_interests ?? 0
+      const interestWithEarly = amort.paydown.sum_of_interests ?? 0
+      let savings = Math.max(0, interestWithoutEarly - interestWithEarly)
+      if (savings > interestWithEarly * 10) savings = 0
+      return savings
+    } catch {
+      return 0
+    }
+  }, [amort?.paydown, loan, loanData, paymentsByDate, status])
+
   const totalPaidAmount = useMemo(() => {
     return payments.reduce(
       (sum, p) => sum + parseFloat(String(p.field_pay_installment ?? '0') || '0'),
@@ -84,7 +112,32 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
     )
   }, [payments])
 
-  const status = getLoanStatus(String(loan?.field_loan_status ?? ''))
+  const handleSubmitLoan = async (values: ApiLoan) => {
+    if (!values.id) throw new Error('Missing loan id')
+    setLoading(true)
+    setError(null)
+    try {
+      await updateLoanAction({
+        loanId: values.id,
+        title: values.title ?? '',
+        field_principal: values.field_principal,
+        field_start_date: values.field_start_date,
+        field_end_date: values.field_end_date,
+        field_rate: values.field_rate,
+        field_initial_fee: values.field_initial_fee,
+        field_rec_first_payment_date: values.field_rec_first_payment_date,
+        field_recurring_payment_day: values.field_recurring_payment_day,
+        field_payment_method: values.field_payment_method,
+        field_loan_status: values.field_loan_status,
+      })
+      setShowLoanEdit(false)
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to update loan')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSubmitPayment = async (values: ApiPaymentItem & { loanId: string }) => {
     const payload: {
@@ -140,14 +193,23 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-4 pb-6">
       <div className="sticky top-0 z-40 -mx-4 px-4 pt-3 pb-4 bg-background/80 backdrop-blur-xl border-b border-white/5">
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
-          onClick={() => router.push('/loans')}
-        >
-          <span aria-hidden="true">←</span>
-          Back
-        </button>
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
+            onClick={() => router.push('/loans')}
+          >
+            <span aria-hidden="true">←</span>
+            Back
+          </button>
+          <button
+            type="button"
+            className="h-9 px-3 rounded-2xl border border-white/10 bg-white/5 text-sm hover:bg-white/10 transition"
+            onClick={() => setShowLoanEdit(true)}
+          >
+            Edit loan
+          </button>
+        </div>
         <div className="flex items-end justify-between gap-4 mt-3">
           <div>
             <div className="text-xs uppercase tracking-widest text-white/60">Loan</div>
@@ -163,10 +225,11 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
       {amort && loanData ? (
         <div className="mb-6">
           <LoanOverview
-            loanTitle={loan.title ?? `Loan ${loanId}`}
+            loanStatus={status}
             loanData={loanData}
             paydown={amort.paydown}
             totalPaidAmount={totalPaidAmount}
+            interestSaved={interestSaved}
           />
         </div>
       ) : null}
@@ -269,6 +332,15 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
           initial={focusedPayment}
           onCancel={() => setShowPaymentForm(false)}
           onSubmit={handleSubmitPayment}
+        />
+      </BottomSheet>
+
+      <BottomSheet open={showLoanEdit} title="Edit loan" onClose={() => setShowLoanEdit(false)}>
+        <LoanForm
+          mode="edit"
+          initial={loan ?? undefined}
+          onCancel={() => setShowLoanEdit(false)}
+          onSubmit={handleSubmitLoan}
         />
       </BottomSheet>
 

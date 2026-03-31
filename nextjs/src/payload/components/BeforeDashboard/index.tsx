@@ -15,6 +15,29 @@ const BeforeDashboard: React.FC = () => {
       <Banner className={`${baseClass}__banner`} type="success">
         <h4>Welcome to your dashboard!</h4>
       </Banner>
+      <div className="mt-4 mb-4 rounded-2xl border border-white/10 bg-black/30 p-4">
+        <div className="text-[11px] uppercase tracking-widest text-white/60">Quick access</div>
+        <div className="flex flex-wrap items-center gap-3 mt-2">
+          <a
+            className="rounded-2xl bg-[var(--color-app-accent,#3b82f6)] px-4 py-2 text-sm font-medium hover:opacity-90 transition"
+            href="/loans"
+          >
+            Go to Loans
+          </a>
+          <a
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10 transition"
+            href="/admin/collections/loans"
+          >
+            Loans (Admin)
+          </a>
+          <a
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10 transition"
+            href="/admin/collections/payments"
+          >
+            Payments (Admin)
+          </a>
+        </div>
+      </div>
       Here&apos;s what to do next:
       <ul className={`${baseClass}__instructions`}>
         <li>

@@ -10,11 +10,21 @@ export default async function LoansPage() {
   let initialLoans: ApiLoan[] = []
   try {
     const { payload, req } = await requireAuthedPayloadReqFromServer()
+    const userId = (req.user as any)?.id
+    if (!userId) {
+      redirect('/loans')
+    }
 
     const { docs } = await payload.find({
       collection: 'loans',
+      where: {
+        field_owner: {
+          equals: userId,
+        },
+      },
       limit: 1000,
       sort: '-createdAt',
+      overrideAccess: false,
       req: req as any,
     })
 

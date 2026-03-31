@@ -25,24 +25,48 @@ export default async function LoanDetailPage({
 
   try {
     const { payload, req } = await requireAuthedPayloadReqFromServer()
+    const userId = (req.user as any)?.id
+    if (!userId) {
+      redirect('/loans')
+    }
 
     const loanDoc = await payload.findByID({
       collection: 'loans',
       id: loanIdNum,
+      overrideAccess: false,
       req: req as any,
     })
 
-    initialLoan = loanDoc ? mapPayloadLoanToApiLoan(loanDoc) : null
+    const loanOwnerId =
+      loanDoc?.field_owner && typeof loanDoc.field_owner === 'object' && 'id' in loanDoc.field_owner
+        ? String((loanDoc.field_owner as any).id)
+        : loanDoc?.field_owner
+
+    if (!loanDoc || String(loanOwnerId) !== String(userId)) {
+      redirect('/loans')
+    }
+
+    initialLoan = mapPayloadLoanToApiLoan(loanDoc)
 
     const { docs } = await payload.find({
       collection: 'payments',
       where: {
-        field_loan_reference: {
-          equals: loanIdNum,
-        },
+        and: [
+          {
+            field_owner: {
+              equals: userId,
+            },
+          },
+          {
+            field_loan_reference: {
+              equals: loanIdNum,
+            },
+          },
+        ],
       },
       limit: 1000,
       sort: '-createdAt',
+      overrideAccess: false,
       req: req as any,
     })
 

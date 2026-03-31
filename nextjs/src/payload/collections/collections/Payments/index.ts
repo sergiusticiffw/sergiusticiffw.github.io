@@ -139,6 +139,7 @@ export const Payments: CollectionConfig<'payments'> = {
               collection: 'loans',
               id: loanIdNum,
               depth: 0,
+              overrideAccess: false,
               req: req as any,
             })
           } catch {

@@ -5,6 +5,16 @@ import { requireAuthedPayloadReqFromServer } from '@/frontend/server/loans/paylo
 import type { ApiLoan, ApiPaymentItem } from '@/shared/types/loans'
 import { mapPayloadLoanToApiLoan, mapPayloadPaymentToApiPaymentItem } from '@/frontend/server/loans/mappers'
 
+function getOwnerId(owner: unknown): string | null {
+  if (!owner) return null
+  if (typeof owner === 'string' || typeof owner === 'number') return String(owner)
+  if (typeof owner === 'object' && 'id' in owner) {
+    const id = (owner as any).id
+    return id ? String(id) : null
+  }
+  return null
+}
+
 type LoanCreateInput = {
   title: string
   field_principal: number
@@ -37,6 +47,8 @@ type PaymentUpdateInput = PaymentCreateInput & { paymentId: string }
 
 export async function createLoanAction(input: LoanCreateInput): Promise<void> {
   const { payload, req } = await requireAuthedPayloadReqFromServer()
+  const userId = (req.user as any)?.id
+  if (!userId) throw new Error('Unauthorized')
 
   const created = await payload.create({
     collection: 'loans',
@@ -51,7 +63,9 @@ export async function createLoanAction(input: LoanCreateInput): Promise<void> {
       field_recurring_payment_day: input.field_recurring_payment_day ?? null,
       field_payment_method: input.field_payment_method,
       field_loan_status: input.field_loan_status,
+      field_owner: userId,
     },
+    overrideAccess: false,
     req: req as any,
   })
 
@@ -63,9 +77,22 @@ export async function createLoanAction(input: LoanCreateInput): Promise<void> {
 
 export async function updateLoanAction(input: LoanUpdateInput): Promise<void> {
   const { payload, req } = await requireAuthedPayloadReqFromServer()
+  const userId = (req.user as any)?.id
+  if (!userId) throw new Error('Unauthorized')
 
   const loanIdNum = Number(input.loanId)
   if (!Number.isFinite(loanIdNum)) throw new Error('Invalid loanId')
+
+  const loanDoc = await payload.findByID({
+    collection: 'loans',
+    id: loanIdNum,
+    overrideAccess: false,
+    req: req as any,
+  })
+  const loanOwnerId = getOwnerId(loanDoc?.field_owner)
+  if (!loanDoc || loanOwnerId !== String(userId)) {
+    throw new Error('Forbidden')
+  }
 
   await payload.update({
     collection: 'loans',
@@ -82,6 +109,7 @@ export async function updateLoanAction(input: LoanUpdateInput): Promise<void> {
       field_payment_method: input.field_payment_method,
       field_loan_status: input.field_loan_status,
     },
+    overrideAccess: false,
     req: req as any,
   })
 
@@ -91,13 +119,27 @@ export async function updateLoanAction(input: LoanUpdateInput): Promise<void> {
 
 export async function deleteLoanAction(loanId: string): Promise<void> {
   const { payload, req } = await requireAuthedPayloadReqFromServer()
+  const userId = (req.user as any)?.id
+  if (!userId) throw new Error('Unauthorized')
 
   const loanIdNum = Number(loanId)
   if (!Number.isFinite(loanIdNum)) throw new Error('Invalid loanId')
 
+  const loanDoc = await payload.findByID({
+    collection: 'loans',
+    id: loanIdNum,
+    overrideAccess: false,
+    req: req as any,
+  })
+  const loanOwnerId = getOwnerId(loanDoc?.field_owner)
+  if (!loanDoc || loanOwnerId !== String(userId)) {
+    throw new Error('Forbidden')
+  }
+
   await payload.delete({
     collection: 'loans',
     id: loanIdNum,
+    overrideAccess: false,
     req: req as any,
   })
 
@@ -106,9 +148,22 @@ export async function deleteLoanAction(loanId: string): Promise<void> {
 
 export async function createPaymentAction(input: PaymentCreateInput): Promise<void> {
   const { payload, req } = await requireAuthedPayloadReqFromServer()
+  const userId = (req.user as any)?.id
+  if (!userId) throw new Error('Unauthorized')
 
   const loanIdNum = Number(input.loanId)
   if (!Number.isFinite(loanIdNum)) throw new Error('Invalid loanId')
+
+  const loanDoc = await payload.findByID({
+    collection: 'loans',
+    id: loanIdNum,
+    overrideAccess: false,
+    req: req as any,
+  })
+  const loanOwnerId = getOwnerId(loanDoc?.field_owner)
+  if (!loanDoc || loanOwnerId !== String(userId)) {
+    throw new Error('Forbidden')
+  }
 
   const created = await payload.create({
     collection: 'payments',
@@ -125,7 +180,9 @@ export async function createPaymentAction(input: PaymentCreateInput): Promise<vo
         : {}),
       field_is_simulated_payment: input.field_is_simulated_payment,
       field_loan_reference: loanIdNum,
+      field_owner: userId,
     },
+    overrideAccess: false,
     req: req as any,
   })
 
@@ -137,12 +194,25 @@ export async function createPaymentAction(input: PaymentCreateInput): Promise<vo
 
 export async function updatePaymentAction(input: PaymentUpdateInput): Promise<void> {
   const { payload, req } = await requireAuthedPayloadReqFromServer()
+  const userId = (req.user as any)?.id
+  if (!userId) throw new Error('Unauthorized')
 
   const loanIdNum = Number(input.loanId)
   if (!Number.isFinite(loanIdNum)) throw new Error('Invalid loanId')
 
   const paymentIdNum = Number(input.paymentId)
   if (!Number.isFinite(paymentIdNum)) throw new Error('Invalid paymentId')
+
+  const paymentDoc = await payload.findByID({
+    collection: 'payments',
+    id: paymentIdNum,
+    overrideAccess: false,
+    req: req as any,
+  })
+  const paymentOwnerId = getOwnerId(paymentDoc?.field_owner)
+  if (!paymentDoc || paymentOwnerId !== String(userId)) {
+    throw new Error('Forbidden')
+  }
 
   await payload.update({
     collection: 'payments',
@@ -161,6 +231,7 @@ export async function updatePaymentAction(input: PaymentUpdateInput): Promise<vo
       field_is_simulated_payment: input.field_is_simulated_payment,
       field_loan_reference: loanIdNum,
     },
+    overrideAccess: false,
     req: req as any,
   })
 
@@ -172,13 +243,27 @@ export async function deletePaymentAction(input: {
   loanId: string
 }): Promise<void> {
   const { payload, req } = await requireAuthedPayloadReqFromServer()
+  const userId = (req.user as any)?.id
+  if (!userId) throw new Error('Unauthorized')
 
   const paymentIdNum = Number(input.paymentId)
   if (!Number.isFinite(paymentIdNum)) throw new Error('Invalid paymentId')
 
+  const paymentDoc = await payload.findByID({
+    collection: 'payments',
+    id: paymentIdNum,
+    overrideAccess: false,
+    req: req as any,
+  })
+  const paymentOwnerId = getOwnerId(paymentDoc?.field_owner)
+  if (!paymentDoc || paymentOwnerId !== String(userId)) {
+    throw new Error('Forbidden')
+  }
+
   await payload.delete({
     collection: 'payments',
     id: paymentIdNum,
+    overrideAccess: false,
     req: req as any,
   })
 

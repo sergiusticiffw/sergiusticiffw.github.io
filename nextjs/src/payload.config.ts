@@ -23,6 +23,7 @@ export default buildConfig({
       // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
       beforeDashboard: ['@/payload/components/BeforeDashboard'],
+      beforeNavLinks: ['@/payload/components/LoansAppLink'],
     },
     importMap: {
       baseDir: path.resolve(dirname),

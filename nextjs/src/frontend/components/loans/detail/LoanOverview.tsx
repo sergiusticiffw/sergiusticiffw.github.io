@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react'
 
 import type { PaydownInit, PaydownResult } from '@/shared/domain/loans/amortization'
-import { calculatePaydownOnly } from '@/shared/domain/loans/amortization'
+import type { LoanStatus } from '@/shared/domain/loans/status'
 
 function parseDMY(dmy: string): Date | null {
   const parts = dmy.split('.')
@@ -67,15 +67,17 @@ function Row({
 }
 
 export default function LoanOverview({
-  loanTitle,
+  loanStatus,
   loanData,
   paydown,
   totalPaidAmount,
+  interestSaved,
 }: {
-  loanTitle: string
+  loanStatus: LoanStatus
   loanData: PaydownInit
   paydown: PaydownResult
   totalPaidAmount: number
+  interestSaved: number
 }) {
   const today = useMemo(() => new Date(), [])
 
@@ -102,37 +104,32 @@ export default function LoanOverview({
   const remainingPrincipal = paydown.remaining_principal_after_paid ?? paydown.remaining_principal ?? 0
 
   const progressPct = useMemo(() => {
-    const p = paydown.effective_principal ?? loanData.principal ?? 0
-    const remaining =
-      paydown.remaining_principal_after_paid ?? paydown.remaining_principal ?? 0
-    const paid = Math.max(0, p - remaining)
+    // Match expenses behavior:
+    // - pending(draft) => 0%
+    // - completed => 100%
+    // - active(in_progress) => compute from totalPaid / sum_of_installments
+    if (loanStatus === 'completed') return 100
+    if (loanStatus === 'pending') return 0
 
-    if (p > 0 && Number.isFinite(paid)) {
-      return Math.max(0, Math.min(100, Math.round((paid / p) * 100)))
-    }
+    const sumInstallments = paydown.sum_of_installments ?? 0
+    if (!Number.isFinite(sumInstallments) || sumInstallments <= 0) return 0
 
-    if (!totalMonths || totalMonths <= 0 || monthsPassed == null) return 0
-    return Math.max(0, Math.min(100, Math.round((monthsPassed / totalMonths) * 100)))
-  }, [
-    loanData.principal,
-    monthsPassed,
-    paydown.effective_principal,
-    paydown.remaining_principal,
-    paydown.remaining_principal_after_paid,
-    totalMonths,
-  ])
+    const progressValue = ((totalPaidAmount ?? 0) / sumInstallments) * 100
+    return Math.max(0, Math.min(100, Math.round(progressValue)))
+  }, [loanStatus, paydown.sum_of_installments, totalPaidAmount])
 
-  const baseline = useMemo(() => {
-    try {
-      return calculatePaydownOnly(loanData, [])
-    } catch {
-      return null
-    }
-  }, [loanData])
+  const monthsPassedDisplay =
+    loanStatus === 'active'
+      ? `${monthsPassed ?? 0} / ${totalMonths ?? 0}`
+      : loanStatus === 'completed'
+        ? `${totalMonths ?? 0} / ${totalMonths ?? 0}`
+        : 'Not started'
 
-  const totalInterest = (paydown.sum_of_interests ?? 0) + (paydown.unpaid_interest ?? 0)
-  const baselineInterest = baseline ? (baseline.sum_of_interests ?? 0) + (baseline.unpaid_interest ?? 0) : null
-  const interestSaved = baselineInterest == null ? null : Math.max(0, baselineInterest - totalInterest)
+  const daysRemainingDisplay =
+    loanStatus === 'active' ? String(daysRemaining ?? 0) : loanStatus === 'completed' ? 'Completed' : 'Not started'
+
+  const interestSavedDisplay =
+    loanStatus === 'pending' ? 'Not started' : interestSaved > 0 ? fmtMoney(interestSaved) : fmtMoney(0)
 
   const totalCost =
     (paydown.sum_of_installments ?? 0) +
@@ -145,14 +142,7 @@ export default function LoanOverview({
   return (
     <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] overflow-hidden">
       <div className="p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-xs uppercase tracking-widest text-white/60">Loan</div>
-            <div className="text-2xl font-bold mt-1">{loanTitle}</div>
-          </div>
-        </div>
-
-        <div className="mt-5">
+        <div className="mt-1">
           <div className="flex items-center justify-between gap-3 mb-2">
             <div className="text-xs uppercase tracking-widest text-white/60">Progress</div>
             <div className="text-xs text-white/70">
@@ -180,7 +170,7 @@ export default function LoanOverview({
               <span>
                 Months Passed:{' '}
                 <span className="text-white font-semibold">
-                  {monthsPassed ?? '-'} / {totalMonths ?? '-'}
+                  {monthsPassedDisplay}
                 </span>
               </span>
             </div>
@@ -198,7 +188,7 @@ export default function LoanOverview({
               </span>
               <span>
                 Days Remaining:{' '}
-                <span className="text-white font-semibold">{daysRemaining ?? '-'}</span>
+                <span className="text-white font-semibold">{daysRemainingDisplay}</span>
               </span>
             </div>
           </div>
@@ -312,7 +302,7 @@ export default function LoanOverview({
           />
           <Row
             label="Interest Saved"
-            value={interestSaved == null ? '-' : fmtMoney(interestSaved)}
+            value={interestSavedDisplay}
             icon={
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path

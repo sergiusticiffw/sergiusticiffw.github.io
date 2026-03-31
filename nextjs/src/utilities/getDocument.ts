@@ -17,6 +17,8 @@ async function getDocument(collection: Collection, slug: string, depth = 0) {
         equals: slug,
       },
     },
+    // This is used by the public site. Ensure we don't bypass access control accidentally.
+    overrideAccess: false,
   })
 
   return page.docs[0]
