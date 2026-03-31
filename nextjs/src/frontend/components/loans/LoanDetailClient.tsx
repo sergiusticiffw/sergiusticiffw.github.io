@@ -17,6 +17,7 @@ import {
   createPaymentAction,
   deletePaymentAction,
   updatePaymentAction,
+  deleteLoanAction,
   updateLoanAction,
 } from '@/frontend/actions/loans'
 import LoanDetails from './detail/LoanDetails'
@@ -197,18 +198,41 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
           <button
             type="button"
             className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition"
-            onClick={() => router.push('/loans')}
+            onClick={() => router.push('/')}
           >
             <span aria-hidden="true">←</span>
             Back
           </button>
-          <button
-            type="button"
-            className="h-9 px-3 rounded-2xl border border-white/10 bg-white/5 text-sm hover:bg-white/10 transition"
-            onClick={() => setShowLoanEdit(true)}
-          >
-            Edit loan
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="h-9 px-3 rounded-2xl border border-white/10 bg-white/5 text-sm hover:bg-white/10 transition"
+              onClick={() => setShowLoanEdit(true)}
+            >
+              Edit loan
+            </button>
+            <button
+              type="button"
+              className="h-9 px-3 rounded-2xl border border-red-400/20 bg-red-500/10 text-sm text-red-200 hover:bg-red-500/15 transition"
+              onClick={async () => {
+                const ok = window.confirm(`Delete "${loan.title ?? 'loan'}"? This cannot be undone.`)
+                if (!ok) return
+                setLoading(true)
+                setError(null)
+                try {
+                  await deleteLoanAction(String(loan.id))
+                  router.push('/')
+                  router.refresh()
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : 'Failed to delete loan')
+                } finally {
+                  setLoading(false)
+                }
+              }}
+            >
+              Delete
+            </button>
+          </div>
         </div>
         <div className="flex items-end justify-between gap-4 mt-3">
           <div>

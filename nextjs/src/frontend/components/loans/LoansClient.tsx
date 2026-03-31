@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 import type { ApiLoan } from '@/shared/types/loans'
 import { LoanForm } from './LoanForm'
 import { getLoanStatus } from '@/shared/domain/loans/status'
-import { createLoanAction, updateLoanAction } from '@/frontend/actions/loans'
+import { createLoanAction, deleteLoanAction, updateLoanAction } from '@/frontend/actions/loans'
 import { BottomSheet } from '@/frontend/components/ui/BottomSheet'
 
 const nf = new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
@@ -53,9 +53,11 @@ function StatusPill({ status }: { status: string }) {
 function LoanCard({
   loan,
   onEdit,
+  onDelete,
 }: {
   loan: ApiLoan
   onEdit: (loan: ApiLoan) => void
+  onDelete: (loan: ApiLoan) => void
 }) {
   const status = getLoanStatus(String(loan.field_loan_status ?? ''))
   return (
@@ -79,6 +81,18 @@ function LoanCard({
               }}
             >
               ✎
+            </button>
+            <button
+              type="button"
+              className="h-9 w-9 rounded-2xl border border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/15 transition"
+              aria-label="Delete loan"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onDelete(loan)
+              }}
+            >
+              🗑
             </button>
           </div>
         </div>
@@ -186,6 +200,23 @@ export default function LoansClient({ initialLoans }: Props) {
     }
   }
 
+  const deleteLoan = async (loan: ApiLoan) => {
+    if (!loan?.id) return
+    const ok = window.confirm(`Delete "${loan.title ?? 'loan'}"? This cannot be undone.`)
+    if (!ok) return
+
+    setLoading(true)
+    setError(null)
+    try {
+      await deleteLoanAction(String(loan.id))
+      router.refresh()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to delete loan')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 pt-6 pb-6">
       <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-white/[0.02] overflow-hidden mb-5">
@@ -274,6 +305,7 @@ export default function LoansClient({ initialLoans }: Props) {
                 setFocused(l)
                 setShowEditSheet(true)
               }}
+              onDelete={deleteLoan}
             />
           ))}
           {filteredLoans.length === 0 && <div className="text-white/60">No loans found.</div>}

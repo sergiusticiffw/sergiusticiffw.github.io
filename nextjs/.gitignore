@@ -24,3 +24,5 @@ node_modules/
 .cursor/*
 
 tsconfig.tsbuildinfo
+
+.pnpm-store/

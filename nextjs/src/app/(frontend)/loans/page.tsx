@@ -12,7 +12,7 @@ export default async function LoansPage() {
     const { payload, req } = await requireAuthedPayloadReqFromServer()
     const userId = (req.user as any)?.id
     if (!userId) {
-      redirect('/loans')
+      redirect('/')
     }
 
     const { docs } = await payload.find({
@@ -30,7 +30,7 @@ export default async function LoansPage() {
 
     initialLoans = docs.map(mapPayloadLoanToApiLoan)
   } catch (e) {
-    redirect('/admin/login?redirectTo=/loans')
+    redirect('/login?redirectTo=/')
   }
 
   return <LoansClient initialLoans={initialLoans} />

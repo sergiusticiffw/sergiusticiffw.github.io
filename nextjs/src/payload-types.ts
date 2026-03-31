@@ -67,9 +67,9 @@ export interface Config {
   };
   blocks: {};
   collections: {
-    users: User;
     loans: Loan;
     payments: Payment;
+    users: User;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -77,9 +77,9 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
-    users: UsersSelect<false> | UsersSelect<true>;
     loans: LoansSelect<false> | LoansSelect<true>;
     payments: PaymentsSelect<false> | PaymentsSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -121,12 +121,33 @@ export interface UserAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "loans".
+ */
+export interface Loan {
+  id: number;
+  title: string;
+  field_owner?: (number | null) | User;
+  field_principal: number;
+  field_start_date: string;
+  field_end_date: string;
+  field_rate: number;
+  field_initial_fee?: number | null;
+  field_rec_first_payment_date?: string | null;
+  field_recurring_payment_day?: number | null;
+  field_payment_method: 'equal_installment' | 'equal_principal';
+  field_loan_status: 'in_progress' | 'draft' | 'completed';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
   name?: string | null;
   roles: ('admin' | 'user')[];
+  sub?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -145,26 +166,6 @@ export interface User {
     | null;
   password?: string | null;
   collection: 'users';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "loans".
- */
-export interface Loan {
-  id: number;
-  title: string;
-  field_owner?: (number | null) | User;
-  field_principal: number;
-  field_start_date: string;
-  field_end_date: string;
-  field_rate: number;
-  field_initial_fee?: number | null;
-  field_rec_first_payment_date?: string | null;
-  field_recurring_payment_day?: number | null;
-  field_payment_method: 'equal_installment' | 'equal_principal';
-  field_loan_status: 'in_progress' | 'draft' | 'completed';
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -211,16 +212,16 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
-        relationTo: 'users';
-        value: number | User;
-      } | null)
-    | ({
         relationTo: 'loans';
         value: number | Loan;
       } | null)
     | ({
         relationTo: 'payments';
         value: number | Payment;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -266,30 +267,6 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
- */
-export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  roles?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
-    | T
-    | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "loans_select".
  */
 export interface LoansSelect<T extends boolean = true> {
@@ -325,6 +302,31 @@ export interface PaymentsSelect<T extends boolean = true> {
   field_loan_reference?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
+export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  roles?: T;
+  sub?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

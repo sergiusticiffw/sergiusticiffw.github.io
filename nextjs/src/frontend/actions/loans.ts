@@ -72,7 +72,7 @@ export async function createLoanAction(input: LoanCreateInput): Promise<void> {
   // Ensure server components refresh.
   const apiLoan = mapPayloadLoanToApiLoan(created)
   void apiLoan
-  revalidatePath('/loans')
+  revalidatePath('/')
 }
 
 export async function updateLoanAction(input: LoanUpdateInput): Promise<void> {
@@ -113,7 +113,7 @@ export async function updateLoanAction(input: LoanUpdateInput): Promise<void> {
     req: req as any,
   })
 
-  revalidatePath('/loans')
+  revalidatePath('/')
   revalidatePath(`/loans/${input.loanId}`)
 }
 
@@ -143,7 +143,7 @@ export async function deleteLoanAction(loanId: string): Promise<void> {
     req: req as any,
   })
 
-  revalidatePath('/loans')
+  revalidatePath('/')
 }
 
 export async function createPaymentAction(input: PaymentCreateInput): Promise<void> {

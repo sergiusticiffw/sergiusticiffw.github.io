@@ -6,4 +6,3 @@ export async function POST() {
   res.cookies.set('payload-token', '', { path: '/', expires: new Date(0) })
   return res
 }
-

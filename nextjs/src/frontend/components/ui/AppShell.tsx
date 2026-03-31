@@ -94,7 +94,7 @@ export function AppShell({
   isAdmin: boolean
 }) {
   const pathname = usePathname() ?? '/'
-  const isLoans = pathname === '/loans' || pathname.startsWith('/loans/')
+  const isLoans = pathname === '/' || pathname.startsWith('/loans/')
   const isAdminArea = pathname.startsWith('/admin')
   const isProfile = pathname === '/profile'
 
@@ -106,7 +106,7 @@ export function AppShell({
         <div className="mx-auto max-w-5xl px-4 pb-4">
           <div className="rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
             <div className={isAdmin ? 'grid grid-cols-3' : 'grid grid-cols-2'}>
-              <Tab href="/loans" label="Loans" icon={<TabIcon name="loans" />} active={isLoans} />
+              <Tab href="/" label="Loans" icon={<TabIcon name="loans" />} active={isLoans} />
               {isAdmin ? (
                 <Tab href="/admin" label="Admin" icon={<TabIcon name="admin" />} active={isAdminArea} />
               ) : null}

@@ -17,7 +17,7 @@ export function LogoutButton() {
         try {
           await fetch('/logout', { method: 'POST' })
         } finally {
-          router.replace('/admin/login?redirectTo=/loans')
+          router.replace('/login?redirectTo=/')
           router.refresh()
         }
       }}

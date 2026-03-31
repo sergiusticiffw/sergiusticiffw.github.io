@@ -9,7 +9,7 @@ export default async function ProfilePage() {
   try {
     const { req } = await requireAuthedPayloadReqFromServer()
     const user = (req as any)?.user as { email?: string; name?: string; roles?: string[] } | undefined
-    if (!user) redirect('/admin/login?redirectTo=/profile')
+    if (!user) redirect('/login?redirectTo=/profile')
 
     const roleLabel = isAdmin(user) ? 'Admin' : 'User'
 
@@ -36,7 +36,7 @@ export default async function ProfilePage() {
               <LogoutButton />
               <a
                 className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm hover:bg-white/10 transition"
-                href="/loans"
+                href="/"
               >
                 Back to loans
               </a>
@@ -46,7 +46,7 @@ export default async function ProfilePage() {
       </div>
     )
   } catch {
-    redirect('/admin/login?redirectTo=/profile')
+    redirect('/login?redirectTo=/profile')
   }
 }
 

@@ -27,7 +27,7 @@ export default async function LoanDetailPage({
     const { payload, req } = await requireAuthedPayloadReqFromServer()
     const userId = (req.user as any)?.id
     if (!userId) {
-      redirect('/loans')
+      redirect('/')
     }
 
     const loanDoc = await payload.findByID({
@@ -43,7 +43,7 @@ export default async function LoanDetailPage({
         : loanDoc?.field_owner
 
     if (!loanDoc || String(loanOwnerId) !== String(userId)) {
-      redirect('/loans')
+      redirect('/')
     }
 
     initialLoan = mapPayloadLoanToApiLoan(loanDoc)
@@ -72,7 +72,7 @@ export default async function LoanDetailPage({
 
     initialPayments = docs.map(mapPayloadPaymentToApiPaymentItem)
   } catch {
-    redirect(`/admin/login?redirectTo=${encodeURIComponent(`/loans/${loanId}`)}`)
+    redirect(`/login?redirectTo=${encodeURIComponent(`/loans/${loanId}`)}`)
   }
 
   return <LoanDetailClient loanId={loanId} initialLoan={initialLoan} initialPayments={initialPayments} />

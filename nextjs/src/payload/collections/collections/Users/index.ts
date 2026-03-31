@@ -1,6 +1,7 @@
 import type { Access, CollectionConfig, PayloadRequest } from 'payload'
 
 import { authenticated } from '@/payload/access/authenticated'
+import { anyone } from '@/payload/access/anyone'
 
 import { isAdmin } from '@/shared/utilities/payload/common'
 
@@ -24,7 +25,8 @@ export const Users: CollectionConfig = {
   access: {
     // Restrict Payload Admin dashboard to admins only.
     admin: adminDashboardOnly,
-    create: adminOnly,
+    // Public sign-up + OAuth auto-provisioning needs this.
+    create: anyone,
     delete: adminOnly,
     read: ownUserOnly,
     update: ownUserOnly,
@@ -34,6 +36,20 @@ export const Users: CollectionConfig = {
     useAsTitle: 'name',
   },
   auth: true,
+  hooks: {
+    beforeChange: [
+      async ({ data, operation, req }) => {
+        if (operation !== 'create') return data
+
+        // Prevent privilege escalation: only admins can create non-user roles.
+        if (!isAdmin(req.user)) {
+          return { ...(data ?? {}), roles: ['user'] }
+        }
+
+        return data
+      },
+    ],
+  },
   fields: [
     {
       name: 'name',

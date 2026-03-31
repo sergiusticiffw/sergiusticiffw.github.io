@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const LOGIN_PATH = '/admin/login'
+const LOGIN_PATH = '/login'
 
 function base64UrlToString(input: string) {
   const pad = '='.repeat((4 - (input.length % 4)) % 4)
@@ -36,7 +36,7 @@ export function proxy(req: NextRequest) {
   if (pathname.startsWith('/admin')) {
     if (token && !tokenHasAdminRole(token)) {
       const url = req.nextUrl.clone()
-      url.pathname = '/loans'
+      url.pathname = '/'
       url.search = ''
       return NextResponse.redirect(url)
     }
@@ -44,7 +44,7 @@ export function proxy(req: NextRequest) {
   }
 
   // Protect Loans pages: require auth cookie
-  if (!pathname.startsWith('/loans')) return NextResponse.next()
+  if (!(pathname === '/' || pathname.startsWith('/loans'))) return NextResponse.next()
   if (token) return NextResponse.next()
 
   const redirectUrl = req.nextUrl.clone()
@@ -55,5 +55,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/loans', '/loans/:path*', '/admin', '/admin/:path*'],
+  matcher: ['/', '/loans', '/loans/:path*', '/admin', '/admin/:path*'],
 }
