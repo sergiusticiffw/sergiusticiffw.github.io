@@ -36,11 +36,21 @@ export const LoanCostBreakdown = ({
 }) => {
   const { principal, sumOfInterest, sumInstallments } = data
 
+  const textColor = '#e5e7eb' // Tailwind gray-200-ish
+  const mutedTextColor = '#9ca3af' // Tailwind gray-400-ish
+
   const options: Highcharts.Options = {
     chart: { type: 'column', backgroundColor: 'transparent' },
-    title: { text: 'Loan cost breakdown' },
-    xAxis: { categories: ['Principal', 'Interests', 'Installments'] },
-    yAxis: { min: 0, title: { text: currency } },
+    title: { text: 'Loan cost breakdown', style: { color: textColor } },
+    xAxis: {
+      categories: ['Principal', 'Interests', 'Installments'],
+      labels: { style: { color: mutedTextColor } },
+    },
+    yAxis: {
+      min: 0,
+      title: { text: currency, style: { color: textColor } },
+      labels: { style: { color: mutedTextColor } },
+    },
     tooltip: { valueDecimals: 2 },
     legend: { enabled: false },
     series: [
@@ -75,11 +85,26 @@ export const LoanPrincipalOverTime = ({
     else simulated.push([x, y])
   }
 
+  const textColor = '#e5e7eb' // gray-200
+  const mutedTextColor = '#9ca3af' // gray-400
+
   const options: Highcharts.Options = {
     chart: { type: 'line', backgroundColor: 'transparent' },
-    title: { text: 'Remaining principal' },
-    xAxis: { type: 'datetime' },
-    yAxis: { min: 0, title: { text: currency } },
+    title: { text: 'Remaining principal', style: { color: '#e5e7eb' } },
+    xAxis: {
+      type: 'datetime',
+      labels: { style: { color: '#9ca3af' } },
+    },
+    yAxis: {
+      min: 0,
+      title: { text: currency, style: { color: '#e5e7eb' } },
+      labels: { style: { color: '#9ca3af' } },
+    },
+    legend: {
+      enabled: true,
+      itemStyle: { color: mutedTextColor, fontWeight: '600' },
+      itemHoverStyle: { color: textColor },
+    },
     tooltip: { valueDecimals: 2 },
     series: [
       { type: 'line', name: 'Active', data: actual },
@@ -102,11 +127,23 @@ export const LoanAnnualBreakdown = ({
   const interest = years.map((y) => annualSummaries[y]?.total_interest ?? 0)
   const fees = years.map((y) => annualSummaries[y]?.total_fees ?? 0)
 
+  const textColor = '#e5e7eb' // Tailwind gray-200-ish
+  const mutedTextColor = '#9ca3af' // Tailwind gray-400-ish
+
   const options: Highcharts.Options = {
     chart: { type: 'column', backgroundColor: 'transparent' },
-    title: { text: 'Annual breakdown' },
-    xAxis: { categories: years },
-    yAxis: { min: 0, title: { text: currency } },
+    title: { text: 'Annual breakdown', style: { color: textColor } },
+    xAxis: { categories: years, labels: { style: { color: mutedTextColor } } },
+    yAxis: {
+      min: 0,
+      title: { text: currency, style: { color: textColor } },
+      labels: { style: { color: mutedTextColor } },
+    },
+    legend: {
+      enabled: true,
+      itemStyle: { color: mutedTextColor, fontWeight: '600' },
+      itemHoverStyle: { color: textColor },
+    },
     tooltip: { shared: true, valueDecimals: 2 },
     plotOptions: { column: { stacking: 'normal' } },
     series: [

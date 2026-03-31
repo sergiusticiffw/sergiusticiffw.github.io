@@ -101,7 +101,13 @@ export default function LoanOverview({
 
   const principal = paydown.effective_principal ?? loanData.principal ?? 0
   const principalPaid = paydown.sum_of_reductions_after_paid ?? paydown.sum_of_reductions ?? 0
-  const remainingPrincipal = paydown.remaining_principal_after_paid ?? paydown.remaining_principal ?? 0
+  // Make "Remaining" stable and consistent by deriving it from:
+  // remaining = principal - paidReductions
+  // This avoids edge cases where `remaining_principal_after_paid` diverges (e.g. missing was_payed mapping).
+  const derivedRemaining = principal - principalPaid
+  const remainingPrincipal = Number.isFinite(derivedRemaining)
+    ? Math.max(0, derivedRemaining)
+    : paydown.remaining_principal_after_paid ?? paydown.remaining_principal ?? 0
 
   const progressPct = useMemo(() => {
     // Match expenses behavior:
