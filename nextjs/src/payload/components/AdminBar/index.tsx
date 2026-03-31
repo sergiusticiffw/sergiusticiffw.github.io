@@ -72,6 +72,13 @@ export const AdminBar: React.FC<{
             logo: 'text-white',
             user: 'text-white',
           }}
+          // Hide admin-only shortcuts on the frontend shell.
+          createProps={{
+            style: { display: 'none' },
+          }}
+          logoutProps={{
+            style: { display: 'none' },
+          }}
           cmsURL={getClientSideURL()}
           collectionSlug={collection}
           collectionLabels={{
