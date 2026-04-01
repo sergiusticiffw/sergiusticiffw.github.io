@@ -146,7 +146,7 @@ export async function deleteLoanAction(loanId: string): Promise<void> {
   revalidatePath('/')
 }
 
-export async function createPaymentAction(input: PaymentCreateInput): Promise<void> {
+export async function createPaymentAction(input: PaymentCreateInput): Promise<ApiPaymentItem> {
   const { payload, req } = await requireAuthedPayloadReqFromServer()
   const userId = (req.user as any)?.id
   if (!userId) throw new Error('Unauthorized')
@@ -186,13 +186,10 @@ export async function createPaymentAction(input: PaymentCreateInput): Promise<vo
     req: req as any,
   })
 
-  const apiPayment = mapPayloadPaymentToApiPaymentItem(created)
-  void apiPayment
-
-  revalidatePath(`/loans/${input.loanId}`)
+  return mapPayloadPaymentToApiPaymentItem(created)
 }
 
-export async function updatePaymentAction(input: PaymentUpdateInput): Promise<void> {
+export async function updatePaymentAction(input: PaymentUpdateInput): Promise<ApiPaymentItem> {
   const { payload, req } = await requireAuthedPayloadReqFromServer()
   const userId = (req.user as any)?.id
   if (!userId) throw new Error('Unauthorized')
@@ -214,7 +211,7 @@ export async function updatePaymentAction(input: PaymentUpdateInput): Promise<vo
     throw new Error('Forbidden')
   }
 
-  await payload.update({
+  const updated = await payload.update({
     collection: 'payments',
     id: paymentIdNum,
     data: {
@@ -235,7 +232,7 @@ export async function updatePaymentAction(input: PaymentUpdateInput): Promise<vo
     req: req as any,
   })
 
-  revalidatePath(`/loans/${input.loanId}`)
+  return mapPayloadPaymentToApiPaymentItem(updated)
 }
 
 export async function deletePaymentAction(input: {
@@ -269,6 +266,4 @@ export async function deletePaymentAction(input: {
     overrideAccess: false,
     req: req as any,
   })
-
-  revalidatePath(`/loans/${input.loanId}`)
 }

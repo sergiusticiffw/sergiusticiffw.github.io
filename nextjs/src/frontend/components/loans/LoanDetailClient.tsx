@@ -52,7 +52,10 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
   const [loan, setLoan] = useState<ApiLoan | null>(initialLoan)
   const [payments, setPayments] = useState<ApiPaymentItem[]>(initialPayments)
 
-  const [loading, setLoading] = useState(false)
+  const [isSavingLoan, setIsSavingLoan] = useState(false)
+  const [isSavingPayment, setIsSavingPayment] = useState(false)
+  const [isDeletingLoan, setIsDeletingLoan] = useState(false)
+  const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const [showPaymentForm, setShowPaymentForm] = useState(false)
@@ -66,7 +69,10 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
     setLoan(initialLoan)
     setPayments(initialPayments)
     setError(null)
-    setLoading(false)
+    setIsSavingLoan(false)
+    setIsSavingPayment(false)
+    setIsDeletingLoan(false)
+    setDeletingPaymentId(null)
   }, [initialLoan, initialPayments])
 
   const paymentsByDate = useMemo(() => {
@@ -115,7 +121,7 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
 
   const handleSubmitLoan = async (values: ApiLoan) => {
     if (!values.id) throw new Error('Missing loan id')
-    setLoading(true)
+    setIsSavingLoan(true)
     setError(null)
     try {
       await updateLoanAction({
@@ -136,7 +142,7 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to update loan')
     } finally {
-      setLoading(false)
+      setIsSavingLoan(false)
     }
   }
 
@@ -165,31 +171,33 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
       field_is_simulated_payment: values.field_is_simulated_payment,
     }
 
-    setLoading(true)
+    setIsSavingPayment(true)
     setError(null)
     try {
       if (mode === 'create') {
-        await createPaymentAction(payload)
+        const created = await createPaymentAction(payload)
+        setPayments((prev) => sortPaymentsByDate([...prev, created]))
       } else {
         if (!values.id) throw new Error('Missing payment id')
-        await updatePaymentAction({
+        const updated = await updatePaymentAction({
           ...payload,
           paymentId: String(values.id),
         })
+        setPayments((prev) => prev.map((p) => (String(p.id) === String(updated.id) ? updated : p)))
       }
 
       setShowPaymentForm(false)
-      router.refresh()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save payment')
     } finally {
-      setLoading(false)
+      setIsSavingPayment(false)
     }
   }
 
-  if (loading) return <div className="max-w-5xl mx-auto px-4 py-8 text-white/70">Loading…</div>
   if (error) return <div className="max-w-5xl mx-auto px-4 py-8 text-red-400">{error}</div>
   if (!loan) return <div className="max-w-5xl mx-auto px-4 py-8 text-white/70">Loan not found.</div>
+
+  const isBusy = isSavingLoan || isSavingPayment || isDeletingLoan
 
   return (
     <div className="max-w-5xl mx-auto px-4 pt-4 pb-6">
@@ -207,6 +215,7 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
             <button
               type="button"
               className="h-9 px-3 rounded-2xl border border-white/10 bg-white/5 text-sm hover:bg-white/10 transition"
+              disabled={isBusy}
               onClick={() => setShowLoanEdit(true)}
             >
               Edit loan
@@ -217,7 +226,7 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
               onClick={async () => {
                 const ok = window.confirm(`Delete "${loan.title ?? 'loan'}"? This cannot be undone.`)
                 if (!ok) return
-                setLoading(true)
+                setIsDeletingLoan(true)
                 setError(null)
                 try {
                   await deleteLoanAction(String(loan.id))
@@ -226,9 +235,10 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
                 } catch (e) {
                   setError(e instanceof Error ? e.message : 'Failed to delete loan')
                 } finally {
-                  setLoading(false)
+                  setIsDeletingLoan(false)
                 }
               }}
+              disabled={isBusy}
             >
               Delete
             </button>
@@ -264,13 +274,14 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
             <h2 className="font-semibold">Payments</h2>
             <button
               className="rounded-2xl bg-[var(--color-app-accent,#3b82f6)] px-4 py-2 font-medium hover:opacity-90 transition"
+              disabled={isBusy}
               onClick={() => {
                 setMode('create')
                 setFocusedPayment(undefined)
                 setShowPaymentForm(true)
               }}
             >
-              Add payment
+              {isSavingPayment ? 'Saving…' : 'Add payment'}
             </button>
           </div>
 
@@ -309,19 +320,20 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
                       if (!p.id) return
                       const ok = confirm('Delete this payment?')
                       if (!ok) return
-                      setLoading(true)
+                      setDeletingPaymentId(String(p.id))
                       setError(null)
                       try {
                         await deletePaymentAction({ paymentId: String(p.id), loanId })
-                        router.refresh()
+                        setPayments((prev) => prev.filter((x) => String(x.id) !== String(p.id)))
                       } catch (e) {
                         setError(e instanceof Error ? e.message : 'Failed to delete payment')
                       } finally {
-                        setLoading(false)
+                        setDeletingPaymentId(null)
                       }
                     }}
+                    disabled={isBusy || deletingPaymentId === String(p.id)}
                   >
-                    Delete
+                    {deletingPaymentId === String(p.id) ? 'Deleting…' : 'Delete'}
                   </button>
                 </div>
               </div>
@@ -371,13 +383,14 @@ export default function LoanDetailClient({ loanId, initialLoan, initialPayments 
       <button
         type="button"
         className="fixed right-4 bottom-24 z-50 rounded-2xl bg-[var(--color-app-accent,#3b82f6)] px-4 py-3 font-medium shadow-[0_20px_60px_rgba(0,0,0,0.45)] hover:opacity-90 transition lg:hidden"
+        disabled={isBusy}
         onClick={() => {
           setMode('create')
           setFocusedPayment(undefined)
           setShowPaymentForm(true)
         }}
       >
-        + Payment
+        {isSavingPayment ? 'Saving…' : '+ Payment'}
       </button>
     </div>
   )

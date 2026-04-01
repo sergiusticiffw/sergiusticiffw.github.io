@@ -116,6 +116,7 @@ function LoanCard({
           </div>
           <Link
             href={`/loans/${loan.id}`}
+            prefetch
             className="text-sm text-[var(--color-app-accent,#3b82f6)] hover:opacity-90 transition"
           >
             View →
@@ -148,6 +149,13 @@ export default function LoansClient({ initialLoans }: Props) {
   useEffect(() => {
     setLoans(initialLoans)
   }, [initialLoans])
+
+  useEffect(() => {
+    // Warm the cache for instant open of details.
+    for (const loan of initialLoans) {
+      if (loan?.id != null) router.prefetch(`/loans/${loan.id}`)
+    }
+  }, [initialLoans, router])
 
   const filteredLoans = useMemo(() => {
     if (!loans?.length) return []

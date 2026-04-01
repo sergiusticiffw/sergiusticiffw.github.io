@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import React from 'react'
 
 function TabIcon({ name }: { name: 'loans' | 'admin' | 'profile' }) {
@@ -68,6 +68,7 @@ function Tab({
   return (
     <Link
       href={href}
+      prefetch
       className={[
         'flex flex-col items-center justify-center gap-1 py-2 px-3 rounded-2xl transition',
         active ? 'text-white' : 'text-white/60 hover:text-white/80',
@@ -94,9 +95,17 @@ export function AppShell({
   isAdmin: boolean
 }) {
   const pathname = usePathname() ?? '/'
+  const router = useRouter()
   const isLoans = pathname === '/' || pathname.startsWith('/loans/')
   const isAdminArea = pathname.startsWith('/admin')
   const isProfile = pathname === '/profile'
+
+  React.useEffect(() => {
+    router.prefetch('/')
+    router.prefetch('/profile')
+    router.prefetch('/login')
+    if (isAdmin) router.prefetch('/admin')
+  }, [isAdmin, router])
 
   return (
     <div className="min-h-[100vh] bg-background text-foreground">
