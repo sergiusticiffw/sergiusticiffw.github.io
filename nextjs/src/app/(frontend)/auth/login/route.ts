@@ -29,4 +29,3 @@ export async function POST(req: Request) {
   if (setCookie) res.headers.set('set-cookie', setCookie)
   return res
 }
-

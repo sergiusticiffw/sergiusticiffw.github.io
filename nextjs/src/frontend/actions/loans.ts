@@ -246,6 +246,9 @@ export async function deletePaymentAction(input: {
   const userId = (req.user as any)?.id
   if (!userId) throw new Error('Unauthorized')
 
+  const loanIdNum = Number(input.loanId)
+  if (!Number.isFinite(loanIdNum)) throw new Error('Invalid loanId')
+
   const paymentIdNum = Number(input.paymentId)
   if (!Number.isFinite(paymentIdNum)) throw new Error('Invalid paymentId')
 

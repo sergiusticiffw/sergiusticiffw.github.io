@@ -33,6 +33,7 @@ export default async function LoanDetailPage({
     const loanDoc = await payload.findByID({
       collection: 'loans',
       id: loanIdNum,
+      depth: 0,
       overrideAccess: false,
       req: req as any,
     })
@@ -50,6 +51,20 @@ export default async function LoanDetailPage({
 
     const { docs } = await payload.find({
       collection: 'payments',
+      depth: 0,
+      select: {
+        id: true,
+        title: true,
+        field_date: true,
+        field_rate: true,
+        field_pay_installment: true,
+        field_pay_single_fee: true,
+        field_new_recurring_amount: true,
+        field_new_principal: true,
+        field_payment_method: true,
+        field_is_simulated_payment: true,
+        field_loan_reference: true,
+      },
       where: {
         and: [
           {
@@ -77,4 +92,3 @@ export default async function LoanDetailPage({
 
   return <LoanDetailClient loanId={loanId} initialLoan={initialLoan} initialPayments={initialPayments} />
 }
-

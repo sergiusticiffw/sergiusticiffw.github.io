@@ -17,6 +17,20 @@ export default async function LoansPage() {
 
     const { docs } = await payload.find({
       collection: 'loans',
+      depth: 0,
+      select: {
+        id: true,
+        title: true,
+        field_principal: true,
+        field_start_date: true,
+        field_end_date: true,
+        field_rate: true,
+        field_initial_fee: true,
+        field_rec_first_payment_date: true,
+        field_recurring_payment_day: true,
+        field_payment_method: true,
+        field_loan_status: true,
+      },
       where: {
         field_owner: {
           equals: userId,
@@ -35,4 +49,3 @@ export default async function LoansPage() {
 
   return <LoansClient initialLoans={initialLoans} />
 }
-
