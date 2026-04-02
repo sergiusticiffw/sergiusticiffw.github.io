@@ -22,6 +22,7 @@ import IncomeTable from '@features/incomes/components/Income/IncomeTable';
 import IncomeFilters from '@features/incomes/components/Income/IncomeFilters';
 import YearIncomeAverageTrend from '@features/incomes/components/Income/YearIncomeAverageTrend';
 import IncomeIntelligence from '@features/incomes/components/Income/IncomeIntelligence';
+import IncomeExpensesPerYearBarChart from '@features/incomes/components/Income/IncomeExpensesPerYearBarChart';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import {
   PageHeader,
@@ -333,6 +334,12 @@ const Income = () => {
                   (filters.dateRange?.start && filters.dateRange?.end)
                 )
               }
+            />
+          </div>
+          <div className="mb-8">
+            <IncomeExpensesPerYearBarChart
+              filteredIncomeData={filteredIncomeData}
+              dateRange={filters.dateRange}
             />
           </div>
           {filteredIncomeData && filteredIncomeData.length ? (
