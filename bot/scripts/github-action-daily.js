@@ -52,6 +52,10 @@ function shouldSendNow({ timeZone, targetHour = '16', targetMinute = '05', lastS
   return { ok: true, todayKey, reason: 'send' };
 }
 
+function isTrue(value) {
+  return String(value ?? '').trim().toLowerCase() === 'true';
+}
+
 function parseStartCommand(text) {
   if (typeof text !== 'string') return false;
   const t = text.trim();
@@ -151,6 +155,7 @@ async function main() {
   const repoFull = requiredEnv('GITHUB_REPOSITORY'); // owner/repo
   const [owner, repo] = repoFull.split('/');
   const timeZone = 'Europe/Chisinau';
+  const forceSend = isTrue(process.env.FORCE_SEND);
 
   // Ensure Telegram is in polling mode (no webhook), otherwise getUpdates stays empty.
   try {
@@ -199,12 +204,14 @@ async function main() {
   };
 
   // 2) Send daily update only at 16:05 local, once per day.
-  const sendDecision = shouldSendNow({
-    timeZone,
-    targetHour: '16',
-    targetMinute: '05',
-    lastSentDateKey: nextState.lastSentDateKey,
-  });
+  const sendDecision = forceSend
+    ? { ok: true, todayKey: todayKeyInTimeZone(timeZone), reason: 'force_send' }
+    : shouldSendNow({
+        timeZone,
+        targetHour: '16',
+        targetMinute: '05',
+        lastSentDateKey: nextState.lastSentDateKey,
+      });
 
   console.log('[GA] Time check:', sendDecision);
 

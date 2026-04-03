@@ -105,6 +105,8 @@ The next workflow run will pick it up and store the `chat_id`.
 
 In GitHub → Actions → **Telegram Daily Currency Bot** → Run workflow.
 
+You can also set `force_send=true` to send immediately (for testing), without waiting for 16:05.
+
 ## Notes
 
 - If BNM data is missing, the message shows **`Not available yet`** for USD.

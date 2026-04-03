@@ -1,7 +1,12 @@
 name: Telegram Daily Currency Bot
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      force_send:
+        description: "Send immediately (ignore 16:05 check)"
+        required: false
+        default: "false"
   schedule:
     # GitHub schedules are UTC. We run every 5 minutes and the script sends
     # only when local time in Europe/Chisinau is 16:05 (DST-safe).
@@ -40,5 +45,6 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          FORCE_SEND: ${{ github.event.inputs.force_send }}
         run: node scripts/github-action-daily.js
 
