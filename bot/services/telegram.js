@@ -38,5 +38,17 @@ async function getTelegramUpdates({ botToken, offset = 0, timeoutSeconds = 30 } 
   return data?.result ?? [];
 }
 
-module.exports = { sendTelegramMessage, getTelegramUpdates };
+/** Message-like payload from a getUpdates entry (DM, group, or channel post). */
+function getMessageLikeFromUpdate(update) {
+  if (!update || typeof update !== 'object') return null;
+  return (
+    update.message ??
+    update.edited_message ??
+    update.channel_post ??
+    update.edited_channel_post ??
+    null
+  );
+}
+
+module.exports = { sendTelegramMessage, getTelegramUpdates, getMessageLikeFromUpdate };
 

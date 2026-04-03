@@ -5,10 +5,13 @@ This bot sends a daily Telegram message at **16:05** **Europe/Chisinau**. On **G
 - **USD** exchange rate from the National Bank of Moldova (BNM) for **tomorrow**
 - **DXY** (US Dollar Index) current value
 
-## Subscription model (private + groups)
+## Subscription model (private, groups, channels)
 
-Users subscribe by sending **`/start`** to the bot in a **private chat** or in a **group/supergroup** (add the bot to the group first if needed).
-The bot stores each chat's `chat_id` in `data/chat_ids.json` (local) or in the GitHub issue state (Actions) and includes them in the daily updates.
+Users subscribe by sending **`/start`** to the bot in a **private chat**, **group/supergroup**, or (if the bot posts in a **channel**) via a **`/start`** as a **channel post** where the bot is admin.
+
+**Channels:** posting the daily message to a channel usually needs the channel id (often like `-100…`). Add the bot as **administrator** with permission to post messages, then put that id in the **`CHAT_IDS`** secret (see below) — `/start` alone often does not appear in `getUpdates` the same way as in groups.
+
+The bot stores each auto-detected `chat_id` in `data/chat_ids.json` (local) or in the GitHub issue state (Actions). **`CHAT_IDS`** (env / GitHub secret) is **merged** at send time with those lists and is **not** written into the issue.
 
 ## Bot menu (Telegram commands)
 
@@ -67,7 +70,7 @@ npm run start
 ```
 
 The bot starts:
-- polling (`getUpdates`) to capture `/start` in DM or groups
+- polling (`getUpdates`) to capture `/start` in DM, groups, or channel posts
 - scheduling (daily at 16:05 Europe/Chisinau)
 
 ## 100% free mode: GitHub Actions (no VPS)
@@ -78,14 +81,16 @@ If you want this bot to run for free without a server, you can use GitHub Action
 - It also polls Telegram updates during each run to collect new `/start` subscribers.
 - Subscribers and offsets are stored in a GitHub Issue titled **`telegram-bot-subscribers`**.
 
-### 1) Add repository secret
+### 1) Add secrets
 
 In your GitHub repo:
 
 1. Go to **Settings → Secrets and variables → Actions**
-2. Add a **Repository secret**:
-   - Name: `BOT_TOKEN`
-   - Value: your Telegram bot token
+2. Add **Repository secrets** (or use an **Environment** — see below):
+   - **`BOT_TOKEN`** — your Telegram bot token
+   - **`CHAT_IDS`** (optional) — extra recipients, comma- or space-separated numeric ids, e.g. `-1001234567890,359559808`. Merged with subscribers from the `telegram-bot-subscribers` issue on every run.
+
+**Environment secrets:** create an environment under **Settings → Environments** (e.g. `telegram-bot`), add `BOT_TOKEN` and/or `CHAT_IDS` there, then in `.github/workflows/telegram-daily-bot.yml` set `environment: telegram-bot` on the `run` job (see the commented line in the workflow).
 
 ### 2) Enable Actions
 

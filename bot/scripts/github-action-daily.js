@@ -6,7 +6,8 @@ const { getTomorrowDate } = require('../utils/date');
 const { isSubscribeChatType } = require('../utils/chat-types');
 const { fetchBnmUsdRateForDate } = require('../services/bnm');
 const { fetchDxyValue } = require('../services/dxy');
-const { sendTelegramMessage } = require('../services/telegram');
+const { sendTelegramMessage, getMessageLikeFromUpdate } = require('../services/telegram');
+const { mergeRecipientChatIds, parseChatIdsFromEnv } = require('../utils/chat-ids-env');
 
 const STATE_TITLE = 'telegram-bot-subscribers';
 const STATE_MARKER_START = '<!-- BOT_STATE_START -->';
@@ -195,7 +196,7 @@ async function main() {
     const updateId = upd?.update_id;
     if (Number.isFinite(updateId)) maxUpdateId = Math.max(maxUpdateId, updateId);
 
-    const msg = upd?.message ?? upd?.edited_message;
+    const msg = getMessageLikeFromUpdate(upd);
     const chatId = msg?.chat?.id;
     const chatType = msg?.chat?.type;
     const text = msg?.text;
@@ -226,9 +227,17 @@ async function main() {
 
   console.log('[GA] Time check:', sendDecision);
 
+  const extraFromEnv = parseChatIdsFromEnv(process.env.CHAT_IDS);
+  const recipientChatIds = mergeRecipientChatIds(nextState.chatIds, process.env.CHAT_IDS);
+  if (extraFromEnv.length) {
+    console.log(
+      `[GA] CHAT_IDS env: ${extraFromEnv.length} id(s); merged recipients: ${recipientChatIds.length} (issue + env).`
+    );
+  }
+
   if (sendDecision.ok) {
-    if (!nextState.chatIds.length) {
-      console.log('[GA] No subscribers yet; skipping send.');
+    if (!recipientChatIds.length) {
+      console.log('[GA] No recipients (empty issue chatIds and no CHAT_IDS); skipping send.');
     } else {
       const bnmDate = getTomorrowDate(timeZone);
       const [usdRate, dxyValue] = await Promise.all([
@@ -244,9 +253,9 @@ async function main() {
         `DXY: ${dxyText}\n\n` +
         `⏰ Time: 16:05`;
 
-      console.log(`[GA] Sending to ${nextState.chatIds.length} chats...`);
+      console.log(`[GA] Sending to ${recipientChatIds.length} chats...`);
       const results = await Promise.allSettled(
-        nextState.chatIds.map((chatId) => sendTelegramMessage({ botToken, chatId, text }))
+        recipientChatIds.map((chatId) => sendTelegramMessage({ botToken, chatId, text }))
       );
 
       const failed = results.filter((r) => r.status === 'rejected');

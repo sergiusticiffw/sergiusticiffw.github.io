@@ -8,7 +8,8 @@ const { getTomorrowDate, getTodayDate } = require('./utils/date');
 const { isSubscribeChatType } = require('./utils/chat-types');
 const { fetchBnmUsdRateForDate } = require('./services/bnm');
 const { fetchDxyValue, fetchDxyForDate } = require('./services/dxy');
-const { sendTelegramMessage, getTelegramUpdates } = require('./services/telegram');
+const { sendTelegramMessage, getTelegramUpdates, getMessageLikeFromUpdate } = require('./services/telegram');
+const { mergeRecipientChatIds } = require('./utils/chat-ids-env');
 const { getChatIds, addChatId, removeChatId } = require('./utils/chatIdsStore');
 
 function getRequiredEnv(name) {
@@ -61,10 +62,11 @@ async function runDailyUpdate() {
   const timeZone = 'Europe/Chisinau';
   const tomorrow = getTomorrowDate(timeZone);
 
-  const chatIds = await getChatIds();
+  const storedIds = await getChatIds();
+  const chatIds = mergeRecipientChatIds(storedIds, process.env.CHAT_IDS);
 
   if (!chatIds.length) {
-    console.log('[DailyUpdate] No subscribed users yet. Waiting for /start...');
+    console.log('[DailyUpdate] No recipients (no stored chat ids and CHAT_IDS unset).');
     return;
   }
 
@@ -116,7 +118,7 @@ function startScheduler() {
 async function startPolling() {
   // Subscription: poll `getUpdates`; on `/start` in private chat or group, store `chat.id`.
   const botToken = getRequiredEnv('BOT_TOKEN');
-  console.log('[Polling] Starting Telegram polling (listening for /start in DM or groups)...');
+  console.log('[Polling] Starting Telegram polling (/start in DM, groups, or channel posts)...');
 
   let offset = 0;
   while (true) {
@@ -125,7 +127,7 @@ async function startPolling() {
       for (const upd of updates) {
         offset = (upd.update_id ?? offset) + 1;
 
-        const msg = upd?.message ?? upd?.edited_message;
+        const msg = getMessageLikeFromUpdate(upd);
         const chatId = msg?.chat?.id;
         const chatType = msg?.chat?.type;
         if (!chatId) continue;
