@@ -8,8 +8,7 @@ on:
         required: false
         default: "false"
   schedule:
-    # GitHub cron is UTC only. 16:05 Europe/Chisinau is 13:05 UTC (EEST) or 14:05 UTC (EET).
-    # Two daily triggers; the script sends only when local time is exactly 16:05 (the other exits without sending).
+    # GitHub cron is UTC. 16:05 Europe/Chisinau ≈ 13:05 UTC (EEST) or 14:05 UTC (EET).
     - cron: "5 13,14 * * *"
 
 concurrency:
@@ -18,13 +17,10 @@ concurrency:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   run:
     runs-on: ubuntu-latest
-    # Optional: use Environment secrets — create e.g. "telegram-bot", add secrets there, then set:
-    # environment: telegram-bot
     timeout-minutes: 5
     steps:
       - name: Checkout
@@ -41,13 +37,10 @@ jobs:
         working-directory: bot
         run: npm ci
 
-      - name: Run daily bot (poll updates + send if 16:05)
+      - name: Daily send (16:05 Chișinău or force_send)
         working-directory: bot
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_IDS: ${{ secrets.CHAT_IDS }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
           FORCE_SEND: ${{ github.event.inputs.force_send }}
         run: node scripts/github-action-daily.js
-

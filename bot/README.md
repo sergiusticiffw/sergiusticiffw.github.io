@@ -1,6 +1,6 @@
 # Telegram Daily Currency Bot (BNM USD + DXY)
 
-This bot sends a daily Telegram message at **16:05** **Europe/Chisinau**. On **GitHub Actions**, the workflow is scheduled **twice per day in UTC** (13:05 and 14:05 UTC) so one of them lines up with 16:05 local time in summer vs winter; the script sends only when the machine’s local time in that timezone is exactly **16:05**, and **at most once per day**. The message includes:
+This bot sends a daily Telegram message at **16:05** **Europe/Chisinau**. On **GitHub Actions**, the workflow runs **twice per day in UTC**; the script sends only when local time in **Europe/Chisinau** is exactly **16:05** (or when you use **force_send**). Recipients on Actions come only from the **`CHAT_IDS`** secret. The message includes:
 
 - **USD** exchange rate from the National Bank of Moldova (BNM) for **tomorrow**
 - **DXY** (US Dollar Index) current value
@@ -9,9 +9,9 @@ This bot sends a daily Telegram message at **16:05** **Europe/Chisinau**. On **G
 
 Users subscribe by sending **`/start`** to the bot in a **private chat**, **group/supergroup**, or (if the bot posts in a **channel**) via a **`/start`** as a **channel post** where the bot is admin.
 
-**Channels:** posting the daily message to a channel usually needs the channel id (often like `-100…`). Add the bot as **administrator** with permission to post messages, then put that id in the **`CHAT_IDS`** secret (see below) — `/start` alone often does not appear in `getUpdates` the same way as in groups.
+**Channels:** add the bot as **administrator** (post messages) and put the channel **`chat_id`** (often `-100…`) in **`CHAT_IDS`**.
 
-The bot stores each auto-detected `chat_id` in `data/chat_ids.json` (local) or in the GitHub issue state (Actions). **`CHAT_IDS`** (env / GitHub secret) is **merged** at send time with those lists and is **not** written into the issue.
+**Local run (`npm run start`):** `/start` stores `chat_id` in **`data/chat_ids.json`**; optional **`CHAT_IDS`** in `.env` is merged at send time. **GitHub Actions** does not use that file — only the **`CHAT_IDS`** secret.
 
 ## Bot menu (Telegram commands)
 
@@ -84,42 +84,27 @@ The bot starts:
 
 ## 100% free mode: GitHub Actions (no VPS)
 
-If you want this bot to run for free without a server, you can use GitHub Actions:
+The workflow only needs **`BOT_TOKEN`** and **`CHAT_IDS`** (no GitHub Issues, no stored subscriber state).
 
-- The workflow runs **twice daily at fixed UTC times** (see `.github/workflows/telegram-daily-bot.yml`); **Telegram is sent only at 16:05 Europe/Chisinau**, once per calendar day. New `/start` subscribers are picked up on the next scheduled run (or use **Run workflow**).
-- It also polls Telegram updates during each run to collect new `/start` subscribers.
-- Subscribers and offsets are stored in a GitHub Issue titled **`telegram-bot-subscribers`**.
+- Schedule: **twice daily UTC** so one run matches **16:05 Europe/Chisinau** (summer vs winter). The script sends only at that local minute, unless **`force_send`** is true.
+- **`CHAT_IDS`**: comma / space / semicolon separated numeric ids (e.g. `-1001234567890,359559808`). Update the secret when recipients change.
 
-### 1) Add secrets
+### 1) Secrets
 
-In your GitHub repo:
+**Settings → Secrets and variables → Actions** — add:
 
-1. Go to **Settings → Secrets and variables → Actions**
-2. Add **Repository secrets** (or use an **Environment** — see below):
-   - **`BOT_TOKEN`** — your Telegram bot token
-   - **`CHAT_IDS`** (optional) — extra recipients, comma- or space-separated numeric ids, e.g. `-1001234567890,359559808`. Merged with subscribers from the `telegram-bot-subscribers` issue on every run.
+- **`BOT_TOKEN`**
+- **`CHAT_IDS`** (required for scheduled sends; empty list skips send)
 
-**Environment secrets:** create an environment under **Settings → Environments** (e.g. `telegram-bot`), add `BOT_TOKEN` and/or `CHAT_IDS` there, then in `.github/workflows/telegram-daily-bot.yml` set `environment: telegram-bot` on the `run` job (see the commented line in the workflow).
+You can use **Environment** secrets instead: create an environment, add the same names, and set `environment: <name>` on the `run` job in the workflow file.
 
 ### 2) Enable Actions
 
-Ensure GitHub Actions are enabled for the repository.
+Ensure Actions are enabled for the repository.
 
-### 3) Subscribe users
+### 3) Run manually
 
-Users open a DM with the bot (or add it to a group) and send:
-
-```text
-/start
-```
-
-The next workflow run will pick it up and store the `chat_id`.
-
-### 4) Run manually (optional)
-
-In GitHub → Actions → **Telegram Daily Currency Bot** → Run workflow.
-
-You can also set `force_send=true` to send immediately (for testing), without waiting for 16:05.
+**Actions → Telegram Daily Currency Bot → Run workflow**. Use **`force_send=true`** to test without waiting for 16:05.
 
 ## Notes
 
