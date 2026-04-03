@@ -25,5 +25,10 @@ function getTomorrowDate(timeZone = 'Europe/Chisinau') {
   return formatDDMMYYYY(tomorrow, timeZone);
 }
 
-module.exports = { getTomorrowDate };
+function getTodayDate(timeZone = 'Europe/Chisinau') {
+  const today = new Date();
+  return formatDDMMYYYY(today, timeZone);
+}
+
+module.exports = { getTomorrowDate, getTodayDate };
 

@@ -28,6 +28,18 @@ function extractFromChartResponse(parsed) {
   return formatDxy(closeArr[closeArr.length - 1]);
 }
 
+function parseDDMMYYYY(dateStr) {
+  if (typeof dateStr !== 'string') return null;
+  const m = dateStr.trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (!m) return null;
+  const dd = Number(m[1]);
+  const mm = Number(m[2]);
+  const yyyy = Number(m[3]);
+  if (!Number.isFinite(dd) || !Number.isFinite(mm) || !Number.isFinite(yyyy)) return null;
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return null;
+  return { dd, mm, yyyy };
+}
+
 async function fetchFromYahooQuote(symbol = 'DX-Y.NYB', { retries = 3 } = {}) {
   const url = 'https://query1.finance.yahoo.com/v7/finance/quote';
   const params = { symbols: symbol };
@@ -69,6 +81,42 @@ async function fetchFromYahooChart(symbol = 'DX-Y.NYB', { retries = 2 } = {}) {
   throw lastError;
 }
 
+async function fetchDxyForDate(dateDDMMYYYY, { symbol = 'DX-Y.NYB' } = {}) {
+  // Best-effort historical fetch using Yahoo chart endpoint (daily interval).
+  // Yahoo often requires auth for quote endpoint, so we use chart.
+  const parsed = parseDDMMYYYY(dateDDMMYYYY);
+  if (!parsed) return null;
+
+  const { dd, mm, yyyy } = parsed;
+
+  // Use UTC day boundaries (best-effort). DXY trades in US markets, so this may not
+  // perfectly align with NY close, but it is good enough for a simple bot.
+  const start = Math.floor(Date.UTC(yyyy, mm - 1, dd, 0, 0, 0) / 1000);
+  const end = start + 3 * 24 * 60 * 60; // include buffer days
+
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`;
+  try {
+    const { data } = await axios.get(url, {
+      params: { period1: start, period2: end, interval: '1d' },
+      timeout: 20000,
+    });
+
+    const closeArr = data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close ?? null;
+    if (!Array.isArray(closeArr) || closeArr.length === 0) return null;
+
+    // Pick the last non-null close in the returned window.
+    for (let i = closeArr.length - 1; i >= 0; i -= 1) {
+      const v = formatDxy(closeArr[i]);
+      if (v !== null) return v;
+    }
+
+    return null;
+  } catch (err) {
+    console.error('[DXY] Historical chart fetch failed:', err?.message ?? err);
+    return null;
+  }
+}
+
 async function fetchDxyValue({ symbol = 'DX-Y.NYB' } = {}) {
   try {
     const value = await fetchFromYahooQuote(symbol);
@@ -88,5 +136,5 @@ async function fetchDxyValue({ symbol = 'DX-Y.NYB' } = {}) {
   }
 }
 
-module.exports = { fetchDxyValue };
+module.exports = { fetchDxyValue, fetchDxyForDate };
 

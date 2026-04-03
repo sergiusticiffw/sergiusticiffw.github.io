@@ -4,9 +4,9 @@ require('dotenv').config();
 
 const cron = require('node-cron');
 
-const { getTomorrowDate } = require('./utils/date');
+const { getTomorrowDate, getTodayDate } = require('./utils/date');
 const { fetchBnmUsdRateForDate } = require('./services/bnm');
-const { fetchDxyValue } = require('./services/dxy');
+const { fetchDxyValue, fetchDxyForDate } = require('./services/dxy');
 const { sendTelegramMessage, getTelegramUpdates } = require('./services/telegram');
 const { getChatIds, addChatId, removeChatId } = require('./utils/chatIdsStore');
 
@@ -19,7 +19,7 @@ function getRequiredEnv(name) {
 function isStartCommand(text) {
   if (typeof text !== 'string') return false;
   const t = text.trim();
-  return t === '/start' || t.startsWith('/start@');
+  return t === '/start' || t.startsWith('/start ') || t.startsWith('/start@');
 }
 
 function formatMessage({ bnmDate, usdRate, dxyValue }) {
@@ -28,6 +28,29 @@ function formatMessage({ bnmDate, usdRate, dxyValue }) {
 
   // Message format: date in title, then BNM + DXY values.
   return `📊 Daily Currency Update — BNM (${bnmDate})\n\nUSD (BNM): ${usdText}\nDXY: ${dxyText}\n\n⏰ Time: 16:05`;
+}
+
+function formatHelp() {
+  return [
+    'Available commands:',
+    '',
+    '/start - Subscribe to daily updates',
+    '/help - Show this help',
+    '/today - Get today’s USD (BNM) and current DXY',
+    '/tomorrow - Get tomorrow’s USD (BNM) and current DXY',
+    '/date DD.MM.YYYY - Get USD (BNM) + DXY for a specific date (best-effort for DXY)',
+  ].join('\n');
+}
+
+function parseCommand(text) {
+  if (typeof text !== 'string') return null;
+  const trimmed = text.trim();
+  if (!trimmed.startsWith('/')) return null;
+
+  const [cmdRaw, ...rest] = trimmed.split(/\s+/);
+  const cmd = cmdRaw.split('@')[0].toLowerCase();
+  const arg = rest.join(' ').trim();
+  return { cmd, arg };
 }
 
 async function runDailyUpdate() {
@@ -110,11 +133,60 @@ async function startPolling() {
         if (!chatId) continue;
         if (chatType !== 'private') continue; // DM only
 
-        if (!isStartCommand(msg?.text)) continue;
+        const text = msg?.text;
+        const parsed = parseCommand(text);
+        if (!parsed) continue;
 
-        // Save this DM for future scheduled updates.
-        const added = await addChatId(chatId);
-        if (added) console.log(`[Polling] Subscribed chatId=${chatId} via /start.`);
+        if (isStartCommand(text)) {
+          const added = await addChatId(chatId);
+          if (added) console.log(`[Polling] Subscribed chatId=${chatId} via /start.`);
+          await sendTelegramMessage({ botToken, chatId, text: 'Subscribed. Use /help to see commands.' });
+          continue;
+        }
+
+        if (parsed.cmd === '/help') {
+          await sendTelegramMessage({ botToken, chatId, text: formatHelp() });
+          continue;
+        }
+
+        if (parsed.cmd === '/today') {
+          const bnmDate = getTodayDate('Europe/Chisinau');
+          const [usdRate, dxyValue] = await Promise.all([
+            fetchBnmUsdRateForDate(bnmDate).catch(() => null),
+            fetchDxyValue().catch(() => null),
+          ]);
+          await sendTelegramMessage({ botToken, chatId, text: formatMessage({ bnmDate, usdRate, dxyValue }) });
+          continue;
+        }
+
+        if (parsed.cmd === '/tomorrow') {
+          const bnmDate = getTomorrowDate('Europe/Chisinau');
+          const [usdRate, dxyValue] = await Promise.all([
+            fetchBnmUsdRateForDate(bnmDate).catch(() => null),
+            fetchDxyValue().catch(() => null),
+          ]);
+          await sendTelegramMessage({ botToken, chatId, text: formatMessage({ bnmDate, usdRate, dxyValue }) });
+          continue;
+        }
+
+        if (parsed.cmd === '/date') {
+          const bnmDate = parsed.arg;
+          if (!/^\d{2}\.\d{2}\.\d{4}$/.test(bnmDate)) {
+            await sendTelegramMessage({
+              botToken,
+              chatId,
+              text: 'Invalid date format. Use: /date DD.MM.YYYY (example: /date 03.04.2026)',
+            });
+            continue;
+          }
+
+          const usdRate = await fetchBnmUsdRateForDate(bnmDate).catch(() => null);
+          const dxyHistorical = await fetchDxyForDate(bnmDate).catch(() => null);
+          const dxyValue = dxyHistorical ?? (await fetchDxyValue().catch(() => null));
+
+          await sendTelegramMessage({ botToken, chatId, text: formatMessage({ bnmDate, usdRate, dxyValue }) });
+          continue;
+        }
       }
     } catch (err) {
       console.error('[Polling] Error:', err?.message ?? err);
