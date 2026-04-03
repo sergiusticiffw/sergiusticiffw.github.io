@@ -1,9 +1,6 @@
 name: Telegram Daily Currency Bot
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       force_send:
@@ -56,7 +53,7 @@ jobs:
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_IDS: ${{ secrets.CHAT_IDS }}
-          FORCE_SEND: ${{ github.event_name == 'push' && 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.force_send || 'false') }}
+          FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.force_send || 'false' }}
           GA_EVENT_NAME: ${{ github.event_name }}
           TELEGRAM_DEDUP_FILE: ${{ github.workspace }}/bot/.telegram-daily-sent
         run: node scripts/github-action-daily.js
