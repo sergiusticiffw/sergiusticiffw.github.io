@@ -60,6 +60,8 @@ async function fetchBnmUsdRateForDate(dateBnm, { retries = 3 } = {}) {
     dateBnm
   )}`;
 
+  console.log(`[BNM] GET ${url}`);
+
   let lastError = null;
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     try {
@@ -86,4 +88,3 @@ async function fetchBnmUsdRateForDate(dateBnm, { retries = 3 } = {}) {
 }
 
 module.exports = { fetchBnmUsdRateForDate };
-

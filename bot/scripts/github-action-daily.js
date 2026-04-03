@@ -43,13 +43,23 @@ function todayKeyInTimeZone(timeZone) {
   return `${p.yyyy}-${p.mm}-${p.dd}`;
 }
 
-function shouldSendNow({ timeZone, targetHour = '16', targetMinute = '05', lastSentDateKey }) {
+/** Send once per calendar day in `timeZone`, only when local clock is exactly target hour:minute. */
+function shouldSendNow({
+  timeZone,
+  targetHour = '16',
+  targetMinute = '05',
+  lastSentDateKey,
+}) {
   const p = nowInTimeZoneParts(timeZone);
   const todayKey = `${p.yyyy}-${p.mm}-${p.dd}`;
   const isTarget = p.hh === targetHour && p.min === targetMinute;
-  if (!isTarget) return { ok: false, todayKey, reason: 'not_target_time' };
-  if (lastSentDateKey === todayKey) return { ok: false, todayKey, reason: 'already_sent_today' };
-  return { ok: true, todayKey, reason: 'send' };
+  if (!isTarget) {
+    return { ok: false, todayKey, reason: 'not_16_05_local' };
+  }
+  if (lastSentDateKey === todayKey) {
+    return { ok: false, todayKey, reason: 'already_sent_today' };
+  }
+  return { ok: true, todayKey, reason: 'send_16_05' };
 }
 
 function isTrue(value) {
@@ -203,7 +213,7 @@ async function main() {
     lastSentDateKey: currentState.lastSentDateKey ?? null,
   };
 
-  // 2) Send daily update only at 16:05 local, once per day.
+  // 2) Send daily update only at 16:05 local, once per day (workflow is scheduled at matching UTC times).
   const sendDecision = forceSend
     ? { ok: true, todayKey: todayKeyInTimeZone(timeZone), reason: 'force_send' }
     : shouldSendNow({

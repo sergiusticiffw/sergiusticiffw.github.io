@@ -44,6 +44,8 @@ async function fetchFromYahooQuote(symbol = 'DX-Y.NYB', { retries = 3 } = {}) {
   const url = 'https://query1.finance.yahoo.com/v7/finance/quote';
   const params = { symbols: symbol };
 
+  console.log(`[DXY] GET ${url}?symbols=${encodeURIComponent(symbol)} (quote)`);
+
   let lastError = null;
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     try {
@@ -64,6 +66,8 @@ async function fetchFromYahooQuote(symbol = 'DX-Y.NYB', { retries = 3 } = {}) {
 async function fetchFromYahooChart(symbol = 'DX-Y.NYB', { retries = 2 } = {}) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`;
   const params = { range: '1d', interval: '1d' };
+
+  console.log(`[DXY] GET ${url}?range=1d&interval=1d (chart)`);
 
   let lastError = null;
   for (let attempt = 1; attempt <= retries; attempt += 1) {
@@ -95,6 +99,9 @@ async function fetchDxyForDate(dateDDMMYYYY, { symbol = 'DX-Y.NYB' } = {}) {
   const end = start + 3 * 24 * 60 * 60; // include buffer days
 
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}`;
+  console.log(
+    `[DXY] GET ${url}?period1=${start}&period2=${end}&interval=1d (historical chart for ${dateDDMMYYYY})`
+  );
   try {
     const { data } = await axios.get(url, {
       params: { period1: start, period2: end, interval: '1d' },
@@ -137,4 +144,3 @@ async function fetchDxyValue({ symbol = 'DX-Y.NYB' } = {}) {
 }
 
 module.exports = { fetchDxyValue, fetchDxyForDate };
-

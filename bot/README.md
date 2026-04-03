@@ -1,6 +1,6 @@
 # Telegram Daily Currency Bot (BNM USD + DXY)
 
-This bot sends a daily Telegram message at **16:05** in the **Europe/Chisinau** timezone with:
+This bot sends a daily Telegram message at **16:05** **Europe/Chisinau**. On **GitHub Actions**, the workflow is scheduled **twice per day in UTC** (13:05 and 14:05 UTC) so one of them lines up with 16:05 local time in summer vs winter; the script sends only when the machine’s local time in that timezone is exactly **16:05**, and **at most once per day**. The message includes:
 
 - **USD** exchange rate from the National Bank of Moldova (BNM) for **tomorrow**
 - **DXY** (US Dollar Index) current value
@@ -74,7 +74,7 @@ The bot starts:
 
 If you want this bot to run for free without a server, you can use GitHub Actions:
 
-- The workflow runs every 5 minutes (UTC), but **sends only at 16:05 Europe/Chisinau** (DST-safe).
+- The workflow runs **twice daily at fixed UTC times** (see `.github/workflows/telegram-daily-bot.yml`); **Telegram is sent only at 16:05 Europe/Chisinau**, once per calendar day. New `/start` subscribers are picked up on the next scheduled run (or use **Run workflow**).
 - It also polls Telegram updates during each run to collect new `/start` subscribers.
 - Subscribers and offsets are stored in a GitHub Issue titled **`telegram-bot-subscribers`**.
 

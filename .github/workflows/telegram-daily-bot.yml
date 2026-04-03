@@ -8,9 +8,9 @@ on:
         required: false
         default: "false"
   schedule:
-    # GitHub schedules are UTC. We run every 5 minutes and the script sends
-    # only when local time in Europe/Chisinau is 16:05 (DST-safe).
-    - cron: "*/5 * * * *"
+    # GitHub cron is UTC only. 16:05 Europe/Chisinau is 13:05 UTC (EEST) or 14:05 UTC (EET).
+    # Two daily triggers; the script sends only when local time is exactly 16:05 (the other exits without sending).
+    - cron: "5 13,14 * * *"
 
 concurrency:
   group: telegram-daily-bot
