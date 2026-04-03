@@ -3,6 +3,7 @@
 const axios = require('axios');
 
 const { getTomorrowDate } = require('../utils/date');
+const { isSubscribeChatType } = require('../utils/chat-types');
 const { fetchBnmUsdRateForDate } = require('../services/bnm');
 const { fetchDxyValue } = require('../services/dxy');
 const { sendTelegramMessage } = require('../services/telegram');
@@ -199,7 +200,7 @@ async function main() {
     const chatType = msg?.chat?.type;
     const text = msg?.text;
 
-    if (chatType !== 'private') continue;
+    if (!isSubscribeChatType(chatType)) continue;
     if (!Number.isFinite(Number(chatId))) continue;
 
     if (parseStartCommand(text)) {

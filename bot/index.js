@@ -5,6 +5,7 @@ require('dotenv').config();
 const cron = require('node-cron');
 
 const { getTomorrowDate, getTodayDate } = require('./utils/date');
+const { isSubscribeChatType } = require('./utils/chat-types');
 const { fetchBnmUsdRateForDate } = require('./services/bnm');
 const { fetchDxyValue, fetchDxyForDate } = require('./services/dxy');
 const { sendTelegramMessage, getTelegramUpdates } = require('./services/telegram');
@@ -113,12 +114,9 @@ function startScheduler() {
 }
 
 async function startPolling() {
-  // DM subscription mechanism:
-  // - poll `getUpdates`
-  // - when a private chat sends `/start`, store its `chat.id`
-  // - daily cron will then send the update to all stored chat ids
+  // Subscription: poll `getUpdates`; on `/start` in private chat or group, store `chat.id`.
   const botToken = getRequiredEnv('BOT_TOKEN');
-  console.log('[Polling] Starting Telegram polling (listening for /start in DM)...');
+  console.log('[Polling] Starting Telegram polling (listening for /start in DM or groups)...');
 
   let offset = 0;
   while (true) {
@@ -131,7 +129,7 @@ async function startPolling() {
         const chatId = msg?.chat?.id;
         const chatType = msg?.chat?.type;
         if (!chatId) continue;
-        if (chatType !== 'private') continue; // DM only
+        if (!isSubscribeChatType(chatType)) continue;
 
         const text = msg?.text;
         const parsed = parseCommand(text);

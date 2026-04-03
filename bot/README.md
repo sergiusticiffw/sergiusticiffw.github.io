@@ -5,10 +5,10 @@ This bot sends a daily Telegram message at **16:05** **Europe/Chisinau**. On **G
 - **USD** exchange rate from the National Bank of Moldova (BNM) for **tomorrow**
 - **DXY** (US Dollar Index) current value
 
-## Subscription model (DM multi-user)
+## Subscription model (private + groups)
 
-Users subscribe by sending **`/start`** to the bot in a DM.
-The bot stores each user's `chat_id` in `data/chat_ids.json` and includes them in the daily updates.
+Users subscribe by sending **`/start`** to the bot in a **private chat** or in a **group/supergroup** (add the bot to the group first if needed).
+The bot stores each chat's `chat_id` in `data/chat_ids.json` (local) or in the GitHub issue state (Actions) and includes them in the daily updates.
 
 ## Bot menu (Telegram commands)
 
@@ -57,7 +57,7 @@ BOT_TOKEN=PUT_TELEGRAM_BOT_TOKEN_HERE
 
 ### Recommended (no manual work)
 
-For DM multi-user, just send **`/start`** to the bot.
+Send **`/start`** in a DM or in the group where you want the daily message.
 The bot will automatically store your `chat_id`.
 
 ## Run locally
@@ -67,7 +67,7 @@ npm run start
 ```
 
 The bot starts:
-- polling (`getUpdates`) to capture `/start` in DM
+- polling (`getUpdates`) to capture `/start` in DM or groups
 - scheduling (daily at 16:05 Europe/Chisinau)
 
 ## 100% free mode: GitHub Actions (no VPS)
@@ -93,7 +93,7 @@ Ensure GitHub Actions are enabled for the repository.
 
 ### 3) Subscribe users
 
-Users open a DM with the bot and send:
+Users open a DM with the bot (or add it to a group) and send:
 
 ```text
 /start
