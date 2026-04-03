@@ -43,15 +43,15 @@ function todayKeyInTimeZone(timeZone) {
   return `${p.yyyy}-${p.mm}-${p.dd}`;
 }
 
-/** Send only when Europe/Chisinau clock is exactly 16:05 (workflow uses matching UTC crons). */
-function shouldSendNow({ timeZone, targetHour = '16', targetMinute = '05' }) {
+/** Send only when Europe/Chisinau clock is exactly 16:15 (workflow uses matching UTC crons). */
+function shouldSendNow({ timeZone, targetHour = '16', targetMinute = '15' }) {
   const p = nowInTimeZoneParts(timeZone);
   const todayKey = `${p.yyyy}-${p.mm}-${p.dd}`;
   const isTarget = p.hh === targetHour && p.min === targetMinute;
   if (!isTarget) {
-    return { ok: false, todayKey, reason: 'not_16_05_local' };
+    return { ok: false, todayKey, reason: 'not_16_15_local' };
   }
-  return { ok: true, todayKey, reason: 'send_16_05' };
+  return { ok: true, todayKey, reason: 'send_16_15' };
 }
 
 function isTrue(value) {
@@ -77,7 +77,7 @@ async function main() {
 
   const sendDecision = forceSend
     ? { ok: true, todayKey: todayKeyInTimeZone(timeZone), reason: 'force_send' }
-    : shouldSendNow({ timeZone, targetHour: '16', targetMinute: '05' });
+    : shouldSendNow({ timeZone, targetHour: '16', targetMinute: '15' });
 
   console.log('[GA] Time check:', sendDecision);
 
@@ -103,7 +103,7 @@ async function main() {
     `📊 Daily Currency Update — BNM (${bnmDate})\n\n` +
     `USD (BNM): ${usdText}\n` +
     `DXY: ${dxyText}\n\n` +
-    `⏰ Time: 16:05`;
+    `⏰ Time: 16:15`;
 
   console.log(`[GA] Sending to ${recipientChatIds.length} chat(s)...`);
   const results = await Promise.allSettled(

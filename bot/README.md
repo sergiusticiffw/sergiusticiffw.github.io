@@ -1,6 +1,6 @@
 # Telegram Daily Currency Bot (BNM USD + DXY)
 
-This bot sends a daily Telegram message at **16:05** **Europe/Chisinau**. On **GitHub Actions**, the workflow runs **twice per day in UTC**; the script sends only when local time in **Europe/Chisinau** is exactly **16:05** (or when you use **force_send**). Recipients on Actions come only from the **`CHAT_IDS`** secret. The message includes:
+This bot sends a daily Telegram message at **16:15** **Europe/Chisinau**. On **GitHub Actions**, the workflow runs **twice per day in UTC**; the script sends only when local time in **Europe/Chisinau** is exactly **16:15** (or when you use **force_send**). Recipients on Actions come only from the **`CHAT_IDS`** secret. The message includes:
 
 - **USD** exchange rate from the National Bank of Moldova (BNM) for **tomorrow**
 - **DXY** (US Dollar Index) current value
@@ -80,13 +80,13 @@ npm run test:local:send  # same + sends a short Telegram to CHAT_IDS and/or data
 
 The bot starts:
 - polling (`getUpdates`) to capture `/start` in DM, groups, or channel posts
-- scheduling (daily at 16:05 Europe/Chisinau)
+- scheduling (daily at 16:15 Europe/Chisinau)
 
 ## 100% free mode: GitHub Actions (no VPS)
 
 The workflow only needs **`BOT_TOKEN`** and **`CHAT_IDS`** (no GitHub Issues, no stored subscriber state).
 
-- Schedule: **twice daily UTC** so one run matches **16:05 Europe/Chisinau** (summer vs winter). The script sends only at that local minute, unless **`force_send`** is true.
+- Schedule: **twice daily UTC** so one run matches **16:15 Europe/Chisinau** (summer vs winter). The script sends only at that local minute, unless **`force_send`** is true.
 - **`CHAT_IDS`**: comma / space / semicolon separated numeric ids (e.g. `-1001234567890,359559808`). Update the secret when recipients change.
 
 ### 1) Secrets
@@ -104,7 +104,7 @@ Ensure Actions are enabled for the repository.
 
 ### 3) Run manually
 
-**Actions → Telegram Daily Currency Bot → Run workflow**. Use **`force_send=true`** to test without waiting for 16:05.
+**Actions → Telegram Daily Currency Bot → Run workflow**. Use **`force_send=true`** to test without waiting for 16:15.
 
 ## Notes
 

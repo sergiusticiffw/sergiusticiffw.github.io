@@ -29,7 +29,7 @@ function formatMessage({ bnmDate, usdRate, dxyValue }) {
   const dxyText = dxyValue ?? 'Not available yet';
 
   // Message format: date in title, then BNM + DXY values.
-  return `📊 Daily Currency Update — BNM (${bnmDate})\n\nUSD (BNM): ${usdText}\nDXY: ${dxyText}\n\n⏰ Time: 16:05`;
+  return `📊 Daily Currency Update — BNM (${bnmDate})\n\nUSD (BNM): ${usdText}\nDXY: ${dxyText}\n\n⏰ Time: 16:15`;
 }
 
 function formatHelp() {
@@ -106,9 +106,9 @@ async function runDailyUpdate() {
 }
 
 function startScheduler() {
-  // Schedule: 16:05 local time in Europe/Chisinau (cron expression "5 16 * * *").
+  // Schedule: 16:15 local time in Europe/Chisinau (cron "15 16 * * *").
   const timeZone = 'Europe/Chisinau';
-  cron.schedule('5 16 * * *', () => {
+  cron.schedule('15 16 * * *', () => {
     runDailyUpdate().catch((err) => {
       console.error('[DailyUpdate] Unhandled error:', err?.message ?? err);
     });
