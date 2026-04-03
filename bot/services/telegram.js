@@ -5,20 +5,32 @@ const axios = require('axios');
 async function sendTelegramMessage({ botToken, chatId, text }) {
   // Sends a plain text Telegram message using the Bot API.
   if (!botToken) throw new Error('Missing BOT_TOKEN');
-  if (!chatId) throw new Error('Missing CHAT_ID');
+  if (chatId == null || chatId === '') throw new Error('Missing CHAT_ID');
   if (!text) throw new Error('Missing message text');
 
-  const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-  const res = await axios.post(url, {
-    chat_id: chatId,
-    text,
-    disable_web_page_preview: true,
-  });
-
-  if (res?.data?.ok !== true) {
-    const details = res?.data ?? 'Unknown Telegram error';
-    throw new Error(`Telegram sendMessage failed: ${JSON.stringify(details)}`);
+  const { normalizeChatId } = require('../utils/chat-ids-env');
+  const resolvedId = normalizeChatId(chatId);
+  if (resolvedId == null) {
+    throw new Error(`Invalid CHAT_ID (not a finite number): ${JSON.stringify(chatId)}`);
   }
+
+  const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+  const res = await axios.post(
+    url,
+    {
+      chat_id: resolvedId,
+      text,
+      disable_web_page_preview: true,
+    },
+    { validateStatus: () => true }
+  );
+
+  const data = res?.data;
+  if (data?.ok === true) return;
+
+  const code = data?.error_code ?? res.status;
+  const desc = data?.description ?? res.statusText ?? 'Unknown Telegram error';
+  throw new Error(`Telegram sendMessage failed for chat_id=${resolvedId}: [${code}] ${desc}`);
 }
 
 async function getTelegramUpdates({ botToken, offset = 0, timeoutSeconds = 30 } = {}) {

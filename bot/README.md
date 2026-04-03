@@ -69,6 +69,15 @@ The bot will automatically store your `chat_id`.
 npm run start
 ```
 
+### Quick test (no GitHub, no cron)
+
+From `bot/` with `BOT_TOKEN` (and optional `CHAT_IDS`) in `.env`:
+
+```bash
+npm run test:local       # only BNM + DXY fetch; prints values
+npm run test:local:send  # same + sends a short Telegram to CHAT_IDS and/or data/chat_ids.json
+```
+
 The bot starts:
 - polling (`getUpdates`) to capture `/start` in DM, groups, or channel posts
 - scheduling (daily at 16:05 Europe/Chisinau)

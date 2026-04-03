@@ -9,7 +9,9 @@
   },
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "test:local": "node scripts/local-smoke-test.js",
+    "test:local:send": "node scripts/local-smoke-test.js --send"
   },
   "dependencies": {
     "axios": "^1.14.0",
