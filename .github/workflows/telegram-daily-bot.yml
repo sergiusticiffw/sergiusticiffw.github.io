@@ -7,6 +7,10 @@ on:
     # only when local time in Europe/Chisinau is 16:05 (DST-safe).
     - cron: "*/5 * * * *"
 
+concurrency:
+  group: telegram-daily-bot
+  cancel-in-progress: true
+
 permissions:
   contents: read
   issues: write
@@ -14,6 +18,7 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,3 +41,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: node scripts/github-action-daily.js
+
