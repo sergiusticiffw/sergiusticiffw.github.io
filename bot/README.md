@@ -1,6 +1,6 @@
 # Telegram Daily Currency Bot (BNM USD + DXY)
 
-This bot sends a daily Telegram message at **16:15** **Europe/Chisinau** (nominal). On **GitHub Actions**, scheduled runs use a **local window 16:15–17:45** to tolerate GitHub start delays, plus a **cache-backed dedup** so the two daily UTC crons do not send twice the same calendar day. Manual **`force_send`** skips the window and does not write the dedup marker. Recipients on Actions come only from the **`CHAT_IDS`** secret. The message includes:
+This bot sends a daily Telegram message at **16:15** **Europe/Chisinau** when run locally (`npm run start`). On **GitHub Actions**, the workflow runs **once per day** on a fixed **UTC** schedule (see workflow comment: **13:15 UTC** lines up with **16:15** local during **EEST** / summer; in **EET** / winter the same UTC is **15:15** local unless you change the cron). Each run **sends immediately**. You can also trigger it manually (**workflow_dispatch**). Recipients on Actions come only from the **`CHAT_IDS`** secret. The message includes:
 
 - **USD** exchange rate from the National Bank of Moldova (BNM) for **tomorrow**
 - **DXY** (US Dollar Index) current value
@@ -86,7 +86,7 @@ The bot starts:
 
 The workflow only needs **`BOT_TOKEN`** and **`CHAT_IDS`** (no GitHub Issues, no stored subscriber state).
 
-- **Schedule:** **twice daily UTC** (DST-safe). Sends during **16:15–17:45 Europe/Chisinau** once per day (`actions/cache` dedup). **`FORCE_SEND` off** for schedule.
+- **Schedule:** **once daily** at **13:15 UTC** (≈ **16:15** Chișinău in **EEST**). Each run does a fresh `npm ci` then sends.
 - **`CHAT_IDS`**: comma / space / semicolon separated numeric ids (e.g. `-1001234567890,359559808`). Update the secret when recipients change.
 
 ### 1) Secrets
@@ -104,7 +104,7 @@ Ensure Actions are enabled for the repository.
 
 ### 3) Run manually
 
-**Actions → Telegram Daily Currency Bot → Run workflow**. Use **`force_send=true`** to test immediately (ignores the 16:15–17:45 window).
+**Actions → Telegram Daily Currency Bot → Run workflow** to send once on demand (same script as the schedule).
 
 ## Notes
 

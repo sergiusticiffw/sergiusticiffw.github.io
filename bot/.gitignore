@@ -8,9 +8,6 @@ node_modules/
 # Bot runtime data (stored dynamically)
 data/
 
-# GitHub Actions dedup marker (restored/saved via actions/cache)
-.telegram-daily-sent
-
 # IDE
 .idea/
 .vscode/
