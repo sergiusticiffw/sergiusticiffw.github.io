@@ -1,0 +1,20 @@
+{
+  "name": "telegram-daily-currency-bot",
+  "version": "1.0.0",
+  "description": "Daily Telegram bot with BNM USD rate and DXY.",
+  "main": "index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "axios": "^1.14.0",
+    "dotenv": "^17.4.0",
+    "node-cron": "^4.2.1",
+    "xml2js": "^0.6.2"
+  }
+}

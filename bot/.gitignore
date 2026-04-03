@@ -1,0 +1,13 @@
+# Node
+node_modules/
+
+# Secrets
+.env
+
+# Bot runtime data (stored dynamically)
+data/
+
+# IDE
+.idea/
+.vscode/
+
