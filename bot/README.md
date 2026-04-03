@@ -1,6 +1,6 @@
 # Telegram Daily Currency Bot (BNM USD + DXY)
 
-This bot sends a daily Telegram message at **16:15** **Europe/Chisinau**. On **GitHub Actions**, the workflow runs **twice per day in UTC**; the script sends only when local time in **Europe/Chisinau** is exactly **16:15** (or when you use **force_send**). Recipients on Actions come only from the **`CHAT_IDS`** secret. The message includes:
+This bot sends a daily Telegram message at **16:15** **Europe/Chisinau** (nominal). On **GitHub Actions**, scheduled runs use a **local window 16:15–17:45** to tolerate GitHub start delays, plus a **cache-backed dedup** so the two daily UTC crons do not send twice the same calendar day. **Push** / **`force_send`** skip the window and do not write the dedup marker. Recipients on Actions come only from the **`CHAT_IDS`** secret. The message includes:
 
 - **USD** exchange rate from the National Bank of Moldova (BNM) for **tomorrow**
 - **DXY** (US Dollar Index) current value
@@ -86,7 +86,8 @@ The bot starts:
 
 The workflow only needs **`BOT_TOKEN`** and **`CHAT_IDS`** (no GitHub Issues, no stored subscriber state).
 
-- Schedule: **twice daily UTC** so one run matches **16:15 Europe/Chisinau** (summer vs winter). The script sends only at that local minute, unless **`force_send`** is true.
+- **Push to `main`:** each push runs the job with **`FORCE_SEND=true`** (sends immediately if `CHAT_IDS` is set), so you can verify the bot after deploys.
+- **Schedule:** **twice daily UTC** (DST-safe). Sends during **16:15–17:45 Europe/Chisinau** once per day (`actions/cache` dedup). **`FORCE_SEND` off** for schedule.
 - **`CHAT_IDS`**: comma / space / semicolon separated numeric ids (e.g. `-1001234567890,359559808`). Update the secret when recipients change.
 
 ### 1) Secrets
@@ -104,7 +105,7 @@ Ensure Actions are enabled for the repository.
 
 ### 3) Run manually
 
-**Actions → Telegram Daily Currency Bot → Run workflow**. Use **`force_send=true`** to test without waiting for 16:15.
+**Actions → Telegram Daily Currency Bot → Run workflow**. Use **`force_send=true`** to test immediately (ignores the 16:15–17:45 window).
 
 ## Notes
 
