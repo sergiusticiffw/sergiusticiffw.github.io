@@ -70,70 +70,40 @@ The bot starts:
 - polling (`getUpdates`) to capture `/start` in DM
 - scheduling (daily at 16:05 Europe/Chisinau)
 
-## Deploy to Fly.io (no code changes)
+## 100% free mode: GitHub Actions (no VPS)
 
-This bot is a long-running process (polling + daily schedule), so you should deploy it as an always-on app.
+If you want this bot to run for free without a server, you can use GitHub Actions:
 
-### 1) Install `flyctl`
+- The workflow runs every 5 minutes (UTC), but **sends only at 16:05 Europe/Chisinau** (DST-safe).
+- It also polls Telegram updates during each run to collect new `/start` subscribers.
+- Subscribers and offsets are stored in a GitHub Issue titled **`telegram-bot-subscribers`**.
 
-On Linux:
+### 1) Add repository secret
 
-```bash
-curl -L https://fly.io/install.sh | sh
+In your GitHub repo:
+
+1. Go to **Settings → Secrets and variables → Actions**
+2. Add a **Repository secret**:
+   - Name: `BOT_TOKEN`
+   - Value: your Telegram bot token
+
+### 2) Enable Actions
+
+Ensure GitHub Actions are enabled for the repository.
+
+### 3) Subscribe users
+
+Users open a DM with the bot and send:
+
+```text
+/start
 ```
 
-Then ensure `flyctl` is in your `PATH` (you may need to restart the shell).
+The next workflow run will pick it up and store the `chat_id`.
 
-### 2) Login
+### 4) Run manually (optional)
 
-```bash
-fly auth login
-```
-
-### 3) Launch the app from the `bot/` folder
-
-```bash
-cd /var/www/sergiusticiffw.github.io/bot
-fly launch
-```
-
-Suggested answers:
-- App name: any unique name
-- Region: choose something close (e.g. `waw` / `otp`)
-- Deploy now: yes
-
-### 4) Set secrets (required)
-
-```bash
-fly secrets set BOT_TOKEN="PASTE_YOUR_TELEGRAM_BOT_TOKEN_HERE"
-```
-
-### 5) Deploy updates
-
-Whenever you update the code:
-
-```bash
-fly deploy
-```
-
-If Fly cannot detect your app automatically (or you have multiple apps), use:
-
-```bash
-fly apps list
-fly deploy -a YOUR_APP_NAME
-```
-
-To check status and logs:
-
-```bash
-fly status
-fly logs
-```
-
-### 6) Keep it running
-
-If you're on a free tier that can stop/sleep VMs, the bot may stop polling and miss the daily schedule.
-Make sure the Fly app is configured to keep at least 1 machine running.
+In GitHub → Actions → **Telegram Daily Currency Bot** → Run workflow.
 
 ## Notes
 
