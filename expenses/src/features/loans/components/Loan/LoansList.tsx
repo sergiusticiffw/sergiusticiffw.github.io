@@ -15,6 +15,7 @@ import {
 import { Link } from '@tanstack/react-router';
 import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
 import type { ApiLoan } from '@shared/type/types';
+import { isDesktopLayout } from '@shared/utils/isDesktopLayout';
 
 interface LoansListProps {
   loans: ApiLoan[];
@@ -46,6 +47,7 @@ const LoansList: React.FC<LoansListProps> = ({
   const listRef = useRef<HTMLDivElement>(null);
   const [sortField, setSortField] = useState<SortField>('status');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const isDesktop = isDesktopLayout();
   // Use external filter if provided, otherwise use internal state
   const [internalStatusFilter, setInternalStatusFilter] = useState<string>('all');
   const statusFilter = externalStatusFilter !== undefined ? externalStatusFilter : internalStatusFilter;
@@ -200,21 +202,54 @@ const LoansList: React.FC<LoansListProps> = ({
             key={loan.id}
             className="relative w-full rounded-2xl overflow-hidden"
           >
-            <div
-              data-swipe-actions
-              className={`absolute inset-0 flex items-center justify-between pointer-events-none z-[1] rounded-2xl opacity-0 transition-opacity duration-200 ${isThisItemSwiped && (deleteVisible || editVisible) ? 'opacity-100' : ''}`}
-            >
-              {isThisItemSwiped && deleteVisible && (
-                <div className="absolute left-5 w-[50px] h-[50px] rounded-full flex items-center justify-center text-white text-lg bg-gradient-to-br from-red-500 to-red-600 shadow-[0_2px_12px_rgba(239,68,68,0.4)] transition-transform duration-300 [&_svg]:text-[1.25rem] [&_svg]:text-white">
-                  <FiTrash2 />
-                </div>
-              )}
-              {isThisItemSwiped && editVisible && (
-                <div className="absolute right-5 w-[50px] h-[50px] rounded-full flex items-center justify-center text-white text-lg bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] shadow-[0_2px_12px_var(--color-app-accent-shadow)] transition-transform duration-300 [&_svg]:text-[1.25rem] [&_svg]:text-white">
+            {!isDesktop && (
+              <div
+                data-swipe-actions
+                className={`absolute inset-0 flex items-center justify-between pointer-events-none z-[1] rounded-2xl opacity-0 transition-opacity duration-200 ${isThisItemSwiped && (deleteVisible || editVisible) ? 'opacity-100' : ''}`}
+              >
+                {isThisItemSwiped && deleteVisible && (
+                  <div className="absolute left-5 w-[50px] h-[50px] rounded-full flex items-center justify-center text-white text-lg bg-gradient-to-br from-red-500 to-red-600 shadow-[0_2px_12px_rgba(239,68,68,0.4)] transition-transform duration-300 [&_svg]:text-[1.25rem] [&_svg]:text-white">
+                    <FiTrash2 />
+                  </div>
+                )}
+                {isThisItemSwiped && editVisible && (
+                  <div className="absolute right-5 w-[50px] h-[50px] rounded-full flex items-center justify-center text-white text-lg bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] shadow-[0_2px_12px_var(--color-app-accent-shadow)] transition-transform duration-300 [&_svg]:text-[1.25rem] [&_svg]:text-white">
+                    <FiEdit2 />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {isDesktop && (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 z-[3] flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onEdit(loan.id);
+                  }}
+                  className="p-1.5 rounded-md text-app-muted/70 hover:text-app-primary hover:bg-white/10 transition-colors [&_svg]:text-[0.95rem]"
+                  aria-label="Edit"
+                  title="Edit"
+                >
                   <FiEdit2 />
-                </div>
-              )}
-            </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete(loan.id);
+                  }}
+                  className="p-1.5 rounded-md text-app-muted/70 hover:text-app-primary hover:bg-white/10 transition-colors [&_svg]:text-[0.95rem]"
+                  aria-label="Delete"
+                  title="Delete"
+                >
+                  <FiTrash2 />
+                </button>
+              </div>
+            )}
 
             <Link
               to="/expenses/loan/$id"
@@ -222,10 +257,18 @@ const LoansList: React.FC<LoansListProps> = ({
               data-id={loan.id}
               className="bg-app-surface rounded-2xl py-4 pr-6 pl-4 flex items-stretch gap-4 relative z-[1] no-underline cursor-pointer w-full min-h-0 touch-pan-y overflow-hidden transition-all duration-200 hover:bg-app-surface-hover hover:translate-x-1 active:scale-[0.98]"
               style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y pan-x pinch-zoom' }}
-              onTouchStart={(e) => handleTouchStart(e as any, loan.id, listRef)}
-              onTouchMove={(e) => handleTouchMove(e as any, listRef)}
-              onTouchEnd={(e) =>
-                handleTouchEnd(e as any, listRef, loan.id, onEdit, onDelete)
+              onTouchStart={
+                !isDesktop
+                  ? (e) => handleTouchStart(e as any, loan.id, listRef)
+                  : undefined
+              }
+              onTouchMove={
+                !isDesktop ? (e) => handleTouchMove(e as any, listRef) : undefined
+              }
+              onTouchEnd={
+                !isDesktop
+                  ? (e) => handleTouchEnd(e as any, listRef, loan.id, onEdit, onDelete)
+                  : undefined
               }
             >
               <div className="flex-1 min-w-0 flex flex-col gap-2.5 relative z-[1]">

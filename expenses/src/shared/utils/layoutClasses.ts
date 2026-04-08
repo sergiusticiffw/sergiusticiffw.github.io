@@ -5,7 +5,10 @@
 export const PAGE_CONTAINER_CLASS =
   'h-full w-full max-w-full overflow-x-hidden overflow-y-auto relative box-border ' +
   'bg-[var(--color-app-bg)] pt-0 px-4 pb-[calc(80px+env(safe-area-inset-bottom,0))] ' +
-  'md:px-6 [&_*]:box-border overflow-touch';
+  'md:px-6 lg:px-8 ' +
+  // Desktop: keep content readable, centered
+  'min-[1024px]:max-w-[1100px] min-[1024px]:mx-auto ' +
+  '[&_*]:box-border overflow-touch';
 
 /** Buton primar submit (înlocuie .btn-submit) – folosit în formulare și drawer footer */
 export const BTN_SUBMIT_CLASS =
@@ -25,5 +28,7 @@ export const FAB_CLASS =
   'hover:-translate-y-0.5 hover:scale-105 hover:shadow-[0_6px_24px_var(--color-app-accent-shadow),0_0_40px_var(--color-app-glow)] ' +
   'active:translate-y-0 active:scale-[0.98] active:shadow-[0_2px_8px_var(--color-app-accent-shadow)] ' +
   '[&_svg]:w-6 [&_svg]:h-6 [&_svg]:pointer-events-none ' +
+  // Desktop: keep FAB inside centered page width (1100px)
+  "min-[1024px]:right-[calc(50%-550px+1rem)] " +
   'md:bottom-[90px] md:right-4 md:w-[52px] md:h-[52px] md:[&_svg]:w-[22px] md:[&_svg]:h-[22px] ' +
   'max-[480px]:bottom-[calc(80px+env(safe-area-inset-bottom))] max-[480px]:right-3 max-[480px]:w-12 max-[480px]:h-12 max-[480px]:[&_svg]:w-5 max-[480px]:[&_svg]:h-5';

@@ -19,6 +19,7 @@ import { incomeSuggestions } from '@shared/utils/constants';
 import TagDisplay from '@shared/components/Common/TagDisplay';
 import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
 import { useLocalization } from '@shared/context/localization';
+import { isDesktopLayout } from '@shared/utils/isDesktopLayout';
 
 interface IncomeTableProps {
   items: TransactionOrIncomeItem[];
@@ -44,6 +45,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const { t, language } = useLocalization();
+  const isDesktop = isDesktopLayout();
 
   const {
     handleTouchStart,
@@ -170,36 +172,43 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
               key={income.id}
               className={`relative w-full rounded-2xl overflow-hidden ${changeType === 'added' ? 'animate-[slideIn_0.3s_ease]' : ''} ${changeType === 'removed' ? 'animate-[slideOut_0.3s_ease] opacity-50' : ''}`}
             >
-              <div
-                data-swipe-actions
-                className={`absolute inset-0 flex items-center justify-between pointer-events-none z-[1] rounded-2xl opacity-0 transition-opacity duration-200 ${isThisItemSwiped && (deleteVisible || editVisible) ? 'opacity-100' : ''}`}
-              >
-                {isThisItemSwiped && deleteVisible && (
-                  <div className="absolute left-5 w-[50px] h-[50px] rounded-full flex items-center justify-center text-white text-lg bg-gradient-to-br from-red-500 to-red-600 shadow-[0_2px_12px_rgba(239,68,68,0.4)] transition-transform duration-300 [&_svg]:text-[1.25rem] [&_svg]:text-white">
-                    <FiTrash2 />
-                  </div>
-                )}
-                {isThisItemSwiped && editVisible && (
-                  <div className="absolute right-5 w-[50px] h-[50px] rounded-full flex items-center justify-center text-white text-lg bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] shadow-[0_2px_12px_var(--color-app-accent-shadow)] transition-transform duration-300 [&_svg]:text-[1.25rem] [&_svg]:text-white">
-                    <FiEdit2 />
-                  </div>
-                )}
-              </div>
+              {!isDesktop && (
+                <div
+                  data-swipe-actions
+                  className={`absolute inset-0 flex items-center justify-between pointer-events-none z-[1] rounded-2xl opacity-0 transition-opacity duration-200 ${isThisItemSwiped && (deleteVisible || editVisible) ? 'opacity-100' : ''}`}
+                >
+                  {isThisItemSwiped && deleteVisible && (
+                    <div className="absolute left-5 w-[50px] h-[50px] rounded-full flex items-center justify-center text-white text-lg bg-gradient-to-br from-red-500 to-red-600 shadow-[0_2px_12px_rgba(239,68,68,0.4)] transition-transform duration-300 [&_svg]:text-[1.25rem] [&_svg]:text-white">
+                      <FiTrash2 />
+                    </div>
+                  )}
+                  {isThisItemSwiped && editVisible && (
+                    <div className="absolute right-5 w-[50px] h-[50px] rounded-full flex items-center justify-center text-white text-lg bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] shadow-[0_2px_12px_var(--color-app-accent-shadow)] transition-transform duration-300 [&_svg]:text-[1.25rem] [&_svg]:text-white">
+                      <FiEdit2 />
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div
                 data-id={income.id}
                 className="bg-white/[0.05] rounded-2xl py-4 pr-6 pl-4 flex items-start gap-4 cursor-pointer transition-all duration-200 relative z-[1] w-full min-h-0 touch-pan-y overflow-hidden hover:bg-white/10 hover:translate-x-1 active:scale-[0.98]"
                 style={{ touchAction: 'pan-y pan-x pinch-zoom' }}
-                onTouchStart={(e) => handleTouchStart(e, income.id, listRef)}
-                onTouchMove={(e) => handleTouchMove(e, listRef)}
-                onTouchEnd={(e) =>
-                  handleTouchEnd(
-                    e,
-                    listRef,
-                    income.id,
-                    handleEdit,
-                    setShowDeleteModal
-                  )
+                onTouchStart={
+                  !isDesktop ? (e) => handleTouchStart(e, income.id, listRef) : undefined
+                }
+                onTouchMove={!isDesktop ? (e) => handleTouchMove(e, listRef) : undefined}
+                onTouchEnd={
+                  !isDesktop
+                    ? (e) =>
+                        handleTouchEnd(
+                          e,
+                          listRef,
+                          income.id,
+                          handleEdit,
+                          setShowDeleteModal
+                        )
+                    : undefined
                 }
               >
                 <div className="flex flex-col items-center justify-center min-w-[50px] shrink-0">
@@ -225,6 +234,37 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                     status={isPending ? 'pending' : undefined}
                   />
                 </div>
+
+                {isDesktop && (
+                  <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleEdit(income.id);
+                      }}
+                      className="p-1.5 rounded-md text-white/45 hover:text-white/80 hover:bg-white/10 transition-colors [&_svg]:text-[0.95rem]"
+                      aria-label="Edit"
+                      title="Edit"
+                    >
+                      <FiEdit2 />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowDeleteModal(income.id);
+                      }}
+                      className="p-1.5 rounded-md text-white/45 hover:text-white/80 hover:bg-white/10 transition-colors [&_svg]:text-[0.95rem]"
+                      aria-label="Delete"
+                      title="Delete"
+                    >
+                      <FiTrash2 />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );
