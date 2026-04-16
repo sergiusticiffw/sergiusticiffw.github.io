@@ -36,15 +36,20 @@ async function sleep(ms: number) {
 async function handler(req: NextRequest): Promise<Response> {
   const url = new URL(req.url)
 
-  const secret = process.env.BOT_SECRET
-  if (!secret) return new Response('Daily endpoint not configured', { status: 503 })
+  const bearer = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? ''
+  const isCron = url.searchParams.get('cron') === '1'
 
-  const incoming =
-    req.headers.get('x-bot-secret') ||
-    req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
-    url.searchParams.get('secret') ||
-    ''
-  if (incoming !== secret) return new Response('Unauthorized', { status: 401 })
+  if (isCron) {
+    const cronSecret = process.env.CRON_SECRET
+    if (!cronSecret) return new Response('CRON_SECRET not configured', { status: 503 })
+    if (bearer !== cronSecret) return new Response('Unauthorized', { status: 401 })
+  } else {
+    const secret = process.env.BOT_SECRET
+    if (!secret) return new Response('Daily endpoint not configured', { status: 503 })
+    const incoming =
+      req.headers.get('x-bot-secret') || bearer || url.searchParams.get('secret') || ''
+    if (incoming !== secret) return new Response('Unauthorized', { status: 401 })
+  }
 
   const botToken = requireEnv('BOT_TOKEN')
 
@@ -52,7 +57,6 @@ async function handler(req: NextRequest): Promise<Response> {
 
   // Vercel Cron runs in UTC; we schedule both 13:15 and 14:15 UTC and only execute
   // when local time in Europe/Chisinau is exactly 16:15.
-  const isCron = url.searchParams.get('cron') === '1'
   if (isCron) {
     const hhmm = localTimeHHMM(timeZone)
     if (hhmm !== '16:15') {

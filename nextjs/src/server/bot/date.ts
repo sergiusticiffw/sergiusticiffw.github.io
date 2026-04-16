@@ -21,3 +21,8 @@ export function getTodayDate(timeZone = 'Europe/Chisinau') {
   return formatDDMMYYYY(new Date(), timeZone)
 }
 
+export function getYesterdayDate(timeZone = 'Europe/Chisinau') {
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  return formatDDMMYYYY(yesterday, timeZone)
+}
+

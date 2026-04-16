@@ -4,7 +4,7 @@ import { addSubscriber } from '@/server/bot/kvSubscribers'
 import { formatDailyMessage, formatHelp, isStartCommand, parseCommand } from '@/server/bot/commands'
 import { fetchBnmUsdRateForDate } from '@/server/bot/bnm'
 import { fetchDxyForDate, fetchDxyValue } from '@/server/bot/dxy'
-import { getTodayDate, getTomorrowDate } from '@/server/bot/date'
+import { getTodayDate, getTomorrowDate, getYesterdayDate } from '@/server/bot/date'
 import { isSubscribeChatType } from '@/server/bot/chatTypes'
 import { getMessageLikeFromUpdate, normalizeChatId, sendTelegramMessage } from '@/server/bot/telegram'
 
@@ -57,6 +57,16 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   if (parsed && parsed.cmd === '/today') {
     const bnmDate = getTodayDate('Europe/Chisinau')
+    const [usdRate, dxyValue] = await Promise.all([
+      fetchBnmUsdRateForDate(bnmDate).catch(() => null),
+      fetchDxyValue().catch(() => null),
+    ])
+    await sendTelegramMessage({ botToken, chatId, text: formatDailyMessage({ bnmDate, usdRate, dxyValue }) })
+    return Response.json({ ok: true })
+  }
+
+  if (parsed && parsed.cmd === '/yesterday') {
+    const bnmDate = getYesterdayDate('Europe/Chisinau')
     const [usdRate, dxyValue] = await Promise.all([
       fetchBnmUsdRateForDate(bnmDate).catch(() => null),
       fetchDxyValue().catch(() => null),

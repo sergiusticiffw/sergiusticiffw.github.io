@@ -11,6 +11,7 @@ export function formatHelp(): string {
     '/start - Subscribe to daily updates',
     '/help - Show this help',
     '/today - Get today’s USD (BNM) and current DXY',
+    '/yesterday - Get yesterday’s USD (BNM) and current DXY',
     '/tomorrow - Get tomorrow’s USD (BNM) and current DXY',
     '/date DD.MM.YYYY - Get USD (BNM) + DXY for a specific date (best-effort for DXY)',
   ].join('\n')
