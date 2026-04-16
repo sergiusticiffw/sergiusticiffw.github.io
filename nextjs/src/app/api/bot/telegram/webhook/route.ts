@@ -45,7 +45,16 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   if (isStartCommand(text)) {
     if (!isSubscribeChatType(chatType)) return Response.json({ ok: true })
-    await addSubscriber(chatId)
+    try {
+      await addSubscriber(chatId)
+    } catch {
+      await sendTelegramMessage({
+        botToken,
+        chatId,
+        text: 'Could not save your subscription (storage error). Check server logs / KV env vars.',
+      })
+      return Response.json({ ok: true })
+    }
     await sendTelegramMessage({ botToken, chatId, text: 'Subscribed. Use /help to see commands.' })
     return Response.json({ ok: true })
   }
