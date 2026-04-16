@@ -1,2 +1,0 @@
-export { LoanForm } from '../LoanForm'
-
