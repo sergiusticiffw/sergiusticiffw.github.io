@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/bot/daily?cron=1",
+      "schedule": "15 13 * * *"
+    },
+    {
+      "path": "/api/bot/daily?cron=1",
+      "schedule": "15 14 * * *"
+    }
+  ]
+}
+
