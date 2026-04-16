@@ -11,17 +11,14 @@ import { sendTelegramMessage } from '@/server/bot/telegram'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-function localTimeHHMM(timeZone: string): string {
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(new Date())
-  const hh = parts.find((p) => p.type === 'hour')?.value ?? '00'
-  const mm = parts.find((p) => p.type === 'minute')?.value ?? '00'
-  return `${hh}:${mm}`
-}
+/**
+ * Daily send: “tomorrow” BNM date for Europe/Chisinau.
+ *
+ * Cron: `15 14 * * *` = 14:15 UTC (ora din vercel.json).
+ * La Chișinău: 14:15 UTC + 2h = 16:15 când fusul e UTC+2 (EET, ora de iarnă).
+ * Când fusul e UTC+3 (EEST, ora de vară), aceeași oră UTC = 17:15 locală.
+ * Pentru 16:15 locală la UTC+3, folosește `15 13 * * *` (13:15 UTC).
+ */
 
 function requireEnv(name: string): string {
   const v = process.env[name]
@@ -35,34 +32,27 @@ async function sleep(ms: number) {
 
 async function handler(req: NextRequest): Promise<Response> {
   const url = new URL(req.url)
-
   const bearer = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? ''
-  const isCron = url.searchParams.get('cron') === '1'
 
-  if (isCron) {
-    const cronSecret = process.env.CRON_SECRET
-    if (!cronSecret) return new Response('CRON_SECRET not configured', { status: 503 })
-    if (bearer !== cronSecret) return new Response('Unauthorized', { status: 401 })
-  } else {
-    const secret = process.env.BOT_SECRET
-    if (!secret) return new Response('Daily endpoint not configured', { status: 503 })
+  const cronSecret = process.env.CRON_SECRET
+  const botSecret = process.env.BOT_SECRET
+
+  let authorized = false
+  if (cronSecret && bearer === cronSecret) {
+    authorized = true
+  } else if (botSecret) {
     const incoming =
       req.headers.get('x-bot-secret') || bearer || url.searchParams.get('secret') || ''
-    if (incoming !== secret) return new Response('Unauthorized', { status: 401 })
+    if (incoming === botSecret) authorized = true
+  }
+
+  if (!authorized) {
+    if (!cronSecret && !botSecret) return new Response('Daily endpoint not configured', { status: 503 })
+    return new Response('Unauthorized', { status: 401 })
   }
 
   const botToken = requireEnv('BOT_TOKEN')
-
   const timeZone = 'Europe/Chisinau'
-
-  // Vercel Cron runs in UTC; we schedule both 13:15 and 14:15 UTC and only execute
-  // when local time in Europe/Chisinau is exactly 16:15.
-  if (isCron) {
-    const hhmm = localTimeHHMM(timeZone)
-    if (hhmm !== '16:15') {
-      return Response.json({ ok: true, skipped: true, reason: `local_time=${hhmm}` })
-    }
-  }
 
   const bnmDate = getTomorrowDate(timeZone)
 
@@ -113,4 +103,3 @@ export async function GET(req: NextRequest): Promise<Response> {
 export async function POST(req: NextRequest): Promise<Response> {
   return handler(req)
 }
-
