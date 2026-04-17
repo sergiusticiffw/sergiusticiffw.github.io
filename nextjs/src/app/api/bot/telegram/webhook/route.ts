@@ -176,12 +176,20 @@ export async function POST(req: NextRequest): Promise<Response> {
       if (!arg) {
         const pickerUrl = buildDatePickerUrl(chatId)
         if (pickerUrl) {
+          // Telegram doesn't allow `web_app` inline buttons in group chats.
+          const isPrivate = chatType === 'private'
           await sendTelegramMessage({
             botToken,
             chatId,
             text: 'Open the calendar to pick a date, or send /date DD.MM.YYYY:',
             replyMarkup: {
-              inline_keyboard: [[{ text: '📅 Open calendar', web_app: { url: pickerUrl } }]],
+              inline_keyboard: [
+                [
+                  isPrivate
+                    ? { text: '📅 Open calendar', web_app: { url: pickerUrl } }
+                    : { text: '📅 Open calendar', url: pickerUrl },
+                ],
+              ],
             },
           })
         } else {

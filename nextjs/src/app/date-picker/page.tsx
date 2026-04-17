@@ -34,6 +34,7 @@ export default function DatePickerPage() {
   const [ready, setReady] = useState(false)
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [canAutoClose, setCanAutoClose] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [urlParams, setUrlParams] = useState<{ chatId: number; token: string } | null>(null)
 
@@ -43,6 +44,7 @@ export default function DatePickerPage() {
     const finish = () => {
       window.Telegram?.WebApp?.ready()
       window.Telegram?.WebApp?.expand()
+      setCanAutoClose(Boolean(window.Telegram?.WebApp?.close))
       setReady(true)
     }
 
@@ -82,7 +84,19 @@ export default function DatePickerPage() {
       if (res.ok && data?.ok) {
         setSent(true)
         window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
-        setTimeout(() => window.Telegram?.WebApp?.close(), 1200)
+        setTimeout(() => {
+          // When opened via web_app button, Telegram can close the Mini App.
+          // When opened as a normal URL (common in groups), auto-close usually isn't possible.
+          if (window.Telegram?.WebApp?.close) {
+            window.Telegram.WebApp.close()
+            return
+          }
+          try {
+            window.close()
+          } catch {
+            // ignore
+          }
+        }, 1200)
       } else {
         setError(data?.error || 'Failed to send. Try /date ' + ddmmyyyy)
       }
@@ -126,6 +140,11 @@ export default function DatePickerPage() {
       {sent ? (
         <p className="mt-5 text-[#34d399] font-semibold text-base">
           ✅ Sent! Check the chat for results.
+          {!canAutoClose ? (
+            <span className="block mt-2 text-sm font-normal text-white/70">
+              You can now close this page.
+            </span>
+          ) : null}
         </p>
       ) : (
         <button
