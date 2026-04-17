@@ -8,7 +8,12 @@ import { fetchDxyForDate, fetchDxyValue } from '@/server/bot/dxy'
 import { getTodayDate, getTomorrowDate, getYesterdayDate } from '@/server/bot/date'
 import { getTelegramDatePickerUrl } from '@/server/bot/publicSiteUrl'
 import { isSubscribeChatType } from '@/server/bot/chatTypes'
-import { getMessageLikeFromUpdate, normalizeChatId, sendTelegramMessage } from '@/server/bot/telegram'
+import {
+  getMessageLikeFromUpdate,
+  normalizeChatId,
+  sendTelegramMessage,
+  type ReplyMarkup,
+} from '@/server/bot/telegram'
 
 export const runtime = 'nodejs'
 export const maxDuration = 20
@@ -19,12 +24,44 @@ function requireEnv(name: string): string {
   return v
 }
 
+const BTN_TODAY = '📊 Today'
+const BTN_TOMORROW = '📊 Tomorrow'
+const BTN_YESTERDAY = '📊 Yesterday'
+const BTN_DATE = '📅 Pick a date'
+const BTN_HELP = '❓ Help'
+
+function buildMainKeyboard(): ReplyMarkup {
+  const webAppUrl = getTelegramDatePickerUrl()
+  const dateBtn = webAppUrl
+    ? { text: BTN_DATE, web_app: { url: webAppUrl } }
+    : { text: BTN_DATE }
+
+  return {
+    keyboard: [
+      [{ text: BTN_TODAY }, { text: BTN_TOMORROW }],
+      [{ text: BTN_YESTERDAY }, dateBtn],
+      [{ text: BTN_HELP }],
+    ],
+    resize_keyboard: true,
+  }
+}
+
+function matchButton(text: unknown): string | null {
+  if (typeof text !== 'string') return null
+  const t = text.trim()
+  if (t === BTN_TODAY) return '/today'
+  if (t === BTN_TOMORROW) return '/tomorrow'
+  if (t === BTN_YESTERDAY) return '/yesterday'
+  if (t === BTN_DATE) return '/date'
+  if (t === BTN_HELP) return '/help'
+  return null
+}
+
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const secret = process.env.BOT_SECRET
     if (!secret) return new Response('Webhook not configured', { status: 503 })
 
-    // Telegram sends this header when secret token is configured.
     const incomingSecret = req.headers.get('x-telegram-bot-api-secret-token')
     if (incomingSecret !== secret) return new Response('Unauthorized', { status: 401 })
 
@@ -34,7 +71,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     try {
       update = await req.json()
     } catch {
-      // Always 200 for Telegram to avoid retries.
       console.error('[telegram webhook] invalid JSON')
       return Response.json({ ok: true })
     }
@@ -48,11 +84,6 @@ export async function POST(req: NextRequest): Promise<Response> {
       hasWebAppData ? 'web_app_data' : msgText ? `text=${msgText.slice(0, 60)}` : 'no-text',
     )
 
-    /**
-     * IMPORTANT:
-     * Do not rely on getMessageLikeFromUpdate() for Web App data.
-     * Parse web_app_data directly from update.message to avoid dropping fields.
-     */
     const directMessage = update?.message
     const directChatId = normalizeChatId(directMessage?.chat?.id)
     const directWebAppData = directMessage?.web_app_data?.data
@@ -63,16 +94,10 @@ export async function POST(req: NextRequest): Promise<Response> {
           botToken,
           chatId: directChatId,
           text: 'Invalid date format. Expected DD.MM.YYYY.',
+          replyMarkup: buildMainKeyboard(),
         }).catch((err) => console.error('[telegram webhook] sendMessage failed', err))
         return Response.json({ ok: true })
       }
-
-      await sendTelegramMessage({
-        botToken,
-        chatId: directChatId,
-        text: `You picked: ${bnmDate}`,
-        replyMarkup: { remove_keyboard: true },
-      }).catch((err) => console.error('[telegram webhook] sendMessage failed', err))
 
       await sendDateRatesMessage({ botToken, chatId: directChatId, bnmDate, source: 'web_app' }).catch((err) =>
         console.error('[telegram webhook] sendDateRatesMessage failed', err),
@@ -88,8 +113,12 @@ export async function POST(req: NextRequest): Promise<Response> {
     const chatType = msg?.chat?.type
     const text = msg?.text
 
-    const parsed = parseCommand(text)
+    const buttonCmd = matchButton(text)
+    const parsed = buttonCmd ? { cmd: buttonCmd, arg: '' } : parseCommand(text)
+
     if (!parsed && !isStartCommand(text)) return Response.json({ ok: true })
+
+    const kbd = buildMainKeyboard()
 
     if (isStartCommand(text)) {
       if (!isSubscribeChatType(chatType)) return Response.json({ ok: true })
@@ -103,12 +132,17 @@ export async function POST(req: NextRequest): Promise<Response> {
         })
         return Response.json({ ok: true })
       }
-      await sendTelegramMessage({ botToken, chatId, text: 'Subscribed. Use /help to see commands.' })
+      await sendTelegramMessage({
+        botToken,
+        chatId,
+        text: 'Subscribed! Choose an option below or use /help.',
+        replyMarkup: kbd,
+      })
       return Response.json({ ok: true })
     }
 
     if (parsed && parsed.cmd === '/help') {
-      await sendTelegramMessage({ botToken, chatId, text: formatHelp() })
+      await sendTelegramMessage({ botToken, chatId, text: formatHelp(), replyMarkup: kbd })
       return Response.json({ ok: true })
     }
 
@@ -118,7 +152,12 @@ export async function POST(req: NextRequest): Promise<Response> {
         fetchBnmUsdRateForDate(bnmDate).catch(() => null),
         fetchDxyValue().catch(() => null),
       ])
-      await sendTelegramMessage({ botToken, chatId, text: formatDailyMessage({ bnmDate, usdRate, dxyValue }) })
+      await sendTelegramMessage({
+        botToken,
+        chatId,
+        text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
+        replyMarkup: kbd,
+      })
       return Response.json({ ok: true })
     }
 
@@ -128,7 +167,12 @@ export async function POST(req: NextRequest): Promise<Response> {
         fetchBnmUsdRateForDate(bnmDate).catch(() => null),
         fetchDxyValue().catch(() => null),
       ])
-      await sendTelegramMessage({ botToken, chatId, text: formatDailyMessage({ bnmDate, usdRate, dxyValue }) })
+      await sendTelegramMessage({
+        botToken,
+        chatId,
+        text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
+        replyMarkup: kbd,
+      })
       return Response.json({ ok: true })
     }
 
@@ -138,31 +182,24 @@ export async function POST(req: NextRequest): Promise<Response> {
         fetchBnmUsdRateForDate(bnmDate).catch(() => null),
         fetchDxyValue().catch(() => null),
       ])
-      await sendTelegramMessage({ botToken, chatId, text: formatDailyMessage({ bnmDate, usdRate, dxyValue }) })
+      await sendTelegramMessage({
+        botToken,
+        chatId,
+        text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
+        replyMarkup: kbd,
+      })
       return Response.json({ ok: true })
     }
 
     if (parsed && parsed.cmd === '/date') {
       const arg = parsed.arg.trim()
       if (!arg) {
-        const webAppUrl = getTelegramDatePickerUrl()
-        if (webAppUrl) {
-          await sendTelegramMessage({
-            botToken,
-            chatId,
-            text: 'Pick a date or send /date DD.MM.YYYY:',
-            replyMarkup: {
-              inline_keyboard: [[{ text: '📅 Open date picker', web_app: { url: webAppUrl } }]],
-            },
-          })
-        } else {
-          await sendTelegramMessage({
-            botToken,
-            chatId,
-            text:
-              'Date picker URL is not configured. Set NEXT_PUBLIC_SERVER_URL to your public HTTPS origin, or use: /date DD.MM.YYYY',
-          })
-        }
+        await sendTelegramMessage({
+          botToken,
+          chatId,
+          text: 'Tap "📅 Pick a date" below or send /date DD.MM.YYYY:',
+          replyMarkup: kbd,
+        })
         return Response.json({ ok: true })
       }
 
@@ -171,6 +208,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           botToken,
           chatId,
           text: 'Invalid date format. Use: /date DD.MM.YYYY (example: /date 03.04.2026)',
+          replyMarkup: kbd,
         })
         return Response.json({ ok: true })
       }
@@ -181,7 +219,6 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     return Response.json({ ok: true })
   } catch (err) {
-    // Always 200 OK to prevent Telegram retries; log for debugging.
     console.error('[telegram webhook] fatal error', err)
     return Response.json({ ok: true })
   }
