@@ -150,11 +150,9 @@ export async function POST(req: NextRequest): Promise<Response> {
           await sendTelegramMessage({
             botToken,
             chatId,
-            text: 'Pick a date:',
+            text: 'Pick a date or send /date DD.MM.YYYY:',
             replyMarkup: {
-              keyboard: [[{ text: '📅 Pick a date', web_app: { url: webAppUrl } }]],
-              resize_keyboard: true,
-              one_time_keyboard: true,
+              inline_keyboard: [[{ text: '📅 Open date picker', web_app: { url: webAppUrl } }]],
             },
           })
         } else {
