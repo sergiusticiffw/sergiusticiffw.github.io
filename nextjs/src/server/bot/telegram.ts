@@ -23,10 +23,14 @@ export async function sendTelegramMessage({
   botToken,
   chatId,
   text,
+  replyMarkup,
 }: {
   botToken: string
   chatId: number
   text: string
+  replyMarkup?: {
+    inline_keyboard: { text: string; web_app: { url: string } }[][]
+  }
 }): Promise<void> {
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`
   const res = await fetch(url, {
@@ -36,6 +40,7 @@ export async function sendTelegramMessage({
       chat_id: chatId,
       text,
       disable_web_page_preview: true,
+      ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
     }),
   })
 
@@ -70,4 +75,36 @@ export async function setTelegramWebhook({
   const code = data?.error_code ?? res.status
   const desc = data?.description ?? res.statusText ?? 'Unknown Telegram error'
   throw new Error(`Telegram setWebhook failed: [${code}] ${desc}`)
+}
+
+/**
+ * Default Menu Button (next to the message field) opens the same Web App URL as /date.
+ * @see https://core.telegram.org/bots/api#setchatmenubutton
+ */
+export async function setTelegramChatMenuButton({
+  botToken,
+  text,
+  webAppUrl,
+}: {
+  botToken: string
+  text: string
+  webAppUrl: string
+}): Promise<void> {
+  const endpoint = `https://api.telegram.org/bot${botToken}/setChatMenuButton`
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      menu_button: {
+        type: 'web_app',
+        text,
+        web_app: { url: webAppUrl },
+      },
+    }),
+  })
+  const data: any = await res.json().catch(() => null)
+  if (data?.ok === true) return
+  const code = data?.error_code ?? res.status
+  const desc = data?.description ?? res.statusText ?? 'Unknown Telegram error'
+  throw new Error(`Telegram setChatMenuButton failed: [${code}] ${desc}`)
 }

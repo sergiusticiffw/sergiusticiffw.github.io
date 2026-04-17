@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 
 import { setTelegramWebhook } from '@/server/bot/telegram'
 
+/** Telegram acceptă setWebhook doar prin POST (JSON); nu folosi GET în browser la api.telegram.org. */
+
 export const runtime = 'nodejs'
 export const maxDuration = 20
 

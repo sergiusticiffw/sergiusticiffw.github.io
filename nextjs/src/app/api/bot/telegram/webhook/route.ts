@@ -2,9 +2,11 @@ import { NextRequest } from 'next/server'
 
 import { addSubscriber } from '@/server/bot/kvSubscribers'
 import { formatDailyMessage, formatHelp, isStartCommand, parseCommand } from '@/server/bot/commands'
+import { BNM_DATE_REGEX, sendDateRatesMessage } from '@/server/bot/dateRatesReply'
 import { fetchBnmUsdRateForDate } from '@/server/bot/bnm'
 import { fetchDxyForDate, fetchDxyValue } from '@/server/bot/dxy'
 import { getTodayDate, getTomorrowDate, getYesterdayDate } from '@/server/bot/date'
+import { getTelegramDatePickerUrl } from '@/server/bot/publicSiteUrl'
 import { isSubscribeChatType } from '@/server/bot/chatTypes'
 import { getMessageLikeFromUpdate, normalizeChatId, sendTelegramMessage } from '@/server/bot/telegram'
 
@@ -36,9 +38,25 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const msg = getMessageLikeFromUpdate(update)
   const chatId = normalizeChatId(msg?.chat?.id)
+  if (!chatId) return Response.json({ ok: true })
+
+  const webAppData = msg?.web_app_data?.data
+  if (typeof webAppData === 'string' && webAppData.trim()) {
+    const bnmDate = webAppData.trim()
+    if (!BNM_DATE_REGEX.test(bnmDate)) {
+      await sendTelegramMessage({
+        botToken,
+        chatId,
+        text: 'Invalid date format. Expected DD.MM.YYYY.',
+      })
+      return Response.json({ ok: true })
+    }
+    await sendDateRatesMessage({ botToken, chatId, bnmDate, source: 'web_app' })
+    return Response.json({ ok: true })
+  }
+
   const chatType = msg?.chat?.type
   const text = msg?.text
-  if (!chatId) return Response.json({ ok: true })
 
   const parsed = parseCommand(text)
   if (!parsed && !isStartCommand(text)) return Response.json({ ok: true })
@@ -95,8 +113,30 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   if (parsed && parsed.cmd === '/date') {
-    const bnmDate = parsed.arg
-    if (!/^\d{2}\.\d{2}\.\d{4}$/.test(bnmDate)) {
+    const arg = parsed.arg.trim()
+    if (!arg) {
+      const webAppUrl = getTelegramDatePickerUrl()
+      if (webAppUrl) {
+        await sendTelegramMessage({
+          botToken,
+          chatId,
+          text: 'Alege data:',
+          replyMarkup: {
+            inline_keyboard: [[{ text: '📅 Alege data', web_app: { url: webAppUrl } }]],
+          },
+        })
+      } else {
+        await sendTelegramMessage({
+          botToken,
+          chatId,
+          text:
+            'Date picker URL is not configured. Set NEXT_PUBLIC_SERVER_URL to your public HTTPS origin, or use: /date DD.MM.YYYY',
+        })
+      }
+      return Response.json({ ok: true })
+    }
+
+    if (!BNM_DATE_REGEX.test(arg)) {
       await sendTelegramMessage({
         botToken,
         chatId,
@@ -105,14 +145,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       return Response.json({ ok: true })
     }
 
-    const usdRate = await fetchBnmUsdRateForDate(bnmDate).catch(() => null)
-    const dxyHistorical = await fetchDxyForDate(bnmDate).catch(() => null)
-    const dxyValue = dxyHistorical ?? (await fetchDxyValue().catch(() => null))
-
-    await sendTelegramMessage({ botToken, chatId, text: formatDailyMessage({ bnmDate, usdRate, dxyValue }) })
+    await sendDateRatesMessage({ botToken, chatId, bnmDate: arg })
     return Response.json({ ok: true })
   }
 
   return Response.json({ ok: true })
 }
-

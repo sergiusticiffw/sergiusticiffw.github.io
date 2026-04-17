@@ -13,7 +13,7 @@ export function formatHelp(): string {
     '/today - Get today’s USD (BNM) and current DXY',
     '/yesterday - Get yesterday’s USD (BNM) and current DXY',
     '/tomorrow - Get tomorrow’s USD (BNM) and current DXY',
-    '/date DD.MM.YYYY - Get USD (BNM) + DXY for a specific date (best-effort for DXY)',
+    '/date - Open date picker (Web App), or /date DD.MM.YYYY (BNM + DXY)',
   ].join('\n')
 }
 
@@ -26,6 +26,10 @@ export function parseCommand(text: unknown): { cmd: string; arg: string } | null
   const cmd = cmdRaw.split('@')[0].toLowerCase()
   const arg = rest.join(' ').trim()
   return { cmd, arg }
+}
+
+export function formatDatePickedHeader(bnmDate: string): string {
+  return `✅ Date picked — ${bnmDate}`
 }
 
 export function formatDailyMessage({
