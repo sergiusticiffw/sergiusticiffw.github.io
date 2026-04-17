@@ -83,25 +83,38 @@ export async function POST(req: NextRequest): Promise<Response> {
       `[telegram webhook] update_id=${updateId} chat=${chatId_}`,
       hasWebAppData ? 'web_app_data' : msgText ? `text=${msgText.slice(0, 60)}` : 'no-text',
     )
+    if (hasWebAppData) {
+      console.log('[telegram webhook] web_app_data payload:', JSON.stringify(update.message.web_app_data))
+    }
 
     const directMessage = update?.message
     const directChatId = normalizeChatId(directMessage?.chat?.id)
     const directWebAppData = directMessage?.web_app_data?.data
     if (directChatId && typeof directWebAppData === 'string' && directWebAppData.trim()) {
       const bnmDate = directWebAppData.trim()
+      console.log(`[telegram webhook] web_app_data received: "${bnmDate}" chat=${directChatId}`)
+
       if (!BNM_DATE_REGEX.test(bnmDate)) {
         await sendTelegramMessage({
           botToken,
           chatId: directChatId,
-          text: 'Invalid date format. Expected DD.MM.YYYY.',
+          text: `Invalid date format: "${bnmDate}". Expected DD.MM.YYYY.`,
           replyMarkup: buildMainKeyboard(),
         }).catch((err) => console.error('[telegram webhook] sendMessage failed', err))
         return Response.json({ ok: true })
       }
 
-      await sendDateRatesMessage({ botToken, chatId: directChatId, bnmDate, source: 'web_app' }).catch((err) =>
-        console.error('[telegram webhook] sendDateRatesMessage failed', err),
-      )
+      try {
+        await sendDateRatesMessage({ botToken, chatId: directChatId, bnmDate, source: 'web_app' })
+      } catch (err) {
+        console.error('[telegram webhook] sendDateRatesMessage failed', err)
+        await sendTelegramMessage({
+          botToken,
+          chatId: directChatId,
+          text: `✅ Date picked: ${bnmDate}\n\nCould not fetch rates. Try /date ${bnmDate}`,
+          replyMarkup: buildMainKeyboard(),
+        }).catch(() => {})
+      }
 
       return Response.json({ ok: true })
     }
