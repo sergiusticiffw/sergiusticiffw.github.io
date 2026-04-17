@@ -4,7 +4,7 @@ import { addSubscriber } from '@/server/bot/kvSubscribers'
 import { formatDailyMessage, formatHelp, isStartCommand, parseCommand } from '@/server/bot/commands'
 import { BNM_DATE_REGEX, sendDateRatesMessage } from '@/server/bot/dateRatesReply'
 import { fetchBnmUsdRateForDate } from '@/server/bot/bnm'
-import { fetchDxyForDate, fetchDxyValue } from '@/server/bot/dxy'
+import { fetchDxyValue } from '@/server/bot/dxy'
 import { getTodayDate, getTomorrowDate, getYesterdayDate } from '@/server/bot/date'
 import { getPublicSiteBaseUrl } from '@/server/bot/publicSiteUrl'
 import { signChatId } from '@/server/bot/sign'
@@ -13,7 +13,6 @@ import {
   getMessageLikeFromUpdate,
   normalizeChatId,
   sendTelegramMessage,
-  type ReplyMarkup,
 } from '@/server/bot/telegram'
 
 export const runtime = 'nodejs'
@@ -23,34 +22,6 @@ function requireEnv(name: string): string {
   const v = process.env[name]
   if (!v) throw new Error(`Missing env: ${name}`)
   return v
-}
-
-const BTN_TODAY = '📊 Today'
-const BTN_TOMORROW = '📊 Tomorrow'
-const BTN_YESTERDAY = '📊 Yesterday'
-const BTN_DATE = '📅 Pick a date'
-const BTN_HELP = '❓ Help'
-
-function buildMainKeyboard(): ReplyMarkup {
-  return {
-    keyboard: [
-      [{ text: BTN_TODAY }, { text: BTN_TOMORROW }],
-      [{ text: BTN_YESTERDAY }, { text: BTN_DATE }],
-      [{ text: BTN_HELP }],
-    ],
-    resize_keyboard: true,
-  }
-}
-
-function matchButton(text: unknown): string | null {
-  if (typeof text !== 'string') return null
-  const t = text.trim()
-  if (t === BTN_TODAY) return '/today'
-  if (t === BTN_TOMORROW) return '/tomorrow'
-  if (t === BTN_YESTERDAY) return '/yesterday'
-  if (t === BTN_DATE) return '/date'
-  if (t === BTN_HELP) return '/help'
-  return null
 }
 
 function buildDatePickerUrl(chatId: number): string | null {
@@ -97,7 +68,6 @@ export async function POST(req: NextRequest): Promise<Response> {
           botToken,
           chatId: directChatId,
           text: `Invalid date format: "${bnmDate}". Expected DD.MM.YYYY.`,
-          replyMarkup: buildMainKeyboard(),
         }).catch((err) => console.error('[telegram webhook] sendMessage failed', err))
         return Response.json({ ok: true })
       }
@@ -110,7 +80,6 @@ export async function POST(req: NextRequest): Promise<Response> {
           botToken,
           chatId: directChatId,
           text: `✅ Date picked: ${bnmDate}\n\nCould not fetch rates. Try /date ${bnmDate}`,
-          replyMarkup: buildMainKeyboard(),
         }).catch(() => {})
       }
       return Response.json({ ok: true })
@@ -123,12 +92,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     const chatType = msg?.chat?.type
     const text = msg?.text
 
-    const buttonCmd = matchButton(text)
-    const parsed = buttonCmd ? { cmd: buttonCmd, arg: '' } : parseCommand(text)
-
+    const parsed = parseCommand(text)
     if (!parsed && !isStartCommand(text)) return Response.json({ ok: true })
-
-    const kbd = buildMainKeyboard()
 
     if (isStartCommand(text)) {
       if (!isSubscribeChatType(chatType)) return Response.json({ ok: true })
@@ -145,14 +110,13 @@ export async function POST(req: NextRequest): Promise<Response> {
       await sendTelegramMessage({
         botToken,
         chatId,
-        text: 'Subscribed! Choose an option below or use /help.',
-        replyMarkup: kbd,
+        text: 'Subscribed! Use /help to see commands.',
       })
       return Response.json({ ok: true })
     }
 
     if (parsed && parsed.cmd === '/help') {
-      await sendTelegramMessage({ botToken, chatId, text: formatHelp(), replyMarkup: kbd })
+      await sendTelegramMessage({ botToken, chatId, text: formatHelp() })
       return Response.json({ ok: true })
     }
 
@@ -166,7 +130,6 @@ export async function POST(req: NextRequest): Promise<Response> {
         botToken,
         chatId,
         text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
-        replyMarkup: kbd,
       })
       return Response.json({ ok: true })
     }
@@ -181,7 +144,6 @@ export async function POST(req: NextRequest): Promise<Response> {
         botToken,
         chatId,
         text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
-        replyMarkup: kbd,
       })
       return Response.json({ ok: true })
     }
@@ -196,7 +158,6 @@ export async function POST(req: NextRequest): Promise<Response> {
         botToken,
         chatId,
         text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
-        replyMarkup: kbd,
       })
       return Response.json({ ok: true })
     }
@@ -219,7 +180,6 @@ export async function POST(req: NextRequest): Promise<Response> {
             botToken,
             chatId,
             text: 'Send a date: /date DD.MM.YYYY (example: /date 17.04.2026)',
-            replyMarkup: kbd,
           })
         }
         return Response.json({ ok: true })
@@ -230,7 +190,6 @@ export async function POST(req: NextRequest): Promise<Response> {
           botToken,
           chatId,
           text: 'Invalid date format. Use: /date DD.MM.YYYY (example: /date 03.04.2026)',
-          replyMarkup: kbd,
         })
         return Response.json({ ok: true })
       }

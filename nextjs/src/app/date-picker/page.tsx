@@ -4,34 +4,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 const SCRIPT = 'https://telegram.org/js/telegram-web-app.js'
 
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
-const DAY_LABELS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
-
-function todayParts() {
+function todayIso(): string {
   const d = new Date()
-  return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() }
-}
-
-function toIso(year: number, month: number, day: number) {
-  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
 function isoToDDMMYYYY(iso: string): string | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim())
   if (!m) return null
   return `${m[3]}.${m[2]}.${m[1]}`
-}
-
-function getDaysInMonth(year: number, month: number) {
-  return new Date(year, month + 1, 0).getDate()
-}
-
-function startDayOfWeek(year: number, month: number) {
-  const d = new Date(year, month, 1).getDay()
-  return (d + 6) % 7
 }
 
 function getUrlParams(): { chatId: number; token: string } | null {
@@ -45,105 +29,8 @@ function getUrlParams(): { chatId: number; token: string } | null {
   return { chatId, token: t }
 }
 
-function Calendar({
-  selectedIso,
-  onSelect,
-}: {
-  selectedIso: string
-  onSelect: (iso: string) => void
-}) {
-  const today = todayParts()
-  const todayIso = toIso(today.year, today.month, today.day)
-
-  const selParts = useMemo(() => {
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(selectedIso)
-    if (!m) return today
-    return { year: +m[1], month: +m[2] - 1, day: +m[3] }
-  }, [selectedIso])
-
-  const [viewYear, setViewYear] = useState(selParts.year)
-  const [viewMonth, setViewMonth] = useState(selParts.month)
-
-  const daysInMonth = getDaysInMonth(viewYear, viewMonth)
-  const offset = startDayOfWeek(viewYear, viewMonth)
-
-  const prev = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1) }
-    else setViewMonth(m => m - 1)
-  }
-  const next = () => {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1) }
-    else setViewMonth(m => m + 1)
-  }
-
-  const cells: (number | null)[] = []
-  for (let i = 0; i < offset; i++) cells.push(null)
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
-
-  return (
-    <div className="w-full max-w-[340px]">
-      <div className="flex items-center justify-between mb-3">
-        <button
-          type="button"
-          onClick={prev}
-          className="w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:bg-white/10 active:bg-white/15 transition-colors text-lg"
-          aria-label="Previous month"
-        >
-          ‹
-        </button>
-        <span className="text-[0.95rem] font-semibold text-white">
-          {MONTH_NAMES[viewMonth]} {viewYear}
-        </span>
-        <button
-          type="button"
-          onClick={next}
-          className="w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:bg-white/10 active:bg-white/15 transition-colors text-lg"
-          aria-label="Next month"
-        >
-          ›
-        </button>
-      </div>
-
-      <div className="grid grid-cols-7 mb-1">
-        {DAY_LABELS.map(l => (
-          <div key={l} className="text-center text-[0.7rem] font-medium text-white/40 py-1">
-            {l}
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 gap-y-0.5">
-        {cells.map((day, i) => {
-          if (day === null) return <div key={`e${i}`} />
-          const iso = toIso(viewYear, viewMonth, day)
-          const isSelected = iso === selectedIso
-          const isToday = iso === todayIso
-          return (
-            <button
-              key={iso}
-              type="button"
-              onClick={() => onSelect(iso)}
-              className={[
-                'mx-auto w-9 h-9 flex items-center justify-center rounded-full text-sm transition-colors',
-                isSelected
-                  ? 'bg-[#2aabee] text-white font-semibold'
-                  : isToday
-                    ? 'ring-1 ring-[#2aabee] text-[#2aabee] font-semibold hover:bg-white/10'
-                    : 'text-white/80 hover:bg-white/10 active:bg-white/15',
-              ].join(' ')}
-            >
-              {day}
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 export default function DatePickerPage() {
-  const t = todayParts()
-  const [iso, setIso] = useState(() => toIso(t.year, t.month, t.day))
+  const [iso, setIso] = useState(todayIso)
   const [ready, setReady] = useState(false)
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
@@ -168,14 +55,11 @@ export default function DatePickerPage() {
     s.src = SCRIPT
     s.async = true
     s.onload = finish
-    s.onerror = () => {
-      setReady(true)
-    }
+    s.onerror = () => setReady(true)
     document.body.appendChild(s)
   }, [])
 
   const ddmmyyyy = useMemo(() => isoToDDMMYYYY(iso), [iso])
-
   const canSend = ready && !!ddmmyyyy && !!urlParams && !sending && !sent
 
   const onSend = useCallback(async () => {
@@ -198,13 +82,11 @@ export default function DatePickerPage() {
       if (res.ok && data?.ok) {
         setSent(true)
         window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
-        setTimeout(() => {
-          window.Telegram?.WebApp?.close()
-        }, 1200)
+        setTimeout(() => window.Telegram?.WebApp?.close(), 1200)
       } else {
         setError(data?.error || 'Failed to send. Try /date ' + ddmmyyyy)
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Check your connection.')
     } finally {
       setSending(false)
@@ -212,7 +94,7 @@ export default function DatePickerPage() {
   }, [ddmmyyyy, urlParams])
 
   return (
-    <div className="min-h-screen box-border p-5 bg-[#0a0a0a] text-[#ededed] font-[system-ui,sans-serif]">
+    <div className="min-h-screen p-5 bg-[#0a0a0a] text-[#ededed] font-[system-ui,sans-serif]">
       <h1 className="text-xl mb-2">Pick a date</h1>
       <p className="text-sm opacity-85 mb-4">
         BNM (USD) rate for the selected day.
@@ -225,7 +107,15 @@ export default function DatePickerPage() {
         </p>
       ) : null}
 
-      <Calendar selectedIso={iso} onSelect={setIso} />
+      <label className="block mb-1.5 text-sm" htmlFor="d">Date</label>
+      <input
+        id="d"
+        type="date"
+        value={iso}
+        onChange={(e) => setIso(e.target.value)}
+        disabled={!ready}
+        className="w-full max-w-[300px] px-3.5 py-3 rounded-xl border border-white/20 bg-white/[0.06] text-inherit text-base"
+      />
 
       {ddmmyyyy ? (
         <p className="mt-3 text-sm opacity-90">

@@ -24,14 +24,11 @@ type InlineKeyboardMarkup = {
 }
 
 type ReplyKeyboardMarkup = {
-  keyboard: { text: string; web_app?: { url: string } }[][]
+  keyboard: { text: string }[][]
   resize_keyboard?: boolean
-  one_time_keyboard?: boolean
 }
 
-type ReplyKeyboardRemove = { remove_keyboard: true }
-
-export type ReplyMarkup = InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove
+export type ReplyMarkup = InlineKeyboardMarkup | ReplyKeyboardMarkup
 
 export async function sendTelegramMessage({
   botToken,
