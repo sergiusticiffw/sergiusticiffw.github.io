@@ -20,43 +20,72 @@ function requireEnv(name: string): string {
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
-  const secret = process.env.BOT_SECRET
-  if (!secret) return new Response('Webhook not configured', { status: 503 })
-
-  // Telegram sends this header when secret token is configured.
-  const incomingSecret = req.headers.get('x-telegram-bot-api-secret-token')
-  if (incomingSecret !== secret) return new Response('Unauthorized', { status: 401 })
-
-  const botToken = requireEnv('BOT_TOKEN')
-
-  let update: any
   try {
-    update = await req.json()
-  } catch {
-    return new Response('Invalid JSON', { status: 400 })
-  }
+    const secret = process.env.BOT_SECRET
+    if (!secret) return new Response('Webhook not configured', { status: 503 })
 
-  const msg = getMessageLikeFromUpdate(update)
-  const chatId = normalizeChatId(msg?.chat?.id)
-  if (!chatId) return Response.json({ ok: true })
+    // Telegram sends this header when secret token is configured.
+    const incomingSecret = req.headers.get('x-telegram-bot-api-secret-token')
+    if (incomingSecret !== secret) return new Response('Unauthorized', { status: 401 })
 
-  const webAppData = msg?.web_app_data?.data
-  if (typeof webAppData === 'string' && webAppData.trim()) {
-    const bnmDate = webAppData.trim()
-    if (!BNM_DATE_REGEX.test(bnmDate)) {
-      await sendTelegramMessage({
-        botToken,
-        chatId,
-        text: 'Invalid date format. Expected DD.MM.YYYY.',
-      })
+    const botToken = requireEnv('BOT_TOKEN')
+
+    let update: any
+    try {
+      update = await req.json()
+    } catch {
+      // Always 200 for Telegram to avoid retries.
+      console.error('[telegram webhook] invalid JSON')
       return Response.json({ ok: true })
     }
-    await sendDateRatesMessage({ botToken, chatId, bnmDate, source: 'web_app' })
-    return Response.json({ ok: true })
-  }
 
-  const chatType = msg?.chat?.type
-  const text = msg?.text
+    // Full update logging for debugging (truncate to keep logs safe-ish).
+    try {
+      const raw = JSON.stringify(update)
+      console.log('[telegram webhook] update', raw.length > 12000 ? `${raw.slice(0, 12000)}…` : raw)
+    } catch {
+      console.log('[telegram webhook] update (non-serializable)')
+    }
+
+    /**
+     * IMPORTANT:
+     * Do not rely on getMessageLikeFromUpdate() for Web App data.
+     * Parse web_app_data directly from update.message to avoid dropping fields.
+     */
+    const directMessage = update?.message
+    const directChatId = normalizeChatId(directMessage?.chat?.id)
+    const directWebAppData = directMessage?.web_app_data?.data
+    if (directChatId && typeof directWebAppData === 'string' && directWebAppData.trim()) {
+      const bnmDate = directWebAppData.trim()
+      if (!BNM_DATE_REGEX.test(bnmDate)) {
+        await sendTelegramMessage({
+          botToken,
+          chatId: directChatId,
+          text: 'Invalid date format. Expected DD.MM.YYYY.',
+        }).catch((err) => console.error('[telegram webhook] sendMessage failed', err))
+        return Response.json({ ok: true })
+      }
+
+      // Explicit feedback required by UX: show the selected date in chat.
+      await sendTelegramMessage({
+        botToken,
+        chatId: directChatId,
+        text: `Ai ales data: ${bnmDate}`,
+      }).catch((err) => console.error('[telegram webhook] sendMessage failed', err))
+
+      await sendDateRatesMessage({ botToken, chatId: directChatId, bnmDate, source: 'web_app' }).catch((err) =>
+        console.error('[telegram webhook] sendDateRatesMessage failed', err),
+      )
+
+      return Response.json({ ok: true })
+    }
+
+    const msg = getMessageLikeFromUpdate(update)
+    const chatId = normalizeChatId(msg?.chat?.id)
+    if (!chatId) return Response.json({ ok: true })
+
+    const chatType = msg?.chat?.type
+    const text = msg?.text
 
   const parsed = parseCommand(text)
   if (!parsed && !isStartCommand(text)) return Response.json({ ok: true })
@@ -150,4 +179,9 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   return Response.json({ ok: true })
+  } catch (err) {
+    // Always 200 OK to prevent Telegram retries; log for debugging.
+    console.error('[telegram webhook] fatal error', err)
+    return Response.json({ ok: true })
+  }
 }

@@ -38,7 +38,7 @@ export default function DatePickerPage() {
       window.Telegram?.WebApp?.expand()
       setReady(true)
     }
-    s.onerror = () => setError('Nu s-a putut încărca Telegram Web App.')
+    s.onerror = () => setError('Could not load Telegram Web App.')
     document.body.appendChild(s)
   }, [])
 
@@ -47,12 +47,12 @@ export default function DatePickerPage() {
   const onSend = useCallback(() => {
     setError(null)
     if (!ddmmyyyy) {
-      setError('Dată invalidă.')
+      setError('Invalid date.')
       return
     }
     const tg = window.Telegram?.WebApp
     if (!tg) {
-      setError('Deschide pagina din Telegram (Web App) ca să trimiți data.')
+      setError('Open this page from Telegram (Web App) to send the date.')
       return
     }
     tg.HapticFeedback?.notificationOccurred('success')
@@ -71,12 +71,12 @@ export default function DatePickerPage() {
         fontFamily: 'system-ui, sans-serif',
       }}
     >
-      <h1 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>Alege data</h1>
+      <h1 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>Pick a date</h1>
       <p style={{ fontSize: '0.9rem', opacity: 0.85, marginBottom: '16px' }}>
-        Curs BNM (USD) pentru ziua selectată; trimite în chat prin butonul de mai jos.
+        BNM (USD) rate for the selected day; send it to the bot via the button below.
       </p>
       <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem' }} htmlFor="d">
-        Dată
+        Date
       </label>
       <input
         id="d"
@@ -115,13 +115,13 @@ export default function DatePickerPage() {
           opacity: ready && ddmmyyyy ? 1 : 0.5,
         }}
       >
-        Trimite la bot
+        Send to bot
       </button>
       {error ? (
         <p style={{ marginTop: '14px', color: '#f87171', fontSize: '0.9rem' }}>{error}</p>
       ) : null}
       {!ready && !error ? (
-        <p style={{ marginTop: '14px', fontSize: '0.85rem', opacity: 0.7 }}>Se încarcă…</p>
+        <p style={{ marginTop: '14px', fontSize: '0.85rem', opacity: 0.7 }}>Loading…</p>
       ) : null}
     </div>
   )
