@@ -4,12 +4,19 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 const SCRIPT = 'https://telegram.org/js/telegram-web-app.js'
 
-function todayIsoLocal(): string {
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+const DAY_LABELS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+
+function todayParts() {
   const d = new Date()
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+  return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() }
+}
+
+function toIso(year: number, month: number, day: number) {
+  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
 function isoToDDMMYYYY(iso: string): string | null {
@@ -23,8 +30,118 @@ function hasTelegramInitData(): boolean {
   return typeof init === 'string' && init.length > 0
 }
 
+function getDaysInMonth(year: number, month: number) {
+  return new Date(year, month + 1, 0).getDate()
+}
+
+/** 0 = Mon … 6 = Sun (ISO weekday) */
+function startDayOfWeek(year: number, month: number) {
+  const d = new Date(year, month, 1).getDay()
+  return (d + 6) % 7
+}
+
+function Calendar({
+  selectedIso,
+  onSelect,
+}: {
+  selectedIso: string
+  onSelect: (iso: string) => void
+}) {
+  const today = todayParts()
+  const todayIso = toIso(today.year, today.month, today.day)
+
+  const selParts = useMemo(() => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(selectedIso)
+    if (!m) return today
+    return { year: +m[1], month: +m[2] - 1, day: +m[3] }
+  }, [selectedIso])
+
+  const [viewYear, setViewYear] = useState(selParts.year)
+  const [viewMonth, setViewMonth] = useState(selParts.month)
+
+  const daysInMonth = getDaysInMonth(viewYear, viewMonth)
+  const offset = startDayOfWeek(viewYear, viewMonth)
+
+  const prev = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1) }
+    else setViewMonth(m => m - 1)
+  }
+  const next = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1) }
+    else setViewMonth(m => m + 1)
+  }
+
+  const cells: (number | null)[] = []
+  for (let i = 0; i < offset; i++) cells.push(null)
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
+
+  return (
+    <div className="w-full max-w-[340px]">
+      {/* header */}
+      <div className="flex items-center justify-between mb-3">
+        <button
+          type="button"
+          onClick={prev}
+          className="w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:bg-white/10 active:bg-white/15 transition-colors text-lg"
+          aria-label="Previous month"
+        >
+          ‹
+        </button>
+        <span className="text-[0.95rem] font-semibold text-white">
+          {MONTH_NAMES[viewMonth]} {viewYear}
+        </span>
+        <button
+          type="button"
+          onClick={next}
+          className="w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:bg-white/10 active:bg-white/15 transition-colors text-lg"
+          aria-label="Next month"
+        >
+          ›
+        </button>
+      </div>
+
+      {/* weekday labels */}
+      <div className="grid grid-cols-7 mb-1">
+        {DAY_LABELS.map(l => (
+          <div key={l} className="text-center text-[0.7rem] font-medium text-white/40 py-1">
+            {l}
+          </div>
+        ))}
+      </div>
+
+      {/* day grid */}
+      <div className="grid grid-cols-7 gap-y-0.5">
+        {cells.map((day, i) => {
+          if (day === null) return <div key={`e${i}`} />
+          const iso = toIso(viewYear, viewMonth, day)
+          const isSelected = iso === selectedIso
+          const isToday = iso === todayIso
+          return (
+            <button
+              key={iso}
+              type="button"
+              onClick={() => onSelect(iso)}
+              className={[
+                'mx-auto w-9 h-9 flex items-center justify-center rounded-full text-sm transition-colors',
+                isSelected
+                  ? 'bg-[#2aabee] text-white font-semibold'
+                  : isToday
+                    ? 'ring-1 ring-[#2aabee] text-[#2aabee] font-semibold hover:bg-white/10'
+                    : 'text-white/80 hover:bg-white/10 active:bg-white/15',
+              ].join(' ')}
+            >
+              {day}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export default function DatePickerPage() {
-  const [iso, setIso] = useState(todayIsoLocal)
+  const t = todayParts()
+  const [iso, setIso] = useState(() => toIso(t.year, t.month, t.day))
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [canSendToBot, setCanSendToBot] = useState(false)
@@ -64,7 +181,7 @@ export default function DatePickerPage() {
       return
     }
     if (!hasTelegramInitData()) {
-      setError('Open this Mini App from the bot (e.g. send /date in chat and tap “Pick a date”). Sending from a browser tab will not reach the bot.')
+      setError('Open this Mini App from the bot (e.g. send /date in chat and tap "Pick a date"). Sending from a browser tab will not reach the bot.')
       return
     }
     tg.HapticFeedback?.notificationOccurred('success')
@@ -73,84 +190,42 @@ export default function DatePickerPage() {
   }, [ddmmyyyy])
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        boxSizing: 'border-box',
-        padding: '20px',
-        background: '#0a0a0a',
-        color: '#ededed',
-        fontFamily: 'system-ui, sans-serif',
-      }}
-    >
-      <h1 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>Pick a date</h1>
-      <p style={{ fontSize: '0.9rem', opacity: 0.85, marginBottom: '16px' }}>
+    <div className="min-h-screen box-border p-5 bg-[#0a0a0a] text-[#ededed] font-[system-ui,sans-serif]">
+      <h1 className="text-xl mb-2">Pick a date</h1>
+      <p className="text-sm opacity-85 mb-4">
         BNM (USD) rate for the selected day; send it to the bot via the button below.
       </p>
+
       {ready && !canSendToBot ? (
-        <p
-          style={{
-            marginBottom: '16px',
-            padding: '12px 14px',
-            borderRadius: '12px',
-            background: 'rgba(250, 204, 21, 0.12)',
-            border: '1px solid rgba(250, 204, 21, 0.35)',
-            fontSize: '0.9rem',
-            lineHeight: 1.45,
-          }}
-        >
+        <p className="mb-4 px-3.5 py-3 rounded-xl text-sm leading-[1.45] bg-yellow-400/[0.12] border border-yellow-400/[0.35]">
           This page must be opened from the bot so your choice can be delivered. In Telegram, send{' '}
           <strong>/date</strong> and tap <strong>Pick a date</strong>. Opening the URL in a normal browser will not
           send data to the bot.
         </p>
       ) : null}
-      <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem' }} htmlFor="d">
-        Date
-      </label>
-      <input
-        id="d"
-        type="date"
-        value={iso}
-        onChange={(e) => setIso(e.target.value)}
-        disabled={!ready}
-        style={{
-          width: '100%',
-          maxWidth: '300px',
-          padding: '12px 14px',
-          borderRadius: '12px',
-          border: '1px solid rgba(255,255,255,0.2)',
-          background: 'rgba(255,255,255,0.06)',
-          color: 'inherit',
-          fontSize: '1rem',
-        }}
-      />
+
+      <Calendar selectedIso={iso} onSelect={setIso} />
+
       {ddmmyyyy ? (
-        <p style={{ marginTop: '12px', fontSize: '0.9rem', opacity: 0.9 }}>Format: {ddmmyyyy}</p>
+        <p className="mt-3 text-sm opacity-90">
+          Selected: <strong>{ddmmyyyy}</strong>
+        </p>
       ) : null}
+
       <button
         type="button"
         onClick={onSend}
         disabled={!ready || !ddmmyyyy || !canSendToBot}
-        style={{
-          marginTop: '20px',
-          padding: '14px 22px',
-          borderRadius: '14px',
-          border: 'none',
-          background: '#2aabee',
-          color: '#fff',
-          fontWeight: 600,
-          fontSize: '1rem',
-          cursor: ready && ddmmyyyy && canSendToBot ? 'pointer' : 'not-allowed',
-          opacity: ready && ddmmyyyy && canSendToBot ? 1 : 0.5,
-        }}
+        className="mt-5 px-6 py-3.5 rounded-[14px] border-none bg-[#2aabee] text-white font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         Send to bot
       </button>
+
       {error ? (
-        <p style={{ marginTop: '14px', color: '#f87171', fontSize: '0.9rem' }}>{error}</p>
+        <p className="mt-3.5 text-[#f87171] text-sm">{error}</p>
       ) : null}
       {!ready && !error ? (
-        <p style={{ marginTop: '14px', fontSize: '0.85rem', opacity: 0.7 }}>Loading…</p>
+        <p className="mt-3.5 text-[0.85rem] opacity-70">Loading…</p>
       ) : null}
     </div>
   )
