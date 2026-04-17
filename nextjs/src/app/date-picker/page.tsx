@@ -18,26 +18,34 @@ function isoToDDMMYYYY(iso: string): string | null {
   return `${m[3]}.${m[2]}.${m[1]}`
 }
 
+function hasTelegramInitData(): boolean {
+  const init = window.Telegram?.WebApp?.initData
+  return typeof init === 'string' && init.length > 0
+}
+
 export default function DatePickerPage() {
   const [iso, setIso] = useState(todayIsoLocal)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [canSendToBot, setCanSendToBot] = useState(false)
 
   useEffect(() => {
+    const finish = () => {
+      window.Telegram?.WebApp?.ready()
+      window.Telegram?.WebApp?.expand()
+      setCanSendToBot(hasTelegramInitData())
+      setReady(true)
+    }
+
     const existing = document.querySelector(`script[src="${SCRIPT}"]`)
     if (existing && window.Telegram?.WebApp) {
-      window.Telegram.WebApp.ready()
-      setReady(true)
+      finish()
       return
     }
     const s = document.createElement('script')
     s.src = SCRIPT
     s.async = true
-    s.onload = () => {
-      window.Telegram?.WebApp?.ready()
-      window.Telegram?.WebApp?.expand()
-      setReady(true)
-    }
+    s.onload = finish
     s.onerror = () => setError('Could not load Telegram Web App.')
     document.body.appendChild(s)
   }, [])
@@ -53,6 +61,10 @@ export default function DatePickerPage() {
     const tg = window.Telegram?.WebApp
     if (!tg) {
       setError('Open this page from Telegram (Web App) to send the date.')
+      return
+    }
+    if (!hasTelegramInitData()) {
+      setError('Open this Mini App from the bot (e.g. send /date in chat and tap “Pick a date”). Sending from a browser tab will not reach the bot.')
       return
     }
     tg.HapticFeedback?.notificationOccurred('success')
@@ -75,6 +87,23 @@ export default function DatePickerPage() {
       <p style={{ fontSize: '0.9rem', opacity: 0.85, marginBottom: '16px' }}>
         BNM (USD) rate for the selected day; send it to the bot via the button below.
       </p>
+      {ready && !canSendToBot ? (
+        <p
+          style={{
+            marginBottom: '16px',
+            padding: '12px 14px',
+            borderRadius: '12px',
+            background: 'rgba(250, 204, 21, 0.12)',
+            border: '1px solid rgba(250, 204, 21, 0.35)',
+            fontSize: '0.9rem',
+            lineHeight: 1.45,
+          }}
+        >
+          This page must be opened from the bot so your choice can be delivered. In Telegram, send{' '}
+          <strong>/date</strong> and tap <strong>Pick a date</strong>. Opening the URL in a normal browser will not
+          send data to the bot.
+        </p>
+      ) : null}
       <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem' }} htmlFor="d">
         Date
       </label>
@@ -101,7 +130,7 @@ export default function DatePickerPage() {
       <button
         type="button"
         onClick={onSend}
-        disabled={!ready || !ddmmyyyy}
+        disabled={!ready || !ddmmyyyy || !canSendToBot}
         style={{
           marginTop: '20px',
           padding: '14px 22px',
@@ -111,8 +140,8 @@ export default function DatePickerPage() {
           color: '#fff',
           fontWeight: 600,
           fontSize: '1rem',
-          cursor: ready && ddmmyyyy ? 'pointer' : 'not-allowed',
-          opacity: ready && ddmmyyyy ? 1 : 0.5,
+          cursor: ready && ddmmyyyy && canSendToBot ? 'pointer' : 'not-allowed',
+          opacity: ready && ddmmyyyy && canSendToBot ? 1 : 0.5,
         }}
       >
         Send to bot

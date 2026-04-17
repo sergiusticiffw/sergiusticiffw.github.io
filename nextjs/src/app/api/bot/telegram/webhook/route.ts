@@ -70,7 +70,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       await sendTelegramMessage({
         botToken,
         chatId: directChatId,
-        text: `Ai ales data: ${bnmDate}`,
+        text: `You picked: ${bnmDate}`,
       }).catch((err) => console.error('[telegram webhook] sendMessage failed', err))
 
       await sendDateRatesMessage({ botToken, chatId: directChatId, bnmDate, source: 'web_app' }).catch((err) =>
@@ -87,98 +87,98 @@ export async function POST(req: NextRequest): Promise<Response> {
     const chatType = msg?.chat?.type
     const text = msg?.text
 
-  const parsed = parseCommand(text)
-  if (!parsed && !isStartCommand(text)) return Response.json({ ok: true })
+    const parsed = parseCommand(text)
+    if (!parsed && !isStartCommand(text)) return Response.json({ ok: true })
 
-  if (isStartCommand(text)) {
-    if (!isSubscribeChatType(chatType)) return Response.json({ ok: true })
-    try {
-      await addSubscriber(chatId)
-    } catch {
-      await sendTelegramMessage({
-        botToken,
-        chatId,
-        text: 'Could not save your subscription (storage error). Check server logs / KV env vars.',
-      })
-      return Response.json({ ok: true })
-    }
-    await sendTelegramMessage({ botToken, chatId, text: 'Subscribed. Use /help to see commands.' })
-    return Response.json({ ok: true })
-  }
-
-  if (parsed && parsed.cmd === '/help') {
-    await sendTelegramMessage({ botToken, chatId, text: formatHelp() })
-    return Response.json({ ok: true })
-  }
-
-  if (parsed && parsed.cmd === '/today') {
-    const bnmDate = getTodayDate('Europe/Chisinau')
-    const [usdRate, dxyValue] = await Promise.all([
-      fetchBnmUsdRateForDate(bnmDate).catch(() => null),
-      fetchDxyValue().catch(() => null),
-    ])
-    await sendTelegramMessage({ botToken, chatId, text: formatDailyMessage({ bnmDate, usdRate, dxyValue }) })
-    return Response.json({ ok: true })
-  }
-
-  if (parsed && parsed.cmd === '/yesterday') {
-    const bnmDate = getYesterdayDate('Europe/Chisinau')
-    const [usdRate, dxyValue] = await Promise.all([
-      fetchBnmUsdRateForDate(bnmDate).catch(() => null),
-      fetchDxyValue().catch(() => null),
-    ])
-    await sendTelegramMessage({ botToken, chatId, text: formatDailyMessage({ bnmDate, usdRate, dxyValue }) })
-    return Response.json({ ok: true })
-  }
-
-  if (parsed && parsed.cmd === '/tomorrow') {
-    const bnmDate = getTomorrowDate('Europe/Chisinau')
-    const [usdRate, dxyValue] = await Promise.all([
-      fetchBnmUsdRateForDate(bnmDate).catch(() => null),
-      fetchDxyValue().catch(() => null),
-    ])
-    await sendTelegramMessage({ botToken, chatId, text: formatDailyMessage({ bnmDate, usdRate, dxyValue }) })
-    return Response.json({ ok: true })
-  }
-
-  if (parsed && parsed.cmd === '/date') {
-    const arg = parsed.arg.trim()
-    if (!arg) {
-      const webAppUrl = getTelegramDatePickerUrl()
-      if (webAppUrl) {
+    if (isStartCommand(text)) {
+      if (!isSubscribeChatType(chatType)) return Response.json({ ok: true })
+      try {
+        await addSubscriber(chatId)
+      } catch {
         await sendTelegramMessage({
           botToken,
           chatId,
-          text: 'Alege data:',
-          replyMarkup: {
-            inline_keyboard: [[{ text: '📅 Alege data', web_app: { url: webAppUrl } }]],
-          },
+          text: 'Could not save your subscription (storage error). Check server logs / KV env vars.',
         })
-      } else {
-        await sendTelegramMessage({
-          botToken,
-          chatId,
-          text:
-            'Date picker URL is not configured. Set NEXT_PUBLIC_SERVER_URL to your public HTTPS origin, or use: /date DD.MM.YYYY',
-        })
+        return Response.json({ ok: true })
       }
+      await sendTelegramMessage({ botToken, chatId, text: 'Subscribed. Use /help to see commands.' })
       return Response.json({ ok: true })
     }
 
-    if (!BNM_DATE_REGEX.test(arg)) {
-      await sendTelegramMessage({
-        botToken,
-        chatId,
-        text: 'Invalid date format. Use: /date DD.MM.YYYY (example: /date 03.04.2026)',
-      })
+    if (parsed && parsed.cmd === '/help') {
+      await sendTelegramMessage({ botToken, chatId, text: formatHelp() })
       return Response.json({ ok: true })
     }
 
-    await sendDateRatesMessage({ botToken, chatId, bnmDate: arg })
+    if (parsed && parsed.cmd === '/today') {
+      const bnmDate = getTodayDate('Europe/Chisinau')
+      const [usdRate, dxyValue] = await Promise.all([
+        fetchBnmUsdRateForDate(bnmDate).catch(() => null),
+        fetchDxyValue().catch(() => null),
+      ])
+      await sendTelegramMessage({ botToken, chatId, text: formatDailyMessage({ bnmDate, usdRate, dxyValue }) })
+      return Response.json({ ok: true })
+    }
+
+    if (parsed && parsed.cmd === '/yesterday') {
+      const bnmDate = getYesterdayDate('Europe/Chisinau')
+      const [usdRate, dxyValue] = await Promise.all([
+        fetchBnmUsdRateForDate(bnmDate).catch(() => null),
+        fetchDxyValue().catch(() => null),
+      ])
+      await sendTelegramMessage({ botToken, chatId, text: formatDailyMessage({ bnmDate, usdRate, dxyValue }) })
+      return Response.json({ ok: true })
+    }
+
+    if (parsed && parsed.cmd === '/tomorrow') {
+      const bnmDate = getTomorrowDate('Europe/Chisinau')
+      const [usdRate, dxyValue] = await Promise.all([
+        fetchBnmUsdRateForDate(bnmDate).catch(() => null),
+        fetchDxyValue().catch(() => null),
+      ])
+      await sendTelegramMessage({ botToken, chatId, text: formatDailyMessage({ bnmDate, usdRate, dxyValue }) })
+      return Response.json({ ok: true })
+    }
+
+    if (parsed && parsed.cmd === '/date') {
+      const arg = parsed.arg.trim()
+      if (!arg) {
+        const webAppUrl = getTelegramDatePickerUrl()
+        if (webAppUrl) {
+          await sendTelegramMessage({
+            botToken,
+            chatId,
+            text: 'Pick a date:',
+            replyMarkup: {
+              inline_keyboard: [[{ text: '📅 Pick a date', web_app: { url: webAppUrl } }]],
+            },
+          })
+        } else {
+          await sendTelegramMessage({
+            botToken,
+            chatId,
+            text:
+              'Date picker URL is not configured. Set NEXT_PUBLIC_SERVER_URL to your public HTTPS origin, or use: /date DD.MM.YYYY',
+          })
+        }
+        return Response.json({ ok: true })
+      }
+
+      if (!BNM_DATE_REGEX.test(arg)) {
+        await sendTelegramMessage({
+          botToken,
+          chatId,
+          text: 'Invalid date format. Use: /date DD.MM.YYYY (example: /date 03.04.2026)',
+        })
+        return Response.json({ ok: true })
+      }
+
+      await sendDateRatesMessage({ botToken, chatId, bnmDate: arg })
+      return Response.json({ ok: true })
+    }
+
     return Response.json({ ok: true })
-  }
-
-  return Response.json({ ok: true })
   } catch (err) {
     // Always 200 OK to prevent Telegram retries; log for debugging.
     console.error('[telegram webhook] fatal error', err)
