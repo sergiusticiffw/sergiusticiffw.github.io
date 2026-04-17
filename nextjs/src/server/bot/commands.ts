@@ -32,6 +32,15 @@ export function formatDatePickedHeader(bnmDate: string): string {
   return `✅ Date picked — ${bnmDate}`
 }
 
+function getLocalTime(timeZone = 'Europe/Chisinau'): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date())
+}
+
 export function formatDailyMessage({
   bnmDate,
   usdRate,
@@ -43,6 +52,7 @@ export function formatDailyMessage({
 }): string {
   const usdText = usdRate ?? 'Not available yet'
   const dxyText = dxyValue ?? 'Not available yet'
-  return `📊 Daily Currency Update — BNM (${bnmDate})\n\nUSD (BNM): ${usdText}\nDXY: ${dxyText}\n\n⏰ Time: 16:15`
+  const time = getLocalTime()
+  return `📊 Daily Currency Update — BNM (${bnmDate})\n\nUSD (BNM): ${usdText}\nDXY: ${dxyText}\n\n⏰ Time: ${time}`
 }
 

@@ -14,10 +14,10 @@ export const maxDuration = 60
 /**
  * Daily send: “tomorrow” BNM date for Europe/Chisinau.
  *
- * Cron: `15 14 * * *` = 14:15 UTC (ora din vercel.json).
- * La Chișinău: 14:15 UTC + 2h = 16:15 când fusul e UTC+2 (EET, ora de iarnă).
- * Când fusul e UTC+3 (EEST, ora de vară), aceeași oră UTC = 17:15 locală.
- * Pentru 16:15 locală la UTC+3, folosește `15 13 * * *` (13:15 UTC).
+ * Cron: `15 14 * * *` = 14:15 UTC (from vercel.json).
+ * In Chisinau: 14:15 UTC + 2h = 16:15 when EET (winter).
+ * During EEST (summer, UTC+3) the same UTC time = 17:15 local.
+ * For 16:15 local during EEST, use `15 13 * * *` (13:15 UTC).
  */
 
 function requireEnv(name: string): string {
@@ -31,7 +31,6 @@ async function sleep(ms: number) {
 }
 
 async function handler(req: NextRequest): Promise<Response> {
-  const url = new URL(req.url)
   const bearer = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? ''
 
   const cronSecret = process.env.CRON_SECRET
@@ -41,8 +40,7 @@ async function handler(req: NextRequest): Promise<Response> {
   if (cronSecret && bearer === cronSecret) {
     authorized = true
   } else if (botSecret) {
-    const incoming =
-      req.headers.get('x-bot-secret') || bearer || url.searchParams.get('secret') || ''
+    const incoming = req.headers.get('x-bot-secret') || bearer || ''
     if (incoming === botSecret) authorized = true
   }
 
@@ -76,7 +74,7 @@ async function handler(req: NextRequest): Promise<Response> {
       sent += 1
     } catch (err) {
       failed += 1
-      const msg = String((err as any)?.message ?? err)
+      const msg = err instanceof Error ? err.message : String(err)
       failures.push({ chatId, error: msg })
       const lower = msg.toLowerCase()
 

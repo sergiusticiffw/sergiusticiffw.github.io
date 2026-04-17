@@ -39,13 +39,14 @@ export async function POST(req: NextRequest): Promise<Response> {
       return Response.json({ ok: true })
     }
 
-    // Full update logging for debugging (truncate to keep logs safe-ish).
-    try {
-      const raw = JSON.stringify(update)
-      console.log('[telegram webhook] update', raw.length > 12000 ? `${raw.slice(0, 12000)}…` : raw)
-    } catch {
-      console.log('[telegram webhook] update (non-serializable)')
-    }
+    const updateId = update?.update_id ?? '?'
+    const chatId_ = update?.message?.chat?.id ?? update?.edited_message?.chat?.id ?? '?'
+    const msgText = update?.message?.text
+    const hasWebAppData = Boolean(update?.message?.web_app_data)
+    console.log(
+      `[telegram webhook] update_id=${updateId} chat=${chatId_}`,
+      hasWebAppData ? 'web_app_data' : msgText ? `text=${msgText.slice(0, 60)}` : 'no-text',
+    )
 
     /**
      * IMPORTANT:
@@ -66,11 +67,11 @@ export async function POST(req: NextRequest): Promise<Response> {
         return Response.json({ ok: true })
       }
 
-      // Explicit feedback required by UX: show the selected date in chat.
       await sendTelegramMessage({
         botToken,
         chatId: directChatId,
         text: `You picked: ${bnmDate}`,
+        replyMarkup: { remove_keyboard: true },
       }).catch((err) => console.error('[telegram webhook] sendMessage failed', err))
 
       await sendDateRatesMessage({ botToken, chatId: directChatId, bnmDate, source: 'web_app' }).catch((err) =>
@@ -151,7 +152,9 @@ export async function POST(req: NextRequest): Promise<Response> {
             chatId,
             text: 'Pick a date:',
             replyMarkup: {
-              inline_keyboard: [[{ text: '📅 Pick a date', web_app: { url: webAppUrl } }]],
+              keyboard: [[{ text: '📅 Pick a date', web_app: { url: webAppUrl } }]],
+              resize_keyboard: true,
+              one_time_keyboard: true,
             },
           })
         } else {

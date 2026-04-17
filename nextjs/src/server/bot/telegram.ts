@@ -19,6 +19,20 @@ export function getMessageLikeFromUpdate(update: any): any | null {
   )
 }
 
+type InlineKeyboardMarkup = {
+  inline_keyboard: { text: string; url?: string; web_app?: { url: string } }[][]
+}
+
+type ReplyKeyboardMarkup = {
+  keyboard: { text: string; web_app?: { url: string } }[][]
+  resize_keyboard?: boolean
+  one_time_keyboard?: boolean
+}
+
+type ReplyKeyboardRemove = { remove_keyboard: true }
+
+export type ReplyMarkup = InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove
+
 export async function sendTelegramMessage({
   botToken,
   chatId,
@@ -28,9 +42,7 @@ export async function sendTelegramMessage({
   botToken: string
   chatId: number
   text: string
-  replyMarkup?: {
-    inline_keyboard: { text: string; web_app: { url: string } }[][]
-  }
+  replyMarkup?: ReplyMarkup
 }): Promise<void> {
   const url = `https://api.telegram.org/bot${botToken}/sendMessage`
   const res = await fetch(url, {
