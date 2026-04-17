@@ -28,7 +28,9 @@ type ReplyKeyboardMarkup = {
   resize_keyboard?: boolean
 }
 
-export type ReplyMarkup = InlineKeyboardMarkup | ReplyKeyboardMarkup
+type ReplyKeyboardRemove = { remove_keyboard: true }
+
+export type ReplyMarkup = InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove
 
 export async function sendTelegramMessage({
   botToken,

@@ -13,6 +13,7 @@ import {
   getMessageLikeFromUpdate,
   normalizeChatId,
   sendTelegramMessage,
+  type ReplyMarkup,
 } from '@/server/bot/telegram'
 
 export const runtime = 'nodejs'
@@ -23,6 +24,8 @@ function requireEnv(name: string): string {
   if (!v) throw new Error(`Missing env: ${name}`)
   return v
 }
+
+const REMOVE_KEYBOARD: ReplyMarkup = { remove_keyboard: true }
 
 function buildDatePickerUrl(chatId: number): string | null {
   const base = getPublicSiteBaseUrl()
@@ -68,6 +71,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           botToken,
           chatId: directChatId,
           text: `Invalid date format: "${bnmDate}". Expected DD.MM.YYYY.`,
+          replyMarkup: REMOVE_KEYBOARD,
         }).catch((err) => console.error('[telegram webhook] sendMessage failed', err))
         return Response.json({ ok: true })
       }
@@ -80,6 +84,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           botToken,
           chatId: directChatId,
           text: `✅ Date picked: ${bnmDate}\n\nCould not fetch rates. Try /date ${bnmDate}`,
+          replyMarkup: REMOVE_KEYBOARD,
         }).catch(() => {})
       }
       return Response.json({ ok: true })
@@ -111,12 +116,13 @@ export async function POST(req: NextRequest): Promise<Response> {
         botToken,
         chatId,
         text: 'Subscribed! Use /help to see commands.',
+        replyMarkup: REMOVE_KEYBOARD,
       })
       return Response.json({ ok: true })
     }
 
     if (parsed && parsed.cmd === '/help') {
-      await sendTelegramMessage({ botToken, chatId, text: formatHelp() })
+      await sendTelegramMessage({ botToken, chatId, text: formatHelp(), replyMarkup: REMOVE_KEYBOARD })
       return Response.json({ ok: true })
     }
 
@@ -130,6 +136,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         botToken,
         chatId,
         text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
+        replyMarkup: REMOVE_KEYBOARD,
       })
       return Response.json({ ok: true })
     }
@@ -144,6 +151,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         botToken,
         chatId,
         text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
+        replyMarkup: REMOVE_KEYBOARD,
       })
       return Response.json({ ok: true })
     }
@@ -158,6 +166,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         botToken,
         chatId,
         text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
+        replyMarkup: REMOVE_KEYBOARD,
       })
       return Response.json({ ok: true })
     }
@@ -180,6 +189,7 @@ export async function POST(req: NextRequest): Promise<Response> {
             botToken,
             chatId,
             text: 'Send a date: /date DD.MM.YYYY (example: /date 17.04.2026)',
+            replyMarkup: REMOVE_KEYBOARD,
           })
         }
         return Response.json({ ok: true })
@@ -190,6 +200,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           botToken,
           chatId,
           text: 'Invalid date format. Use: /date DD.MM.YYYY (example: /date 03.04.2026)',
+          replyMarkup: REMOVE_KEYBOARD,
         })
         return Response.json({ ok: true })
       }
