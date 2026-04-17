@@ -25,18 +25,24 @@ function isoToDDMMYYYY(iso: string): string | null {
   return `${m[3]}.${m[2]}.${m[1]}`
 }
 
-function isTelegramContext(): boolean {
-  return Boolean(window.Telegram?.WebApp)
-}
-
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate()
 }
 
-/** 0 = Mon … 6 = Sun (ISO weekday) */
 function startDayOfWeek(year: number, month: number) {
   const d = new Date(year, month, 1).getDay()
   return (d + 6) % 7
+}
+
+function getUrlParams(): { chatId: number; token: string } | null {
+  if (typeof window === 'undefined') return null
+  const params = new URLSearchParams(window.location.search)
+  const c = params.get('c')
+  const t = params.get('t')
+  if (!c || !t) return null
+  const chatId = Number(c)
+  if (!Number.isFinite(chatId)) return null
+  return { chatId, token: t }
 }
 
 function Calendar({
@@ -76,7 +82,6 @@ function Calendar({
 
   return (
     <div className="w-full max-w-[340px]">
-      {/* header */}
       <div className="flex items-center justify-between mb-3">
         <button
           type="button"
@@ -99,7 +104,6 @@ function Calendar({
         </button>
       </div>
 
-      {/* weekday labels */}
       <div className="grid grid-cols-7 mb-1">
         {DAY_LABELS.map(l => (
           <div key={l} className="text-center text-[0.7rem] font-medium text-white/40 py-1">
@@ -108,7 +112,6 @@ function Calendar({
         ))}
       </div>
 
-      {/* day grid */}
       <div className="grid grid-cols-7 gap-y-0.5">
         {cells.map((day, i) => {
           if (day === null) return <div key={`e${i}`} />
@@ -142,14 +145,17 @@ export default function DatePickerPage() {
   const t = todayParts()
   const [iso, setIso] = useState(() => toIso(t.year, t.month, t.day))
   const [ready, setReady] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [inTelegram, setInTelegram] = useState(false)
+  const [urlParams, setUrlParams] = useState<{ chatId: number; token: string } | null>(null)
 
   useEffect(() => {
+    setUrlParams(getUrlParams())
+
     const finish = () => {
       window.Telegram?.WebApp?.ready()
       window.Telegram?.WebApp?.expand()
-      setInTelegram(isTelegramContext())
       setReady(true)
     }
 
@@ -162,42 +168,60 @@ export default function DatePickerPage() {
     s.src = SCRIPT
     s.async = true
     s.onload = finish
-    s.onerror = () => setError('Could not load Telegram Web App.')
+    s.onerror = () => {
+      setReady(true)
+    }
     document.body.appendChild(s)
   }, [])
 
   const ddmmyyyy = useMemo(() => isoToDDMMYYYY(iso), [iso])
 
-  const onSend = useCallback(() => {
+  const canSend = ready && !!ddmmyyyy && !!urlParams && !sending && !sent
+
+  const onSend = useCallback(async () => {
     setError(null)
-    if (!ddmmyyyy) {
-      setError('Invalid date.')
-      return
-    }
-    const tg = window.Telegram?.WebApp
-    if (!tg) {
-      setError('Open this page from Telegram to send the date.')
-      return
-    }
+    if (!ddmmyyyy || !urlParams) return
+
+    setSending(true)
     try {
-      tg.HapticFeedback?.notificationOccurred('success')
-      tg.sendData(ddmmyyyy)
-      tg.close()
+      const res = await fetch('/api/bot/date-pick', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          date: ddmmyyyy,
+          chatId: urlParams.chatId,
+          token: urlParams.token,
+        }),
+      })
+      const data = await res.json().catch(() => null)
+
+      if (res.ok && data?.ok) {
+        setSent(true)
+        window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
+        setTimeout(() => {
+          window.Telegram?.WebApp?.close()
+        }, 1200)
+      } else {
+        setError(data?.error || 'Failed to send. Try /date ' + ddmmyyyy)
+      }
     } catch (err) {
-      setError(`Failed to send: ${err instanceof Error ? err.message : String(err)}`)
+      setError('Network error. Check your connection.')
+    } finally {
+      setSending(false)
     }
-  }, [ddmmyyyy])
+  }, [ddmmyyyy, urlParams])
 
   return (
     <div className="min-h-screen box-border p-5 bg-[#0a0a0a] text-[#ededed] font-[system-ui,sans-serif]">
       <h1 className="text-xl mb-2">Pick a date</h1>
       <p className="text-sm opacity-85 mb-4">
-        BNM (USD) rate for the selected day; send it to the bot via the button below.
+        BNM (USD) rate for the selected day.
       </p>
 
-      {ready && !inTelegram ? (
+      {ready && !urlParams ? (
         <p className="mb-4 px-3.5 py-3 rounded-xl text-sm leading-[1.45] bg-yellow-400/[0.12] border border-yellow-400/[0.35]">
-          Open this page from Telegram to send the date to the bot.
+          To send a date to the bot, tap <strong>📅 Pick a date</strong> from the chat keyboard,
+          or send <strong>/date</strong> and tap the button below the message.
         </p>
       ) : null}
 
@@ -209,19 +233,25 @@ export default function DatePickerPage() {
         </p>
       ) : null}
 
-      <button
-        type="button"
-        onClick={onSend}
-        disabled={!ready || !ddmmyyyy}
-        className="mt-5 px-6 py-3.5 rounded-[14px] border-none bg-[#2aabee] text-white font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-      >
-        Send to bot
-      </button>
+      {sent ? (
+        <p className="mt-5 text-[#34d399] font-semibold text-base">
+          ✅ Sent! Check the chat for results.
+        </p>
+      ) : (
+        <button
+          type="button"
+          onClick={onSend}
+          disabled={!canSend}
+          className="mt-5 px-6 py-3.5 rounded-[14px] border-none bg-[#2aabee] text-white font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          {sending ? 'Sending…' : 'Send to bot'}
+        </button>
+      )}
 
       {error ? (
         <p className="mt-3.5 text-[#f87171] text-sm">{error}</p>
       ) : null}
-      {!ready && !error ? (
+      {!ready ? (
         <p className="mt-3.5 text-[0.85rem] opacity-70">Loading…</p>
       ) : null}
     </div>

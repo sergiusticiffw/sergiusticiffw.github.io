@@ -6,7 +6,8 @@ import { BNM_DATE_REGEX, sendDateRatesMessage } from '@/server/bot/dateRatesRepl
 import { fetchBnmUsdRateForDate } from '@/server/bot/bnm'
 import { fetchDxyForDate, fetchDxyValue } from '@/server/bot/dxy'
 import { getTodayDate, getTomorrowDate, getYesterdayDate } from '@/server/bot/date'
-import { getTelegramDatePickerUrl } from '@/server/bot/publicSiteUrl'
+import { getPublicSiteBaseUrl } from '@/server/bot/publicSiteUrl'
+import { signChatId } from '@/server/bot/sign'
 import { isSubscribeChatType } from '@/server/bot/chatTypes'
 import {
   getMessageLikeFromUpdate,
@@ -31,15 +32,10 @@ const BTN_DATE = '📅 Pick a date'
 const BTN_HELP = '❓ Help'
 
 function buildMainKeyboard(): ReplyMarkup {
-  const webAppUrl = getTelegramDatePickerUrl()
-  const dateBtn = webAppUrl
-    ? { text: BTN_DATE, web_app: { url: webAppUrl } }
-    : { text: BTN_DATE }
-
   return {
     keyboard: [
       [{ text: BTN_TODAY }, { text: BTN_TOMORROW }],
-      [{ text: BTN_YESTERDAY }, dateBtn],
+      [{ text: BTN_YESTERDAY }, { text: BTN_DATE }],
       [{ text: BTN_HELP }],
     ],
     resize_keyboard: true,
@@ -55,6 +51,13 @@ function matchButton(text: unknown): string | null {
   if (t === BTN_DATE) return '/date'
   if (t === BTN_HELP) return '/help'
   return null
+}
+
+function buildDatePickerUrl(chatId: number): string | null {
+  const base = getPublicSiteBaseUrl()
+  if (!base) return null
+  const token = signChatId(chatId)
+  return `${base}/date-picker?c=${chatId}&t=${token}`
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -83,17 +86,12 @@ export async function POST(req: NextRequest): Promise<Response> {
       `[telegram webhook] update_id=${updateId} chat=${chatId_}`,
       hasWebAppData ? 'web_app_data' : msgText ? `text=${msgText.slice(0, 60)}` : 'no-text',
     )
-    if (hasWebAppData) {
-      console.log('[telegram webhook] web_app_data payload:', JSON.stringify(update.message.web_app_data))
-    }
 
     const directMessage = update?.message
     const directChatId = normalizeChatId(directMessage?.chat?.id)
     const directWebAppData = directMessage?.web_app_data?.data
     if (directChatId && typeof directWebAppData === 'string' && directWebAppData.trim()) {
       const bnmDate = directWebAppData.trim()
-      console.log(`[telegram webhook] web_app_data received: "${bnmDate}" chat=${directChatId}`)
-
       if (!BNM_DATE_REGEX.test(bnmDate)) {
         await sendTelegramMessage({
           botToken,
@@ -115,7 +113,6 @@ export async function POST(req: NextRequest): Promise<Response> {
           replyMarkup: buildMainKeyboard(),
         }).catch(() => {})
       }
-
       return Response.json({ ok: true })
     }
 
@@ -207,12 +204,24 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (parsed && parsed.cmd === '/date') {
       const arg = parsed.arg.trim()
       if (!arg) {
-        await sendTelegramMessage({
-          botToken,
-          chatId,
-          text: 'Tap "📅 Pick a date" below or send /date DD.MM.YYYY:',
-          replyMarkup: kbd,
-        })
+        const pickerUrl = buildDatePickerUrl(chatId)
+        if (pickerUrl) {
+          await sendTelegramMessage({
+            botToken,
+            chatId,
+            text: 'Open the calendar to pick a date, or send /date DD.MM.YYYY:',
+            replyMarkup: {
+              inline_keyboard: [[{ text: '📅 Open calendar', web_app: { url: pickerUrl } }]],
+            },
+          })
+        } else {
+          await sendTelegramMessage({
+            botToken,
+            chatId,
+            text: 'Send a date: /date DD.MM.YYYY (example: /date 17.04.2026)',
+            replyMarkup: kbd,
+          })
+        }
         return Response.json({ ok: true })
       }
 
