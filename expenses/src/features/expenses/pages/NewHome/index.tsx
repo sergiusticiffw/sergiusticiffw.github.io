@@ -530,9 +530,16 @@ const NewHome = () => {
             </div>
           )}
 
-          {/* Month Navigation - hidden when filter panel is open to avoid overlap */}
-          {activeView === 'list' && !filterPanelOpen && (
-            <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 flex justify-center gap-4 z-[100] bg-[var(--color-app-bg)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5">
+          {/* Month nav: always on list; on calendar only md+ (mobile uses swipe). Hidden when filter panel open */}
+          {!filterPanelOpen &&
+            (activeView === 'list' || activeView === 'calendar') && (
+            <div
+              className={`fixed bottom-[70px] left-1/2 -translate-x-1/2 justify-center gap-4 z-[100] bg-[var(--color-app-bg)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5 ${
+                activeView === 'calendar'
+                  ? 'hidden md:flex'
+                  : 'flex'
+              }`}
+            >
               <button
                 type="button"
                 className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-app-subtle bg-app-surface-hover cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-app-secondary [&_svg]:text-[1.3rem] hover:not(:disabled):bg-app-surface-hover hover:not(:disabled):border-[var(--color-app-accent)]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
