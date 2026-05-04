@@ -1351,13 +1351,13 @@
   integrity sha512-NaOGLRrddszbQj9upGat6HG/4TKvXLvu+osAIgfxPYA+eIvYKv8GKDJOrY2D3/U9MRnKfMWD7bU4jeD4xmqyIg==
 
 "@tanstack/react-router@^1.157.18":
-  version "1.168.26"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.168.26.tgz#34943def22a96ef60ca2bf833947dee21a35445d"
-  integrity sha512-+MV+U5KfMUQGZIU/x8MU3FMRSujxLs678v2jhu1Y8P9ndQBKLVOBYKFY+vv/ypxBUYiyDiOsZkDxPJC8UPo/Ig==
+  version "1.169.1"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.169.1.tgz#6dac03bca8db469208a596de5f5b81a7a3178cef"
+  integrity sha512-MBtQKSvac3OCcsSa6oBpDrrN90IV47I6Gtv05NxhbFVh+gVjtqvs6HSU4XM9+y5sHZPgS+35eArflX4vM8GEnQ==
   dependencies:
     "@tanstack/history" "1.161.6"
     "@tanstack/react-store" "^0.9.3"
-    "@tanstack/router-core" "1.168.18"
+    "@tanstack/router-core" "1.169.1"
     isbot "^5.1.22"
 
 "@tanstack/react-store@^0.11.0":
@@ -1390,10 +1390,10 @@
   dependencies:
     "@tanstack/virtual-core" "3.14.0"
 
-"@tanstack/router-core@1.168.18":
-  version "1.168.18"
-  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.168.18.tgz#f6c8ada89fa69ec3520a3a022cadaa6a9510089c"
-  integrity sha512-rheeg/+hIHSVw9IDzcc5NJlKamKtKJN/c8rPG9XEmLwHvA4C1WRN/yjMTGgoGNU0xKKjL2AzvUhYMSaBdelbEA==
+"@tanstack/router-core@1.169.1":
+  version "1.169.1"
+  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.169.1.tgz#37864c4322e1d78bcf1b5b3c0b9a69bc042a0f9e"
+  integrity sha512-x+2gIGKTTE1qAn7tLieGfrB5ciOviDmmi2ox9fAWUubRV+yTU5ruGFXocoCIWF+lB+SOtnHjo2E9BLSWyYoEmA==
   dependencies:
     "@tanstack/history" "1.161.6"
     cookie-es "^3.0.0"
@@ -1781,9 +1781,9 @@ dompurify@*:
     "@types/trusted-types" "^2.0.7"
 
 dompurify@^3.3.1:
-  version "3.4.1"
-  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.4.1.tgz#521d04483ac12631b2aedf434a5f5390933b8789"
-  integrity sha512-JahakDAIg1gyOm7dlgWSDjV4n7Ip2PKR55NIT6jrMfIgLFgWo81vdr1/QGqWtFNRqXP9UV71oVePtjqS2ebnPw==
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/dompurify/-/dompurify-3.4.2.tgz#f0ff81be682c485505097ba8195a058d8f575218"
+  integrity sha512-lHeS9SA/IKeIFFyYciHBr2n0v1VMPlSj843HdLOwjb2OxNwdq9Xykxqhk+FE42MzAdHvInbAolSE4mhahPpjXA==
   optionalDependencies:
     "@types/trusted-types" "^2.0.7"
 
@@ -2918,14 +2918,14 @@ serialize-javascript@^6.0.1:
     randombytes "^2.1.0"
 
 seroval-plugins@^1.5.0:
-  version "1.5.2"
-  resolved "https://registry.yarnpkg.com/seroval-plugins/-/seroval-plugins-1.5.2.tgz#102b8ec17525e2504e9476b1fe6a1f442926f0af"
-  integrity sha512-qpY0Cl+fKYFn4GOf3cMiq6l72CpuVaawb6ILjubOQ+diJ54LfOWaSSPsaswN8DRPIPW4Yq+tE1k5aKd7ILyaFg==
+  version "1.5.3"
+  resolved "https://registry.yarnpkg.com/seroval-plugins/-/seroval-plugins-1.5.3.tgz#80f69795530f09c65c4f4364168810446cacfc74"
+  integrity sha512-LhVh4KjjkKmCxOUjoaUwtqbDjyMfnA535yEmmGDuwZcIYtw8ns6tZmeszNTECeUg/3sJpnEjsz/KhQrcPXPw1Q==
 
 seroval@^1.5.0:
-  version "1.5.2"
-  resolved "https://registry.yarnpkg.com/seroval/-/seroval-1.5.2.tgz#b07584d531281498fa7f51f49dfdc5d76e76a681"
-  integrity sha512-xcRN39BdsnO9Tf+VzsE7b3JyTJASItIV1FVFewJKCFcW4s4haIKS3e6vj8PGB9qBwC7tnuOywQMdv5N4qkzi7Q==
+  version "1.5.3"
+  resolved "https://registry.yarnpkg.com/seroval/-/seroval-1.5.3.tgz#65401b794ef19e897635a2f2e874a54ca5f2e6f7"
+  integrity sha512-BXe0x4buEeYiIKaRUnth1WqCILQ3k4O67KP/B4pC3pVz0Mv2c96ngA9QDREUYxWY1sb2RZVRqwI9RcpVMyHCVw==
 
 set-function-length@^1.2.2:
   version "1.2.2"

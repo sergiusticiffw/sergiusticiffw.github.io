@@ -13,9 +13,10 @@ import {
   hasPendingSyncOperations,
 } from '@shared/utils/indexedDB';
 import { processLoans } from '@shared/utils/utils';
+import { updateLoansUILocally } from '@shared/utils/offlineAPI';
 
 /**
- * Fetch payments for a loan
+ * Fetch payments for a loan; on API failure, reuse cached payments for this loan if present.
  */
 async function fetchLoanPayments(
   apiClient: ApiClient,
@@ -26,6 +27,13 @@ async function fetchLoanPayments(
   );
 
   if (!response.success || !response.data) {
+    if (isIndexedDBAvailable()) {
+      const cached = await getPaymentsFromDB();
+      const row = cached?.find((p: { loanId?: string }) => p.loanId === loanId);
+      if (row?.data?.length) {
+        return { loanId, data: row.data };
+      }
+    }
     return { loanId, data: [] };
   }
 
@@ -76,11 +84,16 @@ export async function fetchLoans(
     // Fetch fresh data from API
     const response = await apiClient.get<any[]>(API_ENDPOINTS.LOANS);
 
-    if (!response.success) {
+    if (!response.success || !response.data) {
+      if (isIndexedDBAvailable()) {
+        await updateLoansUILocally(dataDispatch);
+      } else {
+        updateLoansUI(dataDispatch, null, []);
+      }
       return;
     }
 
-    if (!response.data || response.data.length === 0) {
+    if (response.data.length === 0) {
       if (isIndexedDBAvailable()) {
         await Promise.all([saveLoansToDB([]), savePaymentsToDB([])]);
       }
@@ -100,6 +113,7 @@ export async function fetchLoans(
       // Local cache was already loaded above; sync will reconcile when online.
       const hasPending = await hasPendingSyncOperations(['loan', 'payment']);
       if (hasPending) {
+        await updateLoansUILocally(dataDispatch);
         return;
       }
       await Promise.all([

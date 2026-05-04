@@ -9,6 +9,7 @@ import {
   getExpensesFromDB,
   saveExpensesToDB,
   isIndexedDBAvailable,
+  hasPendingSyncOperations,
 } from '@shared/utils/indexedDB';
 import { processDataWithWorker, processDataSync } from '@shared/utils/utils';
 
@@ -121,8 +122,33 @@ export async function fetchExpenses(
       return item;
     });
 
-    // Save to IndexedDB
+    // Save to IndexedDB (skip overwriting local cache while expense/income sync is pending)
     if (isIndexedDBAvailable()) {
+      const hasPending = await hasPendingSyncOperations(['expense', 'income']);
+      if (hasPending) {
+        const cachedData = await getExpensesFromDB();
+        if (cachedData && cachedData.length > 0) {
+          processDataWithWorker(cachedData, (processedData) => {
+            dataDispatch({
+              type: 'SET_DATA',
+              raw: cachedData,
+              ...processedData,
+              totals: processedData.monthsTotals,
+              loading: false,
+            });
+            if (category || textFilter) {
+              dataDispatch({
+                type: 'FILTER_DATA',
+                category,
+                textFilter,
+              });
+            }
+          });
+        } else {
+          dataDispatch({ type: 'SET_DATA', raw: [], loading: false });
+        }
+        return;
+      }
       await saveExpensesToDB(dataWithTimestamp);
     }
 
