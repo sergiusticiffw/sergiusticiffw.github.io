@@ -117,12 +117,16 @@ const Loan: React.FC = () => {
     rate: transformToNumber(loan.fr ?? 0),
   };
 
+  // Sum ONLY actual (non-simulated) payments; include installment + any single-fee payments.
+  // This keeps Paid/Remaining/Progress consistent with Principal Paid / Interest Paid (which are based on actual payments).
   const totalPaidAmount =
-    filteredData?.data?.reduce(
-      (sum: number, item: ApiPaymentItem) =>
-        sum + parseFloat(String(item.fpi ?? '0')),
-      0
-    ) ?? 0;
+    filteredData?.data
+      ?.filter((item) => Number(item.fisp ?? 0) === 0)
+      .reduce((sum: number, item: ApiPaymentItem) => {
+        const installment = parseFloat(String(item.fpi ?? '0')) || 0;
+        const singleFee = parseFloat(String(item.fpsf ?? '0')) || 0;
+        return sum + installment + singleFee;
+      }, 0) ?? 0;
 
   const calculateProgress = () => {
     if (loanStatus === 'completed') return 100;
@@ -195,6 +199,15 @@ const Loan: React.FC = () => {
       ? t('loan.notStarted')
       : formatNumber(interestPaid);
 
+  // Fees paid from actual (non-simulated) payments only
+  const feesPaidActual =
+    filteredData?.data
+      ?.filter((item) => Number(item.fisp ?? 0) === 0)
+      .reduce((sum: number, item: ApiPaymentItem) => {
+        const singleFee = parseFloat(String(item.fpsf ?? '0')) || 0;
+        return sum + singleFee;
+      }, 0) ?? 0;
+
   // Interest savings is calculated above (outside paydown calculation)
   const interestSavingsValue =
     loanStatus === 'pending' || !paydown ? 0 : interestSavings;
@@ -209,7 +222,7 @@ const Loan: React.FC = () => {
   const principalPaid =
     loanStatus === 'pending' || !paydown
       ? 0
-      : paydown.sum_of_reductions_after_paid ?? paydown.sum_of_reductions ?? 0;
+      : Math.max(0, (totalPaidAmount ?? 0) - (interestPaid ?? 0) - feesPaidActual);
   const principalPaidDisplay =
     loanStatus === 'pending'
       ? t('loan.notStarted')

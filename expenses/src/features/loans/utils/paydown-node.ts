@@ -654,7 +654,8 @@ class PaydownCalculator {
     date: string,
     periodInterest: number,
     fee = 0,
-    numDays?: number
+    numDays?: number,
+    wasPayed?: boolean
   ): void => {
     let installment: number;
     reduction += this.currentPrincipal;
@@ -684,6 +685,7 @@ class PaydownCalculator {
       interest: periodInterest,
       principal: 0,
       fee,
+      was_payed: wasPayed,
       num_days: numDays || null,
     });
 
@@ -744,7 +746,8 @@ class PaydownCalculator {
         this.eventArray[index].date,
         periodInterest,
         fee,
-        numDays
+        numDays,
+        this.eventArray[index].was_payed
       );
       return false;
     }
@@ -1370,18 +1373,20 @@ class PaydownCalculator {
           this.init.payment_method === 'equal_installment' ||
           this.init.payment_method === 'equal_principal'
         ) {
-          const isFixedPrincipal =
-            this.init.payment_method === 'equal_principal';
-          // Apply the payment: use recalculated amount when terms changed (new_principal/payment_method),
-          // otherwise use stored pay_installment (actual paid) or currentRecurringPayment
-          const termsChangedOnThisEvent =
-            event.hasOwnProperty('new_principal') ||
-            event.hasOwnProperty('payment_method');
-          const useRecalculatedAmount =
-            termsChangedOnThisEvent || !event.hasOwnProperty('pay_installment');
-          installment = useRecalculatedAmount
-            ? this.currentRecurringPayment
-            : event.pay_installment!;
+          const hasActualInstallment =
+            event.was_payed === true &&
+            event.hasOwnProperty('pay_installment') &&
+            typeof event.pay_installment === 'number' &&
+            !isNaN(event.pay_installment) &&
+            event.pay_installment > 0;
+
+          // Apply the payment.
+          // IMPORTANT: If the user provided an actual paid installment amount (pay_installment),
+          // we must use it exactly, even if terms changed on the same date (new_principal/payment_method/rate).
+          // Term changes affect future auto-calculated installments, not the historical paid amount.
+          installment = hasActualInstallment
+            ? event.pay_installment!
+            : this.currentRecurringPayment;
 
           // Store principal before payment to check if we need to recalculate after
           const principalBeforePayment =
@@ -1395,7 +1400,9 @@ class PaydownCalculator {
               dateObj,
               installment,
               this.currentRecurringFee,
-              isFixedPrincipal && useRecalculatedAmount
+              // For equal_principal method, the internally calculated recurring amount represents fixed principal.
+              // If an actual installment amount is supplied, treat it as total installment (interest+principal).
+              this.init.payment_method === 'equal_principal' && !hasActualInstallment
             )
           ) {
             break;

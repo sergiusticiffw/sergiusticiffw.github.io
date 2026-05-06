@@ -52,7 +52,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     field_new_principal: values.field_new_principal || '',
     field_payment_method: values.field_payment_method || '',
     field_loan_reference: id,
-    field_is_simulated_payment: values.field_is_simulated_payment || false,
+    // Coerce to a real boolean (avoid truthy strings like "0")
+    field_is_simulated_payment: Boolean(
+      Number(values.field_is_simulated_payment ?? 0)
+    ),
   };
 
   const validationRules = {
