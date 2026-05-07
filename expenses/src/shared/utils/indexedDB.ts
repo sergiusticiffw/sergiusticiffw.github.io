@@ -407,15 +407,38 @@ export async function deleteLoanLocally(id: string): Promise<void> {
     const store = transaction.objectStore(STORE_LOANS);
 
     return new Promise((resolve, reject) => {
-      const request = store.delete(id);
-      request.onsuccess = () => {
+      // Be resilient to historical data where `id` was stored as number vs string.
+      // Attempt deletes for both representations to avoid stale UI until hard refresh.
+      const idAsString = String(id);
+      const idAsNumber = Number(id);
+      const keys: Array<string | number> = [idAsString];
+      if (!Number.isNaN(idAsNumber)) keys.push(idAsNumber);
+
+      let pending = keys.length;
+      let lastError: any = null;
+
+      const done = () => {
         transaction.oncomplete = () => db.close();
+        // Resolve even if a specific key didn't exist; delete is idempotent.
         resolve();
       };
-      request.onerror = () => {
-        transaction.oncomplete = () => db.close();
-        reject(request.error);
-      };
+
+      keys.forEach((key) => {
+        const request = store.delete(key as any);
+        request.onsuccess = () => {
+          pending -= 1;
+          if (pending === 0) done();
+        };
+        request.onerror = () => {
+          lastError = request.error;
+          pending -= 1;
+          if (pending === 0) {
+            transaction.oncomplete = () => db.close();
+            // If all variants errored, reject; otherwise we still resolve in `done`.
+            reject(lastError);
+          }
+        };
+      });
     });
   } catch (error) {
     logger.error('Error deleting loan locally:', error);

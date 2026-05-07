@@ -86,17 +86,14 @@ const Loans: FC = () => {
 
   const handleConfirmDelete = () => {
     setIsSubmitting(true);
-    const id = 'id' in focusedItem ? focusedItem.id : '';
+    const id = 'id' in focusedItem ? String(focusedItem.id ?? '') : '';
     deleteLoan(id, token, dataDispatch, dispatch, () => {
       setIsSubmitting(false);
       setShowDeleteModal(false);
       showNotification(t('notification.loanDeleted'), notificationType.SUCCESS);
-      // UI update is handled by deleteLoan, only fetch if online
-      if (navigator.onLine) {
-        if (apiClient) {
-          fetchLoansService(apiClient, dataDispatch);
-        }
-      }
+      // UI update is handled by deleteLoan (offline-first + sync queue).
+      // Avoid immediate refetch here: it can briefly reintroduce deleted items
+      // if the server snapshot still contains them (eventual consistency / sync delay).
     });
   };
 

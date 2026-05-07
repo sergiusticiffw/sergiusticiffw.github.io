@@ -124,7 +124,7 @@
 
   select,
   label,
-  input:not([type="checkbox"]):not([type="radio"]),
+  input:not([type="checkbox"]):not([type="radio"]):not([type="date"]),
   textarea {
     color: var(--color-text-primary);
     -webkit-appearance: none;
@@ -134,6 +134,21 @@
     /* Keep >= 16px to avoid Safari auto-zoom on focus (iOS) – same approach as sergiusticiffw.github.io */
     font-size: 16px;
     line-height: 1.4;
+  }
+
+  /* Restore native date picker UI on desktop (Chrome/Safari) */
+  input[type="date"] {
+    -webkit-appearance: auto;
+    appearance: auto;
+    /* Ensure native picker UI matches dark app theme (Chrome/Edge/Safari) */
+    color-scheme: dark;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    display: block;
+    cursor: pointer;
+    /* Chrome often renders the icon dark; invert for dark backgrounds */
+    filter: invert(1);
   }
 
   /* Prevent Safari auto-zoom: do not allow inputs/textarea/select to shrink below 16px (Tailwind overrides) */
