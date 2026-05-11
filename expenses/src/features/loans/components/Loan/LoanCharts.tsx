@@ -2,6 +2,7 @@ import { useSettingsCurrency } from '@stores/settingsStore';
 import { useLocalization } from '@shared/context/localization';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
+import { getLocale } from '@shared/utils/utils';
 
 type PaymentLogLike = {
   date: string;
@@ -122,6 +123,7 @@ export const LoanAnnualBreakdown = ({
 }) => {
   const currency = useSettingsCurrency();
   const { t } = useLocalization();
+  const locale = getLocale();
 
   const totalsByYear: Record<
     string,
@@ -143,7 +145,7 @@ export const LoanAnnualBreakdown = ({
   for (const row of schedule ?? []) {
     if (!row || row.was_payed !== true) continue;
     const parts = (row.date ?? '').split('.');
-    const year = parts.length === 3 ? parts[2] : null;
+    const year = parts.length === 3 ? parts[2]?.trim() : null;
     if (!year) continue;
 
     const principalPaid = toNum(row.reduction) ?? 0;
@@ -156,6 +158,18 @@ export const LoanAnnualBreakdown = ({
     paidByYear[year].principal += principalPaid;
     paidByYear[year].interest += interestPaid;
     paidByYear[year].fees += feesPaid;
+  }
+
+  // If some years exist only in actual payments (paidByYear) but not in annualSummaries,
+  // treat their totals as "paid" (so we don't show 0 for past years).
+  for (const y of Object.keys(paidByYear)) {
+    if (!totalsByYear[y]) {
+      totalsByYear[y] = {
+        principal: paidByYear[y]?.principal ?? 0,
+        interest: paidByYear[y]?.interest ?? 0,
+        fees: 0,
+      };
+    }
   }
 
   const years = Array.from(
@@ -191,7 +205,93 @@ export const LoanAnnualBreakdown = ({
     title: { text: t('loan.amortizationSchedule') },
     xAxis: { categories: years },
     yAxis: { min: 0, title: { text: currency }, stackLabels: { enabled: false } },
-    tooltip: { shared: true, valueDecimals: 2 },
+    tooltip: {
+      shared: true,
+      useHTML: true,
+      formatter: function () {
+        const ctx = this as unknown as { x: string | number; points?: any[] };
+        const points = ctx.points ?? [];
+        const firstPoint = points[0];
+        const idx =
+          typeof ctx.x === 'number'
+            ? ctx.x
+            : typeof firstPoint?.point?.x === 'number'
+              ? firstPoint.point.x
+              : null;
+        const yearLabel =
+          (firstPoint?.point?.category as string | undefined) ??
+          (firstPoint?.key as string | undefined) ??
+          (idx != null && years[idx] ? years[idx] : String(ctx.x));
+
+        const principalPaidKey = `${t('loan.principal')} (${t('loan.paid')})`;
+        const principalRemainingKey = `${t('loan.principal')} (${t('loan.remaining')})`;
+        const interestPaidKey = `${t('loan.interests')} (${t('loan.paid')})`;
+        const interestRemainingKey = `${t('loan.interests')} (${t('loan.remaining')})`;
+        const feesPaidKey = `${t('loan.fees')} (${t('loan.paid')})`;
+
+        const getY = (name: string): number => {
+          const p = points.find((pt) => pt?.series?.name === name);
+          const y = p?.y;
+          return typeof y === 'number' && Number.isFinite(y) ? y : 0;
+        };
+
+        const principalPaidVal = getY(principalPaidKey);
+        const principalRemainingVal = getY(principalRemainingKey);
+        const interestPaidVal = getY(interestPaidKey);
+        const interestRemainingVal = getY(interestRemainingKey);
+        const feesPaidVal = getY(feesPaidKey);
+
+        const principalTotalVal = principalPaidVal + principalRemainingVal;
+        const interestTotalVal = interestPaidVal + interestRemainingVal;
+
+        const fmt = (n: number) =>
+          new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(n);
+
+        const lines: string[] = [];
+        lines.push(`<b>${yearLabel}</b>`);
+        lines.push(
+          `<div><b>${t('loan.principal')} total:</b> ${fmt(principalTotalVal)} ${currency}</div>`
+        );
+        lines.push(
+          `<div><b>${t('loan.interests')} total:</b> ${fmt(interestTotalVal)} ${currency}</div>`
+        );
+        if (feesPaidVal > 0) {
+          lines.push(
+            `<div><b>${t('loan.fees')} ${t('loan.paid')}:</b> ${fmt(feesPaidVal)} ${currency}</div>`
+          );
+        }
+
+        // Smart: show Remaining only when it exists (use epsilon for rounding noise)
+        const eps = 0.005;
+        const showPrincipalBreakdown = principalRemainingVal > eps;
+        const showInterestBreakdown = interestRemainingVal > eps;
+
+        if (showPrincipalBreakdown || showInterestBreakdown) {
+          lines.push('<div style="margin-top:6px"></div>');
+        }
+
+        // Only show Paid/Remaining breakdown when there is something remaining.
+        // For fully-paid past years, totals already equal paid and showing paid again is redundant.
+        if (showPrincipalBreakdown) {
+          lines.push(
+            `<div>${t('loan.principal')} ${t('loan.paid')}: ${fmt(principalPaidVal)} ${currency}</div>`
+          );
+          lines.push(
+            `<div>${t('loan.principal')} ${t('loan.remaining')}: ${fmt(principalRemainingVal)} ${currency}</div>`
+          );
+        }
+        if (showInterestBreakdown) {
+          lines.push(
+            `<div>${t('loan.interests')} ${t('loan.paid')}: ${fmt(interestPaidVal)} ${currency}</div>`
+          );
+          lines.push(
+            `<div>${t('loan.interests')} ${t('loan.remaining')}: ${fmt(interestRemainingVal)} ${currency}</div>`
+          );
+        }
+
+        return lines.join('');
+      },
+    },
     plotOptions: { column: { stacking: 'normal' } },
     series: [
       {
