@@ -250,14 +250,14 @@ export const LoanAnnualBreakdown = ({
         const lines: string[] = [];
         lines.push(`<b>${yearLabel}</b>`);
         lines.push(
-          `<div><b>${t('loan.principal')} total:</b> ${fmt(principalTotalVal)} ${currency}</div>`
+          `<div><b>${t('loan.principal')} total:</b> ${fmt(principalTotalVal)}</div>`
         );
         lines.push(
-          `<div><b>${t('loan.interests')} total:</b> ${fmt(interestTotalVal)} ${currency}</div>`
+          `<div><b>${t('loan.interests')} total:</b> ${fmt(interestTotalVal)}</div>`
         );
         if (feesPaidVal > 0) {
           lines.push(
-            `<div><b>${t('loan.fees')} ${t('loan.paid')}:</b> ${fmt(feesPaidVal)} ${currency}</div>`
+            `<div><b>${t('loan.fees')} ${t('loan.paid')}:</b> ${fmt(feesPaidVal)}</div>`
           );
         }
 
@@ -274,18 +274,18 @@ export const LoanAnnualBreakdown = ({
         // For fully-paid past years, totals already equal paid and showing paid again is redundant.
         if (showPrincipalBreakdown) {
           lines.push(
-            `<div>${t('loan.principal')} ${t('loan.paid')}: ${fmt(principalPaidVal)} ${currency}</div>`
+            `<div>${t('loan.principal')} ${t('loan.paid')}: ${fmt(principalPaidVal)}</div>`
           );
           lines.push(
-            `<div>${t('loan.principal')} ${t('loan.remaining')}: ${fmt(principalRemainingVal)} ${currency}</div>`
+            `<div>${t('loan.principal')} ${t('loan.remaining')}: ${fmt(principalRemainingVal)}</div>`
           );
         }
         if (showInterestBreakdown) {
           lines.push(
-            `<div>${t('loan.interests')} ${t('loan.paid')}: ${fmt(interestPaidVal)} ${currency}</div>`
+            `<div>${t('loan.interests')} ${t('loan.paid')}: ${fmt(interestPaidVal)}</div>`
           );
           lines.push(
-            `<div>${t('loan.interests')} ${t('loan.remaining')}: ${fmt(interestRemainingVal)} ${currency}</div>`
+            `<div>${t('loan.interests')} ${t('loan.remaining')}: ${fmt(interestRemainingVal)}</div>`
           );
         }
 
