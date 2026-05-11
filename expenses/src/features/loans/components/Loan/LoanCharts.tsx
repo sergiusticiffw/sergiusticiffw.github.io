@@ -9,6 +9,7 @@ type PaymentLogLike = {
   installment?: number | string;
   reduction: number | string;
   interest: number | string;
+  fee?: number | string;
   was_payed?: boolean | null;
 };
 
@@ -111,19 +112,79 @@ export const LoanPrincipalOverTime = ({
 
 export const LoanAnnualBreakdown = ({
   annualSummaries,
+  schedule,
 }: {
   annualSummaries: Record<
     string,
     { total_principal: number; total_interest: number; total_fees: number }
   >;
+  schedule: PaymentLogLike[];
 }) => {
   const currency = useSettingsCurrency();
   const { t } = useLocalization();
 
-  const years = Object.keys(annualSummaries ?? {}).sort();
-  const principal = years.map((y) => annualSummaries[y]?.total_principal ?? 0);
-  const interest = years.map((y) => annualSummaries[y]?.total_interest ?? 0);
-  const fees = years.map((y) => annualSummaries[y]?.total_fees ?? 0);
+  const totalsByYear: Record<
+    string,
+    { principal: number; interest: number; fees: number }
+  > = {};
+  for (const y of Object.keys(annualSummaries ?? {})) {
+    totalsByYear[y] = {
+      principal: annualSummaries[y]?.total_principal ?? 0,
+      interest: annualSummaries[y]?.total_interest ?? 0,
+      fees: annualSummaries[y]?.total_fees ?? 0,
+    };
+  }
+
+  const paidByYear: Record<
+    string,
+    { principal: number; interest: number; fees: number }
+  > = {};
+
+  for (const row of schedule ?? []) {
+    if (!row || row.was_payed !== true) continue;
+    const parts = (row.date ?? '').split('.');
+    const year = parts.length === 3 ? parts[2] : null;
+    if (!year) continue;
+
+    const principalPaid = toNum(row.reduction) ?? 0;
+    const interestPaid = toNum(row.interest) ?? 0;
+    const feesPaid = toNum((row as PaymentLogLike).fee) ?? 0;
+
+    if (!paidByYear[year]) {
+      paidByYear[year] = { principal: 0, interest: 0, fees: 0 };
+    }
+    paidByYear[year].principal += principalPaid;
+    paidByYear[year].interest += interestPaid;
+    paidByYear[year].fees += feesPaid;
+  }
+
+  const years = Array.from(
+    new Set([...Object.keys(totalsByYear), ...Object.keys(paidByYear)])
+  ).sort();
+
+  const principalTotal = years.map((y) => totalsByYear[y]?.principal ?? 0);
+  const interestTotal = years.map((y) => totalsByYear[y]?.interest ?? 0);
+  const feesTotal = years.map((y) => totalsByYear[y]?.fees ?? 0);
+
+  const principalPaid = years.map((y) => paidByYear[y]?.principal ?? 0);
+  const interestPaid = years.map((y) => paidByYear[y]?.interest ?? 0);
+  const feesPaid = years.map((y) => paidByYear[y]?.fees ?? 0);
+
+  const principalRemaining = years.map((y, i) =>
+    Math.max(0, (principalTotal[i] ?? 0) - (principalPaid[i] ?? 0))
+  );
+  const interestRemaining = years.map((y, i) =>
+    Math.max(0, (interestTotal[i] ?? 0) - (interestPaid[i] ?? 0))
+  );
+
+  // Color palette: paid = stronger, remaining = softer (same hue)
+  const COLORS = {
+    principalPaid: 'rgba(124, 131, 255, 0.95)',
+    principalRemaining: 'rgba(124, 131, 255, 0.45)',
+    interestPaid: 'rgba(116, 227, 180, 0.95)',
+    interestRemaining: 'rgba(116, 227, 180, 0.45)',
+    feesPaid: 'rgba(255, 176, 86, 0.95)',
+  } as const;
 
   const options = {
     chart: { type: 'column' },
@@ -133,9 +194,31 @@ export const LoanAnnualBreakdown = ({
     tooltip: { shared: true, valueDecimals: 2 },
     plotOptions: { column: { stacking: 'normal' } },
     series: [
-      { name: t('loan.principal'), data: principal },
-      { name: t('loan.interests'), data: interest },
-      { name: t('loan.fees'), data: fees },
+      {
+        name: `${t('loan.principal')} (${t('loan.paid')})`,
+        data: principalPaid,
+        color: COLORS.principalPaid,
+      },
+      {
+        name: `${t('loan.principal')} (${t('loan.remaining')})`,
+        data: principalRemaining,
+        color: COLORS.principalRemaining,
+      },
+      {
+        name: `${t('loan.interests')} (${t('loan.paid')})`,
+        data: interestPaid,
+        color: COLORS.interestPaid,
+      },
+      {
+        name: `${t('loan.interests')} (${t('loan.remaining')})`,
+        data: interestRemaining,
+        color: COLORS.interestRemaining,
+      },
+      {
+        name: `${t('loan.fees')} (${t('loan.paid')})`,
+        data: feesPaid,
+        color: COLORS.feesPaid,
+      },
     ],
   };
 

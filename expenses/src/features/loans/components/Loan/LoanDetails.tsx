@@ -160,7 +160,10 @@ const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
 
       {loan?.annual_summaries && Object.keys(loan.annual_summaries).length > 0 ? (
         <>
-          <LoanAnnualBreakdown annualSummaries={loan.annual_summaries} />
+          <LoanAnnualBreakdown
+            annualSummaries={loan.annual_summaries}
+            schedule={amortizationSchedule as any}
+          />
           <br />
         </>
       ) : null}

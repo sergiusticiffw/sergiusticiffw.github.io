@@ -904,6 +904,10 @@ class PaydownCalculator {
           `checkAndAddEvent: invalid pay_single_fee in event ${event.date}`
         );
       }
+      // Fee-only events are actual payments too (unless simulated)
+      if (event.was_payed === undefined) {
+        event.was_payed = event.isSimulatedPayment ? false : true;
+      }
     }
 
     if (event.hasOwnProperty('new_principal')) {
@@ -1501,6 +1505,7 @@ class PaydownCalculator {
             interest: '-',
             principal: this.currentPrincipal,
             fee: this.currentSingleFee,
+            was_payed: event.was_payed,
           });
           this.currentSingleFee = 0;
         }
