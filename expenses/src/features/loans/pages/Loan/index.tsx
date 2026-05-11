@@ -240,6 +240,48 @@ const Loan: React.FC = () => {
         : t('loan.notStarted')
       : formatNumber(remainingPrincipal);
 
+  // Current interest rate: take latest effective rate from amortization schedule (handles rate changes),
+  // falling back to the loan's initial rate when unavailable.
+  const currentRate = (() => {
+    if (!amortizationSchedule?.length) return loanData.rate || 0;
+
+    const parseRate = (row: any): number | null => {
+      const rateRaw = Array.isArray(row) ? row[1] : row?.rate;
+      if (rateRaw === '-' || rateRaw == null || rateRaw === '') return null;
+      const r = typeof rateRaw === 'number' ? rateRaw : Number(rateRaw);
+      return Number.isFinite(r) && r >= 0 ? r : null;
+    };
+
+    // Prefer the latest *paid* row rate (reflects current real state, not future simulation).
+    for (let i = amortizationSchedule.length - 1; i >= 0; i--) {
+      const row: any = amortizationSchedule[i];
+      const wasPaid = Array.isArray(row) ? row[7] : row?.was_payed;
+      if (wasPaid !== true) continue;
+      const r = parseRate(row);
+      if (r != null) return r;
+    }
+
+    // Fallback: latest available rate in the schedule.
+    for (let i = amortizationSchedule.length - 1; i >= 0; i--) {
+      const r = parseRate(amortizationSchedule[i] as any);
+      if (r != null) return r;
+    }
+    return loanData.rate || 0;
+  })();
+
+  // Current daily interest (approx): remaining principal * APR / 365
+  // Uses latest effective rate from the amortization schedule to reflect rate changes.
+  const dailyInterest =
+    loanStatus === 'pending' || !paydown
+      ? 0
+      : Math.max(0, remainingPrincipal * ((currentRate || 0) / 100) / 365);
+  const dailyInterestDisplay =
+    loanStatus === 'pending'
+      ? t('loan.notStarted')
+      : loanStatus === 'completed'
+        ? t('common.completed')
+        : formatNumber(dailyInterest);
+
   const iconTw = 'w-4 h-4 shrink-0 text-[var(--color-app-accent)]';
 
   return (
@@ -350,6 +392,13 @@ const Loan: React.FC = () => {
             {t('loan.currentInterest')}
           </span>
           <span className="text-sm font-semibold text-white tabular-nums text-right">{interestPaidDisplay}</span>
+        </div>
+        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+            <FiPercent className={iconTw} />
+            {t('loan.dailyInterest')}
+          </span>
+          <span className="text-sm font-semibold text-white tabular-nums text-right">{dailyInterestDisplay}</span>
         </div>
         <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
           <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
