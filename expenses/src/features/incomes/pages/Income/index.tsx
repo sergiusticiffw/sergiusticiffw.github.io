@@ -20,6 +20,7 @@ import { useChartsThemeSync } from '@shared/context/highcharts';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import IncomeTable from '@features/incomes/components/Income/IncomeTable';
 import IncomeFilters from '@features/incomes/components/Income/IncomeFilters';
+import CalendarView from '@features/expenses/components/CalendarView';
 import YearIncomeAverageTrend from '@features/incomes/components/Income/YearIncomeAverageTrend';
 import IncomeIntelligence from '@features/incomes/components/Income/IncomeIntelligence';
 import IncomeExpensesPerYearBarChart from '@features/incomes/components/Income/IncomeExpensesPerYearBarChart';
@@ -40,9 +41,41 @@ import {
   FiPlus,
   FiEdit2,
   FiChevronDown,
+  FiChevronLeft,
+  FiChevronRight,
   FiDollarSign,
   FiTrendingUp,
+  FiList,
+  FiCalendar,
 } from 'react-icons/fi';
+
+const ENGLISH_MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+] as const;
+
+const getMonthKey = (dt: string) => {
+  const date = new Date(dt);
+  return `${ENGLISH_MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`;
+};
+
+const parseMonthKey = (monthKey: string) => {
+  const [name, year] = monthKey.split(' ');
+  const monthIndex = ENGLISH_MONTH_NAMES.indexOf(
+    name as (typeof ENGLISH_MONTH_NAMES)[number]
+  );
+  return new Date(parseInt(year, 10), monthIndex, 1).getTime();
+};
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
 import { useApiClient } from '@shared/hooks/useApiClient';
 
@@ -60,6 +93,8 @@ const Income = () => {
   const loading = data.loading;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nrOfItemsToShow, setNrOfItemsToShow] = useState(10);
+  const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [filters, setFilters] = useState<{
     textFilter: string;
@@ -121,6 +156,57 @@ const Income = () => {
       return true;
     });
   }, [data.incomeData, filters]);
+
+  const groupedIncomeByMonth = useMemo(() => {
+    const grouped: Record<string, TransactionOrIncomeItem[]> = {};
+    filteredIncomeData.forEach((item: TransactionOrIncomeItem) => {
+      if (!item.dt) return;
+      const month = getMonthKey(item.dt);
+      if (!grouped[month]) {
+        grouped[month] = [];
+      }
+      grouped[month].push(item);
+    });
+    Object.values(grouped).forEach((items) => {
+      items.sort(
+        (a, b) => new Date(b.dt).getTime() - new Date(a.dt).getTime()
+      );
+    });
+    return grouped;
+  }, [filteredIncomeData]);
+
+  const incomeMonths = useMemo(
+    () =>
+      Object.keys(groupedIncomeByMonth).sort(
+        (a, b) => parseMonthKey(b) - parseMonthKey(a)
+      ),
+    [groupedIncomeByMonth]
+  );
+
+  useEffect(() => {
+    if (incomeMonths.length > 0) {
+      if (currentMonthIndex >= incomeMonths.length) {
+        setCurrentMonthIndex(0);
+      }
+    } else {
+      setCurrentMonthIndex(0);
+    }
+  }, [incomeMonths, currentMonthIndex]);
+
+  const currentMonth = incomeMonths[currentMonthIndex] || incomeMonths[0] || '';
+  const currentMonthIncome = groupedIncomeByMonth[currentMonth] || [];
+
+  const hasActiveFilters = !!(
+    filters.textFilter ||
+    filters.selectedTag ||
+    (filters.dateRange?.start && filters.dateRange?.end)
+  );
+
+  useEffect(() => {
+    if (hasActiveFilters) {
+      setCurrentMonthIndex(0);
+    }
+  }, [filters.textFilter, filters.selectedTag, filters.dateRange, hasActiveFilters]);
 
   const handleFilterChange = useCallback(
     (newFilters: {
@@ -230,12 +316,22 @@ const Income = () => {
     <div className={PAGE_CONTAINER_CLASS}>
       {/* Header */}
       <PageHeader
-        title={t('income.title')}
-        subtitle={
-          filters.textFilter || filters.selectedTag || (filters.dateRange?.start && filters.dateRange?.end)
-            ? `${totalRecords} ${totalRecords === 1 ? t('income.incomeRecord') : t('income.incomeRecords')}`
-            : `${data.incomeData?.length || 0} ${(data.incomeData?.length || 0) === 1 ? t('income.incomeRecord') : t('income.incomeRecords')}`
+        title={
+          activeView === 'calendar' && currentMonth
+            ? currentMonth
+            : t('income.title')
         }
+        subtitle={(() => {
+          const count =
+            activeView === 'calendar' && currentMonth
+              ? currentMonthIncome.length
+              : filters.textFilter ||
+                  filters.selectedTag ||
+                  (filters.dateRange?.start && filters.dateRange?.end)
+                ? totalRecords
+                : data.incomeData?.length || 0;
+          return `${count} ${count === 1 ? t('income.incomeRecord') : t('income.incomeRecords')}`;
+        })()}
       />
 
       {/* Filters */}
@@ -276,7 +372,36 @@ const Income = () => {
         />
       </StatsGrid>
 
-      {/* Income Table Section */}
+      {!noData && (
+        <div className="flex gap-2 mb-6">
+          <button
+            type="button"
+            className={`flex-1 rounded-xl py-3.5 px-4 text-[0.95rem] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 border-none ${
+              activeView === 'list'
+                ? 'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)]'
+                : 'bg-app-surface text-app-muted hover:bg-app-surface-hover hover:text-app-secondary'
+            } [&_svg]:text-lg`}
+            onClick={() => setActiveView('list')}
+          >
+            <FiList />
+            <span>List</span>
+          </button>
+          <button
+            type="button"
+            className={`flex-1 rounded-xl py-3.5 px-4 text-[0.95rem] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 border-none ${
+              activeView === 'calendar'
+                ? 'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)]'
+                : 'bg-app-surface text-app-muted hover:bg-app-surface-hover hover:text-app-secondary'
+            } [&_svg]:text-lg`}
+            onClick={() => setActiveView('calendar')}
+          >
+            <FiCalendar />
+            <span>Calendar</span>
+          </button>
+        </div>
+      )}
+
+      {/* Income List / Calendar */}
       <div className="mb-8">
         {noData ? (
           <NoData
@@ -284,9 +409,9 @@ const Income = () => {
             title={t('income.noIncome')}
             description={t('income.noIncomeDesc')}
           />
-        ) : (
-          <>
-            {filteredIncomeData && filteredIncomeData.length ? (
+        ) : activeView === 'list' ? (
+          filteredIncomeData && filteredIncomeData.length ? (
+            <>
               <IncomeTable
                 items={filteredIncomeData.slice(0, nrOfItemsToShow)}
                 handleEdit={handleEdit}
@@ -295,31 +420,91 @@ const Income = () => {
                 handleClearChangedItem={handleClearChangedItem}
                 pendingSyncIds={pendingSyncIds}
               />
-            ) : (
-              <NoData
-                icon={<FiDollarSign />}
-                title={t('income.noIncome')}
-                description={t('income.noIncomeDesc')}
-              />
-            )}
-
-            {filteredIncomeData?.length > nrOfItemsToShow && (
-              <div className="flex justify-center items-center py-4 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
-                  className="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-[var(--color-app-accent)]/20 border border-[var(--color-app-accent)]/40 text-[var(--color-app-accent)] text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 hover:bg-[var(--color-app-accent)]/30 hover:border-[var(--color-app-accent)]/50 hover:-translate-y-0.5 active:translate-y-0 shadow-[0_2px_8px_rgba(0,0,0,0.15)] [&_svg]:text-sm"
-                >
-                  <FiChevronDown />
-                  <span>
-                    {t('common.loadMore')} ({filteredIncomeData.length - nrOfItemsToShow} {t('common.remaining')})
-                  </span>
-                </button>
-              </div>
-            )}
-          </>
+              {filteredIncomeData.length > nrOfItemsToShow && (
+                <div className="flex justify-center items-center py-4 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setNrOfItemsToShow(nrOfItemsToShow + 10)}
+                    className="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-[var(--color-app-accent)]/20 border border-[var(--color-app-accent)]/40 text-[var(--color-app-accent)] text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 hover:bg-[var(--color-app-accent)]/30 hover:border-[var(--color-app-accent)]/50 hover:-translate-y-0.5 active:translate-y-0 shadow-[0_2px_8px_rgba(0,0,0,0.15)] [&_svg]:text-sm"
+                  >
+                    <FiChevronDown />
+                    <span>
+                      {t('common.loadMore')} ({filteredIncomeData.length - nrOfItemsToShow}{' '}
+                      {t('common.remaining')})
+                    </span>
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <NoData
+              icon={<FiDollarSign />}
+              title={t('income.noIncome')}
+              description={t('income.noIncomeDesc')}
+            />
+          )
+        ) : incomeMonths.length > 0 ? (
+          <CalendarView
+            variant="income"
+            transactions={currentMonthIncome.map((item) => ({
+              id: item.id,
+              dsc: item.dsc ?? '',
+              sum: item.sum,
+              cat: item.cat ?? '',
+              dt: item.dt,
+            }))}
+            currentMonth={currentMonth}
+            changedItems={data.changedItems}
+            onClearChangedItem={handleClearChangedItem}
+            pendingSyncIds={pendingSyncIds}
+            onMonthChange={(direction) => {
+              if (
+                direction === 'prev' &&
+                currentMonthIndex < incomeMonths.length - 1
+              ) {
+                setCurrentMonthIndex(currentMonthIndex + 1);
+              } else if (direction === 'next' && currentMonthIndex > 0) {
+                setCurrentMonthIndex(currentMonthIndex - 1);
+              }
+            }}
+            onEdit={handleEdit}
+            onDelete={(id) => setShowDeleteModal(id)}
+          />
+        ) : (
+          <NoData
+            icon={<FiDollarSign />}
+            title={t('income.noIncome')}
+            description={t('income.noIncomeDesc')}
+          />
         )}
       </div>
+
+      {/* Month navigation — calendar only */}
+      {activeView === 'calendar' &&
+        !noData &&
+        !filterPanelOpen &&
+        incomeMonths.length > 0 && (
+          <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 hidden md:flex justify-center gap-4 z-[100] bg-[var(--color-app-bg)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5">
+            <button
+              type="button"
+              className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-app-subtle bg-app-surface-hover cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-app-secondary [&_svg]:text-[1.3rem] hover:not(:disabled):bg-app-surface-hover hover:not(:disabled):border-[var(--color-app-accent)]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
+              onClick={() => setCurrentMonthIndex(currentMonthIndex + 1)}
+              disabled={currentMonthIndex >= incomeMonths.length - 1}
+              aria-label="Previous month"
+            >
+              <FiChevronLeft />
+            </button>
+            <button
+              type="button"
+              className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-app-subtle bg-app-surface-hover cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-app-secondary [&_svg]:text-[1.3rem] hover:not(:disabled):bg-app-surface-hover hover:not(:disabled):border-[var(--color-app-accent)]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
+              onClick={() => setCurrentMonthIndex(currentMonthIndex - 1)}
+              disabled={currentMonthIndex <= 0}
+              aria-label="Next month"
+            >
+              <FiChevronRight />
+            </button>
+          </div>
+        )}
 
       {/* Charts Section */}
       {data.incomeData?.length ? (

@@ -7,6 +7,8 @@ import { useLocalization } from '@shared/context/localization';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionList from '@features/expenses/components/TransactionList';
 import Month from '@features/expenses/components/Home/Month';
+import IncomeTable from '@features/incomes/components/Income/IncomeTable';
+import { TransactionOrIncomeItem } from '@shared/type/types';
 
 interface Transaction {
   id: string;
@@ -19,7 +21,10 @@ interface Transaction {
 interface CalendarViewProps {
   transactions: Transaction[];
   currentMonth: string;
-  categoryLabels: Array<{ value: string; label: string }>;
+  categoryLabels?: Array<{ value: string; label: string }>;
+  variant?: 'expense' | 'income';
+  changedItems?: Record<string, unknown>;
+  onClearChangedItem?: (id: string) => void;
   onMonthChange: (direction: 'prev' | 'next') => void;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
@@ -29,7 +34,10 @@ interface CalendarViewProps {
 const CalendarView: React.FC<CalendarViewProps> = ({
   transactions,
   currentMonth,
-  categoryLabels,
+  categoryLabels = [],
+  variant = 'expense',
+  changedItems,
+  onClearChangedItem,
   onMonthChange,
   onEdit,
   onDelete,
@@ -81,11 +89,18 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     },
   }));
 
-  // Determine color based on amount
-  const getColorClass = (amount: number) => {
+  type AmountTier = 'amount-low' | 'amount-medium' | 'amount-high';
+
+  const getExpenseTier = (amount: number): AmountTier => {
     if (amount < 1000) return 'amount-low';
     if (amount < 3000) return 'amount-medium';
     return 'amount-high';
+  };
+
+  const getEventColorClasses = (tier: AmountTier): string => {
+    if (tier === 'amount-low') return 'bg-green-500/90 text-white';
+    if (tier === 'amount-medium') return 'bg-amber-400/90 text-stone-900';
+    return 'bg-red-600/90 text-white';
   };
 
   // Get month index from name
@@ -198,15 +213,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         eventContent={(eventInfo) => {
           const amount = eventInfo.event.extendedProps.total;
           const count = eventInfo.event.extendedProps.count;
-          const colorClass = getColorClass(amount);
           const baseClasses =
             'px-3 py-2 rounded-lg flex flex-col items-center justify-center min-h-10 border-0 outline-none text-center font-semibold leading-tight shadow-[0_1px_3px_rgba(0,0,0,0.2)] box-border ';
           const colorClasses =
-            colorClass === 'amount-low'
+            variant === 'income'
               ? 'bg-green-500/90 text-white'
-              : colorClass === 'amount-medium'
-                ? 'bg-amber-400/90 text-stone-900'
-                : 'bg-red-600/90 text-white';
+              : getEventColorClasses(getExpenseTier(amount));
           const responsiveClasses =
             'max-[640px]:px-2.5 max-[640px]:py-1.5 max-[640px]:min-h-9 max-[640px]:rounded-md';
 
@@ -233,10 +245,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         dayHeaderClassNames="calendar-day-header"
       />
 
-      {/* Month Chart */}
-      <div className="month-chart-wrapper mt-6 p-0">
-        <Month month={currentMonth} />
-      </div>
+      {variant === 'expense' && (
+        <div className="month-chart-wrapper mt-6 p-0">
+          <Month month={currentMonth} />
+        </div>
+      )}
 
       {/* Day Transactions Drawer */}
       <VaulDrawer
@@ -261,19 +274,36 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           </>
         }
       >
-        <TransactionList
-          transactions={selectedDayTransactions}
-          categoryLabels={categoryLabels}
-          pendingSyncIds={pendingSyncIds}
-          onEdit={(id) => {
-            setShowDayModal(false);
-            onEdit?.(id);
-          }}
-          onDelete={(id) => {
-            setShowDayModal(false);
-            onDelete?.(id);
-          }}
-        />
+        {variant === 'income' ? (
+          <IncomeTable
+            items={selectedDayTransactions as TransactionOrIncomeItem[]}
+            handleEdit={(id) => {
+              setShowDayModal(false);
+              onEdit?.(id);
+            }}
+            setShowDeleteModal={(id) => {
+              setShowDayModal(false);
+              onDelete?.(id);
+            }}
+            changedItems={changedItems}
+            handleClearChangedItem={onClearChangedItem}
+            pendingSyncIds={pendingSyncIds}
+          />
+        ) : (
+          <TransactionList
+            transactions={selectedDayTransactions}
+            categoryLabels={categoryLabels}
+            pendingSyncIds={pendingSyncIds}
+            onEdit={(id) => {
+              setShowDayModal(false);
+              onEdit?.(id);
+            }}
+            onDelete={(id) => {
+              setShowDayModal(false);
+              onDelete?.(id);
+            }}
+          />
+        )}
       </VaulDrawer>
     </div>
   );
