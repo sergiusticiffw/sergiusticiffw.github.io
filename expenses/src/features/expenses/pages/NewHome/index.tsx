@@ -12,7 +12,9 @@ import {
 import { getCategories, notificationType } from '@shared/utils/constants';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import TransactionFilters, { DateRangeValue } from '@features/expenses/components/Home/TransactionFilters';
-import TransactionList from '@features/expenses/components/TransactionList';
+import { TransactionsList } from '@shared/components/TransactionsList';
+import { HeroSpendCard } from '@shared/components/HeroSpendCard';
+import { Stat, StatsRow } from '@shared/ui';
 import CalendarView from '@features/expenses/components/CalendarView';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionForm from '@features/expenses/components/TransactionForm';
@@ -20,8 +22,6 @@ import {
   PageHeader,
   Loader,
   LoadingSpinner,
-  StatCard,
-  StatsGrid,
   DeleteConfirmDrawer,
   NoData,
 } from '@shared/components/Common';
@@ -282,6 +282,29 @@ const NewHome = () => {
         (monthIncome - (items.totals?.[currentMonth] || 0)).toFixed(2)
       );
 
+  const prevMonthKey =
+    currentMonthIndex < months.length - 1 ? months[currentMonthIndex + 1] : null;
+  const prevMonthTotal = prevMonthKey
+    ? items.totals?.[prevMonthKey] || 0
+    : 0;
+  const deltaPct =
+    prevMonthTotal > 0 && !hasFilters
+      ? (((displayTotal - prevMonthTotal) / prevMonthTotal) * 100).toFixed(1)
+      : null;
+
+  const monthDate = currentMonth ? new Date(`${currentMonth} 1`) : new Date();
+  const now = new Date();
+  const isCurrentMonth =
+    monthDate.getFullYear() === now.getFullYear() &&
+    monthDate.getMonth() === now.getMonth();
+  const daysInMonth = new Date(
+    monthDate.getFullYear(),
+    monthDate.getMonth() + 1,
+    0
+  ).getDate();
+  const today = now.getDate();
+  const daysLeft = isCurrentMonth ? Math.max(0, daysInMonth - today) : null;
+
   return (
     <div className={PAGE_CONTAINER_CLASS}>
       {/* Delete Drawer (Vaul) */}
@@ -415,32 +438,42 @@ const NewHome = () => {
             />
           </div>
 
-          {/* Stats Cards - Show all 3 when no filters, only Total when filtered */}
-          <StatsGrid columns={3} filtered={hasFilters}>
-            <StatCard
-              icon={<FiDollarSign />}
-              value={formatNumber(displayTotal)}
-              label={t('common.total')}
+          <HeroSpendCard
+            label={t('home.spentThisMonth')}
+            amount={formatNumber(displayTotal)}
+            deltaLabel={
+              deltaPct != null
+                ? `${Number(deltaPct) >= 0 ? '+' : ''}${deltaPct}% vs ${t('common.previous').toLowerCase()} month`
+                : undefined
+            }
+            deltaPositive={
+              deltaPct != null ? Number(deltaPct) <= 0 : undefined
+            }
+            subtitle={
+              !hasFilters
+                ? isCurrentMonth && daysLeft != null
+                  ? `${currentMonth} · ${daysLeft} ${t('home.daysLeft')}`
+                  : currentMonth
+                : currentMonth
+            }
+          />
+
+          <StatsRow className="sm:grid-cols-2">
+            <Stat
+              label={t('common.income')}
+              value={formatNumber(displayIncome)}
+              icon={<FiBriefcase />}
+              compact
             />
-
-            {!hasFilters && (
-              <>
-                <StatCard
-                  icon={<FiBriefcase />}
-                  value={formatNumber(displayIncome)}
-                  label={t('common.income')}
-                />
-
-                <StatCard
-                  icon={
-                    displayProfit >= 0 ? <FiTrendingUp /> : <FiTrendingDown />
-                  }
-                  value={formatNumber(displayProfit)}
-                  label={t('common.profit')}
-                />
-              </>
-            )}
-          </StatsGrid>
+            <Stat
+              label={t('common.profit')}
+              value={formatNumber(displayProfit)}
+              icon={
+                displayProfit >= 0 ? <FiTrendingUp /> : <FiTrendingDown />
+              }
+              compact
+            />
+          </StatsRow>
 
           {/* View Tabs - Below Search */}
           <div className="flex gap-2 mb-6">
@@ -496,15 +529,16 @@ const NewHome = () => {
             />
           ) : activeView === 'list' ? (
             <div>
-              <TransactionList
-                transactions={filteredTransactions.map((t) => ({
-                  ...t,
-                  dsc: t.dsc ?? '',
+              <TransactionsList
+                transactions={filteredTransactions.map((tx) => ({
+                  ...tx,
+                  dsc: tx.dsc ?? '',
                 }))}
                 categoryLabels={localizedCategories}
                 pendingSyncIds={pendingSyncIds}
                 onEdit={handleEdit}
                 onDelete={(id) => setShowDeleteModal(id)}
+                groupByDay
               />
             </div>
           ) : (

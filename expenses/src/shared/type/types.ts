@@ -214,4 +214,7 @@ export interface SettingsState {
   currency: string;
   theme: string;
   useChartsBackgroundColor: boolean;
+  compactListDensity: boolean;
+  showCategoryIcons: boolean;
+  onboardingComplete: boolean;
 }

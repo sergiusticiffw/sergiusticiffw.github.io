@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fi';
 import { Link } from '@tanstack/react-router';
 import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
+import { ProgressRing } from '@shared/ui';
 import type { ApiLoan } from '@shared/type/types';
 import { isDesktopLayout } from '@shared/utils/isDesktopLayout';
 
@@ -255,7 +256,7 @@ const LoansList: React.FC<LoansListProps> = ({
               to="/expenses/loan/$id"
               params={{ id: String(loan.id) }}
               data-id={loan.id}
-              className="bg-app-surface rounded-2xl py-4 pr-6 pl-4 flex items-stretch gap-4 relative z-[1] no-underline cursor-pointer w-full min-h-0 touch-pan-y overflow-hidden transition-all duration-200 hover:bg-app-surface-hover hover:translate-x-1 active:scale-[0.98]"
+              className="bg-app-surface border border-app-subtle rounded-2xl py-4 pr-4 pl-4 flex items-center gap-4 relative z-[1] no-underline cursor-pointer w-full min-h-0 touch-pan-y overflow-hidden transition-all duration-200 hover:bg-app-surface-hover hover:border-[var(--color-border-accent)] active:scale-[0.99] motion-safe"
               style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y pan-x pinch-zoom' }}
               onTouchStart={
                 !isDesktop
@@ -291,25 +292,14 @@ const LoansList: React.FC<LoansListProps> = ({
                   {formatNumber(loan.fp ?? '')}
                 </div>
                 <ItemSyncIndicator status={isPending ? 'pending' : undefined} />
-
-                <div className="flex items-center gap-2.5 w-full">
-                  <div className="flex-1 h-1 bg-app-surface rounded-full overflow-hidden relative">
-                    <span
-                      className="block h-full rounded-full transition-[width] duration-300 ease-out"
-                      style={{
-                        width: `${Math.min(progress, 100)}%`,
-                        backgroundColor: statusStyles.backgroundColor,
-                      }}
-                    />
-                  </div>
-                  <div
-                    className="text-[0.76rem] font-semibold whitespace-nowrap"
-                    style={{ color: statusStyles.color }}
-                  >
-                    {Math.round(progress)}%
-                  </div>
-                </div>
               </div>
+              <ProgressRing
+                value={progress}
+                size={52}
+                strokeWidth={4}
+                label={`${loan.title ?? ''} progress`}
+                className="shrink-0"
+              />
             </Link>
           </div>
         );

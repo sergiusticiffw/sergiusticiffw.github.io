@@ -44,6 +44,29 @@
   --color-warning: oklch(0.75 0.18 75);
   --color-info: oklch(0.62 0.18 250);
 
+  /* Semantic financial colors (modern UI) */
+  --color-income: oklch(0.65 0.19 160);
+  --color-expense: oklch(0.58 0.22 25);
+
+  /* Elevated surfaces & borders */
+  --color-surface-elevated: rgba(255, 255, 255, 0.1);
+  --color-surface-2: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+  --color-border-accent: color-mix(in srgb, var(--color-app-accent) 40%, transparent);
+
+  /* Typography scale */
+  --text-body-size: 0.9375rem;
+  --text-body-line: 1.375rem;
+  --text-caption-size: 0.8125rem;
+  --text-caption-line: 1.125rem;
+  --text-micro-size: 0.6875rem;
+  --text-micro-line: 0.875rem;
+
+  /* Motion */
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+
   /* Chart palette (optional: use in Highcharts etc. for consistent series colors) */
   --color-chart-1: var(--color-app-accent);
   --color-chart-2: oklch(0.65 0.19 160);
@@ -198,6 +221,34 @@
 
   table tr {
     z-index: 10;
+  }
+}
+
+/* Typography utilities (modern UI components) */
+@layer components {
+  .text-body {
+    font-size: var(--text-body-size);
+    line-height: var(--text-body-line);
+  }
+  .text-caption {
+    font-size: var(--text-caption-size);
+    line-height: var(--text-caption-line);
+  }
+  .text-micro {
+    font-size: var(--text-micro-size);
+    line-height: var(--text-micro-line);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .text-heading {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .motion-safe {
+      transition-timing-function: ease-out;
+    }
   }
 }
 

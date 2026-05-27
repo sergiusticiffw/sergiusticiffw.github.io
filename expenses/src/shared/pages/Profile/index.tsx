@@ -8,7 +8,12 @@ import {
   setSettingsTheme,
   useChartsBackground,
   setChartsBackground,
+  useCompactListDensity,
+  setCompactListDensity,
+  useShowCategoryIcons,
+  setShowCategoryIcons,
 } from '@stores/settingsStore';
+import { SettingsSection } from '@shared/ui';
 import { APP_THEMES } from '@shared/constants/themes';
 import { useNotification } from '@shared/context/notification';
 import { useLocalization } from '@shared/context/localization';
@@ -21,7 +26,6 @@ import {
   notificationType,
   availableCharts,
   currencies,
-  getCategories,
 } from '@shared/utils/constants';
 import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 import { googleLogout } from '@react-oauth/google';
@@ -35,7 +39,8 @@ const Profile = () => {
   const currency = useSettingsCurrency();
   const currentTheme = useSettingsTheme();
   const useChartsBackgroundColor = useChartsBackground();
-  const localizedCategories = getCategories();
+  const compactListDensity = useCompactListDensity();
+  const showCategoryIcons = useShowCategoryIcons();
   const [state, setState] = useState({
     visibleCharts:
       JSON.parse(localStorage.getItem('visibleCharts')) || availableCharts,
@@ -96,24 +101,6 @@ const Profile = () => {
         }
       }
     );
-  };
-
-  const onBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    const name = event.target.name;
-    event.preventDefault();
-    localStorage.setItem(name, JSON.stringify(value));
-    dispatch && dispatch({ type: 'UPDATE_USER', payload: { [name]: value } });
-  };
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    const name = event.target.name;
-    event.preventDefault();
-    setState({
-      ...state,
-      [name]: value,
-    });
   };
 
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -227,6 +214,34 @@ const Profile = () => {
             })}
           </div>
         </div>
+
+        <SettingsSection
+          title={t('settings.display')}
+          description={t('settings.compactDensityDesc')}
+        >
+          <div className="flex flex-col gap-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={compactListDensity}
+                onChange={(e) => setCompactListDensity(e.target.checked)}
+              />
+              <span className="text-body text-app-secondary">
+                {t('settings.compactDensity')}
+              </span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showCategoryIcons}
+                onChange={(e) => setShowCategoryIcons(e.target.checked)}
+              />
+              <span className="text-body text-app-secondary">
+                {t('settings.categoryIcons')}
+              </span>
+            </label>
+          </div>
+        </SettingsSection>
 
         {/* Language & Currency Settings */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">

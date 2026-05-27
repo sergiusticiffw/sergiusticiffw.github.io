@@ -33,6 +33,10 @@ interface TransactionListProps {
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   pendingSyncIds?: Record<string, true>;
+  /** Hides the left date block (day/month) in each row - used in calendar day drawer. */
+  hideDateColumn?: boolean;
+  /** Hides the "Date" sort button. */
+  hideDateSortButton?: boolean;
 }
 
 type SortField = 'date' | 'amount' | null;
@@ -44,6 +48,8 @@ const TransactionList: React.FC<TransactionListProps> = ({
   onEdit,
   onDelete,
   pendingSyncIds,
+  hideDateColumn = false,
+  hideDateSortButton = false,
 }) => {
   const listRef = useRef<HTMLDivElement>(null);
   const [sortField, setSortField] = useState<SortField>(null);
@@ -112,13 +118,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
       ref={listRef}
     >
       <div className="flex gap-2 mb-3">
-        <button
-          type="button"
-          className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
-          onClick={() => handleSort('date')}
-        >
-          Date {getSortIcon('date')}
-        </button>
+        {!hideDateSortButton && (
+          <button
+            type="button"
+            className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
+            onClick={() => handleSort('date')}
+          >
+            Date {getSortIcon('date')}
+          </button>
+        )}
         <button
           type="button"
           className={`${sortBtn} ${sortField === 'amount' ? sortBtnActive : ''}`}
@@ -186,10 +194,16 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   : undefined
               }
             >
-              <div className="flex flex-col items-center justify-center min-w-[50px] shrink-0">
-                <div className="text-2xl font-bold text-app-primary leading-none">{day}</div>
-                <div className="text-xs font-semibold text-app-muted mt-1 tracking-wide">{month}</div>
-              </div>
+              {!hideDateColumn && (
+                <div className="flex flex-col items-center justify-center min-w-[50px] shrink-0">
+                  <div className="text-2xl font-bold text-app-primary leading-none">
+                    {day}
+                  </div>
+                  <div className="text-xs font-semibold text-app-muted mt-1 tracking-wide">
+                    {month}
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center justify-center min-w-[80px] max-w-[100px] bg-app-surface-hover rounded-xl py-2 px-3 shrink-0">
                 <div className="text-xs font-medium text-app-secondary text-center whitespace-nowrap overflow-hidden text-ellipsis">

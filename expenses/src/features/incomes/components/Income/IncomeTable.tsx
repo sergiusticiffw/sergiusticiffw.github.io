@@ -28,6 +28,10 @@ interface IncomeTableProps {
   changedItems?: any;
   handleClearChangedItem?: any;
   pendingSyncIds?: Record<string, true>;
+  /** Hides the left date block (day/month/year) in each row - used in calendar day drawer. */
+  hideDateColumn?: boolean;
+  /** Hides the "Date" sort button. */
+  hideDateSortButton?: boolean;
 }
 
 type SortField = 'date' | 'amount' | null;
@@ -40,6 +44,8 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   handleClearChangedItem,
   changedItems,
   pendingSyncIds,
+  hideDateColumn = false,
+  hideDateSortButton = false,
 }) => {
   const listRef = useRef<any>(null);
   const [sortField, setSortField] = useState<SortField>('date');
@@ -134,13 +140,15 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
           {t('income.incomeRecords')}
         </h3>
         <div className="flex gap-2">
-          <button
-            type="button"
-            className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
-            onClick={() => handleSort('date')}
-          >
-            Date {getSortIcon('date')}
-          </button>
+          {!hideDateSortButton && (
+            <button
+              type="button"
+              className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
+              onClick={() => handleSort('date')}
+            >
+              Date {getSortIcon('date')}
+            </button>
+          )}
           <button
             type="button"
             className={`${sortBtn} ${sortField === 'amount' ? sortBtnActive : ''}`}
@@ -211,11 +219,19 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                     : undefined
                 }
               >
-                <div className="flex flex-col items-center justify-center min-w-[50px] shrink-0">
-                  <div className="text-2xl font-bold text-white leading-none">{day}</div>
-                  <div className="text-xs font-semibold text-white/50 mt-1 tracking-wide">{month}</div>
-                  <div className="text-xs font-semibold text-white/50 tracking-wide">{year}</div>
-                </div>
+                {!hideDateColumn && (
+                  <div className="flex flex-col items-center justify-center min-w-[50px] shrink-0">
+                    <div className="text-2xl font-bold text-white leading-none">
+                      {day}
+                    </div>
+                    <div className="text-xs font-semibold text-white/50 mt-1 tracking-wide">
+                      {month}
+                    </div>
+                    <div className="text-xs font-semibold text-white/50 tracking-wide">
+                      {year}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex-1 min-w-0">
                   <div className="text-base font-medium text-white/90 leading-snug break-words">

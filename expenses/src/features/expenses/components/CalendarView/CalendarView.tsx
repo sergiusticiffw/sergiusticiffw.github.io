@@ -5,10 +5,10 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { formatNumber, getLocale } from '@shared/utils/utils';
 import { useLocalization } from '@shared/context/localization';
 import VaulDrawer from '@shared/components/VaulDrawer';
-import TransactionList from '@features/expenses/components/TransactionList';
+import { TransactionsList } from '@shared/components/TransactionsList';
 import Month from '@features/expenses/components/Home/Month';
-import IncomeTable from '@features/incomes/components/Income/IncomeTable';
 import { TransactionOrIncomeItem } from '@shared/type/types';
+import IncomeTable from '@features/incomes/components/Income/IncomeTable';
 
 interface Transaction {
   id: string;
@@ -288,12 +288,27 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             changedItems={changedItems}
             handleClearChangedItem={onClearChangedItem}
             pendingSyncIds={pendingSyncIds}
+            hideDateColumn
+            hideDateSortButton
           />
         ) : (
-          <TransactionList
-            transactions={selectedDayTransactions}
+          <TransactionsList
+            variant="expense"
+            transactions={(
+              selectedDayTransactions as TransactionOrIncomeItem[]
+            ).map((tx) => ({
+              id: tx.id,
+              dsc: tx.dsc ?? '',
+              sum: tx.sum,
+              cat: tx.cat,
+              dt: tx.dt,
+            }))}
             categoryLabels={categoryLabels}
             pendingSyncIds={pendingSyncIds}
+            changedItems={changedItems as Record<string, { type?: string }>}
+            groupByDay={false}
+            hideDateColumn
+            hideSort
             onEdit={(id) => {
               setShowDayModal(false);
               onEdit?.(id);

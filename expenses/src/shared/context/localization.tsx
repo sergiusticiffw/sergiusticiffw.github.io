@@ -92,6 +92,8 @@ const translations = {
 
     // Home Page
     'home.title': 'Expenses',
+    'home.spentThisMonth': 'Spent this month',
+    'home.daysLeft': 'days left in month',
     'home.noData': 'No transaction records found.',
     'home.noDataDesc':
       'Start tracking your expenses by adding your first transaction.',
@@ -171,6 +173,13 @@ const translations = {
     'profile.chartsMoveToVisible': 'Move to Visible',
     'profile.account': 'Account',
     'profile.signOut': 'Sign Out',
+
+    // Settings (UI branch)
+    'settings.display': 'Display',
+    'settings.compactDensity': 'Compact list',
+    'settings.compactDensityDesc': 'Reduce spacing in transaction lists',
+    'settings.categoryIcons': 'Category icons',
+    'settings.categoryIconsDesc': 'Show colored icons for categories',
 
     'theme.default': 'Default',
     'theme.navy': 'Navy',
@@ -644,6 +653,8 @@ const translations = {
 
     // Home Page
     'home.title': 'Cheltuieli',
+    'home.spentThisMonth': 'Cheltuit luna aceasta',
+    'home.daysLeft': 'zile rămase în lună',
     'home.noData': 'Nu s-au găsit înregistrări de tranzacții.',
     'home.noDataDesc':
       'Începe să îți urmărești cheltuielile adăugând prima ta tranzacție.',
@@ -726,6 +737,13 @@ const translations = {
     'profile.chartsMoveToVisible': 'Mută la Vizibile',
     'profile.account': 'Cont',
     'profile.signOut': 'Deconectare',
+
+    // Settings (UI branch)
+    'settings.display': 'Afișare',
+    'settings.compactDensity': 'Listă compactă',
+    'settings.compactDensityDesc': 'Reduce spațiul în listele de tranzacții',
+    'settings.categoryIcons': 'Iconițe categorii',
+    'settings.categoryIconsDesc': 'Arată iconițe colorate pentru categorii',
 
     'theme.default': 'Implicit',
     'theme.navy': 'Marini',
