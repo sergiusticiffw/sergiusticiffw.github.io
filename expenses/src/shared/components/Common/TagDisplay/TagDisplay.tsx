@@ -65,7 +65,7 @@ const TagDisplay: React.FC<TagDisplayProps> = ({
 
   const tagsInline = 'inline-flex flex-wrap gap-1.5 items-center';
   const tagInline =
-    'inline-block bg-white/10 rounded-md py-1 px-2 text-xs font-medium text-white/60 whitespace-nowrap';
+    'inline-block bg-white/14 rounded-md py-1 px-2 text-xs font-semibold text-white/85 whitespace-nowrap border border-white/10';
 
   return (
     <span className={className}>

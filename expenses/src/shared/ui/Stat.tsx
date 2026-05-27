@@ -24,7 +24,10 @@ export function Stat({
     <Card
       variant="surface"
       padding={compact ? 'sm' : 'md'}
-      className={cn('flex flex-col gap-1 min-w-0', className)}
+      className={cn(
+        'flex flex-col gap-1 min-w-0 border-[var(--color-border-subtle)] shadow-[0_8px_28px_rgba(0,0,0,0.24)]',
+        className
+      )}
     >
       <div className="flex items-center gap-2 min-w-0">
         {icon && (
@@ -41,7 +44,7 @@ export function Stat({
         className={cn(
           'tabular-nums text-app-primary m-0 leading-tight truncate',
           compact
-            ? 'text-[1.125rem] font-semibold sm:text-xl'
+            ? 'text-[1.25rem] font-bold sm:text-xl'
             : 'text-2xl font-bold sm:text-[1.75rem]'
         )}
       >

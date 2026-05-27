@@ -261,8 +261,9 @@ function TransactionsList({
         <div
           data-id={transaction.id}
           className={cn(
-            'bg-app-surface border border-app-subtle rounded-2xl flex items-center gap-3 cursor-pointer transition-all duration-200 relative z-[1] w-full touch-pan-y',
-            'hover:bg-app-surface-hover hover:border-[var(--color-border-accent)] active:scale-[0.99] motion-safe',
+            'bg-app-surface border border-white/8 rounded-2xl flex items-center gap-3 cursor-pointer transition-all duration-200 relative z-[1] w-full touch-pan-y',
+            'shadow-[0_8px_28px_rgba(0,0,0,0.28)]',
+            'hover:bg-app-surface-hover hover:border-[var(--color-border-accent)] hover:shadow-[0_10px_32px_rgba(0,0,0,0.34)] active:scale-[0.99] motion-safe',
             compact ? 'p-2.5' : 'p-3 sm:p-4'
           )}
           style={{ touchAction: 'pan-y pan-x pinch-zoom' }}
