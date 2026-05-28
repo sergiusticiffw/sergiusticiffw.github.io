@@ -78,6 +78,30 @@ const getNumberOfMonths = (firstDate: string, secondDate: string): number => {
 };
 
 /**
+ * Calculate number of payment periods between two dates.
+ *
+ * Banking convention used here:
+ * - We count payments by month, but the end day matters.
+ * - If `endDay` is before `startDay` (e.g. 22.05 → 20.05), the last month does not
+ *   represent a full additional payment period, so we do NOT add the extra +1 period.
+ * - If `endDay` is on/after `startDay`, we include the last period.
+ *
+ * Examples:
+ * - 22.05.2026 → 20.05.2046: monthsDiff=240, endDay<startDay ⇒ periods=240
+ * - 20.05.2026 → 20.05.2046: monthsDiff=240, endDay>=startDay ⇒ periods=241
+ */
+const getNumberOfPaymentPeriods = (startDate: string, endDate: string): number => {
+  const [day1] = splitDate(startDate);
+  const [day2] = splitDate(endDate);
+  const startDay = Number(day1);
+  const endDay = Number(day2);
+
+  const monthsDiff = getNumberOfMonths(startDate, endDate);
+  const extra = endDay >= startDay ? 1 : 0;
+  return Math.max(1, monthsDiff + extra);
+};
+
+/**
  * Calculate annuity payment using the standard present value of annuity formula
  *
  * MATHEMATICAL FOUNDATION:
@@ -128,9 +152,8 @@ export const calculateAnnuity = (
     throw new Error('calculateAnnuity: rate must be non-negative');
   }
 
-  // Calculate number of remaining payment periods (months)
-  // Use inclusive count: payments on both start and end month = getNumberOfMonths + 1
-  const n = Math.max(1, getNumberOfMonths(startDate, endDate) + 1);
+  // Calculate number of remaining payment periods
+  const n = getNumberOfPaymentPeriods(startDate, endDate);
 
   // Edge case: If loan is at maturity or invalid period, return principal as final payment
   if (n <= 0) {
@@ -200,9 +223,7 @@ export const calculateLinearPrincipal = (
     throw new Error('calculateLinearPrincipal: principal must be positive');
   }
 
-  // Use inclusive count: payments on both start and end month = getNumberOfMonths + 1
-  const rawMonths = getNumberOfMonths(startDate, endDate);
-  const n = Math.max(1, rawMonths + 1);
+  const n = getNumberOfPaymentPeriods(startDate, endDate);
 
   if (n <= 0) {
     return principal;
@@ -330,11 +351,7 @@ export const recalculateAfterRateChange = (params: {
   }
 
   // Calculate remaining months from rate change date to loan end date
-  // Use inclusive count: payments on both start and end month = getNumberOfMonths + 1
-  const remainingMonths = Math.max(
-    1,
-    getNumberOfMonths(rateChangeDate, loanEndDate) + 1
-  );
+  const remainingMonths = getNumberOfPaymentPeriods(rateChangeDate, loanEndDate);
 
   if (remainingMonths <= 0) {
     return {

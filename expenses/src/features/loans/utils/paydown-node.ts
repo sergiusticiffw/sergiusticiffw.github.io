@@ -921,25 +921,13 @@ class PaydownCalculator {
     this.eventArray.push({ ...event });
   };
 
-  private moveToNextMondayIfWeekend = (date: Date): string => {
-    const day = date.getDay(); // 0 = Sunday, 6 = Saturday
-
-    if (day === 6) {
-      date.setDate(date.getDate() + 2); // Saturday → Monday
-    } else if (day === 0) {
-      date.setDate(date.getDate() + 1); // Sunday → Monday
-    }
-
-    return `${zeroFill(date.getDate())}.${zeroFill(date.getMonth() + 1)}.${date.getFullYear()}`;
-  };
-
   private addEvent = (event: PaydownEvent): void => {
     if (!event.hasOwnProperty('date')) {
       throw new Error('addEvent: date missing from event');
     }
-
-    const date = this.parseDate(event.date);
-    event.date = this.moveToNextMondayIfWeekend(date);
+    // IMPORTANT: Keep the event date exactly as provided (calendar date),
+    // without shifting weekends to Monday. Charting and interest day-counting
+    // are based on the configured dates, not on business days.
     this.eventArray.push({ ...event });
   };
 
