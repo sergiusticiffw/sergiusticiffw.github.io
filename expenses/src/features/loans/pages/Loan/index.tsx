@@ -255,6 +255,14 @@ const Loan: React.FC = () => {
   const currentRate = (() => {
     if (!amortizationSchedule?.length) return loanData.rate || 0;
 
+    const parseDateToUtcMs = (date: string): number | null => {
+      const parts = (date ?? '').split('.');
+      if (parts.length !== 3) return null;
+      const [dd, mm, yyyy] = parts.map((p) => Number(p));
+      if (!dd || !mm || !yyyy) return null;
+      return Date.UTC(yyyy, mm - 1, dd);
+    };
+
     const parseRate = (row: any): number | null => {
       const rateRaw = Array.isArray(row) ? row[1] : row?.rate;
       if (rateRaw === '-' || rateRaw == null || rateRaw === '') return null;
@@ -262,16 +270,25 @@ const Loan: React.FC = () => {
       return Number.isFinite(r) && r >= 0 ? r : null;
     };
 
-    // Prefer the latest *paid* row rate (reflects current real state, not future simulation).
+    // Prefer the latest rate that is effective "now" (by date), regardless of whether a payment happened.
+    // This fixes cases where the rate changed but there was no paid installment yet.
+    const todayUtc =
+      Date.UTC(
+        new Date().getFullYear(),
+        new Date().getMonth(),
+        new Date().getDate()
+      ) ?? Date.now();
+
     for (let i = amortizationSchedule.length - 1; i >= 0; i--) {
       const row: any = amortizationSchedule[i];
-      const wasPaid = Array.isArray(row) ? row[7] : row?.was_payed;
-      if (wasPaid !== true) continue;
+      const dateRaw = Array.isArray(row) ? row[0] : row?.date;
+      const rowUtc = typeof dateRaw === 'string' ? parseDateToUtcMs(dateRaw) : null;
+      if (rowUtc == null || rowUtc > todayUtc) continue;
       const r = parseRate(row);
       if (r != null) return r;
     }
 
-    // Fallback: latest available rate in the schedule.
+    // Fallback: latest available numeric rate in the schedule (even if future).
     for (let i = amortizationSchedule.length - 1; i >= 0; i--) {
       const r = parseRate(amortizationSchedule[i] as any);
       if (r != null) return r;

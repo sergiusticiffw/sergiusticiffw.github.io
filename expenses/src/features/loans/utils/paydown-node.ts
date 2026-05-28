@@ -1671,6 +1671,8 @@ export default function Paydown() {
       // Sum reduction and get last principal from payment log (graph) where was_payed === true
       let sumOfReductionsAfterPaid = 0;
       let remainingPrincipalAfterPaid = remainingPrincipal;
+      let hasAnyPaidPayment = false;
+      let hasAnyPrincipalState = false;
       if (paymentsArray && paymentsArray.length > 0) {
         paymentsArray.forEach((p: PaymentLog) => {
           if (
@@ -1679,6 +1681,8 @@ export default function Paydown() {
             p.reduction !== null &&
             p.reduction !== '-'
           ) {
+            hasAnyPaidPayment = true;
+            hasAnyPrincipalState = true;
             const r =
               typeof p.reduction === 'string'
                 ? parseFloat(p.reduction) || 0
@@ -1686,24 +1690,37 @@ export default function Paydown() {
             sumOfReductionsAfterPaid += r;
           }
         });
-        // Last principal from last was_payed entry (chronological order)
+        // Last principal from last paid entry OR last principal reset entry (chronological order).
+        // Principal reset entries are logged with principal value and '-' for installment/reduction/interest.
         for (let i = paymentsArray.length - 1; i >= 0; i--) {
           const p = paymentsArray[i] as PaymentLog;
-          if (p.was_payed === true) {
-            if (
-              p.principal !== undefined &&
-              p.principal !== null &&
-              p.principal !== '-'
-            ) {
-              const pr =
-                typeof p.principal === 'string'
-                  ? parseFloat(p.principal) || 0
-                  : p.principal || 0;
-              remainingPrincipalAfterPaid = pr;
-            }
+          const principalIsPresent =
+            p.principal !== undefined && p.principal !== null && p.principal !== '-';
+          if (!principalIsPresent) continue;
+
+          const principalValue =
+            typeof p.principal === 'string'
+              ? parseFloat(p.principal) || 0
+              : p.principal || 0;
+
+          const isPrincipalResetEvent =
+            p.installment === '-' && p.reduction === '-' && p.interest === '-';
+
+          if (p.was_payed === true || isPrincipalResetEvent) {
+            if (p.was_payed === true) hasAnyPaidPayment = true;
+            hasAnyPrincipalState = true;
+            remainingPrincipalAfterPaid = principalValue;
             break;
           }
         }
+      }
+      // If there is no paid payment and no explicit principal-state event yet,
+      // treat "current" principal as the effective principal
+      // (init principal or last new_principal). This avoids showing 0 principal/daily interest
+      // just because the schedule simulates future payments until end_date.
+      if (!hasAnyPrincipalState) {
+        remainingPrincipalAfterPaid =
+          paydown.getEffectivePrincipal() || initObj.principal!;
       }
 
       let sumOfInstallments: number;
