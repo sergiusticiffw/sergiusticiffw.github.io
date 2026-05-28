@@ -50,9 +50,10 @@ export function buildEventsFromApiPayments(
 ): PaydownEvent[] {
   if (!payments?.length) return [];
   return payments.map((item) => {
+    const isSimulatedPayment = Number(item.fisp ?? 0) !== 0;
     const event: PaydownEvent = {
       date: transformDateFormat(item.fdt ?? ''),
-      isSimulatedPayment: Number(item.fisp ?? 0) !== 0,
+      isSimulatedPayment,
     };
     if (item.fr != null && item.fr !== '')
       event.rate = transformToNumber(item.fr);
@@ -69,6 +70,12 @@ export function buildEventsFromApiPayments(
     }
     if (item.title != null)
       (event as PaydownEvent & { title?: string }).title = item.title;
+
+    // If the API provides a simulated payment with a date but without an explicit installment amount,
+    // treat it as a scheduled recurring payment so it appears in the schedule/graph and affects projections.
+    if (isSimulatedPayment && event.pay_installment == null) {
+      event.pay_recurring = true;
+    }
     return event;
   });
 }

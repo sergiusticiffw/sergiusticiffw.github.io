@@ -71,7 +71,13 @@ const Loan: React.FC = () => {
     [filteredData?.data]
   );
   const scheduledPaymentItems = useMemo(
-    () => paymentsForLoan.filter((item) => !isEarlyPaymentFromApiItem(item)),
+    // Baseline for interest-savings comparison: exclude early/extra and simulated payments.
+    // Simulated payments are what-if scenarios and must affect "with extra payments" only.
+    () =>
+      paymentsForLoan.filter(
+        (item) =>
+          !isEarlyPaymentFromApiItem(item) && Number(item.fisp ?? 0) === 0
+      ),
     [paymentsForLoan]
   );
   const amort = useAmortization(loan ?? null, paymentsForLoan);
@@ -90,11 +96,15 @@ const Loan: React.FC = () => {
   const amortizationSchedule = amort.schedule;
   const errorMessage = amort.error;
   const hasEarlyPayments = paymentsForLoan.some(isEarlyPaymentFromApiItem);
+  const hasSimulatedPayments = paymentsForLoan.some(
+    (item) => Number(item.fisp ?? 0) !== 0
+  );
+  const hasExtraPayments = hasEarlyPayments || hasSimulatedPayments;
 
   let interestSavings = 0;
   if (
     (loanStatus === 'active' || loanStatus === 'completed') &&
-    hasEarlyPayments &&
+    hasExtraPayments &&
     paydown &&
     scheduledAmort.paydown
   ) {
