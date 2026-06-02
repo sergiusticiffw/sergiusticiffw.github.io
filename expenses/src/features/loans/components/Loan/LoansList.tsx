@@ -221,37 +221,6 @@ const LoansList: React.FC<LoansListProps> = ({
               </div>
             )}
 
-            {isDesktop && (
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 z-[3] flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onEdit(loan.id);
-                  }}
-                  className="p-1.5 rounded-md text-app-muted/70 hover:text-app-primary hover:bg-white/10 transition-colors [&_svg]:text-[0.95rem]"
-                  aria-label="Edit"
-                  title="Edit"
-                >
-                  <FiEdit2 />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onDelete(loan.id);
-                  }}
-                  className="p-1.5 rounded-md text-app-muted/70 hover:text-app-primary hover:bg-white/10 transition-colors [&_svg]:text-[0.95rem]"
-                  aria-label="Delete"
-                  title="Delete"
-                >
-                  <FiTrash2 />
-                </button>
-              </div>
-            )}
-
             <Link
               to="/expenses/loan/$id"
               params={{ id: String(loan.id) }}
@@ -298,8 +267,38 @@ const LoansList: React.FC<LoansListProps> = ({
                 size={52}
                 strokeWidth={4}
                 label={`${loan.title ?? ''} progress`}
-                className="shrink-0"
+                className={`shrink-0 ${isDesktop ? 'pointer-events-none' : ''}`}
               />
+              {isDesktop && (
+                <div className="shrink-0 flex flex-col gap-2 ml-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onEdit(loan.id);
+                    }}
+                    className="p-2 rounded-lg text-app-muted/70 bg-black/20 border border-white/10 hover:text-app-primary hover:bg-white/10 hover:border-white/20 transition-colors [&_svg]:text-[1rem]"
+                    aria-label="Edit"
+                    title="Edit"
+                  >
+                    <FiEdit2 />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onDelete(loan.id);
+                    }}
+                    className="p-2 rounded-lg text-app-muted/70 bg-black/20 border border-white/10 hover:text-app-primary hover:bg-white/10 hover:border-white/20 transition-colors [&_svg]:text-[1rem]"
+                    aria-label="Delete"
+                    title="Delete"
+                  >
+                    <FiTrash2 />
+                  </button>
+                </div>
+              )}
             </Link>
           </div>
         );
