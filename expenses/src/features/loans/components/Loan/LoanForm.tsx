@@ -112,9 +112,9 @@ const LoanForm: React.FC<LoanFormProps> = ({
       },
     },
     field_rec_first_payment_date: {
-      required: false,
+      required: true,
       custom: (value: any, state: any) => {
-        if (!value) return true; // Optional field, empty is valid
+        if (!value) return false;
         const currentState = state || formState;
         if (
           !currentState ||
@@ -130,11 +130,11 @@ const LoanForm: React.FC<LoanFormProps> = ({
       },
     },
     field_recurring_payment_day: {
-      required: false,
+      required: true,
       custom: (value: any) => {
-        if (!value) return true; // Optional field
+        if (!value) return false;
         const strValue = String(value).trim();
-        if (strValue === '') return true;
+        if (strValue === '') return false;
         const num = parseInt(strValue);
         return !isNaN(num) && num >= 1 && num <= 31;
       },
@@ -315,6 +315,7 @@ const LoanForm: React.FC<LoanFormProps> = ({
             label={t('loanForm.firstPaymentDate')}
             value={formState.field_rec_first_payment_date}
             onChange={handleChange}
+            required
             inputRef={firstPaymentDateRef}
             isValid={getFieldValidation(
               'field_rec_first_payment_date',
@@ -328,6 +329,7 @@ const LoanForm: React.FC<LoanFormProps> = ({
             label={t('loanForm.paymentDayOfMonth')}
             value={formState.field_recurring_payment_day}
             onChange={handleChange}
+            required
             min="1"
             max="31"
             isValid={getFieldValidation(
