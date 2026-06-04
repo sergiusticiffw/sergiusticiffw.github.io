@@ -125,8 +125,8 @@ const LoanForm: React.FC<LoanFormProps> = ({
         const paymentDate = new Date(value);
         const startDate = new Date(currentState.field_start_date);
         const endDate = new Date(currentState.field_end_date);
-        // First payment date must be >= start date AND <= end date
-        return paymentDate >= startDate && paymentDate <= endDate;
+        // First payment date must be after start date AND on or before end date
+        return paymentDate > startDate && paymentDate <= endDate;
       },
     },
     field_recurring_payment_day: {
@@ -171,7 +171,11 @@ const LoanForm: React.FC<LoanFormProps> = ({
   useEffect(() => {
     if (firstPaymentDateRef.current) {
       if (formState.field_start_date) {
-        firstPaymentDateRef.current.min = formState.field_start_date;
+        const minFirstPaymentDate = new Date(formState.field_start_date);
+        minFirstPaymentDate.setDate(minFirstPaymentDate.getDate() + 1);
+        firstPaymentDateRef.current.min = minFirstPaymentDate
+          .toISOString()
+          .split('T')[0];
       }
       if (formState.field_end_date) {
         firstPaymentDateRef.current.max = formState.field_end_date;
@@ -195,7 +199,7 @@ const LoanForm: React.FC<LoanFormProps> = ({
       }
     }
 
-    // Validate first payment date is between start and end
+    // Validate first payment date is after start and on or before end
     if (
       formState.field_rec_first_payment_date &&
       formState.field_start_date &&
@@ -204,7 +208,7 @@ const LoanForm: React.FC<LoanFormProps> = ({
       const paymentDate = new Date(formState.field_rec_first_payment_date);
       const startDate = new Date(formState.field_start_date);
       const endDate = new Date(formState.field_end_date);
-      if (paymentDate < startDate || paymentDate > endDate) {
+      if (paymentDate <= startDate || paymentDate > endDate) {
         showNotification(
           t('loanForm.firstPaymentDateMustBeBetweenStartAndEnd'),
           notificationType.ERROR

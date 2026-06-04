@@ -471,7 +471,7 @@ const translations = {
     'loanForm.updateLoan': 'Update Loan',
     'loanForm.endDateMustBeAfterStartDate': 'End date must be after start date',
     'loanForm.firstPaymentDateMustBeBetweenStartAndEnd':
-      'First payment date must be between start and end date',
+      'First payment date must be after the start date and on or before the end date',
 
     // Payment
     'payment.simulated': 'Simulated',
@@ -1040,7 +1040,7 @@ const translations = {
     'loanForm.endDateMustBeAfterStartDate':
       'Data de sfârșit trebuie să fie după data de început',
     'loanForm.firstPaymentDateMustBeBetweenStartAndEnd':
-      'Data primei plăți trebuie să fie între data de început și data de sfârșit',
+      'Data primei plăți trebuie să fie după data de început și până la data de sfârșit (inclusiv)',
 
     // Payment
     'payment.simulated': 'Simulat',
