@@ -138,31 +138,29 @@ const Loan: React.FC = () => {
         return sum + installment + singleFee;
       }, 0) ?? 0;
 
-  const calculateProgress = () => {
-    if (loanStatus === 'completed') return 100;
-    if (loanStatus === 'pending') return 0;
-    if (!loan.fp || !paydown) return 0;
-
-    const sumInstallments = paydown.sum_of_installments || 0;
-
-    if (sumInstallments === 0) return 0;
-
-    const progressValue = ((totalPaidAmount ?? 0) / sumInstallments) * 100;
-
-    return Math.max(0, Math.min(progressValue, 100));
-  };
-
-  const progress = calculateProgress();
-
   // Use effective_principal from paydown (new_principal if refinanced, else init)
   const totalPrincipal =
     (paydown?.effective_principal ?? parseFloat(String(loan.fp ?? '0'))) ||
     parseFloat(String(loan.fp ?? '0'));
   const totalInstallments =
-    paydown?.sum_of_installments +
-      paydown?.remaining_principal +
-      paydown?.unpaid_interest +
-      paydown?.sum_of_fees || 0;
+    (paydown?.sum_of_installments ?? 0) +
+    (paydown?.remaining_principal ?? 0) +
+    (paydown?.unpaid_interest ?? 0) +
+    (paydown?.sum_of_fees ?? 0);
+
+  const calculateProgress = () => {
+    if (loanStatus === 'completed') return 100;
+    if (loanStatus === 'pending') return 0;
+    if (!loan.fp || !paydown) return 0;
+
+    if (totalInstallments === 0) return 0;
+
+    const progressValue = ((totalPaidAmount ?? 0) / totalInstallments) * 100;
+
+    return Math.max(0, Math.min(progressValue, 100));
+  };
+
+  const progress = calculateProgress();
   const remainingAmount = totalInstallments - (totalPaidAmount ?? 0);
   const daysCalculated = paydown?.days_calculated || 0;
 

@@ -220,9 +220,16 @@ const Loans: FC = () => {
     const entry = amortizationByLoanId.get(loan.id);
     if (!entry) return 0;
     const { paydown, totalPaidAmount } = entry;
-    const sumInstallments = paydown.sum_of_installments || 0;
-    if (sumInstallments === 0) return 0;
-    return Math.max(0, Math.min(100, (totalPaidAmount / sumInstallments) * 100));
+    const totalInstallments =
+      (paydown.sum_of_installments ?? 0) +
+      (paydown.remaining_principal ?? 0) +
+      (paydown.unpaid_interest ?? 0) +
+      (paydown.sum_of_fees ?? 0);
+    if (totalInstallments === 0) return 0;
+    return Math.max(
+      0,
+      Math.min(100, (totalPaidAmount / totalInstallments) * 100)
+    );
   };
 
   // Filter loans
