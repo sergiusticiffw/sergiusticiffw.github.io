@@ -50,6 +50,7 @@ const Loan: React.FC = () => {
   const { data, dataDispatch } = useLoan();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
+  const [prefillNextPayment, setPrefillNextPayment] = useState(false);
   const [loanFormEditSubmitting, setLoanFormEditSubmitting] = useState(false);
   const [paymentFormSubmitting, setPaymentFormSubmitting] = useState(false);
   const { loans } = data;
@@ -90,22 +91,49 @@ const Loan: React.FC = () => {
     () => getNextRegularPayment(amort.schedule),
     [amort.schedule]
   );
-  const addPaymentValues = useMemo(() => {
+  const emptyPaymentValues = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     return {
       nid: '',
-      title: nextRegularPayment?.title ?? 'Regular',
-      field_date: nextRegularPayment
-        ? scheduleDateToFormDate(nextRegularPayment.date)
-        : today,
+      title: '',
+      field_date: today,
       field_rate: '',
-      field_pay_installment: nextRegularPayment?.installment ?? '',
+      field_pay_installment: '',
       field_pay_single_fee: '',
       field_new_recurring_amount: '',
       field_new_principal: '',
       field_payment_method: '',
     };
-  }, [nextRegularPayment]);
+  }, []);
+
+  const prefilledPaymentValues = useMemo(() => {
+    if (!nextRegularPayment) return emptyPaymentValues;
+    return {
+      nid: '',
+      title: nextRegularPayment.title,
+      field_date: scheduleDateToFormDate(nextRegularPayment.date),
+      field_rate: '',
+      field_pay_installment: nextRegularPayment.installment,
+      field_pay_single_fee: '',
+      field_new_recurring_amount: '',
+      field_new_principal: '',
+      field_payment_method: '',
+    };
+  }, [nextRegularPayment, emptyPaymentValues]);
+
+  const addPaymentValues = prefillNextPayment
+    ? prefilledPaymentValues
+    : emptyPaymentValues;
+
+  const openAddPayment = (prefill: boolean) => {
+    setPrefillNextPayment(prefill);
+    setShowAddPaymentModal(true);
+  };
+
+  const closeAddPayment = () => {
+    setShowAddPaymentModal(false);
+    setPrefillNextPayment(false);
+  };
 
   if (!loan) {
     return (
@@ -496,7 +524,7 @@ const Loan: React.FC = () => {
                 </span>
                 <button
                   type="button"
-                  onClick={() => setShowAddPaymentModal(true)}
+                  onClick={() => openAddPayment(true)}
                   className="inline-flex items-center gap-2 py-2 px-4 text-sm font-semibold text-white bg-[var(--color-app-accent)] rounded-xl hover:bg-[var(--color-app-accent-hover)] active:scale-[0.98] transition-all cursor-pointer"
                 >
                   <FiPlus className="w-4 h-4" />
@@ -592,7 +620,7 @@ const Loan: React.FC = () => {
         show={showAddPaymentModal}
         onClose={(e) => {
           e.preventDefault();
-          setShowAddPaymentModal(false);
+          closeAddPayment();
         }}
         title={t('loan.addPayment')}
         footer={
@@ -616,7 +644,7 @@ const Loan: React.FC = () => {
         <PaymentForm
           key={
             showAddPaymentModal
-              ? `add-${addPaymentValues.field_date}-${addPaymentValues.field_pay_installment}`
+              ? `add-${prefillNextPayment ? 'prefill' : 'empty'}-${addPaymentValues.field_date}-${addPaymentValues.field_pay_installment}`
               : 'add-closed'
           }
           formType="add"
@@ -628,7 +656,7 @@ const Loan: React.FC = () => {
             setPaymentFormSubmitting(isSubmitting);
           }}
           onSuccess={() => {
-            setShowAddPaymentModal(false);
+            closeAddPayment();
             if (navigator.onLine && apiClient) {
               fetchLoansService(apiClient, dataDispatch);
             }
@@ -638,7 +666,7 @@ const Loan: React.FC = () => {
 
       {/* Floating Action Button */}
       <button
-        onClick={() => setShowAddPaymentModal(true)}
+        onClick={() => openAddPayment(false)}
         className={FAB_CLASS}
         title={t('loan.addPayment')}
       >
