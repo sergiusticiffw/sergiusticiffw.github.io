@@ -1441,13 +1441,13 @@
   integrity sha512-79pf/RkhteYZTRgcR4F9kbk84P2N8rugQJswxfIqovlbRiT3yI7eBE+5QorIrZaOKktsgzRlXh1l/du/xpl4iA==
 
 "@tanstack/react-router@^1.157.18":
-  version "1.170.11"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.170.11.tgz#0dc401bb1101d18d5197c12002f3b64b586eb508"
-  integrity sha512-gP2vzdyaI8Ow/Uz/MRPfK2wN09YwRI0Y/oF74Wuy9R3KmjbfJv2tLrkM+Onu1xWklSn3ugZarMPJXRE0kzrJTA==
+  version "1.170.15"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.170.15.tgz#8f6ae4699bffab765dd8636249146dc95e19810d"
+  integrity sha512-GawYz7HEjj8rTUUDoT/SemDEVm63pZUO+2mOcXHY9Jl3EwMS5gFBnPu/2UvcrwRm1jN1k79fokc0d4aFmrLatg==
   dependencies:
     "@tanstack/history" "1.162.0"
     "@tanstack/react-store" "^0.9.3"
-    "@tanstack/router-core" "1.171.9"
+    "@tanstack/router-core" "1.171.13"
     isbot "^5.1.22"
 
 "@tanstack/react-store@^0.11.0":
@@ -1480,10 +1480,10 @@
   dependencies:
     "@tanstack/virtual-core" "3.17.0"
 
-"@tanstack/router-core@1.171.9":
-  version "1.171.9"
-  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.171.9.tgz#ce8afe0e6c9c0b3713a9697ffcb0380a0756239f"
-  integrity sha512-QM5ZwLT9c5ZcTJW0QQZRRIBC4qjImUyUCXCVyuYVOF9xr76XLsJSX4F2dOxr9VptAv+W+TkWNOYdX8VaO9kdgA==
+"@tanstack/router-core@1.171.13":
+  version "1.171.13"
+  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.171.13.tgz#49bee672c8401693d7bf902389b3dcb799de1429"
+  integrity sha512-+NOwEj1kO/6IGmpHRIZHasYxYWpyBQGNIZAST9aNrk9Q3YlU9SgqVnl1pbLa9qAKfeNdXQIRve0RQb/0kyDeDA==
   dependencies:
     "@tanstack/history" "1.162.0"
     cookie-es "^3.0.0"
@@ -1550,9 +1550,9 @@
   integrity sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==
 
 "@types/react@^19.1.9":
-  version "19.2.16"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.2.16.tgz#9868b153fd9e34e0117afcd5d7e372b8179337e1"
-  integrity sha512-esJiCAnl0kfpNdE69f3So4WJUXy95dLZydX0KwK46riIHDzHM7O9Vtf9xCHW0PXIqvgqNrswl522kA/5yx+F4w==
+  version "19.2.17"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.2.17.tgz#dccac365baa0f1734ec270ff4b51c89465e8dc7f"
+  integrity sha512-MXfmqaVPEVgkBT/aY0aGCkRWWtByiYQXo3xdQ8r5RzuFrPiRn8Gar2tQdXSUQ2GKV3bkXckek89V8wQBY2Q/Aw==
   dependencies:
     csstype "^3.2.2"
 
@@ -2426,9 +2426,9 @@ isarray@^2.0.5:
   integrity sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==
 
 isbot@^5.1.22:
-  version "5.1.40"
-  resolved "https://registry.yarnpkg.com/isbot/-/isbot-5.1.40.tgz#2878f52e9e4118b4466c268aaf7502dcfd38375b"
-  integrity sha512-yNeeynhhtIVRBk12tBV4eHNxwB42HzR4Q3Ea7vCOiJhImGaAIdIMrbJtacQlBizGLjUPw+akkFI5Dn9T70XoVQ==
+  version "5.1.41"
+  resolved "https://registry.yarnpkg.com/isbot/-/isbot-5.1.41.tgz#24f44b4260fdda32d3bf34460e3f3195224d5288"
+  integrity sha512-9WFV/Vhh0FEj6CQ7MoHweEL9/vLKPjeoD2I2htbAjX7kbW7VJs3OCpWOVyd+JraNTWVU6/DRx2MZy2KaUNXHcg==
 
 isexe@^2.0.0:
   version "2.0.0"
