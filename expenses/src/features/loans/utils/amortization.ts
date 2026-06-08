@@ -132,3 +132,52 @@ export function calculatePaydownOnly(
   const calculator = Paydown();
   return calculator.calculate(loanData, events);
 }
+
+export const REGULAR_PAYMENT_TITLE = 'Regular' as const;
+
+export interface NextRegularPayment {
+  title: typeof REGULAR_PAYMENT_TITLE;
+  date: string;
+  installment: number;
+}
+
+/** Convert paydown schedule date (DD.MM.YYYY) to HTML date input format (YYYY-MM-DD). */
+export function scheduleDateToFormDate(ddmmyyyy: string): string {
+  const parts = ddmmyyyy.split('.');
+  if (parts.length !== 3) return ddmmyyyy;
+  const [day, month, year] = parts;
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
+
+function roundToCents(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function parseScheduleInstallment(
+  value: number | string | undefined
+): number | null {
+  if (value == null || value === '-' || value === '') return null;
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(num) && num > 0 ? roundToCents(num) : null;
+}
+
+/** First unpaid schedule row with a valid installment — the next regular payment. */
+export function getNextRegularPayment(
+  schedule: PaymentLog[]
+): NextRegularPayment | null {
+  for (const row of schedule) {
+    if ('type' in row && (row as { type?: string }).type === 'annual_summary') {
+      continue;
+    }
+    if (row.was_payed === true) continue;
+    const installment = parseScheduleInstallment(row.installment);
+    if (installment == null) continue;
+    if (!row.date || typeof row.date !== 'string') continue;
+    return {
+      title: REGULAR_PAYMENT_TITLE,
+      date: row.date,
+      installment,
+    };
+  }
+  return null;
+}

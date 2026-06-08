@@ -31,7 +31,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
 
   const initialState = {
     field_date: new Date().toISOString().slice(0, 10),
-    title: '',
+    title: 'Regular',
     field_rate: '',
     field_pay_installment: '',
     field_pay_single_fee: '',

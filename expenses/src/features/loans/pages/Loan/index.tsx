@@ -18,7 +18,11 @@ import {
 import { fetchLoans as fetchLoansService } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useAmortization } from '@features/loans/hooks/useAmortization';
-import { isEarlyPaymentFromApiItem } from '@features/loans/utils/amortization';
+import {
+  getNextRegularPayment,
+  isEarlyPaymentFromApiItem,
+  scheduleDateToFormDate,
+} from '@features/loans/utils/amortization';
 import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
 import {
   FiDollarSign,
@@ -82,6 +86,26 @@ const Loan: React.FC = () => {
   );
   const amort = useAmortization(loan ?? null, paymentsForLoan);
   const scheduledAmort = useAmortization(loan ?? null, scheduledPaymentItems);
+  const nextRegularPayment = useMemo(
+    () => getNextRegularPayment(amort.schedule),
+    [amort.schedule]
+  );
+  const addPaymentValues = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return {
+      nid: '',
+      title: nextRegularPayment?.title ?? 'Regular',
+      field_date: nextRegularPayment
+        ? scheduleDateToFormDate(nextRegularPayment.date)
+        : today,
+      field_rate: '',
+      field_pay_installment: nextRegularPayment?.installment ?? '',
+      field_pay_single_fee: '',
+      field_new_recurring_amount: '',
+      field_new_principal: '',
+      field_payment_method: '',
+    };
+  }, [nextRegularPayment]);
 
   if (!loan) {
     return (
@@ -451,6 +475,38 @@ const Loan: React.FC = () => {
       {/* Loan Sections */}
       <div className="flex flex-col gap-8 w-full sm:gap-6">
 
+        {loanStatus === 'active' && nextRegularPayment && (
+          <div className="bg-gradient-to-br from-[var(--color-app-accent)]/15 to-white/[0.04] border border-[var(--color-app-accent)]/25 rounded-2xl p-5 mb-2">
+            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3 m-0">
+              {t('loan.nextPayment')}
+            </h3>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-lg font-bold text-white">
+                  {t('loan.nextPaymentRegular')}
+                </span>
+                <span className="inline-flex items-center gap-2 text-sm text-white/70">
+                  <FiCalendar className={iconTw} />
+                  {nextRegularPayment.date}
+                </span>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <span className="text-2xl font-extrabold text-white tabular-nums">
+                  {formatNumber(nextRegularPayment.installment)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowAddPaymentModal(true)}
+                  className="inline-flex items-center gap-2 py-2 px-4 text-sm font-semibold text-white bg-[var(--color-app-accent)] rounded-xl hover:bg-[var(--color-app-accent-hover)] active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  <FiPlus className="w-4 h-4" />
+                  <span>{t('loan.addPayment')}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Payment Details Section */}
         <div className="w-full">
           <div className="flex items-center justify-center gap-3 mb-4 pb-3 border-b border-white/5">
@@ -558,18 +614,13 @@ const Loan: React.FC = () => {
         }
       >
         <PaymentForm
+          key={
+            showAddPaymentModal
+              ? `add-${addPaymentValues.field_date}-${addPaymentValues.field_pay_installment}`
+              : 'add-closed'
+          }
           formType="add"
-          values={{
-            nid: '',
-            title: '',
-            field_date: new Date().toISOString().slice(0, 10),
-            field_rate: '',
-            field_pay_installment: '',
-            field_pay_single_fee: '',
-            field_new_recurring_amount: '',
-            field_new_principal: '',
-            field_payment_method: '',
-          }}
+          values={addPaymentValues}
           startDate={loan.sdt}
           endDate={loan.edt}
           hideSubmitButton={true}
