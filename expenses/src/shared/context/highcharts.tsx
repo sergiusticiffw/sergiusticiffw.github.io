@@ -1,82 +1,58 @@
 /**
- * Highcharts theme/config. Reads from localStorage (synced with settingsStore).
- * Apply on every page that renders charts so theme is correct after Profile update and after refresh.
+ * Highcharts config: adaptive dark theme + app-specific chart defaults.
  */
 import React, { useEffect, ReactNode } from 'react';
 import Highcharts from 'highcharts';
 import Highstock from 'highcharts/highstock';
-import BrandDark from 'highcharts/themes/brand-dark';
+import 'highcharts/themes/adaptive';
+import { useSettingsTheme } from '@stores/settingsStore';
 
-const THEME_KEY = 'theme';
-const CHARTS_BG_KEY = 'useChartsBackgroundColor';
+const APP_BG = 'var(--color-app-bg)';
 
-export function applyHighchartsConfig(): void {
-  Highcharts.setOptions(BrandDark.theme);
-  Highstock.setOptions(BrandDark.theme);
-
-  const bgColors: Record<string, string> = {
-    'carrot-orange': '#102433',
-    inchworm: '#201f1e',
-  };
-  let theme = 'blue-pink-gradient';
-  try {
-    const t = localStorage.getItem(THEME_KEY);
-    if (t) theme = JSON.parse(t);
-  } catch {
-    // use default
-  }
-  const useChartsBgRaw = localStorage.getItem(CHARTS_BG_KEY);
-  const useChartsBg = useChartsBgRaw === 'true' || useChartsBgRaw === true;
-
-  const chartTheme = {
+function buildAppChartOptions(): Highcharts.Options {
+  return {
+    chart: { backgroundColor: APP_BG },
     tooltip: { style: { fontSize: '15px' } },
-    ...(!useChartsBg && {
-      chart: { backgroundColor: theme ? bgColors[theme] : '#282a36' },
-    }),
+    plotOptions: {
+      series: { animation: false, boostThreshold: 4000 },
+    },
   };
-  Highcharts.setOptions(chartTheme);
-  Highstock.setOptions(chartTheme);
-
-  Highcharts.setOptions({
-    plotOptions: {
-      series: { animation: false, boostThreshold: 4000 },
-    },
-  });
-  Highstock.setOptions({
-    plotOptions: {
-      series: { animation: false, boostThreshold: 4000 },
-    },
-  });
 }
 
-/**
- * Call on any page that renders Highcharts. Applies current theme from localStorage on mount
- * and when theme/chartsBackground change (so Profile update applies on all pages and after refresh).
- */
+function setOptionsOnAll(options: Highcharts.Options): void {
+  Highcharts.setOptions(options);
+  Highstock.setOptions(options);
+}
+
+function refreshRenderedCharts(): void {
+  for (const chart of Highcharts.charts) {
+    chart?.update({ chart: { backgroundColor: APP_BG } }, false);
+    chart?.redraw(false);
+  }
+}
+
+export function applyHighchartsConfig(): void {
+  document.documentElement.classList.add('highcharts-dark');
+
+  // Side-effect import applies adaptive theme on Highcharts; sync Highstock entry point
+  const adaptiveTheme = (
+    Highcharts as typeof Highcharts & { theme?: Highcharts.Options }
+  ).theme;
+  if (adaptiveTheme) {
+    Highstock.setOptions(adaptiveTheme);
+  }
+
+  setOptionsOnAll(buildAppChartOptions());
+  refreshRenderedCharts();
+}
+
+/** Call on any page that renders Highcharts. Re-applies when app theme changes. */
 export function useChartsThemeSync(): void {
-  useEffect(() => {
-    applyHighchartsConfig();
-  }, []);
+  const theme = useSettingsTheme();
 
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === CHARTS_BG_KEY || e.key === THEME_KEY) {
-        applyHighchartsConfig();
-      }
-    };
-    const onCustom = (e: Event) => {
-      const d = (e as CustomEvent).detail as { key?: string } | undefined;
-      if (d?.key === CHARTS_BG_KEY || d?.key === THEME_KEY) {
-        applyHighchartsConfig();
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    window.addEventListener('localStorageChange', onCustom);
-    return () => {
-      window.removeEventListener('storage', onStorage);
-      window.removeEventListener('localStorageChange', onCustom);
-    };
-  }, []);
+    applyHighchartsConfig();
+  }, [theme]);
 }
 
 interface HighchartsProviderProps {

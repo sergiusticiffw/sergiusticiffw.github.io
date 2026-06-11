@@ -6,7 +6,6 @@ import type { SettingsState } from '@shared/type/types';
 import { DEFAULT_THEME_ID, normalizeThemeId } from '@shared/constants/themes';
 
 const THEME_KEY = 'theme';
-const CHARTS_BG_KEY = 'useChartsBackgroundColor';
 const COMPACT_DENSITY_KEY = 'compactListDensity';
 const CATEGORY_ICONS_KEY = 'showCategoryIcons';
 const ONBOARDING_KEY = 'onboardingComplete';
@@ -33,7 +32,6 @@ function readTheme(): string {
 const initialState: SettingsState = {
   currency: 'MDL',
   theme: readTheme(),
-  useChartsBackgroundColor: readJson(CHARTS_BG_KEY, false),
   compactListDensity: readJson(COMPACT_DENSITY_KEY, false),
   showCategoryIcons: readJson(CATEGORY_ICONS_KEY, true),
   onboardingComplete: readJson(ONBOARDING_KEY, false),
@@ -51,10 +49,6 @@ export function useSettingsCurrency(): string {
 
 export function useSettingsTheme(): string {
   return useStore(settingsStore, (s) => s.theme);
-}
-
-export function useChartsBackground(): boolean {
-  return useStore(settingsStore, (s) => s.useChartsBackgroundColor);
 }
 
 export function useCompactListDensity(): boolean {
@@ -80,11 +74,6 @@ export function setSettingsCurrency(currency: string): void {
 export function setSettingsTheme(theme: string): void {
   localStorage.setItem(THEME_KEY, JSON.stringify(theme));
   settingsStore.setState((s) => ({ ...s, theme }));
-}
-
-export function setChartsBackground(value: boolean): void {
-  persist(CHARTS_BG_KEY, value);
-  settingsStore.setState((s) => ({ ...s, useChartsBackgroundColor: value }));
 }
 
 export function setCompactListDensity(value: boolean): void {

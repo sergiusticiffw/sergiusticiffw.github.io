@@ -19,12 +19,6 @@ const theme = localStorage.getItem('theme')
   ? JSON.parse(localStorage.getItem('theme')!)
   : '';
 
-const useChartsBackgroundColor = localStorage.getItem(
-  'useChartsBackgroundColor'
-)
-  ? JSON.parse(localStorage.getItem('useChartsBackgroundColor')!)
-  : '';
-
 export const initialState = {
   userDetails: user || '',
   token: token || '',
@@ -35,7 +29,6 @@ export const initialState = {
     (user?.current_user as { currency?: string } | undefined)?.currency ||
     'MDL',
   theme: theme || 'blue-pink-gradient',
-  useChartsBackgroundColor,
 };
 
 export const initialData = {

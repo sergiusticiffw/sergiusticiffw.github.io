@@ -162,7 +162,6 @@ const translations = {
     'profile.monthlyBudget': 'Monthly Budget',
     'profile.enterMonthlyBudget': 'Enter monthly budget',
     'profile.chartsSettings': 'Charts Settings',
-    'profile.useChartsBackgroundColor': 'Use Charts Background Color',
     'profile.chartsVisibility': 'Charts Visibility',
     'profile.chartsVisible': 'Visible',
     'profile.chartsHidden': 'Hidden',
@@ -727,8 +726,6 @@ const translations = {
     'profile.monthlyBudget': 'Buget Lunar',
     'profile.enterMonthlyBudget': 'Introdu bugetul lunar',
     'profile.chartsSettings': 'Setări Grafice',
-    'profile.useChartsBackgroundColor':
-      'Folosește Culoarea de Fundal pentru Grafice',
     'profile.chartsVisibility': 'Vizibilitatea Graficelor',
     'profile.chartsVisible': 'Vizibile',
     'profile.chartsHidden': 'Ascunse',

@@ -325,6 +325,16 @@ html[data-theme="sky"] {
   --color-app-accent-shadow: color-mix(in srgb, #0ea5e9 36%, transparent);
 }
 
+/* Highcharts adaptive theme: match chart background to app theme */
+html.highcharts-dark {
+  --highcharts-background-color: var(--color-app-bg);
+}
+
+html.highcharts-dark .highcharts-container,
+html.highcharts-dark .highcharts-background {
+  background-color: var(--color-app-bg) !important;
+}
+
 /* Tailwind @layer utilities – overflow-touch (Tailwind nu are -webkit-overflow-scrolling); culorile app-* sunt generate din @theme */
 @layer utilities {
   .overflow-touch { -webkit-overflow-scrolling: touch; }

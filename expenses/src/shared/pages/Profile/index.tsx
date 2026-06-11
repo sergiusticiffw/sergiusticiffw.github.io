@@ -6,8 +6,6 @@ import {
   setSettingsCurrency,
   useSettingsTheme,
   setSettingsTheme,
-  useChartsBackground,
-  setChartsBackground,
   useCompactListDensity,
   setCompactListDensity,
   useShowCategoryIcons,
@@ -38,7 +36,6 @@ const Profile = () => {
   const { userDetails, token } = useAuthState();
   const currency = useSettingsCurrency();
   const currentTheme = useSettingsTheme();
-  const useChartsBackgroundColor = useChartsBackground();
   const compactListDensity = useCompactListDensity();
   const showCategoryIcons = useShowCategoryIcons();
   const [state, setState] = useState({
@@ -101,22 +98,6 @@ const Profile = () => {
         }
       }
     );
-  };
-
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = event.target;
-    if (name === 'useChartsBackgroundColor') {
-      setChartsBackground(checked);
-      window.dispatchEvent(
-        new CustomEvent('localStorageChange', {
-          detail: { key: name, value: checked },
-        })
-      );
-    } else {
-      setState({ ...state, [name]: checked });
-      localStorage.setItem(name, JSON.stringify(checked));
-    }
-    dispatch({ type: 'UPDATE_USER', payload: { [name]: checked } });
   };
 
   const sortedCurrencies = Object.entries(currencies).sort((a, b) => {
@@ -310,20 +291,7 @@ const Profile = () => {
           </button>
           {chartsAccordionOpen && (
             <div className="px-5 pb-5 pt-0 md:px-4 md:pb-4 border-t border-white/[0.06]">
-              <div className="flex items-center gap-2.5 mb-2 py-2 md:py-1.5 relative [&_input]:w-[18px] [&_input]:h-[18px] [&_input]:min-w-[18px] [&_input]:min-h-[18px] [&_input]:accent-[var(--color-app-accent)] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:inline-block [&_input]:opacity-100 [&_input]:visible [&_label]:text-sm md:[&_label]:text-xs [&_label]:text-app-secondary [&_label]:cursor-pointer [&_label]:flex-1 [&_label]:select-none [&_label]:m-0">
-                <input
-                  type="checkbox"
-                  name="useChartsBackgroundColor"
-                  id="useChartsBackgroundColor"
-                  checked={useChartsBackgroundColor}
-                  onChange={handleCheckboxChange}
-                />
-                <label htmlFor="useChartsBackgroundColor">
-                  {t('profile.useChartsBackgroundColor')}
-                </label>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-white/[0.05] md:mt-4 md:pt-4">
+              <div className="pt-4 md:pt-3">
                 <h4 className="text-xs font-semibold text-app-muted m-0 mb-3 md:mb-2.5 uppercase tracking-wider">
                   {t('profile.chartsVisibility')}
                 </h4>

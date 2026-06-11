@@ -23,9 +23,7 @@ export {
   useSettings,
   useSettingsCurrency,
   useSettingsTheme,
-  useChartsBackground,
   setSettingsCurrency,
   setSettingsTheme,
-  setChartsBackground,
   hydrateSettings,
 } from './settingsStore';

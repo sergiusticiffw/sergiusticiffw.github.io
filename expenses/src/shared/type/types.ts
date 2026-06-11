@@ -44,7 +44,6 @@ export interface AuthState {
   loading: boolean;
   errorMessage: null | any;
   userDetails: string | any;
-  useChartsBackgroundColor: string | any;
 }
 
 export type ChangedItemEntry =
@@ -213,7 +212,6 @@ export type LoanAction = {
 export interface SettingsState {
   currency: string;
   theme: string;
-  useChartsBackgroundColor: boolean;
   compactListDensity: boolean;
   showCategoryIcons: boolean;
   onboardingComplete: boolean;
