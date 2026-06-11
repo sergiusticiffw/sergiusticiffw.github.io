@@ -264,23 +264,17 @@ const NewHome = () => {
     0
   );
 
-  // Get income for current month (income is not filtered; use full data, not filtered)
+  // Get income for current month (only shown when no filters are active)
   const incomeTotals = data.incomeTotals;
   const monthIncome = incomeTotals ? incomeTotals[currentMonth] || 0 : 0;
 
-  // Calculate profit based on filtered total
-  const filteredProfit = parseFloat((monthIncome - filteredTotal).toFixed(2));
-
-  // Decide which values to show - filtered or full month
   const displayTotal = hasFilters
     ? filteredTotal
     : items.totals?.[currentMonth] || 0;
   const displayIncome = monthIncome;
-  const displayProfit = hasFilters
-    ? filteredProfit
-    : parseFloat(
-        (monthIncome - (items.totals?.[currentMonth] || 0)).toFixed(2)
-      );
+  const displayProfit = parseFloat(
+    (monthIncome - (items.totals?.[currentMonth] || 0)).toFixed(2)
+  );
 
   const prevMonthKey =
     currentMonthIndex < months.length - 1 ? months[currentMonthIndex + 1] : null;
@@ -458,22 +452,24 @@ const NewHome = () => {
             }
           />
 
-          <StatsRow className="sm:grid-cols-2">
-            <Stat
-              label={t('common.income')}
-              value={formatNumber(displayIncome)}
-              icon={<FiBriefcase />}
-              compact
-            />
-            <Stat
-              label={t('common.profit')}
-              value={formatNumber(displayProfit)}
-              icon={
-                displayProfit >= 0 ? <FiTrendingUp /> : <FiTrendingDown />
-              }
-              compact
-            />
-          </StatsRow>
+          {!hasFilters && (
+            <StatsRow className="sm:grid-cols-2">
+              <Stat
+                label={t('common.income')}
+                value={formatNumber(displayIncome)}
+                icon={<FiBriefcase />}
+                compact
+              />
+              <Stat
+                label={t('common.profit')}
+                value={formatNumber(displayProfit)}
+                icon={
+                  displayProfit >= 0 ? <FiTrendingUp /> : <FiTrendingDown />
+                }
+                compact
+              />
+            </StatsRow>
+          )}
 
           {/* View Tabs - Below Search */}
           <div className="flex gap-2 mb-6">
