@@ -790,9 +790,7 @@ class PaydownCalculator {
     const isEarly = Boolean(this.eventArray[index].isEarlyPayment);
 
     if (isEarly) {
-      // Extra payment: full amount reduces principal (no interest portion on this payment).
-      // Still accrue period interest when this is the first event on a new date, so
-      // latestPeriodEndDate stays in sync for subsequent payments.
+      // Accrue period interest when this is the first event on a new date.
       if (this.latestCalculatedInterestDate === this.eventArray[index].date) {
         accruedInterest = 0;
       } else {
@@ -808,7 +806,6 @@ class PaydownCalculator {
         );
         numDays = calculateDayCount(startDate, endDate, false);
       }
-      // Show accrued period interest on the same row; payment amount is still 100% principal.
       paymentInterest = accruedInterest;
     } else if (this.latestCalculatedInterestDate === this.eventArray[index].date) {
       accruedInterest = 0;
@@ -830,7 +827,7 @@ class PaydownCalculator {
 
     if (installmentOrPrincipal === 0) {
       reduction = 0;
-    } else if (isEarly || isFixedPrincipal) {
+    } else if (isFixedPrincipal) {
       reduction = installmentOrPrincipal;
     } else {
       reduction = installmentOrPrincipal - accruedInterest;
@@ -878,7 +875,7 @@ class PaydownCalculator {
     this.logPayment({
       date: this.eventArray[index].date,
       rate: this.currentRate,
-      installment: isEarly ? reduction : reduction + paymentInterest,
+      installment: reduction + paymentInterest,
       reduction,
       interest: paymentInterest,
       principal: this.currentPrincipal,
