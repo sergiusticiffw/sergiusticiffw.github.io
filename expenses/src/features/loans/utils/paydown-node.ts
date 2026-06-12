@@ -5,6 +5,10 @@ import {
   recalculateAfterRateChange,
   calculatePeriodInterest,
 } from './loanEngine';
+import {
+  isEarlyPaymentByTitle,
+  isSmallInstallment,
+} from './paymentClassification';
 
 // Types and interfaces
 export interface PaydownInit {
@@ -36,6 +40,10 @@ export interface PaydownEvent {
   was_payed?: boolean;
   isSimulatedPayment?: boolean;
   num_days?: number;
+  /** Stable tie-breaker for same-day events (e.g. API created timestamp). */
+  event_order?: number;
+  /** Extra/advance payment: full amount reduces principal, no interest portion. */
+  isEarlyPayment?: boolean;
 }
 
 export interface PaymentLog {
@@ -48,6 +56,8 @@ export interface PaymentLog {
   fee: number | string;
   was_payed?: boolean | null;
   num_days?: number | null;
+  /** Accrued interest on row is informational only — not paid from this installment. */
+  isEarlyPayment?: boolean;
 }
 
 export interface AnnualSummary {
@@ -213,10 +223,82 @@ const funcRound = (input: number): number => {
   return Math.round(input * 100) / 100;
 };
 
+const hasExplicitInstallment = (e: PaydownEvent): boolean =>
+  e.pay_installment != null &&
+  typeof e.pay_installment === 'number' &&
+  !isNaN(e.pay_installment) &&
+  e.pay_installment > 0;
+
+const isAutoRecurringOnly = (e: PaydownEvent): boolean =>
+  Boolean(e.pay_recurring) &&
+  !hasExplicitInstallment(e) &&
+  !e.ending &&
+  !e.hasOwnProperty('new_principal');
+
+const canMergeEvents = (a: PaydownEvent, b: PaydownEvent): boolean => {
+  if (a.ending || b.ending) return false;
+
+  const aInst = hasExplicitInstallment(a);
+  const bInst = hasExplicitInstallment(b);
+
+  if (aInst && bInst) return false;
+
+  if (isAutoRecurringOnly(a) && bInst) return true;
+  if (aInst && isAutoRecurringOnly(b)) return true;
+  if (isAutoRecurringOnly(a) && isAutoRecurringOnly(b)) return true;
+
+  const aRate = a.hasOwnProperty('rate');
+  const bRate = b.hasOwnProperty('rate');
+  const aFee = a.hasOwnProperty('pay_single_fee');
+  const bFee = b.hasOwnProperty('pay_single_fee');
+  const aNewPrin = a.hasOwnProperty('new_principal');
+  const bNewPrin = b.hasOwnProperty('new_principal');
+
+  if ((aRate && bInst) || (bRate && aInst)) return true;
+  if ((aFee && bInst) || (bFee && aInst)) return true;
+  if ((aNewPrin && bRate) || (bNewPrin && aRate)) return true;
+  if ((aNewPrin && bInst) || (bNewPrin && aInst)) return true;
+  if ((aRate && isAutoRecurringOnly(b)) || (bRate && isAutoRecurringOnly(a)))
+    return true;
+  if (aRate && bRate && !aInst && !bInst) return true;
+
+  return false;
+};
+
+const getMonthYearKey = (date: string): string => {
+  const [, month, year] = date.split('.');
+  return `${month}.${year}`;
+};
+
+const isUserInstallmentEvent = (e: PaydownEvent): boolean =>
+  hasExplicitInstallment(e) && !e.isSimulatedPayment;
+
+const shouldSkipAutoRecurring = (
+  event: PaydownEvent,
+  allEvents: PaydownEvent[]
+): boolean => {
+  if (!isAutoRecurringOnly(event)) return false;
+
+  const eventDate = dateToInteger(event.date);
+  const monthKey = getMonthYearKey(event.date);
+
+  // Skip forecast when user paid on the scheduled day or later in the same month.
+  // Payments before the scheduled day (e.g. 06.06 when due 10.06) keep the forecast.
+  return allEvents.some((e) => {
+    if (!isUserInstallmentEvent(e)) return false;
+    if (getMonthYearKey(e.date) !== monthKey) return false;
+    return dateToInteger(e.date) >= eventDate;
+  });
+};
+
 const eventArraySorter = (a: PaydownEvent, b: PaydownEvent): number => {
   const dateA = dateToInteger(a.date);
   const dateB = dateToInteger(b.date);
-  return dateA - dateB;
+  if (dateA !== dateB) return dateA - dateB;
+  const earlyA = a.isEarlyPayment ? 1 : 0;
+  const earlyB = b.isEarlyPayment ? 1 : 0;
+  if (earlyA !== earlyB) return earlyA - earlyB;
+  return (a.event_order ?? 0) - (b.event_order ?? 0);
 };
 
 // Date utility class
@@ -700,42 +782,67 @@ class PaydownCalculator {
     fee = 0,
     isFixedPrincipal = false
   ): boolean => {
-    let periodInterest: number;
+    let accruedInterest: number;
+    let paymentInterest: number;
     let reduction: number;
     let startDate: string, endDate: string;
     let numDays = 0;
+    const isEarly = Boolean(this.eventArray[index].isEarlyPayment);
 
-    if (this.latestCalculatedInterestDate === this.eventArray[index].date) {
-      periodInterest = 0;
+    if (isEarly) {
+      // Extra payment: full amount reduces principal (no interest portion on this payment).
+      // Still accrue period interest when this is the first event on a new date, so
+      // latestPeriodEndDate stays in sync for subsequent payments.
+      if (this.latestCalculatedInterestDate === this.eventArray[index].date) {
+        accruedInterest = 0;
+      } else {
+        startDate = dateObj
+          .setCurrent(this.latestCalculatedInterestDate)
+          .getNext();
+        endDate = this.eventArray[index].date;
+        accruedInterest = this.getPeriodInterests(
+          this.currentPrincipal,
+          this.currentRate,
+          startDate,
+          endDate
+        );
+        numDays = calculateDayCount(startDate, endDate, false);
+      }
+      // Show accrued period interest on the same row; payment amount is still 100% principal.
+      paymentInterest = accruedInterest;
+    } else if (this.latestCalculatedInterestDate === this.eventArray[index].date) {
+      accruedInterest = 0;
+      paymentInterest = 0;
     } else {
       startDate = dateObj
         .setCurrent(this.latestCalculatedInterestDate)
         .getNext();
       endDate = this.eventArray[index].date;
-      periodInterest = this.getPeriodInterests(
+      accruedInterest = this.getPeriodInterests(
         this.currentPrincipal,
         this.currentRate,
         startDate,
         endDate
       );
+      paymentInterest = accruedInterest;
       numDays = calculateDayCount(startDate, endDate, false);
     }
 
     if (installmentOrPrincipal === 0) {
       reduction = 0;
-    } else if (isFixedPrincipal) {
+    } else if (isEarly || isFixedPrincipal) {
       reduction = installmentOrPrincipal;
     } else {
-      reduction = installmentOrPrincipal - periodInterest;
+      reduction = installmentOrPrincipal - accruedInterest;
     }
 
     if (reduction < 0) {
       throw new Error(
-        `Exception: installment ${this.round(installmentOrPrincipal)} is too small to cover the interest ${this.round(periodInterest)}: ${startDate} - ${endDate}`
+        `Exception: installment ${this.round(installmentOrPrincipal)} is too small to cover the interest ${this.round(accruedInterest)}: ${startDate} - ${endDate}`
       );
     }
 
-    this.sumOfInterests += periodInterest;
+    this.sumOfInterests += accruedInterest;
     this.currentPrincipal -= reduction;
     this.latestCalculatedInterestDate = this.eventArray[index].date;
     this.latestPaymentDate = this.eventArray[index].date;
@@ -744,7 +851,7 @@ class PaydownCalculator {
       this.handleLastPayment(
         reduction,
         this.eventArray[index].date,
-        periodInterest,
+        paymentInterest,
         fee,
         numDays,
         this.eventArray[index].was_payed
@@ -762,7 +869,7 @@ class PaydownCalculator {
       };
     }
     this.annualSummaries[year].total_principal += reduction;
-    this.annualSummaries[year].total_interest += periodInterest;
+    this.annualSummaries[year].total_interest += accruedInterest;
     this.annualSummaries[year].total_fees += fee;
 
     this.sumOfReductions += reduction;
@@ -771,13 +878,14 @@ class PaydownCalculator {
     this.logPayment({
       date: this.eventArray[index].date,
       rate: this.currentRate,
-      installment: reduction + periodInterest,
+      installment: isEarly ? reduction : reduction + paymentInterest,
       reduction,
-      interest: periodInterest,
+      interest: paymentInterest,
       principal: this.currentPrincipal,
       fee,
       was_payed: this.eventArray[index].was_payed,
       num_days: numDays,
+      isEarlyPayment: isEarly || undefined,
     });
 
     return true;
@@ -895,6 +1003,20 @@ class PaydownCalculator {
         // Paid means: actual installment AND not simulated
         event.was_payed = event.isSimulatedPayment ? false : true;
         event.pay_recurring = true;
+        if (!event.isEarlyPayment) {
+          const title = (event as PaydownEvent & { title?: string }).title;
+          if (isEarlyPaymentByTitle(title)) {
+            event.isEarlyPayment = true;
+          } else if (
+            typeof this.currentRecurringPayment === 'number' &&
+            isSmallInstallment(
+              event.pay_installment!,
+              this.currentRecurringPayment
+            )
+          ) {
+            event.isEarlyPayment = true;
+          }
+        }
       }
     }
 
@@ -934,21 +1056,33 @@ class PaydownCalculator {
   private mergeEvents = (): void => {
     this.eventArray.sort(eventArraySorter);
 
-    for (let index = 0; index < this.eventArray.length - 1; index++) {
-      if (this.eventArray[index].hasOwnProperty('rate')) {
-        this.rateHashMap[dateToInteger(this.eventArray[index].date)] =
-          this.eventArray[index].rate!;
-      }
-
-      if (
-        dateToInteger(this.eventArray[index].date) ===
-        dateToInteger(this.eventArray[index + 1].date)
-      ) {
-        Object.assign(this.eventArray[index], this.eventArray[index + 1]);
-        this.eventArray.splice(index + 1, 1);
-        index--;
+    for (const event of this.eventArray) {
+      if (event.hasOwnProperty('rate')) {
+        this.rateHashMap[dateToInteger(event.date)] = event.rate!;
       }
     }
+
+    const merged: PaydownEvent[] = [];
+    const allEvents = this.eventArray;
+
+    for (const event of this.eventArray) {
+      if (shouldSkipAutoRecurring(event, allEvents)) {
+        continue;
+      }
+
+      const last = merged[merged.length - 1];
+      if (
+        last &&
+        dateToInteger(last.date) === dateToInteger(event.date) &&
+        canMergeEvents(last, event)
+      ) {
+        Object.assign(last, event);
+      } else {
+        merged.push({ ...event });
+      }
+    }
+
+    this.eventArray = merged;
   };
 
   private checkFirstPaymentDate = (): void => {
@@ -1503,17 +1637,24 @@ class PaydownCalculator {
           !event.hasOwnProperty('pay_recurring') &&
           !event.hasOwnProperty('pay_installment')
         ) {
-          finalInterest = this.getPeriodInterests(
-            this.currentPrincipal,
-            this.currentRate,
-            dateObj.setCurrent(this.latestCalculatedInterestDate).getNext(),
-            event.date
-          );
+          const interestStartDate = dateObj
+            .setCurrent(this.latestCalculatedInterestDate)
+            .getNext();
+          const shouldAccrueFinalInterest =
+            dateToInteger(interestStartDate) <= dateToInteger(event.date);
+
+          finalInterest = shouldAccrueFinalInterest
+            ? this.getPeriodInterests(
+                this.currentPrincipal,
+                this.currentRate,
+                interestStartDate,
+                event.date
+              )
+            : 0;
           this.sumOfInterests += finalInterest;
-          const numDays = calculateDayCount(
-            dateObj.setCurrent(this.latestCalculatedInterestDate).getNext(),
-            event.date
-          );
+          const numDays = shouldAccrueFinalInterest
+            ? calculateDayCount(interestStartDate, event.date)
+            : 0;
 
           const endingYear = event.date.split('.')[2];
           if (!this.annualSummaries[endingYear]) {
@@ -1579,6 +1720,7 @@ class PaydownCalculator {
       this.paymentLogArray.forEach((payment: PaymentLog) => {
         if (
           payment.was_payed === true &&
+          !payment.isEarlyPayment &&
           payment.interest !== undefined &&
           payment.interest !== null &&
           payment.interest !== '-'
@@ -1626,7 +1768,9 @@ export default function Paydown() {
       if (eventsArray) {
         const filteredEvents = eventsArray.filter(
           (event) =>
-            event.pay_installment !== undefined && !event.isSimulatedPayment
+            event.pay_installment !== undefined &&
+            !event.isSimulatedPayment &&
+            !event.isEarlyPayment
         );
         const sortedByDate = filteredEvents.sort(
           (a, b) =>

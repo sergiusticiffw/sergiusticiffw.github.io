@@ -19,8 +19,8 @@ import { fetchLoans as fetchLoansService } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useAmortization } from '@features/loans/hooks/useAmortization';
 import {
+  calculateInterestSavings,
   getNextRegularPayment,
-  isEarlyPaymentFromApiItem,
   scheduleDateToFormDate,
 } from '@features/loans/utils/amortization';
 import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
@@ -75,18 +75,11 @@ const Loan: React.FC = () => {
     () => (filteredData?.data ?? []) as ApiPaymentItem[],
     [filteredData?.data]
   );
-  const scheduledPaymentItems = useMemo(
-    // Baseline for interest-savings comparison: exclude early/extra and simulated payments.
-    // Simulated payments are what-if scenarios and must affect "with extra payments" only.
-    () =>
-      paymentsForLoan.filter(
-        (item) =>
-          !isEarlyPaymentFromApiItem(item) && Number(item.fisp ?? 0) === 0
-      ),
-    [paymentsForLoan]
-  );
   const amort = useAmortization(loan ?? null, paymentsForLoan);
-  const scheduledAmort = useAmortization(loan ?? null, scheduledPaymentItems);
+  const interestSavings = useMemo(
+    () => calculateInterestSavings(loan, paymentsForLoan),
+    [loan, paymentsForLoan]
+  );
   const nextRegularPayment = useMemo(
     () => getNextRegularPayment(amort.schedule),
     [amort.schedule]
@@ -147,31 +140,6 @@ const Loan: React.FC = () => {
   const paydown = amort.paydown;
   const amortizationSchedule = amort.schedule;
   const errorMessage = amort.error;
-  const hasEarlyPayments = paymentsForLoan.some(isEarlyPaymentFromApiItem);
-  const hasSimulatedPayments = paymentsForLoan.some(
-    (item) => Number(item.fisp ?? 0) !== 0
-  );
-  const hasExtraPayments = hasEarlyPayments || hasSimulatedPayments;
-
-  let interestSavings = 0;
-  if (
-    (loanStatus === 'active' || loanStatus === 'completed') &&
-    hasExtraPayments &&
-    paydown &&
-    scheduledAmort.paydown
-  ) {
-    const interestWithoutEarlyPayments =
-      scheduledAmort.paydown.sum_of_interests ?? 0;
-    const interestWithEarlyPayments = paydown.sum_of_interests ?? 0;
-    interestSavings = Math.max(
-      0,
-      interestWithoutEarlyPayments - interestWithEarlyPayments
-    );
-    if (interestSavings > interestWithEarlyPayments * 10) {
-      interestSavings = 0;
-    }
-  }
-
   const loanData = {
     start_date: transformDateFormat(loan.sdt ?? ''),
     end_date: transformDateFormat(loan.edt ?? ''),

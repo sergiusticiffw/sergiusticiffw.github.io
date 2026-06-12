@@ -11,6 +11,7 @@ import type {
 } from './paydown-node';
 import type { ApiLoan, ApiPaymentItem } from '@shared/type/types';
 import { transformDateFormat, transformToNumber } from '@shared/utils/utils';
+import { isEarlyPaymentByTitle } from './paymentClassification';
 
 export type { PaydownResult, PaymentLog, PaydownInit, PaydownEvent };
 
@@ -44,16 +45,44 @@ export function buildLoanDataFromApiLoan(
   return base;
 }
 
+/** Whether a payment event is early/advance (by title). Pure. */
+export function isEarlyPayment(
+  event: PaydownEvent & { title?: string }
+): boolean {
+  return Boolean(event.isEarlyPayment) || isEarlyPaymentByTitle(event.title);
+}
+
+/** Whether an API payment item is early (by title). Pure. */
+export function isEarlyPaymentFromApiItem(item: ApiPaymentItem): boolean {
+  return isEarlyPaymentByTitle(item.title);
+}
+
 /** Build PaydownEvent[] from API payment items. Pure. */
 export function buildEventsFromApiPayments(
   payments: ApiPaymentItem[] | null | undefined
 ): PaydownEvent[] {
   if (!payments?.length) return [];
-  return payments.map((item) => {
+
+  const sorted = [...payments].sort((a, b) => {
+    const dateA = new Date(a.fdt || 0).getTime();
+    const dateB = new Date(b.fdt || 0).getTime();
+    if (dateA !== dateB) return dateA - dateB;
+    const earlyA = isEarlyPaymentFromApiItem(a) ? 1 : 0;
+    const earlyB = isEarlyPaymentFromApiItem(b) ? 1 : 0;
+    if (earlyA !== earlyB) return earlyA - earlyB;
+    const crA = a.cr ?? dateA;
+    const crB = b.cr ?? dateB;
+    return crA - crB;
+  });
+
+  return sorted.map((item, index) => {
     const isSimulatedPayment = Number(item.fisp ?? 0) !== 0;
+    const isEarly = isEarlyPaymentFromApiItem(item);
     const event: PaydownEvent = {
       date: transformDateFormat(item.fdt ?? ''),
       isSimulatedPayment,
+      isEarlyPayment: isEarly || undefined,
+      event_order: index,
     };
     if (item.fr != null && item.fr !== '')
       event.rate = transformToNumber(item.fr);
@@ -80,34 +109,6 @@ export function buildEventsFromApiPayments(
   });
 }
 
-const EARLY_TITLE_KEYS = [
-  'anticipat',
-  'avans',
-  'înainte',
-  'inainte',
-  'prematur',
-  'extra',
-  'suplimentar',
-  'early',
-  'advance',
-  'premature',
-  'additional',
-];
-
-/** Whether a payment event is early/advance (by title). Pure. */
-export function isEarlyPayment(
-  event: PaydownEvent & { title?: string }
-): boolean {
-  const title = (event.title ?? '').toLowerCase();
-  return EARLY_TITLE_KEYS.some((k) => title.includes(k));
-}
-
-/** Whether an API payment item is early (by title). Pure. */
-export function isEarlyPaymentFromApiItem(item: ApiPaymentItem): boolean {
-  const title = (item.title ?? '').toString().toLowerCase();
-  return EARLY_TITLE_KEYS.some((k) => title.includes(k));
-}
-
 /**
  * Run Paydown once. Pure and deterministic for given (loanData, events).
  * Returns schedule in the same order as Paydown (mutates then returns the array).
@@ -131,6 +132,49 @@ export function calculatePaydownOnly(
 ): PaydownResult {
   const calculator = Paydown();
   return calculator.calculate(loanData, events);
+}
+
+/**
+ * Interest saved by extra/early payments vs. the same loan with only regular payments.
+ * Returns 0 when there is no meaningful savings.
+ */
+export function calculateInterestSavings(
+  loan: ApiLoan | null | undefined,
+  payments: ApiPaymentItem[]
+): number {
+  if (!loan?.sdt || !loan?.edt) return 0;
+
+  const hasExtra =
+    payments.some(isEarlyPaymentFromApiItem) ||
+    payments.some((item) => Number(item.fisp ?? 0) !== 0);
+  if (!hasExtra) return 0;
+
+  const loanData = buildLoanDataFromApiLoan(loan);
+  if (!loanData) return 0;
+
+  const scheduledPayments = payments.filter(
+    (item) =>
+      !isEarlyPaymentFromApiItem(item) && Number(item.fisp ?? 0) === 0
+  );
+
+  const withExtra = calculatePaydownOnly(
+    loanData,
+    buildEventsFromApiPayments(payments)
+  );
+  const withoutExtra = calculatePaydownOnly(
+    loanData,
+    buildEventsFromApiPayments(scheduledPayments)
+  );
+
+  const interestWithExtra = withExtra.sum_of_interests ?? 0;
+  const interestWithoutExtra = withoutExtra.sum_of_interests ?? 0;
+  let savings = Math.max(0, interestWithoutExtra - interestWithExtra);
+
+  if (savings > interestWithExtra * 10) {
+    savings = 0;
+  }
+
+  return savings;
 }
 
 export const REGULAR_PAYMENT_TITLE = 'Regular' as const;
