@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 import { useExpenseData } from '@stores/expenseStore';
 import { useSettingsCurrency } from '@stores/settingsStore';
 import { useLocalization } from '@shared/context/localization';
-import Highcharts from 'highcharts/highstock';
-import HighchartsReact from 'highcharts-react-official';
+import Highcharts from 'highcharts';
+import AppHighcharts from '@shared/components/Charts/AppHighcharts';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import { monthNames, incomeSuggestions } from '@shared/utils/constants';
 import { hasTag, parseMonthString } from '@shared/utils/utils';
@@ -160,124 +160,106 @@ function IncomeIntelligence() {
     };
   }, [incomeData, language, t]);
 
-  const pieOptions: Highcharts.Options = {
-    chart: {
-      type: 'pie',
-    },
-    boost: {
-      useGPUTranslations: true,
-    },
-    title: {
-      text: t('income.incomeBySource') || 'Income by Source',
-      verticalAlign: 'middle',
-    },
-    tooltip: {
-      pointFormat: '{point.y} {series.name} ({point.percentage:.2f}%)',
-    },
-    plotOptions: {
-      pie: {
-        allowPointSelect: true,
-        cursor: 'pointer',
-        innerSize: '70%',
-        borderWidth: 2,
-        borderColor: '#1a1a1a',
-        dataLabels: {
-          enabled: false,
-        },
-        states: {
-          hover: {
-            brightness: 0.1,
-            halo: {
-              size: 10,
+  const pieOptions: Highcharts.Options = useMemo(
+    () => ({
+      chart: {
+        type: 'pie',
+      },
+      boost: {
+        useGPUTranslations: true,
+      },
+      title: {
+        text: t('income.incomeBySource') || 'Income by Source',
+        verticalAlign: 'middle',
+      },
+      tooltip: {
+        pointFormat: '{point.y} {series.name} ({point.percentage:.2f}%)',
+      },
+      plotOptions: {
+        pie: {
+          allowPointSelect: true,
+          cursor: 'pointer',
+          innerSize: '70%',
+          borderWidth: 2,
+          borderColor: '#1a1a1a',
+          dataLabels: {
+            enabled: false,
+          },
+          states: {
+            hover: {
+              brightness: 0.1,
+              halo: {
+                size: 10,
+              },
+            },
+            select: {
+              brightness: 0.1,
             },
           },
-          select: {
-            brightness: 0.1,
-          },
-        },
-        slicedOffset: 10,
-      },
-    },
-    credits: {
-      enabled: false,
-    },
-    series: [
-      {
-        type: 'pie',
-        name: currency,
-        data: chartData.pieData,
-      },
-    ],
-  };
-
-  const lineOptions: Highcharts.Options = {
-    chart: {
-      type: 'line',
-      zooming: {
-        type: 'x',
-      },
-    },
-    boost: {
-      useGPUTranslations: true,
-    },
-    title: {
-      text: t('income.incomeEvolutionBySource') || 'Income Evolution by Source',
-    },
-    xAxis: {
-      type: 'datetime',
-      crosshair: true,
-    },
-    yAxis: {
-      title: {
-        text: 'Amount',
-      },
-      min: 0,
-    },
-    tooltip: {
-      shared: true,
-      split: false,
-      xDateFormat: '%B %Y',
-    },
-    plotOptions: {
-      line: {
-        marker: {
-          enabled: true,
+          slicedOffset: 10,
         },
       },
-    },
-    credits: {
-      enabled: false,
-    },
-    rangeSelector: {
-      selected: 1, // Default to "1 Year" (Highcharts handles user changes)
-      buttons: [
+      credits: {
+        enabled: false,
+      },
+      series: [
         {
-          type: 'all',
-          text: 'View All',
-        },
-        {
-          type: 'year',
-          count: 1,
-          text: '1 Year',
-        },
-        {
-          type: 'year',
-          count: 2,
-          text: '2 Years',
-        },
-        {
-          type: 'year',
-          count: 5,
-          text: '5 Years',
+          type: 'pie',
+          name: currency,
+          data: chartData.pieData,
         },
       ],
-      allButtonsEnabled: true,
-    },
-    legend: {
-      enabled: true,
-    },
-    series: chartData.lineSeries as any,
-  };
+    }),
+    [chartData.pieData, currency, t]
+  );
+
+  const lineOptions: Highcharts.Options = useMemo(
+    () => ({
+      chart: {
+        type: 'line',
+      },
+      boost: {
+        useGPUTranslations: true,
+      },
+      title: {
+        text:
+          t('income.incomeEvolutionBySource') ||
+          'Income Evolution by Source',
+      },
+      xAxis: {
+        type: 'datetime',
+        crosshair: true,
+      },
+      yAxis: {
+        title: {
+          text: 'Amount',
+        },
+        min: 0,
+      },
+      tooltip: {
+        shared: true,
+        split: false,
+        xDateFormat: '%B %Y',
+      },
+      plotOptions: {
+        line: {
+          marker: {
+            enabled: true,
+          },
+        },
+      },
+      credits: {
+        enabled: false,
+      },
+      legend: {
+        enabled: true,
+      },
+      series: chartData.lineSeries as Highcharts.SeriesOptionsType[],
+    }),
+    [chartData.lineSeries, t]
+  );
+
+  const chartKey = `${chartData.lineSeries.length}-${chartData.months.length}-${language}`;
 
   if (chartData.pieData.length === 0) {
     return (
@@ -294,12 +276,12 @@ function IncomeIntelligence() {
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
-        <HighchartsReact highcharts={Highcharts} options={pieOptions} />
+        <AppHighcharts highcharts={Highcharts} options={pieOptions} />
       </div>
       <div>
-        <HighchartsReact
+        <AppHighcharts
+          key={chartKey}
           highcharts={Highcharts}
-          constructorType={'stockChart'}
           options={lineOptions}
         />
       </div>

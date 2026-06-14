@@ -335,6 +335,12 @@ html.highcharts-dark .highcharts-background {
   background-color: var(--color-app-bg) !important;
 }
 
+/* Let vertical page scroll pass through chart areas on touch devices */
+.highcharts-container,
+.highcharts-container svg {
+  touch-action: pan-y;
+}
+
 /* Tailwind @layer utilities – overflow-touch (Tailwind nu are -webkit-overflow-scrolling); culorile app-* sunt generate din @theme */
 @layer utilities {
   .overflow-touch { -webkit-overflow-scrolling: touch; }

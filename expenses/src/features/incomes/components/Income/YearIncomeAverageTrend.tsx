@@ -3,7 +3,7 @@ import { useExpenseData } from '@stores/expenseStore';
 import { useSettingsCurrency } from '@stores/settingsStore';
 import { useLocalization } from '@shared/context/localization';
 import Highcharts from 'highcharts';
-import HighchartsReact from 'highcharts-react-official';
+import AppHighcharts from '@shared/components/Charts/AppHighcharts';
 import { formatDataForChart, formatNumber } from '@shared/utils/utils';
 import { getMonthNames } from '@shared/utils/constants';
 import { TransactionOrIncomeItem } from '@shared/type/types';
@@ -132,9 +132,6 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
     () => ({
       chart: {
         type: 'line',
-        zooming: {
-          type: 'x',
-        },
       },
       boost: {
         useGPUTranslations: true,
@@ -226,7 +223,7 @@ const YearIncomeAverageTrend: React.FC<YearIncomeAverageTrendProps> = ({
 
   return (
     <div className="mt-6 w-full min-w-0 max-w-full -mx-1 sm:-mx-2 md:-mx-3">
-      <HighchartsReact
+      <AppHighcharts
         highcharts={Highcharts}
         options={yearIncomeAverageOptions}
       />
