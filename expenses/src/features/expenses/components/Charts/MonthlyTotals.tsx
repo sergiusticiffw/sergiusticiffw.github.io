@@ -8,89 +8,78 @@ import HighchartsReact from 'highcharts-react-official';
 import { getCategories } from '@shared/utils/constants';
 import { formatMonth, parseMonthString } from '@shared/utils/utils';
 
-const ENGLISH_MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-] as const;
-
 const MonthlyTotals = () => {
-  const totals = useExpenseChartView()?.totals;
+  const view = useExpenseChartView();
   const raw = useStore(expenseStore, (s) => s.raw);
   const category = useStore(expenseStore, (s) => s.category);
   const incomeTotals = useStore(expenseStore, (s) => s.incomeTotals);
-  const filterKey = useStore(
-    expenseStore,
-    (s) =>
-      `${s.category}|${s.textFilter}|${s.selectedTag}|${s.dateRange?.start ?? ''}|${s.dateRange?.end ?? ''}`
-  );
   const currency = useSettingsCurrency();
   const { t } = useLocalization();
   const categories = getCategories();
 
-  const allTimeOptions: Highcharts.Options | null = useMemo(() => {
-    if (!raw?.length) return null;
+  if (!raw?.length) return null;
 
-    const firstDay = new Date(raw[raw.length - 1].dt);
-    const lastDay = new Date(raw[0].dt);
-    const monthlyTotals: Record<string, number> = {};
-    const allMonths: string[] = [];
+  const items = view;
 
-    const cursor = new Date(
-      firstDay.getUTCFullYear(),
-      firstDay.getUTCMonth(),
-      1
-    );
-    while (cursor <= lastDay) {
-      const formattedDate = formatMonth(cursor);
-      allMonths.push(formattedDate);
-      monthlyTotals[formattedDate] = 0;
-      cursor.setMonth(cursor.getMonth() + 1);
+  const firstDay = new Date(raw[raw.length - 1]?.dt ?? '');
+  const lastDay = new Date(raw[0]?.dt ?? '');
+
+  // Initialize monthly totals with all months from the firstDay to the lastDay.
+  let monthlyTotals: { [key: string]: number } = {};
+
+  // Function to generate all months between the first and last date.
+  const generateAllMonths = (startDate: Date, endDate: Date) => {
+    const months = [];
+    const date = new Date(startDate);
+
+    while (date <= endDate) {
+      const formattedDate = formatMonth(date);
+      months.push(formattedDate);
+      monthlyTotals[formattedDate] = 0; // Initialize with zero
+      date.setMonth(date.getMonth() + 1);
     }
+    return months;
+  };
 
-    if (totals) {
-      Object.keys(totals).forEach((month) => {
-        const monthDate = parseMonthString(month);
-        if (monthDate) {
-          const formattedMonth = formatMonth(monthDate);
-          monthlyTotals[formattedMonth] = totals[month];
-        }
-      });
-    }
+  // Generate months between first and last transaction
+  const allMonths = generateAllMonths(
+    new Date(firstDay.getUTCFullYear(), firstDay.getMonth(), 1),
+    lastDay
+  );
+  // Now fill in the totals for the available months
+  items.totals &&
+    Object.keys(items.totals).forEach((month) => {
+      // Parse the month string (e.g., "January 2024") to Date
+      // Safari is stricter with Date parsing, so we use a helper function
+      const monthDate = parseMonthString(month);
 
-    const seriesData = allMonths.map((month) => monthlyTotals[month] || 0);
-    const incomeData = allMonths.map((formattedMonth) => {
-      const monthDate = parseMonthString(formattedMonth);
-      if (!monthDate || !incomeTotals) return 0;
-      const englishKey = `${ENGLISH_MONTH_NAMES[monthDate.getMonth()]} ${monthDate.getFullYear()}`;
-      return incomeTotals[englishKey] ?? 0;
+      if (monthDate) {
+        const formattedMonth = formatMonth(monthDate);
+        monthlyTotals[formattedMonth] = items.totals[month];
+      }
     });
 
-    const pointStart = Date.UTC(
-      firstDay.getUTCFullYear(),
-      firstDay.getMonth(),
-      1
-    );
+  const seriesData = allMonths.map((month) => monthlyTotals[month] || 0);
+  const firstDayStr = raw[raw.length - 1]?.dt ?? '';
 
+  const allTimeOptions: Highcharts.Options = useMemo(() => {
+    const fd = new Date(firstDayStr);
     return {
       chart: {
         type: 'column',
-        zooming: { type: 'x' },
+        zooming: {
+          type: 'x',
+        },
       },
-      title: { text: t('charts.monthlyTotals') },
+      title: {
+        text: t('charts.monthlyTotals'),
+      },
       yAxis: {
         min: 0,
-        title: { text: currency },
-      },
+        title: {
+          text: currency,
+        },
+      } as Highcharts.YAxisOptions,
       plotOptions: {
         column: {
           pointPadding: 0.2,
@@ -99,45 +88,49 @@ const MonthlyTotals = () => {
           groupPadding: 0,
         },
       },
-      credits: { enabled: false },
-      tooltip: { shared: true },
+      credits: {
+        enabled: false,
+      },
+      tooltip: {
+        shared: true,
+      },
       series: [
         {
-          id: 'monthly-expenses',
-          type: 'column',
           name: category
             ? categories.find((c) => c.value === category)?.label
             : t('charts.monthlyTotals'),
           data: seriesData,
           colorByPoint: true,
           pointIntervalUnit: 'month',
-          pointStart,
+          pointStart: Date.UTC(fd.getUTCFullYear(), fd.getMonth(), 1),
         },
         {
-          id: 'monthly-income',
-          type: 'spline',
           name: t('common.income'),
           pointIntervalUnit: 'month',
-          pointStart,
+          pointStart: Date.UTC(fd.getUTCFullYear(), fd.getMonth(), 1),
+          type: 'spline',
           color: '#4DD0E1',
           visible: false,
-          data: incomeData,
+          data: incomeTotals ? Object.values(incomeTotals).reverse() : [],
         },
-      ],
+      ] as Highcharts.SeriesOptionsType[],
       legend: { enabled: true },
       rangeSelector: { selected: 4 },
     };
-    // categories read from closure; not in deps (new array reference every render)
-  }, [raw, totals, category, incomeTotals, currency, t]);
-
-  if (!allTimeOptions) return null;
+  }, [
+    t,
+    currency,
+    categories,
+    category,
+    incomeTotals,
+    seriesData,
+    firstDayStr,
+  ]);
 
   return (
     <HighchartsReact
-      key={filterKey}
-      immutable
       highcharts={Highcharts}
-      constructorType="stockChart"
+      constructorType={'stockChart'}
       options={allTimeOptions}
     />
   );

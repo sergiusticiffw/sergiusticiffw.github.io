@@ -74,7 +74,6 @@ const MonthlyAverageTrend = () => {
 
   return (
     <HighchartsReact
-      immutable
       highcharts={Highcharts}
       constructorType={'stockChart'}
       options={monthlyAverageOptions}

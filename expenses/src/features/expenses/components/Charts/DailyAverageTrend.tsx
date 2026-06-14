@@ -109,7 +109,6 @@ const DailyAverageTrend = () => {
 
   return (
     <HighchartsReact
-      immutable
       highcharts={Highcharts}
       constructorType={'stockChart'}
       options={dailyAverageOptions}

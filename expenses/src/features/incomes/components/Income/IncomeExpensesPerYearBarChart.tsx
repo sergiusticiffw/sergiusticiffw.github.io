@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import Highcharts from 'highcharts';
-import AppHighcharts from '@shared/components/Charts/AppHighcharts';
+import HighchartsReact from 'highcharts-react-official';
 import { useExpenseData } from '@stores/expenseStore';
 import { useSettingsCurrency } from '@stores/settingsStore';
 import { useLocalization } from '@shared/context/localization';
@@ -80,6 +80,8 @@ export default function IncomeExpensesPerYearBarChart({
     return { expenses, income };
   }, [years, expenseTotals, incomeTotals]);
 
+  if (years.length === 0) return null;
+
   const options: Highcharts.Options = useMemo(
     () => ({
       chart: {
@@ -151,8 +153,6 @@ export default function IncomeExpensesPerYearBarChart({
     [t, years, currency, series.expenses, series.income]
   );
 
-  if (years.length === 0) return null;
-
-  return <AppHighcharts highcharts={Highcharts} options={options} />;
+  return <HighchartsReact highcharts={Highcharts} options={options} />;
 }
 

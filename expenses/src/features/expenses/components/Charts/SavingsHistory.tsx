@@ -75,7 +75,6 @@ const SavingsHistory = () => {
 
   return (
     <HighchartsReact
-      immutable
       highcharts={Highcharts}
       constructorType={'stockChart'}
       options={savingsOptions}
