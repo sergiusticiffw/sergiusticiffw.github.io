@@ -1412,8 +1412,8 @@ class PaydownCalculator {
           ) {
             // Use new rate from event if present (rate+payment_method on same date), else currentRate
             const rateFromEvent =
-              event.hasOwnProperty('rate') && event.rate != null && event.rate !== ''
-                ? (typeof event.rate === 'number' ? event.rate : parseFloat(String(event.rate)))
+              event.hasOwnProperty('rate') && event.rate != null
+                ? event.rate
                 : NaN;
             const rateForCalc = !isNaN(rateFromEvent) ? rateFromEvent : this.currentRate;
             const principalForCalc = Number(this.currentPrincipal);
@@ -1451,8 +1451,8 @@ class PaydownCalculator {
         // Store principal reset event in payment log for auditability.
         // Use new rate from event if present (rate+new_principal on same date), else currentRate
         const rateForLog =
-          event.hasOwnProperty('rate') && event.rate != null && event.rate !== ''
-            ? (typeof event.rate === 'number' ? event.rate : parseFloat(String(event.rate)))
+          event.hasOwnProperty('rate') && event.rate != null
+            ? event.rate
             : NaN;
         this.logPayment({
           date: event.date,
@@ -1470,8 +1470,8 @@ class PaydownCalculator {
         ) {
           // Use new rate from event if present (rate+new_principal on same date), else currentRate
           const rateFromEvent =
-            event.hasOwnProperty('rate') && event.rate != null && event.rate !== ''
-              ? (typeof event.rate === 'number' ? event.rate : parseFloat(String(event.rate)))
+            event.hasOwnProperty('rate') && event.rate != null
+              ? event.rate
               : NaN;
           const rateForNewPrincipal = !isNaN(rateFromEvent) ? rateFromEvent : this.currentRate;
           this.currentRecurringPayment = this.calculateRecurringAmount({
@@ -1710,14 +1710,14 @@ class PaydownCalculator {
       arrayOfDebugPrints.push(...this.debugLogArray);
     }
 
-    // Calculate interest paid from actual payments only (was_payed === true)
+    // Calculate interest paid from actual payments only (was_payed === true),
+    // including extra/early payments that settle accrued interest.
     // Use raw values (no rounding) - rounding happens at output/UI layer
     let interestPaid = 0;
     if (this.paymentLogArray && this.paymentLogArray.length > 0) {
       this.paymentLogArray.forEach((payment: PaymentLog) => {
         if (
           payment.was_payed === true &&
-          !payment.isEarlyPayment &&
           payment.interest !== undefined &&
           payment.interest !== null &&
           payment.interest !== '-'
@@ -1988,10 +1988,11 @@ export default function Paydown() {
         effective_principal: paydown.getEffectivePrincipal() || initObj.principal!,
         remaining_principal_after_paid: remainingPrincipalAfterPaid,
         sum_of_reductions_after_paid: sumOfReductionsAfterPaid,
-        days_calculated: paydown.totalNumberOfDays,
+        days_calculated: paydown.getTotalNumberOfDays(),
         actual_end_date: zeroFillDate(actualEndDate),
         latest_payment_date: zeroFillDate(latestPaymentDate),
         unpaid_interest: finalInterest,
+        current_interest_due: finalInterest,
         interest_paid: interestPaid,
         sum_of_fees: fees,
         annual_summaries: annualSummaries,
