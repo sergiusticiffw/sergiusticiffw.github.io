@@ -1276,6 +1276,11 @@ class PaydownCalculator {
     for (let index = 0; index < this.eventArray.length; index++) {
       const event = this.eventArray[index];
 
+      // Loan fully paid — stop processing further scheduled/forecast events.
+      if (this.currentPrincipal <= 0 && !event.hasOwnProperty('ending')) {
+        break;
+      }
+
       // Handle rate change: if rate changes and recurring_amount is NOT manually specified,
       // automatically recalculate the monthly payment based on current principal and new rate
       // IMPORTANT: If pay_recurring is also present, we must apply the payment with OLD rate first,
@@ -1462,7 +1467,12 @@ class PaydownCalculator {
           interest: '-',
           principal: this.currentPrincipal,
           fee: '-',
+          was_payed: event.was_payed,
         });
+
+        if (this.currentPrincipal <= 0) {
+          break;
+        }
 
         if (
           this.currentRecurringPayment !== null &&
@@ -1765,9 +1775,7 @@ export default function Paydown() {
       if (eventsArray) {
         const filteredEvents = eventsArray.filter(
           (event) =>
-            event.pay_installment !== undefined &&
-            !event.isSimulatedPayment &&
-            !event.isEarlyPayment
+            event.pay_installment !== undefined && !event.isSimulatedPayment
         );
         const sortedByDate = filteredEvents.sort(
           (a, b) =>

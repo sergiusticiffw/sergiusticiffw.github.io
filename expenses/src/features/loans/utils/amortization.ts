@@ -109,6 +109,31 @@ export function buildEventsFromApiPayments(
   });
 }
 
+function parseSchedulePrincipal(value: number | string | undefined): number {
+  if (value == null || value === '-' || value === '') return NaN;
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(num) ? num : NaN;
+}
+
+/** Remove forecast rows after the loan is fully paid off (principal reaches 0). */
+export function truncateScheduleAfterPayoff(schedule: PaymentLog[]): PaymentLog[] {
+  let cutoff = -1;
+  for (let i = 0; i < schedule.length; i++) {
+    const row = schedule[i];
+    if ('type' in row && (row as { type?: string }).type === 'annual_summary') {
+      continue;
+    }
+    if (row.was_payed !== true) continue;
+    const principal = parseSchedulePrincipal(row.principal);
+    if (Number.isFinite(principal) && principal <= 0.01) {
+      cutoff = i;
+      break;
+    }
+  }
+  if (cutoff === -1) return schedule;
+  return schedule.slice(0, cutoff + 1);
+}
+
 /**
  * Run Paydown once. Pure and deterministic for given (loanData, events).
  * Returns schedule in the same order as Paydown (mutates then returns the array).
@@ -120,7 +145,10 @@ export function calculateAmortization(
   const schedule: PaymentLog[] = [];
   const calculator = Paydown();
   const paydown = calculator.calculate(loanData, events, schedule);
-  return { paydown, schedule };
+  return {
+    paydown,
+    schedule: truncateScheduleAfterPayoff(schedule),
+  };
 }
 
 /**

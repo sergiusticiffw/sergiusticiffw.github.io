@@ -34,6 +34,7 @@ export function useAmortization(
       loan?.fif,
       loan?.pdt,
       loan?.frpd,
+      loan?.fpm,
     ]
   );
 

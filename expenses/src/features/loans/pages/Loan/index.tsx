@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import LoanDetails from '@features/loans/components/Loan/LoanDetails';
+import LoanDashboard from '@features/loans/components/Loan/dashboard/LoanDashboard';
 import LoanForm from '@features/loans/components/Loan/LoanForm';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import { useParams } from '@tanstack/react-router';
 import PaymentDetails from '@features/loans/components/Loan/PaymentDetails';
 import PaymentForm from '@features/loans/components/Loan/PaymentForm';
-import { Loader, LoadingSpinner, StatCard, StatsGrid } from '@shared/components/Common';
+import { Loader, LoadingSpinner } from '@shared/components/Common';
 import { BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils/layoutClasses';
 import { useLoan } from '@shared/context/loan';
 import {
@@ -19,9 +20,9 @@ import { fetchLoans as fetchLoansService } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useAmortization } from '@features/loans/hooks/useAmortization';
 import {
-  calculateInterestSavings,
   getNextRegularPayment,
   scheduleDateToFormDate,
+  calculateInterestSavings,
 } from '@features/loans/utils/amortization';
 import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
 import {
@@ -29,13 +30,11 @@ import {
   FiEdit2,
   FiPlus,
   FiCheckCircle,
-  FiCreditCard,
   FiBarChart2,
-  FiCheck,
+  FiCalendar,
   FiClock,
   FiPercent,
   FiTrendingDown,
-  FiCalendar,
   FiAlertCircle,
 } from 'react-icons/fi';
 import Notification from '@shared/components/Notification/Notification';
@@ -53,6 +52,7 @@ const Loan: React.FC = () => {
   const [prefillNextPayment, setPrefillNextPayment] = useState(false);
   const [loanFormEditSubmitting, setLoanFormEditSubmitting] = useState(false);
   const [paymentFormSubmitting, setPaymentFormSubmitting] = useState(false);
+  const [customExtra, setCustomExtra] = useState(0);
   const { loans } = data;
   const noData = data.loans === null;
   const { t } = useLocalization();
@@ -182,6 +182,12 @@ const Loan: React.FC = () => {
 
   const progress = calculateProgress();
   const remainingAmount = totalInstallments - (totalPaidAmount ?? 0);
+  const remainingDisplay =
+    loanStatus === 'completed' || loanStatus === 'pending'
+      ? loanStatus === 'completed'
+        ? t('common.completed')
+        : t('loan.notStarted')
+      : formatNumber(remainingAmount);
   const daysCalculated = paydown?.days_calculated || 0;
 
   // Calculate days passed and remaining
@@ -211,14 +217,6 @@ const Loan: React.FC = () => {
         ? t('common.completed')
         : t('loan.notStarted');
 
-  // Remaining amount display - don't show amount for completed or pending loans
-  const remainingDisplay =
-    loanStatus === 'completed' || loanStatus === 'pending'
-      ? loanStatus === 'completed'
-        ? t('common.completed')
-        : t('loan.notStarted')
-      : formatNumber(remainingAmount);
-
   // Get total interest paid from paydown calculation
   const interestPaid =
     loanStatus === 'pending' || !paydown ? 0 : paydown.interest_paid || 0;
@@ -236,7 +234,6 @@ const Loan: React.FC = () => {
         return sum + singleFee;
       }, 0) ?? 0;
 
-  // Interest savings is calculated above (outside paydown calculation)
   const interestSavingsValue =
     loanStatus === 'pending' || !paydown ? 0 : interestSavings;
   const interestSavingsDisplay =
@@ -267,6 +264,15 @@ const Loan: React.FC = () => {
         ? t('common.completed')
         : t('loan.notStarted')
       : formatNumber(remainingPrincipal);
+
+  const totalInterestProjected =
+    loanStatus === 'pending' || !paydown
+      ? 0
+      : (paydown.sum_of_interests ?? 0) + (paydown.unpaid_interest ?? 0);
+  const totalInterestProjectedDisplay =
+    loanStatus === 'pending'
+      ? t('loan.notStarted')
+      : formatNumber(totalInterestProjected);
 
   // Current interest rate: take latest effective rate from amortization schedule (handles rate changes),
   // falling back to the loan's initial rate when unavailable.
@@ -379,130 +385,118 @@ const Loan: React.FC = () => {
         </div>
       </div>
 
-      {/* KEY METRICS: 3 cards (shared StatCard) */}
-      <StatsGrid columns={3}>
-        <StatCard
-          icon={<FiCreditCard />}
-          value={formatNumber(totalPrincipal)}
-          label={t('loan.principal')}
-        />
-        <StatCard
-          icon={<FiCheck />}
-          value={formatNumber(totalPaidAmount)}
-          label={t('loan.paid')}
-          accent
-        />
-        <StatCard
-          icon={<FiClock />}
-          value={remainingDisplay}
-          label={t('loan.remaining')}
-        />
-      </StatsGrid>
-
-      {/* DETAIL ROWS: compact label/value */}
-      <div className="bg-white/[0.04] border border-white/5 rounded-xl overflow-hidden mb-6">
-        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
-          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
-            <FiCalendar className={iconTw} />
-            {t('loan.startDate')}
-          </span>
-          <span className="text-sm font-semibold text-white tabular-nums text-right">{loanData.start_date || '-'}</span>
-        </div>
-        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
-          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
-            <FiCalendar className={iconTw} />
-            {t('loan.endDate')}
-          </span>
-          <span className="text-sm font-semibold text-white tabular-nums text-right">
-            {loanData.end_date ||
-              (amortizationSchedule.length > 0
-                ? (() => {
-                    const lastRow = amortizationSchedule[amortizationSchedule.length - 1];
-                    if (Array.isArray(lastRow)) return lastRow[0] || '-';
-                    return lastRow?.date || '-';
-                  })()
-                : '-')}
-          </span>
-        </div>
-        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
-          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
-            <FiBarChart2 className={iconTw} />
-            {t('common.total')}
-          </span>
-          <span className="text-sm font-semibold text-white tabular-nums text-right">{formatNumber(totalInstallments)}</span>
-        </div>
-        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
-          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
-            <FiPercent className={iconTw} />
-            {t('loan.currentInterest')}
-          </span>
-          <span className="text-sm font-semibold text-white tabular-nums text-right">{interestPaidDisplay}</span>
-        </div>
-        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
-          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
-            <FiPercent className={iconTw} />
-            {t('loan.dailyInterest')}
-          </span>
-          <span className="text-sm font-semibold text-white tabular-nums text-right">{dailyInterestDisplay}</span>
-        </div>
-        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
-          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
-            <FiTrendingDown className={iconTw} />
-            {t('loan.interestSavings')}
-          </span>
-          <span className="text-sm font-semibold text-white tabular-nums text-right">{interestSavingsDisplay}</span>
-        </div>
-        <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
-          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
-            <FiCheckCircle className={iconTw} />
-            {t('loan.principalPaid')}
-          </span>
-          <span className="text-sm font-semibold text-white tabular-nums text-right">{principalPaidDisplay}</span>
-        </div>
-        <div className="flex items-center justify-between py-3 px-4">
-          <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
-            <FiAlertCircle className={iconTw} />
-            {t('loan.remainingPrincipal')}
-          </span>
-          <span className="text-sm font-semibold text-white tabular-nums text-right">{remainingPrincipalDisplay}</span>
-        </div>
-      </div>
+      {/* Dashboard: KPIs, simulator, insights, charts */}
+      <LoanDashboard
+        loan={loan}
+        payments={paymentsForLoan}
+        paydown={paydown}
+        schedule={amortizationSchedule}
+        loanStatus={loanStatus}
+        progress={progress}
+        principalPaid={principalPaid}
+        totalPrincipal={totalPrincipal}
+        totalPaidAmount={totalPaidAmount}
+        remainingDisplay={remainingDisplay}
+        customExtra={customExtra}
+        onExtraChange={setCustomExtra}
+        onAddPayment={() => openAddPayment(true)}
+        detailRows={
+          <>
+            <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+              <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                <FiCalendar className={iconTw} />
+                {t('loan.startDate')}
+              </span>
+              <span className="text-sm font-semibold text-white tabular-nums text-right">
+                {loanData.start_date || '-'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+              <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                <FiCalendar className={iconTw} />
+                {t('loan.endDate')}
+              </span>
+              <span className="text-sm font-semibold text-white tabular-nums text-right">
+                {loanData.end_date ||
+                  (amortizationSchedule.length > 0
+                    ? (() => {
+                        const lastRow =
+                          amortizationSchedule[amortizationSchedule.length - 1];
+                        if (Array.isArray(lastRow)) return lastRow[0] || '-';
+                        return lastRow?.date || '-';
+                      })()
+                    : '-')}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+              <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                <FiBarChart2 className={iconTw} />
+                {t('common.total')}
+              </span>
+              <span className="text-sm font-semibold text-white tabular-nums text-right">
+                {formatNumber(totalInstallments)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+              <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                <FiPercent className={iconTw} />
+                {t('loan.kpi.totalInterest')}
+              </span>
+              <span className="text-sm font-semibold text-white tabular-nums text-right">
+                {totalInterestProjectedDisplay}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+              <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                <FiPercent className={iconTw} />
+                {t('loan.currentInterest')}
+              </span>
+              <span className="text-sm font-semibold text-white tabular-nums text-right">
+                {interestPaidDisplay}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+              <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                <FiPercent className={iconTw} />
+                {t('loan.dailyInterest')}
+              </span>
+              <span className="text-sm font-semibold text-white tabular-nums text-right">
+                {dailyInterestDisplay}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+              <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                <FiTrendingDown className={iconTw} />
+                {t('loan.interestSavings')}
+              </span>
+              <span className="text-sm font-semibold text-white tabular-nums text-right">
+                {interestSavingsDisplay}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+              <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                <FiCheckCircle className={iconTw} />
+                {t('loan.principalPaid')}
+              </span>
+              <span className="text-sm font-semibold text-white tabular-nums text-right">
+                {principalPaidDisplay}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-3 px-4">
+              <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                <FiAlertCircle className={iconTw} />
+                {t('loan.remainingPrincipal')}
+              </span>
+              <span className="text-sm font-semibold text-white tabular-nums text-right">
+                {remainingPrincipalDisplay}
+              </span>
+            </div>
+          </>
+        }
+      />
 
       {/* Loan Sections */}
       <div className="flex flex-col gap-8 w-full sm:gap-6">
-
-        {loanStatus === 'active' && nextRegularPayment && (
-          <div className="bg-gradient-to-br from-[var(--color-app-accent)]/15 to-white/[0.04] border border-[var(--color-app-accent)]/25 rounded-2xl p-5 mb-2">
-            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3 m-0">
-              {t('loan.nextPayment')}
-            </h3>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex flex-col gap-1">
-                <span className="text-lg font-bold text-white">
-                  {t('loan.nextPaymentRegular')}
-                </span>
-                <span className="inline-flex items-center gap-2 text-sm text-white/70">
-                  <FiCalendar className={iconTw} />
-                  {nextRegularPayment.date}
-                </span>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <span className="text-2xl font-extrabold text-white tabular-nums">
-                  {formatNumber(nextRegularPayment.installment)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => openAddPayment(true)}
-                  className="inline-flex items-center gap-2 py-2 px-4 text-sm font-semibold text-white bg-[var(--color-app-accent)] rounded-xl hover:bg-[var(--color-app-accent-hover)] active:scale-[0.98] transition-all cursor-pointer"
-                >
-                  <FiPlus className="w-4 h-4" />
-                  <span>{t('loan.addPayment')}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Payment Details Section */}
         <div className="w-full">
           <div className="flex items-center justify-center gap-3 mb-4 pb-3 border-b border-white/5">
@@ -519,6 +513,12 @@ const Loan: React.FC = () => {
 
         {/* Loan Details Section (Amortization) */}
         <div className="w-full">
+          <div className="flex items-center justify-center gap-3 mb-4 pb-3 border-b border-white/5">
+            <FiBarChart2 className="text-xl text-[var(--color-app-accent)]" />
+            <h3 className="text-lg font-semibold text-white m-0">
+              {t('loan.amortizationSchedule')}
+            </h3>
+          </div>
           <LoanDetails
             loanData={loanData}
             loan={paydown}
