@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocalization } from '@shared/context/localization';
 import { useSettingsCurrency } from '@stores/settingsStore';
 import { formatNumber } from '@shared/utils/utils';
-import type {
-  SimulationResult,
-  ExtraPaymentSimulatorConfig,
+import {
+  getScenarioPreviewRows,
+  type SimulationResult,
+  type ExtraPaymentSimulatorConfig,
 } from '@features/loans/utils/loanSimulation';
 import { FiSliders, FiTrendingDown, FiClock, FiCalendar } from 'react-icons/fi';
 
@@ -25,7 +26,8 @@ const ExtraPaymentSimulator: React.FC<ExtraPaymentSimulatorProps> = ({
 }) => {
   const { t } = useLocalization();
   const currency = useSettingsCurrency();
-  const { presets, maxExtra, step, baseInstallment } = simulatorConfig;
+  const { presets, maxExtra, step, baseInstallment, paymentMethod } =
+    simulatorConfig;
   const [localValue, setLocalValue] = useState(customExtra);
   const [showSchedule, setShowSchedule] = useState(false);
 
@@ -54,15 +56,14 @@ const ExtraPaymentSimulator: React.FC<ExtraPaymentSimulatorProps> = ({
     debouncedChange(v);
   };
 
-  const iconTw = 'w-4 h-4 shrink-0 text-[var(--color-app-accent)]';
-  const futureRows =
-    scenario?.schedule.filter(
-      (r) =>
-        !('type' in r && (r as { type?: string }).type === 'annual_summary') &&
-        r.was_payed !== true
-    ) ?? [];
+  const previewRows = useMemo(
+    () => getScenarioPreviewRows(scenario?.schedule ?? [], 8),
+    [scenario?.schedule]
+  );
 
   if (disabled) return null;
+
+  const iconTw = 'w-4 h-4 shrink-0 text-[var(--color-app-accent)]';
 
   const formatPresetLabel = (amount: number, percentLabel: string | null) => {
     if (amount === 0) return t('loan.simulator.none');
@@ -84,8 +85,13 @@ const ExtraPaymentSimulator: React.FC<ExtraPaymentSimulatorProps> = ({
       <p className="text-sm text-white/55 mb-1 m-0">{t('loan.simulator.subtitle')}</p>
       {baseInstallment > 0 && (
         <p className="text-xs text-white/40 mb-4 m-0">
+          {t('loan.simulator.fromLastPayment')}{' '}
           {t('loan.simulator.installmentBase')}: {formatNumber(baseInstallment)}{' '}
           {currency}
+          {' · '}
+          {paymentMethod === 'equal_principal'
+            ? t('loan.simulator.methodEqualPrincipal')
+            : t('loan.simulator.methodEqualInstallment')}
         </p>
       )}
       {baseInstallment <= 0 && <div className="mb-4" />}
@@ -165,7 +171,7 @@ const ExtraPaymentSimulator: React.FC<ExtraPaymentSimulatorProps> = ({
         </div>
       </div>
 
-      {localValue > 0 && futureRows.length > 0 && (
+      {localValue > 0 && previewRows.length > 0 && (
         <div>
           <button
             type="button"
@@ -193,7 +199,7 @@ const ExtraPaymentSimulator: React.FC<ExtraPaymentSimulatorProps> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {futureRows.slice(0, 8).map((row, i) => (
+                  {previewRows.map((row, i) => (
                     <tr
                       key={`${row.date}-${i}`}
                       className="border-t border-white/5 text-white/80"

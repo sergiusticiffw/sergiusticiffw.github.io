@@ -7,10 +7,15 @@ import {
   buildLoanDataFromApiLoan,
   buildEventsFromApiPayments,
   calculateAmortization,
-  calculatePaydownOnly,
   getNextRegularPayment,
 } from './amortization';
-import type { PaydownEvent, PaydownInit, PaydownResult, PaymentLog } from './paydown-node';
+import type { PaydownEvent, PaydownResult, PaymentLog } from './paydown-node';
+import {
+  extractLoanSnapshot,
+  getRecurringBaseFromRow,
+  type LoanPaymentSnapshot,
+  type PaymentMethod,
+} from './loanSnapshot';
 
 export interface SimulationResult {
   paydown: PaydownResult;
@@ -75,6 +80,7 @@ export interface ExtraPaymentSimulatorConfig {
   presets: ExtraPaymentPreset[];
   maxExtra: number;
   step: number;
+  paymentMethod: PaymentMethod;
 }
 
 function roundNiceAmount(value: number): number {
@@ -86,15 +92,23 @@ function roundNiceAmount(value: number): number {
   return Math.round(value / 100) * 100;
 }
 
-/** Presets derived from the loan's next monthly installment (10%, 25%, 50%). */
+/** Presets derived from next installment after last recorded payment. */
 export function getExtraPaymentSimulatorConfig(
-  schedule: PaymentLog[]
+  schedule: PaymentLog[],
+  snapshot?: LoanPaymentSnapshot | null
 ): ExtraPaymentSimulatorConfig {
   const next = getNextRegularPayment(schedule);
-  const baseInstallment = next?.installment ?? 0;
+  const baseInstallment = snapshot?.nextInstallment ?? next?.installment ?? 0;
+  const paymentMethod = snapshot?.paymentMethod ?? 'equal_installment';
 
   if (baseInstallment <= 0) {
-    return { baseInstallment: 0, presets: [{ amount: 0, percentLabel: null }], maxExtra: 0, step: 1 };
+    return {
+      baseInstallment: 0,
+      presets: [{ amount: 0, percentLabel: null }],
+      maxExtra: 0,
+      step: 1,
+      paymentMethod,
+    };
   }
 
   const percents = [10, 25, 50];
@@ -129,6 +143,7 @@ export function getExtraPaymentSimulatorConfig(
     presets: uniquePresets,
     maxExtra,
     step,
+    paymentMethod,
   };
 }
 
@@ -155,25 +170,6 @@ function roundCents(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-type PaymentMethod = 'equal_installment' | 'equal_principal';
-
-function getPaymentMethod(loanData: PaydownInit): PaymentMethod {
-  return loanData.recurring?.method === 'equal_principal'
-    ? 'equal_principal'
-    : 'equal_installment';
-}
-
-/** Recurring base used by Paydown: total installment or principal slice. */
-function getRecurringBaseFromRow(
-  row: PaymentLog,
-  method: PaymentMethod
-): number | null {
-  if (method === 'equal_principal') {
-    return parseScheduleInstallment(row.reduction);
-  }
-  return parseScheduleInstallment(row.installment);
-}
-
 function compareScheduleDates(a: string, b: string): number {
   const ams = parseScheduleDateToUtcMs(a) ?? 0;
   const bms = parseScheduleDateToUtcMs(b) ?? 0;
@@ -182,31 +178,22 @@ function compareScheduleDates(a: string, b: string): number {
 
 function isOnOrAfterScheduleDate(
   date: string,
-  firstUnpaidDate: string | null
+  fromDate: string | null
 ): boolean {
-  if (!firstUnpaidDate) return false;
-  return compareScheduleDates(date, firstUnpaidDate) >= 0;
-}
-
-function findFirstUnpaidDate(schedule: PaymentLog[]): string | null {
-  for (const row of schedule) {
-    if (!isScheduleRow(row) || row.was_payed === true) continue;
-    if (!row.date) continue;
-    if (parseScheduleInstallment(row.installment) != null) return row.date;
-  }
-  return null;
+  if (!fromDate) return false;
+  return compareScheduleDates(date, fromDate) >= 0;
 }
 
 /** Add extra to future fnra events already recorded in payment history. */
 function applyExtraToBaseEvents(
   baseEvents: PaydownEvent[],
   extraMonthly: number,
-  firstUnpaidDate: string | null
+  fromDate: string
 ): PaydownEvent[] {
-  if (!firstUnpaidDate || extraMonthly <= 0) return baseEvents;
+  if (extraMonthly <= 0) return baseEvents;
 
   return baseEvents.map((event) => {
-    if (!event.date || !isOnOrAfterScheduleDate(event.date, firstUnpaidDate)) {
+    if (!event.date || !isOnOrAfterScheduleDate(event.date, fromDate)) {
       return event;
     }
     if (!Object.prototype.hasOwnProperty.call(event, 'recurring_amount')) {
@@ -223,31 +210,31 @@ function applyExtraToBaseEvents(
 }
 
 /**
- * When the projected recurring base changes (rate change, refinance, etc.),
- * bump recurring_amount so the extra persists after auto-recalculation.
+ * Re-apply extra when projected recurring base changes (rate change, refinance).
+ * Skips dates that already have fnra in payment history (handled by applyExtraToBaseEvents).
  */
 function buildRecurringBumpEvents(
   schedule: PaymentLog[],
+  snapshot: LoanPaymentSnapshot,
   extraMonthly: number,
-  method: PaymentMethod,
-  firstUnpaidDate: string | null,
   fnraDates: Set<string>
 ): PaydownEvent[] {
-  if (!firstUnpaidDate || extraMonthly <= 0) return [];
+  if (extraMonthly <= 0) return [];
 
+  const { nextPaymentDate, paymentMethod } = snapshot;
   const events: PaydownEvent[] = [];
   let lastBase: number | null = null;
 
   for (const row of schedule) {
     if (!isScheduleRow(row) || row.was_payed === true) continue;
-    if (!row.date || !isOnOrAfterScheduleDate(row.date, firstUnpaidDate)) {
+    if (!row.date || !isOnOrAfterScheduleDate(row.date, nextPaymentDate)) {
       continue;
     }
 
     const principal = parseSchedulePrincipal(row.principal);
     if (principal <= 0.01) break;
 
-    const base = getRecurringBaseFromRow(row, method);
+    const base = getRecurringBaseFromRow(row, paymentMethod);
     if (base == null) continue;
 
     const baseChanged =
@@ -270,30 +257,25 @@ function buildRecurringBumpEvents(
 }
 
 /**
- * Build the full event list for an extra-monthly scenario:
- * - preserves payment history (rate / principal / fnra / actual payments)
- * - adds extra on top of existing fnra from the first unpaid date onward
- * - re-applies extra whenever the projected recurring base changes
+ * Build event list for extra-monthly scenario from last-payment snapshot.
+ * Same dual-Paydown pattern as calculateInterestSavings.
  */
 export function buildExtraScenarioEvents(
-  loanData: PaydownInit,
+  snapshot: LoanPaymentSnapshot,
   schedule: PaymentLog[],
   baseEvents: PaydownEvent[],
   extraMonthly: number
 ): PaydownEvent[] {
   if (extraMonthly <= 0) return baseEvents;
 
-  const firstUnpaidDate = findFirstUnpaidDate(schedule);
-  if (!firstUnpaidDate) return baseEvents;
-
-  const method = getPaymentMethod(loanData);
+  const { nextPaymentDate, recurringBase } = snapshot;
 
   const fnraDates = new Set<string>();
   for (const event of baseEvents) {
     if (
       event.date &&
       Object.prototype.hasOwnProperty.call(event, 'recurring_amount') &&
-      isOnOrAfterScheduleDate(event.date, firstUnpaidDate)
+      isOnOrAfterScheduleDate(event.date, nextPaymentDate)
     ) {
       fnraDates.add(event.date);
     }
@@ -302,15 +284,26 @@ export function buildExtraScenarioEvents(
   const modifiedBaseEvents = applyExtraToBaseEvents(
     baseEvents,
     extraMonthly,
-    firstUnpaidDate
+    nextPaymentDate
   );
+
   const bumpEvents = buildRecurringBumpEvents(
     schedule,
+    snapshot,
     extraMonthly,
-    method,
-    firstUnpaidDate,
     fnraDates
   );
+
+  // Ensure first bump at next payment uses snapshot recurring base (not stale schedule guess)
+  const hasBumpAtNext = bumpEvents.some((e) => e.date === nextPaymentDate);
+  if (!fnraDates.has(nextPaymentDate) && !hasBumpAtNext) {
+    bumpEvents.unshift({
+      date: nextPaymentDate,
+      recurring_amount: roundCents(recurringBase + extraMonthly),
+      isSimulatedPayment: true,
+      event_order: -1,
+    });
+  }
 
   return [...modifiedBaseEvents, ...bumpEvents];
 }
@@ -382,6 +375,26 @@ export function getUpcomingPayments(
     });
 
     if (results.length >= count) break;
+  }
+
+  return results;
+}
+
+/** Unpaid installment rows only — excludes rate-change / refinance log markers. */
+export function getScenarioPreviewRows(
+  schedule: PaymentLog[],
+  limit = 8
+): PaymentLog[] {
+  const results: PaymentLog[] = [];
+
+  for (const row of schedule) {
+    if (!isScheduleRow(row)) continue;
+    if (row.was_payed === true) continue;
+    const installment = parseScheduleInstallment(row.installment);
+    if (installment == null || !row.date) continue;
+
+    results.push(row);
+    if (results.length >= limit) break;
   }
 
   return results;
@@ -466,21 +479,13 @@ export function calculateMilestones(
 export function simulateExtraPayment(
   loan: ApiLoan | null | undefined,
   payments: ApiPaymentItem[],
-  extraMonthly: number,
-  baselineSchedule?: PaymentLog[]
+  extraMonthly: number
 ): SimulationResult | null {
   const loanData = buildLoanDataFromApiLoan(loan);
   if (!loanData) return null;
 
   const baseEvents = buildEventsFromApiPayments(payments);
-
-  const baselineFull =
-    baselineSchedule != null
-      ? {
-          paydown: calculatePaydownOnly(loanData, baseEvents),
-          schedule: baselineSchedule,
-        }
-      : calculateAmortization(loanData, baseEvents);
+  const baselineFull = calculateAmortization(loanData, baseEvents);
 
   const baselinePayoff = getEstimatedPayoffDate(baselineFull.schedule);
   const baselineInterest = getTotalInterest(baselineFull.paydown);
@@ -488,67 +493,67 @@ export function simulateExtraPayment(
     ? getMonthsBetweenDates(loanData.start_date, baselinePayoff)
     : 0;
 
+  const baselineResult: SimulationResult = {
+    paydown: baselineFull.paydown,
+    schedule: baselineFull.schedule,
+    payoffDate: baselinePayoff,
+    totalInterest: baselineInterest,
+    totalCost:
+      (baselineFull.paydown.effective_principal ?? loanData.principal) +
+      baselineInterest,
+    monthsToPayoff: baselineMonths,
+    monthsSaved: 0,
+    interestSaved: 0,
+  };
+
   if (extraMonthly <= 0) {
-    return {
-      paydown: baselineFull.paydown,
-      schedule: baselineFull.schedule,
-      payoffDate: baselinePayoff,
-      totalInterest: baselineInterest,
-      totalCost:
-        (baselineFull.paydown.effective_principal ?? loanData.principal) +
-        baselineInterest,
-      monthsToPayoff: baselineMonths,
-      monthsSaved: 0,
-      interestSaved: 0,
-    };
+    return baselineResult;
+  }
+
+  const snapshot = extractLoanSnapshot(
+    loan,
+    payments,
+    baselineFull.paydown,
+    baselineFull.schedule
+  );
+  if (!snapshot) {
+    return baselineResult;
   }
 
   const scenarioEvents = buildExtraScenarioEvents(
-    loanData,
+    snapshot,
     baselineFull.schedule,
     baseEvents,
     extraMonthly
   );
 
   try {
-    const { paydown, schedule } = calculateAmortization(
-      loanData,
-      scenarioEvents
-    );
+    const scenarioFull = calculateAmortization(loanData, scenarioEvents);
 
-    const payoffDate = getEstimatedPayoffDate(schedule);
-    const totalInterest = getTotalInterest(paydown);
+    const payoffDate = getEstimatedPayoffDate(scenarioFull.schedule);
+    const scenarioInterest = getTotalInterest(scenarioFull.paydown);
     const baselineRemaining = countRemainingInstallments(baselineFull.schedule);
-    const scenarioRemaining = countRemainingInstallments(schedule);
+    const scenarioRemaining = countRemainingInstallments(
+      scenarioFull.schedule
+    );
     const monthsToPayoff = payoffDate
       ? getMonthsBetweenDates(loanData.start_date, payoffDate)
       : baselineMonths;
 
     return {
-      paydown,
-      schedule,
+      paydown: scenarioFull.paydown,
+      schedule: scenarioFull.schedule,
       payoffDate,
-      totalInterest,
+      totalInterest: scenarioInterest,
       totalCost:
-        (paydown.effective_principal ?? loanData.principal) + totalInterest,
+        (scenarioFull.paydown.effective_principal ?? loanData.principal) +
+        scenarioInterest,
       monthsToPayoff,
       monthsSaved: Math.max(0, baselineRemaining - scenarioRemaining),
-      interestSaved: Math.max(0, baselineInterest - totalInterest),
+      interestSaved: Math.max(0, baselineInterest - scenarioInterest),
     };
   } catch {
-    // Simulation failed (e.g. invalid recurring bump) — return baseline unchanged
-    return {
-      paydown: baselineFull.paydown,
-      schedule: baselineFull.schedule,
-      payoffDate: baselinePayoff,
-      totalInterest: baselineInterest,
-      totalCost:
-        (baselineFull.paydown.effective_principal ?? loanData.principal) +
-        baselineInterest,
-      monthsToPayoff: baselineMonths,
-      monthsSaved: 0,
-      interestSaved: 0,
-    };
+    return baselineResult;
   }
 }
 
@@ -563,9 +568,10 @@ export function buildScenarioPresets(
   loan: ApiLoan | null | undefined,
   payments: ApiPaymentItem[],
   baselineSchedule: PaymentLog[],
-  customExtra: number
+  customExtra: number,
+  snapshot?: LoanPaymentSnapshot | null
 ): ScenarioPreset[] {
-  const { presets } = getExtraPaymentSimulatorConfig(baselineSchedule);
+  const { presets } = getExtraPaymentSimulatorConfig(baselineSchedule, snapshot);
 
   const scenarioDefs = [
     { id: 'current', label: 'current', extraMonthly: 0 },
@@ -583,11 +589,6 @@ export function buildScenarioPresets(
     id: p.id,
     label: p.label,
     extraMonthly: p.extraMonthly,
-    result: simulateExtraPayment(
-      loan,
-      payments,
-      p.extraMonthly,
-      baselineSchedule
-    ),
+    result: simulateExtraPayment(loan, payments, p.extraMonthly),
   }));
 }

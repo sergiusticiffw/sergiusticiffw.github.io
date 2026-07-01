@@ -11,6 +11,7 @@ import {
   type ScenarioPreset,
   type ExtraPaymentSimulatorConfig,
 } from '@features/loans/utils/loanSimulation';
+import { extractLoanSnapshot } from '@features/loans/utils/loanSnapshot';
 
 export interface LoanSimulationState {
   baseline: SimulationResult | null;
@@ -31,25 +32,28 @@ export function useLoanSimulation(
   customExtra: number
 ): LoanSimulationState {
   return useMemo(() => {
-    const simulatorConfig = getExtraPaymentSimulatorConfig(baselineSchedule);
-    const baseline = simulateExtraPayment(loan, payments, 0, baselineSchedule);
-    const scenarioCustom = simulateExtraPayment(
-      loan,
-      payments,
-      customExtra,
-      baselineSchedule
+    const snapshot =
+      baselinePaydown && baselineSchedule.length > 0
+        ? extractLoanSnapshot(loan, payments, baselinePaydown, baselineSchedule)
+        : null;
+
+    const simulatorConfig = getExtraPaymentSimulatorConfig(
+      baselineSchedule,
+      snapshot
     );
+    const baseline = simulateExtraPayment(loan, payments, 0);
+    const scenarioCustom = simulateExtraPayment(loan, payments, customExtra);
 
     const scenarios = buildScenarioPresets(
       loan,
       payments,
       baselineSchedule,
-      customExtra
+      customExtra,
+      snapshot
     );
 
     const payoffDate =
-      baseline?.payoffDate ??
-      getEstimatedPayoffDate(baselineSchedule);
+      baseline?.payoffDate ?? getEstimatedPayoffDate(baselineSchedule);
     const totalInterest =
       baseline?.totalInterest ?? getTotalInterest(baselinePaydown);
     const principal =

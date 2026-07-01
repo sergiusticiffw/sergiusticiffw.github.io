@@ -24,6 +24,7 @@ import {
   scheduleDateToFormDate,
   calculateInterestSavings,
 } from '@features/loans/utils/amortization';
+import { getEffectiveRateFromSchedule } from '@features/loans/utils/loanSnapshot';
 import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
 import {
   FiDollarSign,
@@ -265,60 +266,11 @@ const Loan: React.FC = () => {
         : t('loan.notStarted')
       : formatNumber(remainingPrincipal);
 
-  const totalInterestProjected =
+  const currentRate =
     loanStatus === 'pending' || !paydown
-      ? 0
-      : (paydown.sum_of_interests ?? 0) + (paydown.unpaid_interest ?? 0);
-  const totalInterestProjectedDisplay =
-    loanStatus === 'pending'
-      ? t('loan.notStarted')
-      : formatNumber(totalInterestProjected);
-
-  // Current interest rate: take latest effective rate from amortization schedule (handles rate changes),
-  // falling back to the loan's initial rate when unavailable.
-  const currentRate = (() => {
-    if (!amortizationSchedule?.length) return loanData.rate || 0;
-
-    const parseDateToUtcMs = (date: string): number | null => {
-      const parts = (date ?? '').split('.');
-      if (parts.length !== 3) return null;
-      const [dd, mm, yyyy] = parts.map((p) => Number(p));
-      if (!dd || !mm || !yyyy) return null;
-      return Date.UTC(yyyy, mm - 1, dd);
-    };
-
-    const parseRate = (row: any): number | null => {
-      const rateRaw = Array.isArray(row) ? row[1] : row?.rate;
-      if (rateRaw === '-' || rateRaw == null || rateRaw === '') return null;
-      const r = typeof rateRaw === 'number' ? rateRaw : Number(rateRaw);
-      return Number.isFinite(r) && r >= 0 ? r : null;
-    };
-
-    // Prefer the latest rate that is effective "now" (by date), regardless of whether a payment happened.
-    // This fixes cases where the rate changed but there was no paid installment yet.
-    const todayUtc =
-      Date.UTC(
-        new Date().getFullYear(),
-        new Date().getMonth(),
-        new Date().getDate()
-      ) ?? Date.now();
-
-    for (let i = amortizationSchedule.length - 1; i >= 0; i--) {
-      const row: any = amortizationSchedule[i];
-      const dateRaw = Array.isArray(row) ? row[0] : row?.date;
-      const rowUtc = typeof dateRaw === 'string' ? parseDateToUtcMs(dateRaw) : null;
-      if (rowUtc == null || rowUtc > todayUtc) continue;
-      const r = parseRate(row);
-      if (r != null) return r;
-    }
-
-    // Fallback: latest available numeric rate in the schedule (even if future).
-    for (let i = amortizationSchedule.length - 1; i >= 0; i--) {
-      const r = parseRate(amortizationSchedule[i] as any);
-      if (r != null) return r;
-    }
-    return loanData.rate || 0;
-  })();
+      ? loanData.rate || 0
+      : getEffectiveRateFromSchedule(amortizationSchedule) ??
+          (loanData.rate || 0);
 
   // Current daily interest (approx): remaining principal * APR / 365
   // Uses latest effective rate from the amortization schedule to reflect rate changes.
@@ -435,15 +387,6 @@ const Loan: React.FC = () => {
               </span>
               <span className="text-sm font-semibold text-white tabular-nums text-right">
                 {formatNumber(totalInstallments)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
-              <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
-                <FiPercent className={iconTw} />
-                {t('loan.kpi.totalInterest')}
-              </span>
-              <span className="text-sm font-semibold text-white tabular-nums text-right">
-                {totalInterestProjectedDisplay}
               </span>
             </div>
             <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">

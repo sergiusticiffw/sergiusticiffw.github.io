@@ -411,7 +411,10 @@ const translations = {
     'loan.simulator.title': 'Extra Payment Simulator',
     'loan.simulator.subtitle':
       'See how extra monthly payments affect your payoff date and total interest.',
+    'loan.simulator.fromLastPayment': 'From next payment after your last recorded payment.',
     'loan.simulator.installmentBase': 'Next installment',
+    'loan.simulator.methodEqualInstallment': 'Equal installment',
+    'loan.simulator.methodEqualPrincipal': 'Equal principal',
     'loan.simulator.extraMonthly': 'Extra monthly payment',
     'loan.simulator.none': 'None',
     'loan.simulator.newPayoff': 'New Payoff Date',
@@ -1040,7 +1043,11 @@ const translations = {
     'loan.simulator.title': 'Simulator Plăți Extra',
     'loan.simulator.subtitle':
       'Vezi cum plățile extra lunare afectează data finalizării și dobânda totală.',
+    'loan.simulator.fromLastPayment':
+      'De la următoarea rată după ultima plată înregistrată.',
     'loan.simulator.installmentBase': 'Următoarea rată',
+    'loan.simulator.methodEqualInstallment': 'Rată egală',
+    'loan.simulator.methodEqualPrincipal': 'Principal egal',
     'loan.simulator.extraMonthly': 'Plată extra lunară',
     'loan.simulator.none': 'Niciuna',
     'loan.simulator.newPayoff': 'Noua Dată Finalizare',
