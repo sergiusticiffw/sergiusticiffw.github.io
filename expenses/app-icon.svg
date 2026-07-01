@@ -1,0 +1,29 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#282a36;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e1f29;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="dollarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#50fa7b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3dd66a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bgGradient)"/>
+  
+  <!-- Dollar Sign -->
+  <g transform="translate(256, 256)">
+    <text 
+      x="0" 
+      y="0" 
+      font-family="Arial, sans-serif" 
+      font-size="280" 
+      font-weight="bold" 
+      fill="url(#dollarGradient)" 
+      text-anchor="middle" 
+      dominant-baseline="central"
+      opacity="0.95">$</text>
+  </g>
+</svg>
