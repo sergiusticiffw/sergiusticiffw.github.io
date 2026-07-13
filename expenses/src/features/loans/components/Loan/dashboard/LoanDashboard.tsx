@@ -1,26 +1,15 @@
 import React, { useMemo } from 'react';
-import { useLocalization } from '@shared/context/localization';
-import type { ApiLoan, ApiPaymentItem } from '@shared/type/types';
 import type { PaydownResult, PaymentLog } from '@features/loans/utils/amortization';
-import { useLoanSimulation } from '@features/loans/hooks/useLoanSimulation';
 import {
   calculateMilestones,
   getUpcomingPayments,
+  getTotalInterest,
 } from '@features/loans/utils/loanSimulation';
-import { calculateLoanHealthScore } from '@features/loans/utils/loanInsights';
 import LoanKpiCards from './LoanKpiCards';
-import ExtraPaymentSimulator from './ExtraPaymentSimulator';
-import LoanHealthScore from './LoanHealthScore';
 import LoanMilestones from './LoanMilestones';
 import UpcomingPayments from './UpcomingPayments';
-import {
-  LoanPrincipalInterestPie,
-  LoanScenarioComparison,
-} from '@features/loans/components/Loan/LoanCharts';
 
 interface LoanDashboardProps {
-  loan: ApiLoan;
-  payments: ApiPaymentItem[];
   paydown: PaydownResult | null;
   schedule: PaymentLog[];
   loanStatus: string;
@@ -29,15 +18,11 @@ interface LoanDashboardProps {
   totalPrincipal: number;
   totalPaidAmount: number;
   remainingDisplay: string;
-  customExtra: number;
-  onExtraChange: (value: number) => void;
   onAddPayment: () => void;
   detailRows: React.ReactNode;
 }
 
 const LoanDashboard: React.FC<LoanDashboardProps> = ({
-  loan,
-  payments,
   paydown,
   schedule,
   loanStatus,
@@ -46,20 +31,15 @@ const LoanDashboard: React.FC<LoanDashboardProps> = ({
   totalPrincipal,
   totalPaidAmount,
   remainingDisplay,
-  customExtra,
-  onExtraChange,
   onAddPayment,
   detailRows,
 }) => {
-  const { t } = useLocalization();
   const isActive = loanStatus === 'active';
 
-  const simulation = useLoanSimulation(
-    loan,
-    payments,
-    schedule,
-    paydown,
-    customExtra
+  const totalInterest = useMemo(() => getTotalInterest(paydown), [paydown]);
+  const interestToPrincipalRatio = useMemo(
+    () => (totalPrincipal > 0 ? (totalInterest / totalPrincipal) * 100 : 0),
+    [totalInterest, totalPrincipal]
   );
 
   const milestones = useMemo(
@@ -73,34 +53,9 @@ const LoanDashboard: React.FC<LoanDashboardProps> = ({
     [schedule, totalPrincipal, principalPaid, paydown]
   );
 
-  const upcomingPayments = useMemo(
-    () => getUpcomingPayments(schedule, 4),
+  const upcomingPayment = useMemo(
+    () => getUpcomingPayments(schedule, 1)[0] ?? null,
     [schedule]
-  );
-
-  const health = useMemo(
-    () =>
-      calculateLoanHealthScore({
-        paydown,
-        schedule,
-        progress,
-        payments,
-        loan,
-        totalPrincipal,
-      }),
-    [paydown, schedule, progress, payments, loan, totalPrincipal]
-  );
-
-  const scenarioChartData = useMemo(
-    () =>
-      simulation.scenarios.map((s) => ({
-        id: s.id,
-        label: s.label,
-        extraMonthly: s.extraMonthly,
-        totalInterest: s.result?.totalInterest ?? 0,
-        monthsToPayoff: s.result?.monthsToPayoff ?? 0,
-      })),
-    [simulation.scenarios]
   );
 
   return (
@@ -109,7 +64,7 @@ const LoanDashboard: React.FC<LoanDashboardProps> = ({
         principal={totalPrincipal}
         paidAmount={totalPaidAmount}
         remainingDisplay={remainingDisplay}
-        interestToPrincipalRatio={simulation.interestToPrincipalRatio}
+        interestToPrincipalRatio={interestToPrincipalRatio}
         loanStatus={loanStatus}
       />
 
@@ -120,56 +75,21 @@ const LoanDashboard: React.FC<LoanDashboardProps> = ({
       {isActive && (
         <>
           <UpcomingPayments
-            payments={upcomingPayments}
+            payment={upcomingPayment}
             onAddPayment={onAddPayment}
           />
-
-          <LoanHealthScore health={health} />
-
-          <ExtraPaymentSimulator
-            customExtra={customExtra}
-            onExtraChange={onExtraChange}
-            scenario={simulation.scenarioCustom}
-            simulatorConfig={simulation.simulatorConfig}
-          />
-
-          <div>
-            <h3 className="text-base font-semibold text-white m-0 mb-4">
-              {t('loan.visualizations')}
-            </h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3">
-                <LoanPrincipalInterestPie
-                  principal={totalPrincipal}
-                  totalInterest={simulation.totalInterest}
-                />
-              </div>
-              <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3">
-                <LoanScenarioComparison
-                  scenarios={scenarioChartData}
-                  customExtra={customExtra}
-                />
-              </div>
-            </div>
-          </div>
 
           <LoanMilestones
             milestones={milestones}
             progress={
-              milestones.every((m) => m.completed)
-                ? 100
-                : progress
+              milestones.every((m) => m.completed) ? 100 : progress
             }
           />
-
         </>
       )}
 
       {loanStatus === 'completed' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <LoanHealthScore health={health} />
-          <LoanMilestones milestones={milestones} progress={100} />
-        </div>
+        <LoanMilestones milestones={milestones} progress={100} />
       )}
     </div>
   );

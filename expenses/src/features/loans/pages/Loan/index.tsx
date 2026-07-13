@@ -53,7 +53,6 @@ const Loan: React.FC = () => {
   const [prefillNextPayment, setPrefillNextPayment] = useState(false);
   const [loanFormEditSubmitting, setLoanFormEditSubmitting] = useState(false);
   const [paymentFormSubmitting, setPaymentFormSubmitting] = useState(false);
-  const [customExtra, setCustomExtra] = useState(0);
   const { loans } = data;
   const noData = data.loans === null;
   const { t } = useLocalization();
@@ -337,10 +336,8 @@ const Loan: React.FC = () => {
         </div>
       </div>
 
-      {/* Dashboard: KPIs, simulator, insights, charts */}
+      {/* Dashboard: KPIs, upcoming payments, milestones */}
       <LoanDashboard
-        loan={loan}
-        payments={paymentsForLoan}
         paydown={paydown}
         schedule={amortizationSchedule}
         loanStatus={loanStatus}
@@ -349,8 +346,6 @@ const Loan: React.FC = () => {
         totalPrincipal={totalPrincipal}
         totalPaidAmount={totalPaidAmount}
         remainingDisplay={remainingDisplay}
-        customExtra={customExtra}
-        onExtraChange={setCustomExtra}
         onAddPayment={() => openAddPayment(true)}
         detailRows={
           <>

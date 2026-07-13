@@ -2,7 +2,7 @@ import { useSettingsCurrency } from '@stores/settingsStore';
 import { useLocalization } from '@shared/context/localization';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
-import { getLocale, formatNumber } from '@shared/utils/utils';
+import { getLocale } from '@shared/utils/utils';
 
 type PaymentLogLike = {
   date: string;
@@ -318,126 +318,6 @@ export const LoanAnnualBreakdown = ({
         name: `${t('loan.fees')} (${t('loan.paid')})`,
         data: feesPaid,
         color: COLORS.feesPaid,
-      },
-    ],
-  };
-
-  return <HighchartsReact highcharts={Highcharts} options={options} />;
-};
-
-export const LoanPrincipalInterestPie = ({
-  principal,
-  totalInterest,
-}: {
-  principal: number;
-  totalInterest: number;
-}) => {
-  const currency = useSettingsCurrency();
-  const { t } = useLocalization();
-
-  const pieData = [
-    {
-      name: t('loan.principal'),
-      y: principal,
-      color: 'rgba(168, 85, 247, 0.9)',
-    },
-    {
-      name: t('loan.interests'),
-      y: totalInterest,
-      color: 'rgba(116, 227, 180, 0.9)',
-    },
-  ].filter((d) => d.y > 0);
-
-  const options = {
-    chart: { type: 'pie' },
-    title: { text: t('loan.charts.principalVsInterest') },
-    tooltip: {
-      pointFormat: `{point.y} ${currency} ({point.percentage:.1f}%)`,
-    },
-    plotOptions: {
-      pie: {
-        allowPointSelect: true,
-        cursor: 'pointer',
-        innerSize: '70%',
-        borderWidth: 2,
-        borderColor: 'transparent',
-        dataLabels: { enabled: false },
-        animation: { duration: 600 },
-      },
-    },
-    credits: { enabled: false },
-    series: [
-      {
-        type: 'pie',
-        name: currency,
-        data: pieData,
-      },
-    ],
-  };
-
-  return <HighchartsReact highcharts={Highcharts} options={options} />;
-};
-
-export const LoanScenarioComparison = ({
-  scenarios,
-  customExtra,
-}: {
-  scenarios: Array<{
-    id: string;
-    label: string;
-    extraMonthly: number;
-    totalInterest: number;
-    monthsToPayoff: number;
-  }>;
-  customExtra: number;
-}) => {
-  const currency = useSettingsCurrency();
-  const { t } = useLocalization();
-
-  const categories = scenarios.map((s) => {
-    if (s.id === 'current') return t('loan.charts.currentPlan');
-    if (s.id === 'custom')
-      return customExtra > 0
-        ? `+${formatNumber(customExtra)} ${currency}`
-        : t('loan.charts.custom');
-    return s.label;
-  });
-
-  const interestData = scenarios.map((s) => s.totalInterest);
-  const monthsData = scenarios.map((s) => s.monthsToPayoff);
-
-  const options = {
-    chart: { type: 'column' },
-    title: { text: t('loan.charts.scenarioComparison') },
-    xAxis: { categories },
-    yAxis: [
-      {
-        min: 0,
-        title: { text: `${t('loan.interests')} (${currency})` },
-      },
-      {
-        min: 0,
-        title: { text: t('loan.charts.months') },
-        opposite: true,
-      },
-    ],
-    tooltip: { shared: true, valueDecimals: 0 },
-    plotOptions: {
-      column: { animation: { duration: 600 } },
-    },
-    series: [
-      {
-        name: t('loan.interests'),
-        data: interestData,
-        color: 'rgba(168, 85, 247, 0.85)',
-        yAxis: 0,
-      },
-      {
-        name: t('loan.charts.monthsToPayoff'),
-        data: monthsData,
-        color: 'rgba(116, 227, 180, 0.85)',
-        yAxis: 1,
-        type: 'column',
       },
     ],
   };
