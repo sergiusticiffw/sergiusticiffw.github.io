@@ -402,8 +402,49 @@ const NewHome = () => {
         />
       ) : (
         <>
-          {/* Search / filters — first element on page */}
-          <div className="pt-6 mb-6">
+          <div className="pt-6">
+            <HeroSpendCard
+              title={currentMonth || t('home.title')}
+              meta={`${filteredTransactions.length} ${filteredTransactions.length === 1 ? t('common.transaction') : t('common.transactions')}`}
+              label={t('home.spentThisMonth')}
+              amount={formatNumber(displayTotal)}
+              deltaLabel={
+                deltaPct != null
+                  ? `${Number(deltaPct) >= 0 ? '+' : ''}${deltaPct}% vs ${t('common.previous').toLowerCase()} month`
+                  : undefined
+              }
+              deltaPositive={
+                deltaPct != null ? Number(deltaPct) <= 0 : undefined
+              }
+              footer={
+                !hasFilters && isCurrentMonth && daysLeft != null
+                  ? `${daysLeft} ${t('home.daysLeft')}`
+                  : undefined
+              }
+            />
+          </div>
+
+          {!hasFilters && (
+            <StatsRow className="sm:grid-cols-2">
+              <Stat
+                label={t('common.income')}
+                value={formatNumber(displayIncome)}
+                icon={<FiBriefcase />}
+                compact
+              />
+              <Stat
+                label={t('common.profit')}
+                value={formatNumber(displayProfit)}
+                icon={
+                  displayProfit >= 0 ? <FiTrendingUp /> : <FiTrendingDown />
+                }
+                compact
+              />
+            </StatsRow>
+          )}
+
+          {/* Search / filters — before view tabs */}
+          <div className="mb-6">
             <TransactionFilters
               searchValue={searchText}
               categoryValue={selectedCategory}
@@ -424,45 +465,6 @@ const NewHome = () => {
               onFilterPanelOpenChange={setFilterPanelOpen}
             />
           </div>
-
-          <HeroSpendCard
-            title={currentMonth || t('home.title')}
-            meta={`${filteredTransactions.length} ${filteredTransactions.length === 1 ? t('common.transaction') : t('common.transactions')}`}
-            label={t('home.spentThisMonth')}
-            amount={formatNumber(displayTotal)}
-            deltaLabel={
-              deltaPct != null
-                ? `${Number(deltaPct) >= 0 ? '+' : ''}${deltaPct}% vs ${t('common.previous').toLowerCase()} month`
-                : undefined
-            }
-            deltaPositive={
-              deltaPct != null ? Number(deltaPct) <= 0 : undefined
-            }
-            footer={
-              !hasFilters && isCurrentMonth && daysLeft != null
-                ? `${daysLeft} ${t('home.daysLeft')}`
-                : undefined
-            }
-          />
-
-          {!hasFilters && (
-            <StatsRow className="sm:grid-cols-2">
-              <Stat
-                label={t('common.income')}
-                value={formatNumber(displayIncome)}
-                icon={<FiBriefcase />}
-                compact
-              />
-              <Stat
-                label={t('common.profit')}
-                value={formatNumber(displayProfit)}
-                icon={
-                  displayProfit >= 0 ? <FiTrendingUp /> : <FiTrendingDown />
-                }
-                compact
-              />
-            </StatsRow>
-          )}
 
           {/* View Tabs */}
           <div className="flex gap-2 mb-6">
