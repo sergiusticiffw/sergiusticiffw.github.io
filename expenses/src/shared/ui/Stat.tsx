@@ -29,7 +29,7 @@ export function Stat({
         className
       )}
     >
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-center gap-1.5 min-w-0">
         {icon && (
           <span
             className="inline-flex w-6 h-6 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--color-app-accent)_22%,transparent)] text-[var(--color-app-accent)] shrink-0 [&_svg]:w-3.5 [&_svg]:h-3.5"
@@ -38,7 +38,9 @@ export function Stat({
             {icon}
           </span>
         )}
-        <span className="text-micro text-app-muted truncate">{label}</span>
+        <span className="text-micro uppercase tracking-wider text-app-muted truncate">
+          {label}
+        </span>
       </div>
       <p
         className={cn(

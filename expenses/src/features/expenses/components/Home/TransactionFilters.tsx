@@ -228,7 +228,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
       role="search"
     >
       <div className={searchBar}>
-        <FiSearch className="text-app-placeholder text-lg shrink-0" aria-hidden />
+        <FiSearch className="text-app-placeholder/70 text-lg shrink-0 relative top-px" aria-hidden />
 
         {categoryValue && !isFilterFocused && (
           <div

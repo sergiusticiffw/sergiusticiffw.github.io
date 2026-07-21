@@ -19,7 +19,6 @@ import CalendarView from '@features/expenses/components/CalendarView';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionForm from '@features/expenses/components/TransactionForm';
 import {
-  PageHeader,
   Loader,
   LoadingSpinner,
   DeleteConfirmDrawer,
@@ -403,14 +402,8 @@ const NewHome = () => {
         />
       ) : (
         <>
-          {/* Header */}
-          <PageHeader
-            title={currentMonth || t('home.title')}
-            subtitle={`${filteredTransactions.length} ${filteredTransactions.length === 1 ? t('common.transaction') : t('common.transactions')}`}
-          />
-
-          {/* Filters - For Both Views */}
-          <div className="mb-6">
+          {/* Search / filters — first element on page */}
+          <div className="pt-6 mb-6">
             <TransactionFilters
               searchValue={searchText}
               categoryValue={selectedCategory}
@@ -433,6 +426,8 @@ const NewHome = () => {
           </div>
 
           <HeroSpendCard
+            title={currentMonth || t('home.title')}
+            meta={`${filteredTransactions.length} ${filteredTransactions.length === 1 ? t('common.transaction') : t('common.transactions')}`}
             label={t('home.spentThisMonth')}
             amount={formatNumber(displayTotal)}
             deltaLabel={
@@ -443,12 +438,10 @@ const NewHome = () => {
             deltaPositive={
               deltaPct != null ? Number(deltaPct) <= 0 : undefined
             }
-            subtitle={
-              !hasFilters
-                ? isCurrentMonth && daysLeft != null
-                  ? `${currentMonth} · ${daysLeft} ${t('home.daysLeft')}`
-                  : currentMonth
-                : currentMonth
+            footer={
+              !hasFilters && isCurrentMonth && daysLeft != null
+                ? `${daysLeft} ${t('home.daysLeft')}`
+                : undefined
             }
           />
 
@@ -471,7 +464,7 @@ const NewHome = () => {
             </StatsRow>
           )}
 
-          {/* View Tabs - Below Search */}
+          {/* View Tabs */}
           <div className="flex gap-2 mb-6">
             <button
               type="button"
