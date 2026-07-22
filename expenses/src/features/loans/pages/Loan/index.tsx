@@ -451,12 +451,6 @@ const Loan: React.FC = () => {
 
         {/* Loan Details Section (Amortization) */}
         <div className="w-full">
-          <div className="flex items-center justify-center gap-3 pt-2 pb-3 mb-4 border-b border-white/5">
-            <FiBarChart2 className="text-xl text-[var(--color-app-accent)]" />
-            <h3 className="text-lg font-semibold text-white m-0">
-              {t('loan.amortizationSchedule')}
-            </h3>
-          </div>
           <LoanDetails
             loanData={loanData}
             loan={paydown}
