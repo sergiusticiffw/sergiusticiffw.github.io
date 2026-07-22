@@ -434,10 +434,10 @@ const Loan: React.FC = () => {
       />
 
       {/* Loan Sections */}
-      <div className="flex flex-col gap-8 w-full sm:gap-6">
+      <div className="flex flex-col gap-8 w-full mt-5 sm:gap-6">
         {/* Payment Details Section */}
         <div className="w-full">
-          <div className="flex items-center justify-center gap-3 mb-4 pb-3 border-b border-white/5">
+          <div className="flex items-center justify-center gap-3 pt-2 pb-3 mb-4 border-b border-white/5">
             <FiDollarSign className="text-xl text-[var(--color-app-accent)]" />
             <h3 className="text-lg font-semibold text-white m-0">{t('loan.paymentHistory')}</h3>
           </div>
@@ -451,7 +451,7 @@ const Loan: React.FC = () => {
 
         {/* Loan Details Section (Amortization) */}
         <div className="w-full">
-          <div className="flex items-center justify-center gap-3 mb-4 pb-3 border-b border-white/5">
+          <div className="flex items-center justify-center gap-3 pt-2 pb-3 mb-4 border-b border-white/5">
             <FiBarChart2 className="text-xl text-[var(--color-app-accent)]" />
             <h3 className="text-lg font-semibold text-white m-0">
               {t('loan.amortizationSchedule')}
