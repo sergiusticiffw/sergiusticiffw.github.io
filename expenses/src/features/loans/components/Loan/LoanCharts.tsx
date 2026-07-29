@@ -93,7 +93,7 @@ export const LoanPrincipalOverTime = ({
 
   const options = {
     chart: { type: 'line' },
-    title: { text: t('loan.remainingPrincipal') },
+    title: { text: t('loan.remaining') },
     xAxis: { type: 'datetime' },
     yAxis: { min: 0, title: { text: currency } },
     tooltip: { valueDecimals: 2 },

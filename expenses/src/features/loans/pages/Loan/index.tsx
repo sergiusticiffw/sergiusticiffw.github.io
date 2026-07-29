@@ -181,6 +181,8 @@ const Loan: React.FC = () => {
   };
 
   const progress = calculateProgress();
+
+  // Remaining amount (principal + interest + fees left based on total installments)
   const remainingAmount = totalInstallments - (totalPaidAmount ?? 0);
   const remainingDisplay =
     loanStatus === 'completed' || loanStatus === 'pending'
@@ -188,6 +190,7 @@ const Loan: React.FC = () => {
         ? t('common.completed')
         : t('loan.notStarted')
       : formatNumber(remainingAmount);
+
   const daysCalculated = paydown?.days_calculated || 0;
 
   // Calculate days passed and remaining
@@ -345,7 +348,7 @@ const Loan: React.FC = () => {
         principalPaid={principalPaid}
         totalPrincipal={totalPrincipal}
         totalPaidAmount={totalPaidAmount}
-        remainingDisplay={remainingDisplay}
+        remainingDisplay={remainingPrincipalDisplay}
         onAddPayment={() => openAddPayment(true)}
         detailRows={
           <>
@@ -423,10 +426,10 @@ const Loan: React.FC = () => {
             <div className="flex items-center justify-between py-3 px-4">
               <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
                 <FiAlertCircle className={iconTw} />
-                {t('loan.remainingPrincipal')}
+                {t('loan.remaining')}
               </span>
               <span className="text-sm font-semibold text-white tabular-nums text-right">
-                {remainingPrincipalDisplay}
+                {remainingDisplay}
               </span>
             </div>
           </>

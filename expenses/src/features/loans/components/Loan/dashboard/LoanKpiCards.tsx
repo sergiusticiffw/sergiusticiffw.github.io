@@ -45,7 +45,7 @@ const LoanKpiCards: React.FC<LoanKpiCardsProps> = ({
       <StatCard
         icon={<FiClock />}
         value={remainingDisplay}
-        label={t('loan.remaining')}
+        label={t('loan.remainingPrincipal')}
       />
       <StatCard
         icon={<FiPieChart />}
