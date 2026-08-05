@@ -1432,13 +1432,13 @@
   integrity sha512-79pf/RkhteYZTRgcR4F9kbk84P2N8rugQJswxfIqovlbRiT3yI7eBE+5QorIrZaOKktsgzRlXh1l/du/xpl4iA==
 
 "@tanstack/react-router@^1.157.18":
-  version "1.170.18"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.170.18.tgz#6efca81d670b89898318b1011ede125ab9ce8b10"
-  integrity sha512-wpbGYZEp/fmz1q4bn7BD8VZ+/VZ7GBqSJv5V969pU+chP8y7dquWDmKTFMohvUegb9lg12m1uPVvD6kB2wORvQ==
+  version "1.170.19"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.170.19.tgz#ab55df2fd2291ba9062569c54bb5a631f291f2a1"
+  integrity sha512-cK7VUsc9+8gYZMqwJjCAhrmL9wPhkwxEcZ7cxlHdBjjmqHbZyNxXAml/KfLmSuxRDQGVk2iofpoHclDTSrkmmg==
   dependencies:
     "@tanstack/history" "1.162.0"
     "@tanstack/react-store" "^0.9.3"
-    "@tanstack/router-core" "1.171.15"
+    "@tanstack/router-core" "1.171.16"
     isbot "^5.1.22"
 
 "@tanstack/react-store@^0.11.0":
@@ -1471,10 +1471,10 @@
   dependencies:
     "@tanstack/virtual-core" "3.17.7"
 
-"@tanstack/router-core@1.171.15":
-  version "1.171.15"
-  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.171.15.tgz#76a9dd5161678566d6c2bf779d215c36bd54d64a"
-  integrity sha512-IILCDcLaItMZQ2jEmCABHY1Nhjjn5XUvwpQp3e4Nmu+vfg0BgYFuu/QASz2SwE2ZNbVMrvt8X/wxa+Gg5aErxA==
+"@tanstack/router-core@1.171.16":
+  version "1.171.16"
+  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.171.16.tgz#bffd209fb59958665d9ba277c61b60c5ac647d3f"
+  integrity sha512-/qwawP5a45puA9DQtG8syrChWCV7uGMYs1p5rwgrICgiS/0pHo7zNOFyfVI02J1azWhCfFc6w6+SuiivPESYAA==
   dependencies:
     "@tanstack/history" "1.162.0"
     cookie-es "^3.0.0"
@@ -2417,9 +2417,9 @@ isarray@^2.0.5:
   integrity sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==
 
 isbot@^5.1.22:
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/isbot/-/isbot-5.2.0.tgz#7726d04b62573279f3b7c0398fce8e11b34c2ba1"
-  integrity sha512-gbZiGCb4B5xaoxg9mS7koAyRdvJnArk10VLSHOgz6rtBG93/pi1xOFaVvXMKZ7JXgyZ8zAbNRK5uIBdIUTFSqw==
+  version "5.2.1"
+  resolved "https://registry.yarnpkg.com/isbot/-/isbot-5.2.1.tgz#2bf32184192bdd3352debdbb8bd0b549ac0bb2cf"
+  integrity sha512-dJ+LpKyClQZ7NG+j3OensC/mAZkGpukE9YUrgPYvAZj2doVL0edfDgywTUh5CXa0o+nW9a1V9e5+CJTX8+SxRw==
 
 isexe@^2.0.0:
   version "2.0.0"
@@ -3032,14 +3032,14 @@ serialize-javascript@^7.0.3:
   integrity sha512-F4LcB0UqUl1zErq+1nYEEzSHJnIwb3AF2XWB94b+afhrekOUijwooAYqFyRbjYkm2PAKBabx6oYv/xDxNi8IBw==
 
 seroval-plugins@^1.5.4:
-  version "1.5.5"
-  resolved "https://registry.yarnpkg.com/seroval-plugins/-/seroval-plugins-1.5.5.tgz#35c7b9125813b98c5f7e8561eee9cca62407c698"
-  integrity sha512-+BDhqYM6CEn3x09v44dpa9p6974FuUB2dxk+Ctn04k0cO1Zt6QODTXfmEZK0eBaTe/fJBvP4NMGuNJ+R8T+QMg==
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/seroval-plugins/-/seroval-plugins-1.6.2.tgz#8e49b47fd585c2025f74f84f78272ea1753a8daa"
+  integrity sha512-TfxuUjlbBESzUOWdTkTKqvSmav0ABym+itetDXLK6mDz8SmrpdI30aF8RTXE8Bvq+tH/1yIDkvy3W0lfQb1ipQ==
 
 seroval@^1.5.4:
-  version "1.5.5"
-  resolved "https://registry.yarnpkg.com/seroval/-/seroval-1.5.5.tgz#53d941cef71c8850a41f4e25b6b637530153bd5b"
-  integrity sha512-bSjOuPcwPKLSJNhr9+bZxA20nQxVle5J5MNsYRVE6cIg7KpRLXGupymePavu0jrxlPiPsr4xGZSB8yUY2sH2sw==
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/seroval/-/seroval-1.6.2.tgz#93ecff62ca1312a565e37146b2a332b9d625194d"
+  integrity sha512-mPT+SD2TrlB6wvte1KkYOYUkubaTbd6pZ/6Kk3C9nxzrHmCZyhxOO7XGAeL7f+yLKZglzGtM9odUVvg/EhO+vQ==
 
 set-function-length@^1.2.2:
   version "1.2.2"
