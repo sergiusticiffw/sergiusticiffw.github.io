@@ -1432,21 +1432,21 @@
   integrity sha512-79pf/RkhteYZTRgcR4F9kbk84P2N8rugQJswxfIqovlbRiT3yI7eBE+5QorIrZaOKktsgzRlXh1l/du/xpl4iA==
 
 "@tanstack/react-router@^1.157.18":
-  version "1.170.19"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.170.19.tgz#ab55df2fd2291ba9062569c54bb5a631f291f2a1"
-  integrity sha512-cK7VUsc9+8gYZMqwJjCAhrmL9wPhkwxEcZ7cxlHdBjjmqHbZyNxXAml/KfLmSuxRDQGVk2iofpoHclDTSrkmmg==
+  version "1.170.20"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.170.20.tgz#8dd37820ad7e4f2156497656ec4d3ffd511f3f7e"
+  integrity sha512-ptdksUzLqYJQcbA1XTIjIXwkQ2hJx/71SyOm2PVYqU30zrbj5c4bCimdJWx4qGYj1lb30mx3A58XIOz3zMzO3Q==
   dependencies:
     "@tanstack/history" "1.162.0"
     "@tanstack/react-store" "^0.9.3"
-    "@tanstack/router-core" "1.171.16"
+    "@tanstack/router-core" "1.171.17"
     isbot "^5.1.22"
 
 "@tanstack/react-store@^0.11.0":
-  version "0.11.0"
-  resolved "https://registry.npmjs.org/@tanstack/react-store/-/react-store-0.11.0.tgz"
-  integrity sha512-tX4YXh3PDkmpvGQWkWqKpzs/MSqbtuwY9dWdWhtV9Q50PmO+jOkUKIWIX4G85dwt7lxdHLXsiaEKPdKmC8F41w==
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-store/-/react-store-0.11.1.tgz#e1e58036ffffa58f5b5d8826c2389f97502fac2c"
+  integrity sha512-HaIGKI3YLmjBYIvy5DFDY23oNaYZIsTZfngey07Uh5iLVJgM3bIGCnZeOFOqzjFld9JHWcaHJnasD/bKoGKwJQ==
   dependencies:
-    "@tanstack/store" "0.11.0"
+    "@tanstack/store" "0.11.1"
     use-sync-external-store "^1.6.0"
 
 "@tanstack/react-store@^0.9.3":
@@ -1471,20 +1471,20 @@
   dependencies:
     "@tanstack/virtual-core" "3.17.7"
 
-"@tanstack/router-core@1.171.16":
-  version "1.171.16"
-  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.171.16.tgz#bffd209fb59958665d9ba277c61b60c5ac647d3f"
-  integrity sha512-/qwawP5a45puA9DQtG8syrChWCV7uGMYs1p5rwgrICgiS/0pHo7zNOFyfVI02J1azWhCfFc6w6+SuiivPESYAA==
+"@tanstack/router-core@1.171.17":
+  version "1.171.17"
+  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.171.17.tgz#c5e9fbbf4246494e471d6215ec32cdfe746cbb60"
+  integrity sha512-jaW4vGn+S0Txcz4HgARz9VN2BlgcyGJwIrZ2Vzo9FoJje8wzIiRSX+BMts6KGANXB/jWr+vLXJ3fen50ge2ZcA==
   dependencies:
     "@tanstack/history" "1.162.0"
     cookie-es "^3.0.0"
-    seroval "^1.5.4"
-    seroval-plugins "^1.5.4"
+    seroval "^1.6.2"
+    seroval-plugins "^1.6.2"
 
-"@tanstack/store@0.11.0":
-  version "0.11.0"
-  resolved "https://registry.npmjs.org/@tanstack/store/-/store-0.11.0.tgz"
-  integrity sha512-WlzzCt3xi0G6pCAJu1U+2jiECwabETDpQDi3hfkFZvJii9AuZqEKbOiVarX1/bWhTNjU486yQtJCCasi/0q+Cw==
+"@tanstack/store@0.11.1":
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/@tanstack/store/-/store-0.11.1.tgz#063f634fe3cc925ad83704581a7be75301bec612"
+  integrity sha512-mzTOBhypOuDJAy/D8n2MfUZ1HFkXnmSETviRyhqEC8LUE7/IZQExOTxMANj3KjTofYTkFNpBY67qaVrT41YccA==
 
 "@tanstack/store@0.9.3":
   version "0.9.3"
@@ -3031,12 +3031,12 @@ serialize-javascript@^7.0.3:
   resolved "https://registry.npmjs.org/serialize-javascript/-/serialize-javascript-7.0.5.tgz"
   integrity sha512-F4LcB0UqUl1zErq+1nYEEzSHJnIwb3AF2XWB94b+afhrekOUijwooAYqFyRbjYkm2PAKBabx6oYv/xDxNi8IBw==
 
-seroval-plugins@^1.5.4:
+seroval-plugins@^1.6.2:
   version "1.6.2"
   resolved "https://registry.yarnpkg.com/seroval-plugins/-/seroval-plugins-1.6.2.tgz#8e49b47fd585c2025f74f84f78272ea1753a8daa"
   integrity sha512-TfxuUjlbBESzUOWdTkTKqvSmav0ABym+itetDXLK6mDz8SmrpdI30aF8RTXE8Bvq+tH/1yIDkvy3W0lfQb1ipQ==
 
-seroval@^1.5.4:
+seroval@^1.6.2:
   version "1.6.2"
   resolved "https://registry.yarnpkg.com/seroval/-/seroval-1.6.2.tgz#93ecff62ca1312a565e37146b2a332b9d625194d"
   integrity sha512-mPT+SD2TrlB6wvte1KkYOYUkubaTbd6pZ/6Kk3C9nxzrHmCZyhxOO7XGAeL7f+yLKZglzGtM9odUVvg/EhO+vQ==
