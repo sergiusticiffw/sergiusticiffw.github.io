@@ -1432,13 +1432,13 @@
   integrity sha512-DR9t6lfLVdrjgCwpglrR9DR7Ok8/HlXjcOE+goWXF3zyuLUO/ug7vMbSFxTqrQTtbRghJfyhmIZ0S6LhPIy44w==
 
 "@tanstack/react-router@^1.157.18":
-  version "1.170.21"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.170.21.tgz#06f5adbb74ff8a92e072483fa8e4fdecfcfe294f"
-  integrity sha512-uF7FhIhBvoVz0dr+JgoYr13KirUbwd7prVcdikv3ITxMsaHnfGe5FUM7wM1caufAgJg1yO71sfTNafTcefLiwg==
+  version "1.170.23"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-router/-/react-router-1.170.23.tgz#4f7032f61d33cba88a03ef4ba82bd91feda630ea"
+  integrity sha512-iKyHk7vGVaTdk7wukFZLjzlOs4TQbQJiRMkvFsphpysOlxzLaqWSlWHKU4gVPW3WjJ19k7EjVUCD4q3DJqZpZg==
   dependencies:
     "@tanstack/history" "1.162.1"
     "@tanstack/react-store" "^0.9.3"
-    "@tanstack/router-core" "1.171.18"
+    "@tanstack/router-core" "1.171.19"
     isbot "^5.1.22"
 
 "@tanstack/react-store@^0.11.0":
@@ -1471,10 +1471,10 @@
   dependencies:
     "@tanstack/virtual-core" "3.17.7"
 
-"@tanstack/router-core@1.171.18":
-  version "1.171.18"
-  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.171.18.tgz#4db583181c06b500697b8a8ea4a94a285c744090"
-  integrity sha512-F91BWGqxOhDRubSaoAA3FDkzbr/WPrW6v3NcmTrI2T0AwtAL8qvY9FEDhTYwFoFiicBsRtt1NaNWKNTFNGQrqA==
+"@tanstack/router-core@1.171.19":
+  version "1.171.19"
+  resolved "https://registry.yarnpkg.com/@tanstack/router-core/-/router-core-1.171.19.tgz#76b41818727e3d15aeeddb97b34374e24e232eda"
+  integrity sha512-uCZhgnfmuBA3PoRLIVSjUhQpJQd/HA7p0XxG1IFKnvXU9lIMZ7gIqx45hyuf9JopxXZI8k7qaz9/6PC7mZLdfQ==
   dependencies:
     "@tanstack/history" "1.162.1"
     cookie-es "^3.0.0"
