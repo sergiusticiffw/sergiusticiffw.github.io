@@ -68,9 +68,16 @@ const Charts = () => {
 
   // Load visible charts from localStorage
   useEffect(() => {
-    const storedCharts =
-      JSON.parse(localStorage.getItem('visibleCharts') || '[]') ||
+    let storedCharts: string[] =
+      JSON.parse(localStorage.getItem('visibleCharts') || 'null') ||
       availableCharts;
+
+    // Remove discontinued chart if present
+    if (storedCharts.includes('YearlyCategorySpendings')) {
+      storedCharts = storedCharts.filter((c) => c !== 'YearlyCategorySpendings');
+      localStorage.setItem('visibleCharts', JSON.stringify(storedCharts));
+    }
+
     setVisibleCharts(storedCharts);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

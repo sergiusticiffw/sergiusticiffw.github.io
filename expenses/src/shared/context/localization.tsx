@@ -232,6 +232,7 @@ const translations = {
     'charts.dailyAverageTrends': 'Daily average trends',
     'charts.monthlyAverageTrends': 'Monthly Average Trends',
     'charts.monthlyTotals': 'Monthly Totals',
+    'charts.spendingsByCategory': 'By Category',
 
     // Forms
     'form.required': 'This field is required',
@@ -812,6 +813,7 @@ const translations = {
     'charts.monthlyAverageTrend': 'Tendința Mediei Lunare',
     'charts.monthlyComparison': 'Comparația Lunară',
     'charts.monthlyTotals': 'Totaluri Lunare',
+    'charts.spendingsByCategory': 'Pe Categorie',
 
     // Forms
     'form.required': 'Acest câmp este obligatoriu',
