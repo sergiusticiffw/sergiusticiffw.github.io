@@ -14,7 +14,6 @@ import MonthlyTotals from '@features/expenses/components/Charts/MonthlyTotals';
 import SavingsHistory from '@features/expenses/components/Charts/SavingsHistory';
 import YearAverageTrend from '@features/expenses/components/Charts/YearAverageTrend';
 import MonthlyComparisonTrend from '@features/expenses/components/Charts/MonthlyComparisonTrend';
-import AllTimeSpendings from '@features/expenses/components/Home/AllTimeSpendings';
 import MonthlyAverage from '@features/expenses/components/Home/MonthlyAverage';
 import MonthlyAverageTrend from '@features/expenses/components/Charts/MonthlyAverageTrend';
 import DailyAverage from '@features/expenses/components/DailyAverage/DailyAverage';
@@ -29,7 +28,6 @@ const componentMap = {
   MonthlyTotals,
   YearAverageTrend,
   MonthlyComparisonTrend,
-  AllTimeSpendings,
   MonthlyAverage,
   MonthlySavingsTrend,
   MonthlyAverageTrend,
@@ -72,11 +70,8 @@ const Charts = () => {
       JSON.parse(localStorage.getItem('visibleCharts') || 'null') ||
       availableCharts;
 
-    // Remove discontinued chart if present
-    if (storedCharts.includes('YearlyCategorySpendings')) {
-      storedCharts = storedCharts.filter((c) => c !== 'YearlyCategorySpendings');
-      localStorage.setItem('visibleCharts', JSON.stringify(storedCharts));
-    }
+    // Remove removed chart(s) from persisted list
+    storedCharts = storedCharts.filter((c) => c !== 'AllTimeSpendings');
 
     setVisibleCharts(storedCharts);
     // eslint-disable-next-line react-hooks/exhaustive-deps

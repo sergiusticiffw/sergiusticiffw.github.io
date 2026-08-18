@@ -5,11 +5,12 @@ import { useLocalization } from '@shared/context/localization';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { getCategories } from '@shared/utils/constants';
+import { formatNumber } from '@shared/utils/utils';
 
 const AllTimeSpendings = () => {
   // All time section
   const {
-    data: { categoryTotals = {} },
+    data: { categoryTotals = {}, totalSpent = 0 },
   } = useExpenseData();
   const currency = useSettingsCurrency();
   const { t } = useLocalization();
@@ -57,7 +58,7 @@ const AllTimeSpendings = () => {
       type: 'pie',
     },
     title: {
-      text: t('home.allTimeSpendings'),
+      text: `${t('charts.totalSpent')}: ${formatNumber(totalSpent)} ${currency}`,
       verticalAlign: 'middle',
     },
     tooltip: {

@@ -22,7 +22,6 @@ import IncomeTable from '@features/incomes/components/Income/IncomeTable';
 import IncomeFilters from '@features/incomes/components/Income/IncomeFilters';
 import CalendarView from '@features/expenses/components/CalendarView';
 import YearIncomeAverageTrend from '@features/incomes/components/Income/YearIncomeAverageTrend';
-import IncomeIntelligence from '@features/incomes/components/Income/IncomeIntelligence';
 import IncomeExpensesPerYearBarChart from '@features/incomes/components/Income/IncomeExpensesPerYearBarChart';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import {
@@ -527,11 +526,6 @@ const Income = () => {
               dateRange={filters.dateRange}
             />
           </div>
-          {filteredIncomeData && filteredIncomeData.length ? (
-            <div className="mb-8">
-              <IncomeIntelligence />
-            </div>
-          ) : null}
         </>
       ) : null}
 

@@ -83,6 +83,7 @@ const YearAverageTrend = () => {
   const monthNames = getMonthNames();
   const localizedCategories = getCategories();
   const [openYear, setOpenYear] = useState<string | null>(null);
+  const [openTotalSpent, setOpenTotalSpent] = useState(false);
 
   const items = view?.totalsPerYearAndMonth ?? null;
   const totalPerYear = view?.totalPerYear ?? {};
@@ -129,6 +130,28 @@ const YearAverageTrend = () => {
     return result;
   }, [raw, filteredRaw, categoryLabelById]);
 
+  const categoryPieAllTime = useMemo(() => {
+    const source =
+      (filteredRaw as TransactionOrIncomeItem[] | undefined) ??
+      (raw as TransactionOrIncomeItem[] | undefined) ??
+      [];
+
+    const totalsByCat: Record<string, number> = {};
+
+    source.forEach((item) => {
+      if (item.type !== 'transaction' || !item.cat) return;
+      totalsByCat[item.cat] = (totalsByCat[item.cat] || 0) + (parseFloat(item.sum) || 0);
+    });
+
+    return Object.entries(totalsByCat)
+      .map(([catId, y]) => ({
+        name: categoryLabelById[catId] || catId,
+        y: parseFloat(y.toFixed(2)),
+      }))
+      .filter((p) => p.y > 0)
+      .sort((a, b) => b.y - a.y);
+  }, [raw, filteredRaw, categoryLabelById]);
+
   const options: Highcharts.Options = useMemo(
     () => ({
       chart: {
@@ -157,6 +180,13 @@ const YearAverageTrend = () => {
       : firstDay
         ? getMonthsPassed(firstDay as string)
         : 0;
+
+  const totalDaysForDisplay =
+    dateRange?.start && dateRange?.end
+      ? getDaysInRange(dateRange.start, dateRange.end)
+      : firstDay
+        ? calculateDaysFrom(firstDay)
+        : 0;
   const monthlyAverage: number =
     totalSpent && monthsForAverage ? totalSpent / monthsForAverage : 0;
   let sumIncome = 0;
@@ -166,7 +196,13 @@ const YearAverageTrend = () => {
   );
 
   const toggleYear = (year: string) => {
+    setOpenTotalSpent(false);
     setOpenYear((prev) => (prev === year ? null : year));
+  };
+
+  const toggleTotalSpent = () => {
+    setOpenYear(null);
+    setOpenTotalSpent((prev) => !prev);
   };
 
   return (
@@ -219,7 +255,11 @@ const YearAverageTrend = () => {
                 </React.Fragment>
               );
             })}
-            <tr className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02] bg-white/[0.02]">
+            <tr
+              className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02] bg-white/[0.02] cursor-pointer"
+              onClick={toggleTotalSpent}
+              aria-expanded={openTotalSpent}
+            >
               <td className="py-3 px-4 text-white font-medium text-[0.95rem] align-middle">
                 <div className="flex items-center gap-2">
                   {getFinancialStabilityIcon(
@@ -227,35 +267,39 @@ const YearAverageTrend = () => {
                     isFiltered
                   )}
                   <span>{t('charts.totalSpent')}</span>
+                  <FiChevronDown
+                    className={`text-white/50 shrink-0 transition-transform duration-200 ${
+                      openTotalSpent ? 'rotate-180' : ''
+                    }`}
+                    aria-hidden
+                  />
                 </div>
               </td>
               <td className="py-3 px-4 text-right text-white font-semibold text-[0.95rem] tabular-nums align-middle">
                 {formatNumber(totalSpent)}
               </td>
             </tr>
+            {openTotalSpent && (
+              <tr className="border-b border-white/5">
+                <td colSpan={2} className="px-2 pb-3 pt-0">
+                  <YearCategoryPie data={categoryPieAllTime} currency={currency} />
+                </td>
+              </tr>
+            )}
             <tr className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02]">
               <td className="py-3 px-4 text-white/90 font-medium text-[0.95rem] align-middle">
-                {t('charts.totalDays')}
+                {t('charts.totalDaysMonths')}
               </td>
               <td className="py-3 px-4 text-right text-white font-medium text-[0.95rem] tabular-nums align-middle">
-                {formatNumber(
-                  dateRange?.start && dateRange?.end
-                    ? getDaysInRange(dateRange.start, dateRange.end)
-                    : calculateDaysFrom(firstDay)
-                )}{' '}
-                {t('charts.days')}
-              </td>
-            </tr>
-            <tr className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02]">
-              <td className="py-3 px-4 text-white/90 font-medium text-[0.95rem] align-middle">
-                {t('charts.totalMonths')}
-              </td>
-              <td className="py-3 px-4 text-right text-white font-medium text-[0.95rem] tabular-nums align-middle">
-                {(dateRange?.start && dateRange?.end
-                  ? getMonthsInRange(dateRange.start, dateRange.end)
-                  : getMonthsPassed(firstDay as string)
-                ).toFixed(2)}{' '}
-                {t('charts.months')}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-1 sm:gap-3">
+                  <span>
+                    {formatNumber(totalDaysForDisplay)} {t('charts.days')}
+                  </span>
+                  <span>
+                    {monthsForAverage.toFixed(2)} {t('charts.months')} (
+                    {(monthsForAverage / 12).toFixed(2)} {t('charts.years')})
+                  </span>
+                </div>
               </td>
             </tr>
             <tr className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02]">
