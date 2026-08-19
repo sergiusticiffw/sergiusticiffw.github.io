@@ -256,6 +256,19 @@ const Loan: React.FC = () => {
       ? t('loan.notStarted')
       : formatNumber(principalPaid);
 
+  const totalInterestExpected =
+    (paydown?.sum_of_interests ?? 0) + (paydown?.unpaid_interest ?? 0);
+  const remainingInterest =
+    loanStatus === 'pending' || !paydown
+      ? 0
+      : Math.max(0, totalInterestExpected - interestPaid);
+  const remainingInterestDisplay =
+    loanStatus === 'pending'
+      ? t('loan.notStarted')
+      : loanStatus === 'completed'
+        ? t('common.completed')
+        : formatNumber(remainingInterest);
+
   // Remaining principal after last actual payment (not simulated future)
   const remainingPrincipal =
     loanStatus === 'pending' || !paydown
@@ -394,6 +407,15 @@ const Loan: React.FC = () => {
               </span>
               <span className="text-sm font-semibold text-white tabular-nums text-right">
                 {interestPaidDisplay}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+              <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                <FiPercent className={iconTw} />
+                {t('loan.remainingInterest')}
+              </span>
+              <span className="text-sm font-semibold text-white tabular-nums text-right">
+                {remainingInterestDisplay}
               </span>
             </div>
             <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
