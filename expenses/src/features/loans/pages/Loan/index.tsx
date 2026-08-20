@@ -23,6 +23,7 @@ import {
   getNextRegularPayment,
   scheduleDateToFormDate,
   calculateInterestSavings,
+  buildEventsFromApiPayments,
 } from '@features/loans/utils/amortization';
 import { getEffectiveRateFromSchedule } from '@features/loans/utils/loanSnapshot';
 import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
@@ -43,6 +44,108 @@ import { useLocalization } from '@shared/context/localization';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import { useChartsThemeSync } from '@shared/context/highcharts';
 import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
+
+const EPSILON = 0.001;
+
+const isChangeMarkerRow = (row: {
+  installment?: number | string;
+  reduction?: number | string;
+  interest?: number | string;
+}): boolean =>
+  row.installment === '-' && row.reduction === '-' && row.interest === '-';
+
+const parseScheduleAmount = (value: number | string | undefined): number => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  if (value == null || value === '' || value === '-') return 0;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+/** Last time a value actually changed (ignores repeats of the same value). */
+const findLastActualChange = (
+  events: Array<{ date: string; rate?: number; new_principal?: number }>,
+  initialValue: number,
+  getValue: (event: {
+    date: string;
+    rate?: number;
+    new_principal?: number;
+  }) => number | undefined
+): { date: string; value: number } | null => {
+  let current = initialValue;
+  let changeDate: string | null = null;
+  let changeValue = initialValue;
+
+  for (const event of events) {
+    const next = getValue(event);
+    if (next == null || !Number.isFinite(next)) continue;
+    if (Math.abs(next - current) > EPSILON) {
+      current = next;
+      changeDate = event.date;
+      changeValue = next;
+    }
+  }
+
+  if (!changeDate || Math.abs(changeValue - initialValue) <= EPSILON) {
+    return null;
+  }
+
+  return { date: changeDate, value: changeValue };
+};
+
+const sumPaidAfterMarker = (
+  schedule: Array<{
+    date?: string;
+    installment?: number | string;
+    reduction?: number | string;
+    interest?: number | string;
+    principal?: number | string;
+    rate?: number | string;
+    was_payed?: boolean | null;
+  }>,
+  change: { date: string; value: number },
+  matchMarker: (
+    row: {
+      date?: string;
+      principal?: number | string;
+      rate?: number | string;
+    },
+    change: { date: string; value: number }
+  ) => boolean,
+  getPaidAmount: (row: {
+    reduction?: number | string;
+    interest?: number | string;
+  }) => number
+): number | null => {
+  const markerIndex = schedule.findLastIndex(
+    (row) => isChangeMarkerRow(row) && matchMarker(row, change)
+  );
+
+  const rowsAfterChange =
+    markerIndex >= 0
+      ? schedule.slice(markerIndex + 1)
+      : schedule.filter((row) => {
+          if (!row.date) return false;
+          // Fallback: include paid rows on/after the change date, skip change markers.
+          const [d1, m1, y1] = change.date.split('.');
+          const [d2, m2, y2] = row.date.split('.');
+          const changeKey = Number(`${y1}${m1.padStart(2, '0')}${d1.padStart(2, '0')}`);
+          const rowKey = Number(`${y2}${m2.padStart(2, '0')}${d2.padStart(2, '0')}`);
+          if (!Number.isFinite(changeKey) || !Number.isFinite(rowKey)) return false;
+          if (rowKey < changeKey) return false;
+          if (rowKey === changeKey && isChangeMarkerRow(row)) return false;
+          return true;
+        });
+
+  if (markerIndex < 0 && rowsAfterChange.length === 0) return null;
+
+  return Math.max(
+    0,
+    rowsAfterChange.reduce((sum, row) => {
+      if (row.was_payed !== true) return sum;
+      return sum + getPaidAmount(row);
+    }, 0)
+  );
+};
 
 const Loan: React.FC = () => {
   useChartsThemeSync();
@@ -128,6 +231,116 @@ const Loan: React.FC = () => {
     setPrefillNextPayment(false);
   };
 
+  const loanData = useMemo(
+    () => ({
+      start_date: transformDateFormat(loan?.sdt ?? ''),
+      end_date: transformDateFormat(loan?.edt ?? ''),
+      principal: transformToNumber(loan?.fp ?? 0),
+      rate: transformToNumber(loan?.fr ?? 0),
+    }),
+    [loan?.sdt, loan?.edt, loan?.fp, loan?.fr]
+  );
+
+  const amortizationSchedule = amort.schedule;
+
+  const loanEvents = useMemo(
+    () => buildEventsFromApiPayments(paymentsForLoan),
+    [paymentsForLoan]
+  );
+
+  const latestPrincipalChange = useMemo(
+    () =>
+      findLastActualChange(
+        loanEvents,
+        loanData.principal,
+        (event) => event.new_principal
+      ),
+    [loanEvents, loanData.principal]
+  );
+
+  const latestRateChange = useMemo(
+    () =>
+      findLastActualChange(loanEvents, loanData.rate, (event) => event.rate),
+    [loanEvents, loanData.rate]
+  );
+
+  /** Same cutoff as principal when refinanced; otherwise rate-change cutoff. */
+  const currentLoanChange = latestPrincipalChange ?? latestRateChange;
+
+  const currentLoanPrincipalPaid = useMemo(() => {
+    if (!latestPrincipalChange) return null;
+    return sumPaidAfterMarker(
+      amortizationSchedule,
+      latestPrincipalChange,
+      (row, change) =>
+        row.date === change.date &&
+        Math.abs(parseScheduleAmount(row.principal) - change.value) <= EPSILON,
+      (row) => parseScheduleAmount(row.reduction)
+    );
+  }, [amortizationSchedule, latestPrincipalChange]);
+
+  const currentLoanInterestPaid = useMemo(() => {
+    // Same cutoff/marker as principal (refinance), else rate change.
+    // Same formula as page principalPaid, inverted:
+    //   principalPaid = totalPaid - interestPaid - fees
+    //   ⇒ interestPaid = totalPaid - principalPaid - fees
+    if (!currentLoanChange) return null;
+
+    const matchMarker = latestPrincipalChange
+      ? (
+          row: { date?: string; principal?: number | string; rate?: number | string },
+          change: { date: string; value: number }
+        ) =>
+          row.date === change.date &&
+          Math.abs(parseScheduleAmount(row.principal) - change.value) <= EPSILON
+      : (
+          row: { date?: string; principal?: number | string; rate?: number | string },
+          change: { date: string; value: number }
+        ) =>
+          row.date === change.date &&
+          Math.abs(parseScheduleAmount(row.rate) - change.value) <= EPSILON;
+
+    const markerIndex = amortizationSchedule.findLastIndex(
+      (row) => isChangeMarkerRow(row) && matchMarker(row, currentLoanChange)
+    );
+
+    const rowsAfterChange =
+      markerIndex >= 0
+        ? amortizationSchedule.slice(markerIndex + 1)
+        : amortizationSchedule.filter((row) => {
+            if (!row.date) return false;
+            const [d1, m1, y1] = currentLoanChange.date.split('.');
+            const [d2, m2, y2] = row.date.split('.');
+            const changeKey = Number(
+              `${y1}${m1.padStart(2, '0')}${d1.padStart(2, '0')}`
+            );
+            const rowKey = Number(
+              `${y2}${m2.padStart(2, '0')}${d2.padStart(2, '0')}`
+            );
+            if (!Number.isFinite(changeKey) || !Number.isFinite(rowKey)) {
+              return false;
+            }
+            if (rowKey < changeKey) return false;
+            if (rowKey === changeKey && isChangeMarkerRow(row)) return false;
+            return true;
+          });
+
+    if (markerIndex < 0 && rowsAfterChange.length === 0) return null;
+
+    let totalPaid = 0;
+    let principalPaidSince = 0;
+    let feesPaidSince = 0;
+
+    for (const row of rowsAfterChange) {
+      if (row.was_payed !== true) continue;
+      totalPaid += parseScheduleAmount(row.installment);
+      principalPaidSince += parseScheduleAmount(row.reduction);
+      feesPaidSince += parseScheduleAmount(row.fee);
+    }
+
+    return Math.max(0, totalPaid - principalPaidSince - feesPaidSince);
+  }, [amortizationSchedule, currentLoanChange, latestPrincipalChange]);
+
   if (!loan) {
     return (
       <div className={PAGE_CONTAINER_CLASS}>
@@ -138,14 +351,7 @@ const Loan: React.FC = () => {
 
   const loanStatus = getLoanStatus(String(loan?.fls ?? ''));
   const paydown = amort.paydown;
-  const amortizationSchedule = amort.schedule;
   const errorMessage = amort.error;
-  const loanData = {
-    start_date: transformDateFormat(loan.sdt ?? ''),
-    end_date: transformDateFormat(loan.edt ?? ''),
-    principal: transformToNumber(loan.fp ?? 0),
-    rate: transformToNumber(loan.fr ?? 0),
-  };
 
   // Sum ONLY actual (non-simulated) payments; include installment + any single-fee payments.
   // This keeps Paid/Remaining/Progress consistent with Principal Paid / Interest Paid (which are based on actual payments).
@@ -445,6 +651,28 @@ const Loan: React.FC = () => {
                 {principalPaidDisplay}
               </span>
             </div>
+            {currentLoanInterestPaid !== null && (
+              <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+                <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                  <FiPercent className={iconTw} />
+                  {t('loan.currentLoanInterestPaid')}
+                </span>
+                <span className="text-sm font-semibold text-white tabular-nums text-right">
+                  {formatNumber(currentLoanInterestPaid)}
+                </span>
+              </div>
+            )}
+            {currentLoanPrincipalPaid !== null && (
+              <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
+                <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
+                  <FiCheckCircle className={iconTw} />
+                  {t('loan.currentLoanPrincipalPaid')}
+                </span>
+                <span className="text-sm font-semibold text-white tabular-nums text-right">
+                  {formatNumber(currentLoanPrincipalPaid)}
+                </span>
+              </div>
+            )}
             <div className="flex items-center justify-between py-3 px-4">
               <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
                 <FiAlertCircle className={iconTw} />
