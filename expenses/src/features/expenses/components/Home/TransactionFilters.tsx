@@ -50,6 +50,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     handleBlur: handleBlurFromHook,
     handleChipClick,
     handleSelection,
+    handleSearchPointerDownCapture,
   } = useFilterFocus();
 
   const handleBlur = useCallback(
@@ -227,7 +228,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
       className="relative z-[1100] w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full"
       role="search"
     >
-      <div className={searchBar}>
+      <div className={searchBar} onPointerDownCapture={handleSearchPointerDownCapture}>
         <FiSearch className="text-app-placeholder/70 text-lg shrink-0 relative top-px" aria-hidden />
 
         {categoryValue && !isFilterFocused && (

@@ -39,6 +39,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
     handleBlur: handleBlurFromHook,
     handleChipClick,
     handleSelection,
+    handleSearchPointerDownCapture,
   } = useFilterFocus();
 
   const handleBlur = useCallback(
@@ -137,7 +138,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
       className="relative z-[1100] w-full flex flex-col gap-3 mb-6 overflow-x-hidden max-w-full"
       role="search"
     >
-      <div className={searchBar}>
+      <div className={searchBar} onPointerDownCapture={handleSearchPointerDownCapture}>
         <FiSearch className="text-white/40 text-lg shrink-0" aria-hidden />
 
         {hasDateRange && !isFilterFocused && (
