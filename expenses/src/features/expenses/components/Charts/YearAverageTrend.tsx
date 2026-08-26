@@ -20,56 +20,11 @@ import {
   buildLogarithmicYAxisOptions,
   buildSharedCurrencyTooltipOptions,
   sanitizeCategorySeriesForLogScale,
+  type CategoryChartPoint,
 } from '@shared/utils/highchartsHelpers';
+import { getCategoryColor } from '@shared/ui/CategoryIcon';
+import CategoryDonutBreakdown from './CategoryDonutBreakdown';
 import type { TransactionOrIncomeItem } from '@shared/type/types';
-
-type PiePoint = { name: string; y: number };
-
-const YearCategoryPie = ({
-  data,
-  currency,
-}: {
-  data: PiePoint[];
-  currency: string;
-}) => {
-  const options: Highcharts.Options = useMemo(
-    () => ({
-      chart: {
-        type: 'pie',
-        backgroundColor: 'transparent',
-        height: 260,
-      },
-      title: {
-        text: undefined,
-      },
-      tooltip: {
-        pointFormat: `{point.y:,.2f} {series.name} ({point.percentage:.1f}%)`,
-      },
-      plotOptions: {
-        pie: {
-          allowPointSelect: true,
-          innerSize: '70%',
-          dataLabels: { enabled: false },
-          showInLegend: false,
-        },
-      },
-      legend: { enabled: false },
-      series: [
-        {
-          name: currency,
-          type: 'pie',
-          data,
-        },
-      ],
-      credits: { enabled: false },
-    }),
-    [currency, data]
-  );
-
-  if (!data.length) return null;
-
-  return <HighchartsReact highcharts={Highcharts} options={options} />;
-};
 
 const YearAverageTrend = () => {
   const view = useExpenseChartView();
@@ -117,12 +72,13 @@ const YearAverageTrend = () => {
         (byYear[year][item.cat] || 0) + (parseFloat(item.sum) || 0);
     });
 
-    const result: Record<string, PiePoint[]> = {};
+    const result: Record<string, CategoryChartPoint[]> = {};
     Object.entries(byYear).forEach(([year, cats]) => {
       result[year] = Object.entries(cats)
         .map(([catId, y]) => ({
           name: categoryLabelById[catId] || catId,
           y: parseFloat(y.toFixed(2)),
+          color: getCategoryColor(catId),
         }))
         .filter((p) => p.y > 0)
         .sort((a, b) => b.y - a.y);
@@ -147,6 +103,7 @@ const YearAverageTrend = () => {
       .map(([catId, y]) => ({
         name: categoryLabelById[catId] || catId,
         y: parseFloat(y.toFixed(2)),
+        color: getCategoryColor(catId),
       }))
       .filter((p) => p.y > 0)
       .sort((a, b) => b.y - a.y);
@@ -248,7 +205,7 @@ const YearAverageTrend = () => {
                   {isOpen && (
                     <tr className="border-b border-white/5">
                       <td colSpan={2} className="px-2 pb-3 pt-0">
-                        <YearCategoryPie data={pieData} currency={currency} />
+                        <CategoryDonutBreakdown data={pieData} currency={currency} />
                       </td>
                     </tr>
                   )}
@@ -282,7 +239,7 @@ const YearAverageTrend = () => {
             {openTotalSpent && (
               <tr className="border-b border-white/5">
                 <td colSpan={2} className="px-2 pb-3 pt-0">
-                  <YearCategoryPie data={categoryPieAllTime} currency={currency} />
+                  <CategoryDonutBreakdown data={categoryPieAllTime} currency={currency} />
                 </td>
               </tr>
             )}

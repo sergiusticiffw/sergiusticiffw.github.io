@@ -37,6 +37,12 @@ const CATEGORY_MAP: Record<
   '13': { icon: FiTrendingUp, color: '#22c55e' }, // investment
 };
 
+/** Stable color per category id — use in charts so series match CategoryIcon. */
+export function getCategoryColor(categoryId?: string): string | undefined {
+  if (!categoryId) return undefined;
+  return CATEGORY_MAP[categoryId]?.color;
+}
+
 export interface CategoryIconProps {
   categoryId?: string;
   size?: 'sm' | 'md' | 'lg';
