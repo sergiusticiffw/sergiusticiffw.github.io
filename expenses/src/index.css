@@ -350,13 +350,7 @@ html.highcharts-dark .highcharts-background {
 
 /* Custom CSS doar unde Tailwind nu poate: amort scrollbar */
 @layer components {
-  /* Amortization table: scrollbar (sticky-col::after moved to Tailwind in AmortizationTable.tsx) */
-  .amort-header-inner {
-    scrollbar-width: none;
-  }
-  .amort-header-inner::-webkit-scrollbar {
-    display: none;
-  }
+  /* Amortization table: scrollbar */
   .amort-body-virtual {
     scrollbar-width: thin;
     scrollbar-color: var(--color-border-medium) transparent;
@@ -369,17 +363,6 @@ html.highcharts-dark .highcharts-background {
     background: var(--color-surface-hover);
     border-radius: 999px;
   }
-  .sticky-col::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.3), transparent);
-    pointer-events: none;
-  }
-
 }
 
 /* Vaul: fallback fără dvh + blocare scroll când drawer deschis */
