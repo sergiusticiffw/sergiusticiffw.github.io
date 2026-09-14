@@ -6,7 +6,6 @@ import {
   type ColumnDef,
   type Row,
 } from '@tanstack/react-table';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { useLocalization } from '@shared/context/localization';
 import { formatNumber } from '@shared/utils/utils';
 
@@ -47,14 +46,13 @@ const AMORT_FIRST_COL_HEADER =
   'shrink-0 bg-[var(--color-app-bg)] border-r border-app-subtle z-[60]';
 const AMORT_HEADER_INNER =
   'flex-1 overflow-x-auto overflow-y-hidden overflow-touch min-w-0';
-const AMORT_BODY_VIRTUAL =
+const AMORT_BODY_SCROLL =
   'overflow-y-auto overflow-touch relative bg-[var(--color-app-bg)] h-[calc(100vh-350px)] min-h-[500px] max-h-[900px] max-md:h-[calc(100vh-280px)] max-md:min-h-[400px] max-md:max-h-[600px] min-xl:h-[calc(100vh-300px)] min-xl:min-h-[600px] min-xl:max-h-[1000px]';
 const AMORT_BODY_SPLIT = 'flex w-full';
 const AMORT_FIRST_COL_BODY =
   'shrink-0 sticky left-0 z-20 bg-[var(--color-app-bg)] border-r border-app-subtle';
 const AMORT_BODY_HORIZONTAL =
   'flex-1 overflow-x-auto overflow-y-hidden overflow-touch min-w-0';
-const AMORT_VIRTUAL_CONTAINER = 'relative min-w-max';
 const AMORT_TABLE =
   'w-full border-separate border-spacing-0 min-w-max';
 const AMORT_TH =
@@ -65,7 +63,6 @@ const STICKY_COL_BODY =
   'sticky left-0 z-10 bg-[var(--color-app-bg)] shadow-[2px_0_2px_-1px_rgba(0,0,0,0.3)] min-w-[100px] isolate pl-3 [transform:translateZ(0)]';
 const STICKY_COL_HEADER =
   'sticky left-0 z-[30] bg-[var(--color-app-bg)] shadow-[2px_0_2px_-1px_rgba(0,0,0,0.3)] min-w-[100px] isolate pl-3 [transform:translateZ(0)]';
-const AMORT_ROW = 'w-full min-w-max';
 const AMORT_ROW_TABLE =
   'w-full min-w-max border-separate border-spacing-0 [&_td]:hover:bg-[color-mix(in_srgb,var(--color-app-accent)_8%,transparent)]';
 const ROW_ANNUAL_BORDERS = 'border-t border-b border-[var(--color-border-medium)]';
@@ -74,13 +71,11 @@ const TD_ANNUAL =
 const TD_ANNUAL_STICKY =
   '!bg-[color-mix(in_srgb,var(--color-app-bg)_85%,black)] font-bold text-[var(--color-text-primary)] z-[11]';
 const TD_WAS_PAYED = 'bg-[rgba(30,58,47,0.55)] text-[#d4edda]';
-const TD_WAS_PAYED_STICKY = '!bg-[rgba(30,58,47,0.7)] text-[#d4edda] z-[11]';
 
 const AmortizationTable: React.FC<AmortizationTableProps> = ({
   amortizationSchedule,
 }) => {
   const { t } = useLocalization();
-  const bodyVerticalRef = useRef<HTMLDivElement>(null);
   const bodyHorizontalRef = useRef<HTMLDivElement>(null);
   const headerScrollRef = useRef<HTMLDivElement>(null);
   const syncingRef = useRef(false);
@@ -231,17 +226,10 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
     columnResizeMode: 'onChange',
   });
 
+  const rows = table.getRowModel().rows;
   const firstHeaderGroup = table.getHeaderGroups()[0];
   const firstHeader = firstHeaderGroup?.headers?.[0];
   const firstColWidth = firstHeader?.getSize?.() ?? 120;
-
-  // Virtualization for rows
-  const { getVirtualItems, getTotalSize } = useVirtualizer({
-    count: amortizationSchedule.length,
-    getScrollElement: () => bodyVerticalRef.current,
-    estimateSize: () => 40, // Estimated row height (matches CSS)
-    overscan: 5, // Render 5 extra rows outside viewport for smooth scrolling
-  });
 
   const getRowKind = (row: Row<AmortizationRow>): 'annual' | 'was-payed' | '' => {
     const original = row.original;
@@ -250,12 +238,7 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
     return '';
   };
 
-  const getRowDivClasses = (row: Row<AmortizationRow>): string => {
-    const kind = getRowKind(row);
-    return kind === 'annual' ? ROW_ANNUAL_BORDERS : '';
-  };
-
-  const getFirstColRowDivClasses = (row: Row<AmortizationRow>): string => {
+  const getRowTrClasses = (row: Row<AmortizationRow>): string => {
     const kind = getRowKind(row);
     return kind === 'annual' ? ROW_ANNUAL_BORDERS : '';
   };
@@ -336,122 +319,68 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
         </div>
       </div>
 
-      <div
-        ref={bodyVerticalRef}
-        className={`amort-body-virtual ${AMORT_BODY_VIRTUAL}`}
-      >
+      <div className={`amort-body-scroll ${AMORT_BODY_SCROLL}`}>
         <div className={AMORT_BODY_SPLIT}>
           <div
             className={AMORT_FIRST_COL_BODY}
             style={{ width: firstColWidth }}
           >
-            <div
-              className={AMORT_VIRTUAL_CONTAINER}
-              style={{
-                height: `${getTotalSize()}px`,
-                width: firstColWidth,
-                position: 'relative',
-              }}
-            >
-              {getVirtualItems().map((virtualRow) => {
-                const row = table.getRowModel().rows[virtualRow.index];
-                if (!row) return null;
-                const cell = row.getVisibleCells()[0];
-                if (!cell) return null;
+            <table className={`${AMORT_ROW_TABLE} min-w-0 [&_td]:hover:!bg-[color-mix(in_srgb,var(--color-app-accent)_8%,transparent)]`}>
+              <tbody>
+                {rows.map((row) => {
+                  const cell = row.getVisibleCells()[0];
+                  if (!cell) return null;
 
-                return (
-                  <div
-                    key={`${row.id}-first`}
-                    className={`${AMORT_ROW} ${getFirstColRowDivClasses(row)}`}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: firstColWidth,
-                      height: `${virtualRow.size}px`,
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  >
-                    <table className={`${AMORT_ROW_TABLE} min-w-0 [&_td]:hover:!bg-[color-mix(in_srgb,var(--color-app-accent)_8%,transparent)]`}>
-                      <tbody>
-                        <tr>
-                          <td
-                            className={`sticky-col ${STICKY_COL_BODY} ${AMORT_TD} ${getStickyTdExtraClassesFirstCol(row)}`}
-                            style={{
-                              width: firstColWidth,
-                              minWidth: firstColWidth,
-                              maxWidth: firstColWidth,
-                            }}
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              })}
-            </div>
+                  return (
+                    <tr key={`${row.id}-first`} className={getRowTrClasses(row)}>
+                      <td
+                        className={`sticky-col ${STICKY_COL_BODY} ${AMORT_TD} ${getStickyTdExtraClassesFirstCol(row)}`}
+                        style={{
+                          width: firstColWidth,
+                          minWidth: firstColWidth,
+                          maxWidth: firstColWidth,
+                        }}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
 
           <div ref={bodyHorizontalRef} className={AMORT_BODY_HORIZONTAL}>
-            <div
-              className={AMORT_VIRTUAL_CONTAINER}
-              style={{
-                height: `${getTotalSize()}px`,
-                width: '100%',
-                position: 'relative',
-              }}
-            >
-              {getVirtualItems().map((virtualRow) => {
-                const row = table.getRowModel().rows[virtualRow.index];
-                if (!row) return null;
-
-                return (
-                  <div
-                    key={row.id}
-                    className={`${AMORT_ROW} ${getRowDivClasses(row)}`}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: `${virtualRow.size}px`,
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  >
-                    <table className={AMORT_ROW_TABLE}>
-                      <tbody>
-                        <tr>
-                          {row
-                            .getVisibleCells()
-                            .slice(1)
-                            .map((cell) => (
-                              <td
-                                key={cell.id}
-                                className={`${AMORT_TD} ${getTdExtraClasses(row)}`}
-                                style={{
-                                  width: cell.column.getSize(),
-                                  minWidth: cell.column.getSize(),
-                                  maxWidth: cell.column.getSize(),
-                                }}
-                              >
-                                {flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext()
-                                )}
-                              </td>
-                            ))}
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              })}
-            </div>
+            <table className={AMORT_ROW_TABLE}>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id} className={getRowTrClasses(row)}>
+                    {row
+                      .getVisibleCells()
+                      .slice(1)
+                      .map((cell) => (
+                        <td
+                          key={cell.id}
+                          className={`${AMORT_TD} ${getTdExtraClasses(row)}`}
+                          style={{
+                            width: cell.column.getSize(),
+                            minWidth: cell.column.getSize(),
+                            maxWidth: cell.column.getSize(),
+                          }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

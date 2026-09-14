@@ -357,15 +357,15 @@ html.highcharts-dark .highcharts-background {
   .amort-header-inner::-webkit-scrollbar {
     display: none;
   }
-  .amort-body-virtual {
+  .amort-body-scroll {
     scrollbar-width: thin;
     scrollbar-color: var(--color-border-medium) transparent;
   }
-  .amort-body-virtual::-webkit-scrollbar {
+  .amort-body-scroll::-webkit-scrollbar {
     height: 10px;
     width: 10px;
   }
-  .amort-body-virtual::-webkit-scrollbar-thumb {
+  .amort-body-scroll::-webkit-scrollbar-thumb {
     background: var(--color-surface-hover);
     border-radius: 999px;
   }
