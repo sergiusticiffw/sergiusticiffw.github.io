@@ -261,7 +261,7 @@ function TransactionsList({
         <div
           data-id={transaction.id}
           className={cn(
-            'bg-app-surface border border-white/8 rounded-2xl flex items-center gap-3 cursor-pointer transition-all duration-200 relative z-[1] w-full touch-pan-y',
+            'bg-app-surface border border-white/8 rounded-2xl flex items-start gap-3 cursor-pointer transition-all duration-200 relative z-[1] w-full touch-pan-y',
             'shadow-[0_8px_28px_rgba(0,0,0,0.28)]',
             'hover:bg-app-surface-hover hover:border-[var(--color-border-accent)] hover:shadow-[0_10px_32px_rgba(0,0,0,0.34)] active:scale-[0.99] motion-safe',
             compact ? 'p-2.5' : 'p-3 sm:p-4'
@@ -316,12 +316,7 @@ function TransactionsList({
               </div>
             ) : (
               <>
-                <div
-                  className={cn(
-                    'text-[0.9375rem] sm:text-body text-app-primary leading-tight break-words',
-                    compact ? 'line-clamp-1' : 'line-clamp-2'
-                  )}
-                >
+                <div className="text-[0.9375rem] sm:text-body text-app-primary leading-snug break-words">
                   <TagDisplay
                     description={transaction.dsc || ''}
                     suggestions={
@@ -371,7 +366,7 @@ function TransactionsList({
             )}
           </div>
 
-          <div className="flex flex-col items-end gap-0.5 shrink-0">
+          <div className="flex flex-col items-end gap-0.5 shrink-0 pt-0.5">
             <div
               className={cn(
                 'font-bold tabular-nums whitespace-nowrap flex items-center gap-1',
