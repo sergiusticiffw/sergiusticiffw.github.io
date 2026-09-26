@@ -10,9 +10,9 @@ export function formatHelp(): string {
     '',
     '/start - Subscribe to daily updates',
     '/help - Show this help',
-    '/today - Get today’s USD (BNM) and current DXY',
-    '/yesterday - Get yesterday’s USD (BNM) and current DXY',
-    '/tomorrow - Get tomorrow’s USD (BNM) and current DXY',
+    '/today - Get today’s USD and EUR (BNM) and current DXY',
+    '/yesterday - Get yesterday’s USD and EUR (BNM) and current DXY',
+    '/tomorrow - Get tomorrow’s USD and EUR (BNM) and current DXY',
     '/date - Open date picker (Web App), or /date DD.MM.YYYY (BNM + DXY)',
   ].join('\n')
 }
@@ -44,15 +44,18 @@ function getLocalTime(timeZone = 'Europe/Chisinau'): string {
 export function formatDailyMessage({
   bnmDate,
   usdRate,
+  eurRate,
   dxyValue,
 }: {
   bnmDate: string
   usdRate: string | null
+  eurRate: string | null
   dxyValue: string | null
 }): string {
   const usdText = usdRate ?? 'Not available yet'
+  const eurText = eurRate ?? 'Not available yet'
   const dxyText = dxyValue ?? 'Not available yet'
   const time = getLocalTime()
-  return `📊 Daily Currency Update — BNM (${bnmDate})\n\nUSD (BNM): ${usdText}\nDXY: ${dxyText}\n\n⏰ Time: ${time}`
+  return `📊 Daily Currency Update — BNM (${bnmDate})\n\nUSD (BNM): ${usdText}\nEUR (BNM): ${eurText}\nDXY: ${dxyText}\n\n⏰ Time: ${time}`
 }
 

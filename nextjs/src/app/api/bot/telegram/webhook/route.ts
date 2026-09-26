@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { addSubscriber } from '@/server/bot/kvSubscribers'
 import { formatDailyMessage, formatHelp, isStartCommand, parseCommand } from '@/server/bot/commands'
 import { BNM_DATE_REGEX, sendDateRatesMessage } from '@/server/bot/dateRatesReply'
-import { fetchBnmUsdRateForDate } from '@/server/bot/bnm'
+import { fetchBnmRatesForDate } from '@/server/bot/bnm'
 import { fetchDxyValue } from '@/server/bot/dxy'
 import { getTodayDate, getTomorrowDate, getYesterdayDate } from '@/server/bot/date'
 import { getPublicSiteBaseUrl } from '@/server/bot/publicSiteUrl'
@@ -128,14 +128,14 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     if (parsed && parsed.cmd === '/today') {
       const bnmDate = getTodayDate('Europe/Chisinau')
-      const [usdRate, dxyValue] = await Promise.all([
-        fetchBnmUsdRateForDate(bnmDate).catch(() => null),
+      const [{ usd: usdRate, eur: eurRate }, dxyValue] = await Promise.all([
+        fetchBnmRatesForDate(bnmDate).catch(() => ({ usd: null, eur: null })),
         fetchDxyValue().catch(() => null),
       ])
       await sendTelegramMessage({
         botToken,
         chatId,
-        text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
+        text: formatDailyMessage({ bnmDate, usdRate, eurRate, dxyValue }),
         replyMarkup: REMOVE_KEYBOARD,
       })
       return Response.json({ ok: true })
@@ -143,14 +143,14 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     if (parsed && parsed.cmd === '/yesterday') {
       const bnmDate = getYesterdayDate('Europe/Chisinau')
-      const [usdRate, dxyValue] = await Promise.all([
-        fetchBnmUsdRateForDate(bnmDate).catch(() => null),
+      const [{ usd: usdRate, eur: eurRate }, dxyValue] = await Promise.all([
+        fetchBnmRatesForDate(bnmDate).catch(() => ({ usd: null, eur: null })),
         fetchDxyValue().catch(() => null),
       ])
       await sendTelegramMessage({
         botToken,
         chatId,
-        text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
+        text: formatDailyMessage({ bnmDate, usdRate, eurRate, dxyValue }),
         replyMarkup: REMOVE_KEYBOARD,
       })
       return Response.json({ ok: true })
@@ -158,14 +158,14 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     if (parsed && parsed.cmd === '/tomorrow') {
       const bnmDate = getTomorrowDate('Europe/Chisinau')
-      const [usdRate, dxyValue] = await Promise.all([
-        fetchBnmUsdRateForDate(bnmDate).catch(() => null),
+      const [{ usd: usdRate, eur: eurRate }, dxyValue] = await Promise.all([
+        fetchBnmRatesForDate(bnmDate).catch(() => ({ usd: null, eur: null })),
         fetchDxyValue().catch(() => null),
       ])
       await sendTelegramMessage({
         botToken,
         chatId,
-        text: formatDailyMessage({ bnmDate, usdRate, dxyValue }),
+        text: formatDailyMessage({ bnmDate, usdRate, eurRate, dxyValue }),
         replyMarkup: REMOVE_KEYBOARD,
       })
       return Response.json({ ok: true })
