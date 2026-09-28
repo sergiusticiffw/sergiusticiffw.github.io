@@ -297,7 +297,7 @@ export const getSuggestions = () => {
       'troleibus',
     ],
     10: ['gaz', 'lumina', 'orange', 'bloc'],
-    11: ['Romania'],
+    11: ['Romania', 'travel funds'],
     12: ['Nelea', 'Leo', 'Sergiu', 'gradinita', 'jucarii', 'teren de joaca'],
     13: [],
     14: ['vin', 'bere', 'whiskey', 'cognac', 'gin', 'cocktails'],

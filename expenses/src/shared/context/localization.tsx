@@ -336,6 +336,7 @@ const translations = {
     'suggestions.alcohol.gin': 'gin',
     'suggestions.alcohol.cocktails': 'cocktails',
     'suggestions.travel.romania': 'Romania',
+    'suggestions.travel.travelFunds': 'Travel funds',
 
     // Notifications
     'notification.success': 'Success',
@@ -922,6 +923,7 @@ const translations = {
     'suggestions.alcohol.gin': 'gin',
     'suggestions.alcohol.cocktails': 'cocktails',
     'suggestions.travel.romania': 'România',
+    'suggestions.travel.travelFunds': 'Pușculiță',
 
     // Notifications
     'notification.success': 'Succes',

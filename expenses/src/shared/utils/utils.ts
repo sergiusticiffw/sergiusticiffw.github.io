@@ -1113,6 +1113,9 @@ const suggestionKeyMap: Record<string, Record<string, string>> = {
     'lichid parbriz': 'lichidParbriz',
     'car wash': 'carWash',
   },
+  travel: {
+    'travel funds': 'travelFunds',
+  },
   family: {
     gradinita: 'gradinita',
     jucarii: 'jucarii',
