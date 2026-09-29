@@ -50,9 +50,9 @@ function formatRateWithTrend(rate: string | null, previousRate: string | null | 
   if (!Number.isFinite(current) || !Number.isFinite(previous)) return rate
 
   const diff = Math.round((current - previous) * 10000) / 10000
-  if (diff > 0) return `${rate} 🔺 +${diff.toFixed(4)}`
-  if (diff < 0) return `${rate} 🔻 ${diff.toFixed(4)}`
-  return `${rate} → 0.0000`
+  if (diff > 0) return `${rate} 🟢 +${diff.toFixed(4)}`
+  if (diff < 0) return `${rate} 🔴 ${diff.toFixed(4)}`
+  return `${rate} ⚪ 0.0000`
 }
 
 export function formatDailyMessage({
