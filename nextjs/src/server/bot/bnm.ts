@@ -59,7 +59,7 @@ const ROMANIAN_MONTHS = [
   'octombrie',
   'noiembrie',
   'decembrie',
-]
+];
 
 function mergeRates(current: BnmRates, next: BnmRates | null): BnmRates {
   if (!next) return current
