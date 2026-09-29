@@ -1,5 +1,5 @@
 import { formatDailyMessage, formatDatePickedHeader } from '@/server/bot/commands'
-import { fetchBnmRatesForDate } from '@/server/bot/bnm'
+import { fetchBnmRatesWithPrevious } from '@/server/bot/bnm'
 import { fetchDxyForDate, fetchDxyValue } from '@/server/bot/dxy'
 import { sendTelegramMessage } from '@/server/bot/telegram'
 
@@ -16,12 +16,19 @@ export async function sendDateRatesMessage({
   bnmDate: string
   source?: 'web_app' | 'command'
 }): Promise<void> {
-  const [{ usd: usdRate, eur: eurRate }, dxyHistorical] = await Promise.all([
-    fetchBnmRatesForDate(bnmDate).catch(() => ({ usd: null, eur: null })),
+  const [{ usd: usdRate, eur: eurRate, previous }, dxyHistorical] = await Promise.all([
+    fetchBnmRatesWithPrevious(bnmDate),
     fetchDxyForDate(bnmDate).catch(() => null),
   ])
   const dxyValue = dxyHistorical ?? (await fetchDxyValue().catch(() => null))
-  const body = formatDailyMessage({ bnmDate, usdRate, eurRate, dxyValue })
+  const body = formatDailyMessage({
+    bnmDate,
+    usdRate,
+    eurRate,
+    dxyValue,
+    previousUsdRate: previous.usd,
+    previousEurRate: previous.eur,
+  })
   const text =
     source === 'web_app' ? `${formatDatePickedHeader(bnmDate)}\n\n${body}` : body
   await sendTelegramMessage({

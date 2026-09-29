@@ -30,6 +30,13 @@ function getShiftedDate(dayOffset: number, timeZone: string) {
   return formatDDMMYYYY(shifted.getFullYear(), shifted.getMonth() + 1, shifted.getDate())
 }
 
+export function shiftBnmDate(bnmDate: string, dayOffset: number): string | null {
+  const m = bnmDate.match(/^(\d{2})\.(\d{2})\.(\d{4})$/)
+  if (!m) return null
+  const shifted = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]) + dayOffset)
+  return formatDDMMYYYY(shifted.getFullYear(), shifted.getMonth() + 1, shifted.getDate())
+}
+
 export function getTodayDate(timeZone = 'Europe/Chisinau') {
   const { year, month, day } = getLocalParts(new Date(), timeZone)
   return formatDDMMYYYY(year, month, day)

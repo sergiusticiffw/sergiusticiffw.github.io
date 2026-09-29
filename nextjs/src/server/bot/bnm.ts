@@ -1,3 +1,5 @@
+import { shiftBnmDate } from '@/server/bot/date'
+
 function normalizeRateValue(value: string | null): string | null {
   if (value == null) return null
   const str = String(value).replace(/\s/g, '')
@@ -95,6 +97,18 @@ export async function fetchBnmRatesForDate(dateBnm: string): Promise<BnmRates> {
   if (isComplete(rates)) return rates
 
   return mergeRates(rates, await fetchRatesFromBnmXml(dateBnm))
+}
+
+export type BnmRatesWithPrevious = BnmRates & { previous: BnmRates }
+
+/** Rates for `dateBnm` plus the previous calendar day, for day-over-day comparison. */
+export async function fetchBnmRatesWithPrevious(dateBnm: string): Promise<BnmRatesWithPrevious> {
+  const previousDate = shiftBnmDate(dateBnm, -1)
+  const [current, previous] = await Promise.all([
+    fetchBnmRatesForDate(dateBnm).catch(() => EMPTY_RATES),
+    previousDate ? fetchBnmRatesForDate(previousDate).catch(() => EMPTY_RATES) : EMPTY_RATES,
+  ])
+  return { ...current, previous }
 }
 
 function cursBnmUrl(dateBnm: string): string | null {

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 
 import { formatDailyMessage } from '@/server/bot/commands'
-import { fetchBnmRatesForDate } from '@/server/bot/bnm'
+import { fetchBnmRatesWithPrevious } from '@/server/bot/bnm'
 import { fetchDxyValue } from '@/server/bot/dxy'
 import { getTomorrowDate } from '@/server/bot/date'
 import { parseChatIdsFromEnv } from '@/server/bot/chatIdsEnv'
@@ -54,11 +54,18 @@ async function handler(req: NextRequest): Promise<Response> {
 
   const bnmDate = getTomorrowDate(timeZone)
 
-  const [{ usd: usdRate, eur: eurRate }, dxyValue] = await Promise.all([
-    fetchBnmRatesForDate(bnmDate).catch(() => ({ usd: null, eur: null })),
+  const [{ usd: usdRate, eur: eurRate, previous }, dxyValue] = await Promise.all([
+    fetchBnmRatesWithPrevious(bnmDate),
     fetchDxyValue().catch(() => null),
   ])
-  const text = formatDailyMessage({ bnmDate, usdRate, eurRate, dxyValue })
+  const text = formatDailyMessage({
+    bnmDate,
+    usdRate,
+    eurRate,
+    dxyValue,
+    previousUsdRate: previous.usd,
+    previousEurRate: previous.eur,
+  })
 
   const kvSubscribers = await listSubscribers().catch(() => [])
   const envRecipients = parseChatIdsFromEnv(process.env.CHAT_IDS)

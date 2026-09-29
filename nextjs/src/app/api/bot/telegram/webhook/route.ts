@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 import { addSubscriber } from '@/server/bot/kvSubscribers'
 import { formatDailyMessage, formatHelp, isStartCommand, parseCommand } from '@/server/bot/commands'
 import { BNM_DATE_REGEX, sendDateRatesMessage } from '@/server/bot/dateRatesReply'
-import { fetchBnmRatesForDate } from '@/server/bot/bnm'
+import { fetchBnmRatesWithPrevious } from '@/server/bot/bnm'
 import { fetchDxyValue } from '@/server/bot/dxy'
 import { getTodayDate, getTomorrowDate, getYesterdayDate } from '@/server/bot/date'
 import { getPublicSiteBaseUrl } from '@/server/bot/publicSiteUrl'
@@ -26,6 +26,12 @@ function requireEnv(name: string): string {
 }
 
 const REMOVE_KEYBOARD: ReplyMarkup = { remove_keyboard: true }
+
+const RELATIVE_DATE_COMMANDS: Record<string, (timeZone: string) => string> = {
+  '/today': getTodayDate,
+  '/yesterday': getYesterdayDate,
+  '/tomorrow': getTomorrowDate,
+}
 
 function buildDatePickerUrl(chatId: number): string | null {
   const base = getPublicSiteBaseUrl()
@@ -126,46 +132,24 @@ export async function POST(req: NextRequest): Promise<Response> {
       return Response.json({ ok: true })
     }
 
-    if (parsed && parsed.cmd === '/today') {
-      const bnmDate = getTodayDate('Europe/Chisinau')
-      const [{ usd: usdRate, eur: eurRate }, dxyValue] = await Promise.all([
-        fetchBnmRatesForDate(bnmDate).catch(() => ({ usd: null, eur: null })),
+    const relativeDateGetter = parsed ? RELATIVE_DATE_COMMANDS[parsed.cmd] : undefined
+    if (relativeDateGetter) {
+      const bnmDate = relativeDateGetter('Europe/Chisinau')
+      const [{ usd: usdRate, eur: eurRate, previous }, dxyValue] = await Promise.all([
+        fetchBnmRatesWithPrevious(bnmDate),
         fetchDxyValue().catch(() => null),
       ])
       await sendTelegramMessage({
         botToken,
         chatId,
-        text: formatDailyMessage({ bnmDate, usdRate, eurRate, dxyValue }),
-        replyMarkup: REMOVE_KEYBOARD,
-      })
-      return Response.json({ ok: true })
-    }
-
-    if (parsed && parsed.cmd === '/yesterday') {
-      const bnmDate = getYesterdayDate('Europe/Chisinau')
-      const [{ usd: usdRate, eur: eurRate }, dxyValue] = await Promise.all([
-        fetchBnmRatesForDate(bnmDate).catch(() => ({ usd: null, eur: null })),
-        fetchDxyValue().catch(() => null),
-      ])
-      await sendTelegramMessage({
-        botToken,
-        chatId,
-        text: formatDailyMessage({ bnmDate, usdRate, eurRate, dxyValue }),
-        replyMarkup: REMOVE_KEYBOARD,
-      })
-      return Response.json({ ok: true })
-    }
-
-    if (parsed && parsed.cmd === '/tomorrow') {
-      const bnmDate = getTomorrowDate('Europe/Chisinau')
-      const [{ usd: usdRate, eur: eurRate }, dxyValue] = await Promise.all([
-        fetchBnmRatesForDate(bnmDate).catch(() => ({ usd: null, eur: null })),
-        fetchDxyValue().catch(() => null),
-      ])
-      await sendTelegramMessage({
-        botToken,
-        chatId,
-        text: formatDailyMessage({ bnmDate, usdRate, eurRate, dxyValue }),
+        text: formatDailyMessage({
+          bnmDate,
+          usdRate,
+          eurRate,
+          dxyValue,
+          previousUsdRate: previous.usd,
+          previousEurRate: previous.eur,
+        }),
         replyMarkup: REMOVE_KEYBOARD,
       })
       return Response.json({ ok: true })
