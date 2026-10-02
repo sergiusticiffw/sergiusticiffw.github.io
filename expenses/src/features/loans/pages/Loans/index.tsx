@@ -31,6 +31,12 @@ import VaulDrawer from '@shared/components/VaulDrawer';
 import LoanForm from '@features/loans/components/Loan/LoanForm';
 import LoansList from '@features/loans/components/Loan/LoansList';
 
+const LOAN_STATUS_COLORS = {
+  active: '#4F8CFF',
+  completed: '#22c55e',
+  pending: '#94a3b8',
+} as const;
+
 const Loans: FC = () => {
   const { data, dataDispatch } = useLoan();
   const { token } = useAuthState();
@@ -259,6 +265,32 @@ const Loans: FC = () => {
       (loan: ApiLoan) => getLoanStatusForLoan(loan) === 'completed'
     ).length || 0;
 
+  const deleteItem = useMemo(() => {
+    if (!showDeleteModal || !('id' in focusedItem)) return null;
+    const loan = focusedItem as ApiLoan;
+    const status = getLoanStatusForLoan(loan);
+    const statusColor =
+      LOAN_STATUS_COLORS[status as keyof typeof LOAN_STATUS_COLORS] ??
+      LOAN_STATUS_COLORS.pending;
+    return {
+      variant: 'loan' as const,
+      dt: loan.sdt ?? '',
+      dsc: loan.title ?? '',
+      sum: loan.fp ?? 0,
+      badge: (
+        <span
+          className="py-0.5 px-2.5 rounded-full text-[0.7rem] font-bold uppercase tracking-wide whitespace-nowrap border bg-transparent"
+          style={{
+            color: statusColor,
+            borderColor: `color-mix(in srgb, ${statusColor} 55%, transparent)`,
+          }}
+        >
+          {getStatusText(status)}
+        </span>
+      ),
+    };
+  }, [showDeleteModal, focusedItem, t]);
+
   if (loading) {
     return (
       <div className={PAGE_CONTAINER_CLASS}>
@@ -431,6 +463,7 @@ const Loans: FC = () => {
         title={t('loan.deleteLoan')}
         message={t('modal.deleteLoanMessage')}
         isSubmitting={isSubmitting}
+        item={deleteItem}
       />
 
       {/* FAB – same pattern as transaction (Add Transaction) */}

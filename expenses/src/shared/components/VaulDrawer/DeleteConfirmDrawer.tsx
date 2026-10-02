@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Drawer } from 'vaul';
 import { FiTrash2, FiX } from 'react-icons/fi';
 import { useLocalization } from '@shared/context/localization';
 import { Loader } from '@shared/components/Common';
+import DeleteItemPreview, { DeleteItemPreviewProps } from './DeleteItemPreview';
 
 interface DeleteConfirmDrawerProps {
   open: boolean;
@@ -11,6 +12,7 @@ interface DeleteConfirmDrawerProps {
   title: string;
   message?: string;
   isSubmitting?: boolean;
+  item?: DeleteItemPreviewProps | null;
 }
 
 const DeleteConfirmDrawer: React.FC<DeleteConfirmDrawerProps> = ({
@@ -20,8 +22,15 @@ const DeleteConfirmDrawer: React.FC<DeleteConfirmDrawerProps> = ({
   title,
   message,
   isSubmitting = false,
+  item,
 }) => {
   const { t } = useLocalization();
+  // Keep the last item while the drawer animates closed (the item may already be removed from the list).
+  const lastItemRef = useRef(item);
+  useEffect(() => {
+    if (item) lastItemRef.current = item;
+  });
+  const previewItem = item ?? (open ? null : lastItemRef.current);
 
   return (
     <Drawer.Root open={open} onOpenChange={(next) => !next && onClose()}>
@@ -62,16 +71,9 @@ const DeleteConfirmDrawer: React.FC<DeleteConfirmDrawerProps> = ({
               t('modal.deleteTransaction')}
           </Drawer.Description>
 
-          <div className="grid grid-cols-2 gap-3 p-1 max-[520px]:grid-cols-1">
-            <button
-              type="button"
-              className="w-full border-none rounded-xl py-3.5 px-4 min-h-12 text-[0.95rem] font-semibold cursor-pointer inline-flex items-center justify-center gap-2 transition-all duration-150 select-none [-webkit-tap-highlight-color:transparent] bg-app-surface border border-app-subtle text-app-primary hover:border-[var(--color-app-accent)]/30 hover:bg-[var(--color-app-accent)]/5 active:not(:disabled):translate-y-px disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              {t('common.cancel')}
-            </button>
+          {previewItem && <DeleteItemPreview {...previewItem} />}
 
+          <div className="p-1">
             <button
               type="button"
               className="w-full border-none rounded-xl py-3.5 px-4 min-h-12 text-[0.95rem] font-semibold cursor-pointer inline-flex items-center justify-center gap-2 transition-all duration-150 select-none [-webkit-tap-highlight-color:transparent] bg-gradient-to-br from-red-500 to-red-600 text-white shadow-[0_4px_14px_rgba(239,68,68,0.35)] ring-1 ring-[var(--color-app-accent)]/25 hover:shadow-[0_6px_20px_rgba(239,68,68,0.4)] hover:ring-2 hover:ring-[var(--color-app-accent)]/40 active:not(:disabled):translate-y-px disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"

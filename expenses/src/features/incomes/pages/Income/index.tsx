@@ -282,6 +282,16 @@ const Income = () => {
     [dataDispatch]
   );
 
+  const deleteItem = useMemo(() => {
+    if (!showDeleteModal) return null;
+    const income = data.incomeData?.find(
+      (item: TransactionOrIncomeItem) => item.id === showDeleteModal
+    );
+    return income
+      ? { variant: 'income' as const, dt: income.dt, dsc: income.dsc, sum: income.sum }
+      : null;
+  }, [showDeleteModal, data.incomeData]);
+
   // Calculate income statistics based on filtered data
   const totalIncome =
     filteredIncomeData?.reduce(
@@ -538,6 +548,7 @@ const Income = () => {
         }
         title={t('income.deleteIncome')}
         isSubmitting={isSubmitting}
+        item={deleteItem}
       />
 
       <VaulDrawer

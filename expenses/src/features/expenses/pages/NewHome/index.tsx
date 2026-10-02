@@ -298,6 +298,16 @@ const NewHome = () => {
   const today = now.getDate();
   const daysLeft = isCurrentMonth ? Math.max(0, daysInMonth - today) : null;
 
+  const deleteItem = useMemo(() => {
+    if (!showDeleteModal) return null;
+    const tx = filteredTransactions.find(
+      (item: TransactionOrIncomeItem) => item.id === showDeleteModal
+    );
+    return tx
+      ? { variant: 'expense' as const, dt: tx.dt, dsc: tx.dsc, sum: tx.sum, cat: tx.cat }
+      : null;
+  }, [showDeleteModal, filteredTransactions]);
+
   return (
     <div className={PAGE_CONTAINER_CLASS}>
       {/* Delete Drawer (Vaul) */}
@@ -310,6 +320,7 @@ const NewHome = () => {
         title={t('transaction.deleteTransaction')}
         message={t('modal.deleteTransaction')}
         isSubmitting={isSubmitting}
+        item={deleteItem}
       />
 
       {/* Edit Transaction Drawer */}

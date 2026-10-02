@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useAuthDispatch, useAuthState } from '@shared/context/context';
 import { useNotification } from '@shared/context/notification';
 import { useLocalization } from '@shared/context/localization';
@@ -124,6 +124,24 @@ const PaymentDetails = (props) => {
     setDeleteModalId(paymentId);
   };
 
+  const deleteItem = useMemo(() => {
+    if (!deleteModalId) return null;
+    const payment = payments.find((item) => item.id === deleteModalId);
+    if (!payment) return null;
+    return {
+      variant: 'payment' as const,
+      dt: payment.fdt,
+      dsc: payment.title,
+      sum: payment.fpi ?? 0,
+      badge:
+        Number(payment.fisp) === 1 ? (
+          <span className="inline-block text-[0.7rem] font-semibold text-[#ff9800] bg-[rgba(255,152,0,0.15)] px-2 py-0.5 rounded-full uppercase tracking-wide">
+            {t('payment.simulated')}
+          </span>
+        ) : undefined,
+    };
+  }, [deleteModalId, payments, t]);
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -197,6 +215,7 @@ const PaymentDetails = (props) => {
         title={t('payment.deletePayment')}
         message={t('modal.deletePayment')}
         isSubmitting={isSubmitting}
+        item={deleteItem}
       />
 
       {/* Edit / Add payment – same VaulDrawer + footer as Income */}
