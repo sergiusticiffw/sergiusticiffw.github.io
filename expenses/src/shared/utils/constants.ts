@@ -285,7 +285,7 @@ export const getSuggestions = () => {
       'sport',
       'asigurare',
     ],
-    8: ['haircut', 'nails', 'Nelea', 'Sergiu', 'beauty'],
+    8: ['haircut', 'nails', 'Nelea', 'Sergiu', 'beauty', 'subscription'],
     9: [
       'benzina',
       'motorina',
