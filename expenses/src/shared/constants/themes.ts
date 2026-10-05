@@ -15,23 +15,27 @@ export interface ThemeDefinition {
 
 export const APP_THEMES: ThemeDefinition[] = [
   { id: 'default', labelKey: 'theme.default', bg: 'oklch(0.145 0.005 264)', accent: '#5b8def', accentHover: 'oklch(0.52 0.18 264)' },
-  { id: 'navy', labelKey: 'theme.navy', bg: 'oklch(0.11 0.02 264)', accent: '#2563eb', accentHover: 'oklch(0.5 0.2 264)' },
-  { id: 'teal', labelKey: 'theme.teal', bg: 'oklch(0.12 0.02 180)', accent: '#0d9488', accentHover: 'oklch(0.52 0.12 180)' },
   { id: 'emerald', labelKey: 'theme.emerald', bg: 'oklch(0.12 0.02 165)', accent: '#10b981', accentHover: 'oklch(0.55 0.16 165)' },
-  { id: 'slate', labelKey: 'theme.slate', bg: 'oklch(0.14 0.008 260)', accent: '#64748b', accentHover: 'oklch(0.55 0.04 260)' },
-  { id: 'indigo', labelKey: 'theme.indigo', bg: 'oklch(0.13 0.025 275)', accent: '#4f46e5', accentHover: 'oklch(0.52 0.22 275)' },
-  { id: 'violet', labelKey: 'theme.violet', bg: 'oklch(0.12 0.03 300)', accent: '#a855f7', accentHover: 'oklch(0.65 0.22 305)' },
   { id: 'aurora', labelKey: 'theme.aurora', bg: 'oklch(0.11 0.025 195)', accent: '#06b6d4', accentHover: 'oklch(0.62 0.14 195)' },
+  { id: 'violet', labelKey: 'theme.violet', bg: 'oklch(0.12 0.03 300)', accent: '#a855f7', accentHover: 'oklch(0.65 0.22 305)' },
   { id: 'rose', labelKey: 'theme.rose', bg: 'oklch(0.14 0.02 350)', accent: '#e11d48', accentHover: 'oklch(0.6 0.22 350)' },
   { id: 'amber', labelKey: 'theme.amber', bg: 'oklch(0.13 0.02 70)', accent: '#f59e0b', accentHover: 'oklch(0.72 0.18 70)' },
-  { id: 'sky', labelKey: 'theme.sky', bg: 'oklch(0.14 0.02 230)', accent: '#0ea5e9', accentHover: 'oklch(0.65 0.15 230)' },
 ];
 
 export const DEFAULT_THEME_ID = 'default';
 
+const LEGACY_THEME_MAP: Record<string, string> = {
+  'blue-pink-gradient': DEFAULT_THEME_ID,
+  navy: DEFAULT_THEME_ID,
+  indigo: DEFAULT_THEME_ID,
+  slate: DEFAULT_THEME_ID,
+  sky: 'aurora',
+  teal: 'emerald',
+};
+
 /** Valoare salvată veche; mapează la default sau la o temă existentă */
 export function normalizeThemeId(theme: string): string {
-  if (theme === 'blue-pink-gradient') return DEFAULT_THEME_ID;
-  const exists = APP_THEMES.some((t) => t.id === theme);
-  return exists ? theme : DEFAULT_THEME_ID;
+  const mapped = LEGACY_THEME_MAP[theme] ?? theme;
+  const exists = APP_THEMES.some((t) => t.id === mapped);
+  return exists ? mapped : DEFAULT_THEME_ID;
 }

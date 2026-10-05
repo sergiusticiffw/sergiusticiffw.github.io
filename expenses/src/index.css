@@ -267,30 +267,10 @@ html[data-theme="default"] {
   --color-app-accent: #5b8def;
   --color-app-accent-hover: oklch(0.52 0.18 264);
 }
-html[data-theme="navy"] {
-  --color-app-bg: oklch(0.11 0.02 264);
-  --color-app-accent: #2563eb;
-  --color-app-accent-hover: oklch(0.5 0.2 264);
-}
-html[data-theme="teal"] {
-  --color-app-bg: oklch(0.12 0.02 180);
-  --color-app-accent: #0d9488;
-  --color-app-accent-hover: oklch(0.52 0.12 180);
-}
 html[data-theme="emerald"] {
   --color-app-bg: oklch(0.12 0.02 165);
   --color-app-accent: #10b981;
   --color-app-accent-hover: oklch(0.55 0.16 165);
-}
-html[data-theme="slate"] {
-  --color-app-bg: oklch(0.14 0.008 260);
-  --color-app-accent: #64748b;
-  --color-app-accent-hover: oklch(0.55 0.04 260);
-}
-html[data-theme="indigo"] {
-  --color-app-bg: oklch(0.13 0.025 275);
-  --color-app-accent: #4f46e5;
-  --color-app-accent-hover: oklch(0.52 0.22 275);
 }
 
 /* Ultra-modern themes */
@@ -317,12 +297,6 @@ html[data-theme="amber"] {
   --color-app-accent: #f59e0b;
   --color-app-accent-hover: oklch(0.72 0.18 70);
   --color-app-accent-shadow: color-mix(in srgb, #f59e0b 36%, transparent);
-}
-html[data-theme="sky"] {
-  --color-app-bg: oklch(0.14 0.02 230);
-  --color-app-accent: #0ea5e9;
-  --color-app-accent-hover: oklch(0.65 0.15 230);
-  --color-app-accent-shadow: color-mix(in srgb, #0ea5e9 36%, transparent);
 }
 
 /* Highcharts adaptive theme: match chart background to app theme */

@@ -176,16 +176,11 @@ const translations = {
 
     // Settings (UI branch)
     'theme.default': 'Default',
-    'theme.navy': 'Navy',
-    'theme.teal': 'Teal',
     'theme.emerald': 'Emerald',
-    'theme.slate': 'Slate',
-    'theme.indigo': 'Indigo',
     'theme.violet': 'Violet',
     'theme.aurora': 'Aurora',
     'theme.rose': 'Rose',
     'theme.amber': 'Amber',
-    'theme.sky': 'Sky',
 
     // Login
     'login.pleaseLogin':
@@ -411,8 +406,6 @@ const translations = {
     'loans.noLoans': 'No loans found',
     'loans.noLoansDesc':
       'No loans available. Add your first loan to get started!',
-    'loans.noLoansWithStatus': 'No loans with status',
-    'loans.showAllLoans': 'Show All Loans',
     'loans.allStatuses': 'All Statuses',
     'loans.loanRecords': 'Loan Records',
     'loans.manageLoans': 'Manage and track your loans',
@@ -422,7 +415,10 @@ const translations = {
     'loans.deleteLoan': 'Delete Loan',
     'loans.loan': 'loan',
     'loans.loans': 'loans',
-
+    'loans.paid': 'Paid',
+    'loans.remaining': 'Remaining',
+    'loans.paidOff': 'Paid off',
+    'loans.completedSection': 'Completed ({count})',
     // Amortization
     'amortization.total': 'Total',
     'amortization.date': 'Date',
@@ -759,16 +755,11 @@ const translations = {
 
     // Settings (UI branch)
     'theme.default': 'Implicit',
-    'theme.navy': 'Marini',
-    'theme.teal': 'Turcoaz',
     'theme.emerald': 'Smarald',
-    'theme.slate': 'Ardezie',
-    'theme.indigo': 'Indigo',
     'theme.violet': 'Violet',
     'theme.aurora': 'Aurora',
     'theme.rose': 'Roz',
     'theme.amber': 'Chihlimbar',
-    'theme.sky': 'Cer',
 
     // Login
     'login.pleaseLogin':
@@ -997,8 +988,6 @@ const translations = {
     'loans.noLoans': 'Nu s-au găsit împrumuturi',
     'loans.noLoansDesc':
       'Nu sunt împrumuturi disponibile. Adaugă primul tău împrumut pentru a începe!',
-    'loans.noLoansWithStatus': 'Nu s-au găsit împrumuturi cu statusul',
-    'loans.showAllLoans': 'Arată Toate Împrumuturile',
     'loans.allStatuses': 'Toate Statusurile',
     'loans.loanRecords': 'Înregistrări de Împrumut',
     'loans.manageLoans': 'Gestionează și urmărește împrumuturile tale',
@@ -1008,7 +997,10 @@ const translations = {
     'loans.deleteLoan': 'Șterge Împrumutul',
     'loans.loan': 'împrumut',
     'loans.loans': 'împrumuturi',
-
+    'loans.paid': 'Plătit',
+    'loans.remaining': 'Rămas',
+    'loans.paidOff': 'Achitat integral',
+    'loans.completedSection': 'Finalizate ({count})',
     // Amortization
     'amortization.total': 'Total',
     'amortization.date': 'Data',

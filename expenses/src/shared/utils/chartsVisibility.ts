@@ -13,7 +13,7 @@ function readJson<T>(key: string, fallback: T): T {
 }
 
 export function readCustomChartsEnabled(): boolean {
-  return readJson(CUSTOM_CHARTS_KEY, false) === true;
+  return readJson<unknown>(CUSTOM_CHARTS_KEY, false) === true;
 }
 
 export function writeCustomChartsEnabled(value: boolean): void {

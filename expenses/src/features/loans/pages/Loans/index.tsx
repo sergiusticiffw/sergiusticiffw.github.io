@@ -2,11 +2,7 @@ import { useEffect, useState, useMemo, FC, useRef } from 'react';
 import { useAuthDispatch, useAuthState } from '@shared/context/context';
 import { useLoan } from '@shared/context/loan';
 import { useLocalization } from '@shared/context/localization';
-import {
-  deleteLoan,
-  formatNumber,
-  getLoanStatus,
-} from '@shared/utils/utils';
+import { deleteLoan, getLoanStatus } from '@shared/utils/utils';
 import { fetchLoans as fetchLoansService } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useNotification } from '@shared/context/notification';
@@ -18,8 +14,8 @@ import {
   calculatePaydownOnly,
 } from '@features/loans/utils/amortization';
 import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
+import { Card } from '@shared/ui';
 import {
-  PageHeader,
   Loader,
   LoadingSpinner,
   DeleteConfirmDrawer,
@@ -29,13 +25,22 @@ import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils
 import { FiCreditCard, FiPlus, FiEdit2 } from 'react-icons/fi';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import LoanForm from '@features/loans/components/Loan/LoanForm';
-import LoansList from '@features/loans/components/Loan/LoansList';
+import LoansList, {
+  type LoanAmounts,
+} from '@features/loans/components/Loan/LoansList';
 
 const LOAN_STATUS_COLORS = {
   active: '#4F8CFF',
   completed: '#22c55e',
   pending: '#94a3b8',
 } as const;
+
+type PaydownTotals = {
+  sum_of_installments?: number;
+  remaining_principal?: number;
+  unpaid_interest?: number;
+  sum_of_fees?: number;
+};
 
 const Loans: FC = () => {
   const { data, dataDispatch } = useLoan();
@@ -51,8 +56,6 @@ const Loans: FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loanFormSubmitting, setLoanFormSubmitting] = useState(false);
   const [loanFormEditSubmitting, setLoanFormEditSubmitting] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-
   const { loans, loading, payments } = data;
 
   // Event-driven pending sync tracking (no polling) - for loans and payments
@@ -106,7 +109,7 @@ const Loans: FC = () => {
   const getLoanStatusForLoan = (loan: ApiLoan) => getLoanStatus(loan?.fls);
 
   const paydownCacheRef = useRef(
-    new Map<string, { sumOfInstallments: number; totalPaidAmount: number }>()
+    new Map<string, { paydown: PaydownTotals; totalPaidAmount: number }>()
   );
 
   const hashString = (input: string): string => {
@@ -134,7 +137,7 @@ const Loans: FC = () => {
   const amortizationByLoanId = useMemo(() => {
     const map = new Map<
       string,
-      { paydown: any; totalPaidAmount: number }
+      { paydown: PaydownTotals; totalPaidAmount: number }
     >();
     if (!loans?.length || !payments?.length) return map;
     const paymentsList = payments as LoanPaymentsEntry[];
@@ -163,11 +166,14 @@ const Loans: FC = () => {
 
       const paymentItems = filteredData.data as ApiPaymentItem[];
       const events = buildEventsFromApiPayments(paymentItems);
-      const totalPaidAmount = paymentItems.reduce(
-        (sum: number, item: ApiPaymentItem) =>
-          sum + parseFloat(String(item.fpi ?? '0')),
-        0
-      );
+      // Same rule as the loan detail page: real (non-simulated) payments, installment + single fee.
+      const totalPaidAmount = paymentItems
+        .filter((item) => Number(item.fisp ?? 0) === 0)
+        .reduce((sum: number, item: ApiPaymentItem) => {
+          const installment = parseFloat(String(item.fpi ?? '0')) || 0;
+          const singleFee = parseFloat(String(item.fpsf ?? '0')) || 0;
+          return sum + installment + singleFee;
+        }, 0);
 
       const loanKey = hashString(
         [
@@ -190,7 +196,7 @@ const Loans: FC = () => {
         paymentItems
           .map(
             (p) =>
-              `${p.id}|${p.cr ?? ''}|${p.fdt ?? ''}|${p.fpi ?? ''}|${p.fr ?? ''}|${p.fnp ?? ''}|${p.fpm ?? ''}|${p.fisp ?? ''}`
+              `${p.id}|${p.cr ?? ''}|${p.fdt ?? ''}|${p.fpi ?? ''}|${p.fpsf ?? ''}|${p.fr ?? ''}|${p.fnp ?? ''}|${p.fpm ?? ''}|${p.fisp ?? ''}`
           )
           .join('~')
       );
@@ -198,20 +204,23 @@ const Loans: FC = () => {
       const cacheKey = `${loanKey}:${paymentsKey}`;
       const cached = paydownCacheRef.current.get(cacheKey);
       if (cached) {
-        map.set(loan.id, {
-          paydown: { sum_of_installments: cached.sumOfInstallments },
-          totalPaidAmount: cached.totalPaidAmount,
-        });
+        map.set(loan.id, cached);
         continue;
       }
 
       try {
-        const paydown = calculatePaydownOnly(loanData, events);
-        map.set(loan.id, { paydown, totalPaidAmount });
-        paydownCacheRef.current.set(cacheKey, {
-          sumOfInstallments: paydown.sum_of_installments ?? 0,
+        const result = calculatePaydownOnly(loanData, events);
+        const entry = {
+          paydown: {
+            sum_of_installments: result.sum_of_installments ?? 0,
+            remaining_principal: result.remaining_principal ?? 0,
+            unpaid_interest: result.unpaid_interest ?? 0,
+            sum_of_fees: result.sum_of_fees ?? 0,
+          },
           totalPaidAmount,
-        });
+        };
+        map.set(loan.id, entry);
+        paydownCacheRef.current.set(cacheKey, entry);
       } catch {
         map.set(loan.id, { paydown: { sum_of_installments: 0 }, totalPaidAmount: 0 });
       }
@@ -238,32 +247,42 @@ const Loans: FC = () => {
     );
   };
 
-  // Filter loans
-  const filteredLoans = useMemo(() => {
-    if (!loans) return [];
-
-    let filtered = loans;
-
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = loans.filter(
-        (loan: ApiLoan) => getLoanStatusForLoan(loan) === statusFilter
-      );
+  const getLoanAmounts = (loan: ApiLoan): LoanAmounts => {
+    const status = getLoanStatusForLoan(loan);
+    const principal = parseFloat(String(loan.fp ?? '0')) || 0;
+    if (status === 'completed') {
+      return { paid: null, remaining: 0, total: null };
     }
+    const entry =
+      status === 'active' ? amortizationByLoanId.get(loan.id) : undefined;
+    const { paydown, totalPaidAmount } = entry ?? {
+      paydown: {},
+      totalPaidAmount: 0,
+    };
+    const total =
+      (paydown.sum_of_installments ?? 0) +
+      (paydown.remaining_principal ?? 0) +
+      (paydown.unpaid_interest ?? 0) +
+      (paydown.sum_of_fees ?? 0);
+    if (total === 0 || totalPaidAmount === 0) {
+      return { paid: 0, remaining: principal, total: principal };
+    }
+    return {
+      paid: totalPaidAmount,
+      remaining: Math.max(0, total - totalPaidAmount),
+      total,
+    };
+  };
 
-    return filtered;
-  }, [loans, statusFilter]);
-
-  // Calculate stats based on filtered loans
-  const totalLoans = filteredLoans?.length || 0;
-  const activeLoans =
-    filteredLoans?.filter(
-      (loan: ApiLoan) => getLoanStatusForLoan(loan) === 'active'
-    ).length || 0;
-  const completedLoans =
-    filteredLoans?.filter(
-      (loan: ApiLoan) => getLoanStatusForLoan(loan) === 'completed'
-    ).length || 0;
+  const totalLoans = loans?.length ?? 0;
+  const statusCounts = useMemo(() => {
+    const counts = { active: 0, pending: 0, completed: 0 };
+    for (const loan of (loans ?? []) as ApiLoan[]) {
+      counts[getLoanStatusForLoan(loan)]++;
+    }
+    return counts;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loans]);
 
   const deleteItem = useMemo(() => {
     if (!showDeleteModal || !('id' in focusedItem)) return null;
@@ -301,47 +320,48 @@ const Loans: FC = () => {
 
   return (
     <div className={PAGE_CONTAINER_CLASS}>
-      {/* Header */}
-      <PageHeader
-        title={t('loans.title')}
-        subtitle={`${totalLoans} ${totalLoans === 1 ? t('loans.loan') : t('loans.loans')}`}
-      />
-
-      {/* Simple Stats (hidden, can be enabled later) */}
-      <div className="hidden">
-        <div className="stat-item">
-          <span className="stat-value">{formatNumber(totalLoans)}</span>
-          <span className="stat-label">{t('common.total')}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-value">{formatNumber(activeLoans)}</span>
-          <span className="stat-label">{t('loans.active')}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-value">{formatNumber(completedLoans)}</span>
-          <span className="stat-label">{t('common.completed')}</span>
-        </div>
+      <div className="pt-6">
+        <Card
+          variant="surface"
+          padding="lg"
+          className="mb-5 flex flex-col gap-4 border-[var(--color-border-subtle)] shadow-[0_8px_28px_rgba(0,0,0,0.24)]"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="m-0 text-2xl font-extrabold tracking-tight text-app-primary leading-tight">
+              {t('loans.title')}
+            </h2>
+            <span className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-[var(--color-surface-2)]/60 text-app-muted/80 tabular-nums">
+              {totalLoans} {totalLoans === 1 ? t('loans.loan') : t('loans.loans')}
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {(['active', 'pending', 'completed'] as const).map((status) => (
+              <div
+                key={status}
+                className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5"
+              >
+                <div
+                  className="text-2xl font-bold tabular-nums leading-tight"
+                  style={{ color: LOAN_STATUS_COLORS[status] }}
+                >
+                  {statusCounts[status]}
+                </div>
+                <div className="text-micro uppercase tracking-wider text-app-muted truncate">
+                  {getStatusText(status)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
 
       {/* Loans List Section */}
       <div className="mb-8">
-        {filteredLoans.length === 0 ? (
+        {!loans?.length ? (
           <NoData
             icon={<FiCreditCard />}
             title={t('loans.noLoans')}
-            description={
-              statusFilter !== 'all'
-                ? `${t('loans.noLoansWithStatus')} "${getStatusText(statusFilter)}".`
-                : t('loans.noLoansDesc')
-            }
-            action={
-              statusFilter !== 'all'
-                ? {
-                    label: t('loans.showAllLoans'),
-                    onClick: () => setStatusFilter('all'),
-                  }
-                : undefined
-            }
+            description={t('loans.noLoansDesc')}
           />
         ) : (
           <LoansList
@@ -351,8 +371,7 @@ const Loans: FC = () => {
             getStatus={getLoanStatusForLoan}
             getStatusText={getStatusText}
             getProgress={calculateLoanProgress}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
+            getAmounts={getLoanAmounts}
             pendingSyncIds={pendingLoanIds}
           />
         )}

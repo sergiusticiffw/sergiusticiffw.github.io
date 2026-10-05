@@ -161,7 +161,7 @@ const Profile = () => {
               {t('profile.theme')}
             </h3>
           </div>
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-3 gap-2">
             {APP_THEMES.map((theme) => {
               const isActive = currentTheme === theme.id;
               return (
