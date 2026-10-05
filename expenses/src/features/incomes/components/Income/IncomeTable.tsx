@@ -127,7 +127,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   const sortBtn =
     'rounded-lg py-2 px-4 text-white/60 text-sm cursor-pointer flex items-center gap-2 transition-all duration-200 bg-white/[0.05] border-none hover:bg-white/10 hover:text-white/80 [&_svg]:text-sm';
   const sortBtnActive =
-    'bg-[rgba(91,141,239,0.2)] text-[#5b8def] font-medium';
+    'bg-[var(--color-app-accent)]/20 text-[var(--color-app-accent)] font-medium';
 
   return (
     <div

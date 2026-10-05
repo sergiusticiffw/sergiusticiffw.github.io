@@ -30,7 +30,7 @@ import LoansList, {
 } from '@features/loans/components/Loan/LoansList';
 
 const LOAN_STATUS_COLORS = {
-  active: '#4F8CFF',
+  active: 'var(--color-app-accent)',
   completed: '#22c55e',
   pending: '#94a3b8',
 } as const;

@@ -26,9 +26,9 @@ interface LoansListProps {
   pendingSyncIds?: Record<string, true>;
 }
 
-/* Culori fixe pentru status loan – nu se schimbă cu tema */
+/* Active urmează accentul temei; completed/pending rămân culori semantice fixe */
 const STATUS_COLORS = {
-  active: '#4F8CFF',
+  active: 'var(--color-app-accent)',
   completed: '#22c55e',
   pending: '#94a3b8',
 } as const;

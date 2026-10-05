@@ -286,7 +286,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 py-3 px-0 [&_input]:w-5 [&_input]:h-5 [&_input]:min-w-5 [&_input]:min-h-5 [&_input]:accent-[#5b8def] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:rounded [&_input]:border-white/20">
+        <div className="flex items-center gap-3 py-3 px-0 [&_input]:w-5 [&_input]:h-5 [&_input]:min-w-5 [&_input]:min-h-5 [&_input]:accent-[var(--color-app-accent)] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:rounded [&_input]:border-white/20">
           <input
             type="checkbox"
             id="field_is_simulated_payment"
