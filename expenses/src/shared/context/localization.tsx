@@ -166,6 +166,7 @@ const translations = {
     'profile.chartsVisible': 'Visible',
     'profile.chartsHidden': 'Hidden',
     'profile.chartsDragHint': 'Drag to reorder or move between sections.',
+    'profile.chartsCustomize': 'Customize charts',
     'profile.chartsDropHere': 'Drop charts here',
     'profile.chartsAllVisible': 'All charts visible',
     'profile.chartsMoveToHidden': 'Move to Hidden',
@@ -174,12 +175,6 @@ const translations = {
     'profile.signOut': 'Sign Out',
 
     // Settings (UI branch)
-    'settings.display': 'Display',
-    'settings.compactDensity': 'Compact list',
-    'settings.compactDensityDesc': 'Reduce spacing in transaction lists',
-    'settings.categoryIcons': 'Category icons',
-    'settings.categoryIconsDesc': 'Show colored icons for categories',
-
     'theme.default': 'Default',
     'theme.navy': 'Navy',
     'theme.teal': 'Teal',
@@ -754,6 +749,7 @@ const translations = {
     'profile.chartsVisible': 'Vizibile',
     'profile.chartsHidden': 'Ascunse',
     'profile.chartsDragHint': 'Trage pentru a reordona sau muta între secțiuni.',
+    'profile.chartsCustomize': 'Personalizează graficele',
     'profile.chartsDropHere': 'Trage graficele aici',
     'profile.chartsAllVisible': 'Toate graficele sunt vizibile',
     'profile.chartsMoveToHidden': 'Mută la Ascunse',
@@ -762,12 +758,6 @@ const translations = {
     'profile.signOut': 'Deconectare',
 
     // Settings (UI branch)
-    'settings.display': 'Afișare',
-    'settings.compactDensity': 'Listă compactă',
-    'settings.compactDensityDesc': 'Reduce spațiul în listele de tranzacții',
-    'settings.categoryIcons': 'Iconițe categorii',
-    'settings.categoryIconsDesc': 'Arată iconițe colorate pentru categorii',
-
     'theme.default': 'Implicit',
     'theme.navy': 'Marini',
     'theme.teal': 'Turcoaz',

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useExpenseData } from '@stores/expenseStore';
 import { useLocalization } from '@shared/context/localization';
-import { availableCharts } from '@shared/utils/constants';
+import { getEffectiveVisibleCharts } from '@shared/utils/chartsVisibility';
 import { getCategories } from '@shared/utils/constants';
 import TransactionFilters, { DateRangeValue } from '@features/expenses/components/Home/TransactionFilters';
 import VaulDrawer from '@shared/components/VaulDrawer';
@@ -66,15 +66,7 @@ const Charts = () => {
 
   // Load visible charts from localStorage
   useEffect(() => {
-    let storedCharts: string[] =
-      JSON.parse(localStorage.getItem('visibleCharts') || 'null') ||
-      availableCharts;
-
-    // Remove removed chart(s) from persisted list
-    storedCharts = storedCharts.filter((c) => c !== 'AllTimeSpendings');
-
-    setVisibleCharts(storedCharts);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setVisibleCharts(getEffectiveVisibleCharts());
   }, []);
 
   // Update filters in context

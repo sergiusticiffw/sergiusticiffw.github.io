@@ -11,10 +11,6 @@ import TagDisplay from '@shared/components/Common/TagDisplay';
 import useSwipeActions from '@shared/hooks/useSwipeActions';
 import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
 import { isDesktopLayout } from '@shared/utils/isDesktopLayout';
-import {
-  useShowCategoryIcons,
-  useCompactListDensity,
-} from '@stores/settingsStore';
 import { CategoryIcon, cn } from '@shared/ui';
 import {
   FiEdit2,
@@ -36,7 +32,6 @@ export interface TransactionRow {
 export interface TransactionsListProps {
   variant?: 'expense' | 'income' | 'payment';
   transactions: TransactionRow[];
-  categoryLabels?: Array<{ value: string; label: string }>;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   pendingSyncIds?: Record<string, true>;
@@ -57,7 +52,6 @@ type SortDirection = 'asc' | 'desc';
 function TransactionsList({
   variant = 'expense',
   transactions,
-  categoryLabels = [],
   onEdit,
   onDelete,
   pendingSyncIds,
@@ -75,9 +69,6 @@ function TransactionsList({
     useState<SortDirection>(initialSortDirection);
   const { language, t } = useLocalization();
   const isDesktop = isDesktopLayout();
-  const showCategoryIcons = useShowCategoryIcons();
-  const compact = useCompactListDensity();
-
   // Keep internal sort state aligned with prop-driven defaults (optional).
   useEffect(() => {
     setSortField(initialSortField);
@@ -95,9 +86,6 @@ function TransactionsList({
     editVisible,
     swipedItemId,
   } = useSwipeActions();
-
-  const getCategoryLabel = (catValue?: string) =>
-    categoryLabels.find((cat) => cat.value === catValue)?.label || catValue || '';
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -200,7 +188,6 @@ function TransactionsList({
     'p-1.5 rounded-md text-app-muted/70 hover:text-app-primary hover:bg-app-surface-hover transition-colors [&_svg]:w-4 [&_svg]:h-4';
 
   const renderRow = (transaction: TransactionRow) => {
-    const categoryLabel = getCategoryLabel(transaction.cat);
     const date = new Date(transaction.dt);
     const day = date.getDate();
     const locale = getLocale(language);
@@ -264,7 +251,7 @@ function TransactionsList({
             'bg-app-surface border border-white/8 rounded-2xl flex items-start gap-3 cursor-pointer transition-all duration-200 relative z-[1] w-full touch-pan-y',
             'shadow-[0_8px_28px_rgba(0,0,0,0.28)]',
             'hover:bg-app-surface-hover hover:border-[var(--color-border-accent)] hover:shadow-[0_10px_32px_rgba(0,0,0,0.34)] active:scale-[0.99] motion-safe',
-            compact ? 'p-2.5' : 'p-3 sm:p-4'
+            'p-3 sm:p-4'
           )}
           style={{ touchAction: 'pan-y pan-x pinch-zoom' }}
           onTouchStart={
@@ -297,11 +284,8 @@ function TransactionsList({
             </div>
           )}
 
-          {variant === 'expense' && showCategoryIcons && (
-            <CategoryIcon
-              categoryId={transaction.cat}
-              size={compact ? 'sm' : 'md'}
-            />
+          {variant === 'expense' && (
+            <CategoryIcon categoryId={transaction.cat} size="md" />
           )}
 
           <div className="flex-1 min-w-0">
@@ -351,17 +335,6 @@ function TransactionsList({
                     }}
                   />
                 </div>
-                {variant === 'expense' && !showCategoryIcons && categoryLabel && (
-                  <p
-                    className={cn(
-                      'text-app-muted m-0 mt-0.5 truncate',
-                      compact ? 'text-[0.72rem] leading-4' : 'text-micro',
-                      'normal-case tracking-normal'
-                    )}
-                  >
-                    {categoryLabel}
-                  </p>
-                )}
               </>
             )}
           </div>
@@ -370,7 +343,7 @@ function TransactionsList({
             <div
               className={cn(
                 'font-bold tabular-nums whitespace-nowrap flex items-center gap-1',
-                compact ? 'text-[0.92rem]' : 'text-[0.95rem] sm:text-base',
+                'text-[0.95rem] sm:text-base',
                 amountClass
               )}
             >

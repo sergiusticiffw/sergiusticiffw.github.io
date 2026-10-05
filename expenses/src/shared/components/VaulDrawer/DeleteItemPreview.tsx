@@ -5,14 +5,9 @@ import {
   getLocale,
   getSuggestionTranslationKey,
 } from '@shared/utils/utils';
-import {
-  getCategories,
-  getSuggestions,
-  incomeSuggestions,
-} from '@shared/utils/constants';
+import { getSuggestions, incomeSuggestions } from '@shared/utils/constants';
 import { normalizeTag } from '@shared/hooks/useTags';
 import TagDisplay from '@shared/components/Common/TagDisplay';
-import { useShowCategoryIcons } from '@stores/settingsStore';
 import { CategoryIcon, cn } from '@shared/ui';
 
 export interface DeleteItemPreviewProps {
@@ -33,8 +28,6 @@ const DeleteItemPreview: React.FC<DeleteItemPreviewProps> = ({
   badge,
 }) => {
   const { language, t } = useLocalization();
-  const categories = getCategories();
-  const showCategoryIcons = useShowCategoryIcons();
   const isPlain = variant === 'payment' || variant === 'loan';
 
   const date = new Date(dt);
@@ -46,11 +39,7 @@ const DeleteItemPreview: React.FC<DeleteItemPreviewProps> = ({
     : '';
   const year = hasValidDate ? date.getFullYear() : '';
 
-  const showIcon = variant === 'expense' && showCategoryIcons;
-  const categoryLabel =
-    variant === 'expense' && !showIcon
-      ? categories.find((c) => c.value === cat)?.label || ''
-      : '';
+  const showIcon = variant === 'expense';
 
   const suggestions =
     variant === 'income'
@@ -104,11 +93,6 @@ const DeleteItemPreview: React.FC<DeleteItemPreviewProps> = ({
             />
           )}
         </div>
-        {categoryLabel && (
-          <p className="m-0 mt-0.5 truncate text-micro text-app-muted normal-case tracking-normal">
-            {categoryLabel}
-          </p>
-        )}
       </div>
 
       <div

@@ -6,12 +6,7 @@ import {
   setSettingsCurrency,
   useSettingsTheme,
   setSettingsTheme,
-  useCompactListDensity,
-  setCompactListDensity,
-  useShowCategoryIcons,
-  setShowCategoryIcons,
 } from '@stores/settingsStore';
-import { SettingsSection } from '@shared/ui';
 import { APP_THEMES } from '@shared/constants/themes';
 import { useNotification } from '@shared/context/notification';
 import { useLocalization } from '@shared/context/localization';
@@ -25,6 +20,13 @@ import {
   availableCharts,
   currencies,
 } from '@shared/utils/constants';
+import {
+  readCustomChartsEnabled,
+  readStoredVisibleCharts,
+  writeCustomChartsEnabled,
+  writeStoredVisibleCharts,
+} from '@shared/utils/chartsVisibility';
+import { Switch } from '@shared/ui';
 import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 import { googleLogout } from '@react-oauth/google';
 
@@ -36,12 +38,12 @@ const Profile = () => {
   const { userDetails, token } = useAuthState();
   const currency = useSettingsCurrency();
   const currentTheme = useSettingsTheme();
-  const compactListDensity = useCompactListDensity();
-  const showCategoryIcons = useShowCategoryIcons();
-  const [state, setState] = useState({
-    visibleCharts:
-      JSON.parse(localStorage.getItem('visibleCharts')) || availableCharts,
-  });
+  const [state, setState] = useState(() => ({
+    visibleCharts: readStoredVisibleCharts(),
+  }));
+  const [customChartsEnabled, setCustomChartsEnabled] = useState(
+    readCustomChartsEnabled
+  );
   const [chartsAccordionOpen, setChartsAccordionOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -106,8 +108,12 @@ const Profile = () => {
   const [blink, setBlink] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('visibleCharts', JSON.stringify(state.visibleCharts));
+    writeStoredVisibleCharts(state.visibleCharts);
   }, [state.visibleCharts]);
+
+  useEffect(() => {
+    writeCustomChartsEnabled(customChartsEnabled);
+  }, [customChartsEnabled]);
 
   const visibleChartsOrdered = state.visibleCharts.filter((c) =>
     availableCharts.includes(c)
@@ -196,34 +202,6 @@ const Profile = () => {
           </div>
         </div>
 
-        <SettingsSection
-          title={t('settings.display')}
-          description={t('settings.compactDensityDesc')}
-        >
-          <div className="flex flex-col gap-3">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={compactListDensity}
-                onChange={(e) => setCompactListDensity(e.target.checked)}
-              />
-              <span className="text-body text-app-secondary">
-                {t('settings.compactDensity')}
-              </span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showCategoryIcons}
-                onChange={(e) => setShowCategoryIcons(e.target.checked)}
-              />
-              <span className="text-body text-app-secondary">
-                {t('settings.categoryIcons')}
-              </span>
-            </label>
-          </div>
-        </SettingsSection>
-
         {/* Language & Currency Settings */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
           <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
@@ -295,15 +273,32 @@ const Profile = () => {
                 <h4 className="text-xs font-semibold text-app-muted m-0 mb-3 md:mb-2.5 uppercase tracking-wider">
                   {t('profile.chartsVisibility')}
                 </h4>
-                <p className="text-xs text-app-muted mb-3">
-                  {t('profile.chartsDragHint')}
-                </p>
-                <ChartsVisibilityDnd
-                  visibleCharts={visibleChartsOrdered}
-                  hiddenCharts={hiddenChartsOrdered}
-                  onVisibleChartsChange={handleVisibleChartsChange}
-                  t={t}
-                />
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <span
+                    id="charts-customize-label"
+                    className="text-body text-app-secondary"
+                  >
+                    {t('profile.chartsCustomize')}
+                  </span>
+                  <Switch
+                    checked={customChartsEnabled}
+                    onCheckedChange={setCustomChartsEnabled}
+                    aria-labelledby="charts-customize-label"
+                  />
+                </div>
+                {customChartsEnabled && (
+                  <>
+                    <p className="text-xs text-app-muted mb-3">
+                      {t('profile.chartsDragHint')}
+                    </p>
+                    <ChartsVisibilityDnd
+                      visibleCharts={visibleChartsOrdered}
+                      hiddenCharts={hiddenChartsOrdered}
+                      onVisibleChartsChange={handleVisibleChartsChange}
+                      t={t}
+                    />
+                  </>
+                )}
               </div>
             </div>
           )}

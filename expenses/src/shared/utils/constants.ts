@@ -337,3 +337,9 @@ export const availableCharts = [
   'LastTwoMonthsAverage',
   'SavingsHistory',
 ];
+
+export const defaultVisibleCharts = [
+  'MonthlyTotals',
+  'YearAverageTrend',
+  'LastTwoMonthsAverage',
+];

@@ -10,3 +10,5 @@ export { CategoryIcon } from './CategoryIcon';
 export type { CategoryIconProps } from './CategoryIcon';
 export { SettingsSection } from './SettingsSection';
 export type { SettingsSectionProps } from './SettingsSection';
+export { Switch } from './Switch';
+export type { SwitchProps } from './Switch';

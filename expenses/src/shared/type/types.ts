@@ -212,7 +212,5 @@ export type LoanAction = {
 export interface SettingsState {
   currency: string;
   theme: string;
-  compactListDensity: boolean;
-  showCategoryIcons: boolean;
   onboardingComplete: boolean;
 }

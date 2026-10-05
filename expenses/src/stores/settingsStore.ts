@@ -6,8 +6,6 @@ import type { SettingsState } from '@shared/type/types';
 import { DEFAULT_THEME_ID, normalizeThemeId } from '@shared/constants/themes';
 
 const THEME_KEY = 'theme';
-const COMPACT_DENSITY_KEY = 'compactListDensity';
-const CATEGORY_ICONS_KEY = 'showCategoryIcons';
 const ONBOARDING_KEY = 'onboardingComplete';
 
 function readJson<T>(key: string, fallback: T): T {
@@ -32,8 +30,6 @@ function readTheme(): string {
 const initialState: SettingsState = {
   currency: 'MDL',
   theme: readTheme(),
-  compactListDensity: readJson(COMPACT_DENSITY_KEY, false),
-  showCategoryIcons: readJson(CATEGORY_ICONS_KEY, true),
   onboardingComplete: readJson(ONBOARDING_KEY, false),
 };
 
@@ -51,14 +47,6 @@ export function useSettingsTheme(): string {
   return useStore(settingsStore, (s) => s.theme);
 }
 
-export function useCompactListDensity(): boolean {
-  return useStore(settingsStore, (s) => s.compactListDensity);
-}
-
-export function useShowCategoryIcons(): boolean {
-  return useStore(settingsStore, (s) => s.showCategoryIcons);
-}
-
 export function useOnboardingComplete(): boolean {
   return useStore(settingsStore, (s) => s.onboardingComplete);
 }
@@ -74,16 +62,6 @@ export function setSettingsCurrency(currency: string): void {
 export function setSettingsTheme(theme: string): void {
   localStorage.setItem(THEME_KEY, JSON.stringify(theme));
   settingsStore.setState((s) => ({ ...s, theme }));
-}
-
-export function setCompactListDensity(value: boolean): void {
-  persist(COMPACT_DENSITY_KEY, value);
-  settingsStore.setState((s) => ({ ...s, compactListDensity: value }));
-}
-
-export function setShowCategoryIcons(value: boolean): void {
-  persist(CATEGORY_ICONS_KEY, value);
-  settingsStore.setState((s) => ({ ...s, showCategoryIcons: value }));
 }
 
 export function setOnboardingComplete(value: boolean): void {

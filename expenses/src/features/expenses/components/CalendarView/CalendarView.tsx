@@ -21,7 +21,6 @@ interface Transaction {
 interface CalendarViewProps {
   transactions: Transaction[];
   currentMonth: string;
-  categoryLabels?: Array<{ value: string; label: string }>;
   variant?: 'expense' | 'income';
   changedItems?: Record<string, unknown>;
   onClearChangedItem?: (id: string) => void;
@@ -34,7 +33,6 @@ interface CalendarViewProps {
 const CalendarView: React.FC<CalendarViewProps> = ({
   transactions,
   currentMonth,
-  categoryLabels = [],
   variant = 'expense',
   changedItems,
   onClearChangedItem,
@@ -303,7 +301,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
               cat: tx.cat,
               dt: tx.dt,
             }))}
-            categoryLabels={categoryLabels}
             pendingSyncIds={pendingSyncIds}
             changedItems={changedItems as Record<string, { type?: string }>}
             groupByDay={false}

@@ -14,7 +14,6 @@ import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import TransactionFilters, { DateRangeValue } from '@features/expenses/components/Home/TransactionFilters';
 import { TransactionsList } from '@shared/components/TransactionsList';
 import { HeroSpendCard } from '@shared/components/HeroSpendCard';
-import { Stat, StatsRow } from '@shared/ui';
 import CalendarView from '@features/expenses/components/CalendarView';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionForm from '@features/expenses/components/TransactionForm';
@@ -23,6 +22,8 @@ import {
   LoadingSpinner,
   DeleteConfirmDrawer,
   NoData,
+  StatCard,
+  StatsGrid,
 } from '@shared/components/Common';
 import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils/layoutClasses';
 import {
@@ -436,22 +437,20 @@ const NewHome = () => {
           </div>
 
           {!hasFilters && (
-            <StatsRow className="sm:grid-cols-2">
-              <Stat
-                label={t('common.income')}
-                value={formatNumber(displayIncome)}
+            <StatsGrid columns={2} filtered={false}>
+              <StatCard
                 icon={<FiBriefcase />}
-                compact
+                value={formatNumber(displayIncome)}
+                label={t('common.income')}
               />
-              <Stat
-                label={t('common.profit')}
-                value={formatNumber(displayProfit)}
+              <StatCard
                 icon={
                   displayProfit >= 0 ? <FiTrendingUp /> : <FiTrendingDown />
                 }
-                compact
+                value={formatNumber(displayProfit)}
+                label={t('common.profit')}
               />
-            </StatsRow>
+            </StatsGrid>
           )}
 
           {/* Search / filters — before view tabs */}
@@ -536,7 +535,6 @@ const NewHome = () => {
                   ...tx,
                   dsc: tx.dsc ?? '',
                 }))}
-                categoryLabels={localizedCategories}
                 pendingSyncIds={pendingSyncIds}
                 onEdit={handleEdit}
                 onDelete={(id) => setShowDeleteModal(id)}
@@ -548,7 +546,6 @@ const NewHome = () => {
               <CalendarView
                 transactions={filteredTransactions}
                 currentMonth={currentMonth}
-                categoryLabels={localizedCategories}
                 pendingSyncIds={pendingSyncIds}
                 onMonthChange={(direction) => {
                   if (
