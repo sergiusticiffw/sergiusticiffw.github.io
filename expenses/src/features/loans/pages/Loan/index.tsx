@@ -374,14 +374,27 @@ const Loan: React.FC = () => {
     (paydown?.unpaid_interest ?? 0) +
     (paydown?.sum_of_fees ?? 0);
 
+  // Progress excludes fees (both paid single fees and expected fees).
+  const installmentsPaidAmount =
+    filteredData?.data
+      ?.filter((item) => Number(item.fisp ?? 0) === 0)
+      .reduce(
+        (sum: number, item: ApiPaymentItem) =>
+          sum + (parseFloat(String(item.fpi ?? '0')) || 0),
+        0
+      ) ?? 0;
+  const totalInstallmentsWithoutFees =
+    totalInstallments - (paydown?.sum_of_fees ?? 0);
+
   const calculateProgress = () => {
     if (loanStatus === 'completed') return 100;
     if (loanStatus === 'pending') return 0;
     if (!loan.fp || !paydown) return 0;
 
-    if (totalInstallments === 0) return 0;
+    if (totalInstallmentsWithoutFees <= 0) return 0;
 
-    const progressValue = ((totalPaidAmount ?? 0) / totalInstallments) * 100;
+    const progressValue =
+      (installmentsPaidAmount / totalInstallmentsWithoutFees) * 100;
 
     return Math.max(0, Math.min(progressValue, 100));
   };

@@ -42,6 +42,12 @@ type PaydownTotals = {
   sum_of_fees?: number;
 };
 
+type LoanAmortizationEntry = {
+  paydown: PaydownTotals;
+  totalPaidAmount: number;
+  installmentsPaidAmount?: number;
+};
+
 const Loans: FC = () => {
   const { data, dataDispatch } = useLoan();
   const { token } = useAuthState();
@@ -108,9 +114,7 @@ const Loans: FC = () => {
 
   const getLoanStatusForLoan = (loan: ApiLoan) => getLoanStatus(loan?.fls);
 
-  const paydownCacheRef = useRef(
-    new Map<string, { paydown: PaydownTotals; totalPaidAmount: number }>()
-  );
+  const paydownCacheRef = useRef(new Map<string, LoanAmortizationEntry>());
 
   const hashString = (input: string): string => {
     // djb2
@@ -135,10 +139,7 @@ const Loans: FC = () => {
   };
 
   const amortizationByLoanId = useMemo(() => {
-    const map = new Map<
-      string,
-      { paydown: PaydownTotals; totalPaidAmount: number }
-    >();
+    const map = new Map<string, LoanAmortizationEntry>();
     if (!loans?.length || !payments?.length) return map;
     const paymentsList = payments as LoanPaymentsEntry[];
     for (const loan of loans as ApiLoan[]) {
@@ -167,13 +168,14 @@ const Loans: FC = () => {
       const paymentItems = filteredData.data as ApiPaymentItem[];
       const events = buildEventsFromApiPayments(paymentItems);
       // Same rule as the loan detail page: real (non-simulated) payments, installment + single fee.
-      const totalPaidAmount = paymentItems
-        .filter((item) => Number(item.fisp ?? 0) === 0)
-        .reduce((sum: number, item: ApiPaymentItem) => {
-          const installment = parseFloat(String(item.fpi ?? '0')) || 0;
-          const singleFee = parseFloat(String(item.fpsf ?? '0')) || 0;
-          return sum + installment + singleFee;
-        }, 0);
+      let installmentsPaidAmount = 0;
+      let singleFeesPaidAmount = 0;
+      for (const item of paymentItems) {
+        if (Number(item.fisp ?? 0) !== 0) continue;
+        installmentsPaidAmount += parseFloat(String(item.fpi ?? '0')) || 0;
+        singleFeesPaidAmount += parseFloat(String(item.fpsf ?? '0')) || 0;
+      }
+      const totalPaidAmount = installmentsPaidAmount + singleFeesPaidAmount;
 
       const loanKey = hashString(
         [
@@ -210,7 +212,7 @@ const Loans: FC = () => {
 
       try {
         const result = calculatePaydownOnly(loanData, events);
-        const entry = {
+        const entry: LoanAmortizationEntry = {
           paydown: {
             sum_of_installments: result.sum_of_installments ?? 0,
             remaining_principal: result.remaining_principal ?? 0,
@@ -218,6 +220,7 @@ const Loans: FC = () => {
             sum_of_fees: result.sum_of_fees ?? 0,
           },
           totalPaidAmount,
+          installmentsPaidAmount,
         };
         map.set(loan.id, entry);
         paydownCacheRef.current.set(cacheKey, entry);
@@ -234,16 +237,16 @@ const Loans: FC = () => {
     if (status === 'pending') return 0;
     const entry = amortizationByLoanId.get(loan.id);
     if (!entry) return 0;
-    const { paydown, totalPaidAmount } = entry;
+    const { paydown, installmentsPaidAmount = 0 } = entry;
+    // Progress excludes fees (both paid single fees and expected fees).
     const totalInstallments =
       (paydown.sum_of_installments ?? 0) +
       (paydown.remaining_principal ?? 0) +
-      (paydown.unpaid_interest ?? 0) +
-      (paydown.sum_of_fees ?? 0);
-    if (totalInstallments === 0) return 0;
+      (paydown.unpaid_interest ?? 0);
+    if (totalInstallments <= 0) return 0;
     return Math.max(
       0,
-      Math.min(100, (totalPaidAmount / totalInstallments) * 100)
+      Math.min(100, (installmentsPaidAmount / totalInstallments) * 100)
     );
   };
 
