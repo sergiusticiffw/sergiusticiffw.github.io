@@ -196,13 +196,12 @@ export function calculateInterestSavings(
 
   const interestWithExtra = withExtra.sum_of_interests ?? 0;
   const interestWithoutExtra = withoutExtra.sum_of_interests ?? 0;
-  let savings = Math.max(0, interestWithoutExtra - interestWithExtra);
+  const savings = interestWithoutExtra - interestWithExtra;
 
-  if (savings > interestWithExtra * 10) {
-    savings = 0;
-  }
+  if (!Number.isFinite(savings) || savings <= 0) return 0;
 
-  return savings;
+  // Paying off early can save almost all interest, but never more than 100% of it.
+  return Math.min(savings, interestWithoutExtra);
 }
 
 export const REGULAR_PAYMENT_TITLE = 'Regular' as const;
