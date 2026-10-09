@@ -1,5 +1,21 @@
 import type { DataPrompt, PromptKind } from './dataPrompts';
 
+const LOAN_SIMULATION_PROMPTS = [
+  'Cât timp am economisit din perioada creditului datorită plăților anticipate?',
+  'Cu cât mi-a scăzut dobânda totală datorită plăților anticipate?',
+  'Care plată anticipată a avut cel mai mare efect?',
+  'Dacă plătesc 1.000 în plus la fiecare rată, când termin creditul?',
+  'Cât trebuie să plătesc în plus lunar ca să închid creditul cu 5 ani mai devreme?',
+  'Ce sumă trebuie să rambursez anticipat ca rata să scadă cu 20%?',
+  'Ce se întâmplă dacă dobânda crește cu 2 puncte procentuale?',
+  'Merită să refinanțez la o dobândă cu 1% mai mică, cu un comision de 5.000?',
+  'Mai bine rambursez anticipat sau pun banii la depozit cu 6%?',
+  'Cât dobândă voi plăti în fiecare an până la final?',
+  'De când începe principalul să fie mai mare decât dobânda în rată?',
+  'Când ajung să am jumătate din credit achitat?',
+  'E mai bine să reduc perioada sau rata la o plată anticipată?',
+];
+
 export const SUGGESTED_PROMPTS = [
   // Current month
   'Cum arată luna curentă față de media mea?',
@@ -190,6 +206,7 @@ export const SUGGESTED_PROMPTS = [
   'Cum s-ar schimba rata dacă aș rambursa 10.000 acum?',
   'Cât dobândă plătesc anul acesta la toate creditele?',
   'Ratele mele cresc sau scad în timp?',
+  ...LOAN_SIMULATION_PROMPTS,
 ];
 
 const shuffle = <T,>(list: T[]): T[] => {
@@ -235,6 +252,7 @@ const LOAN_GENERIC = new Set([
   'Cum s-ar schimba rata dacă aș rambursa 10.000 acum?',
   'Cât dobândă plătesc anul acesta la toate creditele?',
   'Ratele mele cresc sau scad în timp?',
+  ...LOAN_SIMULATION_PROMPTS,
 ]);
 
 const INCOME_GENERIC = new Set([

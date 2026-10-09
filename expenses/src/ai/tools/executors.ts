@@ -18,12 +18,15 @@ import {
   formatLoansSummary,
   LOAN_EVENT_COLUMNS,
 } from '../loans';
+import type { LoanSource } from '../loanScenarios';
+import { LOAN_TOOL_LABELS, loanToolExecutors } from './loanTools';
 
 export interface ToolContext {
   items: AiItem[];
   shareDescriptions: boolean;
   loans: AiLoanSnapshot[];
   loanPayments: AiLoanPayment[];
+  loanSources: Map<string, LoanSource>;
 }
 
 type Args = Record<string, any>;
@@ -290,6 +293,8 @@ const loanDetail = (ctx: ToolContext, args: Args) => {
     nextDate: loan.nextDate || null,
     nextInstallment: loan.nextInstallment || null,
     interestSavedByExtraPayments: loan.interestSaved,
+    projectedPayoff: loan.projectedEnd || null,
+    monthsAheadOfContract: loan.monthsAheadOfContract,
     upcomingColumns: 'date|installment|principal|interest|remaining principal',
     upcoming: loan.upcoming
       .map(
@@ -348,6 +353,7 @@ const executors: Record<string, (ctx: ToolContext, args: Args) => Record<string,
       : { loans: 0 },
   get_loan_detail: loanDetail,
   query_loan_payments: queryLoanPayments,
+  ...loanToolExecutors,
 };
 
 export const executeTool = (name: string, args: Args | undefined, ctx: ToolContext) => {
@@ -368,4 +374,5 @@ export const TOOL_LABELS: Record<string, string> = {
   list_loans: 'Reviewing loans',
   get_loan_detail: 'Reading the loan',
   query_loan_payments: 'Looking up loan payments',
+  ...LOAN_TOOL_LABELS,
 };

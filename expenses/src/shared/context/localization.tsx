@@ -231,6 +231,14 @@ const translations = {
     'assistant.reviewingLoans': 'Reviewing loans',
     'assistant.readingLoan': 'Reading the loan',
     'assistant.loanPayments': 'Looking up loan payments',
+    'assistant.simulatingExtra': 'Simulating an extra payment',
+    'assistant.extraImpact': 'Measuring your extra payments',
+    'assistant.simulatingRecurring': 'Simulating extra payments',
+    'assistant.solvingGoal': 'Calculating the amount needed',
+    'assistant.simulatingRate': 'Simulating a rate change',
+    'assistant.readingSchedule': 'Reading the payment schedule',
+    'assistant.comparingLoans': 'Comparing loans',
+    'assistant.prepayVsInvest': 'Comparing prepaying with investing',
 
     // Settings (UI branch)
     'theme.default': 'Default',
@@ -868,6 +876,14 @@ const translations = {
     'assistant.reviewingLoans': 'Mă uit la credite',
     'assistant.readingLoan': 'Citesc creditul',
     'assistant.loanPayments': 'Caut plățile la credit',
+    'assistant.simulatingExtra': 'Simulez plata anticipată',
+    'assistant.extraImpact': 'Calculez efectul plăților anticipate',
+    'assistant.simulatingRecurring': 'Simulez plățile suplimentare',
+    'assistant.solvingGoal': 'Calculez suma necesară',
+    'assistant.simulatingRate': 'Simulez schimbarea dobânzii',
+    'assistant.readingSchedule': 'Citesc graficul de plăți',
+    'assistant.comparingLoans': 'Compar creditele',
+    'assistant.prepayVsInvest': 'Compar rambursarea cu investiția',
 
     // Settings (UI branch)
     'theme.default': 'Implicit',

@@ -87,6 +87,7 @@ export function useAiChat(apiKey: string) {
         shareDescriptions,
         loans: loanContext.snapshots,
         loanPayments: loanContext.payments,
+        loanSources: loanContext.sources,
       };
 
       let previousText = '';

@@ -1,4 +1,5 @@
 import { GeminiFunctionDeclaration } from '../client';
+import { loanToolDeclarations } from './loanTools';
 
 const filterProperties = {
   kind: {
@@ -111,4 +112,5 @@ export const toolDeclarations: GeminiFunctionDeclaration[] = [
       },
     },
   },
+  ...loanToolDeclarations,
 ];

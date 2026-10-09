@@ -13,6 +13,7 @@ import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/ty
 import { getLoanStatus } from '@shared/utils/utils';
 import type { DataPrompt } from './dataPrompts';
 import { normalizeText, round } from './data';
+import { LoanSource, futureInterestOf, monthsBetween, payoffDateOf } from './loanScenarios';
 
 export interface AiLoanUpcoming {
   date: string;
@@ -66,6 +67,10 @@ export interface AiLoanSnapshot {
   nextDate: string;
   nextInstallment: number;
   interestSaved: number;
+  /** Payoff date in the current schedule (earlier than end after extra payments). */
+  projectedEnd: string;
+  /** Months between projectedEnd and the contract end. */
+  monthsAheadOfContract: number;
   upcoming: AiLoanUpcoming[];
 }
 
@@ -92,6 +97,8 @@ const cell = (value: number | string | undefined) =>
 export interface LoanAiContext {
   snapshots: AiLoanSnapshot[];
   payments: AiLoanPayment[];
+  /** Raw loan and payment records by loan id, for simulations. */
+  sources: Map<string, LoanSource>;
   summary: string;
 }
 
@@ -104,12 +111,14 @@ export function buildLoanContext(
   const entries = paymentEntries || [];
   const payments: AiLoanPayment[] = [];
   const snapshots: AiLoanSnapshot[] = [];
+  const sources = new Map<string, LoanSource>();
 
   for (const loan of list) {
     const name = cleanName(loan.title || 'Loan');
     const status = getLoanStatus(loan.fls as string | undefined);
     const items = (entries.find((entry) => entry.loanId === loan.id)?.data ||
       []) as ApiPaymentItem[];
+    sources.set(loan.id, { loan, items });
     let paidInstallments = 0;
     let paidFees = 0;
     for (const item of items) {
@@ -177,6 +186,8 @@ export function buildLoanContext(
       nextDate: '',
       nextInstallment: 0,
       interestSaved: 0,
+      projectedEnd: '',
+      monthsAheadOfContract: 0,
       upcoming: [],
     };
 
@@ -190,9 +201,11 @@ export function buildLoanContext(
             (paydown.sum_of_installments ?? 0) +
             (paydown.remaining_principal ?? 0) +
             (paydown.unpaid_interest ?? 0);
-          snapshot.remainingPrincipal = round(paydown.remaining_principal ?? 0);
+          snapshot.remainingPrincipal = round(
+            paydown.remaining_principal_after_paid ?? paydown.remaining_principal ?? 0
+          );
           snapshot.interestPaid = round(paydown.interest_paid ?? 0);
-          snapshot.unpaidInterest = round(paydown.unpaid_interest ?? 0);
+          snapshot.unpaidInterest = round(futureInterestOf(schedule));
           snapshot.progress =
             total > 0
               ? round(Math.min(100, (paidInstallments / total) * 100), 1)
@@ -216,6 +229,13 @@ export function buildLoanContext(
             }));
           const saved = calculateInterestSavings(loan, items);
           snapshot.interestSaved = Number.isFinite(saved) ? round(saved) : 0;
+          if (snapshot.end) {
+            snapshot.projectedEnd = payoffDateOf(schedule, snapshot.end);
+            snapshot.monthsAheadOfContract = Math.max(
+              0,
+              monthsBetween(snapshot.projectedEnd, snapshot.end)
+            );
+          }
         }
       } catch {
         snapshot.progress = 0;
@@ -229,6 +249,7 @@ export function buildLoanContext(
   return {
     snapshots,
     payments,
+    sources,
     summary: formatLoansSummary(snapshots, payments),
   };
 }
@@ -283,10 +304,10 @@ export function formatLoansSummary(
   const events = eventsForSummary(payments);
   const lines = [
     `LOANS ${snapshots.length} | remaining principal ${whole(remaining)} | next installments ${whole(next)}`,
-    'loan|status|start|end|principal|initial rate%|current rate%|method|payment day|initial fee|first payment|paid|remaining principal|interest paid|unpaid interest|next date|next installment|progress%',
+    'loan|status|start|end|projected payoff|principal|initial rate%|current rate%|method|payment day|initial fee|first payment|paid|remaining principal|interest paid|unpaid interest|next date|next installment|progress%',
     ...snapshots.map(
       (loan) =>
-        `${loan.name}|${loan.status}|${loan.start}|${loan.end}|${whole(loan.principal)}|${loan.rate}|${loan.currentRate}|${loan.method}|${loan.paymentDay || '-'}|${whole(loan.initialFee)}|${loan.firstPayment || '-'}|${whole(loan.paid)}|${whole(loan.remainingPrincipal)}|${whole(loan.interestPaid)}|${whole(loan.unpaidInterest)}|${loan.nextDate || '-'}|${whole(loan.nextInstallment)}|${loan.progress}`
+        `${loan.name}|${loan.status}|${loan.start}|${loan.end}|${loan.projectedEnd || '-'}|${whole(loan.principal)}|${loan.rate}|${loan.currentRate}|${loan.method}|${loan.paymentDay || '-'}|${whole(loan.initialFee)}|${loan.firstPayment || '-'}|${whole(loan.paid)}|${whole(loan.remainingPrincipal)}|${whole(loan.interestPaid)}|${whole(loan.unpaidInterest)}|${loan.nextDate || '-'}|${whole(loan.nextInstallment)}|${loan.progress}`
     ),
   ];
   if (events.length) {
@@ -310,6 +331,13 @@ const monthName = (date: string) => {
 };
 
 const fmt = (value: number) => Math.round(value).toLocaleString('ro-RO');
+
+/** Round to 2 significant digits so suggested amounts look natural (12.345 → 12.000). */
+const roundNice = (value: number) => {
+  if (value <= 0) return 0;
+  const step = 10 ** Math.max(0, Math.floor(Math.log10(value)) - 1);
+  return Math.round(value / step) * step;
+};
 
 export function buildLoanPrompts(snapshots: AiLoanSnapshot[]): DataPrompt[] {
   const active = snapshots.filter((loan) => loan.status === 'active');
@@ -350,6 +378,22 @@ export function buildLoanPrompts(snapshots: AiLoanSnapshot[]): DataPrompt[] {
         `${loan.name} e achitat în proporție de ${Math.round(loan.progress)}%. Cât mai durează în ritmul actual?`
       );
     }
+    if (loan.remainingPrincipal > 0) {
+      const lump = roundNice(loan.remainingPrincipal * 0.1);
+      add(`Cât aș salva la ${loan.name} dacă fac o plată anticipată de ${fmt(lump)}?`);
+      if (loan.nextInstallment > 0) {
+        add(
+          `Dacă la ${loan.name} plătesc ${fmt(roundNice(loan.nextInstallment * 0.25))} în plus la fiecare rată, cu cât termin mai repede?`
+        );
+      }
+      add(`Ce s-ar întâmpla cu rata la ${loan.name} dacă dobânda devine ${round(loan.currentRate + 1, 2)}%?`);
+    }
+    if (loan.interestSaved > 0 || loan.monthsAheadOfContract > 0) {
+      add(`Cât timp am câștigat la ${loan.name} datorită plăților anticipate?`);
+    }
+  }
+  if (active.length > 1 && remaining > 0) {
+    add(`Am ${fmt(roundNice(remaining * 0.05))} în plus. La care credit să-i pun ca să economisesc cel mai mult?`);
   }
   return prompts;
 }
