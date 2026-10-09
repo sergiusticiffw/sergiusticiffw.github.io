@@ -63,6 +63,14 @@ const ACTIVITY_KEYS: Record<string, string> = {
   'Reviewing loans': 'assistant.reviewingLoans',
   'Reading the loan': 'assistant.readingLoan',
   'Looking up loan payments': 'assistant.loanPayments',
+  'Simulating an extra payment': 'assistant.simulatingExtra',
+  'Measuring extra payments': 'assistant.extraImpact',
+  'Simulating extra payments': 'assistant.simulatingRecurring',
+  'Solving the loan goal': 'assistant.solvingGoal',
+  'Simulating a rate change': 'assistant.simulatingRate',
+  'Reading the schedule': 'assistant.readingSchedule',
+  'Comparing loans': 'assistant.comparingLoans',
+  'Comparing prepay and invest': 'assistant.prepayVsInvest',
 };
 
 const useOnline = () => {
