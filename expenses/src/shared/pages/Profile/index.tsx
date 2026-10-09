@@ -27,6 +27,7 @@ import {
   writeStoredVisibleCharts,
 } from '@shared/utils/chartsVisibility';
 import { Switch } from '@shared/ui';
+import AiSettings from '@features/assistant/components/AiSettings';
 import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 import { googleLogout } from '@react-oauth/google';
 
@@ -246,6 +247,8 @@ const Profile = () => {
             </select>
           </div>
         </div>
+
+        <AiSettings />
 
         {/* Charts Settings (accordion, closed by default) */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden md:rounded-[10px] transition-colors active:border-white/10">

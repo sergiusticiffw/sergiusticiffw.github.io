@@ -6,6 +6,7 @@ import {
   FiDollarSign,
   FiCreditCard,
   FiUser,
+  FiZap,
 } from 'react-icons/fi';
 import React, { useState } from 'react';
 
@@ -87,6 +88,16 @@ const Navbar = () => {
             className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiCreditCard />
+          </Link>
+        </li>
+        <li className="h-full flex-1 flex items-center justify-center">
+          <Link
+            to="/expenses/assistant"
+            title={t('nav.assistant')}
+            activeProps={{ className: 'active' }}
+            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+          >
+            <FiZap />
           </Link>
         </li>
         <li className="h-full flex-1 flex items-center justify-center">

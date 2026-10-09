@@ -2,6 +2,8 @@ import { LoginPayload, UserData } from '@shared/type/types';
 import { clearExpensesDB } from '@shared/utils/indexedDB';
 import { buildApiUrl } from '@shared/utils/utils';
 import { hydrateSettings } from '@stores/settingsStore';
+import { clearChatSession } from '../../ai/chatSession';
+import { clearAiLocalData } from '../../ai/storage';
 
 export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
   const requestOptions = {
@@ -37,6 +39,8 @@ export const logout = async (dispatch: any, dataDispatch: any) => {
   await dataDispatch({ type: 'REMOVE_DATA' });
   localStorage.removeItem('currentUser');
   localStorage.removeItem('token');
+  clearChatSession();
+  clearAiLocalData();
   // Clear IndexedDB cache on logout
   await clearExpensesDB();
 };

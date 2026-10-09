@@ -13,6 +13,7 @@ import Income from '@features/incomes/pages/Income';
 import Profile from '@shared/pages/Profile';
 
 const LazyCharts = lazy(() => import('@features/expenses/pages/LazyCharts'));
+const LazyAssistant = lazy(() => import('@features/assistant/pages/Assistant'));
 import Login from '@shared/pages/Login';
 import NewHome from '@features/expenses/pages/NewHome';
 import Loans from '@features/loans/pages/Loans';
@@ -96,6 +97,14 @@ const loanIdRoute = createRoute({
   component: Loan,
 });
 
+const assistantRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/expenses/assistant',
+  beforeLoad: requireAuth,
+  component: LazyAssistant,
+  pendingComponent: LoadingSpinner,
+});
+
 const userRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/expenses/user',
@@ -110,6 +119,7 @@ const routeTree = rootRoute.addChildren([
   incomeRoute,
   loansRoute,
   loanIdRoute,
+  assistantRoute,
   userRoute,
 ]);
 

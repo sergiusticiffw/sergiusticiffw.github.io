@@ -8,6 +8,7 @@
       "@features/expenses/*": ["src/features/expenses/*"],
       "@features/incomes/*": ["src/features/incomes/*"],
       "@features/loans/*": ["src/features/loans/*"],
+      "@features/assistant/*": ["src/features/assistant/*"],
       "@stores/*": ["src/stores/*"],
       "@router": ["src/router/index.tsx"]
     },
