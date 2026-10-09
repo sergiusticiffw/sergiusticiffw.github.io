@@ -7,6 +7,7 @@ import {
   isEarlyPaymentFromApiItem,
   scheduleDateToFormDate,
 } from '@features/loans/utils/amortization';
+import { getEffectiveRateFromSchedule } from '@features/loans/utils/loanSnapshot';
 import type { PaymentLog } from '@features/loans/utils/paydown-node';
 import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
 import { getLoanStatus } from '@shared/utils/utils';
@@ -27,7 +28,16 @@ export interface AiLoanPayment {
   date: string;
   installment: number;
   fee: number;
+  /** Set only when this event changes the interest rate. */
+  rate: number | null;
+  /** Set only when this event refinances the remaining principal. */
+  newPrincipal: number | null;
+  /** Set only when this event changes the recurring installment. */
+  recurring: number | null;
+  /** Set only when this event changes equal_installment / equal_principal. */
+  method: string;
   extra: boolean;
+  simulated: boolean;
   note: string;
 }
 
@@ -39,8 +49,14 @@ export interface AiLoanSnapshot {
   start: string;
   end: string;
   principal: number;
+  /** Rate on the loan contract. Later changes are events. */
   rate: number;
+  /** Rate in effect today, after rate-change events. */
+  currentRate: number;
   method: string;
+  paymentDay: string;
+  initialFee: number;
+  firstPayment: string;
   paid: number;
   remainingPrincipal: number;
   interestPaid: number;
@@ -94,14 +110,32 @@ export function buildLoanContext(
     const status = getLoanStatus(loan.fls as string | undefined);
     const items = (entries.find((entry) => entry.loanId === loan.id)?.data ||
       []) as ApiPaymentItem[];
-    const actual = items.filter((item) => Number(item.fisp ?? 0) === 0);
     let paidInstallments = 0;
     let paidFees = 0;
-    for (const item of actual) {
+    for (const item of items) {
+      const simulated = Number(item.fisp ?? 0) !== 0;
       const installment = amount(item.fpi);
       const fee = amount(item.fpsf);
-      paidInstallments += installment;
-      paidFees += fee;
+      const rate =
+        item.fr != null && item.fr !== '' ? round(amount(item.fr), 4) : null;
+      const newPrincipal =
+        item.fnp != null && item.fnp !== '' ? round(amount(item.fnp)) : null;
+      const recurring =
+        item.fnra != null && item.fnra !== '' ? round(amount(item.fnra)) : null;
+      const method =
+        item.fpm === 'equal_principal' || item.fpm === 'equal_installment'
+          ? item.fpm
+          : '';
+      const isChange =
+        rate != null || newPrincipal != null || recurring != null || method !== '';
+      const isMoney = installment > 0 || fee > 0;
+      // Simulated rows that only repeat the future schedule stay out of the event log.
+      if (simulated && !isChange) continue;
+      if (!isMoney && !isChange) continue;
+      if (!simulated) {
+        paidInstallments += installment;
+        paidFees += fee;
+      }
       const date = isoDate(item.fdt);
       if (date.length !== 10) continue;
       payments.push({
@@ -110,7 +144,12 @@ export function buildLoanContext(
         date,
         installment: round(installment),
         fee: round(fee),
+        rate,
+        newPrincipal,
+        recurring,
+        method,
         extra: isEarlyPaymentFromApiItem(item),
+        simulated,
         note: shareDescriptions ? cleanName(item.title || '') : '',
       });
     }
@@ -124,7 +163,11 @@ export function buildLoanContext(
       end: isoDate(loan.edt),
       principal: round(amount(loan.fp)),
       rate: round(amount(loan.fr), 4),
+      currentRate: round(amount(loan.fr), 4),
       method: methodLabel(loan.fpm),
+      paymentDay: loan.frpd == null || loan.frpd === '' ? '' : String(loan.frpd),
+      initialFee: round(amount(loan.fif)),
+      firstPayment: isoDate(loan.pdt),
       paid: round(paidInstallments + paidFees),
       remainingPrincipal: 0,
       interestPaid: 0,
@@ -154,6 +197,8 @@ export function buildLoanContext(
             total > 0
               ? round(Math.min(100, (paidInstallments / total) * 100), 1)
               : 0;
+          const effective = getEffectiveRateFromSchedule(schedule);
+          if (effective != null) snapshot.currentRate = round(effective, 4);
           const next = getNextRegularPayment(schedule);
           if (next) {
             snapshot.nextDate = scheduleDateToFormDate(next.date);
@@ -184,24 +229,74 @@ export function buildLoanContext(
   return {
     snapshots,
     payments,
-    summary: formatLoansSummary(snapshots),
+    summary: formatLoansSummary(snapshots, payments),
   };
 }
 
 const whole = (value: number) => Math.round(value);
 
-export function formatLoansSummary(snapshots: AiLoanSnapshot[]): string {
+const eventCell = (value: number) => (value > 0 ? String(whole(value)) : '-');
+
+export const LOAN_EVENT_COLUMNS =
+  'date|loan|installment|fee|rate%|new principal|new recurring|method|extra|planned|note';
+
+export const formatLoanEvent = (event: AiLoanPayment) =>
+  [
+    event.date,
+    event.loan,
+    eventCell(event.installment),
+    eventCell(event.fee),
+    event.rate == null ? '-' : String(event.rate),
+    event.newPrincipal == null ? '-' : String(whole(event.newPrincipal)),
+    event.recurring == null ? '-' : String(whole(event.recurring)),
+    event.method || '-',
+    event.extra ? 'extra' : '-',
+    event.simulated ? 'planned' : '-',
+    event.note || '-',
+  ].join('|');
+
+/** Keep every rate, principal, installment and method change. Drop only the oldest plain payments if the log is huge. */
+const eventsForSummary = (payments: AiLoanPayment[]) => {
+  const chronological = [...payments].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const limit = 400;
+  if (chronological.length <= limit) return chronological;
+  const isChange = (event: AiLoanPayment) =>
+    event.rate != null ||
+    event.newPrincipal != null ||
+    event.recurring != null ||
+    event.method !== '' ||
+    event.extra;
+  const changes = chronological.filter(isChange);
+  const room = Math.max(0, limit - changes.length);
+  const recentPayments = chronological.filter((event) => !isChange(event)).slice(-room);
+  const kept = new Set([...changes, ...recentPayments]);
+  return chronological.filter((event) => kept.has(event));
+};
+
+export function formatLoansSummary(
+  snapshots: AiLoanSnapshot[],
+  payments: AiLoanPayment[] = []
+): string {
   if (!snapshots.length) return '';
   const remaining = snapshots.reduce((sum, loan) => sum + loan.remainingPrincipal, 0);
   const next = snapshots.reduce((sum, loan) => sum + loan.nextInstallment, 0);
+  const events = eventsForSummary(payments);
   const lines = [
     `LOANS ${snapshots.length} | remaining principal ${whole(remaining)} | next installments ${whole(next)}`,
-    'loan|status|start|end|principal|rate%|method|paid|remaining principal|interest paid|unpaid interest|next date|next installment|progress%',
+    'loan|status|start|end|principal|initial rate%|current rate%|method|payment day|initial fee|first payment|paid|remaining principal|interest paid|unpaid interest|next date|next installment|progress%',
     ...snapshots.map(
       (loan) =>
-        `${loan.name}|${loan.status}|${loan.start}|${loan.end}|${whole(loan.principal)}|${loan.rate}|${loan.method}|${whole(loan.paid)}|${whole(loan.remainingPrincipal)}|${whole(loan.interestPaid)}|${whole(loan.unpaidInterest)}|${loan.nextDate || '-'}|${whole(loan.nextInstallment)}|${loan.progress}`
+        `${loan.name}|${loan.status}|${loan.start}|${loan.end}|${whole(loan.principal)}|${loan.rate}|${loan.currentRate}|${loan.method}|${loan.paymentDay || '-'}|${whole(loan.initialFee)}|${loan.firstPayment || '-'}|${whole(loan.paid)}|${whole(loan.remainingPrincipal)}|${whole(loan.interestPaid)}|${whole(loan.unpaidInterest)}|${loan.nextDate || '-'}|${whole(loan.nextInstallment)}|${loan.progress}`
     ),
   ];
+  if (events.length) {
+    lines.push(
+      '',
+      `LOAN EVENTS ${events.length}${events.length < payments.length ? ` of ${payments.length}` : ''} | ${LOAN_EVENT_COLUMNS}`,
+      'A value other than - is a change on that date. planned = not yet an actual payment. extra = payment before the schedule.',
+      ...events.map(formatLoanEvent)
+    );
+  }
   return lines.join('\n');
 }
 
@@ -220,36 +315,41 @@ export function buildLoanPrompts(snapshots: AiLoanSnapshot[]): DataPrompt[] {
   const active = snapshots.filter((loan) => loan.status === 'active');
   if (!active.length) return [];
   const prompts: DataPrompt[] = [];
-  const biggest = [...active].sort(
-    (a, b) => b.nextInstallment - a.nextInstallment
-  )[0];
-  if (biggest?.nextInstallment) {
-    prompts.push({
-      priority: 9,
-      kind: 'loan',
-      text: `Rata din ${monthName(biggest.nextDate)} la ${biggest.name} e ${fmt(biggest.nextInstallment)}. Cum se compară cu cheltuielile mele?`,
-    });
+  const add = (text: string) => prompts.push({ priority: 5, kind: 'loan', text });
+
+  const remaining = active.reduce((sum, loan) => sum + loan.remainingPrincipal, 0);
+  const next = active.reduce((sum, loan) => sum + loan.nextInstallment, 0);
+  if (active.length > 1 && next > 0) {
+    add(
+      `Pe toate creditele plătesc ${fmt(next)} luna asta și mai am ${fmt(remaining)} de dat. Care mă apasă cel mai tare?`
+    );
   }
-  if (active.length > 1) {
-    prompts.push({
-      priority: 8,
-      kind: 'loan',
-      text: 'La care credit plătesc cea mai mare rată și cât mai am de dat în total?',
-    });
-  } else {
-    prompts.push({
-      priority: 8,
-      kind: 'loan',
-      text: `Cât mai am de plătit la ${active[0].name} și când se termină?`,
-    });
-  }
-  const saved = active.find((loan) => loan.interestSaved > 0);
-  if (saved) {
-    prompts.push({
-      priority: 7,
-      kind: 'loan',
-      text: `Cât dobândă am economisit cu plățile anticipate la ${saved.name}?`,
-    });
+
+  for (const loan of active) {
+    if (loan.nextInstallment) {
+      add(
+        `Rata din ${monthName(loan.nextDate)} la ${loan.name} e ${fmt(loan.nextInstallment)}. Cum se compară cu cheltuielile mele?`
+      );
+    }
+    if (loan.remainingPrincipal > 0) {
+      const until = loan.end ? `, până în ${monthName(loan.end)}` : '';
+      add(`La ${loan.name} mai am ${fmt(loan.remainingPrincipal)} de plătit${until}. E un ritm bun?`);
+    }
+    if (loan.interestPaid > 0 || loan.unpaidInterest > 0) {
+      add(
+        `La ${loan.name} am plătit ${fmt(loan.interestPaid)} dobândă și mai urmează cam ${fmt(loan.unpaidInterest)}. Merită o plată anticipată?`
+      );
+    }
+    if (loan.interestSaved > 0) {
+      add(
+        `Cu plățile anticipate la ${loan.name} am economisit ${fmt(loan.interestSaved)} dobândă. Cât aș mai putea tăia?`
+      );
+    }
+    if (loan.progress > 0 && loan.progress < 100) {
+      add(
+        `${loan.name} e achitat în proporție de ${Math.round(loan.progress)}%. Cât mai durează în ritmul actual?`
+      );
+    }
   }
   return prompts;
 }

@@ -114,6 +114,82 @@ export const SUGGESTED_PROMPTS = [
   // Overview
   'Dă-mi o notă de la 1 la 10 pentru cum gestionez banii și explică de ce',
   'Ce tendință din cheltuielile mele ar trebui să mă îngrijoreze?',
+
+  // More expenses
+  'Cât am cheltuit în ultimele 30 de zile?',
+  'Compară ultimele 3 luni între ele',
+  'Ce categorie a scăzut cel mai mult anul acesta?',
+  'Cât cheltui pe utilități iarna față de vară?',
+  'Cât am dat pe familie în ultimul an?',
+  'Cât cheltui pe produse pentru casă, pe lună?',
+  'Care a fost cea mai scumpă săptămână din an?',
+  'Cât cheltui, în medie, într-o zi lucrătoare?',
+  'Ce categorie mi-a luat cel mai mult din buget în ultimul trimestru?',
+  'Cât ar însemna să reduc fiecare categorie cu 10%?',
+  'Ce buget să-mi pun pe luna viitoare, pe categorii?',
+  'În ce lună am făcut cele mai multe cumpărături?',
+  'Cât m-au costat sărbătorile anul trecut?',
+  'Cât cheltui pe transport față de mâncare?',
+  'Care e ziua din lună în care cheltui cel mai mult?',
+  'Am vreo categorie care s-a dublat în ultimul an?',
+  'Cât din cheltuieli sunt sume mici, sub 100?',
+  'Care lună a avut cele mai puține tranzacții?',
+  'Cât cheltui pe sănătate față de acum 2 ani?',
+  'Ce cheltuieli aș putea tăia fără să observ?',
+  'Cât m-au costat ieșirile în oraș în ultimele 6 luni?',
+  'Cheltuiesc mai mult în weekend sau în timpul săptămânii?',
+  'Cât am cheltuit pe cadouri de Crăciun, în fiecare an?',
+  'Care categorie îmi ia cel mai mult dintr-un salariu?',
+  'Cât de mult variază cheltuielile mele de la lună la lună?',
+  'Ce lună din an e, de obicei, cea mai liniștită?',
+  'Câte zile pe lună nu cheltui nimic?',
+  'Care sunt cheltuielile recurente pe care le pot renegocia?',
+  'Cât cheltui pe haine primăvara față de toamnă?',
+  'Cât am cheltuit pe investiții anul acesta?',
+
+  // More income
+  'Care lună a avut venitul cel mai mic?',
+  'Cât de stabil e venitul meu de la o lună la alta?',
+  'În ce an am câștigat cel mai mult?',
+  'Cât am pus deoparte, în medie, pe lună?',
+  'Venitul meu acoperă un fond de urgență de 3 luni?',
+  'Cum arată venitul din ultimele 3 luni față de anul trecut?',
+  'Ce sursă de venit a crescut cel mai mult?',
+  'Cât la sută din venit economisesc, de fapt?',
+  'Am luni fără niciun venit?',
+  'Dacă venitul rămâne la fel, cât pot pune deoparte anul viitor?',
+  'Care e diferența dintre luna cu cel mai mare și cel mai mic venit?',
+  'Cât din venit se duce pe cheltuieli fixe?',
+  'Veniturile ocazionale contează mult în total?',
+  'Cum a evoluat venitul mediu în ultimele 12 luni?',
+  'Cât ar trebui să câștig ca să economisesc 20%?',
+  'În ce trimestru câștig cel mai mult?',
+  'Venitul crește mai ales din salariu sau din alte surse?',
+  'Cât am câștigat anul acesta față de anul trecut?',
+  'Care e venitul meu mediu pe zi?',
+  'Dacă nu mai am venituri extra, îmi ajunge salariul?',
+
+  // More loans
+  'Cât dobândă mai am de plătit până la finalul creditelor?',
+  'Ce procent din venitul meu se duce pe rate?',
+  'Dacă plătesc o rată în plus pe an, cu cât termin mai repede?',
+  'Care credit are dobânda cea mai mare?',
+  'Cât am plătit deja în principal față de dobândă?',
+  'Cum arată progresul la fiecare credit?',
+  'Cât mă costă creditele pe an, în total?',
+  'Merită să refinanțez vreun credit?',
+  'Ce se întâmplă cu bugetul dacă rata crește cu 10%?',
+  'Cât din rata lunară e dobândă și cât e principal?',
+  'În ce lună am avut cea mai mare plată la credit?',
+  'Cât aș plăti în plus dacă prelungesc perioada?',
+  'Care e costul total al creditului, cu tot cu dobândă?',
+  'Câte rate mai am până se termină?',
+  'Am făcut plăți mai devreme decât scadența?',
+  'Cât rămâne de plătit peste un an, în ritmul actual?',
+  'Pe care credit ar trebui să pun banii în plus?',
+  'Cum s-ar schimba rata dacă aș rambursa 10.000 acum?',
+  'Cât dobândă plătesc anul acesta la toate creditele?',
+  'Ratele mele cresc sau scad în timp?',
 ];
 
 const shuffle = <T,>(list: T[]): T[] => {
@@ -139,6 +215,26 @@ const LOAN_GENERIC = new Set([
   'Cum arată ratele mele față de cheltuielile lunare?',
   'Cât plătesc pe lună la toate creditele?',
   'Când se termină creditul dacă păstrez ritmul actual?',
+  'Cât dobândă mai am de plătit până la finalul creditelor?',
+  'Ce procent din venitul meu se duce pe rate?',
+  'Dacă plătesc o rată în plus pe an, cu cât termin mai repede?',
+  'Care credit are dobânda cea mai mare?',
+  'Cât am plătit deja în principal față de dobândă?',
+  'Cum arată progresul la fiecare credit?',
+  'Cât mă costă creditele pe an, în total?',
+  'Merită să refinanțez vreun credit?',
+  'Ce se întâmplă cu bugetul dacă rata crește cu 10%?',
+  'Cât din rata lunară e dobândă și cât e principal?',
+  'În ce lună am avut cea mai mare plată la credit?',
+  'Cât aș plăti în plus dacă prelungesc perioada?',
+  'Care e costul total al creditului, cu tot cu dobândă?',
+  'Câte rate mai am până se termină?',
+  'Am făcut plăți mai devreme decât scadența?',
+  'Cât rămâne de plătit peste un an, în ritmul actual?',
+  'Pe care credit ar trebui să pun banii în plus?',
+  'Cum s-ar schimba rata dacă aș rambursa 10.000 acum?',
+  'Cât dobândă plătesc anul acesta la toate creditele?',
+  'Ratele mele cresc sau scad în timp?',
 ]);
 
 const INCOME_GENERIC = new Set([
@@ -152,6 +248,26 @@ const INCOME_GENERIC = new Set([
   'Ce s-ar întâmpla cu economiile mele dacă venitul scade cu 20%?',
   'Ce lună a fost cea mai echilibrată între venituri și cheltuieli?',
   'Am luni în care cheltui mult mai mult după ce primesc venitul?',
+  'Care lună a avut venitul cel mai mic?',
+  'Cât de stabil e venitul meu de la o lună la alta?',
+  'În ce an am câștigat cel mai mult?',
+  'Cât am pus deoparte, în medie, pe lună?',
+  'Venitul meu acoperă un fond de urgență de 3 luni?',
+  'Cum arată venitul din ultimele 3 luni față de anul trecut?',
+  'Ce sursă de venit a crescut cel mai mult?',
+  'Cât la sută din venit economisesc, de fapt?',
+  'Am luni fără niciun venit?',
+  'Dacă venitul rămâne la fel, cât pot pune deoparte anul viitor?',
+  'Care e diferența dintre luna cu cel mai mare și cel mai mic venit?',
+  'Cât din venit se duce pe cheltuieli fixe?',
+  'Veniturile ocazionale contează mult în total?',
+  'Cum a evoluat venitul mediu în ultimele 12 luni?',
+  'Cât ar trebui să câștig ca să economisesc 20%?',
+  'În ce trimestru câștig cel mai mult?',
+  'Venitul crește mai ales din salariu sau din alte surse?',
+  'Cât am câștigat anul acesta față de anul trecut?',
+  'Care e venitul meu mediu pe zi?',
+  'Dacă nu mai am venituri extra, îmi ajunge salariul?',
 ]);
 
 const genericKind = (text: string): PromptKind => {
@@ -160,58 +276,70 @@ const genericKind = (text: string): PromptKind => {
   return 'expense';
 };
 
-const ranked = (prompts: DataPrompt[]) =>
-  prompts
-    .map((prompt) => ({ prompt, score: prompt.priority + Math.random() * 2 }))
-    .sort((a, b) => b.score - a.score)
-    .map(({ prompt }) => prompt);
+const poolFor = (kind: PromptKind, dataPrompts: DataPrompt[]): SuggestedPrompt[] => {
+  const byText = new Map<string, SuggestedPrompt>();
+  for (const prompt of dataPrompts) {
+    if (prompt.kind === kind) byText.set(prompt.text, { text: prompt.text, personal: true, kind });
+  }
+  if (kind === 'loan' && !dataPrompts.some((prompt) => prompt.kind === 'loan')) return [];
+  for (const text of SUGGESTED_PROMPTS) {
+    if (genericKind(text) !== kind || byText.has(text)) continue;
+    byText.set(text, { text, personal: false, kind });
+  }
+  return shuffle([...byText.values()]);
+};
+
+const takeNext = (
+  pools: Map<PromptKind, SuggestedPrompt[]>,
+  order: PromptKind[],
+  blocked: Set<string>,
+  count: number,
+  picked: SuggestedPrompt[]
+) => {
+  let added = true;
+  while (picked.length < count && added) {
+    added = false;
+    for (const kind of order) {
+      if (picked.length >= count) break;
+      const prompt = (pools.get(kind) || []).find((item) => !blocked.has(item.text));
+      if (!prompt) continue;
+      blocked.add(prompt.text);
+      picked.push(prompt);
+      added = true;
+    }
+  }
+};
 
 /**
- * Six questions, taken in turn from expenses, income and loans so one topic
- * does not fill the list. Data-based questions come first; generic ones fill
- * a topic only when the data did not produce one. Loan questions appear only
- * when the user actually has loans.
+ * Six questions, drawn at random and mixed across expenses, income and loans.
+ * Questions already shown are skipped until every question of that mix has
+ * been used once; then the cycle starts again, still without repeating inside
+ * the new batch. Loan questions appear only when the user actually has loans.
  */
-export const pickSuggestedPrompts = (dataPrompts: DataPrompt[] = [], count = 6): SuggestedPrompt[] => {
+export const pickSuggestedPrompts = (
+  dataPrompts: DataPrompt[] = [],
+  count = 6,
+  seen: ReadonlySet<string> = new Set()
+): { prompts: SuggestedPrompt[]; seen: Set<string> } => {
   const hasLoans = dataPrompts.some((prompt) => prompt.kind === 'loan');
   const kinds: PromptKind[] = hasLoans
     ? ['expense', 'income', 'loan']
     : ['expense', 'income'];
   const start = Math.floor(Math.random() * kinds.length);
   const order = [...kinds.slice(start), ...kinds.slice(0, start)];
-
-  const personal = new Map<PromptKind, DataPrompt[]>();
-  const generic = new Map<PromptKind, string[]>();
-  for (const kind of kinds) {
-    personal.set(kind, ranked(dataPrompts.filter((prompt) => prompt.kind === kind)));
-    generic.set(
-      kind,
-      shuffle(SUGGESTED_PROMPTS.filter((text) => genericKind(text) === kind))
-    );
-  }
+  const pools = new Map(kinds.map((kind) => [kind, poolFor(kind, dataPrompts)]));
 
   const picked: SuggestedPrompt[] = [];
-  const used = new Set<string>();
-  const nextOf = (kind: PromptKind): SuggestedPrompt | null => {
-    const own = personal.get(kind) || [];
-    const match = own.find((prompt) => !used.has(prompt.text));
-    if (match) return { text: match.text, personal: true, kind };
-    if (kind === 'loan' && !hasLoans) return null;
-    const fallback = (generic.get(kind) || []).find((text) => !used.has(text));
-    return fallback ? { text: fallback, personal: false, kind } : null;
-  };
+  takeNext(pools, order, new Set(seen), count, picked);
 
-  while (picked.length < count) {
-    let added = false;
-    for (const kind of order) {
-      if (picked.length >= count) break;
-      const prompt = nextOf(kind);
-      if (!prompt) continue;
-      used.add(prompt.text);
-      picked.push(prompt);
-      added = true;
-    }
-    if (!added) break;
+  if (picked.length < count) {
+    const inBatch = new Set(picked.map((prompt) => prompt.text));
+    takeNext(pools, order, inBatch, count, picked);
+    return { prompts: picked, seen: new Set(picked.map((prompt) => prompt.text)) };
   }
-  return picked;
+
+  return {
+    prompts: picked,
+    seen: new Set([...seen, ...picked.map((prompt) => prompt.text)]),
+  };
 };

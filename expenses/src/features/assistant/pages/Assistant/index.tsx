@@ -154,19 +154,19 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
   const raw = useExpenseRaw();
   const [suggestions, setSuggestions] = useState<SuggestedPrompt[] | null>(null);
   const [browsingSuggestions, setBrowsingSuggestions] = useState(false);
-  const shuffleSuggestions = useCallback(
-    () =>
-      setSuggestions(
-        pickSuggestedPrompts(
-          [
-            ...buildDataPrompts(getAiItems(raw || []), getShareDescriptions()),
-            ...buildLoanPrompts(loans),
-          ],
-          6
-        )
-      ),
-    [raw, loans]
-  );
+  const seenSuggestions = useRef(new Set<string>());
+  const shuffleSuggestions = useCallback(() => {
+    const next = pickSuggestedPrompts(
+      [
+        ...buildDataPrompts(getAiItems(raw || []), getShareDescriptions()),
+        ...buildLoanPrompts(loans),
+      ],
+      6,
+      seenSuggestions.current
+    );
+    seenSuggestions.current = next.seen;
+    setSuggestions(next.prompts);
+  }, [raw, loans]);
 
   const sourceKey = `${raw?.length ? 'expenses' : ''}:${loans.length}`;
   const pickedFor = useRef('');
@@ -174,6 +174,7 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
     if (!raw?.length && !loans.length) return;
     if (pickedFor.current === sourceKey) return;
     pickedFor.current = sourceKey;
+    seenSuggestions.current = new Set();
     shuffleSuggestions();
   }, [sourceKey, raw, loans, shuffleSuggestions]);
 

@@ -14,7 +14,9 @@ import {
   AiLoanPayment,
   AiLoanSnapshot,
   findLoans,
+  formatLoanEvent,
   formatLoansSummary,
+  LOAN_EVENT_COLUMNS,
 } from '../loans';
 
 export interface ToolContext {
@@ -267,15 +269,18 @@ const loanDetail = (ctx: ToolContext, args: Args) => {
     return { error: found.error, matches: found.loans.map((loan) => loan.name) };
   }
   const loan = found.loans[0];
-  const recent = ctx.loanPayments.filter((payment) => payment.loanId === loan.id).slice(0, 8);
   return {
     name: loan.name,
     status: loan.status,
     start: loan.start,
     end: loan.end,
     principal: loan.principal,
-    rate: loan.rate,
+    initialRate: loan.rate,
+    currentRate: loan.currentRate,
     method: loan.method,
+    paymentDay: loan.paymentDay || null,
+    initialFee: loan.initialFee,
+    firstPayment: loan.firstPayment || null,
     paid: loan.paid,
     remainingPrincipal: loan.remainingPrincipal,
     interestPaid: loan.interestPaid,
@@ -292,12 +297,12 @@ const loanDetail = (ctx: ToolContext, args: Args) => {
           `${row.date}|${row.installment}|${row.principal}|${row.interest}|${row.remaining}`
       )
       .join('\n'),
-    recentPaymentsColumns: 'date|installment|fee|extra|note',
-    recentPayments: recent
-      .map(
-        (payment) =>
-          `${payment.date}|${payment.installment}|${payment.fee}|${payment.extra ? 'extra' : ''}|${payment.note}`
-      )
+    eventsColumns: LOAN_EVENT_COLUMNS,
+    events: ctx.loanPayments
+      .filter((payment) => payment.loanId === loan.id)
+      .slice()
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+      .map(formatLoanEvent)
       .join('\n'),
   };
 };
@@ -327,13 +332,8 @@ const queryLoanPayments = (ctx: ToolContext, args: Args) => {
     total: round(rows.reduce((sum, payment) => sum + payment.installment + payment.fee, 0)),
     shown: shown.length,
     truncated: rows.length > shown.length,
-    columns: 'date|loan|installment|fee|extra|note',
-    rows: shown
-      .map(
-        (payment) =>
-          `${payment.date}|${payment.loan}|${payment.installment}|${payment.fee}|${payment.extra ? 'extra' : ''}|${payment.note}`
-      )
-      .join('\n'),
+    columns: LOAN_EVENT_COLUMNS,
+    rows: shown.map(formatLoanEvent).join('\n'),
   };
 };
 
@@ -343,7 +343,9 @@ const executors: Record<string, (ctx: ToolContext, args: Args) => Record<string,
   get_month_summary: monthSummary,
   compare_periods: comparePeriods,
   list_loans: (ctx) =>
-    ctx.loans.length ? { summary: formatLoansSummary(ctx.loans) } : { loans: 0 },
+    ctx.loans.length
+      ? { summary: formatLoansSummary(ctx.loans, ctx.loanPayments) }
+      : { loans: 0 },
   get_loan_detail: loanDetail,
   query_loan_payments: queryLoanPayments,
 };

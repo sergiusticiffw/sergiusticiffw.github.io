@@ -80,13 +80,13 @@ export const toolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'list_loans',
     description:
-      'Every loan with principal, rate, paid amount, remaining principal, interest and the next installment. Same figures as the Loans page.',
+      'Every loan plus its rate changes, payments, fees, principal changes and method changes. Same figures as the Loans page.',
     parameters: { type: 'object', properties: {} },
   },
   {
     name: 'get_loan_detail',
     description:
-      'One loan: totals, interest saved by extra payments, the next unpaid schedule rows, and recent actual payments.',
+      'One loan: totals, current rate, interest saved by extra payments, the next unpaid schedule rows, and every rate change, payment or other event.',
     parameters: {
       type: 'object',
       properties: {
@@ -100,7 +100,7 @@ export const toolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'query_loan_payments',
     description:
-      'Actual loan payments (not the simulated future schedule). Optional loan name and date range.',
+      'Loan events: payments, fees, rate changes, new principal, new recurring installment and method changes. Optional loan name and date range. Planned rows are marked.',
     parameters: {
       type: 'object',
       properties: {

@@ -94,30 +94,45 @@ export const buildDataPrompts = (items: AiItem[], shareDescriptions: boolean): D
 
   if (expensePool.length) {
     const total = sum(expensePool);
-    const top = topEntry(sumBy(expensePool, (i) => i.cat));
-    if (top && total > 0 && categoryLabel(top[0])) {
-      add(
-        6,
-        `Pe ${categoryLabel(top[0])} am dat ${fmt(top[1])} în ultimele 12 luni, cam ${Math.round((top[1] / total) * 100)}% din cheltuieli. Pe ce s-au dus banii?`
-      );
+    const categories = [...sumBy(expensePool, (i) => i.cat).entries()]
+      .filter(([cat, amount]) => amount > 0 && categoryLabel(cat))
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    if (categories.length && total > 0) {
+      for (const [cat, amount] of categories) {
+        add(
+          6,
+          `Pe ${categoryLabel(cat)} am dat ${fmt(amount)} în ultimele 12 luni, cam ${Math.round((amount / total) * 100)}% din cheltuieli. Pe ce s-au dus banii?`
+        );
+      }
     } else if (total > 0) {
       add(6, `Am cheltuit ${fmt(total)} în ultimele 12 luni. Care au fost cele mai mari cheltuieli?`);
     }
-    const biggest = [...expensePool].sort((a, b) => b.amount - a.amount)[0];
-    if (biggest?.amount) {
-      const where = categoryLabel(biggest.cat);
+    const biggest = [...expensePool].sort((a, b) => b.amount - a.amount).slice(0, 3);
+    for (const item of biggest) {
+      if (!item.amount) continue;
+      const where = categoryLabel(item.cat);
       add(
         5,
         where
-          ? `Cea mai mare cheltuială din ultimul an e ${fmt(biggest.amount)} la ${where}, pe ${dayLabel(biggest.date)}. De ce a fost atât de mare?`
-          : `Cea mai mare cheltuială din ultimul an e ${fmt(biggest.amount)}, pe ${dayLabel(biggest.date)}. Ce era?`
+          ? `O cheltuială mare din ultimul an e ${fmt(item.amount)} la ${where}, pe ${dayLabel(item.date)}. De ce a fost atât de mare?`
+          : `O cheltuială mare din ultimul an e ${fmt(item.amount)}, pe ${dayLabel(item.date)}. Ce era?`
       );
+    }
+    const tags = [...sumBy(expensePool, tagsOf).entries()]
+      .filter(([, amount]) => amount > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4);
+    for (const [tag, amount] of tags) {
+      add(4, `Hashtagul #${tag} m-a costat ${fmt(amount)} în ultimele 12 luni. La ce l-am folosit?`);
     }
   }
 
   if (incomePool.length) {
     const totalIn = sum(incomePool);
-    const best = topEntry(sumBy(incomePool, (i) => i.month));
+    const byMonth = [...sumBy(incomePool, (i) => i.month).entries()].sort((a, b) => b[1] - a[1]);
+    const best = byMonth[0];
+    const worst = byMonth[byMonth.length - 1];
     if (best && totalIn > 0) {
       add(
         6,
@@ -125,7 +140,14 @@ export const buildDataPrompts = (items: AiItem[], shareDescriptions: boolean): D
         'income'
       );
     }
-    const incomeMonths = sumBy(incomePool, (i) => i.month).size;
+    if (worst && byMonth.length > 1 && worst[0] !== best?.[0]) {
+      add(
+        5,
+        `În ${monthName(worst[0])} am avut venitul cel mai mic, ${fmt(worst[1])}. Ce a fost diferit?`,
+        'income'
+      );
+    }
+    const incomeMonths = byMonth.length;
     const avgIn = incomeMonths ? totalIn / incomeMonths : 0;
     const expenseMonths = sumBy(expensePool, (i) => i.month).size;
     const avgOut = expenseMonths ? sum(expensePool) / expenseMonths : 0;
@@ -140,6 +162,19 @@ export const buildDataPrompts = (items: AiItem[], shareDescriptions: boolean): D
       );
     } else if (avgIn > 0) {
       add(5, `Venitul mediu lunar e ${fmt(avgIn)}. Cum a evoluat în ultimul an?`, 'income');
+    }
+    if (shareDescriptions) {
+      const sources = [...sumBy(incomePool.filter((i) => i.desc), (i) => i.desc).entries()]
+        .filter(([, amount]) => amount > 0)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+      for (const [desc, amount] of sources) {
+        add(
+          4,
+          `Din „${desc}” am primit ${fmt(amount)} în ultimele 12 luni. Cât reprezintă din venitul total?`,
+          'income'
+        );
+      }
     }
   }
 
