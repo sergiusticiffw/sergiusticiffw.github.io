@@ -12,6 +12,7 @@ import {
 import { getCategories, notificationType } from '@shared/utils/constants';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import TransactionFilters, { DateRangeValue } from '@features/expenses/components/Home/TransactionFilters';
+import VoiceEntryButton from '@features/expenses/components/Home/VoiceEntryButton';
 import { TransactionsList } from '@shared/components/TransactionsList';
 import { HeroSpendCard } from '@shared/components/HeroSpendCard';
 import CalendarView from '@features/expenses/components/CalendarView';
@@ -605,6 +606,10 @@ const NewHome = () => {
             </button>
           )}
         </>
+      )}
+
+      {!loading && !filterPanelOpen && (
+        <VoiceEntryButton stacked={!noData} kind="expense" />
       )}
     </div>
   );

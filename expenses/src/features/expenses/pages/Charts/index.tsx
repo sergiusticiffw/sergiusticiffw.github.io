@@ -4,6 +4,7 @@ import { useLocalization } from '@shared/context/localization';
 import { getEffectiveVisibleCharts } from '@shared/utils/chartsVisibility';
 import { getCategories } from '@shared/utils/constants';
 import TransactionFilters, { DateRangeValue } from '@features/expenses/components/Home/TransactionFilters';
+import VoiceEntryButton from '@features/expenses/components/Home/VoiceEntryButton';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionForm from '@features/expenses/components/TransactionForm';
 import LoadingSpinner from '@shared/components/Common/LoadingSpinner';
@@ -201,13 +202,16 @@ const Charts = () => {
 
       {/* FAB - hidden when filter panel is open to avoid overlap */}
       {!filterPanelOpen && (
-        <button
-          onClick={() => setShowAddModal(true)}
-          className={FAB_CLASS}
-          title={t('transactionForm.addTransaction')}
-        >
-          <FiPlus />
-        </button>
+        <>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className={FAB_CLASS}
+            title={t('transactionForm.addTransaction')}
+          >
+            <FiPlus />
+          </button>
+          <VoiceEntryButton stacked kind="expense" />
+        </>
       )}
     </div>
   );

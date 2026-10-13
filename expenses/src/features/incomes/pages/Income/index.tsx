@@ -5,6 +5,7 @@ import React, {
   useState,
 } from 'react';
 import IncomeForm from '@features/incomes/components/Income/IncomeForm';
+import VoiceEntryButton from '@features/expenses/components/Home/VoiceEntryButton';
 import {
   deleteNode,
   formatNumber,
@@ -603,16 +604,19 @@ const Income = () => {
 
       {/* FAB - hidden when filter panel is open to avoid overlap */}
       {!filterPanelOpen && (
-        <button
-          onClick={() => {
-            setShowEditModal(true);
-            setIsNewModal(true);
-          }}
-          className={FAB_CLASS}
-          title={t('incomeForm.addIncome')}
-        >
-          <FiPlus />
-        </button>
+        <>
+          <button
+            onClick={() => {
+              setShowEditModal(true);
+              setIsNewModal(true);
+            }}
+            className={FAB_CLASS}
+            title={t('incomeForm.addIncome')}
+          >
+            <FiPlus />
+          </button>
+          <VoiceEntryButton stacked kind="income" />
+        </>
       )}
     </div>
   );
