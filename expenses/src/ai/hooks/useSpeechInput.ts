@@ -39,17 +39,35 @@ const ERROR_MESSAGES: Record<string, string> = {
 /**
  * Browser speech-to-text. `onText` receives the full transcript so far,
  * including words that are still being recognized.
+ * `silenceMs` stops listening that long after the last word. 0 keeps the
+ * browser's own end-of-speech pause.
  */
-export function useSpeechInput(onText: (text: string) => void) {
+export function useSpeechInput(onText: (text: string) => void, silenceMs = 0) {
   const [listening, setListening] = useState(false);
   const [error, setError] = useState('');
   const recognitionRef = useRef<Recognition | null>(null);
+  const silenceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onTextRef = useRef(onText);
   onTextRef.current = onText;
 
-  useEffect(() => () => recognitionRef.current?.abort(), []);
+  const clearSilence = useCallback(() => {
+    if (!silenceTimer.current) return;
+    clearTimeout(silenceTimer.current);
+    silenceTimer.current = null;
+  }, []);
 
-  const stop = useCallback(() => recognitionRef.current?.stop(), []);
+  useEffect(
+    () => () => {
+      clearSilence();
+      recognitionRef.current?.abort();
+    },
+    [clearSilence]
+  );
+
+  const stop = useCallback(() => {
+    clearSilence();
+    recognitionRef.current?.stop();
+  }, [clearSilence]);
 
   const start = useCallback(() => {
     if (!RecognitionImpl || recognitionRef.current) return;
@@ -67,6 +85,16 @@ export function useSpeechInput(onText: (text: string) => void) {
         else interim += result[0].transcript;
       }
       onTextRef.current(`${finalText}${interim}`.trim());
+      if (silenceMs > 0) {
+        clearSilence();
+        silenceTimer.current = setTimeout(() => {
+          try {
+            recognition.stop();
+          } catch {
+            // Recognition already ended.
+          }
+        }, silenceMs);
+      }
     };
     recognition.onerror = (event) => {
       if (event.error !== 'aborted' && event.error !== 'no-speech') {
@@ -74,6 +102,7 @@ export function useSpeechInput(onText: (text: string) => void) {
       }
     };
     recognition.onend = () => {
+      clearSilence();
       recognitionRef.current = null;
       setListening(false);
     };
@@ -82,7 +111,7 @@ export function useSpeechInput(onText: (text: string) => void) {
     setError('');
     setListening(true);
     recognition.start();
-  }, []);
+  }, [clearSilence, silenceMs]);
 
   return { supported: !!RecognitionImpl, listening, error, start, stop };
 }

@@ -66,7 +66,7 @@ const VoiceEntryButton = ({
   const speech = useSpeechInput((text) => {
     transcriptRef.current = text;
     setTranscript(text);
-  });
+  }, 1000);
 
   const beginListening = () => {
     heardRef.current = false;
