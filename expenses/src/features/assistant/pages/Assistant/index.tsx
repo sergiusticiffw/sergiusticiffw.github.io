@@ -291,14 +291,14 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {messages.length === 0 ? (
-        <div className="min-h-0 w-full min-w-0 flex-1 overflow-y-auto px-4 pb-3">
+        <div className="min-h-0 w-full min-w-0 flex-1 overflow-y-auto px-4 pb-3 md:px-6 lg:px-8">
           <p className="pt-1 text-sm leading-relaxed text-app-muted">
             {t('assistant.empty')}
           </p>
           {suggestionList}
         </div>
       ) : browsingSuggestions ? (
-        <div className="min-h-0 w-full min-w-0 flex-1 overflow-y-auto px-4 pb-3">
+        <div className="min-h-0 w-full min-w-0 flex-1 overflow-y-auto px-4 pb-3 md:px-6 lg:px-8">
           <button
             type="button"
             onClick={() => setBrowsingSuggestions(false)}
@@ -310,7 +310,7 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
           {suggestionList}
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 md:px-6 lg:px-8">
           {messages.map((message, index) =>
             message.role === 'user' ? (
               <div key={message.id} className="flex justify-end">
@@ -337,7 +337,7 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
         </div>
       )}
 
-      <div className="shrink-0 border-t border-white/[0.06] px-4 pt-3 pb-2">
+      <div className="shrink-0 border-t border-white/[0.06] px-4 pt-3 pb-2 md:px-6 lg:px-8">
         {messages.length > 0 && !browsingSuggestions && (
           <button
             type="button"
@@ -452,8 +452,8 @@ const Assistant = () => {
   }, [apiClient, expenses.loading, expenseDispatch]);
 
   return (
-    <div className="absolute inset-0 flex flex-col pb-[calc(64px+env(safe-area-inset-bottom,0))]">
-      <h1 className="shrink-0 px-4 pt-4 text-2xl font-semibold tracking-tight text-app-primary">
+    <div className="absolute inset-0 flex w-full flex-col pb-[calc(64px+env(safe-area-inset-bottom,0))] min-[1024px]:right-auto min-[1024px]:left-1/2 min-[1024px]:w-full min-[1024px]:max-w-[1100px] min-[1024px]:-translate-x-1/2">
+      <h1 className="shrink-0 px-4 pt-4 text-2xl font-semibold tracking-tight text-app-primary md:px-6 lg:px-8">
         {t('assistant.title')}
       </h1>
       {status === 'loading' && <LoadingSpinner />}
