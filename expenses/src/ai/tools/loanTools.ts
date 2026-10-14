@@ -10,6 +10,7 @@ import {
   LoanSimulator,
   LoanSource,
   ScenarioResult,
+  SequenceEvent,
   addDays,
   daysBetween,
   getLoanSimulator,
@@ -48,7 +49,7 @@ export const loanToolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'simulate_extra_payment',
     description:
-      'What-if for one early/extra payment: interest saved, new payoff date and months saved (reduce_term), or the new lower installment (reduce_installment). Use for "how much would I save if I prepay X".',
+      'What-if for one early/extra payment: interest saved, new payoff date and months saved (reduce_term), or the new lower installment (reduce_installment). Use for "how much would I save if I prepay X". For a prepayment plus another future change (rate, second extra), use simulate_loan_scenario instead.',
     parameters: {
       type: 'object',
       properties: {
@@ -84,7 +85,7 @@ export const loanToolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'simulate_recurring_extra',
     description:
-      'What-if for paying an extra amount with every installment (or every N months), optionally plus a one-time payment: new payoff date, months saved, interest saved, total extra paid.',
+      'What-if for paying an extra amount with every installment (or every N months), optionally plus a one-time payment: new payoff date, months saved, interest saved, total extra paid. If the user also wants a future rate change, use simulate_loan_scenario.',
     parameters: {
       type: 'object',
       properties: {
@@ -127,7 +128,7 @@ export const loanToolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'simulate_rate_change',
     description:
-      'What-if for a new interest rate (variable rate change or refinancing): new installment, interest difference, payoff date; with refinanceFee also net saving and break-even months. keepInstallment keeps the current installment so the term changes instead.',
+      'What-if for a single new interest rate (variable rate change or refinancing): new installment, interest difference, payoff date; with refinanceFee also net saving and break-even months. keepInstallment keeps the current installment so the term changes instead. If the user also wants a future extra payment or a second rate change, use simulate_loan_scenario.',
     parameters: {
       type: 'object',
       properties: {
@@ -138,6 +139,60 @@ export const loanToolDeclarations: GeminiFunctionDeclaration[] = [
         refinanceFee: { type: 'number', description: 'One-time cost of refinancing.' },
       },
       required: ['rate'],
+    },
+  },
+  {
+    name: 'simulate_loan_scenario',
+    description:
+      'What-if that applies two or more future events in date order on one loan schedule: extra payments, recurring extras, and rate changes. Use whenever the user combines changes (e.g. prepay 200k in Feb 2027 then rate 10% from June 2028). Do not call simulate_extra_payment and simulate_rate_change separately for a combined question — each of those starts from the current loan, so the results cannot be added together.',
+    parameters: {
+      type: 'object',
+      properties: {
+        loan: loanParam,
+        events: {
+          type: 'array',
+          description:
+            'Future changes. Order does not matter; they are applied by date. Example: extra_payment 200000 on 2027-02, then rate_change 10 on 2028-06.',
+          items: {
+            type: 'object',
+            properties: {
+              type: {
+                type: 'string',
+                enum: ['extra_payment', 'rate_change', 'recurring_extra'],
+              },
+              date: dateParam('Event date'),
+              amount: {
+                type: 'number',
+                description: 'For extra_payment, the extra amount. For recurring_extra, extra each time.',
+              },
+              strategy: {
+                type: 'string',
+                enum: ['reduce_term', 'reduce_installment'],
+                description: 'For extra_payment. Omit to follow the top-level strategy.',
+              },
+              rate: { type: 'number', description: 'For rate_change, new annual rate in %.' },
+              keepInstallment: {
+                type: 'boolean',
+                description: 'For rate_change: keep the installment in effect at that date so the term changes.',
+              },
+              everyMonths: {
+                type: 'integer',
+                description: 'For recurring_extra. 1 = with every installment (default), 3 = quarterly, 12 = yearly.',
+              },
+              until: { type: 'string', description: 'For recurring_extra: stop after YYYY-MM-DD or YYYY-MM.' },
+              ...feeParams,
+              refinanceFee: { type: 'number', description: 'One-time cost of this rate change / refinancing.' },
+            },
+            required: ['type', 'date'],
+          },
+        },
+        strategy: {
+          type: 'string',
+          enum: ['compare', 'reduce_term', 'reduce_installment'],
+          description: 'For extra payments that omit their own strategy. Default compare (both).',
+        },
+      },
+      required: ['events'],
     },
   },
   {
@@ -679,6 +734,133 @@ const simulateRateChange = (ctx: LoanToolContext, args: Args): ToolResult => {
   };
 };
 
+const MAX_SCENARIO_EVENTS = 12;
+
+const asEventList = (value: unknown): Args[] => {
+  if (Array.isArray(value)) return value.filter((item) => item && typeof item === 'object');
+  if (value && typeof value === 'object') return [value as Args];
+  return [];
+};
+
+const simulateLoanScenario = (ctx: LoanToolContext, args: Args): ToolResult => {
+  const resolved = resolveLoan(ctx, args.loan);
+  if (isError(resolved)) return resolved.error;
+  const { snapshot, sim } = resolved;
+
+  const raw = asEventList(args.events);
+  if (raw.length < 2) {
+    return fail('Need at least two events (e.g. an extra payment and a later rate change).');
+  }
+  if (raw.length > MAX_SCENARIO_EVENTS) {
+    return fail(`At most ${MAX_SCENARIO_EVENTS} events in one scenario.`);
+  }
+
+  const topStrategy = String(args.strategy || 'compare');
+  const parsed: { event: SequenceEvent; fee: number }[] = [];
+  for (const item of raw) {
+    const type = String(item.type || '');
+    if (type !== 'extra_payment' && type !== 'rate_change' && type !== 'recurring_extra') {
+      return fail('Each event type must be extra_payment, rate_change or recurring_extra.');
+    }
+    const date = parseDate(sim, item.date, sim.defaultDate());
+    if (!date) return fail('dates must be YYYY-MM-DD or YYYY-MM');
+    if (type === 'extra_payment') {
+      const amount = Number(item.amount);
+      if (!(amount > 0)) return fail('extra_payment needs a positive amount');
+      const strategy =
+        item.strategy === 'reduce_term' || item.strategy === 'reduce_installment'
+          ? item.strategy
+          : topStrategy === 'reduce_term' || topStrategy === 'reduce_installment'
+            ? topStrategy
+            : undefined;
+      parsed.push({
+        event: { type, date, amount, strategy },
+        fee: feeOf(item, amount),
+      });
+    } else if (type === 'rate_change') {
+      const rate = Number(item.rate);
+      if (!(rate >= 0) || item.rate == null) return fail('rate_change needs rate >= 0');
+      parsed.push({
+        event: {
+          type,
+          date,
+          rate,
+          keepInstallment: item.keepInstallment === true,
+        },
+        fee: Number(item.refinanceFee) > 0 ? Number(item.refinanceFee) : 0,
+      });
+    } else {
+      const amount = Number(item.amount ?? item.extraAmount);
+      if (!(amount > 0)) return fail('recurring_extra needs a positive amount');
+      const until = item.until ? endOfPeriod(item.until) : null;
+      if (item.until && !until) return fail('until must be YYYY-MM-DD or YYYY-MM');
+      parsed.push({
+        event: {
+          type,
+          date,
+          amount,
+          everyMonths: clampLimit(item.everyMonths, 1, 24),
+          until,
+        },
+        fee: feeOf(item, amount),
+      });
+    }
+  }
+
+  const compare = parsed.some((item) => item.event.type === 'extra_payment' && !item.event.strategy);
+  const base = sim.baseline();
+  const totalFee = parsed.reduce((sum, item) => sum + item.fee, 0);
+  const bind = (strategy: ExtraStrategy): SequenceEvent[] =>
+    parsed.map(({ event }) =>
+      event.type === 'extra_payment' && !event.strategy ? { ...event, strategy } : event
+    );
+
+  const describe = (events: SequenceEvent[]) => {
+    const { result, steps } = sim.runSequence(events);
+    const saved = base.totalInterest - result.totalInterest;
+    const last = steps[steps.length - 1];
+    return {
+      timeline: steps.map((step) => ({
+        event: step.type,
+        date: step.appliedOn || step.date,
+        ...(step.amount != null && { amount: whole(step.amount) }),
+        ...(step.strategy && { strategy: step.strategy }),
+        ...(step.extraPaymentsMade != null && { extraPaymentsMade: step.extraPaymentsMade }),
+        ...(step.rate != null && { rate: step.rate, keepInstallment: step.keepInstallment }),
+        remaining: whole(step.remaining),
+        nextInstallment: step.nextInstallment != null ? whole(step.nextInstallment) : null,
+        payoffDate: step.payoffDate,
+        futureInterest: whole(step.futureInterest),
+      })),
+      ...summarize(result, last?.appliedOn || last?.date),
+      interestSaved: whole(saved),
+      ...(totalFee > 0 && { fees: whole(totalFee), netSaving: whole(saved - totalFee) }),
+      ...timeSaved(base, result),
+    };
+  };
+
+  const eventsSummary = parsed.map(({ event }) => {
+    if (event.type === 'extra_payment') return `extra_payment ${whole(event.amount || 0)} on ${event.date}`;
+    if (event.type === 'rate_change') return `rate_change ${event.rate}% on ${event.date}`;
+    return `recurring_extra ${whole(event.amount || 0)} every ${event.everyMonths || 1}m from ${event.date}`;
+  });
+
+  return {
+    loan: snapshot.name,
+    currentRate: snapshot.currentRate,
+    events: eventsSummary,
+    appliedInDateOrder: true,
+    withoutChanges: summarize(base),
+    ...(compare
+      ? {
+          reduce_term: describe(bind('reduce_term')),
+          reduce_installment: describe(bind('reduce_installment')),
+        }
+      : { withEvents: describe(parsed.map(({ event }) => event)) }),
+    note: 'Events are applied in date order on one schedule. A later rate change uses the remaining principal after earlier extra payments.',
+  };
+};
+
 const amortizationSchedule = (ctx: LoanToolContext, args: Args): ToolResult => {
   const resolved = resolveLoan(ctx, args.loan, { activeOnly: false });
   if (isError(resolved)) return resolved.error;
@@ -879,6 +1061,7 @@ export const loanToolExecutors: Record<string, (ctx: LoanToolContext, args: Args
   simulate_recurring_extra: simulateRecurringExtra,
   solve_loan_goal: solveLoanGoal,
   simulate_rate_change: simulateRateChange,
+  simulate_loan_scenario: simulateLoanScenario,
   get_amortization_schedule: amortizationSchedule,
   allocate_extra_payment: allocateExtraPayment,
   compare_prepay_vs_invest: comparePrepayVsInvest,
@@ -890,6 +1073,7 @@ export const LOAN_TOOL_LABELS: Record<string, string> = {
   simulate_recurring_extra: 'Simulating extra payments',
   solve_loan_goal: 'Solving the loan goal',
   simulate_rate_change: 'Simulating a rate change',
+  simulate_loan_scenario: 'Simulating combined loan changes',
   get_amortization_schedule: 'Reading the schedule',
   allocate_extra_payment: 'Comparing loans',
   compare_prepay_vs_invest: 'Comparing prepay and invest',

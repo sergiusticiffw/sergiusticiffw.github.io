@@ -8,6 +8,7 @@ const LOAN_SIMULATION_PROMPTS = [
   'Cât trebuie să plătesc în plus lunar ca să închid creditul cu 5 ani mai devreme?',
   'Ce sumă trebuie să rambursez anticipat ca rata să scadă cu 20%?',
   'Ce se întâmplă dacă dobânda crește cu 2 puncte procentuale?',
+  'Ce se întâmplă dacă rambursez anticipat în 2027 și dobânda trece la 10% în 2028?',
   'Merită să refinanțez la o dobândă cu 1% mai mică, cu un comision de 5.000?',
   'Mai bine rambursez anticipat sau pun banii la depozit cu 6%?',
   'Cât dobândă voi plăti în fiecare an până la final?',
