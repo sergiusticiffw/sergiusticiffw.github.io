@@ -4,13 +4,15 @@ import { useNotification } from '@shared/context';
 import { useLocalization } from '@shared/context/localization';
 import { notificationType } from '@shared/utils/constants';
 import { Switch } from '@shared/ui';
-import { AI_LANGUAGES } from '../../../ai/config';
+import { AI_LANGUAGES, AI_MODELS, modelLabel } from '../../../ai/config';
 import { maskApiKey } from '../../../ai/apiKey';
 import { describeAiError, testApiKey } from '../../../ai/client';
 import { useAiApiKey } from '../../../ai/hooks/useAiApiKey';
 import {
+  effectiveCooldownUntil,
   getAiLanguage,
   getAiUsage,
+  getModelLimitLog,
   getShareDescriptions,
   setAiLanguage,
   setShareDescriptions,
@@ -33,11 +35,17 @@ const AiSettings = () => {
   const [share, setShare] = useState(getShareDescriptions);
   const [language, setLanguage] = useState(getAiLanguage);
   const usage = getAiUsage();
+  const limitLog = getModelLimitLog();
+  const limitedModels = AI_MODELS.chat
+    .filter((model) => limitLog[model])
+    .map((model) => [model, limitLog[model]] as const);
 
   const notifySaved = (result: 'synced' | 'local', removed = false) => {
     if (removed) {
       showNotification(
-        result === 'synced' ? t('profile.aiRemoved') : t('profile.aiRemovedLocal'),
+        result === 'synced'
+          ? t('profile.aiRemoved')
+          : t('profile.aiRemovedLocal'),
         result === 'synced' ? notificationType.SUCCESS : notificationType.ERROR
       );
       return;
@@ -102,14 +110,23 @@ const AiSettings = () => {
       ) : apiKey && !editing ? (
         <>
           <div className="mb-3 flex items-center justify-between gap-3">
-            <span className="text-sm text-app-secondary">{t('profile.aiKey')}</span>
+            <span className="text-sm text-app-secondary">
+              {t('profile.aiKey')}
+            </span>
             <code className="text-xs text-app-muted">{maskApiKey(apiKey)}</code>
           </div>
           {!synced && (
-            <p className="mb-3 text-xs text-amber-300/90">{t('profile.aiSavedLocal')}</p>
+            <p className="mb-3 text-xs text-amber-300/90">
+              {t('profile.aiSavedLocal')}
+            </p>
           )}
           <div className="flex flex-wrap gap-2">
-            <button type="button" className={secondaryBtn} onClick={handleTest} disabled={busy}>
+            <button
+              type="button"
+              className={secondaryBtn}
+              onClick={handleTest}
+              disabled={busy}
+            >
               {t('profile.aiTest')}
             </button>
             <button
@@ -120,7 +137,12 @@ const AiSettings = () => {
             >
               {t('profile.aiChange')}
             </button>
-            <button type="button" className={secondaryBtn} onClick={handleRemove} disabled={busy}>
+            <button
+              type="button"
+              className={secondaryBtn}
+              onClick={handleRemove}
+              disabled={busy}
+            >
               {t('profile.aiRemove')}
             </button>
           </div>
@@ -181,7 +203,9 @@ const AiSettings = () => {
       )}
 
       <label className="mt-4 flex items-center justify-between gap-3">
-        <span className="text-sm text-app-secondary">{t('profile.aiLanguage')}</span>
+        <span className="text-sm text-app-secondary">
+          {t('profile.aiLanguage')}
+        </span>
         <select
           className="rounded-lg border border-app-subtle bg-app-surface px-3 py-2 text-sm text-app-primary outline-none"
           value={language}
@@ -218,8 +242,92 @@ const AiSettings = () => {
             .replace('{requests}', String(usage.requests))
             .replace('{tokens}', usage.tokens.toLocaleString())}`}
       </p>
+
+      {limitedModels.length > 0 && (
+        <div className="mt-4 flex flex-col gap-1.5 border-t border-white/[0.06] pt-3">
+          <span className="text-xs font-semibold text-app-secondary">
+            {t('profile.aiLimits')}
+          </span>
+          {limitedModels.map(([model, record]) => {
+            const until = effectiveCooldownUntil(record);
+            const paused = until > Date.now();
+            return (
+              <details
+                key={model}
+                className="text-xs leading-relaxed text-app-muted"
+              >
+                <summary className="cursor-pointer">
+                  <span
+                    className={
+                      paused ? 'font-semibold text-amber-300' : undefined
+                    }
+                  >
+                    {modelLabel(model)}
+                  </span>
+                  {' · '}
+                  {record.daily
+                    ? t('profile.aiDailyLimit')
+                    : t('profile.aiMinuteLimit')}
+                  {record.limit ? ` (${record.limit})` : ''}
+                  {' · '}
+                  {paused
+                    ? t('profile.aiPausedUntil').replace(
+                        '{time}',
+                        formatTime(until)
+                      )
+                    : t('profile.aiLastHit').replace(
+                        '{time}',
+                        formatTime(record.at)
+                      )}
+                </summary>
+                <dl className="mt-1.5 mb-1 grid grid-cols-[auto_1fr] gap-x-2.5 gap-y-1 rounded-lg bg-white/[0.04] px-2.5 py-2">
+                  <dt className="text-app-muted/70">
+                    {t('profile.aiReceived')}
+                  </dt>
+                  <dd className="m-0 break-words text-app-secondary">
+                    {formatTime(record.at)}
+                  </dd>
+                  {record.retryAfterSeconds !== undefined && (
+                    <>
+                      <dt className="text-app-muted/70">
+                        {t('profile.aiRetryAfter')}
+                      </dt>
+                      <dd className="m-0 text-app-secondary">
+                        {formatDuration(record.retryAfterSeconds)}
+                      </dd>
+                    </>
+                  )}
+                  <dt className="text-app-muted/70">
+                    {t('profile.aiPausedUntilLabel')}
+                  </dt>
+                  <dd className="m-0 text-app-secondary">
+                    {formatTime(until)}
+                  </dd>
+                </dl>
+              </details>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
+};
+
+const formatTime = (timestamp: number) =>
+  new Date(timestamp).toLocaleString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+const formatDuration = (seconds: number) => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours && minutes) return `${hours}h ${minutes}m`;
+  if (hours) return `${hours}h`;
+  if (minutes) return `${minutes}m`;
+  return `${seconds}s`;
 };
 
 export default AiSettings;

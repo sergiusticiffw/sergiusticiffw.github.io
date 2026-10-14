@@ -42,8 +42,10 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   const validationRules = {
     field_amount: {
       required: true,
-      custom: (value: string) =>
-        !isNaN(parseFloat(value)) && parseFloat(value) > 0,
+      custom: (value: string) => {
+        const amount = parseFloat(value);
+        return !isNaN(amount) && amount !== 0;
+      },
     },
     field_date: {
       required: true,
@@ -167,7 +169,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           onChange={handleChange}
           required
           placeholder={t('form.amountPlaceholder')}
-          min={0}
           step={0.01}
           isValid={getFieldValidation('field_amount', formState)}
           ariaLabel={t('transactionForm.amount')}
