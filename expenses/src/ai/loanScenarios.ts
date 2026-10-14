@@ -54,6 +54,8 @@ export interface ScenarioResult {
   applied: string[];
   /** Date a hypothetical rate change took effect on. */
   rateDate?: string;
+  /** Every hypothetical rate-change date, in the order they were applied. */
+  rateDates?: string[];
   paydown: PaydownResult;
 }
 
@@ -62,16 +64,52 @@ export interface HypotheticalPayment {
   amount: number;
 }
 
+export interface HypotheticalRateChange {
+  date: string;
+  rate: number;
+  keepInstallment?: boolean;
+}
+
 export interface ScenarioInput {
   /** Keep payments the user only planned. Default true, same as the Loans page. */
   includePlanned?: boolean;
   excludeItem?: (item: ApiPaymentItem) => boolean;
   payments?: HypotheticalPayment[];
-  rateChange?: { date: string; rate: number; keepInstallment?: boolean };
+  rateChange?: HypotheticalRateChange;
+  rateChanges?: HypotheticalRateChange[];
   recurringAmounts?: { date: string; amount: number }[];
 }
 
 export type ExtraStrategy = 'reduce_term' | 'reduce_installment';
+
+export type SequenceEventType = 'extra_payment' | 'rate_change' | 'recurring_extra';
+
+/** One future change in a chained what-if, already parsed to YYYY-MM-DD. */
+export interface SequenceEvent {
+  type: SequenceEventType;
+  date: string;
+  amount?: number;
+  strategy?: ExtraStrategy;
+  rate?: number;
+  keepInstallment?: boolean;
+  everyMonths?: number;
+  until?: string | null;
+}
+
+export interface SequenceStep {
+  type: SequenceEventType;
+  date: string;
+  appliedOn?: string;
+  amount?: number;
+  strategy?: ExtraStrategy;
+  extraPaymentsMade?: number;
+  rate?: number;
+  keepInstallment?: boolean;
+  remaining: number;
+  nextInstallment: number | null;
+  payoffDate: string;
+  futureInterest: number;
+}
 
 const HYPOTHETICAL_ORDER = 1_000_000;
 
@@ -234,6 +272,11 @@ export class LoanSimulator {
     const events: PaydownEvent[] = buildEventsFromApiPayments(items);
     let order = HYPOTHETICAL_ORDER;
 
+    const rateChanges = [
+      ...(input.rateChanges || []),
+      ...(input.rateChange ? [input.rateChange] : []),
+    ];
+
     // A payment on a scheduled date would be merged into (and replace) the regular installment.
     const regularDates = new Set(
       input.payments?.length
@@ -243,53 +286,82 @@ export class LoanSimulator {
         : []
     );
     const taken = new Set<string>();
+    // Callers read applied[i] as payment i, so dates are reserved in input order.
     const applied: string[] = [];
-    let rateDate: string | undefined;
+    const rateDates: string[] = [];
+    const placed: { at: string; payment: HypotheticalPayment }[] = [];
     for (const payment of input.payments || []) {
       if (!(payment.amount > 0)) continue;
       let date = payment.date > this.startIso ? payment.date : addDays(this.startIso, 1);
       while (regularDates.has(date) || taken.has(date)) date = addDays(date, 1);
       taken.add(date);
       applied.push(date);
-      events.push({
-        date: toEngineDate(date),
-        pay_installment: payment.amount,
-        isEarlyPayment: true,
-        isSimulatedPayment: true,
-        event_order: order++,
-      });
+      placed.push({ at: date, payment });
     }
 
-    if (input.rateChange) {
-      const { rate, keepInstallment } = input.rateChange;
-      const base = this.baseline(includePlanned);
-      const scheduledDates = new Set(base.rows.filter((row) => !row.extra).map((row) => row.date));
-      let date = input.rateChange.date > this.startIso ? input.rateChange.date : addDays(this.startIso, 1);
-      while (scheduledDates.has(date)) date = addDays(date, 1);
-      rateDate = date;
-      const event: PaydownEvent = { date: toEngineDate(date), rate, event_order: order++ };
-      const prior = [...base.rows].reverse().find((row) => row.date < date);
+    // Emit in date order so a later rate change sees the balance after earlier extras.
+    type Overlay =
+      | { at: string; kind: 0; payment: HypotheticalPayment }
+      | { at: string; kind: 1; recurring: { date: string; amount: number } }
+      | { at: string; kind: 2; rate: HypotheticalRateChange };
+    const overlays: Overlay[] = [];
+    for (const payment of placed) overlays.push({ at: payment.at, kind: 0, payment: payment.payment });
+    for (const recurring of input.recurringAmounts || []) {
+      overlays.push({ at: recurring.date, kind: 1, recurring });
+    }
+    for (const rate of rateChanges) overlays.push({ at: rate.date, kind: 2, rate });
+    overlays.sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : a.kind - b.kind));
+
+    for (const overlay of overlays) {
+      if (overlay.kind === 0) {
+        events.push({
+          date: toEngineDate(overlay.at),
+          pay_installment: overlay.payment.amount,
+          isEarlyPayment: true,
+          isSimulatedPayment: true,
+          event_order: order++,
+        });
+        continue;
+      }
+      if (overlay.kind === 1) {
+        events.push({
+          date: toEngineDate(overlay.recurring.date),
+          recurring_amount: overlay.recurring.amount,
+          event_order: order++,
+        });
+        continue;
+      }
+
+      const { paydown, schedule } = calculateAmortization(this.loanData, events);
+      const current = toResult(paydown, schedule, this.endIso, applied);
+      const scheduledDates = new Set(current.rows.filter((row) => !row.extra).map((row) => row.date));
+      let date = overlay.rate.date > this.startIso ? overlay.rate.date : addDays(this.startIso, 1);
+      while (scheduledDates.has(date) || taken.has(date)) date = addDays(date, 1);
+      taken.add(date);
+      rateDates.push(date);
+      const event: PaydownEvent = {
+        date: toEngineDate(date),
+        rate: overlay.rate.rate,
+        event_order: order++,
+      };
+      const prior = [...current.rows].reverse().find((row) => row.date < date);
       const principal = prior ? prior.remaining : this.loanData.principal;
-      if (keepInstallment) {
-        const current = regularAfter(base, date);
-        if (current) event.recurring_amount = current.installment;
+      if (overlay.rate.keepInstallment) {
+        const installment = regularAfter(current, date);
+        if (installment) event.recurring_amount = installment.installment;
       } else if (principal > 1) {
         // The engine would spread a rate change over the contract term; banks keep the current maturity.
-        event.recurring_amount = this.recurringFor(principal, rate, date, base.payoffDate);
+        event.recurring_amount = this.recurringFor(principal, overlay.rate.rate, date, current.payoffDate);
       }
       events.push(event);
     }
 
-    for (const change of input.recurringAmounts || []) {
-      events.push({
-        date: toEngineDate(change.date),
-        recurring_amount: change.amount,
-        event_order: order++,
-      });
-    }
-
     const { paydown, schedule } = calculateAmortization(this.loanData, events);
-    return { ...toResult(paydown, schedule, this.endIso, applied), rateDate };
+    return {
+      ...toResult(paydown, schedule, this.endIso, applied),
+      rateDate: rateDates[rateDates.length - 1],
+      ...(rateDates.length && { rateDates }),
+    };
   }
 
   /** Recurring amount that repays `principal` from `date` until `untilIso`. */
@@ -310,22 +382,141 @@ export class LoanSimulator {
     strategy: ExtraStrategy,
     input: ScenarioInput = {}
   ): ScenarioResult {
+    return this.applyExtra(payment, strategy, input).result;
+  }
+
+  /** runExtra plus the input that reproduces it, so later events can build on it. */
+  private applyExtra(
+    payment: HypotheticalPayment,
+    strategy: ExtraStrategy,
+    input: ScenarioInput
+  ): { result: ScenarioResult; input: ScenarioInput } {
     const withPayment = { ...input, payments: [...(input.payments || []), payment] };
     const first = this.run(withPayment);
-    if (strategy === 'reduce_term') return first;
+    if (strategy === 'reduce_term') return { result: first, input: withPayment };
 
     const date = first.applied[first.applied.length - 1];
     const row = first.rows.find((r) => r.hypothetical && r.date === date);
-    if (!row || row.remaining <= 1) return first;
+    if (!row || row.remaining <= 1) return { result: first, input: withPayment };
+    // Maturity as the bank sees it on that date: later hypothetical extras must not shorten it.
+    const prior = this.inputUntil(input, date);
     const hasInput = Boolean(
-      input.payments?.length || input.rateChange || input.recurringAmounts?.length || input.excludeItem
+      prior.payments?.length ||
+        prior.rateChange ||
+        prior.rateChanges?.length ||
+        prior.recurringAmounts?.length ||
+        prior.excludeItem
     );
-    const current = hasInput ? this.run(input) : this.baseline(input.includePlanned !== false);
+    const current = hasInput ? this.run(prior) : this.baseline(input.includePlanned !== false);
     const amount = this.recurringFor(row.remaining, row.rate, date, current.payoffDate);
-    return this.run({
+    const next = {
       ...withPayment,
       recurringAmounts: [...(input.recurringAmounts || []), { date, amount }],
-    });
+    };
+    return { result: this.run(next), input: next };
+  }
+
+  private inputUntil(input: ScenarioInput, date: string): ScenarioInput {
+    return {
+      ...input,
+      payments: input.payments?.filter((p) => p.date <= date),
+      recurringAmounts: input.recurringAmounts?.filter((r) => r.date <= date),
+      rateChanges: input.rateChanges?.filter((r) => r.date <= date),
+      rateChange: input.rateChange && input.rateChange.date <= date ? input.rateChange : undefined,
+    };
+  }
+
+  /**
+   * Several future extras and/or rate changes, applied in date order on one schedule.
+   * Each extra's strategy is resolved before later events see the new remaining/installment.
+   */
+  runSequence(events: SequenceEvent[]): { result: ScenarioResult; steps: SequenceStep[] } {
+    let input: ScenarioInput = {};
+    const steps: SequenceStep[] = [];
+    const sorted = [...events].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+    const snapshot = (
+      result: ScenarioResult,
+      event: SequenceEvent,
+      extra: Partial<SequenceStep> = {}
+    ): SequenceStep => {
+      const at = extra.appliedOn || result.rateDate || event.date;
+      const row = [...result.rows].reverse().find((r) => r.date <= at);
+      const next = regularAfter(result, at);
+      return {
+        type: event.type,
+        date: event.date,
+        remaining: row ? row.remaining : this.loanData.principal,
+        nextInstallment: next ? next.installment : null,
+        payoffDate: result.payoffDate,
+        futureInterest: result.futureInterest,
+        ...extra,
+      };
+    };
+
+    for (const event of sorted) {
+      if (event.type === 'extra_payment') {
+        const amount = event.amount || 0;
+        if (!(amount > 0)) continue;
+        const strategy = event.strategy || 'reduce_term';
+        const payment = { date: event.date, amount };
+        const applied = this.applyExtra(payment, strategy, input);
+        const result = applied.result;
+        input = applied.input;
+        const appliedOn = result.applied[result.applied.length - 1];
+        steps.push(snapshot(result, event, { amount, strategy, appliedOn }));
+        continue;
+      }
+
+      if (event.type === 'rate_change' && event.rate != null) {
+        const change = {
+          date: event.date,
+          rate: event.rate,
+          keepInstallment: event.keepInstallment,
+        };
+        input = { ...input, rateChanges: [...(input.rateChanges || []), change] };
+        const result = this.run(input);
+        steps.push(
+          snapshot(result, event, {
+            rate: event.rate,
+            keepInstallment: Boolean(event.keepInstallment),
+            appliedOn: result.rateDate || event.date,
+          })
+        );
+        continue;
+      }
+
+      if (event.type === 'recurring_extra') {
+        const amount = event.amount || 0;
+        if (!(amount > 0)) continue;
+        const everyMonths = Math.min(24, Math.max(1, Math.floor(event.everyMonths || 1)));
+        const current = this.run(input);
+        const extras = current.rows
+          .filter(
+            (row) =>
+              !row.paid &&
+              !row.extra &&
+              row.date >= event.date &&
+              (!event.until || row.date <= event.until)
+          )
+          .filter((_, index) => index % everyMonths === 0)
+          .map((row) => ({ date: row.date, amount }));
+        if (!extras.length) continue;
+        input = { ...input, payments: [...(input.payments || []), ...extras] };
+        const result = this.run(input);
+        const ownDates = new Set(result.applied.slice(-extras.length));
+        steps.push(
+          snapshot(result, event, {
+            amount,
+            // Extras planned after the new payoff date never get paid.
+            extraPaymentsMade: result.rows.filter((row) => row.hypothetical && ownDates.has(row.date)).length,
+            appliedOn: result.applied[result.applied.length - extras.length] || extras[0].date,
+          })
+        );
+      }
+    }
+
+    return { result: this.run(input), steps };
   }
 }
 
