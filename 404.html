@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/expenses/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#282a36" />
+    <link rel="apple-touch-icon" href="/expenses/favicon.png" />
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="/expenses/manifest.json" />
+    <title>Expenses</title>
+    <script type="module" crossorigin src="/expenses/assets/index-BT47_3qB.js"></script>
+    <link rel="modulepreload" crossorigin href="/expenses/assets/actions-BqNRJtw0.js">
+    <link rel="modulepreload" crossorigin href="/expenses/assets/useApiClient-_8R8Rx0B.js">
+    <link rel="stylesheet" crossorigin href="/expenses/assets/index-C00CTFjy.css">
+  <link rel="manifest" href="/expenses/manifest.webmanifest"></head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('theme');
+          var theme = t ? JSON.parse(t) : 'default';
+          if (theme === 'blue-pink-gradient') theme = 'default';
+          var valid = ['default','navy','sky','ocean','emerald','forest','teal','mint','violet','indigo','lavender','amber','copper','rose','crimson','slate','charcoal'];
+          if (valid.indexOf(theme) === -1) theme = 'default';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
+    </script>
+    <div id="root"></div>
+  </body>
+</html>
