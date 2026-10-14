@@ -46,6 +46,7 @@ const documentHeaders = [
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  serverExternalPackages: ["tesseract.js", "unpdf", "@napi-rs/canvas"],
   partialPrefetching: true,
   poweredByHeader: false,
   experimental: {

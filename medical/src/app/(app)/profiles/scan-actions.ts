@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getAdminFamilyId } from "@/lib/auth";
 import { readUploadedFiles } from "@/lib/files";
-import { extractMedicalDocument } from "@/lib/gemini";
+import { readPrintedText } from "@/lib/ocr";
 import {
   discardStoredDocument,
   storePrivateDocument,
@@ -38,16 +38,9 @@ type Person = {
   drive_folder_id: string | null;
 };
 
-function geminiError(error: unknown) {
-  const name = error instanceof Error ? error.message : "gemini";
-  if (name === "config") {
-    return "Lipsește GEMINI_API_KEY pe server.";
-  }
-  if (name === "quota") {
-    return "Limita Gemini a fost atinsă. Încearcă mai târziu.";
-  }
-  if (name === "busy") {
-    return "Gemini este ocupat. Încearcă din nou peste puțin timp.";
+function readError(error: unknown) {
+  if (error instanceof Error && error.message === "empty") {
+    return "Nu am găsit text în document. Încearcă o fotografie mai clară.";
   }
   return "Documentul nu a putut fi citit. Verifică fotografia și încearcă din nou.";
 }
@@ -99,18 +92,18 @@ export async function detectDocument(formData: FormData): Promise<DetectResult> 
 
   let extraction: Extraction;
   try {
-    extraction = await extractMedicalDocument({
-      files: uploaded.files.map((file) => ({
+    extraction = await readPrintedText(
+      uploaded.files.map((file) => ({
         bytes: file.bytes,
         mimeType: file.mimeType,
       })),
-    });
+    );
   } catch (error) {
     console.error(
       "detectDocument",
       error instanceof Error ? error.name : "unknown",
     );
-    return { error: geminiError(error) };
+    return { error: readError(error) };
   }
 
   if (!extraction.idnp) {

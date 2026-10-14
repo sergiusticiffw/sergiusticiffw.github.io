@@ -111,10 +111,21 @@ function EntryForm({
     }
   }, [state]);
 
+  function submit(formData: FormData) {
+    const files = formData
+      .getAll("file")
+      .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+    formData.delete("file");
+    for (const file of files) {
+      formData.append("file", file);
+    }
+    formAction(formData);
+  }
+
   return (
     <form
       ref={formRef}
-      action={formAction}
+      action={submit}
       method="post"
       encType="multipart/form-data"
       className="flex flex-col gap-3"

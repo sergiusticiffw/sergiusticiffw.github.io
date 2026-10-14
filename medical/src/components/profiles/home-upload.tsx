@@ -252,8 +252,8 @@ export function HomeUpload({
         </p>
       ) : null}
       <p className="text-sm text-muted-foreground">
-        Poți alege mai multe imagini pentru aceeași înregistrare. AI le citește
-        împreună, iar data și textul se salvează o singură dată.
+        Poți alege mai multe imagini pentru aceeași înregistrare. Textul este
+        citit local, iar data și textul se salvează o singură dată.
       </p>
       <div className="flex flex-col gap-2">
         <Label htmlFor={lockedProfileId ? `upload-${lockedProfileId}` : "home-upload"}>

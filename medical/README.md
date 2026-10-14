@@ -36,9 +36,9 @@ Pentru un cont Google personal, aplicația folosește OAuth 2.0 al contului tău
 4. Pune `GOOGLE_CLIENT_ID` și `GOOGLE_CLIENT_SECRET` în `.env.local`.
 5. După autentificare, folosește „Conectează Google Drive”. Tokenul de reîmprospătare este criptat și salvat în baza de date. Browserul nu îl primește.
 
-La scanare, Next.js trimite fotografia sau PDF-ul către Gemini ca să copieze câmpurile tipărite. Nu se pune un diagnostic și nu se inventează valori. Persoana este profilul a cărui IDNP coincide cu numărul din document. Dacă IDNP-ul lipsește sau nu există în familie, fișierul nu se urcă. După ce verifici câmpurile, serverul urcă fișierul în folderul privat al acelei persoane și salvează consultația sau analizele. Ștergerea documentului șterge și rândurile create din el.
+La citire, PDF-ul își dă textul din fișier, iar fotografia este citită local cu OCR. Nu se folosește un model AI și nu se pune un diagnostic. Dacă în text apare un IDNP de 13 cifre, persoana este profilul cu acel IDNP. După ce verifici textul, serverul urcă fișierul în folderul privat al acelei persoane și salvează înregistrarea. Ștergerea documentului șterge și rândurile create din el.
 
-Creează `GEMINI_API_KEY` în Google AI Studio și pune-o doar în `.env`. Cheia nu ajunge în browser. Aplică mai întâi migrația inițială, apoi [`supabase/migrations/20261013140000_idnp_extraction.sql`](supabase/migrations/20261013140000_idnp_extraction.sql).
+Aplică mai întâi migrația inițială, apoi [`supabase/migrations/20261013140000_idnp_extraction.sql`](supabase/migrations/20261013140000_idnp_extraction.sql).
 
 La deschidere, `/api/documents/[id]` verifică din nou accesul și trimite conținutul prin aplicație, fără un link public. Tipurile permise sunt PDF, JPEG, PNG și WebP, recunoscute după conținut, cu limită de 10 MB.
 

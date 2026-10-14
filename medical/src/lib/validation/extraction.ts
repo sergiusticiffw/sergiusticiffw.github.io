@@ -110,8 +110,18 @@ export function recordDate(extraction: Extraction) {
   );
 }
 
+function consultationNarrative(consultation: ConsultationDraft) {
+  return [
+    consultation.doctorName,
+    consultation.clinicName,
+    consultation.specialty,
+    consultation.summary,
+    consultation.recommendations,
+  ].some((value) => value.trim() !== "");
+}
+
 export function recordCategory(extraction: Extraction) {
-  const hasConsultation = consultationIsPresent(extraction.consultation);
+  const hasConsultation = consultationNarrative(extraction.consultation);
   const hasLabs = presentLabTests(extraction.labTests).length > 0;
   if (hasLabs && !hasConsultation) {
     return "Analize" as const;
@@ -164,7 +174,7 @@ export function recordBody(extraction: Extraction) {
     sections.push(`IDNP: ${extraction.idnp}`);
   }
 
-  if (consultationIsPresent(consultation)) {
+  if (consultationNarrative(consultation)) {
     const summary = consultation.summary.trim();
     const recommendations = consultation.recommendations.trim();
     sections.push(
@@ -196,7 +206,7 @@ export function recordBody(extraction: Extraction) {
   }
 
   const rawText = extraction.extractedText.trim();
-  if (rawText && !consultationIsPresent(consultation) && labs.length === 0) {
+  if (rawText && labs.length === 0) {
     sections.push(rawText);
   }
 
