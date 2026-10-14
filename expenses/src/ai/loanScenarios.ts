@@ -286,18 +286,26 @@ export class LoanSimulator {
         : []
     );
     const taken = new Set<string>();
+    // Callers read applied[i] as payment i, so dates are reserved in input order.
     const applied: string[] = [];
     const rateDates: string[] = [];
+    const placed: { at: string; payment: HypotheticalPayment }[] = [];
+    for (const payment of input.payments || []) {
+      if (!(payment.amount > 0)) continue;
+      let date = payment.date > this.startIso ? payment.date : addDays(this.startIso, 1);
+      while (regularDates.has(date) || taken.has(date)) date = addDays(date, 1);
+      taken.add(date);
+      applied.push(date);
+      placed.push({ at: date, payment });
+    }
 
-    // Apply overlays in date order so a later rate change sees remaining after earlier extras.
+    // Emit in date order so a later rate change sees the balance after earlier extras.
     type Overlay =
       | { at: string; kind: 0; payment: HypotheticalPayment }
       | { at: string; kind: 1; recurring: { date: string; amount: number } }
       | { at: string; kind: 2; rate: HypotheticalRateChange };
     const overlays: Overlay[] = [];
-    for (const payment of input.payments || []) {
-      if (payment.amount > 0) overlays.push({ at: payment.date, kind: 0, payment });
-    }
+    for (const payment of placed) overlays.push({ at: payment.at, kind: 0, payment: payment.payment });
     for (const recurring of input.recurringAmounts || []) {
       overlays.push({ at: recurring.date, kind: 1, recurring });
     }
@@ -306,12 +314,8 @@ export class LoanSimulator {
 
     for (const overlay of overlays) {
       if (overlay.kind === 0) {
-        let date = overlay.payment.date > this.startIso ? overlay.payment.date : addDays(this.startIso, 1);
-        while (regularDates.has(date) || taken.has(date)) date = addDays(date, 1);
-        taken.add(date);
-        applied.push(date);
         events.push({
-          date: toEngineDate(date),
+          date: toEngineDate(overlay.at),
           pay_installment: overlay.payment.amount,
           isEarlyPayment: true,
           isSimulatedPayment: true,
@@ -378,26 +382,48 @@ export class LoanSimulator {
     strategy: ExtraStrategy,
     input: ScenarioInput = {}
   ): ScenarioResult {
+    return this.applyExtra(payment, strategy, input).result;
+  }
+
+  /** runExtra plus the input that reproduces it, so later events can build on it. */
+  private applyExtra(
+    payment: HypotheticalPayment,
+    strategy: ExtraStrategy,
+    input: ScenarioInput
+  ): { result: ScenarioResult; input: ScenarioInput } {
     const withPayment = { ...input, payments: [...(input.payments || []), payment] };
     const first = this.run(withPayment);
-    if (strategy === 'reduce_term') return first;
+    if (strategy === 'reduce_term') return { result: first, input: withPayment };
 
     const date = first.applied[first.applied.length - 1];
     const row = first.rows.find((r) => r.hypothetical && r.date === date);
-    if (!row || row.remaining <= 1) return first;
+    if (!row || row.remaining <= 1) return { result: first, input: withPayment };
+    // Maturity as the bank sees it on that date: later hypothetical extras must not shorten it.
+    const prior = this.inputUntil(input, date);
     const hasInput = Boolean(
-      input.payments?.length ||
-        input.rateChange ||
-        input.rateChanges?.length ||
-        input.recurringAmounts?.length ||
-        input.excludeItem
+      prior.payments?.length ||
+        prior.rateChange ||
+        prior.rateChanges?.length ||
+        prior.recurringAmounts?.length ||
+        prior.excludeItem
     );
-    const current = hasInput ? this.run(input) : this.baseline(input.includePlanned !== false);
+    const current = hasInput ? this.run(prior) : this.baseline(input.includePlanned !== false);
     const amount = this.recurringFor(row.remaining, row.rate, date, current.payoffDate);
-    return this.run({
+    const next = {
       ...withPayment,
       recurringAmounts: [...(input.recurringAmounts || []), { date, amount }],
-    });
+    };
+    return { result: this.run(next), input: next };
+  }
+
+  private inputUntil(input: ScenarioInput, date: string): ScenarioInput {
+    return {
+      ...input,
+      payments: input.payments?.filter((p) => p.date <= date),
+      recurringAmounts: input.recurringAmounts?.filter((r) => r.date <= date),
+      rateChanges: input.rateChanges?.filter((r) => r.date <= date),
+      rateChange: input.rateChange && input.rateChange.date <= date ? input.rateChange : undefined,
+    };
   }
 
   /**
@@ -434,29 +460,10 @@ export class LoanSimulator {
         if (!(amount > 0)) continue;
         const strategy = event.strategy || 'reduce_term';
         const payment = { date: event.date, amount };
-        const result = this.runExtra(payment, strategy, input);
+        const applied = this.applyExtra(payment, strategy, input);
+        const result = applied.result;
+        input = applied.input;
         const appliedOn = result.applied[result.applied.length - 1];
-        const row = result.rows.find((r) => r.hypothetical && r.date === appliedOn);
-        input = {
-          ...input,
-          payments: [...(input.payments || []), payment],
-          ...(strategy === 'reduce_installment' && row && row.remaining > 1
-            ? {
-                recurringAmounts: [
-                  ...(input.recurringAmounts || []),
-                  {
-                    date: appliedOn,
-                    amount: this.recurringFor(
-                      row.remaining,
-                      row.rate,
-                      appliedOn,
-                      this.run(input).payoffDate
-                    ),
-                  },
-                ],
-              }
-            : {}),
-        };
         steps.push(snapshot(result, event, { amount, strategy, appliedOn }));
         continue;
       }
@@ -497,10 +504,12 @@ export class LoanSimulator {
         if (!extras.length) continue;
         input = { ...input, payments: [...(input.payments || []), ...extras] };
         const result = this.run(input);
+        const ownDates = new Set(result.applied.slice(-extras.length));
         steps.push(
           snapshot(result, event, {
             amount,
-            extraPaymentsMade: extras.length,
+            // Extras planned after the new payoff date never get paid.
+            extraPaymentsMade: result.rows.filter((row) => row.hypothetical && ownDates.has(row.date)).length,
             appliedOn: result.applied[result.applied.length - extras.length] || extras[0].date,
           })
         );

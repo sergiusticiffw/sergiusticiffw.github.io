@@ -11,6 +11,7 @@ import {
   LoanSource,
   ScenarioResult,
   SequenceEvent,
+  SequenceStep,
   addDays,
   daysBetween,
   getLoanSimulator,
@@ -756,7 +757,7 @@ const simulateLoanScenario = (ctx: LoanToolContext, args: Args): ToolResult => {
   }
 
   const topStrategy = String(args.strategy || 'compare');
-  const parsed: { event: SequenceEvent; fee: number }[] = [];
+  const parsed: { event: SequenceEvent; fee: number; recurringFeeArgs?: Args }[] = [];
   for (const item of raw) {
     const type = String(item.type || '');
     if (type !== 'extra_payment' && type !== 'rate_change' && type !== 'recurring_extra') {
@@ -802,14 +803,14 @@ const simulateLoanScenario = (ctx: LoanToolContext, args: Args): ToolResult => {
           everyMonths: clampLimit(item.everyMonths, 1, 24),
           until,
         },
-        fee: feeOf(item, amount),
+        fee: 0,
+        recurringFeeArgs: item,
       });
     }
   }
 
   const compare = parsed.some((item) => item.event.type === 'extra_payment' && !item.event.strategy);
   const base = sim.baseline();
-  const totalFee = parsed.reduce((sum, item) => sum + item.fee, 0);
   const bind = (strategy: ExtraStrategy): SequenceEvent[] =>
     parsed.map(({ event }) =>
       event.type === 'extra_payment' && !event.strategy ? { ...event, strategy } : event
@@ -819,6 +820,21 @@ const simulateLoanScenario = (ctx: LoanToolContext, args: Args): ToolResult => {
     const { result, steps } = sim.runSequence(events);
     const saved = base.totalInterest - result.totalInterest;
     const last = steps[steps.length - 1];
+    // A percent commission on a recurring extra applies to every extra actually paid.
+    const usedSteps = new Set<SequenceStep>();
+    const totalFee = parsed.reduce((sum, { event, fee, recurringFeeArgs }) => {
+      if (!recurringFeeArgs) return sum + fee;
+      const step = steps.find(
+        (s) =>
+          s.type === 'recurring_extra' &&
+          !usedSteps.has(s) &&
+          s.date === event.date &&
+          s.amount === event.amount
+      );
+      if (!step) return sum;
+      usedSteps.add(step);
+      return sum + feeOf(recurringFeeArgs, (step.amount || 0) * (step.extraPaymentsMade || 0));
+    }, 0);
     return {
       timeline: steps.map((step) => ({
         event: step.type,
