@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useExpenseRaw } from '@stores/expenseStore';
-import { useLoanList, useLoanLoading, useLoanPayments } from '@stores/loanStore';
+import {
+  useLoanList,
+  useLoanLoading,
+  useLoanPayments,
+} from '@stores/loanStore';
 import { useSettingsCurrency } from '@stores/settingsStore';
 import {
   AiError,
@@ -9,8 +13,14 @@ import {
   describeAiError,
   streamGenerate,
 } from '../client';
-import { AI_LIMITS } from '../config';
-import { ChatMessage, chatSession, clearChatSession } from '../chatSession';
+import { AI_LIMITS, AI_MODELS } from '../config';
+import {
+  ChatMessage,
+  chatSession,
+  clearChatSession,
+  markInterrupted,
+  saveChatSession,
+} from '../chatSession';
 import { buildDataSummary } from '../context/summary';
 import { getAiItems } from '../data';
 import { buildLoanContext } from '../loans';
@@ -48,16 +58,30 @@ export function useAiChat(apiKey: string) {
 
   useEffect(() => {
     chatSession.messages = messages;
+    // Streaming updates are frequent; the finished answer is saved once.
+    if (!messages.some((m) => m.status === 'streaming')) saveChatSession();
   }, [messages]);
 
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      chatSession.messages = markInterrupted(chatSession.messages);
+      saveChatSession();
+    },
+    []
+  );
 
-  const patchMessage = useCallback((id: string, patch: Partial<ChatMessage>) => {
-    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
-  }, []);
+  const patchMessage = useCallback(
+    (id: string, patch: Partial<ChatMessage>) => {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, ...patch } : m))
+      );
+    },
+    []
+  );
 
   const send = useCallback(
-    async (question: string) => {
+    async (question: string, preferModel?: string) => {
       const trimmed = question.trim();
       if (!trimmed || busy || !apiKey) return;
 
@@ -77,8 +101,14 @@ export function useAiChat(apiKey: string) {
 
       const controller = new AbortController();
       abortRef.current = controller;
-      const userTurn: GeminiContent = { role: 'user', parts: [{ text: trimmed }] };
-      const contents: GeminiContent[] = [...trimHistory(chatSession.history), userTurn];
+      const userTurn: GeminiContent = {
+        role: 'user',
+        parts: [{ text: trimmed }],
+      };
+      const contents: GeminiContent[] = [
+        ...trimHistory(chatSession.history),
+        userTurn,
+      ];
       const systemInstruction = {
         parts: [{ text: buildChatSystemInstruction(summary) }],
       };
@@ -113,6 +143,7 @@ export function useAiChat(apiKey: string) {
           const result = await streamGenerate({
             apiKey,
             tier: 'chat',
+            preferModel,
             request,
             signal: controller.signal,
             onText: (text) =>
@@ -125,7 +156,11 @@ export function useAiChat(apiKey: string) {
           const stepTokens = result.usage.totalTokenCount || 0;
           tokens += stepTokens;
           recordAiUsage(stepTokens);
-          contents.push({ role: 'model', parts: result.parts, model: result.model });
+          contents.push({
+            role: 'model',
+            parts: result.parts,
+            model: result.model,
+          });
           model = result.model;
           if (result.text) {
             previousText = previousText
@@ -169,6 +204,11 @@ export function useAiChat(apiKey: string) {
       } catch (error) {
         const stopped = controller.signal.aborted;
         const errorText = describeAiError(error);
+        const failedModel =
+          (error instanceof AiError && error.model) ||
+          preferModel ||
+          model ||
+          AI_MODELS.chat[0];
         patchMessage(assistantId, {
           text:
             stopped || !previousText
@@ -177,6 +217,7 @@ export function useAiChat(apiKey: string) {
           status: stopped ? 'stopped' : 'error',
           activity: undefined,
           tokens: tokens || undefined,
+          failedModel: stopped ? undefined : failedModel,
         });
       } finally {
         abortRef.current = null;
@@ -188,7 +229,7 @@ export function useAiChat(apiKey: string) {
 
   /** Re-asks the question behind a failed answer, replacing both messages. */
   const retry = useCallback(
-    (assistantId: string) => {
+    (assistantId: string, preferModel?: string) => {
       if (busy) return;
       const index = messages.findIndex((m) => m.id === assistantId);
       const question = messages[index - 1];
@@ -196,7 +237,7 @@ export function useAiChat(apiKey: string) {
       setMessages((prev) =>
         prev.filter((m) => m.id !== assistantId && m.id !== question.id)
       );
-      send(question.text);
+      send(question.text, preferModel);
     },
     [busy, messages, send]
   );

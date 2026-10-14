@@ -25,7 +25,7 @@ import { fetchLoans } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useExpenseData, useExpenseRaw } from '@stores/expenseStore';
 import { useLoan } from '@stores/loanStore';
-import { fallbackModelLabel } from '../../../../ai/config';
+import { modelLabel, nextChatModel } from '../../../../ai/config';
 import { ChatMessage } from '../../../../ai/chatSession';
 import { getAiItems } from '../../../../ai/data';
 import { buildLoanPrompts } from '../../../../ai/loans';
@@ -90,7 +90,9 @@ const useOnline = () => {
 const AssistantMessage: React.FC<{
   message: ChatMessage;
   onRetry?: () => void;
-}> = ({ message, onRetry }) => {
+  onRetryAlt?: () => void;
+  altModel?: string | null;
+}> = ({ message, onRetry, onRetryAlt, altModel }) => {
   const { t } = useLocalization();
   const [copied, setCopied] = useState(false);
   const copy = () => {
@@ -136,16 +138,29 @@ const AssistantMessage: React.FC<{
                 {t('assistant.retry')}
               </button>
             )}
-            {message.status === 'stopped' && <span>{t('assistant.stopped')}</span>}
+            {onRetryAlt && altModel && (
+              <button
+                type="button"
+                onClick={onRetryAlt}
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 hover:bg-white/5 hover:text-app-secondary"
+              >
+                <FiRefreshCw />
+                {t('assistant.retryWith').replace(
+                  '{model}',
+                  modelLabel(altModel) || altModel
+                )}
+              </button>
+            )}
+            {message.status === 'stopped' && (
+              <span>{t('assistant.stopped')}</span>
+            )}
             {!!message.tokens && (
               <span>
                 {formatTokens(message.tokens)} {t('assistant.tokens')}
               </span>
             )}
-            {fallbackModelLabel(message.model) && (
-              <span>
-                {t('assistant.via')} {fallbackModelLabel(message.model)}
-              </span>
+            {modelLabel(message.model) && (
+              <span>{modelLabel(message.model)}</span>
             )}
           </div>
         )}
@@ -160,7 +175,9 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
     useAiChat(apiKey);
   const [input, setInput] = useState('');
   const raw = useExpenseRaw();
-  const [suggestions, setSuggestions] = useState<SuggestedPrompt[] | null>(null);
+  const [suggestions, setSuggestions] = useState<SuggestedPrompt[] | null>(
+    null
+  );
   const [browsingSuggestions, setBrowsingSuggestions] = useState(false);
   const seenSuggestions = useRef(new Set<string>());
   const shuffleSuggestions = useCallback(() => {
@@ -191,7 +208,8 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const pendingPrompt = (location.state as { prompt?: string } | undefined)?.prompt;
+  const pendingPrompt = (location.state as { prompt?: string } | undefined)
+    ?.prompt;
   const sentPromptRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -224,7 +242,9 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
 
   const speechPrefixRef = useRef('');
   const speech = useSpeechInput((text) =>
-    setInput(speechPrefixRef.current ? `${speechPrefixRef.current} ${text}` : text)
+    setInput(
+      speechPrefixRef.current ? `${speechPrefixRef.current} ${text}` : text
+    )
   );
 
   const toggleSpeech = () => {
@@ -272,7 +292,9 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
                 <KindIcon className="text-sm" />
                 {t(kind.label)}
               </span>
-              <span className="text-sm leading-snug text-app-primary">{prompt.text}</span>
+              <span className="text-sm leading-snug text-app-primary">
+                {prompt.text}
+              </span>
             </button>
           );
         })}
@@ -311,8 +333,17 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 md:px-6 lg:px-8">
-          {messages.map((message, index) =>
-            message.role === 'user' ? (
+          {messages.map((message, index) => {
+            const canRetry =
+              index === messages.length - 1 &&
+              message.status === 'error' &&
+              online &&
+              !busy;
+            const altModel =
+              canRetry && message.failedModel
+                ? nextChatModel(message.failedModel)
+                : null;
+            return message.role === 'user' ? (
               <div key={message.id} className="flex justify-end">
                 <div className="max-w-[85%] rounded-2xl bg-[var(--color-app-accent)]/15 px-3.5 py-2 text-sm text-app-primary">
                   {message.text}
@@ -322,17 +353,14 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
               <AssistantMessage
                 key={message.id}
                 message={message}
-                onRetry={
-                  index === messages.length - 1 &&
-                  message.status === 'error' &&
-                  online &&
-                  !busy
-                    ? () => retry(message.id)
-                    : undefined
+                onRetry={canRetry ? () => retry(message.id) : undefined}
+                onRetryAlt={
+                  altModel ? () => retry(message.id, altModel) : undefined
                 }
+                altModel={altModel}
               />
-            )
-          )}
+            );
+          })}
           <div ref={endRef} />
         </div>
       )}
@@ -388,10 +416,16 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
               onClick={toggleSpeech}
               disabled={!online || !hasData}
               aria-label={
-                speech.listening ? t('assistant.stopVoice') : t('assistant.voice')
+                speech.listening
+                  ? t('assistant.stopVoice')
+                  : t('assistant.voice')
               }
               aria-pressed={speech.listening}
-              title={speech.listening ? t('assistant.stopVoice') : t('assistant.voice')}
+              title={
+                speech.listening
+                  ? t('assistant.stopVoice')
+                  : t('assistant.voice')
+              }
               className={`mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full disabled:opacity-40 ${
                 speech.listening
                   ? 'bg-red-500/15 text-red-400'
@@ -473,9 +507,7 @@ const Assistant = () => {
           </Link>
         </div>
       )}
-      {status === 'ready' && (
-        <Chat apiKey={apiKey} />
-      )}
+      {status === 'ready' && <Chat apiKey={apiKey} />}
     </div>
   );
 };

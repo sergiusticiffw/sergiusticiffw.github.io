@@ -31,7 +31,9 @@ const todayKey = () => new Date().toISOString().slice(0, 10);
 
 export const getAiUsage = (): AiUsage => {
   try {
-    const usage = JSON.parse(localStorage.getItem(AI_STORAGE_KEYS.usage) || 'null');
+    const usage = JSON.parse(
+      localStorage.getItem(AI_STORAGE_KEYS.usage) || 'null'
+    );
     if (usage?.date === todayKey()) return usage;
   } catch {
     // ignore malformed value
@@ -43,20 +45,27 @@ export const recordAiUsage = (tokens: number) => {
   const usage = getAiUsage();
   localStorage.setItem(
     AI_STORAGE_KEYS.usage,
-    JSON.stringify({ ...usage, requests: usage.requests + 1, tokens: usage.tokens + tokens })
+    JSON.stringify({
+      ...usage,
+      requests: usage.requests + 1,
+      tokens: usage.tokens + tokens,
+    })
   );
 };
 
 export const getAiLanguage = (): string => {
   const value = localStorage.getItem(AI_STORAGE_KEYS.language);
-  return value && (AI_LANGUAGES as readonly string[]).includes(value) ? value : AI_LANGUAGES[0];
+  return value && (AI_LANGUAGES as readonly string[]).includes(value)
+    ? value
+    : AI_LANGUAGES[0];
 };
 
 export const setAiLanguage = (value: string) => {
   localStorage.setItem(AI_STORAGE_KEYS.language, value);
 };
 
-export type InsightTone = 'positive' | 'negative' | 'warning' | 'tip' | 'neutral';
+export type InsightTone =
+  'positive' | 'negative' | 'warning' | 'tip' | 'neutral';
 
 export interface Insight {
   headline: string;
@@ -78,28 +87,77 @@ export interface InsightEntry {
 
 const readInsights = (): Record<string, InsightEntry> => {
   try {
-    return JSON.parse(localStorage.getItem(AI_STORAGE_KEYS.insights) || '{}') || {};
+    return (
+      JSON.parse(localStorage.getItem(AI_STORAGE_KEYS.insights) || '{}') || {}
+    );
   } catch {
     return {};
   }
 };
 
-export const getInsightEntry = (key: string): InsightEntry | null => readInsights()[key] || null;
+export const getInsightEntry = (key: string): InsightEntry | null =>
+  readInsights()[key] || null;
 
 export const saveInsightEntry = (key: string, entry: InsightEntry) => {
   const entries = { ...readInsights(), [key]: entry };
-  const keys = Object.keys(entries).sort((a, b) => entries[b].at - entries[a].at);
+  const keys = Object.keys(entries).sort(
+    (a, b) => entries[b].at - entries[a].at
+  );
   keys.slice(AI_INSIGHT_LIMITS.cacheEntries).forEach((k) => delete entries[k]);
   localStorage.setItem(AI_STORAGE_KEYS.insights, JSON.stringify(entries));
+};
+
+/** Last rate-limit (429) error received for a model, kept for diagnosis. */
+export interface ModelLimitRecord {
+  at: number;
+  /** Cooldown applied by the app. */
+  until: number;
+  daily: boolean;
+  retryAfterSeconds?: number;
+  quotaId?: string;
+  limit?: number;
+}
+
+/** Prefer Google's retryDelay when the record still has one. */
+export const effectiveCooldownUntil = (record: ModelLimitRecord) =>
+  record.retryAfterSeconds
+    ? record.at + record.retryAfterSeconds * 1000
+    : record.until;
+
+export const getModelLimitLog = (): Record<string, ModelLimitRecord> => {
+  try {
+    return (
+      JSON.parse(localStorage.getItem(AI_STORAGE_KEYS.modelLimits) || '{}') ||
+      {}
+    );
+  } catch {
+    return {};
+  }
+};
+
+export const saveModelLimit = (model: string, record: ModelLimitRecord) => {
+  localStorage.setItem(
+    AI_STORAGE_KEYS.modelLimits,
+    JSON.stringify({ ...getModelLimitLog(), [model]: record })
+  );
 };
 
 /** Model → timestamp (ms) until which it is rate limited. Expired entries are dropped. */
 export const getModelCooldowns = (): Record<string, number> => {
   try {
-    const all = JSON.parse(localStorage.getItem(AI_STORAGE_KEYS.modelCooldowns) || '{}') || {};
+    const all =
+      JSON.parse(
+        localStorage.getItem(AI_STORAGE_KEYS.modelCooldowns) || '{}'
+      ) || {};
+    const log = getModelLimitLog();
+    for (const [model, record] of Object.entries(log)) {
+      all[model] = effectiveCooldownUntil(record);
+    }
     const now = Date.now();
     return Object.fromEntries(
-      Object.entries(all).filter(([, until]) => typeof until === 'number' && until > now)
+      Object.entries(all).filter(
+        ([, until]) => typeof until === 'number' && until > now
+      )
     ) as Record<string, number>;
   } catch {
     return {};
