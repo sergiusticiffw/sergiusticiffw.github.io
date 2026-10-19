@@ -72,6 +72,106 @@ export async function deleteRecord(
   return {};
 }
 
+function validRecordDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+export async function updateRecord(
+  kind: RecordKind,
+  id: string,
+  input: { title: string; date: string; body: string },
+): Promise<DocumentActionResult> {
+  if (!recordKinds.includes(kind)) {
+    return { error: "Înregistrarea nu este validă." };
+  }
+  const parsedId = profileIdSchema.safeParse(id);
+  if (!parsedId.success) {
+    return { error: "Înregistrarea nu este validă." };
+  }
+
+  const title = input.title.trim().slice(0, 160);
+  const body = input.body.trim().slice(0, 20000);
+  const date = input.date.trim();
+  if (!validRecordDate(date)) {
+    return { error: "Data nu este validă." };
+  }
+  if (kind !== "consultation" && !title) {
+    return {
+      error: kind === "lab" ? "Numele analizei este obligatoriu." : "Titlul este obligatoriu.",
+    };
+  }
+  if (kind === "consultation" && !body) {
+    return { error: "Nota este obligatorie." };
+  }
+
+  const supabase = await createClient();
+  const table =
+    kind === "document"
+      ? "medical_documents"
+      : kind === "consultation"
+        ? "consultations"
+        : "lab_tests";
+  const { data, error } = await supabase
+    .from(table)
+    .select("id, profile_id")
+    .eq("id", parsedId.data)
+    .maybeSingle();
+  if (error || !data) {
+    return { error: "Înregistrarea nu a fost găsită." };
+  }
+
+  const row = data as { id: string; profile_id: string };
+  const family = await requireProfileWriter(row.profile_id);
+  if (!family.familyId) {
+    return { error: family.error ?? "Familia nu a putut fi încărcată." };
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", row.profile_id)
+    .eq("family_id", family.familyId)
+    .maybeSingle();
+  if (profileError || !profile) {
+    return { error: "Înregistrarea nu a fost găsită." };
+  }
+
+  const changes =
+    kind === "document"
+      ? { title, document_date: date, extracted_text: body || null }
+      : kind === "consultation"
+        ? { consultation_date: date, summary: body }
+        : { test_name: title, sample_date: date, result_text: body || null };
+
+  const updated = await supabase.from(table).update(changes).eq("id", row.id);
+  const missingTitle =
+    kind === "document" &&
+    (updated.error?.code === "42703" || updated.error?.code === "PGRST204") &&
+    (updated.error.message ?? "").toLowerCase().includes("title");
+  const saved = missingTitle
+    ? await supabase
+        .from(table)
+        .update({
+          document_date: date,
+          extracted_text: `${title}\n\n${body}`.trim().slice(0, 20000) || null,
+        })
+        .eq("id", row.id)
+    : updated;
+  if (saved.error) {
+    console.error("updateRecord", saved.error.code);
+    return { error: "Înregistrarea nu a putut fi modificată." };
+  }
+
+  revalidatePath("/profiles");
+  revalidatePath(`/profiles/${row.profile_id}`);
+  revalidatePath("/assistant");
+  return {};
+}
+
 export async function deleteDocument(id: string): Promise<DocumentActionResult> {
   const parsedId = profileIdSchema.safeParse(id);
   if (!parsedId.success) {

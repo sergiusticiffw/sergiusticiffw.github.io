@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { deleteProfile } from "@/app/(app)/profiles/actions";
 import { DeleteRecordButton } from "@/components/profiles/delete-record-button";
+import { EditRecordButton } from "@/components/profiles/edit-record-button";
 import { DocumentPreview } from "@/components/profiles/document-preview";
 import { ProfileEntries } from "@/components/profiles/profile-entries";
 import { ProfileForm } from "@/components/profiles/profile-form";
@@ -247,6 +248,8 @@ function ProfileRecords({
         ]
           .filter(Boolean)
           .join(" · "),
+      editTitle: document.title?.trim() || "",
+      editBody: document.extracted_text?.trim() || "",
       body: documentBody({
         extractedText: document.extracted_text,
         consultation:
@@ -270,6 +273,8 @@ function ProfileRecords({
         kind: "consultation" as const,
         date: item.consultation_date,
         title: ["Consultație", item.doctor_name].filter(Boolean).join(" · "),
+        editTitle: "",
+        editBody: item.summary?.trim() || "",
         body: documentBody({
           extractedText: null,
           consultation: item,
@@ -285,6 +290,8 @@ function ProfileRecords({
         kind: "lab" as const,
         date: item.sample_date,
         title: ["Analiză", item.test_name].filter(Boolean).join(" · "),
+        editTitle: item.test_name,
+        editBody: item.result_text?.trim() || "",
         body: documentBody({
           extractedText: null,
           consultation: null,
@@ -325,20 +332,22 @@ function ProfileRecords({
         <ul className="flex flex-col gap-3">
           {visible.map((record) => (
             <li key={record.id} className="rounded-lg border px-3 py-2">
-              <div className="flex items-center gap-2">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm">
-                    <span className="text-muted-foreground">
-                      {record.date ? formatBirthDate(record.date) : "Fără dată"}
-                    </span>
-                    {record.title ? ` · ${record.title}` : ""}
-                  </p>
-                  {record.body ? (
-                    <p className="truncate text-xs text-muted-foreground">{record.body}</p>
-                  ) : null}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm">
+                      <span className="text-muted-foreground">
+                        {record.date ? formatBirthDate(record.date) : "Fără dată"}
+                      </span>
+                      {record.title ? ` · ${record.title}` : ""}
+                    </p>
+                    {record.body ? (
+                      <p className="truncate text-xs text-muted-foreground">{record.body}</p>
+                    ) : null}
+                  </div>
                 </div>
                 {record.files.length > 0 ? (
-                  <ul className="flex shrink-0 gap-1">
+                  <ul className="flex flex-wrap gap-1">
                     {record.files.map((file) => (
                       <li key={file.id}>
                         <DocumentPreview
@@ -352,12 +361,21 @@ function ProfileRecords({
                   </ul>
                 ) : null}
                 {canWrite ? (
-                  <DeleteRecordButton
-                    kind={record.kind}
-                    id={record.id}
-                    withFiles={record.files.length > 0}
-                    compact
-                  />
+                  <div className="flex flex-wrap items-center gap-1">
+                    <EditRecordButton
+                      kind={record.kind}
+                      id={record.id}
+                      title={record.editTitle || record.title}
+                      date={record.date ?? ""}
+                      body={record.editBody || record.body}
+                    />
+                    <DeleteRecordButton
+                      kind={record.kind}
+                      id={record.id}
+                      withFiles={record.files.length > 0}
+                      compact
+                    />
+                  </div>
                 ) : null}
               </div>
               {record.body ? (

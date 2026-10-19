@@ -46,13 +46,28 @@ const documentHeaders = [
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
-  serverExternalPackages: ["tesseract.js", "unpdf", "@napi-rs/canvas"],
+  serverExternalPackages: [
+    "tesseract.js",
+    "tesseract.js-core",
+    "unpdf",
+    "@napi-rs/canvas",
+  ],
   partialPrefetching: true,
   poweredByHeader: false,
   experimental: {
+    proxyClientMaxBodySize: "32mb",
     serverActions: {
       bodySizeLimit: "32mb",
     },
+  },
+  outputFileTracingIncludes: {
+    "/profiles/**": [
+      "./ocr/**/*",
+      "./node_modules/tesseract.js/**/*",
+      "./node_modules/.pnpm/tesseract.js-core@*/node_modules/tesseract.js-core/**/*",
+      "./node_modules/.pnpm/wasm-feature-detect@*/node_modules/wasm-feature-detect/**/*",
+      "./node_modules/.pnpm/node-fetch@*/node_modules/node-fetch/**/*",
+    ],
   },
   turbopack: {
     rules: {

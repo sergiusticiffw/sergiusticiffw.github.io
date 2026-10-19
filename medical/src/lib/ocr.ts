@@ -1,5 +1,6 @@
 import "server-only";
 
+import path from "node:path";
 import { tmpdir } from "node:os";
 import { createWorker, type Worker } from "tesseract.js";
 import { extractText, getDocumentProxy, renderPageAsImage } from "unpdf";
@@ -96,7 +97,9 @@ export async function readPrintedText(
       return recognize(current, bytes);
     }
     const created = await createWorker("ron+eng", 1, {
-      cachePath: `${tmpdir()}/tesseract-medical`,
+      cachePath: path.join(tmpdir(), "tesseract-medical"),
+      langPath: path.join(process.cwd(), "ocr"),
+      gzip: true,
     });
     await created.setParameters({ preserve_interword_spaces: "1" });
     workers.push(created);
@@ -117,7 +120,9 @@ export async function readPrintedText(
       } catch (error) {
         console.error(
           "readPrintedText",
-          error instanceof Error ? error.name : "unknown",
+          error instanceof Error
+            ? `${error.name}: ${error.message.slice(0, 180)}`
+            : "unknown",
         );
       }
     }

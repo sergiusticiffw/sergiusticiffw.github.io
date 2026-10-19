@@ -56,6 +56,7 @@ export function HomeUpload({
   const [draft, setDraft] = useState<RecordDraft | null>(null);
   const [profileId, setProfileId] = useState(lockedProfileId ?? "");
   const [matchedName, setMatchedName] = useState<string | null>(null);
+  const [attachedTo, setAttachedTo] = useState<string | null>(null);
 
   function reset() {
     setFiles([]);
@@ -64,6 +65,7 @@ export function HomeUpload({
     setDraft(null);
     setProfileId(lockedProfileId ?? "");
     setMatchedName(null);
+    setAttachedTo(null);
     setProgress(null);
     setError(null);
   }
@@ -155,25 +157,51 @@ export function HomeUpload({
 
     setError(null);
     setPending("save");
-    const data = new FormData();
-    for (const file of files) {
-      data.append("file", file);
+    let primaryId = attachedTo;
+    try {
+      for (const [index, file] of files.entries()) {
+        setProgress(`Se salvează ${index + 1} din ${files.length}…`);
+        const named =
+          files.length > 1
+            ? new File([file], `${index + 1}-${file.name}`, { type: file.type })
+            : file;
+        const data = new FormData();
+        data.append("file", named);
+        data.set("profileId", profileId);
+        data.set("title", draft.title.trim());
+        data.set("documentDate", draft.date);
+        data.set("body", primaryId ? "" : draft.body);
+        data.set("payload", primaryId ? "{}" : JSON.stringify(extraction));
+        if (lockedProfileId) {
+          data.set("lockProfile", "1");
+        }
+        if (primaryId) {
+          data.set("recordId", primaryId);
+        }
+        if (index === files.length - 1) {
+          data.set("finalize", "1");
+        }
+        const result = await saveDetectedDocument(data);
+        if (result.error || !result.documentId) {
+          setAttachedTo(primaryId);
+          setFiles(files.slice(index));
+          setError(
+            result.error ??
+              `Imaginea ${index + 1} din ${files.length} nu a putut fi salvată.`,
+          );
+          return;
+        }
+        primaryId = primaryId ?? result.documentId;
+        setAttachedTo(primaryId);
+      }
+      reset();
+    } catch {
+      setAttachedTo(primaryId);
+      setError("Înregistrarea nu a putut fi salvată. Încearcă din nou.");
+    } finally {
+      setPending(null);
+      setProgress(null);
     }
-    data.set("profileId", profileId);
-    data.set("title", draft.title.trim());
-    data.set("documentDate", draft.date);
-    data.set("body", draft.body);
-    data.set("payload", JSON.stringify(extraction));
-    if (lockedProfileId) {
-      data.set("lockProfile", "1");
-    }
-    const result = await saveDetectedDocument(data);
-    setPending(null);
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
-    reset();
   }
 
   if (draft) {
@@ -270,7 +298,7 @@ export function HomeUpload({
               void onSave();
             }}
           >
-            {pending === "save" ? "Se salvează…" : "Salvează"}
+            {pending === "save" ? progress ?? "Se salvează…" : "Salvează"}
           </Button>
           <Button
             type="button"

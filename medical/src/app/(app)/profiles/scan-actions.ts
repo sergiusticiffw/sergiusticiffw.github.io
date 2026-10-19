@@ -29,6 +29,7 @@ export type SaveResult = {
   error?: string;
   saved?: boolean;
   profileId?: string;
+  documentId?: string;
 };
 
 type Person = {
@@ -133,6 +134,8 @@ export async function saveDetectedDocument(
 
   const parsed = extractionSchema.safeParse(payload);
   const parsedId = profileIdSchema.safeParse(formData.get("profileId"));
+  const attachedTo = profileIdSchema.safeParse(formData.get("recordId"));
+  const recordId = attachedTo.success ? attachedTo.data : null;
   const documentDate = String(formData.get("documentDate") ?? "");
   const body = String(formData.get("body") ?? "").trim().slice(0, MAX_EXTRACTED_TEXT);
   const title = String(formData.get("title") ?? "").trim().slice(0, 160);
@@ -141,7 +144,11 @@ export async function saveDetectedDocument(
     profileId: formData.get("profileId"),
     documentDate,
   });
-  if (!parsed.success || !parsedId.success || !savedRecord.success || !body || !title) {
+  if (recordId) {
+    if (!parsedId.success || !savedRecord.success) {
+      return { error: "Verifică data înregistrării." };
+    }
+  } else if (!parsed.success || !parsedId.success || !savedRecord.success || !body || !title) {
     return { error: "Verifică titlul, data și textul înregistrării." };
   }
 
@@ -164,7 +171,7 @@ export async function saveDetectedDocument(
   }
 
   let person = selected.profile;
-  if (!lockProfile && parsed.data.idnp) {
+  if (!recordId && !lockProfile && parsed.success && parsed.data.idnp) {
     const match = await profileByIdnp(family.familyId, parsed.data.idnp);
     if ("error" in match && match.error) {
       return { error: match.error };
@@ -189,9 +196,9 @@ export async function saveDetectedDocument(
       size: file.size,
       documentDate,
       category: "",
-      extractedText: index === 0 ? body : "",
-      title: index === 0 ? title : null,
-      recordId: storedFiles[0]?.documentId ?? null,
+      extractedText: recordId || index > 0 ? "" : body,
+      title: recordId || index > 0 ? null : title,
+      recordId: recordId ?? storedFiles[0]?.documentId ?? null,
     });
     if ("error" in stored) {
       if (storedFiles[0]) {
@@ -206,8 +213,14 @@ export async function saveDetectedDocument(
     storedFiles.push(stored);
   }
 
-  revalidatePath("/profiles");
-  revalidatePath(`/profiles/${person.id}`);
-  revalidatePath("/assistant");
-  return { saved: true, profileId: person.id };
+  if (formData.get("finalize") === "1") {
+    revalidatePath("/profiles");
+    revalidatePath(`/profiles/${person.id}`);
+    revalidatePath("/assistant");
+  }
+  return {
+    saved: true,
+    profileId: person.id,
+    documentId: recordId ?? storedFiles[0]?.documentId,
+  };
 }

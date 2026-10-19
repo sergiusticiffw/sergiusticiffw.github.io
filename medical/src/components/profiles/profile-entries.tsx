@@ -1,11 +1,13 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
 
 import {
   createConsultation,
   type RecordActionResult,
 } from "@/app/(app)/profiles/record-actions";
+import { saveDetectedDocument } from "@/app/(app)/profiles/scan-actions";
 import { HomeUpload } from "@/components/profiles/home-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,7 +71,10 @@ function EntryForm({
   children: ReactNode;
 }) {
   const [state, formAction, pending] = useActionState(action, initialResult);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [savingFiles, setSavingFiles] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (state.saved) {
@@ -77,15 +82,81 @@ function EntryForm({
     }
   }, [state]);
 
-  function submit(formData: FormData) {
+  async function submit(formData: FormData) {
     const files = formData
       .getAll("file")
       .filter((entry): entry is File => entry instanceof File && entry.size > 0);
     formData.delete("file");
-    for (const file of files) {
-      formData.append("file", file);
+    if (files.length === 0) {
+      formAction(formData);
+      return;
     }
-    formAction(formData);
+
+    const profileId = String(formData.get("profileId") ?? "");
+    const date = String(formData.get("consultationDate") ?? "");
+    const summary = String(formData.get("summary") ?? "").trim();
+    if (!date) {
+      setFileError("Data consultației este obligatorie.");
+      return;
+    }
+
+    setFileError(null);
+    setSavingFiles(true);
+    let primaryId: string | null = null;
+    try {
+      for (const [index, file] of files.entries()) {
+        const named =
+          files.length > 1
+            ? new File([file], `${index + 1}-${file.name}`, { type: file.type })
+            : file;
+        const data = new FormData();
+        data.append("file", named);
+        data.set("profileId", profileId);
+        data.set("lockProfile", "1");
+        data.set("documentDate", date);
+        data.set("title", summary.slice(0, 80) || "Consultație");
+        data.set("body", primaryId ? "" : summary || "Consultație");
+        data.set(
+          "payload",
+          primaryId
+            ? "{}"
+            : JSON.stringify({
+                idnp: "",
+                extractedText: summary,
+                consultation: {
+                  doctorName: "",
+                  clinicName: "",
+                  specialty: "",
+                  consultationDate: date,
+                  summary,
+                  recommendations: "",
+                },
+                labTests: [],
+              }),
+        );
+        if (primaryId) {
+          data.set("recordId", primaryId);
+        }
+        if (index === files.length - 1) {
+          data.set("finalize", "1");
+        }
+        const result = await saveDetectedDocument(data);
+        if (result.error || !result.documentId) {
+          setFileError(
+            result.error ??
+              `Imaginea ${index + 1} din ${files.length} nu a putut fi salvată.`,
+          );
+          return;
+        }
+        primaryId = primaryId ?? result.documentId;
+      }
+      formRef.current?.reset();
+      router.refresh();
+    } catch {
+      setFileError("Înregistrarea nu a putut fi salvată. Încearcă din nou.");
+    } finally {
+      setSavingFiles(false);
+    }
   }
 
   return (
@@ -98,14 +169,14 @@ function EntryForm({
     >
       <input type="hidden" name="profileId" value={profileId} />
       <h3 className="text-sm font-medium">{title}</h3>
-      {state.error ? (
+      {fileError ?? state.error ? (
         <p role="alert" className="text-sm text-destructive">
-          {state.error}
+          {fileError ?? state.error}
         </p>
       ) : null}
       {children}
-      <Button type="submit" className="h-11 sm:w-fit" disabled={pending}>
-        {pending ? "Se salvează…" : "Salvează"}
+      <Button type="submit" className="h-11 sm:w-fit" disabled={pending || savingFiles}>
+        {pending || savingFiles ? "Se salvează…" : "Salvează"}
       </Button>
     </form>
   );
