@@ -13,8 +13,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Link href="/profiles" className="text-base font-semibold">
               Dosar medical
             </Link>
-            <Link href="/records" className="text-sm text-muted-foreground">
-              Înregistrări
+            <Link href="/assistant" className="text-sm text-muted-foreground">
+              Asistent
             </Link>
           </div>
           <div className="flex items-center gap-3">

@@ -19,6 +19,8 @@ import {
 import { formatBirthDate } from "@/lib/format";
 import { documentBody } from "@/lib/record-view";
 
+const PAGE_SIZE = 5;
+
 export type MedicalProfile = {
   id: string;
   display_name: string;
@@ -34,6 +36,7 @@ export type MedicalDocument = {
   mime_type: string | null;
   document_date: string | null;
   category: string | null;
+  title: string | null;
   extracted_text: string | null;
   record_id: string | null;
 };
@@ -223,12 +226,14 @@ function ProfileRecords({
       id: document.id,
       kind: "document" as const,
       date: document.document_date,
-      title: [
-        document.category,
-        files.length > 1 ? `${files.length} fișiere` : document.original_filename,
-      ]
-        .filter(Boolean)
-        .join(" · "),
+      title:
+        document.title?.trim() ||
+        [
+          document.category,
+          files.length > 1 ? `${files.length} fișiere` : document.original_filename,
+        ]
+          .filter(Boolean)
+          .join(" · "),
       body: documentBody({
         extractedText: document.extracted_text,
         consultation:
@@ -288,6 +293,13 @@ function ProfileRecords({
     }
     return right.date.localeCompare(left.date);
   });
+  const pageCount = Math.max(1, Math.ceil(records.length / PAGE_SIZE));
+  const [page, setPage] = useState(0);
+  const current = Math.min(page, pageCount - 1);
+  if (page !== current) {
+    setPage(current);
+  }
+  const visible = records.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE);
 
   return (
     <div className="flex flex-col gap-3 border-t pt-4">
@@ -298,41 +310,82 @@ function ProfileRecords({
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
-          {records.map((record) => (
-            <li key={record.id} className="rounded-lg border p-3">
-              <p className="text-sm text-muted-foreground">
-                {record.date ? formatBirthDate(record.date) : "Fără dată"}
-              </p>
-              <p className="text-sm font-medium">{record.title}</p>
-              {record.body ? (
-                <p className="mt-2 max-h-80 overflow-auto whitespace-pre-wrap text-sm">
-                  {record.body}
-                </p>
-              ) : null}
-              {record.files.length > 0 ? (
-                <div className="mt-3 flex flex-col gap-2">
-                  <ul className="flex flex-wrap gap-3">
+          {visible.map((record) => (
+            <li key={record.id} className="rounded-lg border px-3 py-2">
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm">
+                    <span className="text-muted-foreground">
+                      {record.date ? formatBirthDate(record.date) : "Fără dată"}
+                    </span>
+                    {record.title ? ` · ${record.title}` : ""}
+                  </p>
+                  {record.body ? (
+                    <p className="truncate text-xs text-muted-foreground">{record.body}</p>
+                  ) : null}
+                </div>
+                {record.files.length > 0 ? (
+                  <ul className="flex shrink-0 gap-1">
                     {record.files.map((file) => (
                       <li key={file.id}>
                         <DocumentPreview
                           id={file.id}
                           filename={file.filename}
                           mimeType={file.mimeType}
+                          compact
                         />
                       </li>
                     ))}
                   </ul>
-                </div>
+                ) : null}
+                <DeleteRecordButton
+                  kind={record.kind}
+                  id={record.id}
+                  withFiles={record.files.length > 0}
+                  compact
+                />
+              </div>
+              {record.body ? (
+                <details className="mt-1">
+                  <summary className="cursor-pointer text-xs text-muted-foreground">
+                    Textul complet
+                  </summary>
+                  <p className="mt-1 max-h-36 overflow-auto whitespace-pre-wrap text-xs">
+                    {record.body}
+                  </p>
+                </details>
               ) : null}
-              <DeleteRecordButton
-                kind={record.kind}
-                id={record.id}
-                withFiles={record.files.length > 0}
-              />
             </li>
           ))}
         </ul>
       )}
+      {pageCount > 1 ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            {current + 1} din {pageCount}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-8"
+              disabled={current === 0}
+              onClick={() => setPage(current - 1)}
+            >
+              Înapoi
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-8"
+              disabled={current >= pageCount - 1}
+              onClick={() => setPage(current + 1)}
+            >
+              Înainte
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -13,7 +13,6 @@ import { createClient } from "@/lib/supabase/server";
 import { documentSchema } from "@/lib/validation/document";
 import {
   extractionSchema,
-  isDocumentCategory,
   MAX_EXTRACTED_TEXT,
   type Extraction,
 } from "@/lib/validation/extraction";
@@ -135,19 +134,15 @@ export async function saveDetectedDocument(
   const parsed = extractionSchema.safeParse(payload);
   const parsedId = profileIdSchema.safeParse(formData.get("profileId"));
   const documentDate = String(formData.get("documentDate") ?? "");
-  const category = String(formData.get("category") ?? "");
   const body = String(formData.get("body") ?? "").trim().slice(0, MAX_EXTRACTED_TEXT);
+  const title = String(formData.get("title") ?? "").trim().slice(0, 160);
   const lockProfile = formData.get("lockProfile") === "1";
   const savedRecord = documentSchema.safeParse({
     profileId: formData.get("profileId"),
     documentDate,
-    category,
   });
-  if (!parsed.success || !parsedId.success || !savedRecord.success || !body) {
-    return { error: "Verifică data, categoria și textul înregistrării." };
-  }
-  if (!isDocumentCategory(category)) {
-    return { error: "Alege categoria." };
+  if (!parsed.success || !parsedId.success || !savedRecord.success || !body || !title) {
+    return { error: "Verifică titlul, data și textul înregistrării." };
   }
 
   const uploaded = await readUploadedFiles(formData.getAll("file"));
@@ -189,8 +184,9 @@ export async function saveDetectedDocument(
       bytes: file.bytes,
       size: file.size,
       documentDate,
-      category,
+      category: "",
       extractedText: index === 0 ? body : "",
+      title: index === 0 ? title : null,
       recordId: storedFiles[0]?.documentId ?? null,
     });
     if ("error" in stored) {
@@ -208,6 +204,6 @@ export async function saveDetectedDocument(
 
   revalidatePath("/profiles");
   revalidatePath(`/profiles/${person.id}`);
-  revalidatePath("/records");
+  revalidatePath("/assistant");
   return { saved: true, profileId: person.id };
 }

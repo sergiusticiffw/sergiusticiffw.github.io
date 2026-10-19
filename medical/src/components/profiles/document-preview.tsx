@@ -16,10 +16,12 @@ export function DocumentPreview({
   id,
   filename,
   mimeType,
+  compact = false,
 }: {
   id: string;
   filename: string;
   mimeType: string | null;
+  compact?: boolean;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const kind = previewKind(filename, mimeType);
@@ -28,8 +30,14 @@ export function DocumentPreview({
 
   return (
     <>
-      <div className="flex w-24 flex-col gap-1">
-        <div className="relative h-24 w-24 overflow-hidden rounded-md border">
+      <div className={compact ? "w-10" : "flex w-24 flex-col gap-1"}>
+        <div
+          className={
+            compact
+              ? "relative h-10 w-10 overflow-hidden rounded border"
+              : "relative h-24 w-24 overflow-hidden rounded-md border"
+          }
+        >
           {kind === "image" ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={viewUrl} alt="" className="h-full w-full object-cover" />
@@ -37,11 +45,15 @@ export function DocumentPreview({
             <iframe
               title=""
               src={pdfUrl}
-              className="pointer-events-none h-48 w-48 origin-top-left scale-50"
+              className={
+                compact
+                  ? "pointer-events-none h-40 w-40 origin-top-left scale-[0.25]"
+                  : "pointer-events-none h-48 w-48 origin-top-left scale-50"
+              }
               tabIndex={-1}
             />
           ) : (
-            <span className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+            <span className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
               Fișier
             </span>
           )}
@@ -52,7 +64,9 @@ export function DocumentPreview({
             onClick={() => dialogRef.current?.showModal()}
           />
         </div>
-        <span className="truncate text-xs text-muted-foreground">{filename}</span>
+        {compact ? null : (
+          <span className="truncate text-xs text-muted-foreground">{filename}</span>
+        )}
       </div>
       <dialog
         ref={dialogRef}

@@ -24,7 +24,6 @@ export const documentSchema = z.object({
     },
     { message: "Data documentului nu este validă." },
   ),
-  category: z.enum(DOCUMENT_CATEGORIES, { message: "Alege categoria." }),
 });
 
 export type DocumentInput = z.infer<typeof documentSchema>;

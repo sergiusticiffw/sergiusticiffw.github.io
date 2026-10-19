@@ -68,7 +68,7 @@ export async function deleteRecord(
 
   revalidatePath("/profiles");
   revalidatePath(`/profiles/${row.profile_id}`);
-  revalidatePath("/records");
+  revalidatePath("/assistant");
   return {};
 }
 
@@ -157,6 +157,6 @@ export async function deleteDocument(id: string): Promise<DocumentActionResult> 
 
   revalidatePath("/profiles");
   revalidatePath(`/profiles/${document.profile_id}`);
-  revalidatePath("/records");
+  revalidatePath("/assistant");
   return {};
 }

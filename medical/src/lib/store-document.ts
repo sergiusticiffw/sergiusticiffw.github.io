@@ -28,6 +28,7 @@ export async function storePrivateDocument(input: {
   documentDate: string;
   category: string;
   extractedText: string;
+  title?: string | null;
   recordId?: string | null;
 }): Promise<{ error: string } | StoredDocument> {
   const supabase = await createClient();
@@ -75,29 +76,48 @@ export async function storePrivateDocument(input: {
       bytes: input.bytes,
     });
 
-    const { data, error } = await supabase
+    const title = input.title?.trim().slice(0, 160) || null;
+    const baseRow = {
+      profile_id: input.profile.id,
+      drive_file_id: driveFileId,
+      original_filename: input.filename,
+      mime_type: input.mimeType,
+      file_size: input.size,
+      document_date: input.documentDate,
+      category: input.category || null,
+      extracted_text: input.extractedText || null,
+      ...(input.recordId ? { record_id: input.recordId } : {}),
+    };
+    let inserted = await supabase
       .from("medical_documents")
-      .insert({
-        profile_id: input.profile.id,
-        drive_file_id: driveFileId,
-        original_filename: input.filename,
-        mime_type: input.mimeType,
-        file_size: input.size,
-        document_date: input.documentDate,
-        category: input.category || null,
-        extracted_text: input.extractedText || null,
-        ...(input.recordId ? { record_id: input.recordId } : {}),
-      })
+      .insert({ ...baseRow, ...(title ? { title } : {}) })
       .select("id")
       .single();
 
+    const missingTitle =
+      (inserted.error?.code === "42703" || inserted.error?.code === "PGRST204") &&
+      (inserted.error.message ?? "").toLowerCase().includes("title");
+    if (missingTitle && title) {
+      inserted = await supabase
+        .from("medical_documents")
+        .insert({
+          ...baseRow,
+          extracted_text: `${title}\n\n${input.extractedText}`.slice(0, 20000) || null,
+        })
+        .select("id")
+        .single();
+    }
+
+    const { data, error } = inserted;
     if (error || !data) {
       console.error("storePrivateDocument", error?.code);
       await trashDriveFile(input.familyId, driveFileId);
-      if (error?.code === "42703" || error?.code === "PGRST204") {
+      if (
+        (error?.code === "42703" || error?.code === "PGRST204") &&
+        input.recordId
+      ) {
         return {
-          error:
-            "Aplică migrația pentru mai multe imagini la o înregistrare.",
+          error: "Aplică migrația pentru mai multe imagini la o înregistrare.",
         };
       }
       return { error: "Documentul nu a putut fi salvat." };

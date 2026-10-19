@@ -12,20 +12,22 @@ export function DeleteRecordButton({
   kind,
   id,
   withFiles,
+  compact = false,
 }: {
   kind: RecordKind;
   id: string;
   withFiles?: boolean;
+  compact?: boolean;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   return (
-    <div className="mt-3 flex flex-col gap-1">
+    <div className={compact ? "flex flex-col gap-1" : "mt-3 flex flex-col gap-1"}>
       <Button
         type="button"
         variant="outline"
-        className="h-11 sm:w-fit"
+        className={compact ? "h-7 px-2 text-xs sm:w-fit" : "h-11 sm:w-fit"}
         disabled={pending}
         onClick={() => {
           const confirmed = window.confirm(
@@ -46,7 +48,7 @@ export function DeleteRecordButton({
           });
         }}
       >
-        {pending ? "Se șterge…" : "Șterge înregistrarea"}
+        {pending ? "Se șterge…" : compact ? "Șterge" : "Șterge înregistrarea"}
       </Button>
       {error ? (
         <p role="alert" className="text-sm text-destructive">

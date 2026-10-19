@@ -1,0 +1,373 @@
+import "server-only";
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { documentBody } from "@/lib/record-view";
+
+export type CatalogRecord = {
+  id: string;
+  profileName: string;
+  date: string | null;
+  category: string | null;
+  title: string;
+  text: string;
+  files: string[];
+};
+
+const TEXT_CAP = 12000;
+
+function clip(value: string) {
+  const text = value.trim();
+  if (text.length <= TEXT_CAP) {
+    return text;
+  }
+  return `${text.slice(0, TEXT_CAP)}\n…`;
+}
+
+function missingColumn(code: string | undefined) {
+  return code === "42703" || code === "PGRST204";
+}
+
+export async function loadMedicalCatalog(
+  supabase: SupabaseClient,
+  familyId: string,
+): Promise<{ records: CatalogRecord[]; error: string | null }> {
+  const [profilesResult, documentsResult, consultationsResult, labsResult] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, display_name")
+        .eq("family_id", familyId)
+        .order("display_name", { ascending: true }),
+      supabase
+        .from("medical_documents")
+        .select(
+          "id, profile_id, original_filename, mime_type, document_date, category, title, extracted_text, record_id",
+        )
+        .order("document_date", { ascending: false }),
+      supabase
+        .from("consultations")
+        .select(
+          "id, profile_id, source_document_id, consultation_date, doctor_name, clinic_name, specialty, summary, recommendations",
+        )
+        .order("consultation_date", { ascending: false }),
+      supabase
+        .from("lab_tests")
+        .select(
+          "id, profile_id, source_document_id, test_name, sample_date, result_value, result_text, unit, reference_text, laboratory",
+        )
+        .order("sample_date", { ascending: false }),
+    ]);
+
+  let documentsError = documentsResult.error;
+  let documentsData = documentsResult.data;
+  if (missingColumn(documentsError?.code)) {
+    const withRecord = await supabase
+      .from("medical_documents")
+      .select(
+        "id, profile_id, original_filename, mime_type, document_date, category, extracted_text, record_id",
+      )
+      .order("document_date", { ascending: false });
+    if (!withRecord.error) {
+      documentsError = null;
+      documentsData = (withRecord.data ?? []).map((row) => ({ ...row, title: null }));
+    } else {
+      const retry = await supabase
+        .from("medical_documents")
+        .select(
+          "id, profile_id, original_filename, mime_type, document_date, category, extracted_text",
+        )
+        .order("document_date", { ascending: false });
+      documentsError = retry.error;
+      documentsData = (retry.data ?? []).map((row) => ({
+        ...row,
+        title: null,
+        record_id: null,
+      }));
+    }
+  }
+
+  const listError =
+    profilesResult.error ??
+    documentsError ??
+    consultationsResult.error ??
+    labsResult.error;
+  if (listError) {
+    console.error("loadMedicalCatalog", listError.code);
+    return { records: [], error: "Documentele nu au putut fi încărcate." };
+  }
+
+  const profiles = (profilesResult.data ?? []) as {
+    id: string;
+    display_name: string;
+  }[];
+  const names = new Map(profiles.map((profile) => [profile.id, profile.display_name]));
+  const profileIds = new Set(profiles.map((profile) => profile.id));
+
+  const consultations = ((consultationsResult.data ?? []) as {
+    id: string;
+    profile_id: string;
+    source_document_id: string | null;
+    consultation_date: string;
+    doctor_name: string | null;
+    clinic_name: string | null;
+    specialty: string | null;
+    summary: string | null;
+    recommendations: string | null;
+  }[]).filter((item) => profileIds.has(item.profile_id));
+
+  const labs = ((labsResult.data ?? []) as {
+    id: string;
+    profile_id: string;
+    source_document_id: string | null;
+    test_name: string;
+    sample_date: string | null;
+    result_value: number | string | null;
+    result_text: string | null;
+    unit: string | null;
+    reference_text: string | null;
+    laboratory: string | null;
+  }[]).filter((item) => profileIds.has(item.profile_id));
+
+  const documents = ((documentsData ?? []) as {
+    id: string;
+    profile_id: string;
+    original_filename: string;
+    document_date: string | null;
+    category: string | null;
+    title: string | null;
+    extracted_text: string | null;
+    record_id: string | null;
+  }[]).filter((item) => profileIds.has(item.profile_id));
+
+  const records: CatalogRecord[] = [];
+
+  for (const item of documents.filter((row) => !row.record_id)) {
+    const files = [item, ...documents.filter((file) => file.record_id === item.id)];
+    const text = documentBody({
+      extractedText: item.extracted_text,
+      consultation:
+        consultations.find((row) => row.source_document_id === item.id) ?? null,
+      labs: labs.filter((row) => row.source_document_id === item.id),
+    });
+    records.push({
+      id: item.id,
+      profileName: names.get(item.profile_id) ?? "Profil",
+      date: item.document_date,
+      category: item.category,
+      title:
+        item.title?.trim() ||
+        [item.category, files.length > 1 ? `${files.length} fișiere` : item.original_filename]
+          .filter(Boolean)
+          .join(" · "),
+      text: clip(text),
+      files: files.map((file) => file.original_filename),
+    });
+  }
+
+  for (const item of consultations.filter((row) => !row.source_document_id)) {
+    records.push({
+      id: item.id,
+      profileName: names.get(item.profile_id) ?? "Profil",
+      date: item.consultation_date,
+      category: "Consultație",
+      title: ["Consultație", item.doctor_name].filter(Boolean).join(" · "),
+      text: clip(documentBody({ extractedText: null, consultation: item, labs: [] })),
+      files: [],
+    });
+  }
+
+  for (const item of labs.filter((row) => !row.source_document_id)) {
+    records.push({
+      id: item.id,
+      profileName: names.get(item.profile_id) ?? "Profil",
+      date: item.sample_date,
+      category: "Analize",
+      title: ["Analiză", item.test_name].filter(Boolean).join(" · "),
+      text: clip(documentBody({ extractedText: null, consultation: null, labs: [item] })),
+      files: [],
+    });
+  }
+
+  records.sort((left, right) => {
+    if (left.date === right.date) {
+      return left.title.localeCompare(right.title, "ro");
+    }
+    if (!left.date) {
+      return 1;
+    }
+    if (!right.date) {
+      return -1;
+    }
+    return right.date.localeCompare(left.date);
+  });
+
+  return { records, error: null };
+}
+
+const STOP_WORDS = new Set([
+  "din",
+  "in",
+  "de",
+  "la",
+  "pe",
+  "cu",
+  "si",
+  "sau",
+  "ce",
+  "care",
+  "sunt",
+  "este",
+  "pentru",
+  "despre",
+  "document",
+  "documentul",
+  "documentele",
+  "arata",
+  "cauta",
+  "rezuma",
+  "ultimele",
+  "luna",
+  "dosar",
+  "dosarul",
+  "scrie",
+  "text",
+  "textul",
+  "lui",
+  "ei",
+  "lor",
+  "informatie",
+  "informatii",
+  "exista",
+  "afla",
+  "spune",
+]);
+
+function fold(value: string) {
+  return value
+    .toLocaleLowerCase("ro")
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
+}
+
+function contentTerms(query: string) {
+  return fold(query)
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((term) => term.length >= 3 && !STOP_WORDS.has(term))
+    .slice(0, 8);
+}
+
+function excerptAround(text: string, terms: string[]) {
+  const folded = fold(text);
+  let index = -1;
+  for (const term of terms) {
+    const found = folded.indexOf(term);
+    if (found >= 0 && (index < 0 || found < index)) {
+      index = found;
+    }
+  }
+  if (index < 0) {
+    return text.slice(0, 700);
+  }
+  const start = Math.max(0, index - 180);
+  const end = Math.min(text.length, index + 520);
+  const slice = text.slice(start, end).trim();
+  return `${start > 0 ? "…" : ""}${slice}${end < text.length ? "…" : ""}`;
+}
+
+function topicFromText(text: string) {
+  const cleaned = text
+    .replace(/\bIDNP\s*:?\s*\d{13}\b/gi, " ")
+    .replace(/\d{13}/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const words = cleaned.split(" ").filter((word) => word.length > 1);
+  const slice = words.slice(0, 8).join(" ").replace(/[«»"]/g, "");
+  if (slice.length < 12) {
+    return "";
+  }
+  return slice.slice(0, 80);
+}
+
+export function suggestQuestions(records: CatalogRecord[]) {
+  const questions: string[] = [];
+  const seen = new Set<string>();
+  for (const record of records) {
+    if (questions.length >= 4) {
+      break;
+    }
+    const topic = topicFromText(record.text);
+    if (!topic) {
+      continue;
+    }
+    const question = record.profileName.trim()
+      ? `Ce scrie despre „${topic}” la ${record.profileName.trim()}?`
+      : `Ce scrie despre „${topic}”?`;
+    const key = fold(question);
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    questions.push(question);
+  }
+  return questions;
+}
+
+export function searchCatalog(
+  records: CatalogRecord[],
+  filters: {
+    query?: string;
+    profile?: string;
+    from?: string;
+    to?: string;
+    limit?: number;
+  },
+) {
+  const query = (filters.query ?? "").trim().slice(0, 160);
+  const terms = contentTerms(query);
+  const profile = fold(filters.profile ?? "").trim();
+  const from = /^\d{4}-\d{2}-\d{2}$/.test(filters.from ?? "") ? filters.from! : "";
+  const to = /^\d{4}-\d{2}-\d{2}$/.test(filters.to ?? "") ? filters.to! : "";
+  const limit = Math.min(Math.max(Number(filters.limit) || 12, 1), 30);
+
+  const scored = records
+    .map((record) => {
+      if (profile && !fold(record.profileName).includes(profile)) {
+        return null;
+      }
+      if (from && (!record.date || record.date < from)) {
+        return null;
+      }
+      if (to && (!record.date || record.date > to)) {
+        return null;
+      }
+      if (terms.length === 0) {
+        return { record, hits: 0 };
+      }
+      const haystack = fold(
+        `${record.title}\n${record.profileName}\n${record.category ?? ""}\n${record.text}`,
+      );
+      const hits = terms.filter((term) => {
+        if (haystack.includes(term)) {
+          return true;
+        }
+        return term.length >= 6 && haystack.includes(term.slice(0, 5));
+      }).length;
+      const needed = Math.max(1, Math.ceil(terms.length / 2));
+      return hits >= needed ? { record, hits } : null;
+    })
+    .filter((item): item is { record: CatalogRecord; hits: number } => item !== null)
+    .sort((left, right) => right.hits - left.hits);
+
+  return {
+    total: scored.length,
+    records: scored.slice(0, limit).map(({ record }) => ({
+      id: record.id,
+      profile: record.profileName,
+      date: record.date,
+      title: record.title,
+      files: record.files,
+      excerpt: excerptAround(record.text, terms),
+    })),
+  };
+}

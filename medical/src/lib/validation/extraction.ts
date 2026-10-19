@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import { formatBirthDate } from "@/lib/format";
-import { DOCUMENT_CATEGORIES } from "@/lib/validation/document";
 
 export const MAX_EXTRACTED_TEXT = 20_000;
 export const MAX_LAB_ROWS = 40;
@@ -120,18 +119,6 @@ function consultationNarrative(consultation: ConsultationDraft) {
   ].some((value) => value.trim() !== "");
 }
 
-export function recordCategory(extraction: Extraction) {
-  const hasConsultation = consultationNarrative(extraction.consultation);
-  const hasLabs = presentLabTests(extraction.labTests).length > 0;
-  if (hasLabs && !hasConsultation) {
-    return "Analize" as const;
-  }
-  if (hasConsultation) {
-    return "Consultație" as const;
-  }
-  return "Alte documente" as const;
-}
-
 function line(label: string, value: string) {
   return value.trim() ? `${label}: ${value.trim()}` : "";
 }
@@ -211,12 +198,6 @@ export function recordBody(extraction: Extraction) {
   }
 
   return sections.join("\n\n").slice(0, MAX_EXTRACTED_TEXT);
-}
-
-export function isDocumentCategory(
-  value: string,
-): value is (typeof DOCUMENT_CATEGORIES)[number] {
-  return DOCUMENT_CATEGORIES.some((category) => category === value);
 }
 
 const numberPattern = /^-?\d+(?:\.\d+)?$/;

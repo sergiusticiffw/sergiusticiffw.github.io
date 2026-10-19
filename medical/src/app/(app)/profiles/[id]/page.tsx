@@ -54,7 +54,7 @@ async function ProfileSection({
       supabase
         .from("medical_documents")
         .select(
-          "id, profile_id, original_filename, mime_type, document_date, category, extracted_text, record_id",
+          "id, profile_id, original_filename, mime_type, document_date, category, title, extracted_text, record_id",
         )
         .eq("profile_id", id)
         .order("document_date", { ascending: false }),
@@ -82,18 +82,31 @@ async function ProfileSection({
   let documentsError = documentsResult.error;
   let documentsData = documentsResult.data;
   if (documentsError?.code === "42703" || documentsError?.code === "PGRST204") {
-    const retry = await supabase
+    const withRecord = await supabase
       .from("medical_documents")
       .select(
-        "id, profile_id, original_filename, mime_type, document_date, category, extracted_text",
+        "id, profile_id, original_filename, mime_type, document_date, category, extracted_text, record_id",
       )
       .eq("profile_id", id)
       .order("document_date", { ascending: false });
-    documentsError = retry.error;
-    documentsData = (retry.data ?? []).map((row) => ({
-      ...row,
-      record_id: null,
-    }));
+    if (!withRecord.error) {
+      documentsError = null;
+      documentsData = (withRecord.data ?? []).map((row) => ({ ...row, title: null }));
+    } else {
+      const retry = await supabase
+        .from("medical_documents")
+        .select(
+          "id, profile_id, original_filename, mime_type, document_date, category, extracted_text",
+        )
+        .eq("profile_id", id)
+        .order("document_date", { ascending: false });
+      documentsError = retry.error;
+      documentsData = (retry.data ?? []).map((row) => ({
+        ...row,
+        title: null,
+        record_id: null,
+      }));
+    }
   }
 
   const listError =
@@ -136,6 +149,7 @@ async function ProfileSection({
           mime_type: string | null;
           document_date: string | null;
           category: string | null;
+          title: string | null;
           extracted_text: string | null;
           record_id: string | null;
         }[]}

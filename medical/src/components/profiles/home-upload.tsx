@@ -10,10 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DOCUMENT_CATEGORIES } from "@/lib/validation/document";
 import {
   recordBody,
-  recordCategory,
   recordDate,
   type Extraction,
 } from "@/lib/validation/extraction";
@@ -25,10 +23,17 @@ export type UploadPerson = {
 };
 
 type RecordDraft = {
+  title: string;
   date: string;
-  category: string;
   body: string;
 };
+
+function suggestedTitle(file: File | undefined) {
+  if (!file) {
+    return "";
+  }
+  return file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").slice(0, 160);
+}
 
 const selectClass =
   "h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
@@ -80,8 +85,8 @@ export function HomeUpload({
 
     setExtraction(result.extraction);
     setDraft({
+      title: suggestedTitle(files[0]),
       date: recordDate(result.extraction),
-      category: recordCategory(result.extraction),
       body: recordBody(result.extraction),
     });
     setProfileId(lockedProfileId ?? result.matchedProfileId ?? "");
@@ -94,6 +99,10 @@ export function HomeUpload({
     }
     if (!profileId) {
       setError("Alege persoana căreia îi aparține documentul.");
+      return;
+    }
+    if (!draft.title.trim()) {
+      setError("Titlul este obligatoriu.");
       return;
     }
     if (!draft.date) {
@@ -112,8 +121,8 @@ export function HomeUpload({
       data.append("file", file);
     }
     data.set("profileId", profileId);
+    data.set("title", draft.title.trim());
     data.set("documentDate", draft.date);
-    data.set("category", draft.category);
     data.set("body", draft.body);
     data.set("payload", JSON.stringify(extraction));
     if (lockedProfileId) {
@@ -147,7 +156,7 @@ export function HomeUpload({
         ) : null}
         <p className="text-sm">
           {lockedProfileId
-            ? "Documentul a fost citit. Verifică data și textul, apoi salvează o singură înregistrare."
+            ? "Documentul a fost citit. Verifică titlul, data și textul, apoi salvează o singură înregistrare."
             : matchedName
               ? `Documentul a fost recunoscut pentru ${matchedName}.`
               : "IDNP-ul nu corespunde unei persoane. Alege persoana înainte să salvezi."}
@@ -183,6 +192,17 @@ export function HomeUpload({
           </div>
         )}
         <div className="flex flex-col gap-2">
+          <Label htmlFor="upload-title">Titlu</Label>
+          <Input
+            id="upload-title"
+            required
+            maxLength={160}
+            className="h-11"
+            value={draft.title}
+            onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+          />
+        </div>
+        <div className="flex flex-col gap-2">
           <Label htmlFor="upload-date">Data din document</Label>
           <Input
             id="upload-date"
@@ -192,23 +212,6 @@ export function HomeUpload({
             value={draft.date}
             onChange={(event) => setDraft({ ...draft, date: event.target.value })}
           />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="upload-category">Categorie</Label>
-          <select
-            id="upload-category"
-            className={selectClass}
-            value={draft.category}
-            onChange={(event) =>
-              setDraft({ ...draft, category: event.target.value })
-            }
-          >
-            {DOCUMENT_CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="upload-body">Înregistrare</Label>

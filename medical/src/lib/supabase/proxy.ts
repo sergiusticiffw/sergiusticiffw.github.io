@@ -7,7 +7,9 @@ function isPublicPath(pathname: string) {
   return (
     pathname === "/login" ||
     pathname.startsWith("/login/") ||
-    pathname.startsWith("/auth/")
+    pathname.startsWith("/auth/") ||
+    pathname === "/sw.js" ||
+    pathname === "/manifest.webmanifest"
   );
 }
 

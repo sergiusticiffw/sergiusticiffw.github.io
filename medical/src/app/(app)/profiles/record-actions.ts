@@ -11,12 +11,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import {
   consultationDraftSchema,
-  emptyConsultation,
-  labDraftSchema,
   recordBody,
-  splitReference,
-  splitResult,
-  type LabDraft,
 } from "@/lib/validation/extraction";
 import { profileIdSchema } from "@/lib/validation/profile";
 
@@ -60,7 +55,7 @@ async function ownedProfile(profileId: string) {
 function refresh(profileId: string) {
   revalidatePath("/profiles");
   revalidatePath(`/profiles/${profileId}`);
-  revalidatePath("/records");
+  revalidatePath("/assistant");
 }
 
 function isMissingColumn(code: string | undefined) {
@@ -78,6 +73,7 @@ async function storeRecordFiles(input: {
   documentDate: string;
   category: string;
   body: string;
+  title: string;
 }): Promise<{ error: string } | { documentId: string | null; driveFileId: string | null }> {
   const present = input.entries.filter(
     (entry): entry is File => entry instanceof File && entry.size > 0,
@@ -103,6 +99,7 @@ async function storeRecordFiles(input: {
       documentDate: input.documentDate,
       category: input.category,
       extractedText: index === 0 ? input.body : "",
+      title: index === 0 ? input.title : null,
       recordId: storedFiles[0]?.documentId ?? null,
     });
     if ("error" in stored) {
@@ -149,6 +146,13 @@ export async function createConsultation(
     return { error: owner.error };
   }
 
+  const hasFiles = formData
+    .getAll("file")
+    .some((entry) => entry instanceof File && entry.size > 0);
+  if (!parsed.data.summary && !hasFiles) {
+    return { error: "Scrie o notă sau atașează un fișier." };
+  }
+
   const body = recordBody({
     idnp: "",
     extractedText: "",
@@ -162,6 +166,7 @@ export async function createConsultation(
     documentDate: parsed.data.consultationDate,
     category: "Consultație",
     body,
+    title: parsed.data.summary.trim().slice(0, 80) || "Consultație",
   });
   if ("error" in files) {
     return { error: files.error };
@@ -188,90 +193,6 @@ export async function createConsultation(
       await discardStoredDocument(owner.familyId, files.documentId, files.driveFileId);
     }
     return { error: "Consultația nu a putut fi salvată." };
-  }
-
-  refresh(owner.profile.id);
-  return { saved: true };
-}
-
-export async function createLabTest(
-  _previous: RecordActionResult,
-  formData: FormData,
-): Promise<RecordActionResult> {
-  const parsedId = profileIdSchema.safeParse(formData.get("profileId"));
-  const parsed = labDraftSchema.safeParse({
-    testName: formData.get("testName") ?? "",
-    category: formData.get("category") ?? "",
-    sampleDate: formData.get("sampleDate") ?? "",
-    result: formData.get("result") ?? "",
-    unit: formData.get("unit") ?? "",
-    reference: formData.get("reference") ?? "",
-    laboratory: formData.get("laboratory") ?? "",
-    notes: formData.get("notes") ?? "",
-  });
-  if (!parsedId.success || !parsed.success || !parsed.data.testName) {
-    return { error: "Numele analizei este obligatoriu." };
-  }
-
-  const owner = await ownedProfile(parsedId.data);
-  if ("error" in owner) {
-    return { error: owner.error };
-  }
-
-  const hasFiles = formData
-    .getAll("file")
-    .some((entry) => entry instanceof File && entry.size > 0);
-  if (hasFiles && !parsed.data.sampleDate) {
-    return { error: "Data recoltării este necesară când atașezi fișiere." };
-  }
-
-  const labRow: LabDraft = parsed.data;
-  const body = recordBody({
-    idnp: "",
-    extractedText: "",
-    consultation: emptyConsultation(),
-    labTests: [labRow],
-  });
-  const files = await storeRecordFiles({
-    familyId: owner.familyId,
-    profile: owner.profile,
-    entries: formData.getAll("file"),
-    documentDate: parsed.data.sampleDate,
-    category: "Analize",
-    body,
-  });
-  if ("error" in files) {
-    return { error: files.error };
-  }
-
-  const result = splitResult(parsed.data.result);
-  const reference = splitReference(parsed.data.reference);
-  const supabase = await createClient();
-  const { error } = await supabase.from("lab_tests").insert({
-    profile_id: owner.profile.id,
-    ...(files.documentId ? { source_document_id: files.documentId } : {}),
-    test_name: parsed.data.testName,
-    category: parsed.data.category || null,
-    sample_date: parsed.data.sampleDate || null,
-    result_value: result.resultValue,
-    result_text: result.resultText,
-    unit: parsed.data.unit || null,
-    reference_min: reference.referenceMin,
-    reference_max: reference.referenceMax,
-    reference_text: reference.referenceText,
-    laboratory: parsed.data.laboratory || null,
-    notes: parsed.data.notes || null,
-  });
-  if (error) {
-    console.error("createLabTest", error.code);
-    if (files.documentId && files.driveFileId && isMissingColumn(error.code)) {
-      refresh(owner.profile.id);
-      return { saved: true };
-    }
-    if (files.documentId && files.driveFileId) {
-      await discardStoredDocument(owner.familyId, files.documentId, files.driveFileId);
-    }
-    return { error: "Analiza nu a putut fi salvată." };
   }
 
   refresh(owner.profile.id);
