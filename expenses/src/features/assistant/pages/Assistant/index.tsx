@@ -241,17 +241,21 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
   }, [input]);
 
   const speechPrefixRef = useRef('');
-  const speech = useSpeechInput((text) =>
+  // A final recognition result can arrive after send and would refill the box.
+  const acceptSpeechRef = useRef(true);
+  const speech = useSpeechInput((text) => {
+    if (!acceptSpeechRef.current) return;
     setInput(
       speechPrefixRef.current ? `${speechPrefixRef.current} ${text}` : text
-    )
-  );
+    );
+  });
 
   const toggleSpeech = () => {
     if (speech.listening) {
       speech.stop();
       return;
     }
+    acceptSpeechRef.current = true;
     speechPrefixRef.current = input.trim();
     speech.start();
   };
@@ -260,6 +264,8 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
 
   const submit = (text = input) => {
     if (!online || !hasData || busy || !text.trim()) return;
+    acceptSpeechRef.current = false;
+    speechPrefixRef.current = '';
     speech.stop();
     setBrowsingSuggestions(false);
     send(text);

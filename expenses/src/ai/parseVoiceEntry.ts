@@ -262,13 +262,15 @@ export async function parseVoiceEntries(
   apiKey: string,
   transcript: string,
   options: { today: string; currency: string; kind: 'expense' | 'income' },
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  preferModel?: string
 ): Promise<VoiceMoneyEntry[]> {
   const request = (withSchema: boolean) =>
     streamGenerate({
       apiKey,
       tier: 'lite',
       signal,
+      preferModel,
       request: {
         systemInstruction: { parts: [{ text: systemPrompt(options.kind) }] },
         contents: [
@@ -310,13 +312,27 @@ export async function parseVoiceEntries(
       },
     });
 
-  const read = async (withSchema: boolean) =>
-    normalizeVoiceEntries(
-      readJson((await request(withSchema)).text),
-      options.today,
-      options.kind,
-      transcript.trim()
-    );
+  const read = async (withSchema: boolean) => {
+    const result = await request(withSchema);
+    try {
+      return normalizeVoiceEntries(
+        readJson(result.text),
+        options.today,
+        options.kind,
+        transcript.trim()
+      );
+    } catch (error) {
+      if (error instanceof AiError) throw error;
+      throw new AiError(
+        'unknown',
+        error instanceof Error ? error.message : 'Invalid response',
+        undefined,
+        false,
+        undefined,
+        result.model
+      );
+    }
+  };
 
   try {
     return await read(true);

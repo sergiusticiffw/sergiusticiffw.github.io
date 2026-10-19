@@ -29,12 +29,19 @@ export type AiModelTier = keyof typeof AI_MODELS;
 export const modelLabel = (model?: string): string | null =>
   model ? model.replace(/^gemini-/, '') : null;
 
-/** Next model in the chat list after `after`, or the second model if none is given. */
-export const nextChatModel = (after?: string): string | null => {
-  const list = AI_MODELS.chat as readonly string[];
+/** Next model in a tier after `after`, or the second model if none is given. */
+export const nextModel = (
+  tier: keyof typeof AI_MODELS,
+  after?: string
+): string | null => {
+  const list = AI_MODELS[tier] as readonly string[];
   const index = after ? list.indexOf(after) : 0;
   return index >= 0 ? list[index + 1] || null : list[1] || null;
 };
+
+/** Next model in the chat list after `after`, or the second model if none is given. */
+export const nextChatModel = (after?: string): string | null =>
+  nextModel('chat', after);
 
 export const AI_LIMITS = {
   /** Safety cap per step; includes thinking tokens. Actual usage is much lower. */

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { FiMic, FiMicOff } from 'react-icons/fi';
+import { FiMic, FiMicOff, FiRefreshCw } from 'react-icons/fi';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import FormField from '@shared/components/Common/FormField';
 import { Loader } from '@shared/components/Common';
@@ -13,7 +13,8 @@ import TagChips from '@shared/components/Common/TagChips';
 import { normalizeTag } from '@shared/hooks/useTags';
 import { addTagToText, getSuggestionTranslationKey, removeTagFromText } from '@shared/utils/utils';
 import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
-import { describeAiError } from '../../../../ai/client';
+import { AiError, describeAiError } from '../../../../ai/client';
+import { AI_MODELS, modelLabel, nextModel } from '../../../../ai/config';
 import { useAiApiKey } from '../../../../ai/hooks/useAiApiKey';
 import { useSpeechInput } from '../../../../ai/hooks/useSpeechInput';
 import { localToday } from '../../../../ai/data';
@@ -56,12 +57,24 @@ const VoiceEntryButton = ({
   const [transcript, setTranscript] = useState('');
   const [drafts, setDrafts] = useState<VoiceMoneyEntry[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [failedModel, setFailedModel] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [online, setOnline] = useState(navigator.onLine);
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
   const transcriptRef = useRef('');
   const heardRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, []);
 
   const speech = useSpeechInput((text) => {
     transcriptRef.current = text;
@@ -72,6 +85,7 @@ const VoiceEntryButton = ({
     heardRef.current = false;
     transcriptRef.current = '';
     setTranscript('');
+    setFailedModel(null);
     setPhase('listening');
     speech.start();
   };
@@ -89,6 +103,7 @@ const VoiceEntryButton = ({
     heardRef.current = false;
     const text = transcriptRef.current.trim();
     if (!text) {
+      setFailedModel(null);
       setErrorMessage(t('home.voiceEmpty'));
       setPhase('error');
       return;
@@ -98,22 +113,25 @@ const VoiceEntryButton = ({
 
   useEffect(() => {
     if (!speech.error || phaseRef.current !== 'listening') return;
+    setFailedModel(null);
     setErrorMessage(speech.error);
     setPhase('error');
   }, [speech.error]);
 
-  const understand = async (text: string) => {
+  const understand = async (text: string, preferModel?: string) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
     phaseRef.current = 'parsing';
+    setFailedModel(null);
     setPhase('parsing');
     try {
       const items = await parseVoiceEntries(
         apiKey,
         text,
         { today: localToday(), currency: currency || 'MDL', kind },
-        controller.signal
+        controller.signal,
+        preferModel
       );
       if (controller.signal.aborted || phaseRef.current !== 'parsing') return;
       if (!items.length) {
@@ -125,6 +143,11 @@ const VoiceEntryButton = ({
       setPhase('review');
     } catch (error) {
       if ((error as Error)?.name === 'AbortError' || controller.signal.aborted) return;
+      setFailedModel(
+        (error instanceof AiError && error.model) ||
+          preferModel ||
+          AI_MODELS.lite[0]
+      );
       setErrorMessage(describeAiError(error));
       setPhase('error');
     }
@@ -148,6 +171,7 @@ const VoiceEntryButton = ({
     speech.stop();
     setPhase('closed');
     setDrafts([]);
+    setFailedModel(null);
     setSaving(false);
   };
 
@@ -202,7 +226,19 @@ const VoiceEntryButton = ({
     }
   };
 
+  const heard = transcript.trim();
+  const altModel =
+    failedModel && heard ? nextModel('lite', failedModel) : null;
   const listening = phase === 'listening';
+
+  const retrySame = () => {
+    const text = transcriptRef.current.trim();
+    if (failedModel && text) {
+      void understand(text);
+      return;
+    }
+    beginListening();
+  };
 
   return (
     <>
@@ -248,9 +284,31 @@ const VoiceEntryButton = ({
               {t('common.add')}
             </button>
           ) : phase === 'error' ? (
-            <button type="button" className={BTN_SUBMIT_CLASS} onClick={beginListening}>
-              {t('assistant.retry')}
-            </button>
+            <div className="flex w-full flex-col gap-2">
+              <button
+                type="button"
+                className={BTN_SUBMIT_CLASS}
+                onClick={retrySame}
+                disabled={!!failedModel && !online}
+              >
+                <FiRefreshCw />
+                {t('assistant.retry')}
+              </button>
+              {altModel && (
+                <button
+                  type="button"
+                  className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/15 px-4 py-3 text-base font-semibold text-app-primary hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-5"
+                  onClick={() => understand(transcriptRef.current.trim(), altModel)}
+                  disabled={!online}
+                >
+                  <FiRefreshCw />
+                  {t('assistant.retryWith').replace(
+                    '{model}',
+                    modelLabel(altModel) || altModel
+                  )}
+                </button>
+              )}
+            </div>
           ) : null
         }
       >
@@ -283,7 +341,12 @@ const VoiceEntryButton = ({
         )}
 
         {phase === 'error' && (
-          <p className="py-6 text-center text-sm leading-relaxed text-app-secondary">{errorMessage}</p>
+          <div className="flex flex-col gap-3 py-4 text-center">
+            {failedModel && heard && (
+              <p className="text-base leading-snug text-app-primary">{heard}</p>
+            )}
+            <p className="text-sm leading-relaxed text-app-secondary">{errorMessage}</p>
+          </div>
         )}
 
         {phase === 'review' && (
