@@ -63,10 +63,11 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/profiles/**": [
       "./ocr/**/*",
+      // The OCR worker thread is loaded from the real pnpm path, so its
+      // sibling dependencies (bmp-js, is-url, tesseract.js-core, ...) must
+      // ship with the function too.
       "./node_modules/tesseract.js/**/*",
-      "./node_modules/.pnpm/tesseract.js-core@*/node_modules/tesseract.js-core/**/*",
-      "./node_modules/.pnpm/wasm-feature-detect@*/node_modules/wasm-feature-detect/**/*",
-      "./node_modules/.pnpm/node-fetch@*/node_modules/node-fetch/**/*",
+      "./node_modules/.pnpm/tesseract.js@*/node_modules/**/*",
     ],
   },
   turbopack: {

@@ -17,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { formatBirthDate } from "@/lib/format";
 import { documentBody } from "@/lib/record-view";
 
@@ -120,18 +121,12 @@ export function ProfileDetail({
   isAdmin?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const birthDate = formatBirthDate(profile.birth_date);
 
   async function onDelete() {
-    const confirmed = window.confirm(
-            `Ștergi profilul „${profile.display_name}” și tot istoricul asociat, inclusiv consultațiile, analizele și fișierele din Google Drive? Acțiunea nu poate fi anulată.`,
-    );
-    if (!confirmed) {
-      return;
-    }
-
     setPending(true);
     setError(null);
     const result = await deleteProfile(profile.id);
@@ -192,7 +187,8 @@ export function ProfileDetail({
                 className="h-11"
                 disabled={pending}
                 onClick={() => {
-                  void onDelete();
+                  setError(null);
+                  setConfirmingDelete(true);
                 }}
               >
                 {pending ? "Se șterge…" : "Șterge"}
@@ -200,6 +196,18 @@ export function ProfileDetail({
             ) : null}
           </div>
         ) : null}
+        <ConfirmDialog
+          open={confirmingDelete}
+          title={`Ștergi profilul „${profile.display_name}”?`}
+          description="Se șterge tot istoricul asociat: consultațiile, analizele și fișierele din Google Drive. Acțiunea nu poate fi anulată."
+          confirmLabel="Șterge profilul"
+          pending={pending}
+          error={error}
+          onConfirm={() => {
+            void onDelete();
+          }}
+          onCancel={() => setConfirmingDelete(false)}
+        />
         {canEditRecords ? (
         <ProfileEntries
           profileId={profile.id}

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ACCEPTED_FILE_TYPES } from "@/lib/files";
 import {
   emptyConsultation,
   MAX_EXTRACTED_TEXT,
@@ -72,7 +73,7 @@ export function HomeUpload({
 
   async function onDetect() {
     if (files.length === 0) {
-      setError("Alege cel puțin o imagine sau un PDF.");
+      setError("Alege cel puțin un fișier.");
       return;
     }
 
@@ -111,7 +112,7 @@ export function HomeUpload({
     setPending(null);
     setProgress(null);
     if (parts.length === 0) {
-      setError("Documentele nu au putut fi citite. Încearcă fotografii mai clare.");
+      setError("Documentele nu au putut fi citite. Încearcă fotografii mai clare sau alt fișier.");
       return;
     }
 
@@ -322,19 +323,20 @@ export function HomeUpload({
         </p>
       ) : null}
       <p className="text-sm text-muted-foreground">
-        Poți alege mai multe imagini pentru aceeași înregistrare. Textul este
-        citit local, iar data și textul se salvează o singură dată.
+        Poți alege mai multe fișiere pentru aceeași înregistrare: imagini, PDF,
+        Word (.docx) sau text (.txt). Textul este citit local, iar data și
+        textul se salvează o singură dată.
       </p>
       <div className="flex flex-col gap-2">
         <Label htmlFor={lockedProfileId ? `upload-${lockedProfileId}` : "home-upload"}>
-          Imagini sau PDF
+          Imagini, PDF, Word sau text
         </Label>
         <Input
           id={lockedProfileId ? `upload-${lockedProfileId}` : "home-upload"}
           key={fileKey}
           type="file"
           multiple
-          accept="application/pdf,image/jpeg,image/png,image/webp"
+          accept={ACCEPTED_FILE_TYPES}
           className="h-11"
           onChange={(event) => {
             setFiles(Array.from(event.target.files ?? []));

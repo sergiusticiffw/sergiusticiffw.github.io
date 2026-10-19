@@ -120,6 +120,12 @@ export async function storePrivateDocument(input: {
           error: "Aplică migrația pentru mai multe imagini la o înregistrare.",
         };
       }
+      if (
+        error?.code === "23514" &&
+        (error.message ?? "").includes("mime_type")
+      ) {
+        return { error: "Aplică migrația pentru documente Word și text." };
+      }
       return { error: "Documentul nu a putut fi salvat." };
     }
 

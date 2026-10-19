@@ -5,6 +5,8 @@ import { tmpdir } from "node:os";
 import { createWorker, type Worker } from "tesseract.js";
 import { extractText, getDocumentProxy, renderPageAsImage } from "unpdf";
 
+import { decodePlainText, DOCX_MIME, TEXT_MIME } from "@/lib/files";
+import { readDocxText } from "@/lib/office-text";
 import {
   emptyConsultation,
   MAX_EXTRACTED_TEXT,
@@ -13,6 +15,30 @@ import {
 
 const MIN_PDF_TEXT = 40;
 const MAX_PDF_PAGES = 10;
+// Keep below the 60s function limit so a stuck worker surfaces as an error
+// instead of a gateway timeout. tesseract.js never rejects when its worker
+// thread crashes, so this is the only safety net.
+const OCR_BUDGET_MS = 45_000;
+
+function withDeadline<T>(promise: Promise<T>, deadline: number): Promise<T> {
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) {
+    return Promise.reject(new Error("timeout"));
+  }
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("timeout")), remaining);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
 
 function findIdnp(text: string) {
   return text.match(/(?<!\d)(\d{13})(?!\d)/)?.[1] ?? "";
@@ -91,19 +117,28 @@ export async function readPrintedText(
   files: { bytes: Uint8Array; mimeType: string }[],
 ): Promise<Extraction> {
   const workers: Worker[] = [];
+  const deadline = Date.now() + OCR_BUDGET_MS;
+  let timedOut = false;
+
   async function ocr(bytes: Uint8Array) {
     const current = workers[0];
     if (current) {
-      return recognize(current, bytes);
+      return withDeadline(recognize(current, bytes), deadline);
     }
-    const created = await createWorker("ron+eng", 1, {
-      cachePath: path.join(tmpdir(), "tesseract-medical"),
-      langPath: path.join(process.cwd(), "ocr"),
-      gzip: true,
-    });
-    await created.setParameters({ preserve_interword_spaces: "1" });
+    const created = await withDeadline(
+      createWorker("ron+eng", 1, {
+        cachePath: path.join(tmpdir(), "tesseract-medical"),
+        langPath: path.join(process.cwd(), "ocr"),
+        gzip: true,
+      }),
+      deadline,
+    );
     workers.push(created);
-    return recognize(created, bytes);
+    await withDeadline(
+      created.setParameters({ preserve_interword_spaces: "1" }),
+      deadline,
+    );
+    return withDeadline(recognize(created, bytes), deadline);
   }
 
   try {
@@ -111,13 +146,20 @@ export async function readPrintedText(
     for (const file of files) {
       try {
         const text =
-          file.mimeType === "application/pdf"
-            ? await readPdf(file.bytes, ocr)
-            : await ocr(file.bytes);
+          file.mimeType === TEXT_MIME
+            ? (decodePlainText(file.bytes) ?? "")
+            : file.mimeType === DOCX_MIME
+              ? (readDocxText(file.bytes) ?? "")
+              : file.mimeType === "application/pdf"
+                ? await readPdf(file.bytes, ocr)
+                : await ocr(file.bytes);
         if (text.trim()) {
           parts.push(text.trim());
         }
       } catch (error) {
+        if (error instanceof Error && error.message === "timeout") {
+          timedOut = true;
+        }
         console.error(
           "readPrintedText",
           error instanceof Error
@@ -125,6 +167,10 @@ export async function readPrintedText(
             : "unknown",
         );
       }
+    }
+
+    if (timedOut && parts.length === 0) {
+      throw new Error("timeout");
     }
 
     const extractedText = parts.join("\n\n").slice(0, MAX_EXTRACTED_TEXT).trim();

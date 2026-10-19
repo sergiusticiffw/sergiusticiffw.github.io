@@ -3,14 +3,27 @@
 import { useRef } from "react";
 
 function previewKind(filename: string, mimeType: string | null) {
+  const lower = filename.toLowerCase();
   if (mimeType?.startsWith("image/")) {
     return "image";
   }
-  if (mimeType === "application/pdf" || filename.toLowerCase().endsWith(".pdf")) {
+  if (mimeType === "application/pdf" || lower.endsWith(".pdf")) {
     return "pdf";
+  }
+  if (mimeType === "text/plain" || lower.endsWith(".txt")) {
+    return "text";
+  }
+  if (mimeType?.includes("wordprocessingml") || lower.endsWith(".docx")) {
+    return "word";
   }
   return "file";
 }
+
+const kindLabel: Record<string, string> = {
+  text: "Text",
+  word: "Word",
+  file: "Fișier",
+};
 
 export function DocumentPreview({
   id,
@@ -54,7 +67,7 @@ export function DocumentPreview({
             />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
-              Fișier
+              {kindLabel[kind] ?? "Fișier"}
             </span>
           )}
           <button
@@ -98,6 +111,11 @@ export function DocumentPreview({
         {kind === "image" ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={viewUrl} alt={filename} className="max-h-[75vh] w-full object-contain" />
+        ) : kind === "word" || kind === "file" ? (
+          <p className="rounded-md border p-4 text-sm text-muted-foreground">
+            Acest tip de fișier nu se poate afișa aici. Folosește „Descarcă” ca să
+            îl deschizi pe telefon sau pe calculator.
+          </p>
         ) : (
           <iframe title={filename} src={viewUrl} className="h-[75vh] w-full rounded-md border" />
         )}

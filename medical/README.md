@@ -36,13 +36,13 @@ Pentru un cont Google personal, aplicația folosește OAuth 2.0 al contului tău
 4. Pune `GOOGLE_CLIENT_ID` și `GOOGLE_CLIENT_SECRET` în `.env.local`.
 5. După autentificare, folosește „Conectează Google Drive”. Tokenul de reîmprospătare este criptat și salvat în baza de date. Browserul nu îl primește.
 
-La citire, PDF-ul își dă textul din fișier, iar fotografia este citită local cu OCR. Citirea nu pune un diagnostic. Dacă în text apare un IDNP de 13 cifre, persoana este profilul cu acel IDNP. După ce verifici titlul, data și textul, serverul urcă fișierul în folderul privat al acelei persoane și salvează înregistrarea. Ștergerea documentului șterge și rândurile create din el.
+La citire, PDF-ul, fișierul Word (.docx) și fișierul text își dau textul din fișier, iar fotografia este citită local cu OCR. Citirea nu pune un diagnostic. Dacă în text apare un IDNP de 13 cifre, persoana este profilul cu acel IDNP. După ce verifici titlul, data și textul, serverul urcă fișierul în folderul privat al acelei persoane și salvează înregistrarea. Ștergerea documentului șterge și rândurile create din el.
 
 Pagina Asistent înlocuiește lista de înregistrări. Întrebările sunt trimise la Gemini împreună cu textul deja salvat, ca să caute, să filtreze și să rezume documentele. Cheia `GEMINI_API_KEY` stă doar pe server. Asistentul nu înlocuiește un medic.
 
 Aplică mai întâi migrația inițială, apoi [`supabase/migrations/20261013140000_idnp_extraction.sql`](supabase/migrations/20261013140000_idnp_extraction.sql).
 
-La deschidere, `/api/documents/[id]` verifică din nou accesul și trimite conținutul prin aplicație, fără un link public. Tipurile permise sunt PDF, JPEG, PNG și WebP, recunoscute după conținut, cu limită de 10 MB.
+La deschidere, `/api/documents/[id]` verifică din nou accesul și trimite conținutul prin aplicație, fără un link public. Tipurile permise sunt PDF, JPEG, PNG, WebP, Word (.docx) și text (.txt), recunoscute după conținut, cu limită de 10 MB. Pentru Word și text aplică [`supabase/migrations/20261019210000_document_types.sql`](supabase/migrations/20261019210000_document_types.sql). Formatul vechi `.doc` nu este acceptat; salvează-l ca `.docx`.
 
 Nu urca documente medicale până nu verifici izolarea: un al doilea utilizator, autentificat în propria familie, nu trebuie să vadă profilurile primului și nu trebuie să poată deschide documentele lui.
 

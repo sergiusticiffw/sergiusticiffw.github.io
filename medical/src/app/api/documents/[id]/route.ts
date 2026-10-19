@@ -82,7 +82,10 @@ export async function GET(
     const filename = safeFilename(document.original_filename);
     return new NextResponse(driveResponse.body, {
       headers: {
-        "Content-Type": document.mime_type,
+        "Content-Type":
+          document.mime_type === "text/plain"
+            ? "text/plain; charset=utf-8"
+            : document.mime_type,
         "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${filename}"`,
         "Cache-Control": "private, no-store",
         "X-Content-Type-Options": "nosniff",

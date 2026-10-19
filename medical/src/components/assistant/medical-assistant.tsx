@@ -93,17 +93,20 @@ export function MedicalAssistant({
                 </p>
               </div>
             ) : (
-              <p
-                key={`${message.role}-${index}`}
-                className="max-w-[85%] whitespace-pre-wrap text-sm"
-              >
-                {message.text}
-              </p>
+              <div key={`${message.role}-${index}`} className="flex justify-start">
+                <div className="max-w-[85%] rounded-2xl border bg-card px-3 py-2 text-sm shadow-sm">
+                  <p className="whitespace-pre-wrap">{message.text}</p>
+                </div>
+              </div>
             ),
           )
         )}
         {pending ? (
-          <p className="text-sm text-muted-foreground">Caut în documente…</p>
+          <div className="flex justify-start">
+            <p className="max-w-[85%] rounded-2xl border bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm">
+              Caut în documente…
+            </p>
+          </div>
         ) : null}
         {error ? (
           <p role="alert" className="text-sm text-destructive">

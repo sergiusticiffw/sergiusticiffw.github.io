@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 
 import {
   createConsultation,
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ACCEPTED_FILE_TYPES } from "@/lib/files";
 
 const initialResult: RecordActionResult = {};
 
@@ -26,7 +27,7 @@ function FileField({
   if (!driveConnected) {
     return (
       <p className="text-sm text-muted-foreground">
-        Conectează Google Drive ca să atașezi imagini sau un PDF.
+        Conectează Google Drive ca să atașezi imagini, PDF, Word sau text.
       </p>
     );
   }
@@ -39,12 +40,12 @@ function FileField({
         name="file"
         type="file"
         multiple
-        accept="application/pdf,image/jpeg,image/png,image/webp"
+        accept={ACCEPTED_FILE_TYPES}
         className="h-11"
       />
       <p className="text-sm text-muted-foreground">
-        Opțional. Poți adăuga mai multe imagini sau un PDF la aceeași
-        înregistrare.
+        Opțional. Poți adăuga mai multe imagini, PDF, Word (.docx) sau text
+        (.txt) la aceeași înregistrare.
       </p>
     </div>
   );
@@ -70,25 +71,33 @@ function EntryForm({
   title: string;
   children: ReactNode;
 }) {
-  const [state, formAction, pending] = useActionState(action, initialResult);
+  const [state, setState] = useState<RecordActionResult>(initialResult);
   const [fileError, setFileError] = useState<string | null>(null);
-  const [savingFiles, setSavingFiles] = useState(false);
+  const [saving, setSaving] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    if (state.saved) {
-      formRef.current?.reset();
-    }
-  }, [state]);
 
   async function submit(formData: FormData) {
     const files = formData
       .getAll("file")
       .filter((entry): entry is File => entry instanceof File && entry.size > 0);
     formData.delete("file");
+    setFileError(null);
+    setState(initialResult);
+
     if (files.length === 0) {
-      formAction(formData);
+      setSaving(true);
+      try {
+        const result = await action(initialResult, formData);
+        setState(result);
+        if (result.saved) {
+          formRef.current?.reset();
+        }
+      } catch {
+        setState({ error: "Înregistrarea nu a putut fi salvată. Încearcă din nou." });
+      } finally {
+        setSaving(false);
+      }
       return;
     }
 
@@ -100,8 +109,7 @@ function EntryForm({
       return;
     }
 
-    setFileError(null);
-    setSavingFiles(true);
+    setSaving(true);
     let primaryId: string | null = null;
     try {
       for (const [index, file] of files.entries()) {
@@ -155,7 +163,7 @@ function EntryForm({
     } catch {
       setFileError("Înregistrarea nu a putut fi salvată. Încearcă din nou.");
     } finally {
-      setSavingFiles(false);
+      setSaving(false);
     }
   }
 
@@ -175,8 +183,8 @@ function EntryForm({
         </p>
       ) : null}
       {children}
-      <Button type="submit" className="h-11 sm:w-fit" disabled={pending || savingFiles}>
-        {pending || savingFiles ? "Se salvează…" : "Salvează"}
+      <Button type="submit" className="h-11 sm:w-fit" disabled={saving}>
+        {saving ? "Se salvează…" : "Salvează"}
       </Button>
     </form>
   );

@@ -42,6 +42,9 @@ function readError(error: unknown) {
   if (error instanceof Error && error.message === "empty") {
     return "Nu am găsit text în document. Încearcă o fotografie mai clară.";
   }
+  if (error instanceof Error && error.message === "timeout") {
+    return "Citirea a durat prea mult. Încearcă o fotografie mai mică sau un singur document.";
+  }
   return "Documentul nu a putut fi citit. Verifică fotografia și încearcă din nou.";
 }
 
