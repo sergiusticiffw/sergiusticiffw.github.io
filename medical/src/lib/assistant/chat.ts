@@ -41,13 +41,18 @@ const declarations = [
   },
   {
     name: "read_record",
-    description: "Citește textul unui document găsit cu search_records.",
+    description:
+      "Citește textul documentelor găsite cu search_records. Trimite ids cu toate id-urile, nu doar primul.",
     parameters: {
       type: "OBJECT",
       properties: {
-        id: { type: "STRING" },
+        id: { type: "STRING", description: "Id-ul unui document" },
+        ids: {
+          type: "ARRAY",
+          items: { type: "STRING" },
+          description: "Id-urile tuturor documentelor găsite",
+        },
       },
-      required: ["id"],
     },
   },
 ];
@@ -58,7 +63,7 @@ function systemInstruction(count: number) {
     "Ajuți să caute, să filtreze și să consulte documentele deja încărcate.",
     "Răspunzi în română, scurt și clar.",
     "Nu inventa analize, valori, medici, clinici sau date. Dacă nu găsești nimic, spune asta.",
-    "Caută doar în textul documentelor, cu search_records, apoi citește documentul cu read_record.",
+    "Caută în textul documentelor cu search_records. Dacă sunt mai multe rezultate, citește-le pe toate cu read_record și răspunde din fiecare, nu doar din primul.",
     "Nu filtra după categorie. Cuvintele din întrebare trebuie să fie cele din document.",
     "Când citezi, menționează persoana, data și titlul.",
     "Nu pui diagnostice și nu înlocuiești un medic. Poți explica ce scrie în documente.",
@@ -68,28 +73,42 @@ function systemInstruction(count: number) {
 
 function runTool(records: CatalogRecord[], name: string, args: Record<string, unknown>) {
   if (name === "search_records") {
-    return searchCatalog(records, {
+    const found = searchCatalog(records, {
       query: typeof args.query === "string" ? args.query : "",
       profile: typeof args.profile === "string" ? args.profile : "",
       from: typeof args.from === "string" ? args.from : "",
       to: typeof args.to === "string" ? args.to : "",
       limit: typeof args.limit === "number" ? args.limit : 12,
     });
+    return {
+      ...found,
+      records: found.records.map((item) => ({
+        ...item,
+        text: records.find((record) => record.id === item.id)?.text.slice(0, 4000) ?? item.excerpt,
+      })),
+    };
   }
 
   if (name === "read_record") {
-    const id = typeof args.id === "string" ? args.id : "";
-    const record = records.find((item) => item.id === id);
-    if (!record) {
+    const ids = [
+      ...(Array.isArray(args.ids) ? args.ids : []),
+      args.id,
+    ].filter((id): id is string => typeof id === "string" && id.length > 0);
+    const found = ids
+      .map((id) => records.find((record) => record.id === id))
+      .filter((record): record is CatalogRecord => Boolean(record));
+    if (found.length === 0) {
       return { error: "Documentul nu este în dosar." };
     }
     return {
-      id: record.id,
-      profile: record.profileName,
-      date: record.date,
-      title: record.title,
-      files: record.files,
-      text: record.text.slice(0, 8000),
+      records: found.map((record) => ({
+        id: record.id,
+        profile: record.profileName,
+        date: record.date,
+        title: record.title,
+        files: record.files,
+        text: record.text.slice(0, 8000),
+      })),
     };
   }
 

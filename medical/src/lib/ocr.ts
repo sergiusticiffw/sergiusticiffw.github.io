@@ -58,28 +58,32 @@ async function readPdf(
   ocr: (bytes: Uint8Array) => Promise<string>,
 ) {
   const pdf = await getDocumentProxy(bytes);
-  const extracted = await extractText(pdf, { mergePages: true });
-  const embedded = (typeof extracted.text === "string" ? extracted.text : "").trim();
-  if (embedded.length >= MIN_PDF_TEXT) {
-    return embedded;
-  }
-
-  const pages = Math.min(extracted.totalPages, MAX_PDF_PAGES);
-  const recognized: string[] = [];
-  for (let page = 1; page <= pages; page += 1) {
-    const image = await renderPageAsImage(pdf, page, {
-      canvasImport: () => import("@napi-rs/canvas"),
-      scale: 2,
-    });
-    const text = await ocr(new Uint8Array(image));
-    if (text) {
-      recognized.push(text);
+  try {
+    const extracted = await extractText(pdf, { mergePages: true });
+    const embedded = (typeof extracted.text === "string" ? extracted.text : "").trim();
+    if (embedded.length >= MIN_PDF_TEXT) {
+      return embedded;
     }
+
+    const pages = Math.min(extracted.totalPages, MAX_PDF_PAGES);
+    const recognized: string[] = [];
+    for (let page = 1; page <= pages; page += 1) {
+      const image = await renderPageAsImage(pdf, page, {
+        canvasImport: () => import("@napi-rs/canvas"),
+        scale: 2,
+      });
+      const text = await ocr(new Uint8Array(image));
+      if (text) {
+        recognized.push(text);
+      }
+    }
+    if (extracted.totalPages > MAX_PDF_PAGES) {
+      recognized.push("Restul paginilor nu a fost citit.");
+    }
+    return recognized.join("\n\n");
+  } finally {
+    await (pdf as { destroy?: () => Promise<void> }).destroy?.();
   }
-  if (extracted.totalPages > MAX_PDF_PAGES) {
-    recognized.push("Restul paginilor nu a fost citit.");
-  }
-  return recognized.join("\n\n");
 }
 
 export async function readPrintedText(
@@ -102,12 +106,19 @@ export async function readPrintedText(
   try {
     const parts: string[] = [];
     for (const file of files) {
-      const text =
-        file.mimeType === "application/pdf"
-          ? await readPdf(file.bytes, ocr)
-          : await ocr(file.bytes);
-      if (text.trim()) {
-        parts.push(text.trim());
+      try {
+        const text =
+          file.mimeType === "application/pdf"
+            ? await readPdf(file.bytes, ocr)
+            : await ocr(file.bytes);
+        if (text.trim()) {
+          parts.push(text.trim());
+        }
+      } catch (error) {
+        console.error(
+          "readPrintedText",
+          error instanceof Error ? error.name : "unknown",
+        );
       }
     }
 

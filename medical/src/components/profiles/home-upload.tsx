@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  emptyConsultation,
+  MAX_EXTRACTED_TEXT,
   recordBody,
   recordDate,
   type Extraction,
@@ -49,6 +51,7 @@ export function HomeUpload({
   const [files, setFiles] = useState<File[]>([]);
   const [fileKey, setFileKey] = useState(0);
   const [pending, setPending] = useState<"detect" | "save" | null>(null);
+  const [progress, setProgress] = useState<string | null>(null);
   const [extraction, setExtraction] = useState<Extraction | null>(null);
   const [draft, setDraft] = useState<RecordDraft | null>(null);
   const [profileId, setProfileId] = useState(lockedProfileId ?? "");
@@ -61,6 +64,7 @@ export function HomeUpload({
     setDraft(null);
     setProfileId(lockedProfileId ?? "");
     setMatchedName(null);
+    setProgress(null);
     setError(null);
   }
 
@@ -72,25 +76,60 @@ export function HomeUpload({
 
     setError(null);
     setPending("detect");
-    const data = new FormData();
-    for (const file of files) {
+    const parts: string[] = [];
+    const missed: string[] = [];
+    let date = "";
+    let idnp = "";
+    let matchedProfileId: string | null = null;
+    let matched: string | null = null;
+
+    for (const [index, file] of files.entries()) {
+      setProgress(`Se citește ${index + 1} din ${files.length}…`);
+      const data = new FormData();
       data.append("file", file);
+      const result = await detectDocument(data);
+      const text = result.extraction?.extractedText.trim() ?? "";
+      if (result.error || !text) {
+        missed.push(file.name);
+        continue;
+      }
+      parts.push(files.length > 1 ? `${file.name}\n${text}` : text);
+      if (!date) {
+        date = recordDate(result.extraction!);
+      }
+      if (!idnp && result.extraction?.idnp) {
+        idnp = result.extraction.idnp;
+      }
+      if (!matchedProfileId && result.matchedProfileId) {
+        matchedProfileId = result.matchedProfileId;
+        matched = result.matchedName ?? null;
+      }
     }
-    const result = await detectDocument(data);
+
     setPending(null);
-    if (result.error || !result.extraction) {
-      setError(result.error ?? "Documentul nu a putut fi citit.");
+    setProgress(null);
+    if (parts.length === 0) {
+      setError("Documentele nu au putut fi citite. Încearcă fotografii mai clare.");
       return;
     }
 
-    setExtraction(result.extraction);
+    const extraction: Extraction = {
+      idnp,
+      extractedText: parts.join("\n\n").slice(0, MAX_EXTRACTED_TEXT),
+      consultation: { ...emptyConsultation(), consultationDate: date },
+      labTests: [],
+    };
+    setExtraction(extraction);
     setDraft({
       title: suggestedTitle(files[0]),
-      date: recordDate(result.extraction),
-      body: recordBody(result.extraction),
+      date,
+      body: recordBody(extraction),
     });
-    setProfileId(lockedProfileId ?? result.matchedProfileId ?? "");
-    setMatchedName(result.matchedName ?? null);
+    setProfileId(lockedProfileId ?? matchedProfileId ?? "");
+    setMatchedName(matched);
+    if (missed.length > 0) {
+      setError(`Nu am putut citi: ${missed.join(", ")}.`);
+    }
   }
 
   async function onSave() {
@@ -289,7 +328,7 @@ export function HomeUpload({
           void onDetect();
         }}
       >
-        {pending === "detect" ? "Se citește…" : "Citește documentul"}
+        {pending === "detect" ? progress ?? "Se citește…" : "Citește documentele"}
       </Button>
     </div>
   );
