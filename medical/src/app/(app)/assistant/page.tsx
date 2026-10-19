@@ -2,7 +2,7 @@ import { Suspense } from "react";
 
 import { MedicalAssistant } from "@/components/assistant/medical-assistant";
 import { loadMedicalCatalog, suggestQuestions } from "@/lib/assistant/catalog";
-import { getAdminFamilyId } from "@/lib/auth";
+import { getFamilyAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -28,7 +28,7 @@ async function AssistantSection() {
     return <MedicalAssistant enabled={false} suggestions={[]} />;
   }
 
-  const family = await getAdminFamilyId();
+  const family = await getFamilyAccess();
   if (!family.familyId) {
     return <MedicalAssistant enabled suggestions={[]} />;
   }

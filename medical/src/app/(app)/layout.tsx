@@ -16,6 +16,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Link href="/assistant" className="text-sm text-muted-foreground">
               Asistent
             </Link>
+            <Link href="/family" className="text-sm text-muted-foreground">
+              Familie
+            </Link>
           </div>
           <div className="flex items-center gap-3">
             <Suspense

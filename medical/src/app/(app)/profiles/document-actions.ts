@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { getAdminFamilyId } from "@/lib/auth";
+import { requireProfileWriter } from "@/lib/auth";
 import { trashDriveFile } from "@/lib/google-drive";
 import { createClient } from "@/lib/supabase/server";
 import { profileIdSchema } from "@/lib/validation/profile";
@@ -30,11 +30,6 @@ export async function deleteRecord(
     return { error: "Înregistrarea nu este validă." };
   }
 
-  const family = await getAdminFamilyId();
-  if (!family.familyId) {
-    return { error: family.error ?? "Familia nu a putut fi încărcată." };
-  }
-
   const supabase = await createClient();
   const table = kind === "consultation" ? "consultations" : "lab_tests";
   const { data, error } = await supabase
@@ -47,6 +42,11 @@ export async function deleteRecord(
   }
 
   const row = data as { id: string; profile_id: string };
+  const family = await requireProfileWriter(row.profile_id);
+  if (!family.familyId) {
+    return { error: family.error ?? "Familia nu a putut fi încărcată." };
+  }
+
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id")
@@ -78,11 +78,6 @@ export async function deleteDocument(id: string): Promise<DocumentActionResult> 
     return { error: "Documentul nu este valid." };
   }
 
-  const family = await getAdminFamilyId();
-  if (!family.familyId) {
-    return { error: family.error ?? "Familia nu a putut fi încărcată." };
-  }
-
   const supabase = await createClient();
   const withRecord = await supabase
     .from("medical_documents")
@@ -109,6 +104,11 @@ export async function deleteDocument(id: string): Promise<DocumentActionResult> 
     profile_id: string;
     record_id?: string | null;
   };
+  const family = await requireProfileWriter(document.profile_id);
+  if (!family.familyId) {
+    return { error: family.error ?? "Familia nu a putut fi încărcată." };
+  }
+
   const recordId = document.record_id ?? document.id;
   const { data: related, error: relatedError } = await supabase
     .from("medical_documents")

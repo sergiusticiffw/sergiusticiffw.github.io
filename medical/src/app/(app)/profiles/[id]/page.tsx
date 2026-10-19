@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 
 import { ProfileDetail } from "@/components/profiles/profile-list";
-import { getAdminFamilyId } from "@/lib/auth";
+import { canWrite, getFamilyAccess, requireProfileWriter } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -33,7 +33,7 @@ async function ProfileSection({
     return <p className="text-sm text-destructive">Persoana nu a fost găsită.</p>;
   }
 
-  const family = await getAdminFamilyId();
+  const family = await getFamilyAccess();
   if (!family.familyId) {
     return (
       <p role="alert" className="text-sm text-destructive">
@@ -177,6 +177,9 @@ async function ProfileSection({
           laboratory: string | null;
         }[]}
         driveConnected={Boolean(connectionResult.data)}
+        canWrite={canWrite(family.role)}
+        canEditRecords={Boolean((await requireProfileWriter(id)).familyId)}
+        isAdmin={family.role === "admin"}
       />
     </div>
   );

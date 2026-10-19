@@ -105,12 +105,18 @@ export function ProfileDetail({
   consultations,
   labTests,
   driveConnected,
+  canWrite = true,
+  canEditRecords = canWrite,
+  isAdmin = true,
 }: {
   profile: MedicalProfile;
   documents: MedicalDocument[];
   consultations: MedicalConsultation[];
   labTests: MedicalLabTest[];
   driveConnected: boolean;
+  canWrite?: boolean;
+  canEditRecords?: boolean;
+  isAdmin?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -168,7 +174,7 @@ export function ProfileDetail({
             }}
             onDone={() => setEditing(false)}
           />
-        ) : (
+        ) : canWrite ? (
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
               type="button"
@@ -178,29 +184,34 @@ export function ProfileDetail({
             >
               Modifică
             </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              className="h-11"
-              disabled={pending}
-              onClick={() => {
-                void onDelete();
-              }}
-            >
-              {pending ? "Se șterge…" : "Șterge"}
-            </Button>
+            {isAdmin ? (
+              <Button
+                type="button"
+                variant="destructive"
+                className="h-11"
+                disabled={pending}
+                onClick={() => {
+                  void onDelete();
+                }}
+              >
+                {pending ? "Se șterge…" : "Șterge"}
+              </Button>
+            ) : null}
           </div>
-        )}
+        ) : null}
+        {canEditRecords ? (
         <ProfileEntries
           profileId={profile.id}
           profileName={profile.display_name}
           idnp={profile.idnp}
           driveConnected={driveConnected}
         />
+        ) : null}
         <ProfileRecords
           documents={documents}
           consultations={consultations}
           labTests={labTests}
+          canWrite={canEditRecords}
         />
       </CardContent>
     </Card>
@@ -211,10 +222,12 @@ function ProfileRecords({
   documents,
   consultations,
   labTests,
+  canWrite,
 }: {
   documents: MedicalDocument[];
   consultations: MedicalConsultation[];
   labTests: MedicalLabTest[];
+  canWrite: boolean;
 }) {
   const primaries = documents.filter((document) => !document.record_id);
   const documentRecords = primaries.map((document) => {
@@ -338,12 +351,14 @@ function ProfileRecords({
                     ))}
                   </ul>
                 ) : null}
-                <DeleteRecordButton
-                  kind={record.kind}
-                  id={record.id}
-                  withFiles={record.files.length > 0}
-                  compact
-                />
+                {canWrite ? (
+                  <DeleteRecordButton
+                    kind={record.kind}
+                    id={record.id}
+                    withFiles={record.files.length > 0}
+                    compact
+                  />
+                ) : null}
               </div>
               {record.body ? (
                 <details className="mt-1">

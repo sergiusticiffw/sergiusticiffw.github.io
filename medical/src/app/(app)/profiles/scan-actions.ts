@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { getAdminFamilyId } from "@/lib/auth";
+import { getFamilyAccess, requireProfileWriter } from "@/lib/auth";
 import { readUploadedFiles } from "@/lib/files";
 import { readPrintedText } from "@/lib/ocr";
 import {
@@ -84,7 +84,7 @@ export async function detectDocument(formData: FormData): Promise<DetectResult> 
     return { error: uploaded.error };
   }
 
-  const family = await getAdminFamilyId();
+  const family = await getFamilyAccess();
   if (!family.familyId) {
     return { error: family.error ?? "Familia nu a putut fi încărcată." };
   }
@@ -150,7 +150,7 @@ export async function saveDetectedDocument(
     return { error: uploaded.error };
   }
 
-  const family = await getAdminFamilyId();
+  const family = await requireProfileWriter(parsedId.data);
   if (!family.familyId) {
     return { error: family.error ?? "Familia nu a putut fi încărcată." };
   }
@@ -170,6 +170,10 @@ export async function saveDetectedDocument(
       return { error: match.error };
     }
     if (match.profile) {
+      const allowed = await requireProfileWriter(match.profile.id);
+      if (!allowed.familyId) {
+        return { error: allowed.error ?? "Nu ai dreptul să modifici înregistrările acestui profil." };
+      }
       person = match.profile;
     }
   }

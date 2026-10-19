@@ -22,7 +22,7 @@ Clientul OAuth Google și cheia de criptare rămân doar pe server. Nu le prefix
 5. Pentru emailuri de recuperare în producție, configurează un SMTP propriu. Serviciul implicit de email are limite mici.
 6. Aplică [`supabase/migrations/20261013120000_init_medical.sql`](supabase/migrations/20261013120000_init_medical.sql) din SQL Editor, sau cu Supabase CLI: `supabase link` apoi `supabase db push`.
 
-Rolurile `editor` și `viewer` există în schemă, dar nu au politici. Un cont cu aceste roluri nu vede date. Fiecare cont nou primește propria familie și nu vede profilurile altui cont.
+Administratorul invită oamenii din pagina Familie și este singurul care vede tot dosarul, cardul Google Drive și formularul de profil nou. Celelalte conturi văd doar persoanele bifate pentru ele și pot gestiona înregistrările acelor persoane. Un cont nou fără invitație primește propria familie. Dacă are doar familia goală creată automat, invitația îl mută în familia care l-a invitat. Aplică [`supabase/migrations/20261019160000_family_access.sql`](supabase/migrations/20261019160000_family_access.sql), apoi [`supabase/migrations/20261019180000_profile_access.sql`](supabase/migrations/20261019180000_profile_access.sql). Dacă lista de profiluri cade după acea migrație, aplică [`supabase/migrations/20261019190000_profile_access_rls.sql`](supabase/migrations/20261019190000_profile_access_rls.sql). Ca bifele să limiteze și un editor, aplică [`supabase/migrations/20261019200000_checked_profile_access.sql`](supabase/migrations/20261019200000_checked_profile_access.sql).
 
 ## Fișiere în Google Drive
 

@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getAdminFamilyId } from "@/lib/auth";
+import { getFamilyAccess } from "@/lib/auth";
 import { getGoogleConfig } from "@/lib/google-oauth";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -46,7 +46,7 @@ async function ProfilesSection({
   searchParams: Promise<{ drive?: string }>;
 }) {
   const driveStatus = (await searchParams).drive;
-  const family = await getAdminFamilyId();
+  const family = await getFamilyAccess();
   if (!family.familyId) {
     return (
       <p role="alert" className="text-sm text-destructive">
@@ -62,11 +62,13 @@ async function ProfilesSection({
       .select("id, display_name, birth_date, idnp, notes")
       .eq("family_id", family.familyId)
       .order("display_name", { ascending: true }),
-    supabase
-      .from("google_drive_connections")
-      .select("family_id")
-      .eq("family_id", family.familyId)
-      .maybeSingle(),
+    family.role === "admin"
+      ? supabase
+          .from("google_drive_connections")
+          .select("family_id")
+          .eq("family_id", family.familyId)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   const listError = profilesResult.error ?? connectionResult.error;
@@ -98,11 +100,14 @@ async function ProfilesSection({
 
   return (
     <div className="flex flex-col gap-6">
-      <DriveStatus
-        status={driveStatus}
-        configured={googleConfigured}
-        connected={driveConnected}
-      />
+      {family.role === "admin" ? (
+        <DriveStatus
+          status={driveStatus}
+          configured={googleConfigured}
+          connected={driveConnected}
+        />
+      ) : null}
+      {family.role === "admin" ? (
       <Card className="py-0">
         <details className="group">
           <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-(--card-spacing) py-(--card-spacing) [&::-webkit-details-marker]:hidden [&::marker]:content-none">
@@ -127,6 +132,7 @@ async function ProfilesSection({
           </CardContent>
         </details>
       </Card>
+      ) : null}
       <ProfileList profiles={profiles} />
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { getAdminFamilyId } from "@/lib/auth";
+import { requireProfileWriter } from "@/lib/auth";
 import { readUploadedFiles } from "@/lib/files";
 import {
   discardStoredDocument,
@@ -21,7 +21,7 @@ export type RecordActionResult = {
 };
 
 async function ownedProfile(profileId: string) {
-  const family = await getAdminFamilyId();
+  const family = await requireProfileWriter(profileId);
   if (!family.familyId) {
     return { error: family.error ?? "Familia nu a putut fi încărcată." };
   }

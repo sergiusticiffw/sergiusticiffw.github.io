@@ -2,7 +2,7 @@
 
 import { answerMedicalQuestion } from "@/lib/assistant/chat";
 import { loadMedicalCatalog } from "@/lib/assistant/catalog";
-import { getAdminFamilyId } from "@/lib/auth";
+import { getFamilyAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export type AssistantTurn = {
@@ -41,7 +41,7 @@ export async function askMedicalAssistant(
     return { error: "Scrie o întrebare." };
   }
 
-  const family = await getAdminFamilyId();
+  const family = await getFamilyAccess();
   if (!family.familyId) {
     return { error: family.error ?? "Familia nu a putut fi încărcată." };
   }

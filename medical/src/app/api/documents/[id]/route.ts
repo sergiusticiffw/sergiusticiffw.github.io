@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getAdminFamilyId } from "@/lib/auth";
+import { getFamilyAccess } from "@/lib/auth";
 import { safeFilename } from "@/lib/files";
 import { downloadDriveFile } from "@/lib/google-drive";
 import { createClient } from "@/lib/supabase/server";
@@ -22,7 +22,7 @@ export async function GET(
     );
   }
 
-  const family = await getAdminFamilyId();
+  const family = await getFamilyAccess();
   if (!family.familyId) {
     return NextResponse.json(
       { error: "Autentificare necesară." },

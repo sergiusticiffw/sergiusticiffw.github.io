@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { getAdminFamilyId } from "@/lib/auth";
+import { getAdminFamilyId, requireWriter } from "@/lib/auth";
 import { renameDriveFolder, trashDriveFile } from "@/lib/google-drive";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -64,7 +64,7 @@ export async function updateProfile(
     return { error: "Verifică datele profilului." };
   }
 
-  const family = await getAdminFamilyId();
+  const family = await requireWriter();
   if (!family.familyId) {
     return { error: family.error ?? "Familia nu a putut fi încărcată." };
   }
