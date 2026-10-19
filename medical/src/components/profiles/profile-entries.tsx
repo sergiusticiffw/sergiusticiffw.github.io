@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES } from "@/lib/files";
 
 const initialResult: RecordActionResult = {};
@@ -78,14 +79,14 @@ function EntryForm({
   const router = useRouter();
 
   async function submit(formData: FormData) {
-    const files = formData
+    const chosen = formData
       .getAll("file")
       .filter((entry): entry is File => entry instanceof File && entry.size > 0);
     formData.delete("file");
     setFileError(null);
     setState(initialResult);
 
-    if (files.length === 0) {
+    if (chosen.length === 0) {
       setSaving(true);
       try {
         const result = await action(initialResult, formData);
@@ -112,6 +113,13 @@ function EntryForm({
     setSaving(true);
     let primaryId: string | null = null;
     try {
+      // Shrink photos so each request stays under the hosting body limit.
+      const prepared = await prepareUploads(chosen);
+      if (prepared.error) {
+        setFileError(prepared.error);
+        return;
+      }
+      const files = prepared.files;
       for (const [index, file] of files.entries()) {
         const named =
           files.length > 1

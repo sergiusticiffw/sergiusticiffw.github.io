@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES } from "@/lib/files";
 import {
   emptyConsultation,
@@ -51,7 +52,9 @@ export function HomeUpload({
   const [error, setError] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [fileKey, setFileKey] = useState(0);
-  const [pending, setPending] = useState<"detect" | "save" | null>(null);
+  const [pending, setPending] = useState<"detect" | "save" | "prepare" | null>(
+    null,
+  );
   const [progress, setProgress] = useState<string | null>(null);
   const [extraction, setExtraction] = useState<Extraction | null>(null);
   const [draft, setDraft] = useState<RecordDraft | null>(null);
@@ -338,8 +341,25 @@ export function HomeUpload({
           multiple
           accept={ACCEPTED_FILE_TYPES}
           className="h-11"
+          disabled={pending !== null}
           onChange={(event) => {
-            setFiles(Array.from(event.target.files ?? []));
+            const chosen = Array.from(event.target.files ?? []);
+            setError(null);
+            setFiles([]);
+            if (chosen.length === 0) {
+              return;
+            }
+            // Phone photos are shrunk here so each request stays under the
+            // 4.5 MB body limit of the hosting platform.
+            setPending("prepare");
+            void prepareUploads(chosen)
+              .then((prepared) => {
+                setFiles(prepared.files);
+                if (prepared.error) {
+                  setError(prepared.error);
+                }
+              })
+              .finally(() => setPending(null));
           }}
         />
         {files.length > 0 ? (
@@ -353,12 +373,16 @@ export function HomeUpload({
       <Button
         type="button"
         className="h-11 sm:w-fit"
-        disabled={pending !== null}
+        disabled={pending !== null || files.length === 0}
         onClick={() => {
           void onDetect();
         }}
       >
-        {pending === "detect" ? progress ?? "Se citește…" : "Citește documentele"}
+        {pending === "prepare"
+          ? "Se pregătesc fișierele…"
+          : pending === "detect"
+            ? (progress ?? "Se citește…")
+            : "Citește documentele"}
       </Button>
     </div>
   );
