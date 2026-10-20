@@ -9,7 +9,6 @@ import {
   type ProfileGrant,
 } from "@/components/family/family-manager";
 import { getFamilyAccess, type FamilyRole } from "@/lib/auth";
-import { useFamilyCache } from "@/lib/data-cache";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -34,8 +33,6 @@ export default function FamilyPage() {
 }
 
 async function FamilySection() {
-  "use cache: private";
-  useFamilyCache();
   const access = await getFamilyAccess();
   if (!access.familyId || !access.role) {
     return (

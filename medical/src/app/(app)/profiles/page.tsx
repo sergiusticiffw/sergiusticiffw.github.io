@@ -12,7 +12,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getFamilyAccess } from "@/lib/auth";
-import { useFamilyCache } from "@/lib/data-cache";
 import { getGoogleConfig } from "@/lib/google-oauth";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -47,8 +46,6 @@ async function ProfilesSection({
 }: {
   searchParams: Promise<{ drive?: string }>;
 }) {
-  "use cache: private";
-  useFamilyCache();
   const driveStatus = (await searchParams).drive;
   const family = await getFamilyAccess();
   if (!family.familyId) {

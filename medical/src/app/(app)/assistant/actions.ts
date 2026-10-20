@@ -41,18 +41,18 @@ export async function askMedicalAssistant(
     return { error: "Scrie o întrebare." };
   }
 
-  const family = await getFamilyAccess();
-  if (!family.familyId) {
-    return { error: family.error ?? "Familia nu a putut fi încărcată." };
-  }
-
-  const supabase = await createClient();
-  const catalog = await loadMedicalCatalog(supabase, family.familyId);
-  if (catalog.error) {
-    return { error: catalog.error };
-  }
-
   try {
+    const family = await getFamilyAccess();
+    if (!family.familyId) {
+      return { error: family.error ?? "Familia nu a putut fi încărcată." };
+    }
+
+    const supabase = await createClient();
+    const catalog = await loadMedicalCatalog(supabase, family.familyId);
+    if (catalog.error) {
+      return { error: catalog.error };
+    }
+
     const answer = await answerMedicalQuestion({
       apiKey,
       messages: turns,

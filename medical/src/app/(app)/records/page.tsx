@@ -4,7 +4,6 @@ import { PageFallback } from "@/components/layout/page-fallback";
 import { RecordsList } from "@/components/records/records-list";
 import { loadRecordsIndex } from "@/lib/assistant/catalog";
 import { getFamilyAccess } from "@/lib/auth";
-import { useFamilyCache } from "@/lib/data-cache";
 
 export const metadata = {
   title: "Înregistrări",
@@ -27,8 +26,6 @@ export default function RecordsPage() {
 }
 
 async function RecordsSection() {
-  "use cache: private";
-  useFamilyCache();
   const family = await getFamilyAccess();
   if (!family.familyId) {
     return (

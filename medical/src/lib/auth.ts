@@ -3,12 +3,9 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 
-import { useFamilyCache } from "@/lib/data-cache";
 import { createClient } from "@/lib/supabase/server";
 
-export async function getCurrentUser() {
-  "use cache: private";
-  useFamilyCache();
+export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
   const claimed = await supabase.auth.getClaims();
   const claims = claimed.data?.claims;
@@ -26,7 +23,7 @@ export async function getCurrentUser() {
   }
 
   return { id: data.user.id, email: data.user.email ?? "" };
-}
+});
 
 export type FamilyRole = "admin" | "editor" | "viewer";
 
@@ -36,9 +33,7 @@ export function canWrite(role: FamilyRole | null) {
   return role === "admin" || role === "editor";
 }
 
-export async function getFamilyAccess() {
-  "use cache: private";
-  useFamilyCache();
+export const getFamilyAccess = cache(async () => {
   const user = await getCurrentUser();
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -77,7 +72,7 @@ export async function getFamilyAccess() {
     role: role as FamilyRole,
     error: null,
   };
-}
+});
 
 export const getAdminFamilyId = cache(async () => {
   const access = await getFamilyAccess();

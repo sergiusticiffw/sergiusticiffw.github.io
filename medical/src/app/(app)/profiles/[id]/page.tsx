@@ -4,7 +4,6 @@ import Link from "next/link";
 import { PageFallback } from "@/components/layout/page-fallback";
 import { ProfileDetail } from "@/components/profiles/profile-list";
 import { canWrite, getFamilyAccess, requireProfileWriter } from "@/lib/auth";
-import { useFamilyCache } from "@/lib/data-cache";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -36,12 +35,6 @@ async function ProfileSection({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <CachedProfile id={id} />;
-}
-
-async function CachedProfile({ id }: { id: string }) {
-  "use cache: private";
-  useFamilyCache();
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
     return <p className="text-sm text-destructive">Persoana nu a fost găsită.</p>;
   }

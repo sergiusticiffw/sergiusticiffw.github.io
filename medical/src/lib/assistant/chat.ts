@@ -128,26 +128,37 @@ async function generate(
   let lastStatus = 0;
 
   for (const model of MODELS) {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: instruction }] },
-          contents,
-          ...(withTools ? { tools: [{ functionDeclarations: declarations }] } : {}),
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 2048,
-            thinkingConfig: { thinkingLevel: "low" },
+    let response: Response;
+    try {
+      response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          cache: "no-store",
+          signal: AbortSignal.timeout(25_000),
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
           },
-        }),
-      },
-    );
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: instruction }] },
+            contents,
+            ...(withTools ? { tools: [{ functionDeclarations: declarations }] } : {}),
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 2048,
+              thinkingConfig: { thinkingLevel: "low" },
+            },
+          }),
+        },
+      );
+    } catch (error) {
+      if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
+        lastStatus = 504;
+        continue;
+      }
+      throw error;
+    }
 
     const payload = (await response.json().catch(() => ({}))) as {
       error?: { message?: string; status?: string };

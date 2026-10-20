@@ -37,13 +37,18 @@ export function MedicalAssistant({
     setInput("");
     setError(null);
     setPending(true);
-    const result = await askMedicalAssistant(next);
-    setPending(false);
-    if (result.error || !result.answer) {
-      setError(result.error ?? "Asistentul nu a răspuns.");
-      return;
+    try {
+      const result = await askMedicalAssistant(next);
+      if (result.error || !result.answer) {
+        setError(result.error ?? "Asistentul nu a răspuns.");
+        return;
+      }
+      setMessages([...next, { role: "assistant", text: result.answer }]);
+    } catch {
+      setError("Asistentul nu a putut consulta documentele.");
+    } finally {
+      setPending(false);
     }
-    setMessages([...next, { role: "assistant", text: result.answer }]);
   }
 
   if (!enabled) {
