@@ -156,10 +156,18 @@ function DriveStatus({
           </p>
         ) : null}
         {connected ? (
-          <p className="text-sm text-muted-foreground">
-            Contul Google este conectat. Poți încărca documente din pagina
-            unei persoane.
-          </p>
+          <>
+            <p className="text-sm text-muted-foreground">
+              Contul Google este conectat. Poți încărca documente din pagina
+              unei persoane.
+            </p>
+            <Link
+              href="/api/google/connect"
+              className={cn(buttonVariants({ variant: "outline" }), "h-11 w-fit")}
+            >
+              Reconectează Google Drive
+            </Link>
+          </>
         ) : configured ? (
           <Link
             href="/api/google/connect"

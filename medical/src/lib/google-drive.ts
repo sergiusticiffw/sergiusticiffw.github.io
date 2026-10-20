@@ -68,20 +68,26 @@ async function driveRequest(
   return response;
 }
 
-async function getAccessToken(familyId: string, refreshToken: string) {
+async function getAccessToken(
+  familyId: string,
+  refreshToken: string,
+  forceRefresh = false,
+) {
   const config = getGoogleConfig();
   if (!config) {
     throw new Error("Configurația Google lipsește.");
   }
 
-  const cached = tokenCache.get(familyId);
-  if (cached && cached.expiresAt > Date.now() + 60_000) {
-    return cached.token;
+  if (!forceRefresh) {
+    const cached = tokenCache.get(familyId);
+    if (cached && cached.expiresAt > Date.now() + 60_000) {
+      return cached.token;
+    }
   }
 
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    cache: "no-store",
+  const request = {
+    method: "POST" as const,
+    cache: "no-store" as const,
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       client_id: config.clientId,
@@ -89,25 +95,42 @@ async function getAccessToken(familyId: string, refreshToken: string) {
       refresh_token: refreshToken,
       grant_type: "refresh_token",
     }),
-  });
+  };
 
-  if (!response.ok) {
-    throw new Error("Reînnoirea accesului Google a eșuat.");
+  let response = await fetch("https://oauth2.googleapis.com/token", request);
+  if (response.status === 429 || response.status >= 500) {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    response = await fetch("https://oauth2.googleapis.com/token", request);
   }
 
-  const body = (await response.json()) as {
+  const payload = (await response.json().catch(() => ({}))) as {
     access_token?: string;
     expires_in?: number;
+    error?: string;
   };
-  if (!body.access_token) {
-    throw new Error("Reînnoirea accesului Google a eșuat.");
+
+  if (!response.ok || !payload.access_token) {
+    tokenCache.delete(familyId);
+    console.error("googleToken", response.status, payload.error ?? "no_token");
+    if (
+      response.status === 400 ||
+      response.status === 401 ||
+      payload.error === "invalid_grant" ||
+      payload.error === "invalid_client"
+    ) {
+      throw new Error("Conectează din nou Google Drive. Accesul a expirat.");
+    }
+    if (response.status === 429) {
+      throw new Error("Google Drive este ocupat. Încearcă din nou peste câteva minute.");
+    }
+    throw new Error("Conectează din nou Google Drive.");
   }
 
   tokenCache.set(familyId, {
-    token: body.access_token,
-    expiresAt: Date.now() + (body.expires_in ?? 3600) * 1000,
+    token: payload.access_token,
+    expiresAt: Date.now() + (payload.expires_in ?? 3600) * 1000,
   });
-  return body.access_token;
+  return payload.access_token;
 }
 
 async function loadConnection(familyId: string) {
@@ -202,17 +225,7 @@ export async function ensureDriveRoot(familyId: string) {
 
   const accessToken = await getAccessToken(familyId, connection.refreshToken);
   if (connection.rootFolderId) {
-    try {
-      await driveRequest(
-        accessToken,
-        `https://www.googleapis.com/drive/v3/files/${connection.rootFolderId}?fields=id`,
-      );
-      return { accessToken, rootFolderId: connection.rootFolderId };
-    } catch (error) {
-      if (!isMissingFolder(error)) {
-        throw error;
-      }
-    }
+    return { accessToken, rootFolderId: connection.rootFolderId };
   }
 
   const response = await driveRequest(

@@ -86,9 +86,6 @@ async function uploadWithFolderRetry(input: {
   try {
     return await uploadToProfileFolder(input);
   } catch (error) {
-    if (error instanceof Error && error.message.startsWith("Conectează din nou")) {
-      return uploadToProfileFolder(input);
-    }
     if (!isMissingFolder(error) || !input.profile.drive_folder_id) {
       throw error;
     }
