@@ -27,6 +27,9 @@ import { saveMoneyEntries } from '../../api/saveMoneyEntries';
 
 type Phase = 'closed' | 'listening' | 'parsing' | 'review' | 'error' | 'needKey';
 
+const RETRY_BUTTON_CLASS =
+  'inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/15 px-4 py-3 text-base font-semibold text-app-primary hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-5';
+
 const buttonPosition = (stacked: boolean) =>
   [
     'fixed z-[1000] flex cursor-pointer select-none items-center justify-center rounded-full border-0',
@@ -58,6 +61,7 @@ const VoiceEntryButton = ({
   const [drafts, setDrafts] = useState<VoiceMoneyEntry[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [failedModel, setFailedModel] = useState<string | null>(null);
+  const [usedModel, setUsedModel] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
   const phaseRef = useRef(phase);
@@ -86,6 +90,7 @@ const VoiceEntryButton = ({
     transcriptRef.current = '';
     setTranscript('');
     setFailedModel(null);
+    setUsedModel(null);
     setPhase('listening');
     speech.start();
   };
@@ -126,7 +131,7 @@ const VoiceEntryButton = ({
     setFailedModel(null);
     setPhase('parsing');
     try {
-      const items = await parseVoiceEntries(
+      const parsed = await parseVoiceEntries(
         apiKey,
         text,
         { today: localToday(), currency: currency || 'MDL', kind },
@@ -134,12 +139,13 @@ const VoiceEntryButton = ({
         preferModel
       );
       if (controller.signal.aborted || phaseRef.current !== 'parsing') return;
-      if (!items.length) {
+      if (!parsed.items.length) {
         setErrorMessage(t('home.voiceEmpty'));
         setPhase('error');
         return;
       }
-      setDrafts(items);
+      setUsedModel(parsed.model);
+      setDrafts(parsed.items);
       setPhase('review');
     } catch (error) {
       if ((error as Error)?.name === 'AbortError' || controller.signal.aborted) return;
@@ -172,6 +178,7 @@ const VoiceEntryButton = ({
     setPhase('closed');
     setDrafts([]);
     setFailedModel(null);
+    setUsedModel(null);
     setSaving(false);
   };
 
@@ -229,6 +236,8 @@ const VoiceEntryButton = ({
   const heard = transcript.trim();
   const altModel =
     failedModel && heard ? nextModel('lite', failedModel) : null;
+  const reviewAlt =
+    usedModel && heard ? nextModel('lite', usedModel) : null;
   const listening = phase === 'listening';
 
   const retrySame = () => {
@@ -266,14 +275,41 @@ const VoiceEntryButton = ({
         title={phase === 'review' ? t('home.voiceReview') : t('home.voiceAdd')}
         footer={
           phase === 'review' ? (
-            <button
-              type="button"
-              className={BTN_SUBMIT_CLASS}
-              disabled={!canSave || saving}
-              onClick={save}
-            >
-              {saving ? <Loader variant="on-button" /> : t('common.save')}
-            </button>
+            <div className="flex w-full flex-col gap-2">
+              <button
+                type="button"
+                className={BTN_SUBMIT_CLASS}
+                disabled={!canSave || saving}
+                onClick={save}
+              >
+                {saving ? <Loader variant="on-button" /> : t('common.save')}
+              </button>
+              {heard && (
+                <button
+                  type="button"
+                  className={RETRY_BUTTON_CLASS}
+                  onClick={() => understand(heard)}
+                  disabled={!online || saving}
+                >
+                  <FiRefreshCw />
+                  {t('assistant.retry')}
+                </button>
+              )}
+              {reviewAlt && (
+                <button
+                  type="button"
+                  className={RETRY_BUTTON_CLASS}
+                  onClick={() => understand(heard, reviewAlt)}
+                  disabled={!online || saving}
+                >
+                  <FiRefreshCw />
+                  {t('assistant.retryWith').replace(
+                    '{model}',
+                    modelLabel(reviewAlt) || reviewAlt
+                  )}
+                </button>
+              )}
+            </div>
           ) : phase === 'listening' ? (
             <button
               type="button"
@@ -297,7 +333,7 @@ const VoiceEntryButton = ({
               {altModel && (
                 <button
                   type="button"
-                  className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/15 px-4 py-3 text-base font-semibold text-app-primary hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:size-5"
+                  className={RETRY_BUTTON_CLASS}
                   onClick={() => understand(transcriptRef.current.trim(), altModel)}
                   disabled={!online}
                 >
@@ -351,6 +387,9 @@ const VoiceEntryButton = ({
 
         {phase === 'review' && (
           <div className="flex flex-col gap-4">
+            {heard && (
+              <p className="m-0 text-sm leading-snug text-app-muted">{heard}</p>
+            )}
             {drafts.map((entry, index) => (
               <div
                 key={`${entry.description}-${index}`}

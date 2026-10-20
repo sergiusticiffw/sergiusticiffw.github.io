@@ -25,7 +25,8 @@ import { buildDataSummary } from '../context/summary';
 import { getAiItems } from '../data';
 import { buildLoanContext } from '../loans';
 import { buildChatSystemInstruction } from '../prompts';
-import { getShareDescriptions, recordAiUsage } from '../storage';
+import { recordAiQuestion } from '../sessionStats';
+import { getShareDescriptions } from '../storage';
 import { toolDeclarations } from '../tools/definitions';
 import { TOOL_LABELS, executeTool } from '../tools/executors';
 
@@ -84,6 +85,7 @@ export function useAiChat(apiKey: string) {
     async (question: string, preferModel?: string) => {
       const trimmed = question.trim();
       if (!trimmed || busy || !apiKey) return;
+      recordAiQuestion();
 
       const assistantId = newId();
       setMessages((prev) => [
@@ -155,7 +157,6 @@ export function useAiChat(apiKey: string) {
 
           const stepTokens = result.usage.totalTokenCount || 0;
           tokens += stepTokens;
-          recordAiUsage(stepTokens);
           contents.push({
             role: 'model',
             parts: result.parts,

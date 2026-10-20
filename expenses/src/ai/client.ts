@@ -4,6 +4,7 @@ import {
   AiModelTier,
   GEMINI_API_URL,
 } from './config';
+import { recordAiRequest, recordSessionLimit } from './sessionStats';
 import { getModelCooldowns, saveModelLimit, setModelCooldown } from './storage';
 
 export interface GeminiPart {
@@ -277,13 +278,21 @@ export async function streamGenerate({
       }
       if (lastError.kind === 'quota') {
         const until = cooldownUntil(lastError);
+        const at = Date.now();
         setModelCooldown(model, until);
         saveModelLimit(model, {
-          at: Date.now(),
+          at,
           until,
           daily: lastError.daily,
           retryAfterSeconds: lastError.retryAfterSeconds,
           ...lastError.quota,
+        });
+        recordSessionLimit(model, {
+          model,
+          at,
+          until,
+          daily: lastError.daily,
+          limit: lastError.quota?.limit,
         });
         continue;
       }
@@ -319,6 +328,7 @@ export async function streamGenerate({
       .filter((p) => p.functionCall)
       .map((p) => p.functionCall!);
 
+    recordAiRequest(model, usage.totalTokenCount || 0);
     return { parts, text, functionCalls, usage, finishReason, model };
   }
 

@@ -3,6 +3,7 @@ import { normalizeTag } from '@shared/hooks/useTags';
 import { sanitizeText } from '@shared/utils/sanitization';
 import { addTagToText, extractHashtags } from '@shared/utils/utils';
 import { AiError, streamGenerate } from './client';
+import { recordAiQuestion } from './sessionStats';
 import { localToday } from './data';
 
 export interface VoiceMoneyEntry {
@@ -264,7 +265,8 @@ export async function parseVoiceEntries(
   options: { today: string; currency: string; kind: 'expense' | 'income' },
   signal?: AbortSignal,
   preferModel?: string
-): Promise<VoiceMoneyEntry[]> {
+): Promise<{ items: VoiceMoneyEntry[]; model: string }> {
+  recordAiQuestion();
   const request = (withSchema: boolean) =>
     streamGenerate({
       apiKey,
@@ -315,12 +317,15 @@ export async function parseVoiceEntries(
   const read = async (withSchema: boolean) => {
     const result = await request(withSchema);
     try {
-      return normalizeVoiceEntries(
-        readJson(result.text),
-        options.today,
-        options.kind,
-        transcript.trim()
-      );
+      return {
+        items: normalizeVoiceEntries(
+          readJson(result.text),
+          options.today,
+          options.kind,
+          transcript.trim()
+        ),
+        model: result.model,
+      };
     } catch (error) {
       if (error instanceof AiError) throw error;
       throw new AiError(

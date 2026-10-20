@@ -4,15 +4,13 @@ import { useNotification } from '@shared/context';
 import { useLocalization } from '@shared/context/localization';
 import { notificationType } from '@shared/utils/constants';
 import { Switch } from '@shared/ui';
-import { AI_LANGUAGES, AI_MODELS, modelLabel } from '../../../ai/config';
+import { AI_LANGUAGES, modelLabel } from '../../../ai/config';
 import { maskApiKey } from '../../../ai/apiKey';
 import { describeAiError, testApiKey } from '../../../ai/client';
 import { useAiApiKey } from '../../../ai/hooks/useAiApiKey';
+import { getSessionAiStats } from '../../../ai/sessionStats';
 import {
-  effectiveCooldownUntil,
   getAiLanguage,
-  getAiUsage,
-  getModelLimitLog,
   getShareDescriptions,
   setAiLanguage,
   setShareDescriptions,
@@ -34,11 +32,9 @@ const AiSettings = () => {
   const [busy, setBusy] = useState(false);
   const [share, setShare] = useState(getShareDescriptions);
   const [language, setLanguage] = useState(getAiLanguage);
-  const usage = getAiUsage();
-  const limitLog = getModelLimitLog();
-  const limitedModels = AI_MODELS.chat
-    .filter((model) => limitLog[model])
-    .map((model) => [model, limitLog[model]] as const);
+  const stats = getSessionAiStats();
+  const lastModel =
+    stats.usage.lastModel || stats.lastFailed?.model || null;
 
   const notifySaved = (result: 'synced' | 'local', removed = false) => {
     if (removed) {
@@ -237,81 +233,67 @@ const AiSettings = () => {
       </div>
       <p className="mt-2 text-xs leading-relaxed text-app-muted">
         {t('profile.aiShareHint')}
-        {usage.requests > 0 &&
-          ` ${t('profile.aiUsage')
-            .replace('{requests}', String(usage.requests))
-            .replace('{tokens}', usage.tokens.toLocaleString())}`}
       </p>
 
-      {limitedModels.length > 0 && (
-        <div className="mt-4 flex flex-col gap-1.5 border-t border-white/[0.06] pt-3">
-          <span className="text-xs font-semibold text-app-secondary">
-            {t('profile.aiLimits')}
-          </span>
-          {limitedModels.map(([model, record]) => {
-            const until = effectiveCooldownUntil(record);
-            const paused = until > Date.now();
-            return (
-              <details
-                key={model}
-                className="text-xs leading-relaxed text-app-muted"
-              >
-                <summary className="cursor-pointer">
-                  <span
-                    className={
-                      paused ? 'font-semibold text-amber-300' : undefined
-                    }
-                  >
-                    {modelLabel(model)}
-                  </span>
-                  {' · '}
-                  {record.daily
-                    ? t('profile.aiDailyLimit')
-                    : t('profile.aiMinuteLimit')}
-                  {record.limit ? ` (${record.limit})` : ''}
-                  {' · '}
-                  {paused
-                    ? t('profile.aiPausedUntil').replace(
-                        '{time}',
-                        formatTime(until)
-                      )
-                    : t('profile.aiLastHit').replace(
-                        '{time}',
-                        formatTime(record.at)
-                      )}
-                </summary>
-                <dl className="mt-1.5 mb-1 grid grid-cols-[auto_1fr] gap-x-2.5 gap-y-1 rounded-lg bg-white/[0.04] px-2.5 py-2">
-                  <dt className="text-app-muted/70">
-                    {t('profile.aiReceived')}
-                  </dt>
-                  <dd className="m-0 break-words text-app-secondary">
-                    {formatTime(record.at)}
-                  </dd>
-                  {record.retryAfterSeconds !== undefined && (
-                    <>
-                      <dt className="text-app-muted/70">
-                        {t('profile.aiRetryAfter')}
-                      </dt>
-                      <dd className="m-0 text-app-secondary">
-                        {formatDuration(record.retryAfterSeconds)}
-                      </dd>
-                    </>
-                  )}
-                  <dt className="text-app-muted/70">
-                    {t('profile.aiPausedUntilLabel')}
-                  </dt>
-                  <dd className="m-0 text-app-secondary">
-                    {formatTime(until)}
-                  </dd>
-                </dl>
-              </details>
-            );
-          })}
-        </div>
-      )}
+      <div className="mt-4 flex flex-col gap-2 border-t border-white/[0.06] pt-3 text-sm">
+        <p className="m-0 text-xs leading-relaxed text-app-muted">
+          {t('profile.aiStatsHint')}
+        </p>
+        <Stat label={t('profile.aiQuestions')} value={formatCount(stats.usage.questions)} />
+        <Stat label={t('profile.aiRequests')} value={formatCount(stats.usage.requests)} />
+        <Stat label={t('profile.aiTokens')} value={formatCount(stats.usage.tokens)} />
+        <Stat
+          label={t('profile.aiLastModel')}
+          value={lastModel ? modelLabel(lastModel) || lastModel : t('profile.aiNotUsed')}
+        />
+        <Stat
+          label={t('profile.aiReset')}
+          value={`${formatTime(stats.resetAt)} (${t('profile.aiIn').replace(
+            '{time}',
+            formatDuration(Math.max(0, Math.round((stats.resetAt - Date.now()) / 1000)))
+          )})`}
+        />
+        {stats.lastFailed && (
+          <p className="m-0 text-xs leading-relaxed text-app-muted">
+            {t('profile.aiNextModel')
+              .replace('{model}', modelLabel(stats.lastFailed.model) || stats.lastFailed.model)
+              .replace('{time}', formatTime(stats.lastFailed.until))}
+          </p>
+        )}
+        {stats.paused.length > 0 ? (
+          <div className="flex flex-col gap-1.5 pt-1">
+            <span className="text-xs font-semibold text-app-secondary">
+              {t('profile.aiLimits')}
+            </span>
+            {stats.paused.map((limit) => (
+              <p key={limit.model} className="m-0 text-xs leading-relaxed text-app-muted">
+                <span className="font-semibold text-amber-300">
+                  {modelLabel(limit.model)}
+                </span>
+                {' · '}
+                {limit.daily ? t('profile.aiDailyLimit') : t('profile.aiMinuteLimit')}
+                {limit.limit ? ` (${formatCount(limit.limit)})` : ''}
+                {' · '}
+                {t('profile.aiPausedUntil').replace('{time}', formatTime(limit.until))}
+              </p>
+            ))}
+          </div>
+        ) : (
+          <p className="m-0 text-xs text-app-muted">{t('profile.aiNoPause')}</p>
+        )}
+      </div>
     </div>
   );
 };
+
+const Stat = ({ label, value }: { label: string; value: string }) => (
+  <p className="m-0">
+    <span className="text-app-muted">{label}: </span>
+    <span className="text-app-secondary">{value}</span>
+  </p>
+);
+
+const formatCount = (value: number) => value.toLocaleString();
 
 const formatTime = (timestamp: number) =>
   new Date(timestamp).toLocaleString(undefined, {

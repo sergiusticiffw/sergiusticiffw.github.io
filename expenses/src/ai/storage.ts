@@ -21,38 +21,6 @@ export const setShareDescriptions = (value: boolean) => {
   localStorage.setItem(AI_STORAGE_KEYS.shareDescriptions, String(value));
 };
 
-export interface AiUsage {
-  date: string;
-  requests: number;
-  tokens: number;
-}
-
-const todayKey = () => new Date().toISOString().slice(0, 10);
-
-export const getAiUsage = (): AiUsage => {
-  try {
-    const usage = JSON.parse(
-      localStorage.getItem(AI_STORAGE_KEYS.usage) || 'null'
-    );
-    if (usage?.date === todayKey()) return usage;
-  } catch {
-    // ignore malformed value
-  }
-  return { date: todayKey(), requests: 0, tokens: 0 };
-};
-
-export const recordAiUsage = (tokens: number) => {
-  const usage = getAiUsage();
-  localStorage.setItem(
-    AI_STORAGE_KEYS.usage,
-    JSON.stringify({
-      ...usage,
-      requests: usage.requests + 1,
-      tokens: usage.tokens + tokens,
-    })
-  );
-};
-
 export const getAiLanguage = (): string => {
   const value = localStorage.getItem(AI_STORAGE_KEYS.language);
   return value && (AI_LANGUAGES as readonly string[]).includes(value)
