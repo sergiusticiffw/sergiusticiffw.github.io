@@ -3,12 +3,16 @@ import "server-only";
 import { searchCatalog, type CatalogRecord } from "./catalog";
 import { polishAnswer } from "./format-answer";
 
-const MODELS = [
-  "gemini-3.8-flash",
-  "gemini-3.6-flash",
-  "gemini-3.5-flash-lite",
-  "gemini-3.1-flash-lite",
-];
+const AI_MODELS = {
+  chat: [
+    "gemini-3.8-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+  ],
+  lite: ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.6-flash"],
+} as const;
+
 const MAX_ROUNDS = 3;
 const COOLDOWN_MS = 60_000;
 const SKIP_SIGNATURE = "skip_thought_signature_validator";
@@ -162,9 +166,44 @@ function requestBodies(
   ];
 }
 
+function pushUnique(target: string[], models: readonly string[]) {
+  for (const model of models) {
+    if (!target.includes(model)) {
+      target.push(model);
+    }
+  }
+}
+
+function modelOrder(preferModel?: string) {
+  const chat = AI_MODELS.chat;
+  const lite = AI_MODELS.lite;
+  const ordered: string[] = [];
+  const liteIndex = preferModel
+    ? (lite as readonly string[]).indexOf(preferModel)
+    : -1;
+  const chatIndex = preferModel
+    ? (chat as readonly string[]).indexOf(preferModel)
+    : -1;
+
+  if (liteIndex > 0 || (liteIndex === 0 && chatIndex !== 0)) {
+    pushUnique(ordered, lite.slice(liteIndex));
+    pushUnique(ordered, chat);
+    return ordered;
+  }
+  if (chatIndex > 0) {
+    pushUnique(ordered, chat.slice(chatIndex));
+    pushUnique(ordered, lite);
+    return ordered;
+  }
+
+  pushUnique(ordered, [chat[0]]);
+  pushUnique(ordered, lite);
+  pushUnique(ordered, chat);
+  return ordered;
+}
+
 function candidatesFor(preferModel?: string) {
-  const start = preferModel ? MODELS.indexOf(preferModel) : 0;
-  const models = MODELS.slice(start >= 0 && preferModel ? start : 0).filter(
+  const models = modelOrder(preferModel).filter(
     (model) => !unavailableModels.has(model),
   );
   const now = Date.now();
