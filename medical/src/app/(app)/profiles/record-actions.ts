@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateApp } from "@/lib/data-cache";
 
 import { requireProfileWriter } from "@/lib/auth";
 import { readUploadedFiles } from "@/lib/files";
@@ -53,10 +53,7 @@ async function ownedProfile(profileId: string) {
 }
 
 function refresh(profileId: string) {
-  revalidatePath("/profiles");
-  revalidatePath(`/profiles/${profileId}`);
-  revalidatePath("/assistant");
-  revalidatePath("/records");
+  revalidateApp(profileId);
 }
 
 function isMissingColumn(code: string | undefined) {

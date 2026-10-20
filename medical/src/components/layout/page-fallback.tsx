@@ -1,10 +1,13 @@
+import { Spinner } from "@/components/layout/spinner";
+
 export function PageFallback({ label }: { label: string }) {
   return (
-    <div className="flex flex-col gap-3" aria-busy="true">
+    <div
+      className="flex flex-1 flex-col items-center justify-center gap-3 py-16"
+      aria-busy="true"
+    >
+      <Spinner />
       <p className="text-sm text-muted-foreground">{label}</p>
-      <div className="h-16 animate-pulse rounded-lg bg-muted" />
-      <div className="h-16 animate-pulse rounded-lg bg-muted" />
-      <div className="h-16 animate-pulse rounded-lg bg-muted" />
     </div>
   );
 }

@@ -4,13 +4,14 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { AppNav } from "@/components/layout/app-nav";
+import { NavigationLoader } from "@/components/layout/navigation-loader";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
         <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-2 px-4">
-          <Link href="/profiles" className="truncate text-base font-semibold">
+          <Link href="/profiles" prefetch className="truncate text-base font-semibold">
             Dosar medical
           </Link>
           <div className="flex shrink-0 items-center gap-2">
@@ -30,6 +31,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-4 pb-24 sm:py-6 sm:pb-24">
         {children}
       </main>
+      <Suspense fallback={null}>
+        <NavigationLoader />
+      </Suspense>
       <Suspense
         fallback={
           <nav

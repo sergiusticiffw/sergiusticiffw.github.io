@@ -19,6 +19,7 @@ export function RecordDetail({
     <div className="flex flex-col gap-4">
       <Link
         href={`/profiles/${record.profileId}`}
+        prefetch
         className="text-sm text-muted-foreground hover:underline"
       >
         Înapoi la profil
@@ -29,6 +30,7 @@ export function RecordDetail({
           {` · `}
           <Link
             href={`/profiles/${record.profileId}`}
+            prefetch
             className="underline-offset-2 hover:underline"
           >
             {record.profileName}

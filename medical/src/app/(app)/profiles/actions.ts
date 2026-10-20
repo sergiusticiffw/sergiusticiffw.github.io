@@ -1,7 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+import { revalidateApp } from "@/lib/data-cache";
 
 import { getAdminFamilyId, requireWriter } from "@/lib/auth";
 import { renameDriveFolder, trashDriveFile } from "@/lib/google-drive";
@@ -50,7 +51,7 @@ export async function createProfile(
     return { error: "Profilul nu a putut fi salvat." };
   }
 
-  revalidatePath("/profiles");
+  revalidateApp();
   return {};
 }
 
@@ -119,8 +120,7 @@ export async function updateProfile(
     }
   }
 
-  revalidatePath("/profiles");
-  revalidatePath(`/profiles/${parsedId.data}`);
+  revalidateApp(parsedId.data);
   return {};
 }
 
@@ -178,6 +178,6 @@ export async function deleteProfile(id: string): Promise<ProfileActionResult> {
     return { error: "Profilul nu a fost găsit." };
   }
 
-  revalidatePath("/profiles");
+  revalidateApp();
   redirect("/profiles");
 }

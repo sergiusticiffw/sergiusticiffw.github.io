@@ -70,6 +70,7 @@ export function ProfileList({ profiles }: { profiles: MedicalProfile[] }) {
         <li key={profile.id}>
           <Link
             href={`/profiles/${profile.id}`}
+            prefetch
             className="block rounded-lg border p-4 hover:bg-muted"
           >
             <p className="font-medium">{profile.display_name}</p>
@@ -307,6 +308,7 @@ function ProfileRecords({
             <li key={record.id}>
               <Link
                 href={`/records/${record.id}`}
+                prefetch
                 className="block rounded-lg border px-3 py-3 hover:bg-muted/50"
               >
                 <p className="truncate text-sm">

@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateApp } from "@/lib/data-cache";
 
 import { getAdminFamilyId } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -58,7 +58,7 @@ export async function inviteMember(
     return { error: "Invitația nu a putut fi salvată." };
   }
 
-  revalidatePath("/family");
+  revalidateApp();
   return resultMessage(typeof data === "string" ? data : null);
 }
 
@@ -81,7 +81,7 @@ export async function setMemberRole(
     return { error: "Rolul nu a putut fi schimbat." };
   }
 
-  revalidatePath("/family");
+  revalidateApp();
   return resultMessage(typeof data === "string" ? data : null);
 }
 
@@ -103,7 +103,7 @@ export async function removeMember(
     return { error: "Membrul nu a putut fi scos." };
   }
 
-  revalidatePath("/family");
+  revalidateApp();
   return resultMessage(typeof data === "string" ? data : null);
 }
 
@@ -128,7 +128,7 @@ export async function cancelInvite(
     return { error: "Invitația nu a putut fi anulată." };
   }
 
-  revalidatePath("/family");
+  revalidateApp();
   return { saved: true };
 }
 
@@ -156,7 +156,7 @@ export async function renameFamily(
     return { error: "Numele familiei nu a putut fi salvat." };
   }
 
-  revalidatePath("/family");
+  revalidateApp();
   return { saved: true };
 }
 
@@ -191,7 +191,6 @@ export async function setProfileAccess(
     };
   }
 
-  revalidatePath("/family");
-  revalidatePath("/profiles");
+  revalidateApp();
   return resultMessage(typeof data === "string" ? data : null);
 }

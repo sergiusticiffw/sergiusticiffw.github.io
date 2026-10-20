@@ -165,6 +165,7 @@ export function RecordsList({
             <li key={record.id}>
               <Link
                 href={`/records/${record.id}`}
+                prefetch
                 className="block rounded-lg border px-3 py-3 hover:bg-muted/50"
               >
                 <p className="text-sm">

@@ -2,7 +2,9 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { useFamilyCache } from "@/lib/data-cache";
 import { documentBody } from "@/lib/record-view";
+import { createClient } from "@/lib/supabase/server";
 
 export type CatalogPerson = {
   id: string;
@@ -252,14 +254,14 @@ function indexSearch(value: string) {
   return fold(redactIndex(value)).slice(0, 500);
 }
 
-export async function loadRecordsIndex(
-  supabase: SupabaseClient,
-  familyId: string,
-): Promise<{
+export async function loadRecordsIndex(familyId: string): Promise<{
   records: RecordIndexItem[];
   people: CatalogPerson[];
   error: string | null;
 }> {
+  "use cache: private";
+  useFamilyCache();
+  const supabase = await createClient();
   const [profilesResult, documentsResult, consultationsResult, labsResult] =
     await Promise.all([
       supabase

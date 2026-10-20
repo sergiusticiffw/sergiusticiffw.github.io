@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { PageFallback } from "@/components/layout/page-fallback";
 import { RecordDetail } from "@/components/records/record-detail";
 import { getFamilyAccess, requireProfileWriter } from "@/lib/auth";
+import { useFamilyCache } from "@/lib/data-cache";
 import { loadFamilyRecord } from "@/lib/records";
 
 export const metadata = {
@@ -18,7 +19,7 @@ export default function RecordPage({
 }) {
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/records" className="text-sm text-muted-foreground hover:underline">
+      <Link href="/records" prefetch className="text-sm text-muted-foreground hover:underline">
         Toate înregistrările
       </Link>
       <Suspense fallback={<PageFallback label="Se încarcă înregistrarea…" />}>
@@ -34,6 +35,12 @@ async function RecordSection({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  return <CachedRecord id={id} />;
+}
+
+async function CachedRecord({ id }: { id: string }) {
+  "use cache: private";
+  useFamilyCache();
   const family = await getFamilyAccess();
   if (!family.familyId) {
     return (

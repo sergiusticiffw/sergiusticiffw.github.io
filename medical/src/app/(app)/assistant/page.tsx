@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { MedicalAssistant } from "@/components/assistant/medical-assistant";
 import { PageFallback } from "@/components/layout/page-fallback";
 import { getFamilyAccess } from "@/lib/auth";
+import { useFamilyCache } from "@/lib/data-cache";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -27,6 +28,8 @@ export default function AssistantPage() {
 }
 
 async function AssistantSection() {
+  "use cache: private";
+  useFamilyCache();
   const enabled = Boolean(process.env.GEMINI_API_KEY?.trim());
   if (!enabled) {
     return <MedicalAssistant enabled={false} suggestions={[]} />;

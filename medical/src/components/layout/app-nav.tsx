@@ -89,6 +89,7 @@ export function AppNav() {
             <li key={link.href}>
               <Link
                 href={link.href}
+                prefetch
                 aria-current={active ? "page" : undefined}
                 className={
                   active

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { RecordKind } from "@/app/(app)/profiles/document-actions";
+import { useFamilyCache } from "@/lib/data-cache";
 import { documentBody } from "@/lib/record-view";
 import { createClient } from "@/lib/supabase/server";
 
@@ -48,6 +49,8 @@ export async function loadFamilyRecord(
   familyId: string,
   id: string,
 ): Promise<{ record: FamilyRecord | null; error: string | null }> {
+  "use cache: private";
+  useFamilyCache();
   if (!UUID.test(id)) {
     return { record: null, error: "Înregistrarea nu a fost găsită." };
   }

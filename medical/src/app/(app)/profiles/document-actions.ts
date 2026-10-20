@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateApp } from "@/lib/data-cache";
 
 import { requireProfileWriter } from "@/lib/auth";
 import { isUploadedFile, MAX_RECORD_FILES, readUploadedFile } from "@/lib/files";
@@ -69,10 +69,7 @@ export async function deleteRecord(
     return { error: "Înregistrarea nu a putut fi ștearsă." };
   }
 
-  revalidatePath("/profiles");
-  revalidatePath(`/profiles/${row.profile_id}`);
-  revalidatePath("/assistant");
-  revalidatePath("/records");
+  revalidateRecord(row.profile_id);
   return {};
 }
 
@@ -170,10 +167,7 @@ export async function updateRecord(
     return { error: "Înregistrarea nu a putut fi modificată." };
   }
 
-  revalidatePath("/profiles");
-  revalidatePath(`/profiles/${row.profile_id}`);
-  revalidatePath("/assistant");
-  revalidatePath("/records");
+  revalidateRecord(row.profile_id);
   return {};
 }
 
@@ -260,10 +254,7 @@ export async function deleteDocument(id: string): Promise<DocumentActionResult> 
     return { error: "Documentul nu a putut fi șters." };
   }
 
-  revalidatePath("/profiles");
-  revalidatePath(`/profiles/${document.profile_id}`);
-  revalidatePath("/assistant");
-  revalidatePath("/records");
+  revalidateRecord(document.profile_id);
   return {};
 }
 
@@ -425,10 +416,7 @@ export async function deleteRecordFile(
     return { error: "Fișierul nu a putut fi șters." };
   }
 
-  revalidatePath("/profiles");
-  revalidatePath(`/profiles/${document.profile_id}`);
-  revalidatePath("/assistant");
-  revalidatePath("/records");
+  revalidateRecord(document.profile_id);
   return {};
 }
 
@@ -496,10 +484,7 @@ export async function replaceRecordFile(
 
   await trashDriveFile(familyId, document.drive_file_id).catch(() => undefined);
 
-  revalidatePath("/profiles");
-  revalidatePath(`/profiles/${document.profile_id}`);
-  revalidatePath("/assistant");
-  revalidatePath("/records");
+  revalidateRecord(document.profile_id);
   return {};
 }
 
@@ -523,11 +508,8 @@ async function countRecordFiles(
   return (related.data ?? []).length;
 }
 
-function revalidateRecord(profileId: string) {
-  revalidatePath("/profiles");
-  revalidatePath(`/profiles/${profileId}`);
-  revalidatePath("/assistant");
-  revalidatePath("/records");
+function revalidateRecord(profileId: string, recordId?: string) {
+  revalidateApp(profileId, recordId);
 }
 
 export async function addRecordFile(
@@ -589,8 +571,7 @@ export async function addRecordFile(
       return { error: stored.error };
     }
 
-    revalidateRecord(document.profile_id);
-    revalidatePath(`/records/${primaryId}`);
+    revalidateRecord(document.profile_id, primaryId);
     return { recordId: primaryId };
   }
 
@@ -670,7 +651,6 @@ export async function addRecordFile(
     return { error: "Fișierul a fost salvat, dar nu a putut fi legat de înregistrare." };
   }
 
-  revalidateRecord(row.profile_id);
-  revalidatePath(`/records/${stored.documentId}`);
+  revalidateRecord(row.profile_id, stored.documentId);
   return { recordId: stored.documentId };
 }

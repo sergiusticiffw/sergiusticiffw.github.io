@@ -56,6 +56,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: {
     proxyClientMaxBodySize: "32mb",
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
     serverActions: {
       bodySizeLimit: "32mb",
     },

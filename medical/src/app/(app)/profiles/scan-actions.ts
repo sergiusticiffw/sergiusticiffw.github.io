@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateApp } from "@/lib/data-cache";
 
 import { getFamilyAccess, requireProfileWriter } from "@/lib/auth";
 import { readUploadedFiles } from "@/lib/files";
@@ -217,10 +217,7 @@ export async function saveDetectedDocument(
   }
 
   if (formData.get("finalize") === "1") {
-    revalidatePath("/profiles");
-    revalidatePath(`/profiles/${person.id}`);
-    revalidatePath("/assistant");
-    revalidatePath("/records");
+    revalidateApp(person.id);
   }
   return {
     saved: true,

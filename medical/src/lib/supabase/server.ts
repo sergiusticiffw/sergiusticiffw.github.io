@@ -2,10 +2,11 @@ import "server-only";
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 import { getSupabaseEnv } from "@/lib/env";
 
-export async function createClient() {
+export const createClient = cache(async function createClient() {
   const env = getSupabaseEnv();
   if (!env) {
     throw new Error("Conexiunea cu Supabase nu este configurată.");
@@ -29,4 +30,4 @@ export async function createClient() {
       },
     },
   });
-}
+});
