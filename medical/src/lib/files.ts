@@ -144,23 +144,22 @@ export function safeFilename(name: string) {
   return cleaned || "document";
 }
 
-function isUploadedFile(
-  value: { error: string } | {
-    bytes: Uint8Array;
-    mimeType: DocumentType;
-    filename: string;
-    size: number;
-  },
-): value is {
+export type UploadedFile = {
   bytes: Uint8Array;
   mimeType: DocumentType;
   filename: string;
   size: number;
-} {
+};
+
+export function isUploadedFile(
+  value: { error: string } | UploadedFile,
+): value is UploadedFile {
   return "bytes" in value && value.bytes instanceof Uint8Array;
 }
 
-export async function readUploadedFile(entry: FormDataEntryValue | null) {
+export async function readUploadedFile(
+  entry: FormDataEntryValue | null,
+): Promise<{ error: string } | UploadedFile> {
   if (!(entry instanceof File) || entry.size === 0) {
     return { error: "Alege un PDF, o fotografie, un fișier Word sau text." };
   }
@@ -178,7 +177,7 @@ export async function readUploadedFile(entry: FormDataEntryValue | null) {
   }
 
   return {
-    bytes,
+    bytes: bytes as Uint8Array,
     mimeType,
     filename: safeFilename(entry.name),
     size: entry.size,

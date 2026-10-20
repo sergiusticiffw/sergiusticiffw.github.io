@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireProfileWriter } from "@/lib/auth";
-import { MAX_RECORD_FILES, readUploadedFile } from "@/lib/files";
+import { isUploadedFile, MAX_RECORD_FILES, readUploadedFile } from "@/lib/files";
 import { trashDriveFile } from "@/lib/google-drive";
 import { replacePrivateFile, storePrivateDocument } from "@/lib/store-document";
 import { createClient } from "@/lib/supabase/server";
@@ -442,7 +442,7 @@ export async function replaceRecordFile(
   const { supabase, document, familyId } = loaded;
 
   const uploaded = await readUploadedFile(formData.get("file"));
-  if (!("bytes" in uploaded)) {
+  if (!isUploadedFile(uploaded)) {
     return { error: uploaded.error };
   }
 
@@ -544,7 +544,7 @@ export async function addRecordFile(
   }
 
   const uploaded = await readUploadedFile(formData.get("file"));
-  if (!("bytes" in uploaded)) {
+  if (!isUploadedFile(uploaded)) {
     return { error: uploaded.error };
   }
 
