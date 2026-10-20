@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import { PageFallback } from "@/components/layout/page-fallback";
 import {
   FamilyManager,
   type AccessProfile,
@@ -24,7 +25,7 @@ export default function FamilyPage() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold tracking-tight">Familie</h1>
-      <Suspense fallback={<p className="text-sm text-muted-foreground">Se încarcă familia…</p>}>
+      <Suspense fallback={<PageFallback label="Se încarcă familia…" />}>
         <FamilySection />
       </Suspense>
     </div>
@@ -42,21 +43,33 @@ async function FamilySection() {
   }
 
   const supabase = await createClient();
-  const [familyResult, membersResult, invitesResult] = await Promise.all([
-    supabase.from("families").select("name").eq("id", access.familyId).maybeSingle(),
-    supabase
-      .from("family_members")
-      .select("user_id, email, role")
-      .eq("family_id", access.familyId)
-      .order("email", { ascending: true }),
-    access.role === "admin"
-      ? supabase
-          .from("family_invites")
-          .select("email, role")
-          .eq("family_id", access.familyId)
-          .order("email", { ascending: true })
-      : Promise.resolve({ data: [], error: null }),
-  ]);
+  const isAdmin = access.role === "admin";
+  const [familyResult, membersResult, invitesResult, profilesResult, grantsResult] =
+    await Promise.all([
+      supabase.from("families").select("name").eq("id", access.familyId).maybeSingle(),
+      supabase
+        .from("family_members")
+        .select("user_id, email, role")
+        .eq("family_id", access.familyId)
+        .order("email", { ascending: true }),
+      isAdmin
+        ? supabase
+            .from("family_invites")
+            .select("email, role")
+            .eq("family_id", access.familyId)
+            .order("email", { ascending: true })
+        : Promise.resolve({ data: [], error: null }),
+      isAdmin
+        ? supabase
+            .from("profiles")
+            .select("id, display_name")
+            .eq("family_id", access.familyId)
+            .order("display_name", { ascending: true })
+        : Promise.resolve({ data: [], error: null }),
+      isAdmin
+        ? supabase.from("profile_access").select("profile_id, user_id")
+        : Promise.resolve({ data: [], error: null }),
+    ]);
 
   const listError = familyResult.error ?? membersResult.error ?? invitesResult.error;
   if (listError) {
@@ -90,15 +103,7 @@ async function FamilySection() {
   let profiles: AccessProfile[] = [];
   let grants: ProfileGrant[] = [];
   let accessNote: string | null = null;
-  if (access.role === "admin") {
-    const [profilesResult, grantsResult] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id, display_name")
-        .eq("family_id", access.familyId)
-        .order("display_name", { ascending: true }),
-      supabase.from("profile_access").select("profile_id, user_id"),
-    ]);
+  if (isAdmin) {
     if (profilesResult.error) {
       console.error("familyProfiles", profilesResult.error.code);
       accessNote = "Profilurile nu au putut fi încărcate.";

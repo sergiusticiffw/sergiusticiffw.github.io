@@ -14,13 +14,68 @@ type StoredDocument = {
   driveFileId: string;
 };
 
+type ProfileFolder = {
+  id: string;
+  display_name: string;
+  drive_folder_id: string | null;
+};
+
+async function uploadToProfileFolder(input: {
+  familyId: string;
+  profile: ProfileFolder;
+  filename: string;
+  mimeType: DocumentType;
+  bytes: Uint8Array;
+  documentDate: string;
+  category: string;
+}): Promise<{ error: string } | { driveFileId: string }> {
+  const supabase = await createClient();
+  const root = await ensureDriveRoot(input.familyId);
+  if (!root) {
+    return { error: "Conectează mai întâi Google Drive." };
+  }
+
+  let profileFolderId = input.profile.drive_folder_id;
+  if (!profileFolderId) {
+    profileFolderId = await ensureFolder(
+      root.accessToken,
+      root.rootFolderId,
+      input.profile.display_name,
+    );
+    const { error: folderError } = await supabase
+      .from("profiles")
+      .update({ drive_folder_id: profileFolderId })
+      .eq("id", input.profile.id)
+      .eq("family_id", input.familyId);
+    if (folderError) {
+      console.error("storePrivateDocument", folderError.code);
+      return { error: "Dosarul persoanei nu a putut fi salvat." };
+    }
+  }
+
+  const yearFolderId = await ensureFolder(
+    root.accessToken,
+    profileFolderId,
+    input.documentDate.slice(0, 4),
+  );
+  const categoryFolderId = await ensureFolder(
+    root.accessToken,
+    yearFolderId,
+    input.category || "Fără categorie",
+  );
+  const driveFileId = await uploadDriveFile({
+    accessToken: root.accessToken,
+    parentId: categoryFolderId,
+    filename: input.filename,
+    mimeType: input.mimeType,
+    bytes: input.bytes,
+  });
+  return { driveFileId };
+}
+
 export async function storePrivateDocument(input: {
   familyId: string;
-  profile: {
-    id: string;
-    display_name: string;
-    drive_folder_id: string | null;
-  };
+  profile: ProfileFolder;
   filename: string;
   mimeType: DocumentType;
   bytes: Uint8Array;
@@ -35,46 +90,11 @@ export async function storePrivateDocument(input: {
   let driveFileId: string | null = null;
 
   try {
-    const root = await ensureDriveRoot(input.familyId);
-    if (!root) {
-      return { error: "Conectează mai întâi Google Drive." };
+    const uploaded = await uploadToProfileFolder(input);
+    if ("error" in uploaded) {
+      return uploaded;
     }
-
-    let profileFolderId = input.profile.drive_folder_id;
-    if (!profileFolderId) {
-      profileFolderId = await ensureFolder(
-        root.accessToken,
-        root.rootFolderId,
-        input.profile.display_name,
-      );
-      const { error: folderError } = await supabase
-        .from("profiles")
-        .update({ drive_folder_id: profileFolderId })
-        .eq("id", input.profile.id)
-        .eq("family_id", input.familyId);
-      if (folderError) {
-        console.error("storePrivateDocument", folderError.code);
-        return { error: "Dosarul persoanei nu a putut fi salvat." };
-      }
-    }
-
-    const yearFolderId = await ensureFolder(
-      root.accessToken,
-      profileFolderId,
-      input.documentDate.slice(0, 4),
-    );
-    const categoryFolderId = await ensureFolder(
-      root.accessToken,
-      yearFolderId,
-      input.category || "Fără categorie",
-    );
-    driveFileId = await uploadDriveFile({
-      accessToken: root.accessToken,
-      parentId: categoryFolderId,
-      filename: input.filename,
-      mimeType: input.mimeType,
-      bytes: input.bytes,
-    });
+    driveFileId = uploaded.driveFileId;
 
     const title = input.title?.trim().slice(0, 160) || null;
     const baseRow = {
@@ -138,6 +158,26 @@ export async function storePrivateDocument(input: {
     if (driveFileId) {
       await trashDriveFile(input.familyId, driveFileId).catch(() => undefined);
     }
+    return { error: "Documentul nu a putut fi încărcat în Google Drive." };
+  }
+}
+
+export async function replacePrivateFile(input: {
+  familyId: string;
+  profile: ProfileFolder;
+  filename: string;
+  mimeType: DocumentType;
+  bytes: Uint8Array;
+  documentDate: string;
+  category: string;
+}): Promise<{ error: string } | { driveFileId: string }> {
+  try {
+    return await uploadToProfileFolder(input);
+  } catch (storeError) {
+    console.error(
+      "replacePrivateFile",
+      storeError instanceof Error ? storeError.name : "unknown",
+    );
     return { error: "Documentul nu a putut fi încărcat în Google Drive." };
   }
 }

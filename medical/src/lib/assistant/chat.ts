@@ -1,6 +1,7 @@
 import "server-only";
 
 import { searchCatalog, type CatalogRecord } from "./catalog";
+import { polishAnswer } from "./format-answer";
 
 const MODELS = [
   "gemini-3.8-flash",
@@ -62,6 +63,9 @@ function systemInstruction(count: number) {
     "Ești asistentul medical al dosarului de familie.",
     "Ajuți să caute, să filtreze și să consulte documentele deja încărcate.",
     "Răspunzi în română, scurt și clar.",
+    "Începe direct cu informația. Fără salut, fără „Sigur”, fără „Iată ce am găsit”.",
+    "Formatează răspunsul curat: paragrafe scurte; liste cu - pentru mai multe înregistrări sau valori; ## doar pentru un titlu de secțiune; **evidențiere** doar pentru nume, date și valori.",
+    "Fără tabele, fără blocuri de cod, fără emoji, fără IDNP.",
     "Nu inventa analize, valori, medici, clinici sau date. Dacă nu găsești nimic, spune asta.",
     "Caută în textul documentelor cu search_records. Dacă sunt mai multe rezultate, citește-le pe toate cu read_record și răspunde din fiecare, nu doar din primul.",
     "Nu filtra după categorie. Cuvintele din întrebare trebuie să fie cele din document.",
@@ -192,7 +196,7 @@ export async function answerMedicalQuestion(input: {
       .join("\n\n");
 
     if (calls.length === 0) {
-      return text || "Nu am găsit un răspuns în documente.";
+      return polishAnswer(text || "Nu am găsit un răspuns în documente.");
     }
 
     contents.push({ role: "model", parts });
@@ -210,7 +214,7 @@ export async function answerMedicalQuestion(input: {
     });
 
     if (text && round === MAX_ROUNDS - 1) {
-      return text;
+      return polishAnswer(text);
     }
   }
 
@@ -219,5 +223,5 @@ export async function answerMedicalQuestion(input: {
     .map((part) => part.text?.trim() ?? "")
     .filter(Boolean)
     .join("\n\n");
-  return text || "Nu am putut încheia consultarea documentelor.";
+  return polishAnswer(text || "Nu am putut încheia consultarea documentelor.");
 }

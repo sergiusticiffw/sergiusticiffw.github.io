@@ -220,6 +220,7 @@ export async function saveDetectedDocument(
     revalidatePath("/profiles");
     revalidatePath(`/profiles/${person.id}`);
     revalidatePath("/assistant");
+    revalidatePath("/records");
   }
   return {
     saved: true,

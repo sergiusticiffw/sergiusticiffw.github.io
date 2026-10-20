@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
+import { PageFallback } from "@/components/layout/page-fallback";
 import { ProfileDetail } from "@/components/profiles/profile-list";
 import { canWrite, getFamilyAccess, requireProfileWriter } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -17,11 +18,14 @@ export default function ProfilePage({
   params: Promise<{ id: string }>;
 }) {
   return (
-    <Suspense
-      fallback={<p className="text-sm text-muted-foreground">Se încarcă persoana…</p>}
-    >
-      <ProfileSection params={params} />
-    </Suspense>
+    <div className="flex flex-col gap-4">
+      <Link href="/profiles" className="text-sm text-muted-foreground hover:underline">
+        Toate persoanele
+      </Link>
+      <Suspense fallback={<PageFallback label="Se încarcă persoana…" />}>
+        <ProfileSection params={params} />
+      </Suspense>
+    </div>
   );
 }
 
@@ -45,7 +49,7 @@ async function ProfileSection({
   }
 
   const supabase = await createClient();
-  const [profileResult, documentsResult, consultationsResult, labsResult, connectionResult] =
+  const [profileResult, documentsResult, consultationsResult, labsResult, connectionResult, writer] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -56,22 +60,20 @@ async function ProfileSection({
       supabase
         .from("medical_documents")
         .select(
-          "id, profile_id, original_filename, mime_type, document_date, category, title, extracted_text, record_id",
+          "id, profile_id, original_filename, document_date, category, title, record_id",
         )
         .eq("profile_id", id)
         .order("document_date", { ascending: false }),
       supabase
         .from("consultations")
         .select(
-          "id, profile_id, source_document_id, consultation_date, doctor_name, clinic_name, specialty, summary, recommendations",
+          "id, profile_id, source_document_id, consultation_date, doctor_name, summary",
         )
         .eq("profile_id", id)
         .order("consultation_date", { ascending: false }),
       supabase
         .from("lab_tests")
-        .select(
-          "id, profile_id, source_document_id, test_name, sample_date, result_value, result_text, unit, reference_text, laboratory",
-        )
+        .select("id, profile_id, source_document_id, test_name, sample_date")
         .eq("profile_id", id)
         .order("sample_date", { ascending: false }),
       supabase
@@ -79,6 +81,7 @@ async function ProfileSection({
         .select("family_id")
         .eq("family_id", family.familyId)
         .maybeSingle(),
+      requireProfileWriter(id),
     ]);
 
   let documentsError = documentsResult.error;
@@ -87,7 +90,7 @@ async function ProfileSection({
     const withRecord = await supabase
       .from("medical_documents")
       .select(
-        "id, profile_id, original_filename, mime_type, document_date, category, extracted_text, record_id",
+        "id, profile_id, original_filename, document_date, category, record_id",
       )
       .eq("profile_id", id)
       .order("document_date", { ascending: false });
@@ -98,7 +101,7 @@ async function ProfileSection({
       const retry = await supabase
         .from("medical_documents")
         .select(
-          "id, profile_id, original_filename, mime_type, document_date, category, extracted_text",
+          "id, profile_id, original_filename, document_date, category",
         )
         .eq("profile_id", id)
         .order("document_date", { ascending: false });
@@ -138,51 +141,36 @@ async function ProfileSection({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <Link href="/profiles" className="text-sm text-muted-foreground hover:underline">
-        Toate persoanele
-      </Link>
-      <ProfileDetail
-        profile={profile}
-        documents={(documentsData ?? []) as {
-          id: string;
-          profile_id: string;
-          original_filename: string;
-          mime_type: string | null;
-          document_date: string | null;
-          category: string | null;
-          title: string | null;
-          extracted_text: string | null;
-          record_id: string | null;
-        }[]}
-        consultations={(consultationsResult.data ?? []) as {
-          id: string;
-          profile_id: string;
-          source_document_id: string | null;
-          consultation_date: string;
-          doctor_name: string | null;
-          clinic_name: string | null;
-          specialty: string | null;
-          summary: string | null;
-          recommendations: string | null;
-        }[]}
-        labTests={(labsResult.data ?? []) as {
-          id: string;
-          profile_id: string;
-          source_document_id: string | null;
-          test_name: string;
-          sample_date: string | null;
-          result_value: number | string | null;
-          result_text: string | null;
-          unit: string | null;
-          reference_text: string | null;
-          laboratory: string | null;
-        }[]}
-        driveConnected={Boolean(connectionResult.data)}
-        canWrite={canWrite(family.role)}
-        canEditRecords={Boolean((await requireProfileWriter(id)).familyId)}
-        isAdmin={family.role === "admin"}
-      />
-    </div>
+    <ProfileDetail
+      profile={profile}
+      documents={(documentsData ?? []) as {
+        id: string;
+        profile_id: string;
+        original_filename: string;
+        document_date: string | null;
+        category: string | null;
+        title: string | null;
+        record_id: string | null;
+      }[]}
+      consultations={(consultationsResult.data ?? []) as {
+        id: string;
+        profile_id: string;
+        source_document_id: string | null;
+        consultation_date: string;
+        doctor_name: string | null;
+        summary: string | null;
+      }[]}
+      labTests={(labsResult.data ?? []) as {
+        id: string;
+        profile_id: string;
+        source_document_id: string | null;
+        test_name: string;
+        sample_date: string | null;
+      }[]}
+      driveConnected={Boolean(connectionResult.data)}
+      canWrite={canWrite(family.role)}
+      canEditRecords={Boolean(writer.familyId)}
+      isAdmin={family.role === "admin"}
+    />
   );
 }

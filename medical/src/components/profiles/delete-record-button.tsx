@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import {
@@ -14,12 +15,15 @@ export function DeleteRecordButton({
   id,
   withFiles,
   compact = false,
+  afterHref,
 }: {
   kind: RecordKind;
   id: string;
   withFiles?: boolean;
   compact?: boolean;
+  afterHref?: string;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -33,8 +37,11 @@ export function DeleteRecordButton({
       setPending(false);
       return;
     }
-    // The page revalidates and this card disappears; keep the dialog closed.
     setOpen(false);
+    if (afterHref) {
+      router.push(afterHref);
+      return;
+    }
     setPending(false);
   }
 

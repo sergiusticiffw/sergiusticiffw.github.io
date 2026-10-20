@@ -6,6 +6,7 @@ import {
   askMedicalAssistant,
   type AssistantTurn,
 } from "@/app/(app)/assistant/actions";
+import { AssistantAnswer } from "@/components/assistant/assistant-answer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -94,8 +95,8 @@ export function MedicalAssistant({
               </div>
             ) : (
               <div key={`${message.role}-${index}`} className="flex justify-start">
-                <div className="max-w-[85%] rounded-2xl border bg-card px-3 py-2 text-sm shadow-sm">
-                  <p className="whitespace-pre-wrap">{message.text}</p>
+                <div className="max-w-[92%] rounded-2xl border bg-card px-3.5 py-2.5 text-sm shadow-sm">
+                  <AssistantAnswer text={message.text} />
                 </div>
               </div>
             ),

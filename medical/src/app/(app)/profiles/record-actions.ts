@@ -56,6 +56,7 @@ function refresh(profileId: string) {
   revalidatePath("/profiles");
   revalidatePath(`/profiles/${profileId}`);
   revalidatePath("/assistant");
+  revalidatePath("/records");
 }
 
 function isMissingColumn(code: string | undefined) {

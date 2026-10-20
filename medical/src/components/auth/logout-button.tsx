@@ -12,7 +12,7 @@ export function LogoutButton() {
     <Button
       type="button"
       variant="outline"
-      className="h-11"
+      className="h-9 px-3 sm:h-11 sm:px-4"
       disabled={pending}
       onClick={() => {
         setPending(true);

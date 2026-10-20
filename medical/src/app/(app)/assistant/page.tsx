@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 
 import { MedicalAssistant } from "@/components/assistant/medical-assistant";
-import { loadMedicalCatalog, suggestQuestions } from "@/lib/assistant/catalog";
+import { PageFallback } from "@/components/layout/page-fallback";
 import { getFamilyAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -9,13 +9,17 @@ export const metadata = {
   title: "Asistent",
 };
 
+const genericSuggestions = [
+  "Ce analize recente există în dosar?",
+  "Ce consultații sunt în dosar?",
+  "Rezumă ultimele documente.",
+];
+
 export default function AssistantPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <h1 className="text-2xl font-semibold tracking-tight">Asistent</h1>
-      <Suspense
-        fallback={<p className="text-sm text-muted-foreground">Se încarcă documentele…</p>}
-      >
+      <Suspense fallback={<PageFallback label="Se încarcă asistentul…" />}>
         <AssistantSection />
       </Suspense>
     </div>
@@ -34,11 +38,17 @@ async function AssistantSection() {
   }
 
   const supabase = await createClient();
-  const catalog = await loadMedicalCatalog(supabase, family.familyId);
-  return (
-    <MedicalAssistant
-      enabled
-      suggestions={catalog.error ? [] : suggestQuestions(catalog.records)}
-    />
-  );
+  const { data } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("family_id", family.familyId)
+    .order("display_name", { ascending: true })
+    .limit(2);
+  const people = (data ?? []) as { display_name: string }[];
+  const suggestions = [
+    ...people.map((person) => `Ce documente recente are ${person.display_name}?`),
+    ...genericSuggestions,
+  ].slice(0, 4);
+
+  return <MedicalAssistant enabled suggestions={suggestions} />;
 }

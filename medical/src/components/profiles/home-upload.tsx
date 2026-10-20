@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   detectDocument,
@@ -45,9 +45,11 @@ const selectClass =
 export function HomeUpload({
   people,
   lockedProfileId,
+  onSaved,
 }: {
   people: UploadPerson[];
   lockedProfileId?: string;
+  onSaved?: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -61,6 +63,7 @@ export function HomeUpload({
   const [profileId, setProfileId] = useState(lockedProfileId ?? "");
   const [matchedName, setMatchedName] = useState<string | null>(null);
   const [attachedTo, setAttachedTo] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   function reset() {
     setFiles([]);
@@ -199,6 +202,7 @@ export function HomeUpload({
         setAttachedTo(primaryId);
       }
       reset();
+      onSaved?.();
     } catch {
       setAttachedTo(primaryId);
       setError("Înregistrarea nu a putut fi salvată. Încearcă din nou.");
@@ -330,17 +334,18 @@ export function HomeUpload({
         Word (.docx) sau text (.txt). Textul este citit local, iar data și
         textul se salvează o singură dată.
       </p>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 rounded-lg border border-dashed px-3 py-3">
         <Label htmlFor={lockedProfileId ? `upload-${lockedProfileId}` : "home-upload"}>
           Imagini, PDF, Word sau text
         </Label>
-        <Input
+        <input
+          ref={fileRef}
           id={lockedProfileId ? `upload-${lockedProfileId}` : "home-upload"}
           key={fileKey}
           type="file"
           multiple
           accept={ACCEPTED_FILE_TYPES}
-          className="h-11"
+          className="sr-only"
           disabled={pending !== null}
           onChange={(event) => {
             const chosen = Array.from(event.target.files ?? []);
@@ -349,8 +354,6 @@ export function HomeUpload({
             if (chosen.length === 0) {
               return;
             }
-            // Phone photos are shrunk here so each request stays under the
-            // 4.5 MB body limit of the hosting platform.
             setPending("prepare");
             void prepareUploads(chosen)
               .then((prepared) => {
@@ -362,6 +365,15 @@ export function HomeUpload({
               .finally(() => setPending(null));
           }}
         />
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11"
+          disabled={pending !== null}
+          onClick={() => fileRef.current?.click()}
+        >
+          Alege fișiere
+        </Button>
         {files.length > 0 ? (
           <ul className="text-sm text-muted-foreground">
             {files.map((file) => (

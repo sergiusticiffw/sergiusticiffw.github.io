@@ -9,6 +9,7 @@ import {
   updateProfile,
 } from "@/app/(app)/profiles/actions";
 import { Button } from "@/components/ui/button";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -149,5 +150,31 @@ export function ProfileForm({
         ) : null}
       </div>
     </form>
+  );
+}
+
+export function AddProfileButton() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button type="button" className="h-11 sm:w-fit" onClick={() => setOpen(true)}>
+        Adaugă profil
+      </Button>
+      <FormDialog
+        open={open}
+        title="Adaugă profil"
+        onClose={() => setOpen(false)}
+      >
+        <p className="text-sm text-muted-foreground">
+          Numele, data nașterii și IDNP-ul. Documentele scanate se asociază
+          după IDNP și rămân în folderul privat din Google Drive.
+        </p>
+        <ProfileForm
+          submitLabel="Adaugă profil"
+          onDone={() => setOpen(false)}
+        />
+      </FormDialog>
+    </>
   );
 }

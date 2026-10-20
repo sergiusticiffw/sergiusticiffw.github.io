@@ -4,8 +4,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { documentBody } from "@/lib/record-view";
 
+export type CatalogPerson = {
+  id: string;
+  display_name: string;
+};
+
 export type CatalogRecord = {
   id: string;
+  profileId: string;
   profileName: string;
   date: string | null;
   category: string | null;
@@ -28,10 +34,21 @@ function missingColumn(code: string | undefined) {
   return code === "42703" || code === "PGRST204";
 }
 
+function fold(value: string) {
+  return value
+    .toLocaleLowerCase("ro")
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "");
+}
+
 export async function loadMedicalCatalog(
   supabase: SupabaseClient,
   familyId: string,
-): Promise<{ records: CatalogRecord[]; error: string | null }> {
+): Promise<{
+  records: CatalogRecord[];
+  people: CatalogPerson[];
+  error: string | null;
+}> {
   const [profilesResult, documentsResult, consultationsResult, labsResult] =
     await Promise.all([
       supabase
@@ -94,7 +111,11 @@ export async function loadMedicalCatalog(
     labsResult.error;
   if (listError) {
     console.error("loadMedicalCatalog", listError.code);
-    return { records: [], error: "Documentele nu au putut fi încărcate." };
+    return {
+      records: [],
+      people: [],
+      error: "Documentele nu au putut fi încărcate.",
+    };
   }
 
   const profiles = (profilesResult.data ?? []) as {
@@ -152,6 +173,7 @@ export async function loadMedicalCatalog(
     });
     records.push({
       id: item.id,
+      profileId: item.profile_id,
       profileName: names.get(item.profile_id) ?? "Profil",
       date: item.document_date,
       category: item.category,
@@ -168,6 +190,7 @@ export async function loadMedicalCatalog(
   for (const item of consultations.filter((row) => !row.source_document_id)) {
     records.push({
       id: item.id,
+      profileId: item.profile_id,
       profileName: names.get(item.profile_id) ?? "Profil",
       date: item.consultation_date,
       category: "Consultație",
@@ -180,6 +203,7 @@ export async function loadMedicalCatalog(
   for (const item of labs.filter((row) => !row.source_document_id)) {
     records.push({
       id: item.id,
+      profileId: item.profile_id,
       profileName: names.get(item.profile_id) ?? "Profil",
       date: item.sample_date,
       category: "Analize",
@@ -202,7 +226,208 @@ export async function loadMedicalCatalog(
     return right.date.localeCompare(left.date);
   });
 
-  return { records, error: null };
+  return { records, people: profiles, error: null };
+}
+
+export type RecordIndexItem = {
+  id: string;
+  profileId: string;
+  profileName: string;
+  date: string | null;
+  title: string;
+  snippet: string;
+  search: string;
+  fileCount: number;
+};
+
+function redactIndex(value: string) {
+  return value
+    .replace(/\bIDNP\s*:?\s*\d{13}\b/gi, " ")
+    .replace(/\b\d{13}\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function indexSearch(value: string) {
+  return fold(redactIndex(value)).slice(0, 500);
+}
+
+export async function loadRecordsIndex(
+  supabase: SupabaseClient,
+  familyId: string,
+): Promise<{
+  records: RecordIndexItem[];
+  people: CatalogPerson[];
+  error: string | null;
+}> {
+  const [profilesResult, documentsResult, consultationsResult, labsResult] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, display_name")
+        .eq("family_id", familyId)
+        .order("display_name", { ascending: true }),
+      supabase
+        .from("medical_documents")
+        .select("id, profile_id, original_filename, document_date, category, title, record_id")
+        .order("document_date", { ascending: false }),
+      supabase
+        .from("consultations")
+        .select(
+          "id, profile_id, source_document_id, consultation_date, doctor_name, summary",
+        )
+        .order("consultation_date", { ascending: false }),
+      supabase
+        .from("lab_tests")
+        .select("id, profile_id, source_document_id, test_name, sample_date")
+        .order("sample_date", { ascending: false }),
+    ]);
+
+  let documentsError = documentsResult.error;
+  let documentsData = documentsResult.data;
+  if (missingColumn(documentsError?.code)) {
+    const withRecord = await supabase
+      .from("medical_documents")
+      .select("id, profile_id, original_filename, document_date, category, record_id")
+      .order("document_date", { ascending: false });
+    if (!withRecord.error) {
+      documentsError = null;
+      documentsData = (withRecord.data ?? []).map((row) => ({ ...row, title: null }));
+    } else {
+      const retry = await supabase
+        .from("medical_documents")
+        .select("id, profile_id, original_filename, document_date, category")
+        .order("document_date", { ascending: false });
+      documentsError = retry.error;
+      documentsData = (retry.data ?? []).map((row) => ({
+        ...row,
+        title: null,
+        record_id: null,
+      }));
+    }
+  }
+
+  const listError =
+    profilesResult.error ??
+    documentsError ??
+    consultationsResult.error ??
+    labsResult.error;
+  if (listError) {
+    console.error("loadRecordsIndex", listError.code);
+    return {
+      records: [],
+      people: [],
+      error: "Documentele nu au putut fi încărcate.",
+    };
+  }
+
+  const profiles = (profilesResult.data ?? []) as CatalogPerson[];
+  const names = new Map(profiles.map((profile) => [profile.id, profile.display_name]));
+  const profileIds = new Set(profiles.map((profile) => profile.id));
+
+  const consultations = ((consultationsResult.data ?? []) as {
+    id: string;
+    profile_id: string;
+    source_document_id: string | null;
+    consultation_date: string;
+    doctor_name: string | null;
+    summary: string | null;
+  }[]).filter((item) => profileIds.has(item.profile_id));
+
+  const labs = ((labsResult.data ?? []) as {
+    id: string;
+    profile_id: string;
+    source_document_id: string | null;
+    test_name: string;
+    sample_date: string | null;
+  }[]).filter((item) => profileIds.has(item.profile_id));
+
+  const documents = ((documentsData ?? []) as {
+    id: string;
+    profile_id: string;
+    original_filename: string;
+    document_date: string | null;
+    category: string | null;
+    title: string | null;
+    record_id: string | null;
+  }[]).filter((item) => profileIds.has(item.profile_id));
+
+  const records: RecordIndexItem[] = [];
+
+  for (const item of documents.filter((row) => !row.record_id)) {
+    const files = [item, ...documents.filter((file) => file.record_id === item.id)];
+    const consultation =
+      consultations.find((row) => row.source_document_id === item.id) ?? null;
+    const labNames = labs
+      .filter((row) => row.source_document_id === item.id)
+      .map((row) => row.test_name);
+    const title =
+      item.title?.trim() ||
+      [item.category, files.length > 1 ? `${files.length} fișiere` : item.original_filename]
+        .filter(Boolean)
+        .join(" · ");
+    const snippet = redactIndex(
+      [consultation?.summary, labNames.join(" "), files.map((file) => file.original_filename).join(" ")]
+        .filter(Boolean)
+        .join(" "),
+    ).slice(0, 220);
+    records.push({
+      id: item.id,
+      profileId: item.profile_id,
+      profileName: names.get(item.profile_id) ?? "Profil",
+      date: item.document_date,
+      title,
+      snippet,
+      search: indexSearch(
+        `${title} ${names.get(item.profile_id) ?? ""} ${consultation?.doctor_name ?? ""} ${snippet}`,
+      ),
+      fileCount: files.length,
+    });
+  }
+
+  for (const item of consultations.filter((row) => !row.source_document_id)) {
+    const title = ["Consultație", item.doctor_name].filter(Boolean).join(" · ");
+    const snippet = redactIndex(item.summary ?? "").slice(0, 220);
+    records.push({
+      id: item.id,
+      profileId: item.profile_id,
+      profileName: names.get(item.profile_id) ?? "Profil",
+      date: item.consultation_date,
+      title,
+      snippet,
+      search: indexSearch(`${title} ${names.get(item.profile_id) ?? ""} ${snippet}`),
+      fileCount: 0,
+    });
+  }
+
+  for (const item of labs.filter((row) => !row.source_document_id)) {
+    const title = ["Analiză", item.test_name].filter(Boolean).join(" · ");
+    records.push({
+      id: item.id,
+      profileId: item.profile_id,
+      profileName: names.get(item.profile_id) ?? "Profil",
+      date: item.sample_date,
+      title,
+      snippet: "",
+      search: indexSearch(`${title} ${names.get(item.profile_id) ?? ""}`),
+      fileCount: 0,
+    });
+  }
+
+  records.sort((left, right) => {
+    if (left.date === right.date) {
+      return left.title.localeCompare(right.title, "ro");
+    }
+    if (!left.date) {
+      return 1;
+    }
+    if (!right.date) {
+      return -1;
+    }
+    return right.date.localeCompare(left.date);
+  });
+
+  return { records, people: profiles, error: null };
 }
 
 const STOP_WORDS = new Set([
@@ -242,13 +467,6 @@ const STOP_WORDS = new Set([
   "afla",
   "spune",
 ]);
-
-function fold(value: string) {
-  return value
-    .toLocaleLowerCase("ro")
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "");
-}
 
 function contentTerms(query: string) {
   return fold(query)

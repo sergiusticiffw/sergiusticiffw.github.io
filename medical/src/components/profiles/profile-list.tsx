@@ -4,9 +4,6 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { deleteProfile } from "@/app/(app)/profiles/actions";
-import { DeleteRecordButton } from "@/components/profiles/delete-record-button";
-import { EditRecordButton } from "@/components/profiles/edit-record-button";
-import { DocumentPreview } from "@/components/profiles/document-preview";
 import { ProfileEntries } from "@/components/profiles/profile-entries";
 import { ProfileForm } from "@/components/profiles/profile-form";
 import { Button } from "@/components/ui/button";
@@ -18,8 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { formatBirthDate } from "@/lib/format";
-import { documentBody } from "@/lib/record-view";
 
 const PAGE_SIZE = 5;
 
@@ -35,11 +32,9 @@ export type MedicalDocument = {
   id: string;
   profile_id: string;
   original_filename: string;
-  mime_type: string | null;
   document_date: string | null;
   category: string | null;
   title: string | null;
-  extracted_text: string | null;
   record_id: string | null;
 };
 
@@ -49,10 +44,7 @@ export type MedicalConsultation = {
   source_document_id: string | null;
   consultation_date: string;
   doctor_name: string | null;
-  clinic_name: string | null;
-  specialty: string | null;
   summary: string | null;
-  recommendations: string | null;
 };
 
 export type MedicalLabTest = {
@@ -61,11 +53,6 @@ export type MedicalLabTest = {
   source_document_id: string | null;
   test_name: string;
   sample_date: string | null;
-  result_value: number | string | null;
-  result_text: string | null;
-  unit: string | null;
-  reference_text: string | null;
-  laboratory: string | null;
 };
 
 export function ProfileList({ profiles }: { profiles: MedicalProfile[] }) {
@@ -158,19 +145,7 @@ export function ProfileDetail({
             {error}
           </p>
         ) : null}
-        {editing ? (
-          <ProfileForm
-            profileId={profile.id}
-            submitLabel="Salvează"
-            defaultValues={{
-              displayName: profile.display_name,
-              birthDate: profile.birth_date ?? "",
-              idnp: profile.idnp ?? "",
-              notes: profile.notes ?? "",
-            }}
-            onDone={() => setEditing(false)}
-          />
-        ) : canWrite ? (
+        {canWrite ? (
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
               type="button"
@@ -196,6 +171,23 @@ export function ProfileDetail({
             ) : null}
           </div>
         ) : null}
+        <FormDialog
+          open={editing}
+          title="Modifică profilul"
+          onClose={() => setEditing(false)}
+        >
+          <ProfileForm
+            profileId={profile.id}
+            submitLabel="Salvează"
+            defaultValues={{
+              displayName: profile.display_name,
+              birthDate: profile.birth_date ?? "",
+              idnp: profile.idnp ?? "",
+              notes: profile.notes ?? "",
+            }}
+            onDone={() => setEditing(false)}
+          />
+        </FormDialog>
         <ConfirmDialog
           open={confirmingDelete}
           title={`Ștergi profilul „${profile.display_name}”?`}
@@ -220,7 +212,6 @@ export function ProfileDetail({
           documents={documents}
           consultations={consultations}
           labTests={labTests}
-          canWrite={canEditRecords}
         />
       </CardContent>
     </Card>
@@ -231,12 +222,10 @@ function ProfileRecords({
   documents,
   consultations,
   labTests,
-  canWrite,
 }: {
   documents: MedicalDocument[];
   consultations: MedicalConsultation[];
   labTests: MedicalLabTest[];
-  canWrite: boolean;
 }) {
   const primaries = documents.filter((document) => !document.record_id);
   const documentRecords = primaries.map((document) => {
@@ -246,7 +235,6 @@ function ProfileRecords({
     ];
     return {
       id: document.id,
-      kind: "document" as const,
       date: document.document_date,
       title:
         document.title?.trim() ||
@@ -256,21 +244,14 @@ function ProfileRecords({
         ]
           .filter(Boolean)
           .join(" · "),
-      editTitle: document.title?.trim() || "",
-      editBody: document.extracted_text?.trim() || "",
-      body: documentBody({
-        extractedText: document.extracted_text,
-        consultation:
-          consultations.find((item) => item.source_document_id === document.id) ??
-          null,
-        labs: labTests.filter((item) => item.source_document_id === document.id),
-      }),
-      documentId: document.id,
-      files: files.map((file) => ({
-        id: file.id,
-        filename: file.original_filename,
-        mimeType: file.mime_type,
-      })),
+      body:
+        consultations.find((item) => item.source_document_id === document.id)
+          ?.summary ??
+        labTests
+          .filter((item) => item.source_document_id === document.id)
+          .map((item) => item.test_name)
+          .join(" · "),
+      fileCount: files.length,
     };
   });
   const manualRecords = [
@@ -278,35 +259,19 @@ function ProfileRecords({
       .filter((item) => !item.source_document_id)
       .map((item) => ({
         id: item.id,
-        kind: "consultation" as const,
         date: item.consultation_date,
         title: ["Consultație", item.doctor_name].filter(Boolean).join(" · "),
-        editTitle: "",
-        editBody: item.summary?.trim() || "",
-        body: documentBody({
-          extractedText: null,
-          consultation: item,
-          labs: [],
-        }).replace(/^Consultație\n?/, ""),
-        documentId: null,
-        files: [],
+        body: item.summary?.trim() || "",
+        fileCount: 0,
       })),
     ...labTests
       .filter((item) => !item.source_document_id)
       .map((item) => ({
         id: item.id,
-        kind: "lab" as const,
         date: item.sample_date,
         title: ["Analiză", item.test_name].filter(Boolean).join(" · "),
-        editTitle: item.test_name,
-        editBody: item.result_text?.trim() || "",
-        body: documentBody({
-          extractedText: null,
-          consultation: null,
-          labs: [item],
-        }).replace(/^Analize\n?/, ""),
-        documentId: null,
-        files: [],
+        body: "",
+        fileCount: 0,
       })),
   ];
   const records = [...documentRecords, ...manualRecords].sort((left, right) => {
@@ -339,63 +304,30 @@ function ProfileRecords({
       ) : (
         <ul className="flex flex-col gap-3">
           {visible.map((record) => (
-            <li key={record.id} className="rounded-lg border px-3 py-2">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm">
-                      <span className="text-muted-foreground">
-                        {record.date ? formatBirthDate(record.date) : "Fără dată"}
-                      </span>
-                      {record.title ? ` · ${record.title}` : ""}
-                    </p>
-                    {record.body ? (
-                      <p className="truncate text-xs text-muted-foreground">{record.body}</p>
-                    ) : null}
-                  </div>
-                </div>
-                {record.files.length > 0 ? (
-                  <ul className="flex flex-wrap gap-1">
-                    {record.files.map((file) => (
-                      <li key={file.id}>
-                        <DocumentPreview
-                          id={file.id}
-                          filename={file.filename}
-                          mimeType={file.mimeType}
-                          compact
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                {canWrite ? (
-                  <div className="flex flex-wrap items-center gap-1">
-                    <EditRecordButton
-                      kind={record.kind}
-                      id={record.id}
-                      title={record.editTitle || record.title}
-                      date={record.date ?? ""}
-                      body={record.editBody || record.body}
-                    />
-                    <DeleteRecordButton
-                      kind={record.kind}
-                      id={record.id}
-                      withFiles={record.files.length > 0}
-                      compact
-                    />
-                  </div>
-                ) : null}
-              </div>
-              {record.body ? (
-                <details className="mt-1">
-                  <summary className="cursor-pointer text-xs text-muted-foreground">
-                    Textul complet
-                  </summary>
-                  <p className="mt-1 max-h-36 overflow-auto whitespace-pre-wrap text-xs">
+            <li key={record.id}>
+              <Link
+                href={`/records/${record.id}`}
+                className="block rounded-lg border px-3 py-3 hover:bg-muted/50"
+              >
+                <p className="truncate text-sm">
+                  <span className="text-muted-foreground">
+                    {record.date ? formatBirthDate(record.date) : "Fără dată"}
+                  </span>
+                  {record.title ? ` · ${record.title}` : ""}
+                </p>
+                {record.body ? (
+                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                     {record.body}
                   </p>
-                </details>
-              ) : null}
+                ) : null}
+                {record.fileCount > 0 ? (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {record.fileCount === 1
+                      ? "1 fișier"
+                      : `${record.fileCount} fișiere`}
+                  </p>
+                ) : null}
+              </Link>
             </li>
           ))}
         </ul>

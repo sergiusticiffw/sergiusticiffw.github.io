@@ -9,13 +9,22 @@ import { createClient } from "@/lib/supabase/server";
 export const getCurrentUser = cache(async () => {
   await connection();
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
+  const claimed = await supabase.auth.getClaims();
+  const claims = claimed.data?.claims;
+  const claimedId = typeof claims?.sub === "string" ? claims.sub : "";
+  if (claimedId) {
+    return {
+      id: claimedId,
+      email: typeof claims?.email === "string" ? claims.email : "",
+    };
+  }
 
+  const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
     redirect("/login");
   }
 
-  return data.user;
+  return { id: data.user.id, email: data.user.email ?? "" };
 });
 
 export type FamilyRole = "admin" | "editor" | "viewer";

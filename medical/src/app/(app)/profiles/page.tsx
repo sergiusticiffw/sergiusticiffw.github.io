@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 
-import { ProfileForm } from "@/components/profiles/profile-form";
+import { PageFallback } from "@/components/layout/page-fallback";
+import { AddProfileButton } from "@/components/profiles/profile-form";
 import { ProfileList } from "@/components/profiles/profile-list";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -33,7 +34,7 @@ export default function ProfilesPage({
           Alege o persoană. Documentele se încarcă din pagina ei.
         </p>
       </div>
-      <Suspense fallback={<p className="text-sm text-muted-foreground">Se încarcă profilurile…</p>}>
+      <Suspense fallback={<PageFallback label="Se încarcă profilurile…" />}>
         <ProfilesSection searchParams={searchParams} />
       </Suspense>
     </div>
@@ -59,7 +60,7 @@ async function ProfilesSection({
   const [profilesResult, connectionResult] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, display_name, birth_date, idnp, notes")
+      .select("id, display_name, birth_date, idnp")
       .eq("family_id", family.familyId)
       .order("display_name", { ascending: true }),
     family.role === "admin"
@@ -88,13 +89,12 @@ async function ProfilesSection({
     );
   }
 
-  const profiles = (profilesResult.data ?? []) as {
+  const profiles = ((profilesResult.data ?? []) as {
     id: string;
     display_name: string;
     birth_date: string | null;
     idnp: string | null;
-    notes: string | null;
-  }[];
+  }[]).map((profile) => ({ ...profile, notes: null }));
   const driveConnected = Boolean(connectionResult.data);
   const googleConfigured = Boolean(getGoogleConfig());
 
@@ -107,32 +107,7 @@ async function ProfilesSection({
           connected={driveConnected}
         />
       ) : null}
-      {family.role === "admin" ? (
-      <Card className="py-0">
-        <details className="group">
-          <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-(--card-spacing) py-(--card-spacing) [&::-webkit-details-marker]:hidden [&::marker]:content-none">
-            <span>
-              <span className="font-heading text-base leading-snug font-medium">
-                Adaugă profil
-              </span>
-              <span className="mt-1 block text-sm text-muted-foreground">
-                Numele, data nașterii și IDNP-ul. Documentele scanate se
-                asociază după IDNP și rămân în folderul privat din Google Drive.
-              </span>
-            </span>
-            <span
-              aria-hidden
-              className="mt-0.5 text-muted-foreground transition-transform group-open:rotate-180"
-            >
-              ▾
-            </span>
-          </summary>
-          <CardContent className="pb-(--card-spacing)">
-            <ProfileForm submitLabel="Adaugă profil" />
-          </CardContent>
-        </details>
-      </Card>
-      ) : null}
+      {family.role === "admin" ? <AddProfileButton /> : null}
       <ProfileList profiles={profiles} />
     </div>
   );

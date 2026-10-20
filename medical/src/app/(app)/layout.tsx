@@ -3,27 +3,22 @@ import Link from "next/link";
 
 import { getCurrentUser } from "@/lib/auth";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { AppNav } from "@/components/layout/app-nav";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="border-b bg-card">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-3">
-          <div className="flex items-center gap-4">
-            <Link href="/profiles" className="text-base font-semibold">
-              Dosar medical
-            </Link>
-            <Link href="/assistant" className="text-sm text-muted-foreground">
-              Asistent
-            </Link>
-            <Link href="/family" className="text-sm text-muted-foreground">
-              Familie
-            </Link>
-          </div>
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur">
+        <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-2 px-4">
+          <Link href="/profiles" className="truncate text-base font-semibold">
+            Dosar medical
+          </Link>
+          <div className="flex shrink-0 items-center gap-2">
             <Suspense
               fallback={
-                <span className="text-sm text-muted-foreground">Se încarcă…</span>
+                <span className="hidden text-sm text-muted-foreground sm:inline">
+                  Se încarcă…
+                </span>
               }
             >
               <CurrentUserEmail />
@@ -32,9 +27,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-6">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-4 pb-24 sm:py-6 sm:pb-24">
         {children}
       </main>
+      <Suspense
+        fallback={
+          <nav
+            className="fixed inset-x-0 bottom-0 z-40 h-[calc(3.5rem+max(0.5rem,env(safe-area-inset-bottom)))] border-t bg-card/95"
+            aria-hidden
+          />
+        }
+      >
+        <AppNav />
+      </Suspense>
     </div>
   );
 }

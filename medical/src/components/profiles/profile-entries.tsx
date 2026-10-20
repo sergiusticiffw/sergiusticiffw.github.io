@@ -10,6 +10,7 @@ import {
 import { saveDetectedDocument } from "@/app/(app)/profiles/scan-actions";
 import { HomeUpload } from "@/components/profiles/home-upload";
 import { Button } from "@/components/ui/button";
+import { FormDialog } from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +26,9 @@ function FileField({
   id: string;
   driveConnected: boolean;
 }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [names, setNames] = useState<string[]>([]);
+
   if (!driveConnected) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -34,20 +38,42 @@ function FileField({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>Fișiere</Label>
-      <Input
+    <div className="flex flex-col gap-2 rounded-lg border border-dashed px-3 py-3">
+      <p className="text-sm">Adaugă fișiere</p>
+      <p className="text-xs text-muted-foreground">
+        Opțional. Imagini, PDF, Word (.docx) sau text (.txt).
+      </p>
+      <input
+        ref={inputRef}
         id={id}
         name="file"
         type="file"
         multiple
         accept={ACCEPTED_FILE_TYPES}
-        className="h-11"
+        className="sr-only"
+        onChange={(event) => {
+          setNames(
+            [...(event.target.files ?? [])]
+              .filter((file) => file.size > 0)
+              .map((file) => file.name),
+          );
+        }}
       />
-      <p className="text-sm text-muted-foreground">
-        Opțional. Poți adăuga mai multe imagini, PDF, Word (.docx) sau text
-        (.txt) la aceeași înregistrare.
-      </p>
+      <Button
+        type="button"
+        variant="outline"
+        className="h-11"
+        onClick={() => inputRef.current?.click()}
+      >
+        Alege fișiere
+      </Button>
+      {names.length > 0 ? (
+        <ul className="text-xs text-muted-foreground">
+          {names.map((name) => (
+            <li key={name}>{name}</li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }
@@ -61,16 +87,16 @@ function todayInputValue() {
 function EntryForm({
   action,
   profileId,
-  title,
   children,
+  onSaved,
 }: {
   action: (
     previous: RecordActionResult,
     formData: FormData,
   ) => Promise<RecordActionResult>;
   profileId: string;
-  title: string;
   children: ReactNode;
+  onSaved?: () => void;
 }) {
   const [state, setState] = useState<RecordActionResult>(initialResult);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -93,6 +119,7 @@ function EntryForm({
         setState(result);
         if (result.saved) {
           formRef.current?.reset();
+          onSaved?.();
         }
       } catch {
         setState({ error: "Înregistrarea nu a putut fi salvată. Încearcă din nou." });
@@ -168,6 +195,7 @@ function EntryForm({
       }
       formRef.current?.reset();
       router.refresh();
+      onSaved?.();
     } catch {
       setFileError("Înregistrarea nu a putut fi salvată. Încearcă din nou.");
     } finally {
@@ -184,7 +212,6 @@ function EntryForm({
       className="flex flex-col gap-3"
     >
       <input type="hidden" name="profileId" value={profileId} />
-      <h3 className="text-sm font-medium">{title}</h3>
       {fileError ?? state.error ? (
         <p role="alert" className="text-sm text-destructive">
           {fileError ?? state.error}
@@ -217,62 +244,64 @@ export function ProfileEntries({
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button
           type="button"
-          variant={panel === "consultation" ? "default" : "outline"}
+          variant="outline"
           className="h-11"
-          onClick={() =>
-            setPanel((current) =>
-              current === "consultation" ? null : "consultation",
-            )
-          }
+          onClick={() => setPanel("consultation")}
         >
           Consultație
         </Button>
         <Button
           type="button"
-          variant={panel === "file" ? "default" : "outline"}
+          variant="outline"
           className="h-11"
-          onClick={() =>
-            setPanel((current) => (current === "file" ? null : "file"))
-          }
+          onClick={() => setPanel("file")}
         >
           Document
         </Button>
       </div>
-      {panel === "consultation" ? (
-        <EntryForm
-          action={createConsultation}
-          profileId={profileId}
-          title="Consultație nouă"
-        >
-          <div className="flex flex-col gap-2">
-            <Label htmlFor={`consult-date-${profileId}`}>Data</Label>
-            <Input
-              id={`consult-date-${profileId}`}
-              name="consultationDate"
-              type="date"
-              required
-              defaultValue={todayInputValue()}
-              className="h-11"
+      <FormDialog
+        open={panel !== null}
+        title={panel === "file" ? "Document nou" : "Consultație nouă"}
+        onClose={() => setPanel(null)}
+      >
+        {panel === "consultation" ? (
+          <EntryForm
+            action={createConsultation}
+            profileId={profileId}
+            onSaved={() => setPanel(null)}
+          >
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`consult-date-${profileId}`}>Data</Label>
+              <Input
+                id={`consult-date-${profileId}`}
+                name="consultationDate"
+                type="date"
+                required
+                defaultValue={todayInputValue()}
+                className="h-11"
+              />
+            </div>
+            <Textarea name="summary" className="min-h-24" placeholder="Notă" />
+            <FileField
+              id={`consult-files-${profileId}`}
+              driveConnected={driveConnected}
             />
-          </div>
-          <Textarea name="summary" className="min-h-24" placeholder="Notă" />
-          <FileField id={`consult-files-${profileId}`} driveConnected={driveConnected} />
-        </EntryForm>
-      ) : null}
-      {panel === "file" ? (
-        driveConnected ? (
-          <HomeUpload
-            people={[
-              { id: profileId, display_name: profileName, idnp },
-            ]}
-            lockedProfileId={profileId}
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Conectează Google Drive ca să încarci un document privat.
-          </p>
-        )
-      ) : null}
+          </EntryForm>
+        ) : null}
+        {panel === "file" ? (
+          driveConnected ? (
+            <HomeUpload
+              people={[{ id: profileId, display_name: profileName, idnp }]}
+              lockedProfileId={profileId}
+              onSaved={() => setPanel(null)}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Conectează Google Drive ca să încarci un document privat.
+            </p>
+          )
+        ) : null}
+      </FormDialog>
     </div>
   );
 }
