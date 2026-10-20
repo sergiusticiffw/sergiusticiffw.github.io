@@ -1,22 +1,15 @@
-"use server";
+import "server-only";
 
 import { answerMedicalQuestion } from "@/lib/assistant/chat";
 import { loadMedicalCatalog } from "@/lib/assistant/catalog";
+import { isKnownModel } from "@/lib/assistant/models";
+import type { AssistantResult, AssistantTurn } from "@/lib/assistant/types";
 import { getFamilyAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-export type AssistantTurn = {
-  role: "user" | "assistant";
-  text: string;
-};
-
-export type AssistantResult = {
-  error?: string;
-  answer?: string;
-};
-
 export async function askMedicalAssistant(
   messages: AssistantTurn[],
+  preferModel?: string,
 ): Promise<AssistantResult> {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
@@ -55,20 +48,30 @@ export async function askMedicalAssistant(
 
     const answer = await answerMedicalQuestion({
       apiKey,
+      familyId: family.familyId,
       messages: turns,
       records: catalog.records,
+      preferModel:
+        preferModel && isKnownModel(preferModel) ? preferModel : undefined,
     });
     return { answer };
   } catch (error) {
     console.error(
       "askMedicalAssistant",
-      error instanceof Error ? error.name : "unknown",
+      error instanceof Error ? error.message : "unknown",
     );
     return {
       error:
         error instanceof Error
           ? error.message
           : "Asistentul nu a putut consulta documentele.",
+      failedModel:
+        error &&
+        typeof error === "object" &&
+        "failedModel" in error &&
+        typeof error.failedModel === "string"
+          ? error.failedModel
+          : undefined,
     };
   }
 }

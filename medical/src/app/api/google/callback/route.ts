@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   const state = readOAuthState(url.searchParams.get("state"));
   const code = url.searchParams.get("code");
   const destination = (status: string) =>
-    NextResponse.redirect(`${getSiteUrl()}/profiles?drive=${status}`);
+    NextResponse.redirect(`${getSiteUrl()}/profile?drive=${status}`);
 
   if (!state || !code) {
     return destination("error");

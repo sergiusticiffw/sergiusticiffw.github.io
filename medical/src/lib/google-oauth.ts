@@ -153,7 +153,7 @@ export function googleAuthUrl(state: string) {
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", DRIVE_SCOPE);
   url.searchParams.set("access_type", "offline");
-  url.searchParams.set("prompt", "consent");
+  url.searchParams.set("prompt", "select_account consent");
   url.searchParams.set("state", state);
   return url;
 }

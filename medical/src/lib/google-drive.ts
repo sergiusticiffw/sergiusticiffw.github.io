@@ -362,6 +362,42 @@ export async function downloadDriveFile(familyId: string, fileId: string) {
   );
 }
 
+export async function getDriveConnectionMeta(familyId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("google_drive_connections")
+    .select("root_folder_id, updated_at")
+    .eq("family_id", familyId)
+    .maybeSingle();
+  if (error) {
+    console.error("getDriveConnectionMeta", error.code);
+    return { error: "Starea Google Drive nu a putut fi încărcată." as const };
+  }
+  const row = data as { root_folder_id: string | null; updated_at: string } | null;
+  if (!row) {
+    return { connected: false as const, error: null };
+  }
+  return {
+    connected: true as const,
+    rootFolderId: row.root_folder_id,
+    updatedAt: row.updated_at,
+    error: null,
+  };
+}
+
+export async function disconnectDrive(familyId: string) {
+  tokenCache.delete(familyId);
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("google_drive_connections")
+    .delete()
+    .eq("family_id", familyId);
+  if (error) {
+    console.error("disconnectDrive", error.code);
+    throw new Error("Google Drive nu a putut fi deconectat.");
+  }
+}
+
 function randomBoundary() {
   return randomBytes(12).toString("hex");
 }

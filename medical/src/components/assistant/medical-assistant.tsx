@@ -2,13 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import {
-  askMedicalAssistant,
-  type AssistantTurn,
-} from "@/app/(app)/assistant/actions";
 import { AssistantAnswer } from "@/components/assistant/assistant-answer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { nextChatModel, retryModelLabel } from "@/lib/assistant/models";
+import type { AssistantResult, AssistantTurn } from "@/lib/assistant/types";
 
 export function MedicalAssistant({
   enabled,
@@ -21,11 +19,37 @@ export function MedicalAssistant({
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [failedModel, setFailedModel] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
   }, [messages, pending, error]);
+
+  async function ask(turns: AssistantTurn[], preferModel?: string) {
+    setError(null);
+    setFailedModel(null);
+    setPending(true);
+    try {
+      const result = await askAssistant(turns, preferModel);
+      if (result.error || !result.answer) {
+        setError(result.error ?? "Asistentul nu a răspuns.");
+        setFailedModel(result.failedModel ?? preferModel ?? null);
+        return;
+      }
+      setMessages([...turns, { role: "assistant", text: result.answer }]);
+    } catch (error) {
+      setError(
+        error instanceof Error &&
+          error.message &&
+          !/digest|server action/i.test(error.message)
+          ? error.message
+          : "Asistentul nu a putut consulta documentele. Reîncearcă.",
+      );
+    } finally {
+      setPending(false);
+    }
+  }
 
   async function send(text: string) {
     const question = text.trim();
@@ -35,21 +59,19 @@ export function MedicalAssistant({
     const next = [...messages, { role: "user" as const, text: question }];
     setMessages(next);
     setInput("");
-    setError(null);
-    setPending(true);
-    try {
-      const result = await askMedicalAssistant(next);
-      if (result.error || !result.answer) {
-        setError(result.error ?? "Asistentul nu a răspuns.");
-        return;
-      }
-      setMessages([...next, { role: "assistant", text: result.answer }]);
-    } catch {
-      setError("Asistentul nu a putut consulta documentele.");
-    } finally {
-      setPending(false);
-    }
+    await ask(next);
   }
+
+  async function retry(preferModel?: string) {
+    const last = messages.at(-1);
+    if (!last || last.role !== "user" || pending) {
+      return;
+    }
+    await ask(messages, preferModel);
+  }
+
+  const canRetry = Boolean(error) && messages.at(-1)?.role === "user" && !pending;
+  const altModel = canRetry ? nextChatModel(failedModel) : null;
 
   if (!enabled) {
     return (
@@ -115,9 +137,41 @@ export function MedicalAssistant({
           </div>
         ) : null}
         {error ? (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
+          <div className="flex justify-start">
+            <div className="max-w-[92%]">
+              <p role="alert" className="text-sm text-destructive">
+                {error}
+              </p>
+              {canRetry ? (
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <button
+                    type="button"
+                    disabled={pending}
+                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 hover:bg-muted hover:text-foreground disabled:opacity-50"
+                    onClick={() => {
+                      void retry();
+                    }}
+                  >
+                    <RetryIcon />
+                    Reîncearcă
+                  </button>
+                  {altModel ? (
+                    <button
+                      type="button"
+                      disabled={pending}
+                      className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 hover:bg-muted hover:text-foreground disabled:opacity-50"
+                      onClick={() => {
+                        void retry(altModel);
+                      }}
+                    >
+                      <RetryIcon />
+                      Reîncearcă cu {retryModelLabel(altModel)}
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          </div>
         ) : null}
         <div ref={endRef} />
       </div>
@@ -137,6 +191,7 @@ export function MedicalAssistant({
             onClick={() => {
               setMessages([]);
               setError(null);
+              setFailedModel(null);
             }}
           >
             Chat nou
@@ -165,5 +220,39 @@ export function MedicalAssistant({
         Asistentul poate greși. Verifică documentul înainte de o decizie medicală.
       </p>
     </div>
+  );
+}
+
+async function askAssistant(
+  messages: AssistantTurn[],
+  preferModel?: string,
+): Promise<AssistantResult> {
+  const response = await fetch("/api/assistant", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages, preferModel }),
+  });
+  const payload = (await response.json().catch(() => null)) as AssistantResult | null;
+  if (!payload) {
+    return { error: "Asistentul nu a putut consulta documentele." };
+  }
+  return payload;
+}
+
+function RetryIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="size-3.5"
+      aria-hidden
+    >
+      <path d="M21 12a9 9 0 1 1-3.2-6.9" />
+      <path d="M21 3v6h-6" />
+    </svg>
   );
 }

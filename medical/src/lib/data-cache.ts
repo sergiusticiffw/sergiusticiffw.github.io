@@ -12,6 +12,7 @@ export function useFamilyCache() {
 export function revalidateApp(profileId?: string, recordId?: string) {
   updateTag(FAMILY_CACHE_TAG);
   revalidatePath("/profiles");
+  revalidatePath("/profile");
   revalidatePath("/records");
   revalidatePath("/assistant");
   revalidatePath("/family");

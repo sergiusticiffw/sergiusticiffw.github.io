@@ -18,6 +18,7 @@ export type CatalogRecord = {
   category: string | null;
   title: string;
   fields: string;
+  text: string;
   files: string[];
 };
 
@@ -50,6 +51,17 @@ function fieldLines(entries: [string, string | number | null | undefined][]) {
     .join("\n");
 }
 
+const MAX_SCANNED_TEXT = 8000;
+
+function scannedText(values: (string | null | undefined)[]) {
+  return redactIndex(
+    values
+      .map((value) => String(value ?? "").trim())
+      .filter(Boolean)
+      .join("\n\n"),
+  ).slice(0, MAX_SCANNED_TEXT);
+}
+
 export async function loadMedicalCatalog(
   supabase: SupabaseClient,
   familyId: string,
@@ -68,7 +80,7 @@ export async function loadMedicalCatalog(
       supabase
         .from("medical_documents")
         .select(
-          "id, profile_id, original_filename, document_date, category, title, record_id",
+          "id, profile_id, original_filename, document_date, category, title, record_id, extracted_text",
         )
         .order("document_date", { ascending: false }),
       supabase
@@ -88,26 +100,41 @@ export async function loadMedicalCatalog(
   let documentsError = documentsResult.error;
   let documentsData = documentsResult.data;
   if (missingColumn(documentsError?.code)) {
-    const withRecord = await supabase
+    const withText = await supabase
       .from("medical_documents")
       .select(
-        "id, profile_id, original_filename, document_date, category, record_id",
+        "id, profile_id, original_filename, document_date, category, record_id, extracted_text",
       )
       .order("document_date", { ascending: false });
-    if (!withRecord.error) {
+    if (!withText.error) {
       documentsError = null;
-      documentsData = (withRecord.data ?? []).map((row) => ({ ...row, title: null }));
+      documentsData = (withText.data ?? []).map((row) => ({ ...row, title: null }));
     } else {
-      const retry = await supabase
+      const withRecord = await supabase
         .from("medical_documents")
-        .select("id, profile_id, original_filename, document_date, category")
+        .select(
+          "id, profile_id, original_filename, document_date, category, title, record_id",
+        )
         .order("document_date", { ascending: false });
-      documentsError = retry.error;
-      documentsData = (retry.data ?? []).map((row) => ({
-        ...row,
-        title: null,
-        record_id: null,
-      }));
+      if (!withRecord.error) {
+        documentsError = null;
+        documentsData = (withRecord.data ?? []).map((row) => ({
+          ...row,
+          extracted_text: null,
+        }));
+      } else {
+        const retry = await supabase
+          .from("medical_documents")
+          .select("id, profile_id, original_filename, document_date, category")
+          .order("document_date", { ascending: false });
+        documentsError = retry.error;
+        documentsData = (retry.data ?? []).map((row) => ({
+          ...row,
+          title: null,
+          record_id: null,
+          extracted_text: null,
+        }));
+      }
     }
   }
 
@@ -202,6 +229,7 @@ export async function loadMedicalCatalog(
     category: string | null;
     title: string | null;
     record_id: string | null;
+    extracted_text?: string | null;
   }[]).filter((item) => profileIds.has(item.profile_id));
 
   const records: CatalogRecord[] = [];
@@ -245,6 +273,7 @@ export async function loadMedicalCatalog(
             .join("; "),
         ],
       ]),
+      text: scannedText(files.map((file) => file.extracted_text)),
       files: files.map((file) => file.original_filename),
     });
   }
@@ -268,6 +297,7 @@ export async function loadMedicalCatalog(
         ["Rezumat", item.summary],
         ["Recomandări", item.recommendations],
       ]),
+      text: "",
       files: [],
     });
   }
@@ -292,6 +322,7 @@ export async function loadMedicalCatalog(
         ["Referință", item.reference_text],
         ["Laborator", item.laboratory],
       ]),
+      text: "",
       files: [],
     });
   }
@@ -638,7 +669,7 @@ export function searchCatalog(
         return { record, hits: 0 };
       }
       const haystack = fold(
-        `${record.title}\n${record.profileName}\n${record.category ?? ""}\n${record.fields}`,
+        `${record.title}\n${record.profileName}\n${record.category ?? ""}\n${record.fields}\n${record.text}`,
       );
       const hits = terms.filter((term) => {
         if (haystack.includes(term)) {
@@ -659,7 +690,10 @@ export function searchCatalog(
       profile: record.profileName,
       date: record.date,
       title: record.title,
-      excerpt: excerptAround(record.fields, terms),
+      excerpt: excerptAround(
+        record.text ? `${record.fields}\n\n${record.text}` : record.fields,
+        terms,
+      ),
     })),
   };
 }

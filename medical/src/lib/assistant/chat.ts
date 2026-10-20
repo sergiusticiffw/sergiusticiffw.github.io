@@ -2,23 +2,29 @@ import "server-only";
 
 import { searchCatalog, type CatalogRecord } from "./catalog";
 import { polishAnswer } from "./format-answer";
-
-const AI_MODELS = {
-  chat: [
-    "gemini-3.8-flash",
-    "gemini-3.6-flash",
-    "gemini-3.5-flash-lite",
-    "gemini-3.1-flash-lite",
-  ],
-  lite: ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.6-flash"],
-} as const;
+import { AI_MODELS } from "./models";
+import {
+  getModelCooldown,
+  isDailyQuota,
+  isModelUnavailable,
+  markModelUnavailable,
+  nextGeminiReset,
+  parseRetryDelay,
+  peekLastFailed,
+  quotaFromDetails,
+  recordAiLimit,
+  recordAiQuestion,
+  recordAiRequest,
+  rememberSkip,
+  setModelCooldown,
+} from "./usage";
 
 const MAX_ROUNDS = 3;
+const MAX_MODELS = 4;
+const REQUEST_MS = 12_000;
+const BUDGET_MS = 40_000;
 const COOLDOWN_MS = 60_000;
 const SKIP_SIGNATURE = "skip_thought_signature_validator";
-
-const unavailableModels = new Set<string>();
-const modelCooldown = new Map<string, number>();
 
 type ChatTurn = { role: "user" | "assistant"; text: string };
 
@@ -40,7 +46,7 @@ const declarations = [
   {
     name: "search_records",
     description:
-      "Caută în câmpurile din dosar: persoană, dată, titlu, medic, clinică, rezumat, analize. Apelează înainte să afirmi că o informație există.",
+      "Caută în câmpurile din dosar și în textul scanat al înregistrării: persoană, dată, titlu, medic, clinică, rezumat, analize, conținut extras. Apelează înainte să afirmi că o informație există.",
     parameters: {
       type: "OBJECT",
       properties: {
@@ -58,7 +64,7 @@ const declarations = [
   {
     name: "read_record",
     description:
-      "Citește câmpurile din dosar pentru înregistrările găsite. Trimite ids cu toate id-urile, nu doar primul.",
+      "Citește câmpurile și textul scanat din dosar pentru înregistrările găsite. Trimite ids cu toate id-urile, nu doar primul.",
     parameters: {
       type: "OBJECT",
       properties: {
@@ -82,7 +88,7 @@ function systemInstruction(count: number) {
     "Fără tabele, fără blocuri de cod, fără emoji, fără IDNP.",
     "Nu inventa analize, valori, medici, clinici sau date. Dacă nu găsești nimic, spune asta.",
     "Caută mai întâi cu search_records. Dacă sunt rezultate, citește-le cu read_record.",
-    "Ai doar câmpurile din dosar: persoană, dată, titlu, categorie, medic, clinică, rezumat, analize. Nu ai fișierul și nu ai textul extras din el.",
+    "Ai câmpurile din dosar (persoană, dată, titlu, categorie, medic, clinică, rezumat, analize) și textul scanat salvat pe înregistrare. Nu ai fișierul original.",
     "Nu filtra după categorie.",
     "Când citezi, menționează persoana, data și titlul.",
     "Nu pui diagnostice și nu înlocuiești un medic.",
@@ -119,6 +125,7 @@ function runTool(records: CatalogRecord[], name: string, args: Record<string, un
         date: record.date,
         title: record.title,
         fields: record.fields,
+        ...(record.text ? { text: record.text } : {}),
       })),
     };
   }
@@ -202,19 +209,75 @@ function modelOrder(preferModel?: string) {
   return ordered;
 }
 
+function resumeFrom() {
+  const failed = peekLastFailed();
+  if (!failed) {
+    return undefined;
+  }
+  const order = modelOrder();
+  const index = order.indexOf(failed.model);
+  if (index < 0) {
+    return undefined;
+  }
+  return order[index + 1] ?? order[0];
+}
+
 function candidatesFor(preferModel?: string) {
-  const models = modelOrder(preferModel).filter(
-    (model) => !unavailableModels.has(model),
-  );
+  const start = preferModel || resumeFrom();
+  const models = modelOrder(start).filter((model) => !isModelUnavailable(model));
   const now = Date.now();
   return {
     models,
-    candidates: models.filter((model) => (modelCooldown.get(model) ?? 0) <= now),
+    candidates: models
+      .filter((model) => getModelCooldown(model) <= now)
+      .slice(0, MAX_MODELS),
   };
+}
+
+type GeminiErrorDetail = {
+  retryDelay?: string;
+  violations?: {
+    quotaId?: string;
+    quotaMetric?: string;
+    quotaValue?: string | number;
+  }[];
+};
+
+async function rememberLimit(input: {
+  familyId: string;
+  model: string;
+  status: number;
+  message: string;
+  details?: GeminiErrorDetail[];
+}) {
+  const retryAfterSeconds = parseRetryDelay(input.details, input.message);
+  const daily = isDailyQuota(input.message, input.details);
+  const quota = quotaFromDetails(input.message, input.details);
+  const until = daily
+    ? Math.max(
+        nextGeminiReset().getTime(),
+        Date.now() + (retryAfterSeconds ?? 60) * 1000,
+      )
+    : Date.now() + (retryAfterSeconds ?? COOLDOWN_MS / 1000) * 1000;
+  rememberSkip(input.model);
+  if (input.status === 429 || input.status === 503) {
+    setModelCooldown(input.model, Math.max(until, Date.now() + COOLDOWN_MS));
+  }
+  await recordAiLimit(input.familyId, {
+    model: input.model,
+    at: Date.now(),
+    until: Math.max(getModelCooldown(input.model), until),
+    status: input.status,
+    daily,
+    retryAfterSeconds,
+    quotaId: quota.quotaId,
+    quotaLimit: quota.quotaLimit,
+  });
 }
 
 async function generate(
   apiKey: string,
+  familyId: string,
   instruction: string,
   contents: Content[],
   withTools: boolean,
@@ -226,8 +289,16 @@ async function generate(
   }
 
   let lastStatus = 0;
+  let lastModel = candidates[0];
+  const deadline = Date.now() + BUDGET_MS;
 
   for (const model of candidates) {
+    const remaining = deadline - Date.now();
+    if (remaining < 1_000) {
+      lastStatus = 504;
+      break;
+    }
+    lastModel = model;
     for (const body of requestBodies(
       instruction,
       contentsFor(contents, model),
@@ -240,7 +311,7 @@ async function generate(
           {
             method: "POST",
             cache: "no-store",
-            signal: AbortSignal.timeout(20_000),
+            signal: AbortSignal.timeout(Math.min(REQUEST_MS, remaining)),
             headers: {
               "Content-Type": "application/json",
               "x-goog-api-key": apiKey,
@@ -251,15 +322,23 @@ async function generate(
       } catch (error) {
         if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
           lastStatus = 504;
-          continue;
+          await rememberLimit({
+            familyId,
+            model,
+            status: 504,
+            message: "timeout",
+          });
+          console.error("askMedicalAssistant", model, 504);
+          break;
         }
         throw error;
       }
 
       const payload = (await response.json().catch(() => ({}))) as {
-        error?: { message?: string };
+        error?: { message?: string; details?: GeminiErrorDetail[] };
         promptFeedback?: { blockReason?: string };
         candidates?: { content?: { parts?: Part[] }; finishReason?: string }[];
+        usageMetadata?: { totalTokenCount?: number };
       };
 
       if (response.ok) {
@@ -268,6 +347,11 @@ async function generate(
         }
         const parts = payload.candidates?.[0]?.content?.parts ?? [];
         if (parts.length > 0) {
+          await recordAiRequest({
+            familyId,
+            model,
+            tokens: payload.usageMetadata?.totalTokenCount ?? 0,
+          });
           return { parts, model };
         }
         lastStatus = 204;
@@ -277,49 +361,83 @@ async function generate(
       lastStatus = response.status;
       const message = payload.error?.message ?? "";
       console.error("askMedicalAssistant", model, response.status);
-      if (/api key/i.test(message) || response.status === 401 || response.status === 403) {
+      if (/api key/i.test(message) || response.status === 401) {
         throw new Error("Cheia Gemini nu este validă.");
       }
-      if (response.status === 404) {
-        unavailableModels.add(model);
+      if (response.status === 403 || response.status === 404) {
+        markModelUnavailable(model);
+        await rememberLimit({
+          familyId,
+          model,
+          status: response.status,
+          message,
+          details: payload.error?.details,
+        });
         break;
       }
-      if (response.status === 429) {
-        modelCooldown.set(model, Date.now() + COOLDOWN_MS);
+      if (response.status === 429 || response.status === 503) {
+        await rememberLimit({
+          familyId,
+          model,
+          status: response.status,
+          message,
+          details: payload.error?.details,
+        });
         break;
       }
       if (response.status === 400) {
         continue;
       }
+      await rememberLimit({
+        familyId,
+        model,
+        status: response.status,
+        message,
+        details: payload.error?.details,
+      });
       break;
     }
   }
 
-  console.error("askMedicalAssistant", lastStatus);
-  if (lastStatus === 429) {
-    throw new Error("Limita Gemini a fost atinsă. Încearcă din nou peste câteva minute.");
-  }
-  if (lastStatus === 504) {
-    throw new Error("Gemini nu a răspuns la timp. Încearcă din nou.");
-  }
-  throw new Error("Gemini nu a răspuns.");
+  console.error("askMedicalAssistant", lastStatus, lastModel);
+  const failed = Object.assign(
+    new Error(
+      lastStatus === 429
+        ? "Limita Gemini a fost atinsă. Încearcă din nou peste câteva minute."
+        : lastStatus === 504
+          ? "Gemini nu a răspuns la timp. Încearcă din nou."
+          : "Gemini nu a răspuns.",
+    ),
+    { failedModel: lastModel },
+  );
+  throw failed;
 }
 
 export async function answerMedicalQuestion(input: {
   apiKey: string;
+  familyId: string;
   messages: ChatTurn[];
   records: CatalogRecord[];
+  preferModel?: string;
 }) {
+  await recordAiQuestion(input.familyId);
   const instruction = systemInstruction(input.records.length);
   const contents: Content[] = input.messages.slice(-6).map((message) => ({
     role: message.role === "assistant" ? "model" : "user",
     parts: [{ text: message.text.slice(0, 2000) }],
   }));
 
-  let model: string | undefined;
+  let model: string | undefined = input.preferModel;
 
   for (let round = 0; round < MAX_ROUNDS; round += 1) {
-    const step = await generate(input.apiKey, instruction, contents, true, model);
+    const step = await generate(
+      input.apiKey,
+      input.familyId,
+      instruction,
+      contents,
+      true,
+      model,
+    );
     model = step.model;
     const calls = step.parts.filter((part) => part.functionCall?.name);
     const text = step.parts
@@ -351,7 +469,14 @@ export async function answerMedicalQuestion(input: {
     }
   }
 
-  const finalStep = await generate(input.apiKey, instruction, contents, false, model);
+  const finalStep = await generate(
+    input.apiKey,
+    input.familyId,
+    instruction,
+    contents,
+    false,
+    model,
+  );
   const text = finalStep.parts
     .map((part) => (part.thought ? "" : part.text?.trim() ?? ""))
     .filter(Boolean)

@@ -12,13 +12,13 @@ import {
 export async function GET() {
   await connection();
   if (!getGoogleConfig()) {
-    return NextResponse.redirect(`${getSiteUrl()}/profiles?drive=config`);
+    return NextResponse.redirect(`${getSiteUrl()}/profile?drive=config`);
   }
 
   const user = await getCurrentUser();
   const family = await getAdminFamilyId();
   if (!family.familyId) {
-    return NextResponse.redirect(`${getSiteUrl()}/profiles`);
+    return NextResponse.redirect(`${getSiteUrl()}/profile`);
   }
 
   const state = createOAuthState({

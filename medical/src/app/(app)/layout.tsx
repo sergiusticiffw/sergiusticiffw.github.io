@@ -51,8 +51,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 async function CurrentUserEmail() {
   const user = await getPageUser();
   return (
-    <span className="hidden max-w-48 truncate text-sm text-muted-foreground sm:inline">
+    <Link
+      href="/profile"
+      prefetch
+      className="hidden max-w-48 truncate text-sm text-muted-foreground hover:text-foreground sm:inline"
+    >
       {user.email}
-    </span>
+    </Link>
   );
 }

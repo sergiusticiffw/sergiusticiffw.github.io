@@ -24,6 +24,11 @@ const links = [
     label: "Familie",
     match: (path: string) => path.startsWith("/family"),
   },
+  {
+    href: "/profile",
+    label: "Profil",
+    match: (path: string) => path === "/profile" || path.startsWith("/profile/"),
+  },
 ] as const;
 
 function FolderIcon() {
@@ -66,11 +71,21 @@ function PeopleIcon() {
   );
 }
 
+function UserIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5" aria-hidden>
+      <circle cx="12" cy="8" r="3" />
+      <path d="M5 19c1.2-3 3.7-5 7-5s5.8 2 7 5" />
+    </svg>
+  );
+}
+
 const icons = {
   "/profiles": FolderIcon,
   "/records": ListIcon,
   "/assistant": ChatIcon,
   "/family": PeopleIcon,
+  "/profile": UserIcon,
 } as const;
 
 export function AppNav() {
@@ -81,7 +96,7 @@ export function AppNav() {
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-card/95 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur"
       aria-label="Pagini"
     >
-        <ul className="mx-auto grid max-w-3xl grid-cols-4">
+        <ul className="mx-auto grid max-w-3xl grid-cols-5">
         {links.map((link) => {
           const active = link.match(pathname);
           const Icon = icons[link.href];
