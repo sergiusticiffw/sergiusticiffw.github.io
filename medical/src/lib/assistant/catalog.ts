@@ -3,7 +3,6 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { useFamilyCache } from "@/lib/data-cache";
-import { documentBody } from "@/lib/record-view";
 import { createClient } from "@/lib/supabase/server";
 
 export type CatalogPerson = {
@@ -18,19 +17,9 @@ export type CatalogRecord = {
   date: string | null;
   category: string | null;
   title: string;
-  text: string;
+  fields: string;
   files: string[];
 };
-
-const TEXT_CAP = 12000;
-
-function clip(value: string) {
-  const text = value.trim();
-  if (text.length <= TEXT_CAP) {
-    return text;
-  }
-  return `${text.slice(0, TEXT_CAP)}\n…`;
-}
 
 function missingColumn(code: string | undefined) {
   return code === "42703" || code === "PGRST204";
@@ -41,6 +30,24 @@ function fold(value: string) {
     .toLocaleLowerCase("ro")
     .normalize("NFD")
     .replace(/\p{M}/gu, "");
+}
+
+function redactIndex(value: string) {
+  return value
+    .replace(/\bIDNP\s*:?\s*\d{13}\b/gi, " ")
+    .replace(/\b\d{13}\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function fieldLines(entries: [string, string | number | null | undefined][]) {
+  return entries
+    .map(([label, value]) => {
+      const text = redactIndex(String(value ?? "").trim()).slice(0, 400);
+      return text ? `${label}: ${text}` : "";
+    })
+    .filter(Boolean)
+    .join("\n");
 }
 
 export async function loadMedicalCatalog(
@@ -61,7 +68,7 @@ export async function loadMedicalCatalog(
       supabase
         .from("medical_documents")
         .select(
-          "id, profile_id, original_filename, mime_type, document_date, category, title, extracted_text, record_id",
+          "id, profile_id, original_filename, document_date, category, title, record_id",
         )
         .order("document_date", { ascending: false }),
       supabase
@@ -84,7 +91,7 @@ export async function loadMedicalCatalog(
     const withRecord = await supabase
       .from("medical_documents")
       .select(
-        "id, profile_id, original_filename, mime_type, document_date, category, extracted_text, record_id",
+        "id, profile_id, original_filename, document_date, category, record_id",
       )
       .order("document_date", { ascending: false });
     if (!withRecord.error) {
@@ -93,9 +100,7 @@ export async function loadMedicalCatalog(
     } else {
       const retry = await supabase
         .from("medical_documents")
-        .select(
-          "id, profile_id, original_filename, mime_type, document_date, category, extracted_text",
-        )
+        .select("id, profile_id, original_filename, document_date, category")
         .order("document_date", { ascending: false });
       documentsError = retry.error;
       documentsData = (retry.data ?? []).map((row) => ({
@@ -106,11 +111,48 @@ export async function loadMedicalCatalog(
     }
   }
 
+  let consultationsError = consultationsResult.error;
+  let consultationsData = consultationsResult.data;
+  if (missingColumn(consultationsError?.code)) {
+    const retry = await supabase
+      .from("consultations")
+      .select(
+        "id, profile_id, source_document_id, consultation_date, doctor_name, summary",
+      )
+      .order("consultation_date", { ascending: false });
+    consultationsError = retry.error;
+    consultationsData = (retry.data ?? []).map((row) => ({
+      ...row,
+      clinic_name: null,
+      specialty: null,
+      recommendations: null,
+    }));
+  }
+
+  let labsError = labsResult.error;
+  let labsData = labsResult.data;
+  if (missingColumn(labsError?.code)) {
+    const retry = await supabase
+      .from("lab_tests")
+      .select(
+        "id, profile_id, source_document_id, test_name, sample_date, result_text",
+      )
+      .order("sample_date", { ascending: false });
+    labsError = retry.error;
+    labsData = (retry.data ?? []).map((row) => ({
+      ...row,
+      result_value: null,
+      unit: null,
+      reference_text: null,
+      laboratory: null,
+    }));
+  }
+
   const listError =
     profilesResult.error ??
     documentsError ??
-    consultationsResult.error ??
-    labsResult.error;
+    consultationsError ??
+    labsError;
   if (listError) {
     console.error("loadMedicalCatalog", listError.code);
     return {
@@ -127,7 +169,7 @@ export async function loadMedicalCatalog(
   const names = new Map(profiles.map((profile) => [profile.id, profile.display_name]));
   const profileIds = new Set(profiles.map((profile) => profile.id));
 
-  const consultations = ((consultationsResult.data ?? []) as {
+  const consultations = ((consultationsData ?? []) as {
     id: string;
     profile_id: string;
     source_document_id: string | null;
@@ -139,7 +181,7 @@ export async function loadMedicalCatalog(
     recommendations: string | null;
   }[]).filter((item) => profileIds.has(item.profile_id));
 
-  const labs = ((labsResult.data ?? []) as {
+  const labs = ((labsData ?? []) as {
     id: string;
     profile_id: string;
     source_document_id: string | null;
@@ -159,7 +201,6 @@ export async function loadMedicalCatalog(
     document_date: string | null;
     category: string | null;
     title: string | null;
-    extracted_text: string | null;
     record_id: string | null;
   }[]).filter((item) => profileIds.has(item.profile_id));
 
@@ -167,50 +208,90 @@ export async function loadMedicalCatalog(
 
   for (const item of documents.filter((row) => !row.record_id)) {
     const files = [item, ...documents.filter((file) => file.record_id === item.id)];
-    const text = documentBody({
-      extractedText: item.extracted_text,
-      consultation:
-        consultations.find((row) => row.source_document_id === item.id) ?? null,
-      labs: labs.filter((row) => row.source_document_id === item.id),
-    });
+    const consultation =
+      consultations.find((row) => row.source_document_id === item.id) ?? null;
+    const linkedLabs = labs.filter((row) => row.source_document_id === item.id);
+    const title =
+      item.title?.trim() ||
+      [item.category, files.length > 1 ? `${files.length} fișiere` : item.original_filename]
+        .filter(Boolean)
+        .join(" · ");
     records.push({
       id: item.id,
       profileId: item.profile_id,
       profileName: names.get(item.profile_id) ?? "Profil",
       date: item.document_date,
       category: item.category,
-      title:
-        item.title?.trim() ||
-        [item.category, files.length > 1 ? `${files.length} fișiere` : item.original_filename]
-          .filter(Boolean)
-          .join(" · "),
-      text: clip(text),
+      title,
+      fields: fieldLines([
+        ["Persoană", names.get(item.profile_id)],
+        ["Data", item.document_date],
+        ["Titlu", title],
+        ["Categorie", item.category],
+        ["Fișier", files.map((file) => file.original_filename).join(", ")],
+        ["Medic", consultation?.doctor_name],
+        ["Clinică", consultation?.clinic_name],
+        ["Specialitate", consultation?.specialty],
+        ["Rezumat", consultation?.summary],
+        ["Recomandări", consultation?.recommendations],
+        [
+          "Analize",
+          linkedLabs
+            .map((lab) =>
+              [lab.test_name, lab.result_value, lab.unit, lab.result_text]
+                .filter((part) => part !== null && part !== "")
+                .join(" "),
+            )
+            .join("; "),
+        ],
+      ]),
       files: files.map((file) => file.original_filename),
     });
   }
 
   for (const item of consultations.filter((row) => !row.source_document_id)) {
+    const title = ["Consultație", item.doctor_name].filter(Boolean).join(" · ");
     records.push({
       id: item.id,
       profileId: item.profile_id,
       profileName: names.get(item.profile_id) ?? "Profil",
       date: item.consultation_date,
       category: "Consultație",
-      title: ["Consultație", item.doctor_name].filter(Boolean).join(" · "),
-      text: clip(documentBody({ extractedText: null, consultation: item, labs: [] })),
+      title,
+      fields: fieldLines([
+        ["Persoană", names.get(item.profile_id)],
+        ["Data", item.consultation_date],
+        ["Titlu", title],
+        ["Medic", item.doctor_name],
+        ["Clinică", item.clinic_name],
+        ["Specialitate", item.specialty],
+        ["Rezumat", item.summary],
+        ["Recomandări", item.recommendations],
+      ]),
       files: [],
     });
   }
 
   for (const item of labs.filter((row) => !row.source_document_id)) {
+    const title = ["Analiză", item.test_name].filter(Boolean).join(" · ");
     records.push({
       id: item.id,
       profileId: item.profile_id,
       profileName: names.get(item.profile_id) ?? "Profil",
       date: item.sample_date,
       category: "Analize",
-      title: ["Analiză", item.test_name].filter(Boolean).join(" · "),
-      text: clip(documentBody({ extractedText: null, consultation: null, labs: [item] })),
+      title,
+      fields: fieldLines([
+        ["Persoană", names.get(item.profile_id)],
+        ["Data", item.sample_date],
+        ["Titlu", title],
+        ["Analiză", item.test_name],
+        ["Valoare", item.result_value],
+        ["Unitate", item.unit],
+        ["Rezultat", item.result_text],
+        ["Referință", item.reference_text],
+        ["Laborator", item.laboratory],
+      ]),
       files: [],
     });
   }
@@ -241,14 +322,6 @@ export type RecordIndexItem = {
   search: string;
   fileCount: number;
 };
-
-function redactIndex(value: string) {
-  return value
-    .replace(/\bIDNP\s*:?\s*\d{13}\b/gi, " ")
-    .replace(/\b\d{13}\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
 
 function indexSearch(value: string) {
   return fold(redactIndex(value)).slice(0, 500);
@@ -516,7 +589,7 @@ export function suggestQuestions(records: CatalogRecord[]) {
     if (questions.length >= 4) {
       break;
     }
-    const topic = topicFromText(record.text);
+    const topic = topicFromText(record.fields);
     if (!topic) {
       continue;
     }
@@ -565,7 +638,7 @@ export function searchCatalog(
         return { record, hits: 0 };
       }
       const haystack = fold(
-        `${record.title}\n${record.profileName}\n${record.category ?? ""}\n${record.text}`,
+        `${record.title}\n${record.profileName}\n${record.category ?? ""}\n${record.fields}`,
       );
       const hits = terms.filter((term) => {
         if (haystack.includes(term)) {
@@ -586,8 +659,7 @@ export function searchCatalog(
       profile: record.profileName,
       date: record.date,
       title: record.title,
-      files: record.files,
-      excerpt: excerptAround(record.text, terms),
+      excerpt: excerptAround(record.fields, terms),
     })),
   };
 }

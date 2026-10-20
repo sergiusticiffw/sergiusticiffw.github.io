@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { PageFallback } from "@/components/layout/page-fallback";
 import { RecordDetail } from "@/components/records/record-detail";
-import { getFamilyAccess, requireProfileWriter } from "@/lib/auth";
+import { getPageFamilyAccess, requireProfileWriter } from "@/lib/auth";
 import { loadFamilyRecord } from "@/lib/records";
 
 export const metadata = {
@@ -34,7 +34,7 @@ async function RecordSection({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const family = await getFamilyAccess();
+  const family = await getPageFamilyAccess();
   if (!family.familyId) {
     return (
       <p role="alert" className="text-sm text-destructive">

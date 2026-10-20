@@ -69,8 +69,8 @@ export function MedicalAssistant({
         {messages.length === 0 ? (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
-              Întreabă despre ce scrie în documente. Răspunsul vine doar din
-              textul salvat.
+              Întreabă despre dosar. Răspunsul vine din câmpurile salvate, nu
+              din fișier.
             </p>
             {suggestions.length > 0 ? (
               <div className="flex flex-col gap-2">

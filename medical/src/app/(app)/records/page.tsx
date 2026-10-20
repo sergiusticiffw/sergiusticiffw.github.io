@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { PageFallback } from "@/components/layout/page-fallback";
 import { RecordsList } from "@/components/records/records-list";
 import { loadRecordsIndex } from "@/lib/assistant/catalog";
-import { getFamilyAccess } from "@/lib/auth";
+import { getPageFamilyAccess } from "@/lib/auth";
 
 export const metadata = {
   title: "Înregistrări",
@@ -26,7 +26,7 @@ export default function RecordsPage() {
 }
 
 async function RecordsSection() {
-  const family = await getFamilyAccess();
+  const family = await getPageFamilyAccess();
   if (!family.familyId) {
     return (
       <p role="alert" className="text-sm text-destructive">

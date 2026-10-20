@@ -26,6 +26,26 @@ export function folderName(value: string) {
   return cleaned || "Fără categorie";
 }
 
+function driveStatusError(status: number) {
+  if (status === 401) {
+    return "Conectează din nou Google Drive.";
+  }
+  if (status === 403) {
+    return "Google Drive a refuzat accesul. Încearcă din nou peste câteva minute.";
+  }
+  if (status === 404) {
+    return "Dosarul Google Drive nu a fost găsit.";
+  }
+  if (status === 429) {
+    return "Google Drive este ocupat. Încearcă din nou peste câteva minute.";
+  }
+  return `Drive a răspuns cu ${status}.`;
+}
+
+export function isMissingFolder(error: unknown) {
+  return error instanceof Error && error.message.includes("nu a fost găsit");
+}
+
 async function driveRequest(
   accessToken: string,
   url: string,
@@ -33,9 +53,17 @@ async function driveRequest(
 ) {
   const headers = new Headers(init?.headers);
   headers.set("Authorization", `Bearer ${accessToken}`);
-  const response = await fetch(url, { ...init, headers });
+  const request = { ...init, headers, cache: "no-store" as const };
+  let response = await fetch(url, request);
+  if (response.status === 429) {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    response = await fetch(url, request);
+  }
+  if (response.status === 401) {
+    tokenCache.clear();
+  }
   if (!response.ok) {
-    throw new Error(`Drive a răspuns cu ${response.status}.`);
+    throw new Error(driveStatusError(response.status));
   }
   return response;
 }
@@ -53,6 +81,7 @@ async function getAccessToken(familyId: string, refreshToken: string) {
 
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
+    cache: "no-store",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       client_id: config.clientId,
@@ -173,7 +202,17 @@ export async function ensureDriveRoot(familyId: string) {
 
   const accessToken = await getAccessToken(familyId, connection.refreshToken);
   if (connection.rootFolderId) {
-    return { accessToken, rootFolderId: connection.rootFolderId };
+    try {
+      await driveRequest(
+        accessToken,
+        `https://www.googleapis.com/drive/v3/files/${connection.rootFolderId}?fields=id`,
+      );
+      return { accessToken, rootFolderId: connection.rootFolderId };
+    } catch (error) {
+      if (!isMissingFolder(error)) {
+        throw error;
+      }
+    }
   }
 
   const response = await driveRequest(
@@ -221,11 +260,16 @@ export async function uploadDriveFile(input: {
     mimeType: input.mimeType,
     parents: [input.parentId],
   });
-  const preamble = Buffer.from(
+  const encoder = new TextEncoder();
+  const preamble = encoder.encode(
     `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: ${input.mimeType}\r\n\r\n`,
   );
-  const ending = Buffer.from(`\r\n--${boundary}--`);
-  const body = Buffer.concat([preamble, Buffer.from(input.bytes), ending]);
+  const ending = encoder.encode(`\r\n--${boundary}--`);
+  const fileBytes = new Uint8Array(input.bytes);
+  const body = new Uint8Array(preamble.byteLength + fileBytes.byteLength + ending.byteLength);
+  body.set(preamble, 0);
+  body.set(fileBytes, preamble.byteLength);
+  body.set(ending, preamble.byteLength + fileBytes.byteLength);
 
   const response = await driveRequest(
     input.accessToken,
@@ -233,7 +277,7 @@ export async function uploadDriveFile(input: {
     {
       method: "POST",
       headers: { "Content-Type": `multipart/related; boundary=${boundary}` },
-      body: new Uint8Array(body),
+      body,
     },
   );
   const created = (await response.json()) as DriveFile;
@@ -276,6 +320,7 @@ export async function trashDriveFile(familyId: string, fileId: string) {
     `https://www.googleapis.com/drive/v3/files/${fileId}`,
     {
       method: "PATCH",
+      cache: "no-store",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",

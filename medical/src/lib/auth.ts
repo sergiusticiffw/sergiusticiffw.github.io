@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,6 +25,11 @@ export const getCurrentUser = cache(async () => {
 
   return { id: data.user.id, email: data.user.email ?? "" };
 });
+
+export async function getPageUser() {
+  await connection();
+  return getCurrentUser();
+}
 
 export type FamilyRole = "admin" | "editor" | "viewer";
 
@@ -73,6 +79,11 @@ export const getFamilyAccess = cache(async () => {
     error: null,
   };
 });
+
+export async function getPageFamilyAccess() {
+  await connection();
+  return getFamilyAccess();
+}
 
 export const getAdminFamilyId = cache(async () => {
   const access = await getFamilyAccess();

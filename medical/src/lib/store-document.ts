@@ -4,6 +4,7 @@ import type { DocumentType } from "@/lib/files";
 import {
   ensureDriveRoot,
   ensureFolder,
+  isMissingFolder,
   trashDriveFile,
   uploadDriveFile,
 } from "@/lib/google-drive";
@@ -73,6 +74,37 @@ async function uploadToProfileFolder(input: {
   return { driveFileId };
 }
 
+async function uploadWithFolderRetry(input: {
+  familyId: string;
+  profile: ProfileFolder;
+  filename: string;
+  mimeType: DocumentType;
+  bytes: Uint8Array;
+  documentDate: string;
+  category: string;
+}) {
+  try {
+    return await uploadToProfileFolder(input);
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Conectează din nou")) {
+      return uploadToProfileFolder(input);
+    }
+    if (!isMissingFolder(error) || !input.profile.drive_folder_id) {
+      throw error;
+    }
+    const supabase = await createClient();
+    await supabase
+      .from("profiles")
+      .update({ drive_folder_id: null })
+      .eq("id", input.profile.id)
+      .eq("family_id", input.familyId);
+    return uploadToProfileFolder({
+      ...input,
+      profile: { ...input.profile, drive_folder_id: null },
+    });
+  }
+}
+
 export async function storePrivateDocument(input: {
   familyId: string;
   profile: ProfileFolder;
@@ -90,7 +122,7 @@ export async function storePrivateDocument(input: {
   let driveFileId: string | null = null;
 
   try {
-    const uploaded = await uploadToProfileFolder(input);
+    const uploaded = await uploadWithFolderRetry(input);
     if ("error" in uploaded) {
       return uploaded;
     }
@@ -151,14 +183,17 @@ export async function storePrivateDocument(input: {
 
     return { documentId: (data as { id: string }).id, driveFileId };
   } catch (storeError) {
-    console.error(
-      "storePrivateDocument",
-      storeError instanceof Error ? storeError.name : "unknown",
-    );
+    const message = storeError instanceof Error ? storeError.message : "";
+    console.error("storePrivateDocument", message || "unknown");
     if (driveFileId) {
       await trashDriveFile(input.familyId, driveFileId).catch(() => undefined);
     }
-    return { error: "Documentul nu a putut fi încărcat în Google Drive." };
+    return {
+      error:
+        message && !message.startsWith("Drive a răspuns")
+          ? message
+          : "Documentul nu a putut fi încărcat în Google Drive.",
+    };
   }
 }
 
@@ -172,13 +207,16 @@ export async function replacePrivateFile(input: {
   category: string;
 }): Promise<{ error: string } | { driveFileId: string }> {
   try {
-    return await uploadToProfileFolder(input);
+    return await uploadWithFolderRetry(input);
   } catch (storeError) {
-    console.error(
-      "replacePrivateFile",
-      storeError instanceof Error ? storeError.name : "unknown",
-    );
-    return { error: "Documentul nu a putut fi încărcat în Google Drive." };
+    const message = storeError instanceof Error ? storeError.message : "";
+    console.error("replacePrivateFile", message || "unknown");
+    return {
+      error:
+        message && !message.startsWith("Drive a răspuns")
+          ? message
+          : "Documentul nu a putut fi încărcat în Google Drive.",
+    };
   }
 }
 

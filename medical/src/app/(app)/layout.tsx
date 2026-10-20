@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
-import { getCurrentUser } from "@/lib/auth";
+import { getPageUser } from "@/lib/auth";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { AppNav } from "@/components/layout/app-nav";
 import { NavigationLoader } from "@/components/layout/navigation-loader";
@@ -49,7 +49,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 async function CurrentUserEmail() {
-  const user = await getCurrentUser();
+  const user = await getPageUser();
   return (
     <span className="hidden max-w-48 truncate text-sm text-muted-foreground sm:inline">
       {user.email}

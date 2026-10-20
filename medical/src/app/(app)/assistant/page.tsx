@@ -2,12 +2,14 @@ import { Suspense } from "react";
 
 import { MedicalAssistant } from "@/components/assistant/medical-assistant";
 import { PageFallback } from "@/components/layout/page-fallback";
-import { getFamilyAccess } from "@/lib/auth";
+import { getPageFamilyAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
   title: "Asistent",
 };
+
+export const maxDuration = 60;
 
 const genericSuggestions = [
   "Ce analize recente există în dosar?",
@@ -32,7 +34,7 @@ async function AssistantSection() {
     return <MedicalAssistant enabled={false} suggestions={[]} />;
   }
 
-  const family = await getFamilyAccess();
+  const family = await getPageFamilyAccess();
   if (!family.familyId) {
     return <MedicalAssistant enabled suggestions={[]} />;
   }

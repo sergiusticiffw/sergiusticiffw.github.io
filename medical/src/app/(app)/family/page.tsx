@@ -8,7 +8,7 @@ import {
   type FamilyMember,
   type ProfileGrant,
 } from "@/components/family/family-manager";
-import { getFamilyAccess, type FamilyRole } from "@/lib/auth";
+import { getPageFamilyAccess, type FamilyRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -33,7 +33,7 @@ export default function FamilyPage() {
 }
 
 async function FamilySection() {
-  const access = await getFamilyAccess();
+  const access = await getPageFamilyAccess();
   if (!access.familyId || !access.role) {
     return (
       <p role="alert" className="text-sm text-destructive">

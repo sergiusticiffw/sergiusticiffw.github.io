@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getFamilyAccess } from "@/lib/auth";
+import { getPageFamilyAccess } from "@/lib/auth";
 import { getGoogleConfig } from "@/lib/google-oauth";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,8 @@ import Link from "next/link";
 export const metadata = {
   title: "Profiluri",
 };
+
+export const maxDuration = 60;
 
 export default function ProfilesPage({
   searchParams,
@@ -47,7 +49,7 @@ async function ProfilesSection({
   searchParams: Promise<{ drive?: string }>;
 }) {
   const driveStatus = (await searchParams).drive;
-  const family = await getFamilyAccess();
+  const family = await getPageFamilyAccess();
   if (!family.familyId) {
     return (
       <p role="alert" className="text-sm text-destructive">

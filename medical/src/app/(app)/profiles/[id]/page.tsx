@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { PageFallback } from "@/components/layout/page-fallback";
 import { ProfileDetail } from "@/components/profiles/profile-list";
-import { canWrite, getFamilyAccess, requireProfileWriter } from "@/lib/auth";
+import { canWrite, getPageFamilyAccess, requireProfileWriter } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -39,7 +39,7 @@ async function ProfileSection({
     return <p className="text-sm text-destructive">Persoana nu a fost găsită.</p>;
   }
 
-  const family = await getFamilyAccess();
+  const family = await getPageFamilyAccess();
   if (!family.familyId) {
     return (
       <p role="alert" className="text-sm text-destructive">
