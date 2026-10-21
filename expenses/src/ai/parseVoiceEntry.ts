@@ -265,7 +265,7 @@ export async function parseVoiceEntries(
   options: { today: string; currency: string; kind: 'expense' | 'income' },
   signal?: AbortSignal,
   preferModel?: string
-): Promise<{ items: VoiceMoneyEntry[]; model: string }> {
+): Promise<VoiceMoneyEntry[]> {
   recordAiQuestion();
   const request = (withSchema: boolean) =>
     streamGenerate({
@@ -317,15 +317,12 @@ export async function parseVoiceEntries(
   const read = async (withSchema: boolean) => {
     const result = await request(withSchema);
     try {
-      return {
-        items: normalizeVoiceEntries(
-          readJson(result.text),
-          options.today,
-          options.kind,
-          transcript.trim()
-        ),
-        model: result.model,
-      };
+      return normalizeVoiceEntries(
+        readJson(result.text),
+        options.today,
+        options.kind,
+        transcript.trim()
+      );
     } catch (error) {
       if (error instanceof AiError) throw error;
       throw new AiError(
