@@ -19,6 +19,8 @@ import {
 } from '@shared/utils/offlineAPI';
 import { logger } from '@shared/utils/logger';
 import { sanitizeFormField } from '@shared/utils/sanitization';
+import { isWriteBlocked, refreshStatus } from '../../crypto/encryptionState';
+import { encodeNodeBody } from '../../crypto/nodeCodec';
 
 interface UseFormSubmitOptions<T> {
   formType: 'add' | 'edit';
@@ -122,6 +124,26 @@ export const useFormSubmit = <T extends Record<string, any>>({
         ? buildApiUrl('/node?_format=json')
         : buildApiUrl(`/node/${values.nid}?_format=json`);
 
+      const isMoney = nodeType === 'transaction' || nodeType === 'incomes';
+      const isProtected =
+        isMoney || nodeType === 'loan' || nodeType === 'payment';
+      let outgoing = node;
+      let holdSend = false;
+      if (isProtected) {
+        await refreshStatus(true);
+        if (isWriteBlocked()) {
+          showNotification(t('privacy.writePaused'), notificationType.ERROR);
+          setIsSubmitting(false);
+          return;
+        }
+        const encoded = await encodeNodeBody(node);
+        if (encoded.kind === 'hold') {
+          holdSend = true;
+        } else {
+          outgoing = encoded.body;
+        }
+      }
+
       // Determine entity type
       const entityType =
         nodeType === 'transaction' || nodeType === 'incomes'
@@ -140,7 +162,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
             ? 'notification.added'
             : 'notification.updated';
 
-        if (isOnline()) {
+        if (isOnline() && !holdSend) {
           // Online: make direct API request first
           const fetchOptions = {
             method,
@@ -149,7 +171,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               'Content-Type': 'application/json',
               'JWT-Authorization': 'Bearer ' + token,
             }),
-            body: JSON.stringify(node),
+            body: JSON.stringify(outgoing),
           };
 
           try {
@@ -284,7 +306,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
             ? 'notification.added'
             : 'notification.updated';
 
-        if (isOnline()) {
+        if (isOnline() && !holdSend) {
           // Online: make direct API request first
           const fetchOptions = {
             method,
@@ -293,7 +315,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               'Content-Type': 'application/json',
               'JWT-Authorization': 'Bearer ' + token,
             }),
-            body: JSON.stringify(node),
+            body: JSON.stringify(outgoing),
           };
 
           try {
@@ -434,7 +456,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
             ? 'notification.added'
             : 'notification.updated';
 
-        if (isOnline()) {
+        if (isOnline() && !holdSend) {
           // Online: make direct API request first
           const fetchOptions = {
             method,
@@ -443,7 +465,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               'Content-Type': 'application/json',
               'JWT-Authorization': 'Bearer ' + token,
             }),
-            body: JSON.stringify(node),
+            body: JSON.stringify(outgoing),
           };
 
           try {
@@ -556,6 +578,11 @@ export const useFormSubmit = <T extends Record<string, any>>({
         }
       } else {
         // Fallback to original behavior
+        if (isProtected && holdSend) {
+          showNotification(t('privacy.writePaused'), notificationType.ERROR);
+          setIsSubmitting(false);
+          return;
+        }
         const fetchOptions = {
           method,
           headers: new Headers({
@@ -563,7 +590,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
             'Content-Type': 'application/json',
             'JWT-Authorization': 'Bearer ' + token,
           }),
-          body: JSON.stringify(node),
+          body: JSON.stringify(isProtected ? outgoing : node),
         };
 
         if (useFetchRequest && dataDispatch) {
@@ -625,10 +652,14 @@ export const useFormSubmit = <T extends Record<string, any>>({
         }
       }
     } catch (error) {
+      const paused = error instanceof Error && error.message === 'write-blocked';
       logger.error('Form submission error:', error);
-      showNotification(t('error.unknown'), notificationType.ERROR);
+      showNotification(
+        t(paused ? 'privacy.writePaused' : 'error.unknown'),
+        notificationType.ERROR
+      );
       setIsSubmitting(false);
-      onSuccess(); // Close modal even on error
+      if (!paused) onSuccess();
     }
   };
 

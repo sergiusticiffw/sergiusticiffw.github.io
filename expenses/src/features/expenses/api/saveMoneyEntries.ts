@@ -8,6 +8,8 @@ import { saveOffline, updateUILocally } from '@shared/utils/offlineAPI';
 import { logger } from '@shared/utils/logger';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import type { VoiceMoneyEntry } from '../../../ai/parseVoiceEntry';
+import { isWriteBlocked } from '../../../crypto/encryptionState';
+import { encodeNodeBody } from '../../../crypto/nodeCodec';
 
 const createUrl = () =>
   `${getApiBaseUrl().replace(/\/+$/, '')}/node?_format=json`.replace(/([^:]\/)\/+/g, '$1');
@@ -32,15 +34,19 @@ const itemFor = (entry: VoiceMoneyEntry, id?: string): TransactionOrIncomeItem =
 });
 
 const saveOne = async (entry: VoiceMoneyEntry, token: string, url: string) => {
+  if (isWriteBlocked()) {
+    throw new Error('write-blocked');
+  }
   const node = nodeFor(entry);
   const entityType = entry.kind === 'income' ? 'income' : 'expense';
+  const encoded = await encodeNodeBody(node);
 
   const persistOffline = async () => {
     await saveOffline(itemFor(entry), node, 'add', entityType, url, 'POST');
     return true;
   };
 
-  if (!isOnline() || !isIndexedDBAvailable()) {
+  if (!isOnline() || !isIndexedDBAvailable() || encoded.kind === 'hold') {
     if (!isIndexedDBAvailable()) {
       throw new Error('Local storage is not available');
     }
@@ -55,7 +61,7 @@ const saveOne = async (entry: VoiceMoneyEntry, token: string, url: string) => {
         'Content-Type': 'application/json',
         'JWT-Authorization': `Bearer ${token}`,
       }),
-      body: JSON.stringify(node),
+      body: JSON.stringify(encoded.body),
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();

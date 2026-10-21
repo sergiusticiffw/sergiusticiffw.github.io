@@ -115,6 +115,7 @@
     height: -webkit-fill-available;
     width: 100%;
     overflow-x: hidden;
+    background: var(--color-app-bg);
   }
 
   body {
@@ -254,7 +255,7 @@
 
 /* Layout: padding-bottom override when main has no .month-stats (Tailwind has no :has() for this) */
 .main-content:not(:has(.month-stats)) {
-  padding-bottom: 60px;
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ═══ Theme overrides: background + accent (financial apps trend) ═══

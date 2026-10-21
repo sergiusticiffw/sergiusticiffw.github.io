@@ -4,6 +4,10 @@ import { buildApiUrl } from '@shared/utils/utils';
 import { hydrateSettings } from '@stores/settingsStore';
 import { clearChatSession } from '../../ai/chatSession';
 import { clearAiLocalData } from '../../ai/storage';
+import {
+  applyLoginStatus,
+  resetEncryptionState,
+} from '../../crypto/encryptionState';
 
 export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
   const requestOptions = {
@@ -23,6 +27,9 @@ export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
     if (data.current_user) {
       dispatch({ type: 'LOGIN_SUCCESS', payload: data });
       localStorage.setItem('currentUser', JSON.stringify(data));
+      applyLoginStatus(
+        (data.current_user as { encryption_status?: string })?.encryption_status
+      );
       const currency = (data.current_user as { currency?: string })?.currency;
       if (currency) hydrateSettings({ currency });
       return data;
@@ -37,6 +44,7 @@ export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
 export const logout = async (dispatch: any, dataDispatch: any) => {
   await dispatch({ type: 'LOGOUT' });
   await dataDispatch({ type: 'REMOVE_DATA' });
+  resetEncryptionState();
   localStorage.removeItem('currentUser');
   localStorage.removeItem('token');
   clearChatSession();

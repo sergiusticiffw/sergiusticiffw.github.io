@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import Link from "next/link";
 
 import { getPageUser } from "@/lib/auth";
-import { LogoutButton } from "@/components/auth/logout-button";
 import { AppNav } from "@/components/layout/app-nav";
 import { NavigationLoader } from "@/components/layout/navigation-loader";
 
@@ -24,7 +23,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               <CurrentUserEmail />
             </Suspense>
-            <LogoutButton />
           </div>
         </div>
       </header>

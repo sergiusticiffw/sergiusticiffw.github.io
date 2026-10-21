@@ -9,6 +9,7 @@ import { isIndexedDBAvailable } from './indexedDB';
 import { logger } from './logger';
 import { retryWithBackoff, retryPresets } from './retry';
 import { getApiBaseUrl, fetchWithFallback } from './apiBase';
+import { isWriteBlocked } from '../../crypto/encryptionState';
 
 /** Build API URL without double slashes */
 function buildApiUrl(path: string): string {
@@ -400,6 +401,8 @@ export const deleteNode = async (
                 console.error('Delete sync failed:', error);
               });
           }
+        } else if (isWriteBlocked()) {
+          callback(null);
         } else {
           // Item not found locally, try to delete from server
           const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
@@ -412,6 +415,10 @@ export const deleteNode = async (
         }
       }
     } catch (error) {
+      if (error instanceof Error && error.message === 'write-blocked') {
+        callback(null);
+        return;
+      }
       console.error('Error in offline delete:', error);
       // Fallback to original behavior
       const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
@@ -487,6 +494,9 @@ export const deleteLoan = async (
           });
       }
     } catch (error) {
+      if (error instanceof Error && error.message === 'write-blocked') {
+        return;
+      }
       console.error('Error in offline delete loan:', error);
       // Fallback to original behavior
       fetchFromAPI(

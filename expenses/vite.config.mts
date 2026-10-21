@@ -11,6 +11,10 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      manifest: {
+        background_color: '#13122d',
+        theme_color: '#282a36',
+      },
     }),
   ],
   resolve: {

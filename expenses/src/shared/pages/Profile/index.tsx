@@ -28,6 +28,7 @@ import {
 } from '@shared/utils/chartsVisibility';
 import { Switch } from '@shared/ui';
 import AiSettings from '@features/assistant/components/AiSettings';
+import PrivacySettings from '../../../features/privacy/PrivacySettings';
 import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 import { googleLogout } from '@react-oauth/google';
 
@@ -306,6 +307,8 @@ const Profile = () => {
             </div>
           )}
         </div>
+
+        <PrivacySettings />
 
         {/* Logout Button */}
         <button

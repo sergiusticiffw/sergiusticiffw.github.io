@@ -19,6 +19,11 @@ import {
 import { fetchWithFallback } from '@shared/utils/apiBase';
 import { logger } from '@shared/utils/logger';
 import { retryWithBackoff, retryPresets } from '@shared/utils/retry';
+import {
+  isMigrationActive,
+  refreshStatus,
+} from '../../crypto/encryptionState';
+import { encodeNodeBody } from '../../crypto/nodeCodec';
 
 export interface SyncResult {
   success: number;
@@ -30,9 +35,11 @@ export async function syncPendingOperations(
   token: string,
   dataDispatch?: any
 ): Promise<SyncResult> {
-  if (!isOnline()) {
+  if (!isOnline() || isMigrationActive()) {
     return { success: 0, failed: 0 };
   }
+
+  await refreshStatus(true);
 
   // Clean up invalid operations first
   const cleanedCount = await cleanupInvalidSyncOperations();
@@ -237,7 +244,24 @@ export async function syncPendingOperations(
       }
 
       const fetchOptions = createAuthenticatedFetchOptions(token, op.method);
-      const body = op.data ? JSON.stringify(op.data) : undefined;
+      let body: string | undefined;
+      if (op.type !== 'delete' && op.data) {
+        const protectedEntity =
+          op.entityType === 'expense' ||
+          op.entityType === 'income' ||
+          op.entityType === 'loan' ||
+          op.entityType === 'payment';
+        if (protectedEntity) {
+          const encoded = await encodeNodeBody(op.data);
+          if (encoded.kind === 'hold') {
+            logger.log(`Holding sync operation ${op.id}: ${encoded.reason}`);
+            continue;
+          }
+          body = JSON.stringify(encoded.body);
+        } else {
+          body = JSON.stringify(op.data);
+        }
+      }
 
       // Use retry logic for sync operations
       const retryResult = await retryWithBackoff(

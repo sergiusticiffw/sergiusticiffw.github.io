@@ -12,6 +12,11 @@ import {
   hasPendingSyncOperations,
 } from '@shared/utils/indexedDB';
 import { processDataWithWorker, processDataSync } from '@shared/utils/utils';
+import { decodeServerItem } from '../../../crypto/nodeCodec';
+import {
+  isMigrationActive,
+  reportCorrupt,
+} from '../../../crypto/encryptionState';
 
 export interface FetchExpensesOptions {
   category?: string;
@@ -77,6 +82,10 @@ export async function fetchExpenses(
       }
     }
 
+    if (isMigrationActive()) {
+      return;
+    }
+
     // Fetch fresh data from API (when offline, get() returns success: false immediately)
     const response = await apiClient.get<TransactionOrIncomeItem[]>(
       API_ENDPOINTS.EXPENSES,
@@ -114,13 +123,24 @@ export async function fetchExpenses(
       return;
     }
 
-    // Add created timestamp if not present
-    const dataWithTimestamp = response.data.map((item) => {
-      if (!item.cr) {
-        item.cr = new Date(item.dt).getTime();
+    const decoded = await decodeExpenseRecords(response.data);
+    reportCorrupt('expenses', decoded.corrupt);
+    const cachedForPreserve = isIndexedDBAvailable()
+      ? (await getExpensesFromDB()) || []
+      : [];
+    if (decoded.locked > 0 && decoded.items.length === 0) {
+      if (cachedForPreserve.length === 0) {
+        dataDispatch({ type: 'SET_DATA', raw: [], loading: false });
       }
-      return item;
-    });
+      return;
+    }
+
+    const merged = new Map(decoded.items.map((item) => [item.id, item]));
+    for (const id of decoded.preserveIds) {
+      const local = cachedForPreserve.find((item) => item.id === id);
+      if (local && !merged.has(id)) merged.set(id, local);
+    }
+    const dataWithTimestamp = Array.from(merged.values());
 
     // Save to IndexedDB (skip overwriting local cache while expense/income sync is pending)
     if (isIndexedDBAvailable()) {
@@ -175,6 +195,44 @@ export async function fetchExpenses(
   });
 
   return expensesFetchInFlight;
+}
+
+async function decodeExpenseRecords(records: any[]): Promise<{
+  items: TransactionOrIncomeItem[];
+  preserveIds: string[];
+  locked: number;
+  corrupt: number;
+}> {
+  const items: TransactionOrIncomeItem[] = [];
+  const preserveIds: string[] = [];
+  let locked = 0;
+  let corrupt = 0;
+
+  for (const record of records) {
+    const { payload, field_encrypted_payload, ...rest } = record || {};
+    const dt = rest.dt ? String(rest.dt) : '';
+    const base: TransactionOrIncomeItem = {
+      ...rest,
+      id: String(rest.id ?? ''),
+      dt,
+      sum: rest.sum === undefined || rest.sum === null ? '' : String(rest.sum),
+      type: rest.type || 'transaction',
+      cr: rest.cr || (dt ? new Date(dt).getTime() : Date.now()),
+    };
+    const result = await decodeServerItem(
+      { ...record, payload, field_encrypted_payload },
+      base
+    );
+    if (result.kind === 'ok') {
+      items.push(result.item);
+    } else {
+      preserveIds.push(result.id);
+      if (result.kind === 'locked') locked += 1;
+      else corrupt += 1;
+    }
+  }
+
+  return { items, preserveIds, locked, corrupt };
 }
 
 /**

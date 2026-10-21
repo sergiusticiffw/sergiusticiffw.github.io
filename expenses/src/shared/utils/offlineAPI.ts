@@ -13,6 +13,13 @@ import {
 } from '@shared/utils/indexedDB';
 import { processDataSync, processLoans } from '@shared/utils/utils';
 import { TransactionOrIncomeItem } from '@shared/type/types';
+import { isWriteBlocked } from '../../crypto/encryptionState';
+
+const assertMoneyWritesOpen = () => {
+  if (isWriteBlocked()) {
+    throw new Error('write-blocked');
+  }
+};
 
 // Save transaction/income offline
 export async function saveOffline(
@@ -23,6 +30,7 @@ export async function saveOffline(
   url: string,
   method: string
 ): Promise<string> {
+  assertMoneyWritesOpen();
   // Generate temporary ID if new
   if (formType === 'add' && !item.id) {
     item.id = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -50,6 +58,7 @@ export async function deleteOffline(
   entityType: 'expense' | 'income',
   url: string
 ): Promise<void> {
+  assertMoneyWritesOpen();
   // Delete locally
   await deleteExpenseLocally(id);
 
@@ -71,6 +80,7 @@ export async function saveLoanOffline(
   url: string,
   method: string
 ): Promise<string> {
+  assertMoneyWritesOpen();
   // Generate temporary ID if new
   if (formType === 'add' && !item.id) {
     item.id = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -97,6 +107,7 @@ export async function deleteLoanOffline(
   id: string,
   url: string
 ): Promise<void> {
+  assertMoneyWritesOpen();
   // Delete locally
   await deleteLoanLocally(id);
 
@@ -119,6 +130,7 @@ export async function savePaymentOffline(
   url: string,
   method: string
 ): Promise<string> {
+  assertMoneyWritesOpen();
   // Generate temporary ID if new
   if (formType === 'add' && !payment.id) {
     payment.id = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -146,6 +158,7 @@ export async function deletePaymentOffline(
   paymentId: string,
   url: string
 ): Promise<void> {
+  assertMoneyWritesOpen();
   // Delete locally
   await deletePaymentLocally(loanId, paymentId);
 

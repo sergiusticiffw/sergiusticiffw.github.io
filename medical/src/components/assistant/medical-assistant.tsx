@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { AssistantAnswer } from "@/components/assistant/assistant-answer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  chatSession,
+  clearChatSession,
+  loadChatSession,
+  saveChatSession,
+} from "@/lib/assistant/chat-session";
 import { nextChatModel, retryModelLabel } from "@/lib/assistant/models";
 import type { AssistantResult, AssistantTurn } from "@/lib/assistant/types";
 
@@ -20,7 +26,26 @@ export function MedicalAssistant({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [failedModel, setFailedModel] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const stored = loadChatSession();
+    setMessages(stored.messages);
+    setError(stored.error);
+    setFailedModel(stored.failedModel);
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+    chatSession.messages = messages;
+    chatSession.error = error;
+    chatSession.failedModel = failedModel;
+    saveChatSession();
+  }, [ready, messages, error, failedModel]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -189,6 +214,7 @@ export function MedicalAssistant({
             className="h-11"
             disabled={pending}
             onClick={() => {
+              clearChatSession();
               setMessages([]);
               setError(null);
               setFailedModel(null);

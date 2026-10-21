@@ -6,8 +6,6 @@
 const API_PRIMARY_URL = 'https://dev-expenses-api.pantheonsite.io';
 const API_PROXY_URL = 'https://expenses-api-proxy.sergiustici1993.workers.dev';
 
-const FALLBACK_KEY = 'api_use_proxy_fallback';
-
 /** Check if error is a network error (DNS, timeout, connection) */
 export function isNetworkError(error: unknown): boolean {
   if (error instanceof TypeError) {
@@ -28,31 +26,9 @@ export function isNetworkError(error: unknown): boolean {
   return false;
 }
 
-/** Returns true if using proxy (Pantheon inaccessible) */
-export function getUseProxyFallback(): boolean {
-  try {
-    return sessionStorage.getItem(FALLBACK_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-/** Set proxy usage (when Pantheon is inaccessible) */
-export function setUseProxyFallback(use: boolean): void {
-  try {
-    if (use) {
-      sessionStorage.setItem(FALLBACK_KEY, '1');
-    } else {
-      sessionStorage.removeItem(FALLBACK_KEY);
-    }
-  } catch {
-    // ignore
-  }
-}
-
-/** Current API URL (Pantheon or Cloudflare proxy) */
+/** Pantheon. The Cloudflare proxy is only a one-off retry inside fetchWithFallback. */
 export function getApiBaseUrl(): string {
-  return getUseProxyFallback() ? API_PROXY_URL : API_PRIMARY_URL;
+  return API_PRIMARY_URL;
 }
 
 /** Convert URL from primary to proxy (for retry) */
@@ -69,7 +45,8 @@ export function isPrimaryUrl(url: string): boolean {
 }
 
 /**
- * Fetch with fallback: if Pantheon request fails (network), retry with proxy.
+ * Always call Pantheon. Use the Cloudflare proxy only when that request fails
+ * before a response (DNS, connection). The next request starts on Pantheon again.
  */
 export async function fetchWithFallback(
   url: string,
@@ -78,15 +55,10 @@ export async function fetchWithFallback(
   try {
     return await fetch(url, options);
   } catch (error) {
-    if (
-      isNetworkError(error) &&
-      isPrimaryUrl(url) &&
-      !getUseProxyFallback()
-    ) {
-      setUseProxyFallback(true);
-      return fetch(toProxyUrl(url), options);
-    }
-    throw error;
+    if (!isNetworkError(error) || !isPrimaryUrl(url)) throw error;
+    const proxyUrl = toProxyUrl(url);
+    if (proxyUrl === url) throw error;
+    return fetch(proxyUrl, options);
   }
 }
 

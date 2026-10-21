@@ -14,6 +14,8 @@ import {
 } from '@shared/utils/indexedDB';
 import { processLoans } from '@shared/utils/utils';
 import { updateLoansUILocally } from '@shared/utils/offlineAPI';
+import { decodeBundleRecord } from '../../../crypto/nodeCodec';
+import { isMigrationActive, reportCorrupt } from '../../../crypto/encryptionState';
 
 /**
  * Fetch payments for a loan; on API failure, reuse cached payments for this loan if present.
@@ -81,6 +83,10 @@ export async function fetchLoans(
       }
     }
 
+    if (isMigrationActive()) {
+      return;
+    }
+
     // Fetch fresh data from API
     const response = await apiClient.get<any[]>(API_ENDPOINTS.LOANS);
 
@@ -101,12 +107,26 @@ export async function fetchLoans(
       return;
     }
 
-    const paymentPromises = response.data.map((loan: any) =>
-      fetchLoanPayments(apiClient, loan.id)
+    const cachedLoans = isIndexedDBAvailable() ? (await getLoansFromDB()) || [] : [];
+    const cachedPayments = isIndexedDBAvailable()
+      ? (await getPaymentsFromDB()) || []
+      : [];
+    const decoded = await decodeLoanBundle(
+      response.data,
+      cachedLoans,
+      cachedPayments,
+      (loanId) => fetchLoanPayments(apiClient, loanId)
     );
-    const payments = await Promise.all(paymentPromises);
+    reportCorrupt('loans', decoded.corrupt);
+    if (decoded.lockedLoans > 0 && decoded.loans.length === 0) {
+      if (cachedLoans.length === 0) {
+        updateLoansUI(dataDispatch, null, cachedPayments);
+      }
+      return;
+    }
 
-    const processedLoans = processLoans(response.data);
+    const payments = decoded.payments;
+    const processedLoans = processLoans(decoded.loans);
 
     if (isIndexedDBAvailable()) {
       // If there are pending local changes, don't overwrite local cache/UI with server snapshot.
@@ -128,6 +148,54 @@ export async function fetchLoans(
   });
 
   return loansFetchInFlight;
+}
+
+async function decodeLoanBundle(
+  serverLoans: any[],
+  cachedLoans: any[],
+  cachedPayments: Array<{ loanId?: string; data?: any[] }>,
+  loadPayments: (loanId: string) => Promise<{ loanId: string; data: any[] }>
+): Promise<{ loans: any[]; payments: any[]; corrupt: number; lockedLoans: number }> {
+  const loans: any[] = [];
+  const payments: any[] = [];
+  let corrupt = 0;
+  let lockedLoans = 0;
+
+  for (const loan of serverLoans) {
+    const loanId = String(loan.id);
+    const decodedLoan = await decodeBundleRecord(loan, 'loan');
+    if (decodedLoan.kind === 'ok') {
+      loans.push(decodedLoan.item);
+    } else {
+      lockedLoans += 1;
+      if (decodedLoan.kind === 'corrupt') corrupt += 1;
+      const local = cachedLoans.find((item) => String(item.id) === loanId);
+      if (local) loans.push(local);
+    }
+
+    const group = await loadPayments(loanId);
+    const kept: any[] = [];
+    const preserve = new Set<string>();
+    for (const payment of group.data || []) {
+      const decodedPayment = await decodeBundleRecord(payment, 'payment');
+      if (decodedPayment.kind === 'ok') {
+        kept.push(decodedPayment.item);
+      } else {
+        if (decodedPayment.kind === 'corrupt') corrupt += 1;
+        preserve.add(String(payment.id));
+      }
+    }
+    if (preserve.size) {
+      const cached = cachedPayments.find((row) => row.loanId === loanId);
+      for (const id of preserve) {
+        const local = cached?.data?.find((item) => String(item.id) === id);
+        if (local && !kept.some((item) => String(item.id) === id)) kept.push(local);
+      }
+    }
+    payments.push({ loanId, data: kept });
+  }
+
+  return { loans, payments, corrupt, lockedLoans };
 }
 
 /**

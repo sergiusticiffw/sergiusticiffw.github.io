@@ -8,15 +8,7 @@
  * - Type safety
  */
 
-import {
-  getApiBaseUrl,
-  getUseProxyFallback,
-  setUseProxyFallback,
-  isNetworkError,
-  toProxyUrl,
-  isPrimaryUrl,
-  fetchWithFallback,
-} from '@shared/utils/apiBase';
+import { getApiBaseUrl, fetchWithFallback } from '@shared/utils/apiBase';
 import { retryWithBackoff, retryPresets } from '@shared/utils/retry';
 import { logger } from '@shared/utils/logger';
 import { isOnline } from '@shared/utils/indexedDB';
@@ -229,26 +221,12 @@ class ApiClient {
       let response: Response;
 
       if (skipRetry) {
-        // Direct fetch without retry
-        try {
-          response = await fetch(url, requestOptions);
-        } catch (directError) {
-          if (
-            isNetworkError(directError) &&
-            isPrimaryUrl(url) &&
-            !getUseProxyFallback()
-          ) {
-            setUseProxyFallback(true);
-            response = await fetch(toProxyUrl(url), requestOptions);
-          } else {
-            throw directError;
-          }
-        }
+        response = await fetchWithFallback(url, requestOptions);
       } else {
-        // Use retry logic
+        // Use retry logic. fetchWithFallback also tries the other API host.
         const retryResult = await retryWithBackoff(
           async () => {
-            const res = await fetch(url, requestOptions);
+            const res = await fetchWithFallback(url, requestOptions);
             if (!res.ok) {
               await this.handleErrorResponse(res, url);
             }
@@ -271,49 +249,16 @@ class ApiClient {
               ? retryResult.error
               : new Error('Request failed after retries');
 
-          // Fallback: if Pantheon is inaccessible (DNS/network), try Cloudflare proxy
-          if (
-            isNetworkError(error) &&
-            isPrimaryUrl(url) &&
-            !getUseProxyFallback()
-          ) {
-            setUseProxyFallback(true);
-            const proxyUrl = toProxyUrl(url);
-            try {
-              const proxyRes = await fetch(proxyUrl, requestOptions);
-              if (!proxyRes.ok) {
-                await this.handleErrorResponse(proxyRes, proxyUrl);
-              }
-              response = proxyRes;
-            } catch (proxyError) {
-              const proxyErr =
-                proxyError instanceof Error
-                  ? proxyError
-                  : new Error('Proxy request failed');
-              if (this.showNotification) {
-                this.showNotification(
-                  proxyErr.message || 'Network error. Please try again.',
-                  'error'
-                );
-              }
-              return {
-                data: null,
-                error: proxyErr,
-                success: false,
-              };
-            }
-          } else {
-            if (this.showNotification) {
-              const errorMessage =
-                error.message || 'Network error. Please try again.';
-              this.showNotification(errorMessage, 'error');
-            }
-            return {
-              data: null,
-              error,
-              success: false,
-            };
+          if (this.showNotification) {
+            const errorMessage =
+              error.message || 'Network error. Please try again.';
+            this.showNotification(errorMessage, 'error');
           }
+          return {
+            data: null,
+            error,
+            success: false,
+          };
         } else {
           response = retryResult.data!;
         }

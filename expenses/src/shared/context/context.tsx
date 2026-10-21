@@ -11,6 +11,7 @@ import { logger } from '@shared/utils/logger';
 import type { ActionType } from '@shared/type/types';
 import { expenseDispatch } from '@stores/expenseStore';
 import { hydrateSettings } from '@stores/settingsStore';
+import { refreshStatus } from '../../crypto/encryptionState';
 
 const AuthStateContext = React.createContext<AuthState | null>(null);
 const AuthDispatchContext =
@@ -38,6 +39,7 @@ function SyncEffect(): null {
   useEffect(() => {
     if (!token || !userIsLoggedIn) return;
     if (currency) hydrateSettings({ currency });
+    refreshStatus(true);
     import('@shared/utils/indexedDB').then(
       ({ cleanupInvalidSyncOperations }) => {
         cleanupInvalidSyncOperations().then((count) => {

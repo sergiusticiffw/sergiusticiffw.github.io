@@ -223,8 +223,12 @@ const VoiceEntryButton = ({
           : `${drafts.length} ${t('home.voiceSavedMany')}`;
       showNotification(message, notificationType.SUCCESS);
       close();
-    } catch {
-      showNotification(t('error.unknown'), notificationType.ERROR);
+    } catch (error) {
+      const paused = error instanceof Error && error.message === 'write-blocked';
+      showNotification(
+        t(paused ? 'privacy.writePaused' : 'error.unknown'),
+        notificationType.ERROR
+      );
       setSaving(false);
     }
   };

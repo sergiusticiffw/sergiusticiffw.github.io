@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
+import { clearChatSession } from "@/lib/assistant/chat-session";
 
 export function LogoutButton({ className }: { className?: string }) {
   const [pending, setPending] = useState(false);
@@ -16,6 +17,7 @@ export function LogoutButton({ className }: { className?: string }) {
       disabled={pending}
       onClick={() => {
         setPending(true);
+        clearChatSession();
         void logout();
       }}
     >

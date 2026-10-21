@@ -20,32 +20,48 @@ import Loans from '@features/loans/pages/Loans';
 import Loan from '@features/loans/pages/Loan';
 import { logger } from '@shared/utils/logger';
 import { getStoredToken } from '@shared/utils/authStorage';
+import { useAuthState } from '@shared/context/context';
+import {
+  needsEncryptionKey,
+  useEncryptionState,
+} from '../crypto/encryptionState';
+import KeyNeededScreen from '../features/privacy/KeyNeededScreen';
+import MigrationProgress from '../features/privacy/MigrationProgress';
 
 function requireAuth() {
   if (!getStoredToken()) throw redirect({ to: '/expenses/login' });
 }
 
 function RootComponent() {
+  const { token } = useAuthState();
+  const encryption = useEncryptionState();
+  const lockedOut = !!token && needsEncryptionKey(encryption);
+
   return (
     <div className="h-dvh w-full max-w-full flex flex-col overflow-hidden bg-[var(--color-app-bg)]">
       <SyncStatusIndicator />
+      <MigrationProgress />
       <Navbar />
       <main
-        className="main-content flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-[95px] w-full relative block scroll-smooth bg-[var(--color-app-bg)] overflow-touch"
+        className="main-content flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-[calc(95px+env(safe-area-inset-bottom,0px))] w-full relative block scroll-smooth bg-[var(--color-app-bg)] overflow-touch"
       >
-        <Suspense fallback={<LoadingSpinner />}>
-          <ErrorBoundary
-            onError={(error, errorInfo) => {
-              logger.error(
-                'Application error caught by ErrorBoundary:',
-                error,
-                errorInfo
-              );
-            }}
-          >
-            <Outlet />
-          </ErrorBoundary>
-        </Suspense>
+        {lockedOut ? (
+          <KeyNeededScreen />
+        ) : (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ErrorBoundary
+              onError={(error, errorInfo) => {
+                logger.error(
+                  'Application error caught by ErrorBoundary:',
+                  error,
+                  errorInfo
+                );
+              }}
+            >
+              <Outlet />
+            </ErrorBoundary>
+          </Suspense>
+        )}
       </main>
     </div>
   );
