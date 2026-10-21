@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,8 @@ function fold(value: string) {
     .replace(/\p{M}/gu, "");
 }
 
+const PAGE_SIZE = 10;
+
 const selectClass =
   "h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
 
@@ -44,6 +46,7 @@ export function RecordsList({
   const [query, setQuery] = useState("");
   const [personId, setPersonId] = useState("");
   const [month, setMonth] = useState("");
+  const [page, setPage] = useState(0);
   const peopleOptions = useMemo(() => {
     const map = new Map<string, RecordPerson>();
     for (const person of people) {
@@ -64,7 +67,7 @@ export function RecordsList({
     );
   }, [people, records]);
 
-  const visible = useMemo(() => {
+  const matched = useMemo(() => {
     const needle = fold(query.trim());
     const selected = peopleOptions.find((person) => person.id === personId);
     const selectedName = selected ? fold(selected.display_name) : "";
@@ -89,11 +92,22 @@ export function RecordsList({
   }, [records, query, personId, month, peopleOptions]);
 
   const filtered = Boolean(query.trim() || personId || month);
+  const pageCount = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
+  const current = Math.min(page, pageCount - 1);
+  const visible = matched.slice(
+    current * PAGE_SIZE,
+    current * PAGE_SIZE + PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setPage(0);
+  }, [query, personId, month]);
 
   function clearFilters() {
     setQuery("");
     setPersonId("");
     setMonth("");
+    setPage(0);
   }
 
   return (
@@ -140,9 +154,9 @@ export function RecordsList({
       </div>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {visible.length === records.length
+          {matched.length === records.length
             ? `${records.length} înregistrări`
-            : `${visible.length} din ${records.length} înregistrări`}
+            : `${matched.length} din ${records.length} înregistrări`}
         </p>
         {filtered ? (
           <Button
@@ -155,7 +169,7 @@ export function RecordsList({
           </Button>
         ) : null}
       </div>
-      {visible.length === 0 ? (
+      {matched.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           Nicio înregistrare pentru aceste filtre.
         </p>
@@ -192,6 +206,33 @@ export function RecordsList({
           ))}
         </ul>
       )}
+      {pageCount > 1 ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            {current + 1} din {pageCount}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-8"
+              disabled={current === 0}
+              onClick={() => setPage(current - 1)}
+            >
+              Înapoi
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-8"
+              disabled={current >= pageCount - 1}
+              onClick={() => setPage(current + 1)}
+            >
+              Înainte
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
