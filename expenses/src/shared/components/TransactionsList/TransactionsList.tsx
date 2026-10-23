@@ -44,6 +44,8 @@ export interface TransactionsListProps {
   hideSort?: boolean;
   initialSortField?: 'date' | 'amount';
   initialSortDirection?: 'asc' | 'desc';
+  /** Renders on the same row as sort controls, aligned to the right. */
+  toolbarEnd?: React.ReactNode;
 }
 
 type SortField = 'date' | 'amount' | null;
@@ -62,6 +64,7 @@ function TransactionsList({
   hideSort = false,
   initialSortField = null,
   initialSortDirection = 'desc',
+  toolbarEnd,
 }: TransactionsListProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const [sortField, setSortField] = useState<SortField>(initialSortField);
@@ -399,30 +402,39 @@ function TransactionsList({
       className="flex flex-col gap-2 w-full relative overflow-x-hidden"
       ref={listRef}
     >
-      {!hideSort && (
-        <div className="flex gap-2 mb-2">
-          <button
-            type="button"
-            className={cn(
-              sortBtnBase,
-              sortField === 'date' ? sortBtnActive : sortBtnInactive
-            )}
-            onClick={() => handleSort('date')}
-            aria-pressed={sortField === 'date'}
-          >
-            {t('common.date')} {getSortIcon('date')}
-          </button>
-          <button
-            type="button"
-            className={cn(
-              sortBtnBase,
-              sortField === 'amount' ? sortBtnActive : sortBtnInactive
-            )}
-            onClick={() => handleSort('amount')}
-            aria-pressed={sortField === 'amount'}
-          >
-            {t('common.amount')} {getSortIcon('amount')}
-          </button>
+      {(!hideSort || toolbarEnd) && (
+        <div className="flex items-center gap-2 mb-2">
+          {!hideSort && (
+            <div className="flex gap-2 min-w-0">
+              <button
+                type="button"
+                className={cn(
+                  sortBtnBase,
+                  sortField === 'date' ? sortBtnActive : sortBtnInactive
+                )}
+                onClick={() => handleSort('date')}
+                aria-pressed={sortField === 'date'}
+              >
+                {t('common.date')} {getSortIcon('date')}
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  sortBtnBase,
+                  sortField === 'amount' ? sortBtnActive : sortBtnInactive
+                )}
+                onClick={() => handleSort('amount')}
+                aria-pressed={sortField === 'amount'}
+              >
+                {t('common.amount')} {getSortIcon('amount')}
+              </button>
+            </div>
+          )}
+          {toolbarEnd && (
+            <div className="ml-auto flex items-center gap-1 shrink-0">
+              {toolbarEnd}
+            </div>
+          )}
         </div>
       )}
 

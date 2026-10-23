@@ -1,7 +1,7 @@
 import React, { ReactNode, memo } from 'react';
 
 interface StatCardProps {
-  icon: ReactNode;
+  icon?: ReactNode;
   value: string | number;
   label: string;
   /** Accent style (e.g. for "Paid" or highlighted metric) */
@@ -9,7 +9,12 @@ interface StatCardProps {
   className?: string;
 }
 
-const baseCard =
+const compactCard =
+  'rounded-xl py-2.5 px-3 min-h-0 flex flex-col items-center justify-center gap-0.5 text-center shadow-sm ' +
+  'bg-gradient-to-b from-white/[0.08] to-white/[0.04] border border-white/10 ' +
+  'hover:from-white/[0.1] hover:to-white/[0.06] hover:border-white/15 hover:shadow-md transition-all';
+
+const roomyCard =
   'rounded-xl py-5 px-4 min-h-[120px] flex flex-col items-center justify-center gap-2 text-center shadow-sm ' +
   'bg-gradient-to-b from-white/[0.08] to-white/[0.04] border border-white/10 ' +
   'hover:from-white/[0.1] hover:to-white/[0.06] hover:border-white/15 hover:shadow-md hover:-translate-y-0.5 transition-all ' +
@@ -24,15 +29,28 @@ const iconBase =
 
 const StatCard: React.FC<StatCardProps> = memo(
   ({ icon, value, label, accent = false, className = '' }) => {
+    const hasIcon = icon != null;
     return (
       <div
-        className={`${baseCard} ${accent ? accentCard : ''} ${className}`}
+        className={`${hasIcon ? roomyCard : compactCard} ${accent ? accentCard : ''} ${className}`}
       >
-        <div className={iconBase}>{icon}</div>
-        <div className="text-xl font-bold text-white tabular-nums tracking-tight sm:text-lg">
+        {hasIcon && <div className={iconBase}>{icon}</div>}
+        <div
+          className={
+            hasIcon
+              ? 'text-xl font-bold text-white tabular-nums tracking-tight sm:text-lg'
+              : 'text-base font-bold text-white tabular-nums tracking-tight leading-tight sm:text-[1.05rem]'
+          }
+        >
           {value}
         </div>
-        <div className="text-[0.7rem] font-semibold text-white/50 uppercase tracking-wide">
+        <div
+          className={
+            hasIcon
+              ? 'text-[0.7rem] font-semibold text-white/50 uppercase tracking-wide'
+              : 'text-[0.65rem] font-semibold text-white/50 uppercase tracking-wide leading-tight'
+          }
+        >
           {label}
         </div>
       </div>

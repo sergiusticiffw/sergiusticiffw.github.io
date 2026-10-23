@@ -32,6 +32,8 @@ interface IncomeTableProps {
   hideDateColumn?: boolean;
   /** Hides the "Date" sort button. */
   hideDateSortButton?: boolean;
+  /** Renders on the same row as sort controls, aligned to the right. */
+  toolbarEnd?: React.ReactNode;
 }
 
 type SortField = 'date' | 'amount' | null;
@@ -46,6 +48,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   pendingSyncIds,
   hideDateColumn = false,
   hideDateSortButton = false,
+  toolbarEnd,
 }) => {
   const listRef = useRef<any>(null);
   const [sortField, setSortField] = useState<SortField>('date');
@@ -139,23 +142,30 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
         <h3 className="text-lg font-semibold text-white m-0 mb-2 tracking-tight text-center">
           {t('income.incomeRecords')}
         </h3>
-        <div className="flex gap-2">
-          {!hideDateSortButton && (
+        <div className="flex items-center gap-2">
+          <div className="flex gap-2 min-w-0">
+            {!hideDateSortButton && (
+              <button
+                type="button"
+                className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
+                onClick={() => handleSort('date')}
+              >
+                Date {getSortIcon('date')}
+              </button>
+            )}
             <button
               type="button"
-              className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
-              onClick={() => handleSort('date')}
+              className={`${sortBtn} ${sortField === 'amount' ? sortBtnActive : ''}`}
+              onClick={() => handleSort('amount')}
             >
-              Date {getSortIcon('date')}
+              Amount {getSortIcon('amount')}
             </button>
+          </div>
+          {toolbarEnd && (
+            <div className="ml-auto flex items-center gap-1 shrink-0">
+              {toolbarEnd}
+            </div>
           )}
-          <button
-            type="button"
-            className={`${sortBtn} ${sortField === 'amount' ? sortBtnActive : ''}`}
-            onClick={() => handleSort('amount')}
-          >
-            Amount {getSortIcon('amount')}
-          </button>
         </div>
       </div>
 

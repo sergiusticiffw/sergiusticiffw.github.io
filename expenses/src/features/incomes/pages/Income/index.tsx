@@ -35,6 +35,7 @@ import {
   NoData,
 } from '@shared/components/Common';
 import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils/layoutClasses';
+import { IconButton, cn } from '@shared/ui';
 import { notificationType } from '@shared/utils/constants';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import {
@@ -44,7 +45,6 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiDollarSign,
-  FiTrendingUp,
   FiList,
   FiCalendar,
 } from 'react-icons/fi';
@@ -314,6 +314,35 @@ const Income = () => {
 
   const averageIncome = totalIncome / Math.max(1, months);
 
+  const viewToggle = (
+    <>
+      <IconButton
+        size="sm"
+        aria-label="List"
+        aria-pressed={activeView === 'list'}
+        className={cn(
+          activeView === 'list' &&
+            'bg-[var(--color-app-accent)] text-[var(--color-btn-on-accent)] hover:bg-[var(--color-app-accent-hover)] hover:text-[var(--color-btn-on-accent)]'
+        )}
+        onClick={() => setActiveView('list')}
+      >
+        <FiList />
+      </IconButton>
+      <IconButton
+        size="sm"
+        aria-label="Calendar"
+        aria-pressed={activeView === 'calendar'}
+        className={cn(
+          activeView === 'calendar' &&
+            'bg-[var(--color-app-accent)] text-[var(--color-btn-on-accent)] hover:bg-[var(--color-app-accent-hover)] hover:text-[var(--color-btn-on-accent)]'
+        )}
+        onClick={() => setActiveView('calendar')}
+      >
+        <FiCalendar />
+      </IconButton>
+    </>
+  );
+
   if (loading) {
     return (
       <div className={PAGE_CONTAINER_CLASS}>
@@ -369,47 +398,16 @@ const Income = () => {
       />
 
       {/* Income Stats Cards */}
-      <StatsGrid columns={2} filtered={false}>
+      <StatsGrid columns={2} filtered={false} className="gap-2 mb-4 sm:gap-2">
         <StatCard
-          icon={<FiDollarSign />}
           value={formatNumber(totalIncome)}
           label={t('income.totalIncome')}
         />
         <StatCard
-          icon={<FiTrendingUp />}
           value={formatNumber(averageIncome)}
           label={t('income.averageIncome')}
         />
       </StatsGrid>
-
-      {!noData && (
-        <div className="flex gap-2 mb-6">
-          <button
-            type="button"
-            className={`flex-1 rounded-xl py-3.5 px-4 text-[0.95rem] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 border-none ${
-              activeView === 'list'
-                ? 'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)]'
-                : 'bg-app-surface text-app-muted hover:bg-app-surface-hover hover:text-app-secondary'
-            } [&_svg]:text-lg`}
-            onClick={() => setActiveView('list')}
-          >
-            <FiList />
-            <span>List</span>
-          </button>
-          <button
-            type="button"
-            className={`flex-1 rounded-xl py-3.5 px-4 text-[0.95rem] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 border-none ${
-              activeView === 'calendar'
-                ? 'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)]'
-                : 'bg-app-surface text-app-muted hover:bg-app-surface-hover hover:text-app-secondary'
-            } [&_svg]:text-lg`}
-            onClick={() => setActiveView('calendar')}
-          >
-            <FiCalendar />
-            <span>Calendar</span>
-          </button>
-        </div>
-      )}
 
       {/* Income List / Calendar */}
       <div className="mb-8">
@@ -429,6 +427,7 @@ const Income = () => {
                 changedItems={data.changedItems}
                 handleClearChangedItem={handleClearChangedItem}
                 pendingSyncIds={pendingSyncIds}
+                toolbarEnd={viewToggle}
               />
               {filteredIncomeData.length > nrOfItemsToShow && (
                 <div className="flex justify-center items-center py-4 mt-2">
@@ -454,32 +453,37 @@ const Income = () => {
             />
           )
         ) : incomeMonths.length > 0 ? (
-          <CalendarView
-            variant="income"
-            transactions={currentMonthIncome.map((item) => ({
-              id: item.id,
-              dsc: item.dsc ?? '',
-              sum: item.sum,
-              cat: item.cat ?? '',
-              dt: item.dt,
-            }))}
-            currentMonth={currentMonth}
-            changedItems={data.changedItems}
-            onClearChangedItem={handleClearChangedItem}
-            pendingSyncIds={pendingSyncIds}
-            onMonthChange={(direction) => {
-              if (
-                direction === 'prev' &&
-                currentMonthIndex < incomeMonths.length - 1
-              ) {
-                setCurrentMonthIndex(currentMonthIndex + 1);
-              } else if (direction === 'next' && currentMonthIndex > 0) {
-                setCurrentMonthIndex(currentMonthIndex - 1);
-              }
-            }}
-            onEdit={handleEdit}
-            onDelete={(id) => setShowDeleteModal(id)}
-          />
+          <>
+            <div className="flex items-center justify-end gap-1 mb-2">
+              {viewToggle}
+            </div>
+            <CalendarView
+              variant="income"
+              transactions={currentMonthIncome.map((item) => ({
+                id: item.id,
+                dsc: item.dsc ?? '',
+                sum: item.sum,
+                cat: item.cat ?? '',
+                dt: item.dt,
+              }))}
+              currentMonth={currentMonth}
+              changedItems={data.changedItems}
+              onClearChangedItem={handleClearChangedItem}
+              pendingSyncIds={pendingSyncIds}
+              onMonthChange={(direction) => {
+                if (
+                  direction === 'prev' &&
+                  currentMonthIndex < incomeMonths.length - 1
+                ) {
+                  setCurrentMonthIndex(currentMonthIndex + 1);
+                } else if (direction === 'next' && currentMonthIndex > 0) {
+                  setCurrentMonthIndex(currentMonthIndex - 1);
+                }
+              }}
+              onEdit={handleEdit}
+              onDelete={(id) => setShowDeleteModal(id)}
+            />
+          </>
         ) : (
           <NoData
             icon={<FiDollarSign />}

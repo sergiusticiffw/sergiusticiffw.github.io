@@ -129,6 +129,37 @@ const translations = {
     'home.voiceRemove': 'Remove',
     'home.voiceSavedMany': 'entries saved',
 
+    // Budget rings
+    'budgetRings.title': '{month} budgets',
+    'budgetRings.ofBudget': 'of {budget}',
+    'budgetRings.overCount': '{count} over',
+    'budgetRings.noSuggestions': 'No suggestions yet',
+    'budgetRings.unlocks': 'Unlocks {date}',
+    'budgetRings.noteEarly':
+      '{viewed} is based on {source}, your last completed month.',
+    'budgetRings.noteAverage':
+      'Average of your last {count} completed {unit}.',
+    'budgetRings.noteAll':
+      'Average of all {count} completed months before this one.',
+    'budgetRings.month': 'month',
+    'budgetRings.months': 'months',
+    'budgetRings.paceLegend': "Today's mark at a steady pace",
+    'budgetRings.windowGroup': 'Months in the average',
+    'budgetRings.nMo': '{n} mo',
+    'budgetRings.allTime': 'All',
+    'budgetRings.showAll': 'Show all ({count})',
+    'budgetRings.showFewer': 'Show fewer',
+    'budgetRings.noHistoryYet': 'No history yet:',
+    'budgetRings.emptySuggestions':
+      'Not enough spending in your last completed months to suggest budgets.',
+    'budgetRings.unlockAfterClose':
+      'Not enough history yet. Monthly budgets unlock on {date}, after this month closes.',
+    'budgetRings.unlockAddExpenses':
+      'Not enough history yet. Add expenses this month — monthly budgets unlock on {date}, after the month closes.',
+    'budgetRings.left': '{amount} left',
+    'budgetRings.overAmount': '{amount} over',
+    'budgetRings.of': '{spent} of {budget}',
+
     // Income Page
     'income.title': 'Income Management',
     'income.subtitle': 'Track and manage your income sources',
@@ -866,6 +897,37 @@ const translations = {
     'home.voiceIncome': 'Venit',
     'home.voiceRemove': 'Elimină',
     'home.voiceSavedMany': 'înregistrări salvate',
+
+    // Budget rings
+    'budgetRings.title': 'Bugete {month}',
+    'budgetRings.ofBudget': 'din {budget}',
+    'budgetRings.overCount': '{count} depășite',
+    'budgetRings.noSuggestions': 'Nicio sugestie încă',
+    'budgetRings.unlocks': 'Se deblochează pe {date}',
+    'budgetRings.noteEarly':
+      '{viewed} se bazează pe {source}, ultima ta lună încheiată.',
+    'budgetRings.noteAverage':
+      'Media ultimelor tale {count} {unit} încheiate.',
+    'budgetRings.noteAll':
+      'Media tuturor celor {count} luni încheiate înainte de aceasta.',
+    'budgetRings.month': 'lună',
+    'budgetRings.months': 'luni',
+    'budgetRings.paceLegend': 'Marcajul de azi la un ritm constant',
+    'budgetRings.windowGroup': 'Luni în medie',
+    'budgetRings.nMo': '{n} lun',
+    'budgetRings.allTime': 'Tot',
+    'budgetRings.showAll': 'Arată toate ({count})',
+    'budgetRings.showFewer': 'Arată mai puține',
+    'budgetRings.noHistoryYet': 'Fără istoric încă:',
+    'budgetRings.emptySuggestions':
+      'Nu sunt suficiente cheltuieli în lunile încheiate pentru a sugera bugete.',
+    'budgetRings.unlockAfterClose':
+      'Istoric insuficient. Bugetele lunare se deblochează pe {date}, după închiderea lunii.',
+    'budgetRings.unlockAddExpenses':
+      'Istoric insuficient. Adaugă cheltuieli luna aceasta — bugetele se deblochează pe {date}, după închiderea lunii.',
+    'budgetRings.left': '{amount} rămas',
+    'budgetRings.overAmount': '{amount} peste',
+    'budgetRings.of': '{spent} din {budget}',
 
     // Income Page
     'income.title': 'Gestionarea Veniturilor',

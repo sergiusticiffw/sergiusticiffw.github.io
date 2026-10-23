@@ -15,6 +15,7 @@ import TransactionFilters, { DateRangeValue } from '@features/expenses/component
 import VoiceEntryButton from '@features/expenses/components/Home/VoiceEntryButton';
 import { TransactionsList } from '@shared/components/TransactionsList';
 import { HeroSpendCard } from '@shared/components/HeroSpendCard';
+import BudgetRings from '@features/expenses/components/budgets/BudgetRings';
 import CalendarView from '@features/expenses/components/CalendarView';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionForm from '@features/expenses/components/TransactionForm';
@@ -27,17 +28,15 @@ import {
   StatsGrid,
 } from '@shared/components/Common';
 import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils/layoutClasses';
+import { IconButton, cn } from '@shared/ui';
 import {
   FiPlus,
   FiEdit2,
   FiDollarSign,
-  FiBriefcase,
   FiChevronLeft,
   FiChevronRight,
   FiList,
   FiCalendar,
-  FiTrendingUp,
-  FiTrendingDown,
 } from 'react-icons/fi';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
@@ -310,6 +309,35 @@ const NewHome = () => {
       : null;
   }, [showDeleteModal, filteredTransactions]);
 
+  const viewToggle = (
+    <>
+      <IconButton
+        size="sm"
+        aria-label="List"
+        aria-pressed={activeView === 'list'}
+        className={cn(
+          activeView === 'list' &&
+            'bg-[var(--color-app-accent)] text-[var(--color-btn-on-accent)] hover:bg-[var(--color-app-accent-hover)] hover:text-[var(--color-btn-on-accent)]'
+        )}
+        onClick={() => setActiveView('list')}
+      >
+        <FiList />
+      </IconButton>
+      <IconButton
+        size="sm"
+        aria-label="Calendar"
+        aria-pressed={activeView === 'calendar'}
+        className={cn(
+          activeView === 'calendar' &&
+            'bg-[var(--color-app-accent)] text-[var(--color-btn-on-accent)] hover:bg-[var(--color-app-accent-hover)] hover:text-[var(--color-btn-on-accent)]'
+        )}
+        onClick={() => setActiveView('calendar')}
+      >
+        <FiCalendar />
+      </IconButton>
+    </>
+  );
+
   return (
     <div className={PAGE_CONTAINER_CLASS}>
       {/* Delete Drawer (Vaul) */}
@@ -438,21 +466,19 @@ const NewHome = () => {
           </div>
 
           {!hasFilters && (
-            <StatsGrid columns={2} filtered={false}>
+            <StatsGrid columns={2} filtered={false} className="gap-2 mb-4 sm:gap-2">
               <StatCard
-                icon={<FiBriefcase />}
                 value={formatNumber(displayIncome)}
                 label={t('common.income')}
               />
               <StatCard
-                icon={
-                  displayProfit >= 0 ? <FiTrendingUp /> : <FiTrendingDown />
-                }
                 value={formatNumber(displayProfit)}
                 label={t('common.profit')}
               />
             </StatsGrid>
           )}
+
+          <BudgetRings monthLabel={currentMonth} visible={!hasFilters} />
 
           {/* Search / filters — before view tabs */}
           <div className="mb-6">
@@ -475,33 +501,6 @@ const NewHome = () => {
               }}
               onFilterPanelOpenChange={setFilterPanelOpen}
             />
-          </div>
-
-          {/* View Tabs */}
-          <div className="flex gap-2 mb-6">
-            <button
-              type="button"
-              className={`flex-1 rounded-xl py-3.5 px-4 text-[0.95rem] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 border-none ${
-                activeView === 'list'
-                  ? 'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)]'
-                  : 'bg-app-surface text-app-muted hover:bg-app-surface-hover hover:text-app-secondary'
-              } [&_svg]:text-lg`}
-              onClick={() => setActiveView('list')}
-            >
-              <FiList />
-              <span>List</span>
-            </button>
-            <button
-              className={`flex-1 rounded-xl py-3.5 px-4 text-[0.95rem] cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 border-none ${
-                activeView === 'calendar'
-                  ? 'bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-[var(--color-btn-on-accent)] font-medium shadow-[0_2px_8px_var(--color-app-accent-shadow)]'
-                  : 'bg-app-surface text-app-muted hover:bg-app-surface-hover hover:text-app-secondary'
-              } [&_svg]:text-lg`}
-              onClick={() => setActiveView('calendar')}
-            >
-              <FiCalendar />
-              <span>Calendar</span>
-            </button>
           </div>
 
           {/* Content - List or Calendar */}
@@ -540,10 +539,14 @@ const NewHome = () => {
                 onEdit={handleEdit}
                 onDelete={(id) => setShowDeleteModal(id)}
                 groupByDay
+                toolbarEnd={viewToggle}
               />
             </div>
           ) : (
             <div className="mb-8">
+              <div className="flex items-center justify-end gap-1 mb-2">
+                {viewToggle}
+              </div>
               <CalendarView
                 transactions={filteredTransactions}
                 currentMonth={currentMonth}
