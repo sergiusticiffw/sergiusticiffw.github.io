@@ -477,6 +477,7 @@ const BudgetRings: React.FC<BudgetRingsProps> = ({
                         className="flex w-full rounded-full bg-white/[0.06] p-0.5"
                         role="group"
                         aria-label={t('budgetRings.windowGroup')}
+                        data-no-month-swipe
                       >
                         {options.map((value) => (
                           <button

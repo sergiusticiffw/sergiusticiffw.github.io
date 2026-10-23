@@ -36,11 +36,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   variant = 'expense',
   changedItems,
   onClearChangedItem,
-  onMonthChange,
+  onMonthChange: _onMonthChange,
   onEdit,
   onDelete,
   pendingSyncIds,
 }) => {
+  // Month swipe is handled by the parent page (covers Budget Rings + calendar).
+  void _onMonthChange;
   const { language } = useLocalization();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showDayModal, setShowDayModal] = useState(false);
@@ -133,43 +135,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     }
   };
 
-  // Swipe navigation - copied from original calendar
-  let touchStartX = 0;
-  let touchEndX = 0;
-  let isSwiping = false;
-
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (showDayModal) return; // don't capture swipe when day drawer is open
-    touchStartX = event.touches[0].clientX;
-  };
-
-  const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (showDayModal) return;
-    touchEndX = event.touches[0].clientX;
-    isSwiping = true;
-  };
-
-  const handleTouchEnd = () => {
-    if (showDayModal) return; // don't change month when day drawer is open
-    if (isSwiping) {
-      const deltaX = touchEndX - touchStartX;
-      const thresholdPercentage = 0.25;
-      const containerWidth = window.innerWidth;
-      const threshold = containerWidth * thresholdPercentage;
-
-      if (Math.abs(deltaX) > threshold) {
-        if (deltaX > 0) {
-          // Swiped right - go to previous month (older)
-          onMonthChange('prev');
-        } else {
-          // Swiped left - go to next month (newer)
-          onMonthChange('next');
-        }
-      }
-    }
-    isSwiping = false;
-  };
-
   // Get transactions for selected date
   const selectedDayTransactions = selectedDate
     ? transactionsByDate[selectedDate] || []
@@ -182,9 +147,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   return (
     <div
       className="calendar-view-component w-full relative"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      data-no-month-swipe={showDayModal ? true : undefined}
     >
       <FullCalendar
         key={currentMonth}

@@ -11,6 +11,7 @@ import {
 } from '@shared/utils/utils';
 import { getCategories, notificationType } from '@shared/utils/constants';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
+import { useHorizontalMonthSwipe } from '@shared/hooks/useHorizontalMonthSwipe';
 import TransactionFilters, { DateRangeValue } from '@features/expenses/components/Home/TransactionFilters';
 import VoiceEntryButton from '@features/expenses/components/Home/VoiceEntryButton';
 import { TransactionsList } from '@shared/components/TransactionsList';
@@ -309,6 +310,22 @@ const NewHome = () => {
       : null;
   }, [showDeleteModal, filteredTransactions]);
 
+  const handleMonthSwipe = useCallback(
+    (direction: 'prev' | 'next') => {
+      if (direction === 'prev' && currentMonthIndex < months.length - 1) {
+        setCurrentMonthIndex(currentMonthIndex + 1);
+      } else if (direction === 'next' && currentMonthIndex > 0) {
+        setCurrentMonthIndex(currentMonthIndex - 1);
+      }
+    },
+    [currentMonthIndex, months.length]
+  );
+
+  const monthSwipeHandlers = useHorizontalMonthSwipe(
+    handleMonthSwipe,
+    activeView === 'calendar' && !filterPanelOpen && !showAddModal && !showEditModal && !showDeleteModal
+  );
+
   const viewToggle = (
     <>
       <IconButton
@@ -443,135 +460,128 @@ const NewHome = () => {
         />
       ) : (
         <>
-          <div className="pt-6">
-            <HeroSpendCard
-              title={currentMonth || t('home.title')}
-              meta={`${filteredTransactions.length} ${filteredTransactions.length === 1 ? t('common.transaction') : t('common.transactions')}`}
-              label={t('home.spentThisMonth')}
-              amount={formatNumber(displayTotal)}
-              deltaLabel={
-                deltaPct != null
-                  ? `${Number(deltaPct) >= 0 ? '+' : ''}${deltaPct}% vs ${t('common.previous').toLowerCase()} month`
-                  : undefined
-              }
-              deltaPositive={
-                deltaPct != null ? Number(deltaPct) <= 0 : undefined
-              }
-              footer={
-                !hasFilters && isCurrentMonth && daysLeft != null
-                  ? `${daysLeft} ${t('home.daysLeft')}`
-                  : undefined
-              }
-            />
-          </div>
-
-          {!hasFilters && (
-            <StatsGrid columns={2} filtered={false} className="gap-2 mb-4 sm:gap-2">
-              <StatCard
-                value={formatNumber(displayIncome)}
-                label={t('common.income')}
-              />
-              <StatCard
-                value={formatNumber(displayProfit)}
-                label={t('common.profit')}
-              />
-            </StatsGrid>
-          )}
-
-          <BudgetRings monthLabel={currentMonth} visible={!hasFilters} />
-
-          {/* Search / filters — before view tabs */}
-          <div className="mb-6">
-            <TransactionFilters
-              searchValue={searchText}
-              categoryValue={selectedCategory}
-              selectedTag={selectedTag}
-              dateRange={dateRange}
-              onDateRangeChange={setDateRange}
-              categories={localizedCategories}
-              onSearchChange={setSearchText}
-              onCategoryChange={setSelectedCategory}
-              onTagChange={setSelectedTag}
-              onClearFilters={() => {
-                setSearchText('');
-                setSelectedCategory('');
-                setSelectedTag('');
-                setDateRange(null);
-                setCurrentMonthIndex(0);
-              }}
-              onFilterPanelOpenChange={setFilterPanelOpen}
-            />
-          </div>
-
-          {/* Content - List or Calendar */}
-          {filteredTransactions.length === 0 ? (
-            <NoData
-              icon={<FiDollarSign />}
-              title={t('home.noTransactionsFound')}
-              description={
-                hasFilters
-                  ? t('home.tryDifferentFilters')
-                  : t('home.noDataDesc')
-              }
-              action={
-                hasFilters
-                  ? {
-                      label: t('common.clearFilters'),
-                      onClick: () => {
-                        setSearchText('');
-                        setSelectedCategory('');
-                        setSelectedTag('');
-                        setDateRange(null);
-                        setCurrentMonthIndex(0);
-                      },
-                    }
-                  : undefined
-              }
-            />
-          ) : activeView === 'list' ? (
-            <div>
-              <TransactionsList
-                transactions={filteredTransactions.map((tx) => ({
-                  ...tx,
-                  dsc: tx.dsc ?? '',
-                }))}
-                pendingSyncIds={pendingSyncIds}
-                onEdit={handleEdit}
-                onDelete={(id) => setShowDeleteModal(id)}
-                groupByDay
-                toolbarEnd={viewToggle}
+          <div {...monthSwipeHandlers}>
+            <div className="pt-6">
+              <HeroSpendCard
+                title={currentMonth || t('home.title')}
+                meta={`${filteredTransactions.length} ${filteredTransactions.length === 1 ? t('common.transaction') : t('common.transactions')}`}
+                label={t('home.spentThisMonth')}
+                amount={formatNumber(displayTotal)}
+                deltaLabel={
+                  deltaPct != null
+                    ? `${Number(deltaPct) >= 0 ? '+' : ''}${deltaPct}% vs ${t('common.previous').toLowerCase()} month`
+                    : undefined
+                }
+                deltaPositive={
+                  deltaPct != null ? Number(deltaPct) <= 0 : undefined
+                }
+                footer={
+                  !hasFilters && isCurrentMonth && daysLeft != null
+                    ? `${daysLeft} ${t('home.daysLeft')}`
+                    : undefined
+                }
               />
             </div>
-          ) : (
-            <div className="mb-8">
-              <div className="flex items-center justify-end gap-1 mb-2">
-                {viewToggle}
-              </div>
-              <CalendarView
-                transactions={filteredTransactions}
-                currentMonth={currentMonth}
-                pendingSyncIds={pendingSyncIds}
-                onMonthChange={(direction) => {
-                  if (
-                    direction === 'prev' &&
-                    currentMonthIndex < months.length - 1
-                  ) {
-                    setCurrentMonthIndex(currentMonthIndex + 1);
-                  } else if (direction === 'next' && currentMonthIndex > 0) {
-                    setCurrentMonthIndex(currentMonthIndex - 1);
-                  }
+
+            {!hasFilters && (
+              <StatsGrid columns={2} filtered={false} className="gap-2 mb-4 sm:gap-2">
+                <StatCard
+                  value={formatNumber(displayIncome)}
+                  label={t('common.income')}
+                />
+                <StatCard
+                  value={formatNumber(displayProfit)}
+                  label={t('common.profit')}
+                />
+              </StatsGrid>
+            )}
+
+            <BudgetRings monthLabel={currentMonth} visible={!hasFilters} />
+
+            {/* Search / filters — before view tabs */}
+            <div className="mb-6">
+              <TransactionFilters
+                searchValue={searchText}
+                categoryValue={selectedCategory}
+                selectedTag={selectedTag}
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+                categories={localizedCategories}
+                onSearchChange={setSearchText}
+                onCategoryChange={setSelectedCategory}
+                onTagChange={setSelectedTag}
+                onClearFilters={() => {
+                  setSearchText('');
+                  setSelectedCategory('');
+                  setSelectedTag('');
+                  setDateRange(null);
+                  setCurrentMonthIndex(0);
                 }}
-                onEdit={handleEdit}
-                onDelete={(id) => setShowDeleteModal(id)}
+                onFilterPanelOpenChange={setFilterPanelOpen}
               />
             </div>
-          )}
+
+            {/* Content - List or Calendar */}
+            {filteredTransactions.length === 0 ? (
+              <NoData
+                icon={<FiDollarSign />}
+                title={t('home.noTransactionsFound')}
+                description={
+                  hasFilters
+                    ? t('home.tryDifferentFilters')
+                    : t('home.noDataDesc')
+                }
+                action={
+                  hasFilters
+                    ? {
+                        label: t('common.clearFilters'),
+                        onClick: () => {
+                          setSearchText('');
+                          setSelectedCategory('');
+                          setSelectedTag('');
+                          setDateRange(null);
+                          setCurrentMonthIndex(0);
+                        },
+                      }
+                    : undefined
+                }
+              />
+            ) : activeView === 'list' ? (
+              <div>
+                <TransactionsList
+                  transactions={filteredTransactions.map((tx) => ({
+                    ...tx,
+                    dsc: tx.dsc ?? '',
+                  }))}
+                  pendingSyncIds={pendingSyncIds}
+                  onEdit={handleEdit}
+                  onDelete={(id) => setShowDeleteModal(id)}
+                  groupByDay
+                  toolbarEnd={viewToggle}
+                />
+              </div>
+            ) : (
+              <div className="mb-8">
+                <div className="flex items-center justify-end gap-1 mb-2">
+                  {viewToggle}
+                </div>
+                <CalendarView
+                  transactions={filteredTransactions}
+                  currentMonth={currentMonth}
+                  pendingSyncIds={pendingSyncIds}
+                  onMonthChange={handleMonthSwipe}
+                  onEdit={handleEdit}
+                  onDelete={(id) => setShowDeleteModal(id)}
+                />
+              </div>
+            )}
+          </div>
 
           {/* Month nav: always on list; on calendar only md+ (mobile uses swipe). Hidden when filter panel open */}
           {!filterPanelOpen &&
             (activeView === 'list' || activeView === 'calendar') && (
             <div
-              className={`fixed bottom-[70px] left-1/2 -translate-x-1/2 justify-center gap-4 z-[100] bg-[var(--color-app-bg)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5 ${
+              className={`fixed bottom-[70px] left-1/2 -translate-x-1/2 justify-center gap-4 z-[1050] bg-[var(--color-app-bg)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5 ${
                 activeView === 'calendar'
                   ? 'hidden md:flex'
                   : 'flex'

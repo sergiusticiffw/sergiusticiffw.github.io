@@ -25,6 +25,7 @@ import CalendarView from '@features/expenses/components/CalendarView';
 import YearIncomeAverageTrend from '@features/incomes/components/Income/YearIncomeAverageTrend';
 import IncomeExpensesPerYearBarChart from '@features/incomes/components/Income/IncomeExpensesPerYearBarChart';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
+import { useHorizontalMonthSwipe } from '@shared/hooks/useHorizontalMonthSwipe';
 import {
   PageHeader,
   Loader,
@@ -314,6 +315,22 @@ const Income = () => {
 
   const averageIncome = totalIncome / Math.max(1, months);
 
+  const handleMonthSwipe = useCallback(
+    (direction: 'prev' | 'next') => {
+      if (direction === 'prev' && currentMonthIndex < incomeMonths.length - 1) {
+        setCurrentMonthIndex(currentMonthIndex + 1);
+      } else if (direction === 'next' && currentMonthIndex > 0) {
+        setCurrentMonthIndex(currentMonthIndex - 1);
+      }
+    },
+    [currentMonthIndex, incomeMonths.length]
+  );
+
+  const monthSwipeHandlers = useHorizontalMonthSwipe(
+    handleMonthSwipe,
+    activeView === 'calendar' && !filterPanelOpen && !noData
+  );
+
   const viewToggle = (
     <>
       <IconButton
@@ -410,7 +427,7 @@ const Income = () => {
       </StatsGrid>
 
       {/* Income List / Calendar */}
-      <div className="mb-8">
+      <div className="mb-8" {...monthSwipeHandlers}>
         {noData ? (
           <NoData
             icon={<FiDollarSign />}
@@ -470,16 +487,7 @@ const Income = () => {
               changedItems={data.changedItems}
               onClearChangedItem={handleClearChangedItem}
               pendingSyncIds={pendingSyncIds}
-              onMonthChange={(direction) => {
-                if (
-                  direction === 'prev' &&
-                  currentMonthIndex < incomeMonths.length - 1
-                ) {
-                  setCurrentMonthIndex(currentMonthIndex + 1);
-                } else if (direction === 'next' && currentMonthIndex > 0) {
-                  setCurrentMonthIndex(currentMonthIndex - 1);
-                }
-              }}
+              onMonthChange={handleMonthSwipe}
               onEdit={handleEdit}
               onDelete={(id) => setShowDeleteModal(id)}
             />
@@ -498,7 +506,7 @@ const Income = () => {
         !noData &&
         !filterPanelOpen &&
         incomeMonths.length > 0 && (
-          <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 hidden md:flex justify-center gap-4 z-[100] bg-[var(--color-app-bg)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5">
+          <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 hidden md:flex justify-center gap-4 z-[1050] bg-[var(--color-app-bg)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5">
             <button
               type="button"
               className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-app-subtle bg-app-surface-hover cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-app-secondary [&_svg]:text-[1.3rem] hover:not(:disabled):bg-app-surface-hover hover:not(:disabled):border-[var(--color-app-accent)]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"

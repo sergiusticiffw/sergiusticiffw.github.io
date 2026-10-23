@@ -3,16 +3,16 @@ import {
   useCallback,
   useRef,
   type PointerEvent as ReactPointerEvent,
-  type MouseEvent as ReactMouseEvent,
+  type FocusEvent as ReactFocusEvent,
 } from 'react';
 
-const TAP_MOVE_PX = 10;
+const TAP_MOVE_PX = 12;
+const TAP_MAX_MS = 400;
 
 /**
- * Hook for managing filter panel open state.
- * On touch, a tap opens the panel without focusing the search input
- * (avoids the mobile keyboard). A second tap on search can focus and type.
- * Scrolls that start on the search bar do not open the panel.
+ * Opens the filter panel only when the user taps/clicks the search input itself.
+ * Scrolls that start on the input do not open it. Padding, icons, and chrome
+ * around the field are ignored — attach handlers only to the <input>.
  */
 export const useFilterFocus = () => {
   const [isFilterFocused, setIsFilterFocused] = useState(false);
@@ -22,53 +22,74 @@ export const useFilterFocus = () => {
     x: number;
     y: number;
     pointerId: number;
+    startedAt: number;
     moved: boolean;
   } | null>(null);
 
-  const handleFocus = useCallback(() => {
+  const openPanel = useCallback((editable: boolean) => {
     setIsFilterFocused(true);
+    setSearchEditable(editable);
   }, []);
 
-  const handleBlur = useCallback(() => {
-    setTimeout(() => {
-      setIsFilterFocused(false);
-      setSearchEditable(false);
-    }, 200);
-  }, []);
-
-  const handleChipClick = useCallback(() => {
-    setIsFilterFocused(true);
-  }, []);
-
-  const handleSelection = useCallback(() => {
+  const closePanel = useCallback(() => {
     setIsFilterFocused(false);
     setSearchEditable(false);
   }, []);
 
-  const clearGesture = useCallback(() => {
-    gestureRef.current = null;
-  }, []);
+  const handleFocus = useCallback(
+    (e: ReactFocusEvent<HTMLInputElement>) => {
+      // Touch: focus alone must not open the panel (scroll / accidental focus).
+      if (
+        lastPointerType.current === 'touch' ||
+        lastPointerType.current === 'pen'
+      ) {
+        if (!isFilterFocused) {
+          e.currentTarget.blur();
+          return;
+        }
+        setSearchEditable(true);
+        return;
+      }
+      openPanel(true);
+    },
+    [isFilterFocused, openPanel]
+  );
 
-  const handleSearchPointerDownCapture = useCallback(
-    (e: ReactPointerEvent) => {
+  const handleBlur = useCallback(() => {
+    setTimeout(() => closePanel(), 200);
+  }, [closePanel]);
+
+  const handleChipClick = useCallback(() => {
+    openPanel(false);
+  }, [openPanel]);
+
+  const handleSelection = useCallback(() => {
+    closePanel();
+  }, [closePanel]);
+
+  /** Attach only to the search <input>, never the surrounding bar. */
+  const handleSearchPointerDown = useCallback(
+    (e: ReactPointerEvent<HTMLInputElement>) => {
       lastPointerType.current = e.pointerType || 'mouse';
       if (e.pointerType === 'mouse') return;
-      const target = e.target as HTMLElement | null;
-      if (target?.closest('button')) return;
 
-      // Panel already open: second tap may focus/type — don't intercept.
       if (isFilterFocused) {
         setSearchEditable(true);
         return;
       }
 
-      // Defer open until pointerup so scrolls don't open the panel.
-      // Do not preventDefault here — that would block scrolling from the search bar.
-      gestureRef.current = {
+      // Do not preventDefault — that would block scrolling from the field.
+      const gesture = {
         x: e.clientX,
         y: e.clientY,
         pointerId: e.pointerId,
+        startedAt: Date.now(),
         moved: false,
+      };
+      gestureRef.current = gesture;
+
+      const markMoved = () => {
+        if (gestureRef.current) gestureRef.current.moved = true;
       };
 
       const onMove = (ev: PointerEvent) => {
@@ -87,31 +108,24 @@ export const useFilterFocus = () => {
         window.removeEventListener('pointermove', onMove);
         window.removeEventListener('pointerup', onEnd);
         window.removeEventListener('pointercancel', onEnd);
-        clearGesture();
+        window.removeEventListener('scroll', markMoved, true);
+        gestureRef.current = null;
+
         if (!g || ev.pointerId !== g.pointerId || g.moved) return;
-        // Confirmed tap: open panel, blur to avoid keyboard.
-        setIsFilterFocused(true);
-        setSearchEditable(false);
+        if (Date.now() - g.startedAt > TAP_MAX_MS) return;
+
+        openPanel(false);
         const active = document.activeElement as HTMLElement | null;
         if (active && typeof active.blur === 'function') active.blur();
       };
 
+      window.addEventListener('scroll', markMoved, true);
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', onEnd);
       window.addEventListener('pointercancel', onEnd);
     },
-    [isFilterFocused, clearGesture]
+    [isFilterFocused, openPanel]
   );
-
-  /** Opens the panel; mouse can type immediately, touch stays read-only until second tap. */
-  const handleSearchClick = useCallback((e: ReactMouseEvent) => {
-    const target = e.target as HTMLElement | null;
-    if (target?.closest('button')) return;
-    setIsFilterFocused(true);
-    if (lastPointerType.current === 'mouse') {
-      setSearchEditable(true);
-    }
-  }, []);
 
   return {
     isFilterFocused,
@@ -120,7 +134,6 @@ export const useFilterFocus = () => {
     handleBlur,
     handleChipClick,
     handleSelection,
-    handleSearchPointerDownCapture,
-    handleSearchClick,
+    handleSearchPointerDown,
   };
 };
