@@ -10,9 +10,9 @@ const TAP_MOVE_PX = 12;
 const TAP_MAX_MS = 400;
 
 /**
- * Opens the filter panel only when the user taps/clicks the search input itself.
- * Scrolls that start on the input do not open it. Padding, icons, and chrome
- * around the field are ignored — attach handlers only to the <input>.
+ * First tap on the search input → open filter panel only (no keyboard).
+ * Second tap → allow typing / show keyboard.
+ * Scrolls that start on the input do not open the panel.
  */
 export const useFilterFocus = () => {
   const [isFilterFocused, setIsFilterFocused] = useState(false);
@@ -38,21 +38,22 @@ export const useFilterFocus = () => {
 
   const handleFocus = useCallback(
     (e: ReactFocusEvent<HTMLInputElement>) => {
-      // Touch: focus alone must not open the panel (scroll / accidental focus).
-      if (
+      const isTouch =
         lastPointerType.current === 'touch' ||
-        lastPointerType.current === 'pen'
-      ) {
-        if (!isFilterFocused) {
+        lastPointerType.current === 'pen';
+
+      if (isTouch) {
+        // Never unlock the keyboard from focus alone — only from a second tap.
+        if (!searchEditable) {
           e.currentTarget.blur();
-          return;
         }
-        setSearchEditable(true);
         return;
       }
+
+      // Mouse / keyboard: open and allow typing immediately.
       openPanel(true);
     },
-    [isFilterFocused, openPanel]
+    [searchEditable, openPanel]
   );
 
   const handleBlur = useCallback(() => {
@@ -73,12 +74,22 @@ export const useFilterFocus = () => {
       lastPointerType.current = e.pointerType || 'mouse';
       if (e.pointerType === 'mouse') return;
 
+      const input = e.currentTarget;
+
+      // Second tap: unlock typing and show keyboard.
       if (isFilterFocused) {
+        // Prevent focusing while still readOnly this frame; focus after unlock.
+        e.preventDefault();
         setSearchEditable(true);
+        requestAnimationFrame(() => {
+          input.focus();
+        });
         return;
       }
 
-      // Do not preventDefault — that would block scrolling from the field.
+      // First tap: prevent focus so the soft keyboard cannot open.
+      e.preventDefault();
+
       const gesture = {
         x: e.clientX,
         y: e.clientY,
@@ -115,8 +126,6 @@ export const useFilterFocus = () => {
         if (Date.now() - g.startedAt > TAP_MAX_MS) return;
 
         openPanel(false);
-        const active = document.activeElement as HTMLElement | null;
-        if (active && typeof active.blur === 'function') active.blur();
       };
 
       window.addEventListener('scroll', markMoved, true);

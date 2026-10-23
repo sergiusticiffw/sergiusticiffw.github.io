@@ -282,6 +282,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           type="search"
           value={searchValue}
           readOnly={!searchEditable}
+          inputMode={searchEditable ? 'search' : 'none'}
           onChange={(e) => {
             const sanitizedValue = sanitizeText(e.target.value);
             onSearchChange(sanitizedValue);

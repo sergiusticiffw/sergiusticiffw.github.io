@@ -179,6 +179,7 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
           type="search"
           value={textFilter}
           readOnly={!searchEditable}
+          inputMode={searchEditable ? 'search' : 'none'}
           onChange={(e) => onTextFilterChange(e.target.value)}
           onPointerDown={handleSearchPointerDown}
           onFocus={handleFocus}
