@@ -101,12 +101,29 @@ const windowLabel = (
   return t('budgetRings.nMo').replace('{n}', String(value));
 };
 
+type TipAlign = 'start' | 'center' | 'end';
+
+const tipAlignClass: Record<TipAlign, string> = {
+  start: 'left-0 translate-x-0',
+  center: 'left-1/2 -translate-x-1/2',
+  end: 'right-0 left-auto translate-x-0',
+};
+
+/** Keep tooltips inside the 4-column mobile grid (and wider desks). */
+const tipAlignForIndex = (index: number): TipAlign => {
+  const col = index % 4;
+  if (col === 0) return 'start';
+  if (col === 3) return 'end';
+  return 'center';
+};
+
 const Ring: React.FC<{
   ring: BudgetRing;
   pace: number;
   play: boolean;
   delay: number;
   tip: boolean;
+  tipAlign: TipAlign;
   leftText: string;
   ofText: (spent: string, budget: string) => string;
   onShowTip: (id: string, hold: boolean) => void;
@@ -117,6 +134,7 @@ const Ring: React.FC<{
   play,
   delay,
   tip,
+  tipAlign,
   leftText,
   ofText,
   onShowTip,
@@ -196,7 +214,10 @@ const Ring: React.FC<{
         {tip && (
           <span
             role="status"
-            className="absolute z-10 bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-app-bg)] px-2.5 py-1.5 text-left text-[0.7rem] leading-snug shadow-[0_8px_24px_rgba(0,0,0,0.55)]"
+            className={cn(
+              'absolute z-20 bottom-full mb-2 max-w-[min(12rem,70vw)] whitespace-normal rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-app-bg)] px-2.5 py-1.5 text-left text-[0.7rem] leading-snug shadow-[0_8px_24px_rgba(0,0,0,0.55)]',
+              tipAlignClass[tipAlign]
+            )}
           >
             <strong className="block text-app-primary">{ring.label}</strong>
             <span className="block text-app-muted">
@@ -405,7 +426,10 @@ const BudgetRings: React.FC<BudgetRingsProps> = ({
       <Card
         variant="surface"
         padding="none"
-        className="overflow-hidden border-[var(--color-border-subtle)]"
+        className={cn(
+          'border-[var(--color-border-subtle)]',
+          open ? 'overflow-visible' : 'overflow-hidden'
+        )}
       >
         <button
           type="button"
