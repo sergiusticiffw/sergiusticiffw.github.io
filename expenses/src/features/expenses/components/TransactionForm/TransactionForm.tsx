@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useExpenseData } from '@stores/expenseStore';
 import { useLocalization } from '@shared/context/localization';
-import { getCategories, getSuggestions } from '@shared/utils/constants';
+import { getCategories } from '@shared/utils/constants';
 import { getSuggestionTranslationKey } from '@shared/utils/utils';
 import { useFormSubmit } from '@shared/hooks/useFormSubmit';
 import { useFormValidation } from '@shared/hooks/useFormValidation';
@@ -10,6 +10,8 @@ import { FormField, Loader } from '@shared/components/Common';
 import TagChips from '@shared/components/Common/TagChips';
 import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
 import { FiPlus, FiEdit2 } from 'react-icons/fi';
+import { activeTags } from '../../../../tags/catalog';
+import { useTagCatalog } from '../../../../tags/store';
 
 interface TransactionFormProps {
   formType: 'add' | 'edit';
@@ -87,13 +89,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     },
   });
 
+  const catalog = useTagCatalog();
   // Get suggestions for current category (memoized to prevent infinite loops)
   const category = formState.field_category || values.field_category || '';
   const categorySuggestions = useMemo(() => {
     if (!category) return [];
-    const suggestions = getSuggestions();
-    return suggestions[category as keyof typeof suggestions] || [];
-  }, [category]);
+    return activeTags(catalog, category);
+  }, [category, catalog]);
 
   // Use tags hook for tag management
   const {

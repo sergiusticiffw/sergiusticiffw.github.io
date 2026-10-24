@@ -8,7 +8,7 @@ import { useAuthState } from '@shared/context/context';
 import { useExpenseData } from '@stores/expenseStore';
 import { useLocalization } from '@shared/context/localization';
 import { useNotification } from '@shared/context/notification';
-import { getCategories, incomeSuggestions, notificationType } from '@shared/utils/constants';
+import { getCategories, notificationType } from '@shared/utils/constants';
 import TagChips from '@shared/components/Common/TagChips';
 import { normalizeTag } from '@shared/hooks/useTags';
 import { addTagToText, getSuggestionTranslationKey, removeTagFromText } from '@shared/utils/utils';
@@ -411,9 +411,7 @@ const VoiceEntryButton = ({
                   </div>
                 )}
                 <TagChips
-                  suggestions={
-                    entry.kind === 'income' ? incomeSuggestions : tagsFor('expense', entry.category)
-                  }
+                  suggestions={tagsFor(entry.kind, entry.category)}
                   selectedTags={entry.tags}
                   normalizeTag={normalizeTag}
                   isTagSelected={(tag) => entry.tags.includes(tag)}

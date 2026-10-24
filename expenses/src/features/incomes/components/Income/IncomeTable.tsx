@@ -15,11 +15,12 @@ import {
 } from 'react-icons/fi';
 import { formatNumber, getLocale } from '@shared/utils/utils';
 import { TransactionOrIncomeItem } from '@shared/type/types';
-import { incomeSuggestions } from '@shared/utils/constants';
 import TagDisplay from '@shared/components/Common/TagDisplay';
 import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
 import { useLocalization } from '@shared/context/localization';
 import { isDesktopLayout } from '@shared/utils/isDesktopLayout';
+import { INCOME_TAG_KEY, activeTags } from '../../../../tags/catalog';
+import { useTagCatalog } from '../../../../tags/store';
 
 interface IncomeTableProps {
   items: TransactionOrIncomeItem[];
@@ -54,6 +55,11 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const { t, language } = useLocalization();
+  const catalog = useTagCatalog();
+  const incomeTags = useMemo(
+    () => activeTags(catalog, INCOME_TAG_KEY),
+    [catalog]
+  );
   const isDesktop = isDesktopLayout();
 
   const {
@@ -247,7 +253,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                   <div className="text-base font-medium text-white/90 leading-snug break-words">
                     <TagDisplay
                       description={income.dsc || ''}
-                      suggestions={incomeSuggestions}
+                      suggestions={incomeTags}
                       getTagLabel={(tag) => t(`income.tags.${tag}`) || tag}
                       translationKey="income.tags"
                     />

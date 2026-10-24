@@ -5,10 +5,11 @@ import {
   getLocale,
   getSuggestionTranslationKey,
 } from '@shared/utils/utils';
-import { getSuggestions, incomeSuggestions } from '@shared/utils/constants';
 import { normalizeTag } from '@shared/hooks/useTags';
 import TagDisplay from '@shared/components/Common/TagDisplay';
 import { CategoryIcon, cn } from '@shared/ui';
+import { INCOME_TAG_KEY, activeTags } from '../../../tags/catalog';
+import { useTagCatalog } from '../../../tags/store';
 
 export interface DeleteItemPreviewProps {
   variant?: 'expense' | 'income' | 'payment' | 'loan';
@@ -28,6 +29,7 @@ const DeleteItemPreview: React.FC<DeleteItemPreviewProps> = ({
   badge,
 }) => {
   const { language, t } = useLocalization();
+  const catalog = useTagCatalog();
   const isPlain = variant === 'payment' || variant === 'loan';
 
   const date = new Date(dt);
@@ -43,11 +45,8 @@ const DeleteItemPreview: React.FC<DeleteItemPreviewProps> = ({
 
   const suggestions =
     variant === 'income'
-      ? incomeSuggestions
-      : (() => {
-          const all = getSuggestions();
-          return all[cat as keyof typeof all] || [];
-        })();
+      ? activeTags(catalog, INCOME_TAG_KEY)
+      : activeTags(catalog, cat || '');
 
   const getTagLabel = (suggestion: string) => {
     if (variant === 'income') {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useExpenseData } from '@stores/expenseStore';
 import { useLocalization } from '@shared/context/localization';
 import { useFormSubmit } from '@shared/hooks/useFormSubmit';
@@ -7,7 +7,8 @@ import { useTags } from '@shared/hooks/useTags';
 import { FormField, Loader } from '@shared/components/Common';
 import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
 import TagChips from '@shared/components/Common/TagChips';
-import { incomeSuggestions } from '@shared/utils/constants';
+import { INCOME_TAG_KEY, activeTags } from '../../../../tags/catalog';
+import { useTagCatalog } from '../../../../tags/store';
 
 interface IncomeFormProps {
   formType: 'add' | 'edit';
@@ -75,13 +76,19 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
       },
     });
 
+  const catalog = useTagCatalog();
+  const incomeTags = useMemo(
+    () => activeTags(catalog, INCOME_TAG_KEY),
+    [catalog]
+  );
+
   // Use tags hook for tag management
   const {
     selectedTags,
     handleTagClick: handleTagClickInternal,
     isTagSelected,
   } = useTags({
-    suggestions: incomeSuggestions,
+    suggestions: incomeTags,
     description: formState.field_description,
     formType,
   });
@@ -153,7 +160,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
         {/* Income Tags */}
         <TagChips
-          suggestions={incomeSuggestions}
+          suggestions={incomeTags}
           selectedTags={selectedTags}
           onTagClick={handleTagClick}
           isTagSelected={isTagSelected}

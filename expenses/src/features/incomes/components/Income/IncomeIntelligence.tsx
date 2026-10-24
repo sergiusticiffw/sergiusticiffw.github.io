@@ -5,13 +5,20 @@ import { useLocalization } from '@shared/context/localization';
 import Highcharts from 'highcharts/highstock';
 import HighchartsReact from 'highcharts-react-official';
 import { TransactionOrIncomeItem } from '@shared/type/types';
-import { monthNames, incomeSuggestions } from '@shared/utils/constants';
+import { monthNames } from '@shared/utils/constants';
 import { hasTag, parseMonthString } from '@shared/utils/utils';
+import { INCOME_TAG_KEY, activeTags } from '../../../../tags/catalog';
+import { useTagCatalog } from '../../../../tags/store';
 
 function IncomeIntelligence() {
   const { data } = useExpenseData();
   const currency = useSettingsCurrency();
   const { t, language } = useLocalization();
+  const catalog = useTagCatalog();
+  const incomeTags = useMemo(
+    () => activeTags(catalog, INCOME_TAG_KEY),
+    [catalog]
+  );
 
   // Use income data - component will work with filtered or unfiltered data
   // Filtering happens at parent level (Income page)
@@ -29,7 +36,7 @@ function IncomeIntelligence() {
 
     // Initialize totals for pie chart (using tags as keys for consistency)
     const sourceTotals: Record<string, number> = {};
-    incomeSuggestions.forEach((tag) => {
+    incomeTags.forEach((tag) => {
       sourceTotals[tag] = 0;
     });
     let untaggedTotal = 0;
@@ -48,7 +55,7 @@ function IncomeIntelligence() {
 
       if (!monthlyData[month]) {
         monthlyData[month] = {};
-        incomeSuggestions.forEach((tag) => {
+        incomeTags.forEach((tag) => {
           monthlyData[month][tag] = 0;
         });
         monthlyData[month]['untagged'] = 0;
@@ -56,7 +63,7 @@ function IncomeIntelligence() {
 
       // Check for tags and categorize
       let categorized = false;
-      for (const tag of incomeSuggestions) {
+      for (const tag of incomeTags) {
         if (hasTag(item, tag)) {
           sourceTotals[tag] = sourceTotals[tag] + amount;
           monthlyData[month][tag] = monthlyData[month][tag] + amount;
@@ -103,7 +110,7 @@ function IncomeIntelligence() {
     });
 
     // Prepare line chart series with timestamps for Highcharts Stock (translate labels for display)
-    const lineSeries = incomeSuggestions
+    const lineSeries = incomeTags
       .map((tag) => {
         const label = t(`income.tags.${tag}`) || tag;
         const data = sortedMonths.map((month) => {
@@ -158,7 +165,7 @@ function IncomeIntelligence() {
       months: sortedMonths,
       lineSeries,
     };
-  }, [incomeData, language, t]);
+  }, [incomeData, incomeTags, language, t]);
 
   const pieOptions: Highcharts.Options = {
     chart: {
@@ -280,12 +287,18 @@ function IncomeIntelligence() {
   };
 
   if (chartData.pieData.length === 0) {
+    const tagHint = incomeTags.length
+      ? ` ${t('income.addWithTagsHint')} ${incomeTags
+          .slice(0, 4)
+          .map((tag) => `#${tag}`)
+          .join(', ')}.`
+      : '';
     return (
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-white m-0 mb-2">{t('income.incomeIntelligence') || 'Income Intelligence'}</h3>
+        <h3 className="text-lg font-semibold text-white m-0 mb-2">{t('income.incomeIntelligence')}</h3>
         <p className="text-white/70 m-0">
-          {t('income.noIncomeDataAvailable') ||
-            'No income data available. Add income entries with tags like #salary, #freelance, #bonus, #interest, or #gift.'}
+          {t('income.noIncomeDataAvailable')}
+          {tagHint}
         </p>
       </div>
     );

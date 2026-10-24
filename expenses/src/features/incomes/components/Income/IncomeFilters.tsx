@@ -3,8 +3,9 @@ import { useLocalization } from '@shared/context/localization';
 import { useExpenseData } from '@stores/expenseStore';
 import { FiCalendar, FiSearch, FiTag, FiX } from 'react-icons/fi';
 import { useFilterFocus } from '@shared/hooks/useFilterFocus';
-import { incomeSuggestions } from '@shared/utils/constants';
 import { hasTag } from '@shared/utils/utils';
+import { INCOME_TAG_KEY, activeTags } from '../../../../tags/catalog';
+import { useTagCatalog } from '../../../../tags/store';
 
 export type DateRangeValue = { start: string; end: string } | null;
 
@@ -31,6 +32,11 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
 }) => {
   const { t } = useLocalization();
   const { data } = useExpenseData();
+  const catalog = useTagCatalog();
+  const incomeTags = useMemo(
+    () => activeTags(catalog, INCOME_TAG_KEY),
+    [catalog]
+  );
   const filterContainerRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -90,21 +96,21 @@ const IncomeFilters: React.FC<IncomeFiltersProps> = ({
 
   // Get available tags from income data
   const availableTags = useMemo(() => {
-    if (!data.incomeData || data.incomeData.length === 0) {
+    if (!data.incomeData || data.incomeData.length === 0 || incomeTags.length === 0) {
       return [];
     }
 
     const tagsCount: Record<string, number> = {};
     data.incomeData.forEach((item: any) => {
-      incomeSuggestions.forEach((tag) => {
+      incomeTags.forEach((tag) => {
         if (hasTag(item, tag)) {
           tagsCount[tag] = (tagsCount[tag] || 0) + 1;
         }
       });
     });
 
-    return incomeSuggestions.filter((tag) => tagsCount[tag] > 0);
-  }, [data.incomeData]);
+    return incomeTags.filter((tag) => tagsCount[tag] > 0);
+  }, [data.incomeData, incomeTags]);
 
   // Get selected tag label
   const selectedTagLabel = selectedTag

@@ -5,9 +5,10 @@ import {
   getSuggestionTranslationKey,
 } from '@shared/utils/utils';
 import { useLocalization } from '@shared/context/localization';
-import { getSuggestions, incomeSuggestions } from '@shared/utils/constants';
 import { normalizeTag } from '@shared/hooks/useTags';
 import TagDisplay from '@shared/components/Common/TagDisplay';
+import { INCOME_TAG_KEY, activeTags } from '../../../tags/catalog';
+import { useTagCatalog } from '../../../tags/store';
 import useSwipeActions from '@shared/hooks/useSwipeActions';
 import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
 import { isDesktopLayout } from '@shared/utils/isDesktopLayout';
@@ -71,6 +72,7 @@ function TransactionsList({
   const [sortDirection, setSortDirection] =
     useState<SortDirection>(initialSortDirection);
   const { language, t } = useLocalization();
+  const catalog = useTagCatalog();
   const isDesktop = isDesktopLayout();
   // Keep internal sort state aligned with prop-driven defaults (optional).
   useEffect(() => {
@@ -308,15 +310,8 @@ function TransactionsList({
                     description={transaction.dsc || ''}
                     suggestions={
                       variant === 'income'
-                        ? incomeSuggestions
-                        : (() => {
-                            const suggestions = getSuggestions();
-                            return (
-                              suggestions[
-                                transaction.cat as keyof typeof suggestions
-                              ] || []
-                            );
-                          })()
+                        ? activeTags(catalog, INCOME_TAG_KEY)
+                        : activeTags(catalog, transaction.cat || '')
                     }
                     normalizeTag={
                       variant === 'income' ? undefined : normalizeTag

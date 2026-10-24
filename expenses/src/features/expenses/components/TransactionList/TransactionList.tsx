@@ -5,9 +5,10 @@ import {
   getSuggestionTranslationKey,
 } from '@shared/utils/utils';
 import { useLocalization } from '@shared/context/localization';
-import { getSuggestions } from '@shared/utils/constants';
 import { normalizeTag } from '@shared/hooks/useTags';
 import TagDisplay from '@shared/components/Common/TagDisplay';
+import { activeTags } from '../../../../tags/catalog';
+import { useTagCatalog } from '../../../../tags/store';
 import useSwipeActions from '@shared/hooks/useSwipeActions';
 import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
 import {
@@ -55,6 +56,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const { language, t } = useLocalization();
+  const catalog = useTagCatalog();
   const isDesktop = isDesktopLayout();
 
   const {
@@ -215,14 +217,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <div className="text-base font-medium text-app-secondary leading-snug break-words">
                   <TagDisplay
                     description={transaction.dsc || ''}
-                    suggestions={(() => {
-                      const suggestions = getSuggestions();
-                      return (
-                        suggestions[
-                          transaction.cat as keyof typeof suggestions
-                        ] || []
-                      );
-                    })()}
+                    suggestions={activeTags(catalog, transaction.cat || '')}
                     normalizeTag={normalizeTag}
                     getTagLabel={(suggestion) => {
                       const translationKey = getSuggestionTranslationKey(

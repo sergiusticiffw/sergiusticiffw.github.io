@@ -3,13 +3,14 @@ import { useLocalization } from '@shared/context/localization';
 import { useExpenseData } from '@stores/expenseStore';
 import { FiCalendar, FiGrid, FiSearch, FiTag, FiX } from 'react-icons/fi';
 import { useFilterFocus } from '@shared/hooks/useFilterFocus';
-import { getSuggestions } from '@shared/utils/constants';
 import {
   getSuggestionTranslationKey,
   extractHashtags,
 } from '@shared/utils/utils';
 import { normalizeTag } from '@shared/hooks/useTags';
 import { sanitizeText } from '@shared/utils/sanitization';
+import { activeTags, tagGroups } from '../../../../tags/catalog';
+import { useTagCatalog } from '../../../../tags/store';
 export type DateRangeValue = { start: string; end: string } | null;
 
 interface TransactionFiltersProps {
@@ -41,6 +42,7 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
 }) => {
   const { t } = useLocalization();
   const { data } = useExpenseData();
+  const catalog = useTagCatalog();
 
   // Use reusable hooks
   const filterContainerRef = useRef<HTMLDivElement>(null);
@@ -112,8 +114,12 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
     return `${fmt(dateRange.start)} – ${fmt(dateRange.end)}`;
   }, [dateRange]);
 
-  // Get all available tags from transaction data
+  // Get all available tags from transaction data (or category suggestions)
   const availableTags = useMemo(() => {
+    if (categoryValue) {
+      return activeTags(catalog, categoryValue).map(normalizeTag);
+    }
+
     if (!data.raw || data.raw.length === 0) {
       return [];
     }
@@ -136,31 +142,20 @@ const TransactionFilters: React.FC<TransactionFiltersProps> = ({
       }
     });
 
-    // Get all suggestions from all categories for translation purposes
-    const allSuggestions = new Set<string>();
-    const suggestionsMap = getSuggestions();
-    Object.values(suggestionsMap).forEach((suggestions) => {
-      suggestions.forEach((suggestion) => {
-        allSuggestions.add(suggestion);
-      });
-    });
-
-    // Combine extracted tags with suggestions (for proper translation)
     // Return tags sorted by count (most used first)
     return Array.from(allExtractedTags).sort(
       (a, b) => (tagsCount[b] || 0) - (tagsCount[a] || 0)
     );
-  }, [data.raw]);
+  }, [data.raw, categoryValue, catalog]);
 
   // Helper function to find the original suggestion from a normalized tag
   const findOriginalSuggestion = (
     normalizedTag: string
   ): { suggestion: string; category: string } | null => {
-    const suggestionsMap = getSuggestions();
-    for (const [category, suggestions] of Object.entries(suggestionsMap)) {
-      for (const suggestion of suggestions) {
+    for (const group of tagGroups()) {
+      for (const suggestion of activeTags(catalog, group.key)) {
         if (normalizeTag(suggestion) === normalizedTag) {
-          return { suggestion, category };
+          return { suggestion, category: group.key };
         }
       }
     }

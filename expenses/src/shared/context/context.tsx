@@ -12,6 +12,7 @@ import type { ActionType } from '@shared/type/types';
 import { expenseDispatch } from '@stores/expenseStore';
 import { hydrateSettings } from '@stores/settingsStore';
 import { refreshStatus } from '../../crypto/encryptionState';
+import { refreshTagCatalog } from '../../tags/store';
 
 const AuthStateContext = React.createContext<AuthState | null>(null);
 const AuthDispatchContext =
@@ -40,6 +41,7 @@ function SyncEffect(): null {
     if (!token || !userIsLoggedIn) return;
     if (currency) hydrateSettings({ currency });
     refreshStatus(true);
+    refreshTagCatalog();
     import('@shared/utils/indexedDB').then(
       ({ cleanupInvalidSyncOperations }) => {
         cleanupInvalidSyncOperations().then((count) => {

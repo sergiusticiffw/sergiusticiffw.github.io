@@ -1,7 +1,13 @@
-import { categories, getSuggestions, incomeSuggestions } from '@shared/utils/constants';
+import { categories } from '@shared/utils/constants';
 import { normalizeTag } from '@shared/hooks/useTags';
 import { sanitizeText } from '@shared/utils/sanitization';
 import { addTagToText, extractHashtags } from '@shared/utils/utils';
+import {
+  INCOME_TAG_KEY,
+  activeTags,
+  tagGroups,
+} from '../tags/catalog';
+import { getTagCatalog } from '../tags/store';
 import { AiError, streamGenerate } from './client';
 import { recordAiQuestion } from './sessionStats';
 import { localToday } from './data';
@@ -16,18 +22,27 @@ export interface VoiceMoneyEntry {
 }
 
 export const tagsFor = (kind: 'expense' | 'income', category: string): string[] => {
-  if (kind === 'income') return [...incomeSuggestions];
-  const all = getSuggestions() as Record<string, string[]>;
-  return all[category] || [];
+  const catalog = getTagCatalog();
+  if (kind === 'income') return [...activeTags(catalog, INCOME_TAG_KEY)];
+  return [...activeTags(catalog, category)];
 };
 
 const tagGuide = (kind: 'expense' | 'income') => {
+  const catalog = getTagCatalog();
   if (kind === 'income') {
-    return `income: ${incomeSuggestions.map((tag) => normalizeTag(tag)).join(', ')}`;
+    return `income: ${activeTags(catalog, INCOME_TAG_KEY)
+      .map((tag) => normalizeTag(tag))
+      .join(', ')}`;
   }
-  return Object.entries(getSuggestions() as Record<string, string[]>)
-    .filter(([id, list]) => id && list.length)
-    .map(([id, list]) => `${id}: ${list.map((tag) => normalizeTag(tag)).join(', ')}`)
+  return tagGroups()
+    .filter((group) => group.key !== INCOME_TAG_KEY)
+    .map((group) => {
+      const list = activeTags(catalog, group.key);
+      return list.length
+        ? `${group.key}: ${list.map((tag) => normalizeTag(tag)).join(', ')}`
+        : '';
+    })
+    .filter(Boolean)
     .join('\n');
 };
 
@@ -144,18 +159,18 @@ const CATEGORY_ALIASES: Record<string, string[]> = {
 };
 
 const tagRows = () => {
-  const all = getSuggestions() as Record<string, string[]>;
-  return Object.entries(all).flatMap(([category, list]) =>
-    category
-      ? list.map((suggestion) => ({
-          id: normalizeTag(suggestion),
-          category,
-          phrases: [...new Set([fold(normalizeTag(suggestion)), fold(suggestion)])].filter(
-            (phrase) => phrase.length >= 3
-          ),
-        }))
-      : []
-  );
+  const catalog = getTagCatalog();
+  return tagGroups()
+    .filter((group) => group.key !== INCOME_TAG_KEY)
+    .flatMap((group) =>
+      activeTags(catalog, group.key).map((suggestion) => ({
+        id: normalizeTag(suggestion),
+        category: group.key,
+        phrases: [
+          ...new Set([fold(normalizeTag(suggestion)), fold(suggestion)]),
+        ].filter((phrase) => phrase.length >= 3),
+      }))
+    );
 };
 
 /** Category the user named, or the single category of a tag they named. */
@@ -180,7 +195,7 @@ const spokenCategory = (transcript: string): string | null => {
 const spokenTags = (transcript: string, kind: 'expense' | 'income', category: string) => {
   const text = fold(transcript);
   if (kind === 'income') {
-    return incomeSuggestions
+    return activeTags(getTagCatalog(), INCOME_TAG_KEY)
       .map((tag) => normalizeTag(tag))
       .filter((tag) => mentions(text, fold(tag)));
   }

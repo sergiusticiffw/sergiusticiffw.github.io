@@ -8,6 +8,7 @@ import {
   applyLoginStatus,
   resetEncryptionState,
 } from '../../crypto/encryptionState';
+import { resetTagsOnLogout } from '../../tags/catalog';
 
 export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
   const requestOptions = {
@@ -45,6 +46,7 @@ export const logout = async (dispatch: any, dataDispatch: any) => {
   await dispatch({ type: 'LOGOUT' });
   await dataDispatch({ type: 'REMOVE_DATA' });
   resetEncryptionState();
+  resetTagsOnLogout();
   localStorage.removeItem('currentUser');
   localStorage.removeItem('token');
   clearChatSession();
