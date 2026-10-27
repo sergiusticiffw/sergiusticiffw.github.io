@@ -2,9 +2,9 @@ import { NextRequest } from 'next/server'
 
 import { addSubscriber } from '@/server/bot/kvSubscribers'
 import { formatDailyMessage, formatHelp, isStartCommand, parseCommand } from '@/server/bot/commands'
-import { convertAmount, formatConvertMessage, parseConvertArg } from '@/server/bot/convert'
+import { parseConvertArg, sendConvertMessage } from '@/server/bot/convert'
 import { BNM_DATE_REGEX, sendDateRatesMessage } from '@/server/bot/dateRatesReply'
-import { fetchBnmRatesForDate, fetchBnmRatesWithPrevious } from '@/server/bot/bnm'
+import { fetchBnmRatesWithPrevious } from '@/server/bot/bnm'
 import { fetchDxyValue } from '@/server/bot/dxy'
 import { getTodayDate, getTomorrowDate, getYesterdayDate } from '@/server/bot/date'
 import { getPublicSiteBaseUrl } from '@/server/bot/publicSiteUrl'
@@ -39,6 +39,13 @@ function buildDatePickerUrl(chatId: number): string | null {
   if (!base) return null
   const token = signChatId(chatId)
   return `${base}/date-picker?c=${chatId}&t=${token}`
+}
+
+function buildConvertUrl(chatId: number): string | null {
+  const base = getPublicSiteBaseUrl()
+  if (!base) return null
+  const token = signChatId(chatId)
+  return `${base}/convert?c=${chatId}&t=${token}`
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -203,7 +210,37 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
 
     if (parsed && parsed.cmd === '/convert') {
-      const parsedConvert = parseConvertArg(parsed.arg)
+      const arg = parsed.arg.trim()
+      if (!arg) {
+        const convertUrl = buildConvertUrl(chatId)
+        if (convertUrl) {
+          const isPrivate = chatType === 'private'
+          await sendTelegramMessage({
+            botToken,
+            chatId,
+            text: 'Open the converter, or send /convert <amount> <currency> [DD.MM.YYYY]:',
+            replyMarkup: {
+              inline_keyboard: [
+                [
+                  isPrivate
+                    ? { text: '💱 Open converter', web_app: { url: convertUrl } }
+                    : { text: '💱 Open converter', url: convertUrl },
+                ],
+              ],
+            },
+          })
+        } else {
+          await sendTelegramMessage({
+            botToken,
+            chatId,
+            text: 'Send: /convert <amount> <currency> [DD.MM.YYYY]\nExample: /convert 100 USD',
+            replyMarkup: REMOVE_KEYBOARD,
+          })
+        }
+        return Response.json({ ok: true })
+      }
+
+      const parsedConvert = parseConvertArg(arg)
       if ('error' in parsedConvert) {
         await sendTelegramMessage({
           botToken,
@@ -214,37 +251,12 @@ export async function POST(req: NextRequest): Promise<Response> {
         return Response.json({ ok: true })
       }
 
-      const bnmDate = parsedConvert.date ?? getTodayDate('Europe/Chisinau')
-      const rates = await fetchBnmRatesForDate(bnmDate).catch(() => ({ usd: null, eur: null }))
-      if (rates.usd == null && rates.eur == null) {
-        await sendTelegramMessage({
-          botToken,
-          chatId,
-          text: `No BNM rates available for ${bnmDate}. Try another date.`,
-          replyMarkup: REMOVE_KEYBOARD,
-        })
-        return Response.json({ ok: true })
-      }
-
-      const result = convertAmount({
-        amount: parsedConvert.amount,
-        currency: parsedConvert.currency,
-        usdRate: rates.usd,
-        eurRate: rates.eur,
-      })
-
-      await sendTelegramMessage({
+      await sendConvertMessage({
         botToken,
         chatId,
-        text: formatConvertMessage({
-          bnmDate,
-          amount: parsedConvert.amount,
-          currency: parsedConvert.currency,
-          usdRate: rates.usd,
-          eurRate: rates.eur,
-          result,
-        }),
-        replyMarkup: REMOVE_KEYBOARD,
+        amount: parsedConvert.amount,
+        currency: parsedConvert.currency,
+        bnmDate: parsedConvert.date,
       })
       return Response.json({ ok: true })
     }

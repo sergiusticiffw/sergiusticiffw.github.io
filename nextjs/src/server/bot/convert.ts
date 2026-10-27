@@ -1,6 +1,13 @@
+import { fetchBnmRatesForDate } from '@/server/bot/bnm'
+import { getTodayDate } from '@/server/bot/date'
 import { BNM_DATE_REGEX } from '@/server/bot/dateRatesReply'
+import { sendTelegramMessage } from '@/server/bot/telegram'
 
 export type ConvertCurrency = 'MDL' | 'USD' | 'EUR'
+
+export function isConvertCurrency(value: unknown): value is ConvertCurrency {
+  return value === 'MDL' || value === 'USD' || value === 'EUR'
+}
 
 export type ConvertParseOk = {
   amount: number
@@ -29,6 +36,7 @@ const CURRENCY_ALIASES: Record<string, ConvertCurrency> = {
 
 export const CONVERT_USAGE =
   'Usage: /convert <amount> <currency> [DD.MM.YYYY]\n' +
+  'Or send /convert to open the converter form.\n' +
   'Examples:\n' +
   '  /convert 100 USD\n' +
   '  /convert 100 EUR 17.04.2026\n' +
@@ -36,7 +44,7 @@ export const CONVERT_USAGE =
   '  /convert 2500 lei\n' +
   'Currencies: MDL (lei), USD, EUR'
 
-function parseAmountToken(raw: string): number | null {
+export function parseAmountToken(raw: string): number | null {
   let s = raw.trim().replace(/\s/g, '')
   if (!s) return null
 
@@ -208,4 +216,50 @@ export function formatConvertMessage({
   const footer = `\nCursuri: 1 USD = ${formatRateLabel(usdRate)} MDL | 1 EUR = ${formatRateLabel(eurRate)} MDL`
 
   return [header, ...lines, footer].join('\n')
+}
+
+export async function sendConvertMessage({
+  botToken,
+  chatId,
+  amount,
+  currency,
+  bnmDate,
+}: {
+  botToken: string
+  chatId: number
+  amount: number
+  currency: ConvertCurrency
+  bnmDate?: string
+}): Promise<void> {
+  const date = bnmDate ?? getTodayDate('Europe/Chisinau')
+  const rates = await fetchBnmRatesForDate(date).catch(() => ({ usd: null, eur: null }))
+
+  if (rates.usd == null && rates.eur == null) {
+    await sendTelegramMessage({
+      botToken,
+      chatId,
+      text: `No BNM rates available for ${date}. Try another date.`,
+    })
+    return
+  }
+
+  const result = convertAmount({
+    amount,
+    currency,
+    usdRate: rates.usd,
+    eurRate: rates.eur,
+  })
+
+  await sendTelegramMessage({
+    botToken,
+    chatId,
+    text: formatConvertMessage({
+      bnmDate: date,
+      amount,
+      currency,
+      usdRate: rates.usd,
+      eurRate: rates.eur,
+      result,
+    }),
+  })
 }
