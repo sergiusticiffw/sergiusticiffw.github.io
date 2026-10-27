@@ -218,7 +218,7 @@ export function useAiChat(apiKey: string) {
           status: stopped ? 'stopped' : 'error',
           activity: undefined,
           tokens: tokens || undefined,
-          failedModel: stopped ? undefined : failedModel,
+          failedModel,
         });
       } finally {
         abortRef.current = null;

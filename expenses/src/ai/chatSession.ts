@@ -1,5 +1,5 @@
 import type { GeminiContent } from './client';
-import { AI_LIMITS, AI_STORAGE_KEYS } from './config';
+import { AI_LIMITS, AI_MODELS, AI_STORAGE_KEYS } from './config';
 
 export interface ChatMessage {
   id: string;
@@ -30,6 +30,8 @@ export const markInterrupted = (messages: ChatMessage[]): ChatMessage[] =>
           status: 'error',
           activity: undefined,
           text: m.text || interruptedText(),
+          // So "Retry with another model" can offer the next candidate.
+          failedModel: m.failedModel || m.model || AI_MODELS.chat[0],
         }
       : m
   );

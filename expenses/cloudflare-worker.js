@@ -15,7 +15,7 @@ export default {
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, JWT-Authorization, Authorization',
+          'Access-Control-Allow-Headers': 'Content-Type, JWT-Authorization, Authorization, X-CSRF-Token, Accept',
           'Access-Control-Max-Age': '86400',
         },
       });
