@@ -20,7 +20,7 @@ import {
   formatDurationUntil,
   formatNumber,
 } from "@/lib/format";
-import { getDriveConnectionMeta } from "@/lib/google-drive";
+import { getDriveConnectionMeta, getDriveHealth } from "@/lib/google-drive";
 import { getGoogleConfig } from "@/lib/google-oauth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -77,6 +77,7 @@ async function ProfileSection({
     familyResult,
     authResult,
     driveMeta,
+    driveHealth,
     ai,
     profilesResult,
     membersResult,
@@ -84,6 +85,7 @@ async function ProfileSection({
     supabase.from("families").select("name").eq("id", family.familyId).maybeSingle(),
     supabase.auth.getUser(),
     getDriveConnectionMeta(family.familyId),
+    getDriveHealth(family.familyId),
     loadAiUsage(family.familyId),
     supabase.from("profiles").select("id").eq("family_id", family.familyId),
     supabase
@@ -178,6 +180,7 @@ async function ProfileSection({
               status={driveStatus}
               configured={googleConfigured}
               connected={driveConnected}
+              expired={driveHealth.status === "expired"}
               updatedAt={formatDateTime(driveUpdatedAt)}
               isAdmin={family.role === "admin"}
             />

@@ -13,12 +13,14 @@ export function DriveSettings({
   status,
   configured,
   connected,
+  expired = false,
   updatedAt,
   isAdmin,
 }: {
   status?: string;
   configured: boolean;
   connected: boolean;
+  expired?: boolean;
   updatedAt: string | null;
   isAdmin: boolean;
 }) {
@@ -34,7 +36,9 @@ export function DriveSettings({
         ? "Completează pe server clientul OAuth și cheia de criptare."
         : status === "error"
           ? "Conectarea cu Google Drive nu a reușit."
-          : null;
+          : expired
+            ? "Accesul Google Drive a expirat. Reconectează-te ca să încarci sau deschizi fișiere."
+            : null;
 
   async function onDisconnect() {
     setPending(true);
@@ -55,13 +59,15 @@ export function DriveSettings({
       {message ? (
         <p
           role={status === "connected" ? "status" : "alert"}
-          className={status === "connected" ? "text-sm" : "text-sm text-destructive"}
+          className={
+            status === "connected" ? "text-sm" : "text-sm text-destructive"
+          }
         >
           {message}
         </p>
       ) : null}
       <p className="text-sm">
-        {connected ? "Conectat" : "Neconectat"}
+        {expired ? "Expirat" : connected ? "Conectat" : "Neconectat"}
         {connected && updatedAt ? ` · actualizat ${updatedAt}` : null}
       </p>
       <p className="text-sm text-muted-foreground">
@@ -74,11 +80,15 @@ export function DriveSettings({
             <Link
               href="/api/google/connect"
               className={cn(
-                buttonVariants({ variant: connected ? "outline" : "default" }),
+                buttonVariants({
+                  variant: connected && !expired ? "outline" : "default",
+                }),
                 "h-11 w-fit",
               )}
             >
-              {connected ? "Reconectează Google Drive" : "Conectează Google Drive"}
+              {connected || expired
+                ? "Reconectează Google Drive"
+                : "Conectează Google Drive"}
             </Link>
             {connected ? (
               <Button

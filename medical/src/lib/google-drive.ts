@@ -7,9 +7,28 @@ import { decryptToken, getGoogleConfig } from "@/lib/google-oauth";
 
 const FILE_ID = /^[A-Za-z0-9_-]{10,128}$/;
 const tokenCache = new Map<string, { token: string; expiresAt: number }>();
+const healthCache = new Map<
+  string,
+  { health: DriveHealth; expiresAt: number }
+>();
 
 type DriveFile = { id?: string };
 type DriveList = { files?: DriveFile[] };
+
+export type DriveHealth =
+  | { status: "ok" }
+  | { status: "missing" }
+  | { status: "expired" }
+  | { status: "unavailable" };
+
+function rememberHealth(familyId: string, health: DriveHealth, ttlMs: number) {
+  healthCache.set(familyId, { health, expiresAt: Date.now() + ttlMs });
+  return health;
+}
+
+function clearHealth(familyId: string) {
+  healthCache.delete(familyId);
+}
 
 function assertFileId(fileId: string) {
   if (!FILE_ID.test(fileId)) {
@@ -118,6 +137,7 @@ async function getAccessToken(
       payload.error === "invalid_grant" ||
       payload.error === "invalid_client"
     ) {
+      rememberHealth(familyId, { status: "expired" }, 60_000);
       throw new Error("Conectează din nou Google Drive. Accesul a expirat.");
     }
     if (response.status === 429) {
@@ -130,6 +150,7 @@ async function getAccessToken(
     token: payload.access_token,
     expiresAt: Date.now() + (payload.expires_in ?? 3600) * 1000,
   });
+  rememberHealth(familyId, { status: "ok" }, 5 * 60_000);
   return payload.access_token;
 }
 
@@ -385,8 +406,47 @@ export async function getDriveConnectionMeta(familyId: string) {
   };
 }
 
+export async function getDriveHealth(familyId: string): Promise<DriveHealth> {
+  const cached = healthCache.get(familyId);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.health;
+  }
+
+  let connection: Awaited<ReturnType<typeof loadConnection>>;
+  try {
+    connection = await loadConnection(familyId);
+  } catch (error) {
+    console.error(
+      "getDriveHealth",
+      error instanceof Error ? error.message : "load_failed",
+    );
+    return rememberHealth(familyId, { status: "expired" }, 60_000);
+  }
+
+  if (!connection) {
+    return rememberHealth(familyId, { status: "missing" }, 60_000);
+  }
+
+  try {
+    await getAccessToken(familyId, connection.refreshToken);
+    return rememberHealth(familyId, { status: "ok" }, 5 * 60_000);
+  } catch (error) {
+    const after = healthCache.get(familyId);
+    if (after && after.expiresAt > Date.now() && after.health.status === "expired") {
+      return after.health;
+    }
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("expirat")) {
+      return rememberHealth(familyId, { status: "expired" }, 60_000);
+    }
+    console.error("getDriveHealth", message || "unavailable");
+    return rememberHealth(familyId, { status: "unavailable" }, 30_000);
+  }
+}
+
 export async function disconnectDrive(familyId: string) {
   tokenCache.delete(familyId);
+  clearHealth(familyId);
   const supabase = await createClient();
   const { error } = await supabase
     .from("google_drive_connections")

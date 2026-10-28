@@ -295,9 +295,19 @@ function ProfileRecords({
   }
   const visible = records.slice(current * PAGE_SIZE, current * PAGE_SIZE + PAGE_SIZE);
 
+  const recordsLabel =
+    records.length === 1
+      ? "1 înregistrare"
+      : `${records.length} înregistrări`;
+
   return (
     <div className="flex flex-col gap-3 border-t pt-4">
-      <h2 className="text-sm font-medium">Înregistrări</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-sm font-medium">Înregistrări</h2>
+        {records.length > 0 ? (
+          <p className="text-xs text-muted-foreground">{recordsLabel}</p>
+        ) : null}
+      </div>
       {records.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           Nicio înregistrare pentru această persoană.

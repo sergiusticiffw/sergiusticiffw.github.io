@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { getPageUser } from "@/lib/auth";
 import { AppNav } from "@/components/layout/app-nav";
+import { DriveReconnectBanner } from "@/components/layout/drive-reconnect-banner";
 import { NavigationLoader } from "@/components/layout/navigation-loader";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -26,6 +27,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
+      <Suspense fallback={null}>
+        <DriveReconnectBanner />
+      </Suspense>
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-4 pb-24 sm:py-6 sm:pb-24">
         {children}
       </main>
