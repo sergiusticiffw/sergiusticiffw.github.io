@@ -8,7 +8,6 @@ import {
   deleteIdentityDoc,
   updateIdentityDoc,
 } from "@/app/(app)/profiles/identity-actions";
-import { DocumentGallery } from "@/components/profiles/document-preview";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
@@ -260,27 +259,4 @@ export async function saveIdentityDraft(options: {
     return { error: result.error };
   }
   return {};
-}
-
-/** Identity file thumb — sits to the right of the insurance policy file. */
-export function ProfileIdentityDocsSection({
-  docs,
-}: {
-  docs: ProfileIdentityDoc[];
-}) {
-  const doc = docs[0];
-  if (!doc?.source_document_id) {
-    return null;
-  }
-  return (
-    <DocumentGallery
-      files={[
-        {
-          id: doc.source_document_id,
-          filename: doc.filename || doc.title || "Act",
-          mimeType: doc.mime_type,
-        },
-      ]}
-    />
-  );
 }

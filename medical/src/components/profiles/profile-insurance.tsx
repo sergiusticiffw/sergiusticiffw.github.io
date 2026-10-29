@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import {
   createInsurance,
@@ -9,6 +9,9 @@ import {
   updateInsurance,
 } from "@/app/(app)/profiles/insurance-actions";
 import { DocumentGallery } from "@/components/profiles/document-preview";
+import {
+  type ProfileIdentityDoc,
+} from "@/components/profiles/profile-identity-docs";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormDialog } from "@/components/ui/form-dialog";
@@ -18,10 +21,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES } from "@/lib/files";
 import { formatBirthDate } from "@/lib/format";
-import {
-  ProfileIdentityDocsSection,
-  type ProfileIdentityDoc,
-} from "@/components/profiles/profile-identity-docs";
 
 export type ProfileInsurance = {
   id: string;
@@ -55,6 +54,34 @@ function sortInsurances(items: ProfileInsurance[]) {
   });
 }
 
+function galleryFiles(
+  insurance: ProfileInsurance,
+  identityDocs: ProfileIdentityDoc[] = [],
+) {
+  const files: {
+    id: string;
+    filename: string;
+    mimeType: string | null;
+  }[] = [];
+  if (insurance.source_document_id) {
+    files.push({
+      id: insurance.source_document_id,
+      filename: insurance.filename || "Poliță",
+      mimeType: insurance.mime_type,
+    });
+  }
+  for (const doc of identityDocs) {
+    if (!doc.source_document_id) continue;
+    if (files.some((file) => file.id === doc.source_document_id)) continue;
+    files.push({
+      id: doc.source_document_id,
+      filename: doc.filename || doc.title || "Act",
+      mimeType: doc.mime_type,
+    });
+  }
+  return files;
+}
+
 function InsuranceCard({
   item,
   status,
@@ -62,7 +89,7 @@ function InsuranceCard({
   canEdit,
   onEdit,
   onDelete,
-  identitySlot,
+  identityDocs = [],
 }: {
   item: ProfileInsurance;
   status: "activă" | "expirată" | "viitoare";
@@ -70,7 +97,7 @@ function InsuranceCard({
   canEdit: boolean;
   onEdit: () => void;
   onDelete: () => void;
-  identitySlot?: ReactNode;
+  identityDocs?: ProfileIdentityDoc[];
 }) {
   if (!featured) {
     return (
@@ -120,6 +147,8 @@ function InsuranceCard({
     );
   }
 
+  const files = galleryFiles(item, identityDocs);
+
   return (
     <div className="rounded-lg border-2 border-foreground/15 bg-muted/30 px-3 py-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -144,20 +173,9 @@ function InsuranceCard({
           {item.notes}
         </p>
       ) : null}
-      {item.source_document_id || identitySlot ? (
-        <div className="mt-2 flex flex-wrap items-start gap-3">
-          {item.source_document_id ? (
-            <DocumentGallery
-              files={[
-                {
-                  id: item.source_document_id,
-                  filename: item.filename || "Poliță",
-                  mimeType: item.mime_type,
-                },
-              ]}
-            />
-          ) : null}
-          {identitySlot}
+      {files.length > 0 ? (
+        <div className="mt-2">
+          <DocumentGallery files={files} />
         </div>
       ) : null}
       {canEdit ? (
@@ -432,19 +450,29 @@ export function ProfileInsuranceSection({
               status={statusFor(current.start_date, current.end_date, today)}
               featured
               canEdit={canEdit}
+              identityDocs={identityDocs}
               onEdit={() => setEditing(current)}
               onDelete={() => {
                 setDeleteError(null);
                 setDeleting(current);
               }}
-              identitySlot={
-                <ProfileIdentityDocsSection docs={identityDocs} />
-              }
             />
-          ) : identityDocs.length > 0 ? (
+          ) : identityDocs.some((doc) => doc.source_document_id) ? (
             <div className="rounded-lg border-2 border-foreground/15 bg-muted/30 px-3 py-3">
               <p className="mb-2 text-xs text-muted-foreground">Act</p>
-              <ProfileIdentityDocsSection docs={identityDocs} />
+              <DocumentGallery
+                files={identityDocs.flatMap((doc) =>
+                  doc.source_document_id
+                    ? [
+                        {
+                          id: doc.source_document_id,
+                          filename: doc.filename || doc.title || "Act",
+                          mimeType: doc.mime_type,
+                        },
+                      ]
+                    : [],
+                )}
+              />
             </div>
           ) : null}
           {history.length > 0 ? (
