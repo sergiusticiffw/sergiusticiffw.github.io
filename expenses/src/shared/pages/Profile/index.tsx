@@ -30,6 +30,7 @@ import { Switch } from '@shared/ui';
 import AiSettings from '@features/assistant/components/AiSettings';
 import TagSettings from '../../../features/profile/TagSettings';
 import PrivacySettings from '../../../features/privacy/PrivacySettings';
+import BiometricSettings from '../../../features/privacy/BiometricSettings';
 import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 import { googleLogout } from '@react-oauth/google';
 
@@ -310,6 +311,11 @@ const Profile = () => {
             </div>
           )}
         </div>
+
+        <BiometricSettings
+          userId={String(userDetails?.current_user?.uid ?? '')}
+          displayName={String(userDetails?.current_user?.name ?? '')}
+        />
 
         <PrivacySettings />
 

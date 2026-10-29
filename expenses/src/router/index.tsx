@@ -27,17 +27,19 @@ import {
 } from '../crypto/encryptionState';
 import KeyNeededScreen from '../features/privacy/KeyNeededScreen';
 import MigrationProgress from '../features/privacy/MigrationProgress';
+import BiometricLockGate from '../features/privacy/BiometricLockGate';
 
 function requireAuth() {
   if (!getStoredToken()) throw redirect({ to: '/expenses/login' });
 }
 
 function RootComponent() {
-  const { token } = useAuthState();
+  const { token, userDetails } = useAuthState();
   const encryption = useEncryptionState();
   const lockedOut = !!token && needsEncryptionKey(encryption);
+  const userId = String(userDetails?.current_user?.uid ?? '');
 
-  return (
+  const shell = (
     <div className="h-dvh w-full max-w-full flex flex-col overflow-hidden bg-[var(--color-app-bg)]">
       <SyncStatusIndicator />
       <MigrationProgress />
@@ -65,6 +67,12 @@ function RootComponent() {
       </main>
     </div>
   );
+
+  if (!token || !userId) {
+    return shell;
+  }
+
+  return <BiometricLockGate userId={userId}>{shell}</BiometricLockGate>;
 }
 
 const rootRoute = createRootRoute({

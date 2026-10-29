@@ -9,6 +9,8 @@ import {
   resetEncryptionState,
 } from '../../crypto/encryptionState';
 import { resetTagsOnLogout } from '../../tags/catalog';
+import { clearUnlockOnLogout, markUnlocked } from '../../features/privacy/biometricLock';
+import { getStoredCurrentUser } from '@shared/utils/authStorage';
 
 export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
   const requestOptions = {
@@ -33,6 +35,10 @@ export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
       );
       const currency = (data.current_user as { currency?: string })?.currency;
       if (currency) hydrateSettings({ currency });
+      const uid = String(
+        (data.current_user as { uid?: string | number }).uid ?? ''
+      );
+      if (uid) markUnlocked(uid);
       return data;
     }
 
@@ -43,6 +49,12 @@ export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
 };
 
 export const logout = async (dispatch: any, dataDispatch: any) => {
+  const stored = getStoredCurrentUser();
+  const uid = String(
+    (stored?.current_user as { uid?: string | number } | undefined)?.uid ?? ''
+  );
+  if (uid) clearUnlockOnLogout(uid);
+
   await dispatch({ type: 'LOGOUT' });
   await dataDispatch({ type: 'REMOVE_DATA' });
   resetEncryptionState();

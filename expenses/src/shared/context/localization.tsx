@@ -217,6 +217,34 @@ const translations = {
     'profile.chartsMoveToVisible': 'Move to Visible',
     'profile.account': 'Account',
     'profile.signOut': 'Sign Out',
+    'biometric.title': 'Screen lock',
+    'biometric.body':
+      'After sign-in, lock the app on this device and unlock with Face ID, fingerprint, or Windows Hello. Your session stays; only the screen is protected.',
+    'biometric.toggle': 'Unlock with biometrics',
+    'biometric.statusLabel': 'Status',
+    'biometric.status.unsupported': 'unavailable in this browser',
+    'biometric.status.unavailable': 'no Face ID / fingerprint / Windows Hello on this device',
+    'biometric.status.active': 'on for this device',
+    'biometric.status.inactive': 'off',
+    'biometric.enabled': 'Biometric unlock is on for this device.',
+    'biometric.disabled': 'Biometric unlock was turned off.',
+    'biometric.disableConfirm': 'Turn off biometric unlock on this device?',
+    'biometric.lockTitle': 'Unlock Expenses',
+    'biometric.lockBody':
+      'Use biometrics on this device, or sign in again with Google.',
+    'biometric.unlock': 'Unlock',
+    'biometric.unlocking': 'Checking…',
+    'biometric.useGoogle': 'Sign in with Google',
+    'biometric.err.unsupported': 'This device does not support biometric unlock.',
+    'biometric.err.unavailable':
+      'No Face ID, fingerprint, or Windows Hello on this device.',
+    'biometric.err.cancelled': 'Biometric prompt was cancelled.',
+    'biometric.err.enrollFailed': 'Biometrics could not be enabled on this device.',
+    'biometric.err.notEnabled': 'Biometric unlock is not enabled.',
+    'biometric.err.missingCredential':
+      'Biometric credential is missing. Turn it on again from Profile.',
+    'biometric.err.assertFailed':
+      'Biometric unlock failed. Try again or sign in with Google.',
     'privacy.title': 'Privacy',
     'privacy.lockTitle': 'Lock my data',
     'privacy.lockBody':
@@ -1007,6 +1035,34 @@ const translations = {
     'profile.chartsMoveToVisible': 'Mută la Vizibile',
     'profile.account': 'Cont',
     'profile.signOut': 'Deconectare',
+    'biometric.title': 'Blocare ecran',
+    'biometric.body':
+      'După autentificare, blochează aplicația pe acest dispozitiv și deblochează cu Face ID, amprentă sau Windows Hello. Sesiunea rămâne; doar ecranul e protejat.',
+    'biometric.toggle': 'Deblocare cu biometrie',
+    'biometric.statusLabel': 'Stare',
+    'biometric.status.unsupported': 'indisponibil în acest browser',
+    'biometric.status.unavailable': 'fără Face ID / amprentă / Windows Hello pe dispozitiv',
+    'biometric.status.active': 'activ pe acest dispozitiv',
+    'biometric.status.inactive': 'inactiv',
+    'biometric.enabled': 'Deblocarea biometrică este activă pe acest dispozitiv.',
+    'biometric.disabled': 'Deblocarea biometrică a fost dezactivată.',
+    'biometric.disableConfirm': 'Dezactivezi deblocarea biometrică pe acest dispozitiv?',
+    'biometric.lockTitle': 'Deblochează Expenses',
+    'biometric.lockBody':
+      'Folosește biometria acestui dispozitiv sau autentifică-te din nou cu Google.',
+    'biometric.unlock': 'Deblochează',
+    'biometric.unlocking': 'Se verifică…',
+    'biometric.useGoogle': 'Autentificare cu Google',
+    'biometric.err.unsupported': 'Dispozitivul nu suportă deblocare biometrică.',
+    'biometric.err.unavailable':
+      'Nu există Face ID, amprentă sau Windows Hello pe acest dispozitiv.',
+    'biometric.err.cancelled': 'Promptul biometric a fost anulat.',
+    'biometric.err.enrollFailed': 'Biometria nu a putut fi activată pe acest dispozitiv.',
+    'biometric.err.notEnabled': 'Deblocarea biometrică nu este activă.',
+    'biometric.err.missingCredential':
+      'Credentialul biometric lipsește. Reactivează din Profil.',
+    'biometric.err.assertFailed':
+      'Deblocarea biometrică a eșuat. Încearcă din nou sau autentifică-te cu Google.',
     'privacy.title': 'Confidențialitate',
     'privacy.lockTitle': 'Blochează datele',
     'privacy.lockBody':
