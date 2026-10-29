@@ -46,18 +46,18 @@ export function DeleteRecordButton({
   }
 
   return (
-    <div className={compact ? "flex flex-col gap-1" : "mt-3 flex flex-col gap-1"}>
+    <>
       <Button
         type="button"
-        variant="outline"
-        className={compact ? "h-7 px-2 text-xs sm:w-fit" : "h-11 sm:w-fit"}
+        variant="destructive"
+        className={compact ? "h-7 px-2 text-xs sm:w-fit" : "h-11 w-full"}
         disabled={pending}
         onClick={() => {
           setError(null);
           setOpen(true);
         }}
       >
-        {pending ? "Se șterge…" : compact ? "Șterge" : "Șterge înregistrarea"}
+        {pending ? "Se șterge…" : compact ? "Șterge" : "Șterge"}
       </Button>
       <ConfirmDialog
         open={open}
@@ -74,6 +74,6 @@ export function DeleteRecordButton({
         }}
         onCancel={() => setOpen(false)}
       />
-    </div>
+    </>
   );
 }

@@ -98,22 +98,31 @@ function todayInputValue() {
 function EntryForm({
   action,
   profileId,
+  formId,
   children,
   onSaved,
+  onPendingChange,
 }: {
   action: (
     previous: RecordActionResult,
     formData: FormData,
   ) => Promise<RecordActionResult>;
   profileId: string;
+  formId: string;
   children: ReactNode;
   onSaved?: () => void;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const [state, setState] = useState<RecordActionResult>(initialResult);
   const [fileError, setFileError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
+
+  function setPending(next: boolean) {
+    setSaving(next);
+    onPendingChange?.(next);
+  }
 
   async function submit(formData: FormData) {
     const chosen = formData
@@ -124,7 +133,7 @@ function EntryForm({
     setState(initialResult);
 
     if (chosen.length === 0) {
-      setSaving(true);
+      setPending(true);
       try {
         const result = await action(initialResult, formData);
         setState(result);
@@ -135,7 +144,7 @@ function EntryForm({
       } catch {
         setState({ error: "Înregistrarea nu a putut fi salvată. Încearcă din nou." });
       } finally {
-        setSaving(false);
+        setPending(false);
       }
       return;
     }
@@ -154,7 +163,7 @@ function EntryForm({
       return;
     }
 
-    setSaving(true);
+    setPending(true);
     let primaryId: string | null = null;
     try {
       // Shrink photos so each request stays under the hosting body limit.
@@ -217,12 +226,13 @@ function EntryForm({
     } catch {
       setFileError("Înregistrarea nu a putut fi salvată. Încearcă din nou.");
     } finally {
-      setSaving(false);
+      setPending(false);
     }
   }
 
   return (
     <form
+      id={formId}
       ref={formRef}
       action={submit}
       method="post"
@@ -236,9 +246,6 @@ function EntryForm({
         </p>
       ) : null}
       {children}
-      <Button type="submit" className="h-11 sm:w-fit" disabled={saving}>
-        {saving ? "Se salvează…" : "Salvează"}
-      </Button>
     </form>
   );
 }
@@ -258,11 +265,19 @@ export function ProfileEntries({
   const [saveAction, setSaveAction] = useState<HomeUploadSaveAction | null>(
     null,
   );
+  const [entryPending, setEntryPending] = useState(false);
+  const entryFormId = `entry-form-${profileId}`;
 
   function closePanel() {
+    if (saveAction?.disabled || entryPending) {
+      return;
+    }
     setSaveAction(null);
     setPanel(null);
   }
+
+  const dialogPending =
+    entryPending || Boolean(saveAction?.disabled);
 
   return (
     <div className="flex flex-col gap-4 border-t pt-4">
@@ -288,26 +303,68 @@ export function ProfileEntries({
       <FormDialog
         open={panel !== null}
         title={panel === "file" ? "Document nou" : "Înregistrare nouă"}
-        pending={saveAction?.disabled ?? false}
+        pending={dialogPending}
         onClose={closePanel}
-        actions={
-          saveAction ? (
+        footer={
+          panel === "consultation" ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11"
+                disabled={entryPending}
+                onClick={closePanel}
+              >
+                Renunță
+              </Button>
+              <Button
+                type="submit"
+                form={entryFormId}
+                className="h-11 sm:w-fit"
+                disabled={entryPending}
+              >
+                {entryPending ? "Se salvează…" : "Salvează"}
+              </Button>
+            </>
+          ) : saveAction ? (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11"
+                disabled={saveAction.disabled}
+                onClick={closePanel}
+              >
+                Renunță
+              </Button>
+              <Button
+                type="button"
+                className="h-11 sm:w-fit"
+                disabled={saveAction.disabled}
+                onClick={saveAction.onSave}
+              >
+                {saveAction.label}
+              </Button>
+            </>
+          ) : (
             <Button
               type="button"
-              className="h-9"
-              disabled={saveAction.disabled}
-              onClick={saveAction.onSave}
+              variant="outline"
+              className="h-11"
+              onClick={closePanel}
             >
-              {saveAction.label}
+              Renunță
             </Button>
-          ) : null
+          )
         }
       >
         {panel === "consultation" ? (
           <EntryForm
             action={createConsultation}
             profileId={profileId}
+            formId={entryFormId}
             onSaved={closePanel}
+            onPendingChange={setEntryPending}
           >
             <div className="flex flex-col gap-2">
               <Label htmlFor={`consult-category-${profileId}`}>Tip</Label>

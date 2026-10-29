@@ -118,6 +118,8 @@ export function ProfileDetail({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [editPending, setEditPending] = useState(false);
+  const editFormId = `edit-profile-${profile.id}`;
   const birthDate = formatBirthDate(profile.birth_date);
 
   async function onDelete() {
@@ -181,11 +183,37 @@ export function ProfileDetail({
         <FormDialog
           open={editing}
           title="Modifică profilul"
-          onClose={() => setEditing(false)}
+          pending={editPending}
+          onClose={() => {
+            if (!editPending) setEditing(false);
+          }}
+          footer={
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11"
+                disabled={editPending}
+                onClick={() => setEditing(false)}
+              >
+                Renunță
+              </Button>
+              <Button
+                type="submit"
+                form={editFormId}
+                className="h-11 sm:w-fit"
+                disabled={editPending}
+              >
+                {editPending ? "Se salvează…" : "Salvează"}
+              </Button>
+            </>
+          }
         >
           <ProfileForm
             profileId={profile.id}
+            formId={editFormId}
             submitLabel="Salvează"
+            hideActions
             defaultValues={{
               displayName: profile.display_name,
               birthDate: profile.birth_date ?? "",
@@ -193,6 +221,7 @@ export function ProfileDetail({
               notes: profile.notes ?? "",
             }}
             onDone={() => setEditing(false)}
+            onPendingChange={setEditPending}
           />
         </FormDialog>
         <ConfirmDialog

@@ -24,14 +24,20 @@ const emptyValues: ProfileInput = {
 
 export function ProfileForm({
   profileId,
+  formId,
   defaultValues = emptyValues,
   submitLabel,
+  hideActions = false,
   onDone,
+  onPendingChange,
 }: {
   profileId?: string;
+  formId?: string;
   defaultValues?: ProfileInput;
   submitLabel: string;
+  hideActions?: boolean;
   onDone?: () => void;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<ProfileInput>({
@@ -41,23 +47,34 @@ export function ProfileForm({
 
   const onSubmit = form.handleSubmit(async (values) => {
     setFormError(null);
-    const result = profileId
-      ? await updateProfile(profileId, values)
-      : await createProfile(values);
+    onPendingChange?.(true);
+    try {
+      const result = profileId
+        ? await updateProfile(profileId, values)
+        : await createProfile(values);
 
-    if (result.error) {
-      setFormError(result.error);
-      return;
-    }
+      if (result.error) {
+        setFormError(result.error);
+        return;
+      }
 
-    if (!profileId) {
-      form.reset(emptyValues);
+      if (!profileId) {
+        form.reset(emptyValues);
+      }
+      onDone?.();
+    } finally {
+      onPendingChange?.(false);
     }
-    onDone?.();
   });
 
   return (
-    <form method="post" onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+    <form
+      id={formId}
+      method="post"
+      onSubmit={onSubmit}
+      className="flex flex-col gap-4"
+      noValidate
+    >
       {formError ? (
         <p role="alert" className="text-sm text-destructive">
           {formError}
@@ -130,31 +147,35 @@ export function ProfileForm({
           </p>
         ) : null}
       </div>
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button
-          type="submit"
-          className="h-11 sm:min-w-36"
-          disabled={form.formState.isSubmitting}
-        >
-          {form.formState.isSubmitting ? "Se salvează…" : submitLabel}
-        </Button>
-        {onDone ? (
+      {hideActions ? null : (
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Button
-            type="button"
-            variant="outline"
-            className="h-11"
-            onClick={onDone}
+            type="submit"
+            className="h-11 sm:min-w-36"
+            disabled={form.formState.isSubmitting}
           >
-            Renunță
+            {form.formState.isSubmitting ? "Se salvează…" : submitLabel}
           </Button>
-        ) : null}
-      </div>
+          {onDone ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11"
+              onClick={onDone}
+            >
+              Renunță
+            </Button>
+          ) : null}
+        </div>
+      )}
     </form>
   );
 }
 
 export function AddProfileButton() {
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const formId = "add-profile-form";
 
   return (
     <>
@@ -164,15 +185,42 @@ export function AddProfileButton() {
       <FormDialog
         open={open}
         title="Adaugă profil"
-        onClose={() => setOpen(false)}
+        pending={pending}
+        onClose={() => {
+          if (!pending) setOpen(false);
+        }}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11"
+              disabled={pending}
+              onClick={() => setOpen(false)}
+            >
+              Renunță
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              className="h-11 sm:w-fit"
+              disabled={pending}
+            >
+              {pending ? "Se salvează…" : "Adaugă profil"}
+            </Button>
+          </>
+        }
       >
         <p className="text-sm text-muted-foreground">
           Numele, data nașterii și IDNP-ul. Documentele scanate se asociază
           după IDNP și rămân în folderul privat din Google Drive.
         </p>
         <ProfileForm
+          formId={formId}
           submitLabel="Adaugă profil"
+          hideActions
           onDone={() => setOpen(false)}
+          onPendingChange={setPending}
         />
       </FormDialog>
     </>

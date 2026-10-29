@@ -165,15 +165,10 @@ export function FamilyManager({
           >
             Invită
           </Button>
-          <FormDialog
+          <InviteDialog
             open={inviteOpen}
-            title="Invită în familie"
             onClose={() => setInviteOpen(false)}
-          >
-            {inviteOpen ? (
-              <InviteForm onSaved={() => setInviteOpen(false)} />
-            ) : null}
-          </FormDialog>
+          />
         </div>
       ) : null}
 
@@ -219,8 +214,33 @@ function RenameFamily({ name }: { name: string }) {
         title="Numele familiei"
         pending={pending}
         onClose={() => setOpen(false)}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11"
+              disabled={pending}
+              onClick={() => setOpen(false)}
+            >
+              Renunță
+            </Button>
+            <Button
+              type="submit"
+              form="rename-family-form"
+              className="h-11 sm:w-fit"
+              disabled={pending}
+            >
+              {pending ? "Se salvează…" : "Salvează"}
+            </Button>
+          </>
+        }
       >
-        <form action={action} className="flex flex-col gap-3">
+        <form
+          id="rename-family-form"
+          action={action}
+          className="flex flex-col gap-3"
+        >
           <Label htmlFor="family-name">Nume</Label>
           <Input
             id="family-name"
@@ -231,46 +251,80 @@ function RenameFamily({ name }: { name: string }) {
             className="h-11"
           />
           <Notice state={state} />
-          <Button type="submit" className="h-11" disabled={pending}>
-            {pending ? "Se salvează…" : "Salvează"}
-          </Button>
         </form>
       </FormDialog>
     </div>
   );
 }
 
-function InviteForm({ onSaved }: { onSaved: () => void }) {
+function InviteDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   const [state, action, pending] = useActionState(inviteMember, initial);
 
   useEffect(() => {
     if (state.saved) {
-      onSaved();
+      onClose();
     }
-  }, [state.saved, onSaved]);
+  }, [state.saved, onClose]);
 
   return (
-    <form action={action} className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">
-        Dacă persoana are deja cont, intră imediat. Altfel, invitația se aplică
-        când contul este creat.
-      </p>
-      <Notice state={state} />
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="invite-email">Email</Label>
-        <Input
-          id="invite-email"
-          name="email"
-          type="email"
-          required
-          className="h-11"
-        />
-      </div>
-      <RoleSelect name="role" defaultValue="viewer" />
-      <Button type="submit" className="h-11" disabled={pending}>
-        {pending ? "Se invită…" : "Invită"}
-      </Button>
-    </form>
+    <FormDialog
+      open={open}
+      title="Invită în familie"
+      pending={pending}
+      onClose={onClose}
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11"
+            disabled={pending}
+            onClick={onClose}
+          >
+            Renunță
+          </Button>
+          <Button
+            type="submit"
+            form="invite-member-form"
+            className="h-11 sm:w-fit"
+            disabled={pending}
+          >
+            {pending ? "Se invită…" : "Invită"}
+          </Button>
+        </>
+      }
+    >
+      {open ? (
+        <form
+          id="invite-member-form"
+          action={action}
+          className="flex flex-col gap-3"
+        >
+          <p className="text-sm text-muted-foreground">
+            Dacă persoana are deja cont, intră imediat. Altfel, invitația se
+            aplică când contul este creat.
+          </p>
+          <Notice state={state} />
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="invite-email">Email</Label>
+            <Input
+              id="invite-email"
+              name="email"
+              type="email"
+              required
+              className="h-11"
+            />
+          </div>
+          <RoleSelect name="role" defaultValue="viewer" />
+        </form>
+      ) : null}
+    </FormDialog>
   );
 }
 
@@ -319,8 +373,33 @@ function ProfileAccessForm({
         title={`Acces · ${profile.display_name}`}
         pending={pending}
         onClose={() => setOpen(false)}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11"
+              disabled={pending}
+              onClick={() => setOpen(false)}
+            >
+              Renunță
+            </Button>
+            <Button
+              type="submit"
+              form={`access-form-${profile.id}`}
+              className="h-11 sm:w-fit"
+              disabled={pending}
+            >
+              {pending ? "Se salvează…" : "Salvează accesul"}
+            </Button>
+          </>
+        }
       >
-        <form action={action} className="flex flex-col gap-3">
+        <form
+          id={`access-form-${profile.id}`}
+          action={action}
+          className="flex flex-col gap-3"
+        >
           <input type="hidden" name="profileId" value={profile.id} />
           <ul className="flex flex-col">
             {members.map((member) => (
@@ -341,9 +420,6 @@ function ProfileAccessForm({
             ))}
           </ul>
           <Notice state={state} />
-          <Button type="submit" className="h-11" disabled={pending}>
-            {pending ? "Se salvează…" : "Salvează accesul"}
-          </Button>
         </form>
       </FormDialog>
     </div>
@@ -379,16 +455,38 @@ function MemberRow({ member }: { member: FamilyMember }) {
         title={member.email ?? "Membru"}
         pending={rolePending || removePending}
         onClose={() => setOpen(false)}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11"
+              disabled={rolePending || removePending}
+              onClick={() => setOpen(false)}
+            >
+              Renunță
+            </Button>
+            <Button
+              type="submit"
+              form={`member-role-${member.user_id}`}
+              className="h-11 sm:w-fit"
+              disabled={rolePending || removePending}
+            >
+              {rolePending ? "Se salvează…" : "Salvează rolul"}
+            </Button>
+          </>
+        }
       >
         <div className="flex flex-col gap-4">
-          <form action={roleAction} className="flex flex-col gap-3">
+          <form
+            id={`member-role-${member.user_id}`}
+            action={roleAction}
+            className="flex flex-col gap-3"
+          >
             <input type="hidden" name="userId" value={member.user_id} />
             <Label>Rol</Label>
             <RoleSelect name="role" defaultValue={member.role} />
             <Notice state={roleState} />
-            <Button type="submit" className="h-11" disabled={rolePending}>
-              {rolePending ? "Se salvează…" : "Salvează rolul"}
-            </Button>
           </form>
           <form action={removeAction} className="border-t pt-3">
             <input type="hidden" name="userId" value={member.user_id} />
@@ -396,7 +494,7 @@ function MemberRow({ member }: { member: FamilyMember }) {
               type="submit"
               variant="destructive"
               className="h-11"
-              disabled={removePending}
+              disabled={removePending || rolePending}
             >
               {removePending ? "Se scoate…" : "Scoate din familie"}
             </Button>

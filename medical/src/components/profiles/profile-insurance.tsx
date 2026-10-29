@@ -176,19 +176,27 @@ function InsuranceCard({
 
 function InsuranceForm({
   profileId,
+  formId,
   insurance,
   driveConnected,
   onSaved,
+  onPendingChange,
 }: {
   profileId: string;
+  formId: string;
   insurance?: ProfileInsurance | null;
   driveConnected: boolean;
   onSaved: () => void;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [pending, setPendingState] = useState(false);
+  function setPending(next: boolean) {
+    setPendingState(next);
+    onPendingChange?.(next);
+  }
   const [fileName, setFileName] = useState<string | null>(null);
   const [title, setTitle] = useState(insurance?.title ?? "");
   const [startDate, setStartDate] = useState(
@@ -246,7 +254,11 @@ function InsuranceForm({
   }
 
   return (
-    <form className="flex flex-col gap-3" onSubmit={(event) => void onSubmit(event)}>
+    <form
+      id={formId}
+      className="flex flex-col gap-3"
+      onSubmit={(event) => void onSubmit(event)}
+    >
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}
@@ -335,9 +347,6 @@ function InsuranceForm({
           </p>
         ) : null}
       </div>
-      <Button type="submit" className="h-11 sm:w-fit" disabled={pending}>
-        {pending ? "Se salvează…" : "Salvează"}
-      </Button>
     </form>
   );
 }
@@ -359,6 +368,9 @@ export function ProfileInsuranceSection({
   const [deleting, setDeleting] = useState<ProfileInsurance | null>(null);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [formPending, setFormPending] = useState(false);
+  const addFormId = `insurance-add-${profileId}`;
+  const editFormId = `insurance-edit-${profileId}`;
   const today = todayInputValue();
   const sorted = sortInsurances(insurances);
   const current =
@@ -452,27 +464,79 @@ export function ProfileInsuranceSection({
       <FormDialog
         open={adding}
         title="Asigurare nouă"
-        onClose={() => setAdding(false)}
+        pending={formPending}
+        onClose={() => {
+          if (!formPending) setAdding(false);
+        }}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11"
+              disabled={formPending}
+              onClick={() => setAdding(false)}
+            >
+              Renunță
+            </Button>
+            <Button
+              type="submit"
+              form={addFormId}
+              className="h-11 sm:w-fit"
+              disabled={formPending}
+            >
+              {formPending ? "Se salvează…" : "Salvează"}
+            </Button>
+          </>
+        }
       >
         <InsuranceForm
           profileId={profileId}
+          formId={addFormId}
           driveConnected={driveConnected}
           onSaved={() => setAdding(false)}
+          onPendingChange={setFormPending}
         />
       </FormDialog>
 
       <FormDialog
         open={editing !== null}
         title="Modifică asigurarea"
-        onClose={() => setEditing(null)}
+        pending={formPending}
+        onClose={() => {
+          if (!formPending) setEditing(null);
+        }}
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11"
+              disabled={formPending}
+              onClick={() => setEditing(null)}
+            >
+              Renunță
+            </Button>
+            <Button
+              type="submit"
+              form={editFormId}
+              className="h-11 sm:w-fit"
+              disabled={formPending}
+            >
+              {formPending ? "Se salvează…" : "Salvează"}
+            </Button>
+          </>
+        }
       >
         {editing ? (
           <InsuranceForm
             key={editing.id}
             profileId={profileId}
+            formId={editFormId}
             insurance={editing}
             driveConnected={driveConnected}
             onSaved={() => setEditing(null)}
+            onPendingChange={setFormPending}
           />
         ) : null}
       </FormDialog>

@@ -241,11 +241,11 @@ export function EditRecordButton({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <>
       <Button
         type="button"
         variant="outline"
-        className="h-11 sm:w-fit"
+        className="h-11 w-full"
         disabled={pending !== null}
         onClick={openForm}
       >
@@ -489,6 +489,6 @@ export function EditRecordButton({
           </div>
         </form>
       </dialog>
-    </div>
+    </>
   );
 }

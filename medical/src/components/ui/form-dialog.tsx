@@ -9,14 +9,15 @@ export function FormDialog({
   title,
   pending = false,
   onClose,
-  actions,
+  footer,
   children,
 }: {
   open: boolean;
   title: string;
   pending?: boolean;
   onClose: () => void;
-  actions?: ReactNode;
+  /** Sticky bottom actions (Renunță / Salvează), same pattern as edit record. */
+  footer?: ReactNode;
   children: ReactNode;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -58,22 +59,30 @@ export function FormDialog({
           <h2 className="min-w-0 flex-1 truncate text-base font-semibold">
             {title}
           </h2>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9"
-              disabled={pending}
-              onClick={close}
-            >
-              Închide
-            </Button>
-            {actions}
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 shrink-0"
+            disabled={pending}
+            onClick={close}
+          >
+            Închide
+          </Button>
         </div>
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div
+          className={
+            footer
+              ? "flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3"
+              : "flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+          }
+        >
           {children}
         </div>
+        {footer ? (
+          <div className="flex flex-col-reverse gap-2 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end">
+            {footer}
+          </div>
+        ) : null}
       </div>
     </dialog>
   );

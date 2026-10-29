@@ -56,23 +56,24 @@ export function RecordDetail({
         <p className="text-sm text-muted-foreground">Nu există text salvat.</p>
       )}
       {canEdit ? (
-        <div className="border-t pt-4">
-          <EditRecordButton
-            kind={record.kind}
-            id={record.id}
-            title={record.editTitle || record.title}
-            date={record.date ?? ""}
-            body={record.editBody || record.body}
-            category={record.category}
-            files={record.files}
-          >
+        <div className="sticky bottom-[calc(3.5rem+max(0.5rem,env(safe-area-inset-bottom)))] z-20 -mx-4 mt-2 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/90">
+          <div className="grid grid-cols-2 gap-2">
+            <EditRecordButton
+              kind={record.kind}
+              id={record.id}
+              title={record.editTitle || record.title}
+              date={record.date ?? ""}
+              body={record.editBody || record.body}
+              category={record.category}
+              files={record.files}
+            />
             <DeleteRecordButton
               kind={record.kind}
               id={record.id}
               withFiles={record.files.length > 0}
               afterHref="/records"
             />
-          </EditRecordButton>
+          </div>
         </div>
       ) : null}
     </div>

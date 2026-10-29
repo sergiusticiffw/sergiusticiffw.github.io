@@ -362,27 +362,29 @@ export function HomeUpload({
             onChange={(event) => setDraft({ ...draft, body: event.target.value })}
           />
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
-            type="button"
-            className="h-11"
-            disabled={pending !== null}
-            onClick={() => {
-              void onSave();
-            }}
-          >
-            {pending === "save" ? progress ?? "Se salvează…" : "Salvează"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11"
-            disabled={pending !== null}
-            onClick={reset}
-          >
-            Renunță
-          </Button>
-        </div>
+        {onSaveActionChange ? null : (
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              type="button"
+              className="h-11"
+              disabled={pending !== null}
+              onClick={() => {
+                void onSave();
+              }}
+            >
+              {pending === "save" ? progress ?? "Se salvează…" : "Salvează"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11"
+              disabled={pending !== null}
+              onClick={reset}
+            >
+              Renunță
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
