@@ -6,6 +6,10 @@ import { useState } from "react";
 import { deleteProfile } from "@/app/(app)/profiles/actions";
 import { ProfileEntries } from "@/components/profiles/profile-entries";
 import { ProfileForm } from "@/components/profiles/profile-form";
+import {
+  ProfileInsuranceSection,
+  type ProfileInsurance,
+} from "@/components/profiles/profile-insurance";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -94,6 +98,7 @@ export function ProfileDetail({
   documents,
   consultations,
   labTests,
+  insurances = [],
   driveConnected,
   canWrite = true,
   canEditRecords = canWrite,
@@ -103,6 +108,7 @@ export function ProfileDetail({
   documents: MedicalDocument[];
   consultations: MedicalConsultation[];
   labTests: MedicalLabTest[];
+  insurances?: ProfileInsurance[];
   driveConnected: boolean;
   canWrite?: boolean;
   canEditRecords?: boolean;
@@ -209,6 +215,12 @@ export function ProfileDetail({
           driveConnected={driveConnected}
         />
         ) : null}
+        <ProfileInsuranceSection
+          profileId={profile.id}
+          insurances={insurances}
+          driveConnected={driveConnected}
+          canEdit={canEditRecords}
+        />
         <ProfileRecords
           documents={documents}
           consultations={consultations}
@@ -228,7 +240,9 @@ function ProfileRecords({
   consultations: MedicalConsultation[];
   labTests: MedicalLabTest[];
 }) {
-  const primaries = documents.filter((document) => !document.record_id);
+  const primaries = documents.filter(
+    (document) => !document.record_id && document.category !== "Asigurare",
+  );
   const documentRecords = primaries.map((document) => {
     const files = [
       document,
@@ -258,19 +272,30 @@ function ProfileRecords({
   const manualRecords = [
     ...consultations
       .filter((item) => !item.source_document_id)
-      .map((item) => ({
-        id: item.id,
-        date: item.consultation_date,
-        title: ["Consultație", item.doctor_name].filter(Boolean).join(" · "),
-        body: item.summary?.trim() || "",
-        fileCount: 0,
-      })),
+      .map((item) => {
+        const summary = item.summary?.trim() || "";
+        const firstLine = summary.split("\n")[0]?.trim() || "";
+        const rest = summary.includes("\n\n")
+          ? summary.slice(summary.indexOf("\n\n") + 2).trim()
+          : summary === firstLine
+            ? ""
+            : summary.slice(firstLine.length).trim();
+        return {
+          id: item.id,
+          date: item.consultation_date,
+          title:
+            firstLine ||
+            ["Consultație", item.doctor_name].filter(Boolean).join(" · "),
+          body: rest,
+          fileCount: 0,
+        };
+      }),
     ...labTests
       .filter((item) => !item.source_document_id)
       .map((item) => ({
         id: item.id,
         date: item.sample_date,
-        title: ["Analiză", item.test_name].filter(Boolean).join(" · "),
+        title: item.test_name || "Analiză",
         body: "",
         fileCount: 0,
       })),

@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { useFamilyCache } from "@/lib/data-cache";
+import { parseRecordCategory } from "@/lib/record-category";
 import { createClient } from "@/lib/supabase/server";
 
 export type CatalogPerson = {
@@ -234,7 +235,9 @@ export async function loadMedicalCatalog(
 
   const records: CatalogRecord[] = [];
 
-  for (const item of documents.filter((row) => !row.record_id)) {
+  for (const item of documents.filter(
+    (row) => !row.record_id && row.category !== "Asigurare",
+  )) {
     const files = [item, ...documents.filter((file) => file.record_id === item.id)];
     const consultation =
       consultations.find((row) => row.source_document_id === item.id) ?? null;
@@ -349,6 +352,7 @@ export type RecordIndexItem = {
   profileName: string;
   date: string | null;
   title: string;
+  category: string | null;
   snippet: string;
   search: string;
   fileCount: number;
@@ -385,7 +389,7 @@ export async function loadRecordsIndex(familyId: string): Promise<{
         .order("consultation_date", { ascending: false }),
       supabase
         .from("lab_tests")
-        .select("id, profile_id, source_document_id, test_name, sample_date")
+        .select("id, profile_id, source_document_id, test_name, category, sample_date")
         .order("sample_date", { ascending: false }),
     ]);
 
@@ -445,6 +449,7 @@ export async function loadRecordsIndex(familyId: string): Promise<{
     profile_id: string;
     source_document_id: string | null;
     test_name: string;
+    category: string | null;
     sample_date: string | null;
   }[]).filter((item) => profileIds.has(item.profile_id));
 
@@ -460,7 +465,9 @@ export async function loadRecordsIndex(familyId: string): Promise<{
 
   const records: RecordIndexItem[] = [];
 
-  for (const item of documents.filter((row) => !row.record_id)) {
+  for (const item of documents.filter(
+    (row) => !row.record_id && row.category !== "Asigurare",
+  )) {
     const files = [item, ...documents.filter((file) => file.record_id === item.id)];
     const consultation =
       consultations.find((row) => row.source_document_id === item.id) ?? null;
@@ -477,15 +484,19 @@ export async function loadRecordsIndex(familyId: string): Promise<{
         .filter(Boolean)
         .join(" "),
     ).slice(0, 220);
+    const category = parseRecordCategory(
+      item.category || (labNames.length > 0 ? "Analiză" : "Consultație"),
+    );
     records.push({
       id: item.id,
       profileId: item.profile_id,
       profileName: names.get(item.profile_id) ?? "Profil",
       date: item.document_date,
       title,
+      category,
       snippet,
       search: indexSearch(
-        `${title} ${names.get(item.profile_id) ?? ""} ${consultation?.doctor_name ?? ""} ${snippet}`,
+        `${title} ${category} ${names.get(item.profile_id) ?? ""} ${consultation?.doctor_name ?? ""} ${snippet}`,
       ),
       fileCount: files.length,
     });
@@ -500,13 +511,17 @@ export async function loadRecordsIndex(familyId: string): Promise<{
       profileName: names.get(item.profile_id) ?? "Profil",
       date: item.consultation_date,
       title,
+      category: "Consultație",
       snippet,
-      search: indexSearch(`${title} ${names.get(item.profile_id) ?? ""} ${snippet}`),
+      search: indexSearch(
+        `${title} Consultație ${names.get(item.profile_id) ?? ""} ${snippet}`,
+      ),
       fileCount: 0,
     });
   }
 
   for (const item of labs.filter((row) => !row.source_document_id)) {
+    const category = parseRecordCategory(item.category || "Analiză");
     const title = ["Analiză", item.test_name].filter(Boolean).join(" · ");
     records.push({
       id: item.id,
@@ -514,8 +529,11 @@ export async function loadRecordsIndex(familyId: string): Promise<{
       profileName: names.get(item.profile_id) ?? "Profil",
       date: item.sample_date,
       title,
+      category,
       snippet: "",
-      search: indexSearch(`${title} ${names.get(item.profile_id) ?? ""}`),
+      search: indexSearch(
+        `${title} ${category} ${names.get(item.profile_id) ?? ""}`,
+      ),
       fileCount: 0,
     });
   }

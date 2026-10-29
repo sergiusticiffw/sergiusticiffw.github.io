@@ -5,6 +5,11 @@ import { revalidateApp } from "@/lib/data-cache";
 import { requireProfileWriter } from "@/lib/auth";
 import { isUploadedFile, MAX_RECORD_FILES, readUploadedFile } from "@/lib/files";
 import { trashDriveFile } from "@/lib/google-drive";
+import {
+  DEFAULT_RECORD_CATEGORY,
+  parseRecordCategory,
+  type RecordCategory,
+} from "@/lib/record-category";
 import { replacePrivateFile, storePrivateDocument } from "@/lib/store-document";
 import { createClient } from "@/lib/supabase/server";
 import { profileIdSchema } from "@/lib/validation/profile";
@@ -84,7 +89,7 @@ function validRecordDate(value: string) {
 export async function updateRecord(
   kind: RecordKind,
   id: string,
-  input: { title: string; date: string; body: string },
+  input: { title: string; date: string; body: string; category?: string },
 ): Promise<DocumentActionResult> {
   if (!recordKinds.includes(kind)) {
     return { error: "Înregistrarea nu este validă." };
@@ -97,6 +102,9 @@ export async function updateRecord(
   const title = input.title.trim().slice(0, 160);
   const body = input.body.trim().slice(0, 20000);
   const date = input.date.trim();
+  const category: RecordCategory = parseRecordCategory(
+    input.category ?? DEFAULT_RECORD_CATEGORY,
+  );
   if (!validRecordDate(date)) {
     return { error: "Data nu este validă." };
   }
@@ -143,10 +151,10 @@ export async function updateRecord(
 
   const changes =
     kind === "document"
-      ? { title, document_date: date, extracted_text: body || null }
+      ? { title, document_date: date, extracted_text: body || null, category }
       : kind === "consultation"
         ? { consultation_date: date, summary: body }
-        : { test_name: title, sample_date: date, result_text: body || null };
+        : { test_name: title, sample_date: date, result_text: body || null, category };
 
   const updated = await supabase.from(table).update(changes).eq("id", row.id);
   const missingTitle =

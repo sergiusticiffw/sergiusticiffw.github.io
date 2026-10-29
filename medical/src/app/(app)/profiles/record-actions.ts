@@ -4,6 +4,7 @@ import { revalidateApp } from "@/lib/data-cache";
 
 import { requireProfileWriter } from "@/lib/auth";
 import { readUploadedFiles } from "@/lib/files";
+import { parseRecordCategory } from "@/lib/record-category";
 import {
   discardStoredDocument,
   storePrivateDocument,
@@ -136,7 +137,12 @@ export async function createConsultation(
     return { error: "Verifică datele consultației." };
   }
   if (!parsed.data.consultationDate) {
-    return { error: "Data consultației este obligatorie." };
+    return { error: "Data este obligatorie." };
+  }
+
+  const title = String(formData.get("title") ?? "").trim().slice(0, 160);
+  if (!title) {
+    return { error: "Titlul este obligatoriu." };
   }
 
   const owner = await ownedProfile(parsedId.data);
@@ -151,6 +157,7 @@ export async function createConsultation(
     return { error: "Scrie o notă sau atașează un fișier." };
   }
 
+  const category = parseRecordCategory(formData.get("category"));
   const body = recordBody({
     idnp: "",
     extractedText: "",
@@ -162,35 +169,73 @@ export async function createConsultation(
     profile: owner.profile,
     entries: formData.getAll("file"),
     documentDate: parsed.data.consultationDate,
-    category: "Consultație",
+    category,
     body,
-    title: parsed.data.summary.trim().slice(0, 80) || "Consultație",
+    title,
   });
   if ("error" in files) {
     return { error: files.error };
   }
 
   const supabase = await createClient();
+
+  // With attached files the document row is the record; skip typed tables.
+  if (files.documentId) {
+    refresh(owner.profile.id);
+    return { saved: true };
+  }
+
+  if (category === "Analiză") {
+    const { error } = await supabase.from("lab_tests").insert({
+      profile_id: owner.profile.id,
+      test_name: title,
+      category,
+      sample_date: parsed.data.consultationDate,
+      result_text: parsed.data.summary || null,
+    });
+    if (error) {
+      console.error("createConsultation lab", error.code);
+      return { error: "Analiza nu a putut fi salvată." };
+    }
+    refresh(owner.profile.id);
+    return { saved: true };
+  }
+
+  if (category === "Investigație") {
+    // Note-only investigație: store as consultation-like note with title in summary prefix.
+    const { error } = await supabase.from("consultations").insert({
+      profile_id: owner.profile.id,
+      doctor_name: parsed.data.doctorName || null,
+      clinic_name: parsed.data.clinicName || null,
+      specialty: parsed.data.specialty || title,
+      consultation_date: parsed.data.consultationDate,
+      summary: parsed.data.summary
+        ? `${title}\n\n${parsed.data.summary}`
+        : title,
+      recommendations: parsed.data.recommendations || null,
+    });
+    if (error) {
+      console.error("createConsultation investigation", error.code);
+      return { error: "Înregistrarea nu a putut fi salvată." };
+    }
+    refresh(owner.profile.id);
+    return { saved: true };
+  }
+
   const { error } = await supabase.from("consultations").insert({
     profile_id: owner.profile.id,
-    ...(files.documentId ? { source_document_id: files.documentId } : {}),
     doctor_name: parsed.data.doctorName || null,
     clinic_name: parsed.data.clinicName || null,
     specialty: parsed.data.specialty || null,
     consultation_date: parsed.data.consultationDate,
-    summary: parsed.data.summary || null,
+    summary: parsed.data.summary
+      ? `${title}\n\n${parsed.data.summary}`
+      : title,
     recommendations: parsed.data.recommendations || null,
   });
   if (error) {
     console.error("createConsultation", error.code);
-    if (files.documentId && files.driveFileId && isMissingColumn(error.code)) {
-      refresh(owner.profile.id);
-      return { saved: true };
-    }
-    if (files.documentId && files.driveFileId) {
-      await discardStoredDocument(owner.familyId, files.documentId, files.driveFileId);
-    }
-    return { error: "Consultația nu a putut fi salvată." };
+    return { error: "Înregistrarea nu a putut fi salvată." };
   }
 
   refresh(owner.profile.id);

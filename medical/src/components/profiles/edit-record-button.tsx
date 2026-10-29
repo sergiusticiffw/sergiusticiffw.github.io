@@ -17,6 +17,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES, MAX_RECORD_FILES } from "@/lib/files";
+import {
+  DEFAULT_RECORD_CATEGORY,
+  parseRecordCategory,
+  RECORD_CATEGORIES,
+  type RecordCategory,
+} from "@/lib/record-category";
+
+const selectClass =
+  "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
 
 export function EditRecordButton({
   kind,
@@ -24,6 +33,7 @@ export function EditRecordButton({
   title,
   date,
   body,
+  category = DEFAULT_RECORD_CATEGORY,
   files = [],
   children,
 }: {
@@ -32,6 +42,7 @@ export function EditRecordButton({
   title: string;
   date: string;
   body: string;
+  category?: string | null;
   files?: PreviewFile[];
   children?: ReactNode;
 }) {
@@ -50,6 +61,13 @@ export function EditRecordButton({
   const [draftTitle, setDraftTitle] = useState(title);
   const [draftDate, setDraftDate] = useState(date);
   const [draftBody, setDraftBody] = useState(body);
+  const [draftCategory, setDraftCategory] = useState<RecordCategory>(() =>
+    kind === "lab"
+      ? parseRecordCategory(category || "Analiză")
+      : kind === "consultation"
+        ? "Consultație"
+        : parseRecordCategory(category),
+  );
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -74,6 +92,13 @@ export function EditRecordButton({
     setDraftTitle(title);
     setDraftDate(date);
     setDraftBody(body);
+    setDraftCategory(
+      kind === "lab"
+        ? parseRecordCategory(category || "Analiză")
+        : kind === "consultation"
+          ? "Consultație"
+          : parseRecordCategory(category),
+    );
     setError(null);
     setConfirmFileId(null);
     setReplacingId(null);
@@ -87,6 +112,7 @@ export function EditRecordButton({
       title: draftTitle,
       date: draftDate,
       body: draftBody,
+      category: draftCategory,
     });
     setPending(null);
     if (result.error) {
@@ -259,6 +285,24 @@ export function EditRecordButton({
             </Button>
           </div>
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor={`record-category-${id}`}>Tip</Label>
+            <select
+              id={`record-category-${id}`}
+              className={selectClass}
+              value={draftCategory}
+              disabled={kind === "consultation"}
+              onChange={(event) =>
+                setDraftCategory(event.target.value as RecordCategory)
+              }
+            >
+              {RECORD_CATEGORIES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
           {kind === "consultation" ? null : (
             <div className="flex flex-col gap-1">
               <Label htmlFor={`record-title-${id}`}>

@@ -13,6 +13,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES } from "@/lib/files";
 import {
+  DEFAULT_RECORD_CATEGORY,
+  RECORD_CATEGORIES,
+  type RecordCategory,
+} from "@/lib/record-category";
+import {
   emptyConsultation,
   MAX_EXTRACTED_TEXT,
   recordBody,
@@ -32,6 +37,7 @@ export type HomeUploadSaveAction = {
 };
 
 type RecordDraft = {
+  category: RecordCategory;
   title: string;
   date: string;
   body: string;
@@ -140,6 +146,7 @@ export function HomeUpload({
     };
     setExtraction(extraction);
     setDraft({
+      category: DEFAULT_RECORD_CATEGORY,
       title: suggestedTitle(files[0]),
       date: todayInputValue(),
       body: recordBody(extraction),
@@ -185,6 +192,7 @@ export function HomeUpload({
         const data = new FormData();
         data.append("file", named);
         data.set("profileId", profileId);
+        data.set("category", draft.category);
         data.set("title", draft.title.trim());
         data.set("documentDate", draft.date);
         data.set("body", primaryId ? "" : draft.body);
@@ -301,6 +309,26 @@ export function HomeUpload({
             </select>
           </div>
         )}
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="upload-category">Tip</Label>
+          <select
+            id="upload-category"
+            className={selectClass}
+            value={draft.category}
+            onChange={(event) =>
+              setDraft({
+                ...draft,
+                category: event.target.value as RecordCategory,
+              })
+            }
+          >
+            {RECORD_CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="upload-title">Titlu</Label>
           <Input

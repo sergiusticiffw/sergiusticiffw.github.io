@@ -18,6 +18,7 @@ export type FamilyRecord = {
   profileName: string;
   date: string | null;
   title: string;
+  category: string | null;
   editTitle: string;
   editBody: string;
   body: string;
@@ -192,6 +193,7 @@ export async function loadFamilyRecord(
         profileName: name,
         date: primaryRow.document_date,
         title,
+        category: primaryRow.category,
         editTitle: primaryRow.title?.trim() || "",
         editBody: primaryRow.extracted_text?.trim() || "",
         body,
@@ -245,6 +247,7 @@ export async function loadFamilyRecord(
         profileName: name,
         date: consultation.consultation_date,
         title: ["Consultație", consultation.doctor_name].filter(Boolean).join(" · "),
+        category: "Consultație",
         editTitle: "",
         editBody: consultation.summary?.trim() || "",
         body,
@@ -257,7 +260,7 @@ export async function loadFamilyRecord(
   const labResult = await supabase
     .from("lab_tests")
     .select(
-      "id, profile_id, source_document_id, test_name, sample_date, result_value, result_text, unit, reference_text, laboratory",
+      "id, profile_id, source_document_id, test_name, category, sample_date, result_value, result_text, unit, reference_text, laboratory",
     )
     .eq("id", id)
     .maybeSingle();
@@ -270,6 +273,7 @@ export async function loadFamilyRecord(
     profile_id: string;
     source_document_id: string | null;
     test_name: string;
+    category: string | null;
     sample_date: string | null;
     result_value: number | string | null;
     result_text: string | null;
@@ -297,6 +301,7 @@ export async function loadFamilyRecord(
       profileName: name,
       date: lab.sample_date,
       title: ["Analiză", lab.test_name].filter(Boolean).join(" · "),
+      category: lab.category || "Analiză",
       editTitle: lab.test_name,
       editBody: lab.result_text?.trim() || "",
       body,

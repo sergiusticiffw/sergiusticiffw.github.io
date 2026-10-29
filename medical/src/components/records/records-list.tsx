@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatBirthDate } from "@/lib/format";
+import {
+  parseRecordCategory,
+  RECORD_CATEGORIES,
+  type RecordCategory,
+} from "@/lib/record-category";
 
 export type RecordListItem = {
   id: string;
@@ -14,6 +19,7 @@ export type RecordListItem = {
   profileName: string;
   date: string | null;
   title: string;
+  category?: string | null;
   snippet: string;
   search: string;
   fileCount: number;
@@ -45,6 +51,7 @@ export function RecordsList({
 }) {
   const [query, setQuery] = useState("");
   const [personId, setPersonId] = useState("");
+  const [category, setCategory] = useState<"" | RecordCategory>("");
   const [month, setMonth] = useState("");
   const [page, setPage] = useState(0);
   const peopleOptions = useMemo(() => {
@@ -79,6 +86,12 @@ export function RecordsList({
           return false;
         }
       }
+      if (category) {
+        const recordCategory = parseRecordCategory(record.category);
+        if (recordCategory !== category) {
+          return false;
+        }
+      }
       if (month && (!record.date || !record.date.startsWith(month))) {
         return false;
       }
@@ -89,9 +102,9 @@ export function RecordsList({
         needle,
       );
     });
-  }, [records, query, personId, month, peopleOptions]);
+  }, [records, query, personId, category, month, peopleOptions]);
 
-  const filtered = Boolean(query.trim() || personId || month);
+  const filtered = Boolean(query.trim() || personId || category || month);
   const pageCount = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
   const current = Math.min(page, pageCount - 1);
   const visible = matched.slice(
@@ -101,11 +114,12 @@ export function RecordsList({
 
   useEffect(() => {
     setPage(0);
-  }, [query, personId, month]);
+  }, [query, personId, category, month]);
 
   function clearFilters() {
     setQuery("");
     setPersonId("");
+    setCategory("");
     setMonth("");
     setPage(0);
   }
@@ -123,7 +137,7 @@ export function RecordsList({
             className="h-11"
           />
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
             <Label htmlFor="records-person">Persoană</Label>
             <select
@@ -136,6 +150,24 @@ export function RecordsList({
               {peopleOptions.map((person) => (
                 <option key={person.id} value={person.id}>
                   {person.display_name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="records-category">Tip</Label>
+            <select
+              id="records-category"
+              value={category}
+              className={selectClass}
+              onChange={(event) =>
+                setCategory(event.target.value as "" | RecordCategory)
+              }
+            >
+              <option value="">Toate tipurile</option>
+              {RECORD_CATEGORIES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
                 </option>
               ))}
             </select>
@@ -184,6 +216,8 @@ export function RecordsList({
               >
                 <p className="text-sm">
                   <span className="text-muted-foreground">
+                    {parseRecordCategory(record.category)}
+                    {` · `}
                     {record.date ? formatBirthDate(record.date) : "Fără dată"}
                   </span>
                   {` · ${record.profileName}`}

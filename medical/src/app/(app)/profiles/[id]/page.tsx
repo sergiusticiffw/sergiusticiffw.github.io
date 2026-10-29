@@ -49,8 +49,15 @@ async function ProfileSection({
   }
 
   const supabase = await createClient();
-  const [profileResult, documentsResult, consultationsResult, labsResult, connectionResult, writer] =
-    await Promise.all([
+  const [
+    profileResult,
+    documentsResult,
+    consultationsResult,
+    labsResult,
+    insurancesResult,
+    connectionResult,
+    writer,
+  ] = await Promise.all([
       supabase
         .from("profiles")
         .select("id, display_name, birth_date, idnp, notes")
@@ -60,7 +67,7 @@ async function ProfileSection({
       supabase
         .from("medical_documents")
         .select(
-          "id, profile_id, original_filename, document_date, category, title, record_id",
+          "id, profile_id, original_filename, document_date, category, title, record_id, mime_type",
         )
         .eq("profile_id", id)
         .order("document_date", { ascending: false }),
@@ -76,6 +83,13 @@ async function ProfileSection({
         .select("id, profile_id, source_document_id, test_name, sample_date")
         .eq("profile_id", id)
         .order("sample_date", { ascending: false }),
+      supabase
+        .from("medical_insurances")
+        .select(
+          "id, title, start_date, end_date, notes, source_document_id",
+        )
+        .eq("profile_id", id)
+        .order("end_date", { ascending: false }),
       supabase
         .from("google_drive_connections")
         .select("family_id")
@@ -96,7 +110,11 @@ async function ProfileSection({
       .order("document_date", { ascending: false });
     if (!withRecord.error) {
       documentsError = null;
-      documentsData = (withRecord.data ?? []).map((row) => ({ ...row, title: null }));
+      documentsData = (withRecord.data ?? []).map((row) => ({
+        ...row,
+        title: null,
+        mime_type: null,
+      }));
     } else {
       const retry = await supabase
         .from("medical_documents")
@@ -110,15 +128,22 @@ async function ProfileSection({
         ...row,
         title: null,
         record_id: null,
+        mime_type: null,
       }));
     }
   }
+
+  const insuranceMissing =
+    insurancesResult.error?.code === "42P01" ||
+    insurancesResult.error?.code === "PGRST205" ||
+    (insurancesResult.error?.message ?? "").includes("medical_insurances");
 
   const listError =
     profileResult.error ??
     documentsError ??
     consultationsResult.error ??
     labsResult.error ??
+    (insuranceMissing ? null : insurancesResult.error) ??
     connectionResult.error;
   if (listError) {
     console.error("profilePage", listError.code);
@@ -140,18 +165,46 @@ async function ProfileSection({
     return <p className="text-sm text-destructive">Persoana nu a fost găsită.</p>;
   }
 
+  const documents = (documentsData ?? []) as {
+    id: string;
+    profile_id: string;
+    original_filename: string;
+    document_date: string | null;
+    category: string | null;
+    title: string | null;
+    record_id: string | null;
+    mime_type: string | null;
+  }[];
+  const docsById = new Map(documents.map((doc) => [doc.id, doc]));
+  const insurances = insuranceMissing
+    ? []
+    : ((insurancesResult.data ?? []) as {
+        id: string;
+        title: string;
+        start_date: string;
+        end_date: string;
+        notes: string | null;
+        source_document_id: string | null;
+      }[]).map((item) => {
+        const file = item.source_document_id
+          ? docsById.get(item.source_document_id)
+          : null;
+        return {
+          id: item.id,
+          title: item.title,
+          start_date: item.start_date,
+          end_date: item.end_date,
+          notes: item.notes,
+          source_document_id: item.source_document_id,
+          filename: file?.original_filename ?? null,
+          mime_type: file?.mime_type ?? null,
+        };
+      });
+
   return (
     <ProfileDetail
       profile={profile}
-      documents={(documentsData ?? []) as {
-        id: string;
-        profile_id: string;
-        original_filename: string;
-        document_date: string | null;
-        category: string | null;
-        title: string | null;
-        record_id: string | null;
-      }[]}
+      documents={documents}
       consultations={(consultationsResult.data ?? []) as {
         id: string;
         profile_id: string;
@@ -167,6 +220,7 @@ async function ProfileSection({
         test_name: string;
         sample_date: string | null;
       }[]}
+      insurances={insurances}
       driveConnected={Boolean(connectionResult.data)}
       canWrite={canWrite(family.role)}
       canEditRecords={Boolean(writer.familyId)}

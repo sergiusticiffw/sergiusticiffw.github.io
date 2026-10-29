@@ -10,6 +10,7 @@ import {
   storePrivateDocument,
 } from "@/lib/store-document";
 import { createClient } from "@/lib/supabase/server";
+import { parseRecordCategory } from "@/lib/record-category";
 import { documentSchema } from "@/lib/validation/document";
 import {
   extractionSchema,
@@ -142,6 +143,7 @@ export async function saveDetectedDocument(
   const documentDate = String(formData.get("documentDate") ?? "");
   const body = String(formData.get("body") ?? "").trim().slice(0, MAX_EXTRACTED_TEXT);
   const title = String(formData.get("title") ?? "").trim().slice(0, 160);
+  const category = parseRecordCategory(formData.get("category"));
   const lockProfile = formData.get("lockProfile") === "1";
   const savedRecord = documentSchema.safeParse({
     profileId: formData.get("profileId"),
@@ -198,7 +200,7 @@ export async function saveDetectedDocument(
       bytes: file.bytes,
       size: file.size,
       documentDate,
-      category: "",
+      category,
       extractedText: recordId || index > 0 ? "" : body,
       title: recordId || index > 0 ? null : title,
       recordId: recordId ?? storedFiles[0]?.documentId ?? null,

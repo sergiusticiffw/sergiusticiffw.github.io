@@ -15,7 +15,7 @@ export default function RecordsPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Înregistrări</h1>
         <p className="text-sm text-muted-foreground">
-          Caută în tot dosarul. Filtrează după persoană sau lună.
+          Caută în tot dosarul. Filtrează după tip, persoană sau lună.
         </p>
       </div>
       <Suspense fallback={<PageFallback label="Se încarcă înregistrările…" />}>

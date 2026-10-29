@@ -19,8 +19,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES } from "@/lib/files";
+import {
+  DEFAULT_RECORD_CATEGORY,
+  parseRecordCategory,
+  RECORD_CATEGORIES,
+} from "@/lib/record-category";
 
 const initialResult: RecordActionResult = {};
+
+const selectClass =
+  "h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
 
 function FileField({
   id,
@@ -134,9 +142,15 @@ function EntryForm({
 
     const profileId = String(formData.get("profileId") ?? "");
     const date = String(formData.get("consultationDate") ?? "");
+    const title = String(formData.get("title") ?? "").trim().slice(0, 160);
     const summary = String(formData.get("summary") ?? "").trim();
+    const category = parseRecordCategory(formData.get("category"));
     if (!date) {
-      setFileError("Data consultației este obligatorie.");
+      setFileError("Data este obligatorie.");
+      return;
+    }
+    if (!title) {
+      setFileError("Titlul este obligatoriu.");
       return;
     }
 
@@ -160,8 +174,9 @@ function EntryForm({
         data.set("profileId", profileId);
         data.set("lockProfile", "1");
         data.set("documentDate", date);
-        data.set("title", summary.slice(0, 80) || "Consultație");
-        data.set("body", primaryId ? "" : summary || "Consultație");
+        data.set("category", category);
+        data.set("title", title);
+        data.set("body", primaryId ? "" : summary || title);
         data.set(
           "payload",
           primaryId
@@ -259,7 +274,7 @@ export function ProfileEntries({
           className="h-11"
           onClick={() => setPanel("consultation")}
         >
-          Consultație
+          Înregistrare
         </Button>
         <Button
           type="button"
@@ -272,7 +287,7 @@ export function ProfileEntries({
       </div>
       <FormDialog
         open={panel !== null}
-        title={panel === "file" ? "Document nou" : "Consultație nouă"}
+        title={panel === "file" ? "Document nou" : "Înregistrare nouă"}
         pending={saveAction?.disabled ?? false}
         onClose={closePanel}
         actions={
@@ -294,6 +309,32 @@ export function ProfileEntries({
             profileId={profileId}
             onSaved={closePanel}
           >
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`consult-category-${profileId}`}>Tip</Label>
+              <select
+                id={`consult-category-${profileId}`}
+                name="category"
+                className={selectClass}
+                defaultValue={DEFAULT_RECORD_CATEGORY}
+              >
+                {RECORD_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`consult-title-${profileId}`}>Titlu</Label>
+              <Input
+                id={`consult-title-${profileId}`}
+                name="title"
+                required
+                maxLength={160}
+                className="h-11"
+                placeholder="ex. Control pediatrie"
+              />
+            </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor={`consult-date-${profileId}`}>Data</Label>
               <Input

@@ -6,8 +6,9 @@ import { DeleteRecordButton } from "@/components/profiles/delete-record-button";
 import { DocumentGallery } from "@/components/profiles/document-preview";
 import { EditRecordButton } from "@/components/profiles/edit-record-button";
 import { ShareFilesButton } from "@/components/records/share-files-button";
-import type { FamilyRecord } from "@/lib/records";
 import { formatBirthDate } from "@/lib/format";
+import { parseRecordCategory } from "@/lib/record-category";
+import type { FamilyRecord } from "@/lib/records";
 
 export function RecordDetail({
   record,
@@ -27,6 +28,10 @@ export function RecordDetail({
       </Link>
       <div className="flex flex-col gap-1">
         <p className="text-sm text-muted-foreground">
+          {parseRecordCategory(
+            record.category || (record.kind === "lab" ? "Analiză" : "Consultație"),
+          )}
+          {` · `}
           {record.date ? formatBirthDate(record.date) : "Fără dată"}
           {` · `}
           <Link
@@ -58,6 +63,7 @@ export function RecordDetail({
             title={record.editTitle || record.title}
             date={record.date ?? ""}
             body={record.editBody || record.body}
+            category={record.category}
             files={record.files}
           >
             <DeleteRecordButton
