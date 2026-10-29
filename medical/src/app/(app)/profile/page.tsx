@@ -2,10 +2,9 @@ import { Suspense } from "react";
 import Link from "next/link";
 
 import { LogoutButton } from "@/components/auth/logout-button";
-import { BiometricSettings } from "@/components/profile/biometric-settings";
 import { ChangePasswordForm } from "@/components/profile/change-password-form";
 import { DriveSettings } from "@/components/profile/drive-settings";
-import { PasskeySettings } from "@/components/profile/passkey-settings";
+import { SecuritySettings } from "@/components/profile/security-settings";
 import { PageFallback } from "@/components/layout/page-fallback";
 import {
   Card,
@@ -287,26 +286,14 @@ async function ProfileSection({
 
       <Card>
         <CardHeader>
-          <CardTitle>Login cu passkey</CardTitle>
+          <CardTitle>Amprentă și Face ID</CardTitle>
           <CardDescription>
-            Intră în cont cu amprenta / Face ID de pe pagina de login.
+            Login fără parolă și, opțional, blocarea ecranului pe acest
+            dispozitiv.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <PasskeySettings />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Securitate pe acest dispozitiv</CardTitle>
-          <CardDescription>
-            Deblocare cu Face ID, amprentă sau Windows Hello după ce ești deja
-            autentificat.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <BiometricSettings userId={user.id} email={user.email} />
+          <SecuritySettings userId={user.id} email={user.email} />
         </CardContent>
       </Card>
 
