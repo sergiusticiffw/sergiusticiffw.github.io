@@ -202,12 +202,20 @@ async function createFolder(
   return body.id;
 }
 
+const ROOT_FOLDER_NAME = "Dosar medical";
+/** Canonical My Drive folder for this family. Prefer env; falls back to known id. */
+const CANONICAL_ROOT_FOLDER_ID =
+  process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim() ||
+  "1q-yQh0PN3kyRZMXVxF6SuTnjwn8u6uVc";
+
 async function findFolder(
   accessToken: string,
   parentId: string,
   name: string,
 ) {
-  assertFileId(parentId);
+  if (parentId !== "root") {
+    assertFileId(parentId);
+  }
   const safeName = folderName(name).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   const query = [
     `name = '${safeName}'`,
@@ -219,6 +227,8 @@ async function findFolder(
   url.searchParams.set("q", query);
   url.searchParams.set("fields", "files(id)");
   url.searchParams.set("pageSize", "1");
+  // Prefer the oldest folder when duplicates already exist.
+  url.searchParams.set("orderBy", "createdTime");
   url.searchParams.set("spaces", "drive");
 
   const response = await driveRequest(accessToken, url.toString());
@@ -238,6 +248,42 @@ export async function ensureFolder(
   return createFolder(accessToken, parentId, name);
 }
 
+async function saveRootFolderId(familyId: string, rootFolderId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("google_drive_connections")
+    .update({
+      root_folder_id: rootFolderId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("family_id", familyId);
+
+  if (error) {
+    throw new Error("Dosarul Google Drive nu a putut fi salvat.");
+  }
+}
+
+async function folderAccessible(accessToken: string, folderId: string) {
+  if (!FILE_ID.test(folderId)) {
+    return false;
+  }
+  const response = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,trashed`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    },
+  );
+  if (response.status === 404 || response.status === 403) {
+    return false;
+  }
+  if (!response.ok) {
+    throw new Error(driveStatusError(response.status));
+  }
+  const body = (await response.json()) as { id?: string; trashed?: boolean };
+  return Boolean(body.id) && body.trashed !== true;
+}
+
 export async function ensureDriveRoot(familyId: string) {
   const connection = await loadConnection(familyId);
   if (!connection) {
@@ -245,39 +291,34 @@ export async function ensureDriveRoot(familyId: string) {
   }
 
   const accessToken = await getAccessToken(familyId, connection.refreshToken);
-  if (connection.rootFolderId) {
+
+  // Always prefer the known "Dosar medical" folder when it is reachable.
+  if (
+    FILE_ID.test(CANONICAL_ROOT_FOLDER_ID) &&
+    (await folderAccessible(accessToken, CANONICAL_ROOT_FOLDER_ID))
+  ) {
+    if (connection.rootFolderId !== CANONICAL_ROOT_FOLDER_ID) {
+      await saveRootFolderId(familyId, CANONICAL_ROOT_FOLDER_ID);
+    }
+    return { accessToken, rootFolderId: CANONICAL_ROOT_FOLDER_ID };
+  }
+
+  if (
+    connection.rootFolderId &&
+    (await folderAccessible(accessToken, connection.rootFolderId))
+  ) {
     return { accessToken, rootFolderId: connection.rootFolderId };
   }
 
-  const response = await driveRequest(
-    accessToken,
-    "https://www.googleapis.com/drive/v3/files?fields=id",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: "Dosar medical",
-        mimeType: "application/vnd.google-apps.folder",
-        parents: ["root"],
-      }),
-    },
-  );
-  const created = (await response.json()) as DriveFile;
-  if (!created.id) {
-    throw new Error("Dosarul Google Drive nu a putut fi creat.");
-  }
+  const existing = await findFolder(accessToken, "root", ROOT_FOLDER_NAME);
+  const rootFolderId =
+    existing ?? (await createFolder(accessToken, "root", ROOT_FOLDER_NAME));
+  // If two requests raced and both created folders, keep the oldest.
+  const canonical =
+    (await findFolder(accessToken, "root", ROOT_FOLDER_NAME)) ?? rootFolderId;
 
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("google_drive_connections")
-    .update({ root_folder_id: created.id, updated_at: new Date().toISOString() })
-    .eq("family_id", familyId);
-
-  if (error) {
-    throw new Error("Dosarul Google Drive nu a putut fi salvat.");
-  }
-
-  return { accessToken, rootFolderId: created.id };
+  await saveRootFolderId(familyId, canonical);
+  return { accessToken, rootFolderId: canonical };
 }
 
 export async function uploadDriveFile(input: {

@@ -53,11 +53,15 @@ export async function GET(request: Request) {
       .eq("family_id", state.familyId)
       .maybeSingle();
 
+    // Clear root_folder_id on reconnect: another admin may pick a different
+    // Google account, and the previous folder id is not valid there. ensureDriveRoot
+    // will reuse an existing "Dosar medical" folder on the newly linked Drive.
     const { error } = existing
       ? await supabase
           .from("google_drive_connections")
           .update({
             refresh_token_ciphertext: ciphertext,
+            root_folder_id: null,
             updated_at: new Date().toISOString(),
           })
           .eq("family_id", state.familyId)

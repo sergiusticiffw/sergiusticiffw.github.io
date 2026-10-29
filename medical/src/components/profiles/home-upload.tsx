@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   detectDocument,
@@ -16,7 +16,6 @@ import {
   emptyConsultation,
   MAX_EXTRACTED_TEXT,
   recordBody,
-  recordDate,
   type Extraction,
 } from "@/lib/validation/extraction";
 
@@ -24,6 +23,12 @@ export type UploadPerson = {
   id: string;
   display_name: string;
   idnp: string | null;
+};
+
+export type HomeUploadSaveAction = {
+  label: string;
+  disabled: boolean;
+  onSave: () => void;
 };
 
 type RecordDraft = {
@@ -39,6 +44,12 @@ function suggestedTitle(file: File | undefined) {
   return file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").slice(0, 160);
 }
 
+function todayInputValue() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+}
+
 const selectClass =
   "h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
 
@@ -46,10 +57,12 @@ export function HomeUpload({
   people,
   lockedProfileId,
   onSaved,
+  onSaveActionChange,
 }: {
   people: UploadPerson[];
   lockedProfileId?: string;
   onSaved?: () => void;
+  onSaveActionChange?: (action: HomeUploadSaveAction | null) => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -64,6 +77,7 @@ export function HomeUpload({
   const [matchedName, setMatchedName] = useState<string | null>(null);
   const [attachedTo, setAttachedTo] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const saveRef = useRef<() => void>(() => undefined);
 
   function reset() {
     setFiles([]);
@@ -87,7 +101,6 @@ export function HomeUpload({
     setPending("detect");
     const parts: string[] = [];
     const missed: string[] = [];
-    let date = "";
     let idnp = "";
     let matchedProfileId: string | null = null;
     let matched: string | null = null;
@@ -103,9 +116,6 @@ export function HomeUpload({
         continue;
       }
       parts.push(files.length > 1 ? `${file.name}\n${text}` : text);
-      if (!date) {
-        date = recordDate(result.extraction!);
-      }
       if (!idnp && result.extraction?.idnp) {
         idnp = result.extraction.idnp;
       }
@@ -125,13 +135,13 @@ export function HomeUpload({
     const extraction: Extraction = {
       idnp,
       extractedText: parts.join("\n\n").slice(0, MAX_EXTRACTED_TEXT),
-      consultation: { ...emptyConsultation(), consultationDate: date },
+      consultation: emptyConsultation(),
       labTests: [],
     };
     setExtraction(extraction);
     setDraft({
       title: suggestedTitle(files[0]),
-      date,
+      date: todayInputValue(),
       body: recordBody(extraction),
     });
     setProfileId(lockedProfileId ?? matchedProfileId ?? "");
@@ -154,7 +164,7 @@ export function HomeUpload({
       return;
     }
     if (!draft.date) {
-      setError("Data nu a fost găsită în document. Completeaz-o înainte să salvezi.");
+      setError("Completează data înainte să salvezi.");
       return;
     }
     if (!draft.body.trim()) {
@@ -211,6 +221,31 @@ export function HomeUpload({
       setProgress(null);
     }
   }
+
+  saveRef.current = () => {
+    void onSave();
+  };
+
+  useEffect(() => {
+    if (!onSaveActionChange) {
+      return;
+    }
+    if (!draft) {
+      onSaveActionChange(null);
+      return;
+    }
+    onSaveActionChange({
+      label: pending === "save" ? progress ?? "Se salvează…" : "Salvează",
+      disabled: pending !== null,
+      onSave: () => {
+        saveRef.current();
+      },
+    });
+  }, [draft, pending, progress, onSaveActionChange]);
+
+  useEffect(() => {
+    return () => onSaveActionChange?.(null);
+  }, [onSaveActionChange]);
 
   if (draft) {
     const lockedPerson = people.find((person) => person.id === lockedProfileId);
@@ -281,8 +316,10 @@ export function HomeUpload({
           <Label htmlFor="upload-date">Data din document</Label>
           <Input
             id="upload-date"
+            name="document-date"
             type="date"
             required
+            autoComplete="off"
             className="h-11"
             value={draft.date}
             onChange={(event) => setDraft({ ...draft, date: event.target.value })}

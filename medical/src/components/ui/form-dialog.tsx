@@ -9,12 +9,14 @@ export function FormDialog({
   title,
   pending = false,
   onClose,
+  actions,
   children,
 }: {
   open: boolean;
   title: string;
   pending?: boolean;
   onClose: () => void;
+  actions?: ReactNode;
   children: ReactNode;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -53,16 +55,21 @@ export function FormDialog({
     >
       <div className="flex h-full max-h-dvh flex-col sm:max-h-[min(92dvh,44rem)]">
         <div className="flex items-center justify-between gap-3 border-b px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-          <h2 className="text-base font-semibold">{title}</h2>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9"
-            disabled={pending}
-            onClick={close}
-          >
-            Închide
-          </Button>
+          <h2 className="min-w-0 flex-1 truncate text-base font-semibold">
+            {title}
+          </h2>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9"
+              disabled={pending}
+              onClick={close}
+            >
+              Închide
+            </Button>
+            {actions}
+          </div>
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {children}

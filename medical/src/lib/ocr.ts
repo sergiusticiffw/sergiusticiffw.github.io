@@ -44,37 +44,6 @@ function findIdnp(text: string) {
   return text.match(/(?<!\d)(\d{13})(?!\d)/)?.[1] ?? "";
 }
 
-function validDay(year: number, month: number, day: number) {
-  if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
-    return "";
-  }
-  const iso = `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-  const date = new Date(`${iso}T00:00:00Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === iso
-    ? iso
-    : "";
-}
-
-function findDate(text: string) {
-  const iso = text.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
-  if (iso) {
-    const day = validDay(Number(iso[1]), Number(iso[2]), Number(iso[3]));
-    if (day) {
-      return day;
-    }
-  }
-
-  const local = text.matchAll(/\b(\d{1,2})[./](\d{1,2})[./](\d{4})\b/g);
-  for (const match of local) {
-    const day = validDay(Number(match[3]), Number(match[2]), Number(match[1]));
-    if (day) {
-      return day;
-    }
-  }
-
-  return "";
-}
-
 async function recognize(worker: Worker, bytes: Uint8Array) {
   const result = await worker.recognize(Buffer.from(bytes));
   return result.data.text.replace(/\s+\n/g, "\n").replace(/[ \t]{2,}/g, " ").trim();
@@ -181,10 +150,7 @@ export async function readPrintedText(
     return {
       idnp: findIdnp(extractedText),
       extractedText,
-      consultation: {
-        ...emptyConsultation(),
-        consultationDate: findDate(extractedText),
-      },
+      consultation: emptyConsultation(),
       labTests: [],
     };
   } finally {

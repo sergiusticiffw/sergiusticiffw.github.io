@@ -2,16 +2,19 @@ import type { AssistantTurn } from "@/lib/assistant/types";
 
 const STORAGE_KEY = "medicalAssistantChat";
 const MAX_STORED_MESSAGES = 60;
-const INTERRUPTED = "Întrerupt înainte să se termine răspunsul.";
+
+export const INTERRUPTED = "Întrerupt înainte să se termine răspunsul.";
 
 export type StoredChat = {
   messages: AssistantTurn[];
   error: string | null;
   failedModel: string | null;
+  /** True while a request is in flight — survives tab changes via localStorage. */
+  awaiting: boolean;
 };
 
 function empty(): StoredChat {
-  return { messages: [], error: null, failedModel: null };
+  return { messages: [], error: null, failedModel: null, awaiting: false };
 }
 
 function asTurns(value: unknown): AssistantTurn[] {
@@ -32,12 +35,17 @@ function asTurns(value: unknown): AssistantTurn[] {
   });
 }
 
-function markInterrupted(chat: StoredChat): StoredChat {
+/** A question left without an answer (nav away / reload) becomes retryable. */
+export function markInterrupted(chat: StoredChat): StoredChat {
   const last = chat.messages.at(-1);
-  if (last?.role === "user" && !chat.error) {
-    return { ...chat, error: INTERRUPTED };
+  if (chat.awaiting || (last?.role === "user" && !chat.error)) {
+    return {
+      ...chat,
+      error: chat.error || INTERRUPTED,
+      awaiting: false,
+    };
   }
-  return chat;
+  return { ...chat, awaiting: false };
 }
 
 function readStorage(): StoredChat {
@@ -47,7 +55,8 @@ function readStorage(): StoredChat {
     const error = typeof stored?.error === "string" ? stored.error : null;
     const failedModel =
       typeof stored?.failedModel === "string" ? stored.failedModel : null;
-    return markInterrupted({ messages, error, failedModel });
+    const awaiting = stored?.awaiting === true;
+    return markInterrupted({ messages, error, failedModel, awaiting });
   } catch {
     return empty();
   }
@@ -61,6 +70,7 @@ export function loadChatSession(): StoredChat {
   chatSession.messages = stored.messages;
   chatSession.error = stored.error;
   chatSession.failedModel = stored.failedModel;
+  chatSession.awaiting = stored.awaiting;
   return stored;
 }
 
@@ -72,6 +82,7 @@ export function saveChatSession() {
     messages: chatSession.messages.slice(-MAX_STORED_MESSAGES),
     error: chatSession.error,
     failedModel: chatSession.failedModel,
+    awaiting: chatSession.awaiting,
   };
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -84,11 +95,17 @@ export function clearChatSession() {
   chatSession.messages = [];
   chatSession.error = null;
   chatSession.failedModel = null;
+  chatSession.awaiting = false;
   if (typeof window !== "undefined") {
     localStorage.removeItem(STORAGE_KEY);
   }
 }
 
 if (typeof window !== "undefined") {
-  window.addEventListener("pagehide", saveChatSession);
+  window.addEventListener("pagehide", () => {
+    if (chatSession.awaiting) {
+      Object.assign(chatSession, markInterrupted(chatSession));
+    }
+    saveChatSession();
+  });
 }

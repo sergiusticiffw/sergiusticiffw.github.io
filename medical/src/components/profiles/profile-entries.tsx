@@ -8,7 +8,10 @@ import {
   type RecordActionResult,
 } from "@/app/(app)/profiles/record-actions";
 import { saveDetectedDocument } from "@/app/(app)/profiles/scan-actions";
-import { HomeUpload } from "@/components/profiles/home-upload";
+import {
+  HomeUpload,
+  type HomeUploadSaveAction,
+} from "@/components/profiles/home-upload";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
@@ -237,6 +240,14 @@ export function ProfileEntries({
   driveConnected: boolean;
 }) {
   const [panel, setPanel] = useState<"consultation" | "file" | null>(null);
+  const [saveAction, setSaveAction] = useState<HomeUploadSaveAction | null>(
+    null,
+  );
+
+  function closePanel() {
+    setSaveAction(null);
+    setPanel(null);
+  }
 
   return (
     <div className="flex flex-col gap-4 border-t pt-4">
@@ -262,13 +273,26 @@ export function ProfileEntries({
       <FormDialog
         open={panel !== null}
         title={panel === "file" ? "Document nou" : "Consultație nouă"}
-        onClose={() => setPanel(null)}
+        pending={saveAction?.disabled ?? false}
+        onClose={closePanel}
+        actions={
+          saveAction ? (
+            <Button
+              type="button"
+              className="h-9"
+              disabled={saveAction.disabled}
+              onClick={saveAction.onSave}
+            >
+              {saveAction.label}
+            </Button>
+          ) : null
+        }
       >
         {panel === "consultation" ? (
           <EntryForm
             action={createConsultation}
             profileId={profileId}
-            onSaved={() => setPanel(null)}
+            onSaved={closePanel}
           >
             <div className="flex flex-col gap-2">
               <Label htmlFor={`consult-date-${profileId}`}>Data</Label>
@@ -293,7 +317,8 @@ export function ProfileEntries({
             <HomeUpload
               people={[{ id: profileId, display_name: profileName, idnp }]}
               lockedProfileId={profileId}
-              onSaved={() => setPanel(null)}
+              onSaved={closePanel}
+              onSaveActionChange={setSaveAction}
             />
           ) : (
             <p className="text-sm text-muted-foreground">

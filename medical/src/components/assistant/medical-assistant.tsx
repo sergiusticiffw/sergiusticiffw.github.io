@@ -6,9 +6,11 @@ import { AssistantAnswer } from "@/components/assistant/assistant-answer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  INTERRUPTED,
   chatSession,
   clearChatSession,
   loadChatSession,
+  markInterrupted,
   saveChatSession,
 } from "@/lib/assistant/chat-session";
 import { nextChatModel, retryModelLabel } from "@/lib/assistant/models";
@@ -28,12 +30,14 @@ export function MedicalAssistant({
   const [failedModel, setFailedModel] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useLayoutEffect(() => {
     const stored = loadChatSession();
     setMessages(stored.messages);
     setError(stored.error);
     setFailedModel(stored.failedModel);
+    setPending(false);
     setReady(true);
   }, []);
 
@@ -44,35 +48,70 @@ export function MedicalAssistant({
     chatSession.messages = messages;
     chatSession.error = error;
     chatSession.failedModel = failedModel;
+    chatSession.awaiting = pending;
     saveChatSession();
-  }, [ready, messages, error, failedModel]);
+  }, [ready, messages, error, failedModel, pending]);
+
+  // Same as expenses: leaving the tab aborts the request and leaves a retryable error.
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+      abortRef.current = null;
+      Object.assign(chatSession, markInterrupted(chatSession));
+      saveChatSession();
+    };
+  }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
   }, [messages, pending, error]);
 
   async function ask(turns: AssistantTurn[], preferModel?: string) {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setError(null);
     setFailedModel(null);
     setPending(true);
+    chatSession.messages = turns;
+    chatSession.error = null;
+    chatSession.failedModel = null;
+    chatSession.awaiting = true;
+    saveChatSession();
+
     try {
-      const result = await askAssistant(turns, preferModel);
+      const result = await askAssistant(turns, preferModel, controller.signal);
+      if (controller.signal.aborted) {
+        return;
+      }
       if (result.error || !result.answer) {
         setError(result.error ?? "Asistentul nu a răspuns.");
         setFailedModel(result.failedModel ?? preferModel ?? null);
         return;
       }
       setMessages([...turns, { role: "assistant", text: result.answer }]);
-    } catch (error) {
+      setError(null);
+      setFailedModel(null);
+    } catch (askError) {
+      if (controller.signal.aborted) {
+        setError(INTERRUPTED);
+        return;
+      }
       setError(
-        error instanceof Error &&
-          error.message &&
-          !/digest|server action/i.test(error.message)
-          ? error.message
+        askError instanceof Error &&
+          askError.message &&
+          !/digest|server action/i.test(askError.message)
+          ? askError.message
           : "Asistentul nu a putut consulta documentele. Reîncearcă.",
       );
     } finally {
-      setPending(false);
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+      }
+      if (!controller.signal.aborted) {
+        setPending(false);
+      }
     }
   }
 
@@ -214,10 +253,13 @@ export function MedicalAssistant({
             className="h-11"
             disabled={pending}
             onClick={() => {
+              abortRef.current?.abort();
+              abortRef.current = null;
               clearChatSession();
               setMessages([]);
               setError(null);
               setFailedModel(null);
+              setPending(false);
             }}
           >
             Chat nou
@@ -251,13 +293,18 @@ export function MedicalAssistant({
 
 async function askAssistant(
   messages: AssistantTurn[],
-  preferModel?: string,
+  preferModel: string | undefined,
+  signal: AbortSignal,
 ): Promise<AssistantResult> {
   const response = await fetch("/api/assistant", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ messages, preferModel }),
+    signal,
   });
+  if (signal.aborted) {
+    throw new DOMException("Aborted", "AbortError");
+  }
   const payload = (await response.json().catch(() => null)) as AssistantResult | null;
   if (!payload) {
     return { error: "Asistentul nu a putut consulta documentele." };

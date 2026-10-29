@@ -26,6 +26,7 @@ function previewKind(filename: string, mimeType: string | null) {
 }
 
 const kindLabel: Record<string, string> = {
+  pdf: "PDF",
   text: "Text",
   word: "Word",
   file: "Fișier",
@@ -33,6 +34,38 @@ const kindLabel: Record<string, string> = {
 
 function viewUrl(id: string) {
   return `/api/documents/${id}`;
+}
+
+/** Mobile browsers cannot render PDFs inside iframes (broken-file icon). */
+function useNativePdfViewer() {
+  const [native, setNative] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(pointer: coarse), (max-width: 640px)");
+    const sync = () => setNative(media.matches);
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  return native;
+}
+
+function PdfGlyph({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className={className}
+      aria-hidden
+    >
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="M8 13h8M8 17h5" />
+    </svg>
+  );
 }
 
 function FileThumb({
@@ -51,27 +84,19 @@ function FileThumb({
       <div
         className={
           compact
-            ? "relative h-10 w-10 overflow-hidden rounded border"
-            : "relative h-24 w-24 overflow-hidden rounded-md border"
+            ? "relative h-10 w-10 overflow-hidden rounded border bg-muted/40"
+            : "relative h-24 w-24 overflow-hidden rounded-md border bg-muted/40"
         }
       >
         {kind === "image" ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={url} alt="" className="h-full w-full object-cover" />
-        ) : kind === "pdf" ? (
-          <iframe
-            title=""
-            src={`${url}#toolbar=0&navpanes=0`}
-            className={
-              compact
-                ? "pointer-events-none h-40 w-40 origin-top-left scale-[0.25]"
-                : "pointer-events-none h-48 w-48 origin-top-left scale-50"
-            }
-            tabIndex={-1}
-          />
         ) : (
-          <span className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
-            {kindLabel[kind] ?? "Fișier"}
+          <span className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground">
+            <PdfGlyph className={compact ? "size-5" : "size-8"} />
+            {compact ? null : (
+              <span className="text-[10px]">{kindLabel[kind] ?? "Fișier"}</span>
+            )}
           </span>
         )}
         <button
@@ -88,7 +113,35 @@ function FileThumb({
   );
 }
 
-function FileView({ file }: { file: PreviewFile }) {
+function PdfNativeView({ filename, url }: { filename: string; url: string }) {
+  return (
+    <div className="flex max-w-sm flex-col items-center gap-4 rounded-md bg-white/10 px-6 py-8 text-center">
+      <PdfGlyph className="size-12 text-white/80" />
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-medium text-white">{filename}</p>
+        <p className="text-sm text-white/70">
+          Pe telefon, PDF-ul se deschide în vizualizatorul nativ.
+        </p>
+      </div>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-medium text-neutral-950"
+      >
+        Deschide PDF
+      </a>
+    </div>
+  );
+}
+
+function FileView({
+  file,
+  preferNativePdf,
+}: {
+  file: PreviewFile;
+  preferNativePdf: boolean;
+}) {
   const kind = previewKind(file.filename, file.mimeType);
   const url = viewUrl(file.id);
   if (kind === "image") {
@@ -109,6 +162,9 @@ function FileView({ file }: { file: PreviewFile }) {
       </p>
     );
   }
+  if (kind === "pdf" && preferNativePdf) {
+    return <PdfNativeView filename={file.filename} url={url} />;
+  }
   return (
     <iframe
       title={file.filename}
@@ -127,14 +183,23 @@ export function DocumentGallery({
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const touchX = useRef<number | null>(null);
+  const preferNativePdf = useNativePdfViewer();
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
   const current = files[index];
   const many = files.length > 1;
 
   function show(next: number) {
+    const file = files[next];
     setIndex(next);
     setOpen(true);
+    if (
+      preferNativePdf &&
+      file &&
+      previewKind(file.filename, file.mimeType) === "pdf"
+    ) {
+      window.open(viewUrl(file.id), "_blank", "noopener,noreferrer");
+    }
   }
 
   function close() {
@@ -295,7 +360,11 @@ export function DocumentGallery({
                   </button>
                 </>
               ) : null}
-              <FileView key={current.id} file={current} />
+              <FileView
+                key={current.id}
+                file={current}
+                preferNativePdf={preferNativePdf}
+              />
             </div>
             {many ? (
               <div className="flex gap-2 overflow-x-auto px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -323,8 +392,9 @@ export function DocumentGallery({
                           className="h-full w-full object-cover"
                         />
                       ) : (
-                        <span className="flex h-full w-full items-center justify-center bg-white/10 text-[10px] text-white/80">
-                          {kindLabel[kind] ?? "PDF"}
+                        <span className="flex h-full w-full flex-col items-center justify-center gap-0.5 bg-white/10 text-[10px] text-white/80">
+                          <PdfGlyph className="size-5" />
+                          {kindLabel[kind] ?? "Fișier"}
                         </span>
                       )}
                     </button>
