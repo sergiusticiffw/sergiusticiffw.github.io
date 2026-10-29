@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
 
 import {
   createInsurance,
@@ -18,6 +18,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES } from "@/lib/files";
 import { formatBirthDate } from "@/lib/format";
+import {
+  ProfileIdentityDocsSection,
+  type ProfileIdentityDoc,
+} from "@/components/profiles/profile-identity-docs";
 
 export type ProfileInsurance = {
   id: string;
@@ -58,6 +62,7 @@ function InsuranceCard({
   canEdit,
   onEdit,
   onDelete,
+  identitySlot,
 }: {
   item: ProfileInsurance;
   status: "activă" | "expirată" | "viitoare";
@@ -65,6 +70,7 @@ function InsuranceCard({
   canEdit: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  identitySlot?: ReactNode;
 }) {
   if (!featured) {
     return (
@@ -115,62 +121,61 @@ function InsuranceCard({
   }
 
   return (
-    <li className="rounded-lg border-2 border-foreground/15 bg-muted/30 px-3 py-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-medium">{item.title}</p>
-            <span
-              className={
-                status === "activă"
-                  ? "rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300"
-                  : status === "viitoare"
-                    ? "rounded-md bg-sky-500/15 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300"
-                    : "rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
-              }
-            >
-              {status}
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {formatBirthDate(item.start_date)} – {formatBirthDate(item.end_date)}
-          </p>
-          {item.notes ? (
-            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-              {item.notes}
-            </p>
-          ) : null}
-          {item.source_document_id ? (
-            <div className="mt-2">
-              <DocumentGallery
-                files={[
-                  {
-                    id: item.source_document_id,
-                    filename: item.filename || "Poliță",
-                    mimeType: item.mime_type,
-                  },
-                ]}
-              />
-            </div>
-          ) : null}
-        </div>
-        {canEdit ? (
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" className="h-9" onClick={onEdit}>
-              Modifică
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              className="h-9"
-              onClick={onDelete}
-            >
-              Șterge
-            </Button>
-          </div>
-        ) : null}
+    <div className="rounded-lg border-2 border-foreground/15 bg-muted/30 px-3 py-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-sm font-medium">{item.title}</p>
+        <span
+          className={
+            status === "activă"
+              ? "rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300"
+              : status === "viitoare"
+                ? "rounded-md bg-sky-500/15 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300"
+                : "rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+          }
+        >
+          {status}
+        </span>
       </div>
-    </li>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {formatBirthDate(item.start_date)} – {formatBirthDate(item.end_date)}
+      </p>
+      {item.notes ? (
+        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+          {item.notes}
+        </p>
+      ) : null}
+      {item.source_document_id || identitySlot ? (
+        <div className="mt-2 flex flex-wrap items-start gap-3">
+          {item.source_document_id ? (
+            <DocumentGallery
+              files={[
+                {
+                  id: item.source_document_id,
+                  filename: item.filename || "Poliță",
+                  mimeType: item.mime_type,
+                },
+              ]}
+            />
+          ) : null}
+          {identitySlot}
+        </div>
+      ) : null}
+      {canEdit ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button type="button" variant="outline" className="h-9" onClick={onEdit}>
+            Modifică
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            className="h-9"
+            onClick={onDelete}
+          >
+            Șterge
+          </Button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -352,6 +357,7 @@ function InsuranceForm({
 }
 
 export function ProfileInsuranceSection({
+  identityDocs,
   profileId,
   insurances,
   driveConnected,
@@ -361,6 +367,7 @@ export function ProfileInsuranceSection({
   insurances: ProfileInsurance[];
   driveConnected: boolean;
   canEdit: boolean;
+  identityDocs: ProfileIdentityDoc[];
 }) {
   const router = useRouter();
   const [adding, setAdding] = useState(false);
@@ -413,26 +420,32 @@ export function ProfileInsuranceSection({
           </Button>
         ) : null}
       </div>
-      {insurances.length === 0 ? (
+      {insurances.length === 0 && identityDocs.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           Nicio asigurare adăugată încă.
         </p>
       ) : (
         <div className="flex flex-col gap-3">
           {current ? (
-            <ul className="flex flex-col gap-3">
-              <InsuranceCard
-                item={current}
-                status={statusFor(current.start_date, current.end_date, today)}
-                featured
-                canEdit={canEdit}
-                onEdit={() => setEditing(current)}
-                onDelete={() => {
-                  setDeleteError(null);
-                  setDeleting(current);
-                }}
-              />
-            </ul>
+            <InsuranceCard
+              item={current}
+              status={statusFor(current.start_date, current.end_date, today)}
+              featured
+              canEdit={canEdit}
+              onEdit={() => setEditing(current)}
+              onDelete={() => {
+                setDeleteError(null);
+                setDeleting(current);
+              }}
+              identitySlot={
+                <ProfileIdentityDocsSection docs={identityDocs} />
+              }
+            />
+          ) : identityDocs.length > 0 ? (
+            <div className="rounded-lg border-2 border-foreground/15 bg-muted/30 px-3 py-3">
+              <p className="mb-2 text-xs text-muted-foreground">Act</p>
+              <ProfileIdentityDocsSection docs={identityDocs} />
+            </div>
           ) : null}
           {history.length > 0 ? (
             <details className="group">

@@ -40,11 +40,18 @@ async function ProfilesSection() {
   }
 
   const supabase = await createClient();
-  const profilesResult = await supabase
-    .from("profiles")
-    .select("id, display_name, birth_date, idnp")
-    .eq("family_id", family.familyId)
-    .order("display_name", { ascending: true });
+  const [profilesResult, connectionResult] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, display_name, birth_date, idnp")
+      .eq("family_id", family.familyId)
+      .order("display_name", { ascending: true }),
+    supabase
+      .from("google_drive_connections")
+      .select("family_id")
+      .eq("family_id", family.familyId)
+      .maybeSingle(),
+  ]);
 
   const listError = profilesResult.error;
   if (listError) {
@@ -80,7 +87,9 @@ async function ProfilesSection() {
           .
         </p>
       ) : null}
-      {family.role === "admin" ? <AddProfileButton /> : null}
+      {family.role === "admin" ? (
+        <AddProfileButton driveConnected={Boolean(connectionResult.data)} />
+      ) : null}
       <ProfileList profiles={profiles} />
     </div>
   );

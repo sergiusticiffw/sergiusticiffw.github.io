@@ -15,6 +15,7 @@ import {
 
 export type ProfileActionResult = {
   error?: string;
+  id?: string;
 };
 
 function emptyToNull(value: string) {
@@ -35,13 +36,17 @@ export async function createProfile(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("profiles").insert({
-    family_id: family.familyId,
-    display_name: parsed.data.displayName,
-    birth_date: emptyToNull(parsed.data.birthDate),
-    idnp: emptyToNull(parsed.data.idnp),
-    notes: emptyToNull(parsed.data.notes),
-  });
+  const { data, error } = await supabase
+    .from("profiles")
+    .insert({
+      family_id: family.familyId,
+      display_name: parsed.data.displayName,
+      birth_date: emptyToNull(parsed.data.birthDate),
+      idnp: emptyToNull(parsed.data.idnp),
+      notes: emptyToNull(parsed.data.notes),
+    })
+    .select("id")
+    .single();
 
   if (error) {
     console.error("createProfile", error.code);
@@ -52,7 +57,7 @@ export async function createProfile(
   }
 
   revalidateApp();
-  return {};
+  return { id: (data as { id: string }).id };
 }
 
 export async function updateProfile(

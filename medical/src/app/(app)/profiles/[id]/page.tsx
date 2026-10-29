@@ -55,6 +55,7 @@ async function ProfileSection({
     consultationsResult,
     labsResult,
     insurancesResult,
+    identityDocsResult,
     connectionResult,
     writer,
   ] = await Promise.all([
@@ -90,6 +91,11 @@ async function ProfileSection({
         )
         .eq("profile_id", id)
         .order("end_date", { ascending: false }),
+      supabase
+        .from("profile_identity_docs")
+        .select("id, title, issued_date, notes, source_document_id")
+        .eq("profile_id", id)
+        .order("created_at", { ascending: false }),
       supabase
         .from("google_drive_connections")
         .select("family_id")
@@ -137,6 +143,10 @@ async function ProfileSection({
     insurancesResult.error?.code === "42P01" ||
     insurancesResult.error?.code === "PGRST205" ||
     (insurancesResult.error?.message ?? "").includes("medical_insurances");
+  const identityMissing =
+    identityDocsResult.error?.code === "42P01" ||
+    identityDocsResult.error?.code === "PGRST205" ||
+    (identityDocsResult.error?.message ?? "").includes("profile_identity_docs");
 
   const listError =
     profileResult.error ??
@@ -144,6 +154,7 @@ async function ProfileSection({
     consultationsResult.error ??
     labsResult.error ??
     (insuranceMissing ? null : insurancesResult.error) ??
+    (identityMissing ? null : identityDocsResult.error) ??
     connectionResult.error;
   if (listError) {
     console.error("profilePage", listError.code);
@@ -201,6 +212,29 @@ async function ProfileSection({
         };
       });
 
+  const identityDocs = identityMissing
+    ? []
+    : ((identityDocsResult.data ?? []) as {
+        id: string;
+        title: string;
+        issued_date: string | null;
+        notes: string | null;
+        source_document_id: string | null;
+      }[]).map((item) => {
+        const file = item.source_document_id
+          ? docsById.get(item.source_document_id)
+          : null;
+        return {
+          id: item.id,
+          title: item.title,
+          issued_date: item.issued_date,
+          notes: item.notes,
+          source_document_id: item.source_document_id,
+          filename: file?.original_filename ?? null,
+          mime_type: file?.mime_type ?? null,
+        };
+      });
+
   return (
     <ProfileDetail
       profile={profile}
@@ -221,6 +255,7 @@ async function ProfileSection({
         sample_date: string | null;
       }[]}
       insurances={insurances}
+      identityDocs={identityDocs}
       driveConnected={Boolean(connectionResult.data)}
       canWrite={canWrite(family.role)}
       canEditRecords={Boolean(writer.familyId)}

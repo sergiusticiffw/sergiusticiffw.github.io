@@ -8,6 +8,13 @@ import {
   createProfile,
   updateProfile,
 } from "@/app/(app)/profiles/actions";
+import {
+  emptyIdentityDraft,
+  ProfileIdentityFields,
+  saveIdentityDraft,
+  type IdentityDraft,
+  type ProfileIdentityDoc,
+} from "@/components/profiles/profile-identity-docs";
 import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
@@ -30,6 +37,8 @@ export function ProfileForm({
   hideActions = false,
   onDone,
   onPendingChange,
+  identityDoc = null,
+  driveConnected = false,
 }: {
   profileId?: string;
   formId?: string;
@@ -38,12 +47,20 @@ export function ProfileForm({
   hideActions?: boolean;
   onDone?: () => void;
   onPendingChange?: (pending: boolean) => void;
+  identityDoc?: ProfileIdentityDoc | null;
+  driveConnected?: boolean;
 }) {
   const [formError, setFormError] = useState<string | null>(null);
+  const [identityCleared, setIdentityCleared] = useState(false);
+  const [identityDraft, setIdentityDraft] = useState<IdentityDraft>(() =>
+    emptyIdentityDraft(identityDoc),
+  );
   const form = useForm<ProfileInput>({
     resolver: zodResolver(profileSchema),
     defaultValues,
   });
+  const idPrefix = profileId ?? formId ?? "profile";
+  const activeIdentityDoc = identityCleared ? null : identityDoc;
 
   const onSubmit = form.handleSubmit(async (values) => {
     setFormError(null);
@@ -58,8 +75,26 @@ export function ProfileForm({
         return;
       }
 
+      const savedProfileId = profileId ?? result.id;
+      if (!savedProfileId) {
+        setFormError("Profilul a fost salvat, dar actul nu a putut fi legat.");
+        return;
+      }
+      const identityResult = await saveIdentityDraft({
+        profileId: savedProfileId,
+        existing: activeIdentityDoc,
+        draft: identityDraft,
+        driveConnected,
+      });
+      if (identityResult.error) {
+        setFormError(identityResult.error);
+        return;
+      }
+
       if (!profileId) {
         form.reset(emptyValues);
+        setIdentityDraft(emptyIdentityDraft(null));
+        setIdentityCleared(false);
       }
       onDone?.();
     } finally {
@@ -147,6 +182,14 @@ export function ProfileForm({
           </p>
         ) : null}
       </div>
+      <ProfileIdentityFields
+        idPrefix={idPrefix}
+        doc={activeIdentityDoc}
+        draft={identityDraft}
+        onChange={setIdentityDraft}
+        driveConnected={driveConnected}
+        onDeleted={() => setIdentityCleared(true)}
+      />
       {hideActions ? null : (
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button
@@ -172,7 +215,11 @@ export function ProfileForm({
   );
 }
 
-export function AddProfileButton() {
+export function AddProfileButton({
+  driveConnected = false,
+}: {
+  driveConnected?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const formId = "add-profile-form";
@@ -216,9 +263,11 @@ export function AddProfileButton() {
           după IDNP și rămân în folderul privat din Google Drive.
         </p>
         <ProfileForm
+          key={open ? "open" : "closed"}
           formId={formId}
           submitLabel="Adaugă profil"
           hideActions
+          driveConnected={driveConnected}
           onDone={() => setOpen(false)}
           onPendingChange={setPending}
         />

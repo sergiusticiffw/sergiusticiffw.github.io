@@ -6,6 +6,7 @@ import { useState } from "react";
 import { deleteProfile } from "@/app/(app)/profiles/actions";
 import { ProfileEntries } from "@/components/profiles/profile-entries";
 import { ProfileForm } from "@/components/profiles/profile-form";
+import { type ProfileIdentityDoc } from "@/components/profiles/profile-identity-docs";
 import {
   ProfileInsuranceSection,
   type ProfileInsurance,
@@ -99,6 +100,7 @@ export function ProfileDetail({
   consultations,
   labTests,
   insurances = [],
+  identityDocs = [],
   driveConnected,
   canWrite = true,
   canEditRecords = canWrite,
@@ -109,6 +111,7 @@ export function ProfileDetail({
   consultations: MedicalConsultation[];
   labTests: MedicalLabTest[];
   insurances?: ProfileInsurance[];
+  identityDocs?: ProfileIdentityDoc[];
   driveConnected: boolean;
   canWrite?: boolean;
   canEditRecords?: boolean;
@@ -210,10 +213,13 @@ export function ProfileDetail({
           }
         >
           <ProfileForm
+            key={editing ? `edit-${profile.id}-${identityDocs[0]?.id ?? "none"}` : "closed"}
             profileId={profile.id}
             formId={editFormId}
             submitLabel="Salvează"
             hideActions
+            identityDoc={identityDocs[0] ?? null}
+            driveConnected={driveConnected}
             defaultValues={{
               displayName: profile.display_name,
               birthDate: profile.birth_date ?? "",
@@ -245,6 +251,7 @@ export function ProfileDetail({
         />
         ) : null}
         <ProfileInsuranceSection
+          identityDocs={identityDocs}
           profileId={profile.id}
           insurances={insurances}
           driveConnected={driveConnected}
@@ -270,7 +277,10 @@ function ProfileRecords({
   labTests: MedicalLabTest[];
 }) {
   const primaries = documents.filter(
-    (document) => !document.record_id && document.category !== "Asigurare",
+    (document) =>
+      !document.record_id &&
+      document.category !== "Asigurare" &&
+      document.category !== "Act",
   );
   const documentRecords = primaries.map((document) => {
     const files = [

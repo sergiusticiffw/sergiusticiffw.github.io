@@ -236,7 +236,10 @@ export async function loadMedicalCatalog(
   const records: CatalogRecord[] = [];
 
   for (const item of documents.filter(
-    (row) => !row.record_id && row.category !== "Asigurare",
+    (row) =>
+      !row.record_id &&
+      row.category !== "Asigurare" &&
+      row.category !== "Act",
   )) {
     const files = [item, ...documents.filter((file) => file.record_id === item.id)];
     const consultation =
@@ -466,7 +469,10 @@ export async function loadRecordsIndex(familyId: string): Promise<{
   const records: RecordIndexItem[] = [];
 
   for (const item of documents.filter(
-    (row) => !row.record_id && row.category !== "Asigurare",
+    (row) =>
+      !row.record_id &&
+      row.category !== "Asigurare" &&
+      row.category !== "Act",
   )) {
     const files = [item, ...documents.filter((file) => file.record_id === item.id)];
     const consultation =
