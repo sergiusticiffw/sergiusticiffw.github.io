@@ -38,6 +38,36 @@ export async function login(input: LoginInput): Promise<ActionResult> {
   redirect("/profiles");
 }
 
+/** Verifies password without redirect — used by biometric lock fallback. */
+export async function verifyPassword(
+  input: LoginInput,
+): Promise<ActionResult> {
+  const parsed = loginSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: "Verifică emailul și parola." };
+  }
+
+  try {
+    const supabase = await createClient();
+    const { data: current } = await supabase.auth.getUser();
+    if (current.user?.email && current.user.email !== parsed.data.email) {
+      return { error: "Emailul nu corespunde contului curent." };
+    }
+    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    if (error) {
+      return { error: "Emailul sau parola nu sunt corecte." };
+    }
+  } catch (error) {
+    console.error(
+      "verifyPassword",
+      error instanceof Error ? error.name : "unknown",
+    );
+    return { error: "Conexiunea cu Supabase nu este configurată." };
+  }
+
+  return {};
+}
+
 export async function requestPasswordReset(
   input: RecoveryInput,
 ): Promise<ActionResult> {

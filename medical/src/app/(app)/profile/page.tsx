@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
 
+import { LogoutButton } from "@/components/auth/logout-button";
+import { BiometricSettings } from "@/components/profile/biometric-settings";
 import { ChangePasswordForm } from "@/components/profile/change-password-form";
 import { DriveSettings } from "@/components/profile/drive-settings";
-import { LogoutButton } from "@/components/auth/logout-button";
 import { PageFallback } from "@/components/layout/page-fallback";
 import {
   Card,
@@ -285,6 +286,19 @@ async function ProfileSection({
 
       <Card>
         <CardHeader>
+          <CardTitle>Securitate pe acest dispozitiv</CardTitle>
+          <CardDescription>
+            Deblocare cu Face ID, amprentă sau Windows Hello după ce ești deja
+            autentificat.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <BiometricSettings userId={user.id} email={user.email} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Parolă</CardTitle>
           <CardDescription>Schimbă parola acestui cont.</CardDescription>
         </CardHeader>
@@ -293,7 +307,7 @@ async function ProfileSection({
         </CardContent>
       </Card>
 
-      <LogoutButton className="h-11 w-full sm:w-fit" />
+      <LogoutButton userId={user.id} className="h-11 w-full sm:w-fit" />
     </div>
   );
 }

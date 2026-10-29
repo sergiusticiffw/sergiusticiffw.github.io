@@ -5,8 +5,15 @@ import { useState } from "react";
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
 import { clearChatSession } from "@/lib/assistant/chat-session";
+import { clearUnlockOnLogout } from "@/lib/biometric-lock";
 
-export function LogoutButton({ className }: { className?: string }) {
+export function LogoutButton({
+  userId,
+  className,
+}: {
+  userId?: string;
+  className?: string;
+}) {
   const [pending, setPending] = useState(false);
 
   return (
@@ -18,6 +25,9 @@ export function LogoutButton({ className }: { className?: string }) {
       onClick={() => {
         setPending(true);
         clearChatSession();
+        if (userId) {
+          clearUnlockOnLogout(userId);
+        }
         void logout();
       }}
     >
