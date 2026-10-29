@@ -8,5 +8,11 @@ export function createClient() {
     throw new Error("Conexiunea cu Supabase nu este configurată.");
   }
 
-  return createBrowserClient(env.url, env.anonKey);
+  // Passkeys (WebAuthn) require Dashboard: Authentication → Passkeys enabled,
+  // with stable RP ID + HTTPS origins. API is experimental in supabase-js.
+  return createBrowserClient(env.url, env.anonKey, {
+    auth: {
+      experimental: { passkey: true },
+    },
+  });
 }

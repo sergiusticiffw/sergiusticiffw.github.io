@@ -5,6 +5,7 @@ import { LogoutButton } from "@/components/auth/logout-button";
 import { BiometricSettings } from "@/components/profile/biometric-settings";
 import { ChangePasswordForm } from "@/components/profile/change-password-form";
 import { DriveSettings } from "@/components/profile/drive-settings";
+import { PasskeySettings } from "@/components/profile/passkey-settings";
 import { PageFallback } from "@/components/layout/page-fallback";
 import {
   Card,
@@ -281,6 +282,18 @@ async function ProfileSection({
               Vezi profilurile
             </Link>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Login cu passkey</CardTitle>
+          <CardDescription>
+            Intră în cont cu amprenta / Face ID de pe pagina de login.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PasskeySettings />
         </CardContent>
       </Card>
 
