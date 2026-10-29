@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DeleteRecordButton } from "@/components/profiles/delete-record-button";
 import { DocumentGallery } from "@/components/profiles/document-preview";
 import { EditRecordButton } from "@/components/profiles/edit-record-button";
+import { ShareFilesButton } from "@/components/records/share-files-button";
 import type { FamilyRecord } from "@/lib/records";
 import { formatBirthDate } from "@/lib/format";
 
@@ -39,7 +40,10 @@ export function RecordDetail({
         <h1 className="text-2xl font-semibold tracking-tight">{record.title}</h1>
       </div>
       {record.files.length > 0 ? (
-        <DocumentGallery files={record.files} />
+        <div className="flex flex-col gap-3">
+          <DocumentGallery files={record.files} />
+          <ShareFilesButton files={record.files} title={record.title} />
+        </div>
       ) : null}
       {record.body ? (
         <p className="whitespace-pre-wrap text-sm">{record.body}</p>
