@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import type { PaydownResult, PaymentLog } from '@features/loans/utils/amortization';
 import {
   calculateMilestones,
+  countRemainingPayments,
   getUpcomingPayments,
   getTotalInterest,
 } from '@features/loans/utils/loanSimulation';
@@ -58,6 +59,11 @@ const LoanDashboard: React.FC<LoanDashboardProps> = ({
     [schedule]
   );
 
+  const remainingPaymentsCount = useMemo(
+    () => countRemainingPayments(schedule),
+    [schedule]
+  );
+
   return (
     <div className="flex flex-col gap-6 w-full">
       <LoanKpiCards
@@ -76,6 +82,7 @@ const LoanDashboard: React.FC<LoanDashboardProps> = ({
         <>
           <UpcomingPayments
             payment={upcomingPayment}
+            remainingCount={remainingPaymentsCount}
             onAddPayment={onAddPayment}
           />
 

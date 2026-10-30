@@ -2,15 +2,17 @@ import React from 'react';
 import { useLocalization } from '@shared/context/localization';
 import { formatNumber } from '@shared/utils/utils';
 import type { UpcomingPayment } from '@features/loans/utils/loanSimulation';
-import { FiCalendar, FiPlus } from 'react-icons/fi';
+import { FiCalendar, FiList, FiPlus } from 'react-icons/fi';
 
 interface UpcomingPaymentsProps {
   payment: UpcomingPayment | null;
+  remainingCount: number;
   onAddPayment: () => void;
 }
 
 const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({
   payment,
+  remainingCount,
   onAddPayment,
 }) => {
   const { t } = useLocalization();
@@ -20,6 +22,14 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({
   const statusLabel = payment.isOverdue
     ? t('loan.upcoming.overdue')
     : t('loan.upcoming.daysLeft').replace('{days}', String(payment.daysUntil));
+
+  const remainingLabel =
+    remainingCount === 1
+      ? t('loan.upcoming.remainingOne')
+      : t('loan.upcoming.remainingCount').replace(
+          '{count}',
+          String(remainingCount)
+        );
 
   return (
     <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.03] p-5">
@@ -48,6 +58,12 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({
           <FiCalendar className="w-3.5 h-3.5 shrink-0" />
           <span className="tabular-nums">{payment.date}</span>
         </div>
+        {remainingCount > 0 && (
+          <div className="mt-2 inline-flex items-center gap-1.5 text-sm text-white/55">
+            <FiList className="w-3.5 h-3.5 shrink-0" />
+            <span>{remainingLabel}</span>
+          </div>
+        )}
       </div>
 
       <button

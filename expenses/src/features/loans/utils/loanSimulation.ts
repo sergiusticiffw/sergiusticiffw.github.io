@@ -64,6 +64,22 @@ export function getDaysUntil(date: string): number {
   return Math.round((targetMs - todayMs) / (1000 * 60 * 60 * 24));
 }
 
+function isRemainingPaymentRow(row: PaymentLog | { type?: string }): boolean {
+  if (!isScheduleRow(row)) return false;
+  if (row.was_payed === true) return false;
+  const installment = parseScheduleInstallment(row.installment);
+  return installment != null && !!row.date;
+}
+
+/** Number of unpaid schedule installments still left to make. */
+export function countRemainingPayments(schedule: PaymentLog[]): number {
+  let count = 0;
+  for (const row of schedule) {
+    if (isRemainingPaymentRow(row)) count += 1;
+  }
+  return count;
+}
+
 export function getUpcomingPayments(
   schedule: PaymentLog[],
   count = 4
@@ -71,8 +87,7 @@ export function getUpcomingPayments(
   const results: UpcomingPayment[] = [];
 
   for (const row of schedule) {
-    if (!isScheduleRow(row)) continue;
-    if (row.was_payed === true) continue;
+    if (!isRemainingPaymentRow(row)) continue;
     const installment = parseScheduleInstallment(row.installment);
     if (installment == null || !row.date) continue;
 

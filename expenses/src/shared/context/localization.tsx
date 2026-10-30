@@ -635,6 +635,8 @@ const translations = {
     'loan.upcoming.title': 'Next payment',
     'loan.upcoming.daysLeft': '{days} days left',
     'loan.upcoming.overdue': 'Overdue',
+    'loan.upcoming.remainingOne': '1 payment remaining',
+    'loan.upcoming.remainingCount': '{count} payments remaining',
     'loan.dashboard': 'Loan Planning',
 
     // Loans Page
@@ -1456,6 +1458,8 @@ const translations = {
     'loan.upcoming.title': 'Următoarea plată',
     'loan.upcoming.daysLeft': '{days} zile rămase',
     'loan.upcoming.overdue': 'Întârziat',
+    'loan.upcoming.remainingOne': 'Mai rămâne 1 plată',
+    'loan.upcoming.remainingCount': 'Mai rămân {count} plăți',
     'loan.dashboard': 'Planificare Împrumut',
 
     // Loans Page
