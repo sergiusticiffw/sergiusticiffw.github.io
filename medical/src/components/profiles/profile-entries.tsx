@@ -8,6 +8,7 @@ import {
   type RecordActionResult,
 } from "@/app/(app)/profiles/record-actions";
 import { saveDetectedDocument } from "@/app/(app)/profiles/scan-actions";
+import { DriveConnectCta } from "@/components/layout/drive-connect-cta";
 import {
   HomeUpload,
   type HomeUploadSaveAction,
@@ -16,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES } from "@/lib/files";
@@ -27,25 +29,20 @@ import {
 
 const initialResult: RecordActionResult = {};
 
-const selectClass =
-  "h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
-
 function FileField({
   id,
   driveConnected,
+  canConnectDrive,
 }: {
   id: string;
   driveConnected: boolean;
+  canConnectDrive: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [names, setNames] = useState<string[]>([]);
 
   if (!driveConnected) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Conectează Google Drive ca să atașezi imagini, PDF, Word sau text.
-      </p>
-    );
+    return <DriveConnectCta canConnect={canConnectDrive} />;
   }
 
   return (
@@ -255,11 +252,13 @@ export function ProfileEntries({
   profileName,
   idnp,
   driveConnected,
+  canConnectDrive = false,
 }: {
   profileId: string;
   profileName: string;
   idnp: string | null;
   driveConnected: boolean;
+  canConnectDrive?: boolean;
 }) {
   const [panel, setPanel] = useState<"consultation" | "file" | null>(null);
   const [saveAction, setSaveAction] = useState<HomeUploadSaveAction | null>(
@@ -368,10 +367,9 @@ export function ProfileEntries({
           >
             <div className="flex flex-col gap-2">
               <Label htmlFor={`consult-category-${profileId}`}>Tip</Label>
-              <select
+              <Select
                 id={`consult-category-${profileId}`}
                 name="category"
-                className={selectClass}
                 defaultValue={DEFAULT_RECORD_CATEGORY}
               >
                 {RECORD_CATEGORIES.map((category) => (
@@ -379,7 +377,7 @@ export function ProfileEntries({
                     {category}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor={`consult-title-${profileId}`}>Titlu</Label>
@@ -407,22 +405,19 @@ export function ProfileEntries({
             <FileField
               id={`consult-files-${profileId}`}
               driveConnected={driveConnected}
+              canConnectDrive={canConnectDrive}
             />
           </EntryForm>
         ) : null}
         {panel === "file" ? (
-          driveConnected ? (
-            <HomeUpload
-              people={[{ id: profileId, display_name: profileName, idnp }]}
-              lockedProfileId={profileId}
-              onSaved={closePanel}
-              onSaveActionChange={setSaveAction}
-            />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Conectează Google Drive ca să încarci un document privat.
-            </p>
-          )
+          <HomeUpload
+            people={[{ id: profileId, display_name: profileName, idnp }]}
+            lockedProfileId={profileId}
+            driveConnected={driveConnected}
+            canConnectDrive={canConnectDrive}
+            onSaved={closePanel}
+            onSaveActionChange={setSaveAction}
+          />
         ) : null}
       </FormDialog>
     </div>

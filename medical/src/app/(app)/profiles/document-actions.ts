@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateApp } from "@/lib/data-cache";
+import { revalidateMedicalData } from "@/lib/data-cache";
 
 import { requireProfileWriter } from "@/lib/auth";
 import { isUploadedFile, MAX_RECORD_FILES, readUploadedFile } from "@/lib/files";
@@ -156,22 +156,15 @@ export async function updateRecord(
         ? { consultation_date: date, summary: body }
         : { test_name: title, sample_date: date, result_text: body || null, category };
 
-  const updated = await supabase.from(table).update(changes).eq("id", row.id);
-  const missingTitle =
-    kind === "document" &&
-    (updated.error?.code === "42703" || updated.error?.code === "PGRST204") &&
-    (updated.error.message ?? "").toLowerCase().includes("title");
-  const saved = missingTitle
-    ? await supabase
-        .from(table)
-        .update({
-          document_date: date,
-          extracted_text: `${title}\n\n${body}`.trim().slice(0, 20000) || null,
-        })
-        .eq("id", row.id)
-    : updated;
+  const saved = await supabase.from(table).update(changes).eq("id", row.id);
   if (saved.error) {
     console.error("updateRecord", saved.error.code);
+    if (
+      kind === "document" &&
+      (saved.error.code === "42703" || saved.error.code === "PGRST204")
+    ) {
+      return { error: "Aplică migrațiile pentru titlu și textul documentului." };
+    }
     return { error: "Înregistrarea nu a putut fi modificată." };
   }
 
@@ -186,22 +179,18 @@ export async function deleteDocument(id: string): Promise<DocumentActionResult> 
   }
 
   const supabase = await createClient();
-  const withRecord = await supabase
+  const loaded = await supabase
     .from("medical_documents")
     .select("id, drive_file_id, profile_id, record_id")
     .eq("id", parsedId.data)
     .maybeSingle();
-  const missingRecordColumn =
-    withRecord.error?.code === "42703" || withRecord.error?.code === "PGRST204";
-  const loaded = missingRecordColumn
-    ? await supabase
-        .from("medical_documents")
-        .select("id, drive_file_id, profile_id")
-        .eq("id", parsedId.data)
-        .maybeSingle()
-    : withRecord;
 
   if (loaded.error || !loaded.data) {
+    if (loaded.error?.code === "42703" || loaded.error?.code === "PGRST204") {
+      return {
+        error: "Aplică migrația pentru mai multe imagini la o înregistrare.",
+      };
+    }
     return { error: "Documentul nu a fost găsit." };
   }
 
@@ -285,26 +274,20 @@ async function loadDocumentFile(id: string) {
   }
 
   const supabase = await createClient();
-  const withRecord = await supabase
+  const loaded = await supabase
     .from("medical_documents")
     .select(
       "id, drive_file_id, profile_id, record_id, original_filename, document_date, category, title, extracted_text",
     )
     .eq("id", parsedId.data)
     .maybeSingle();
-  const missingColumn =
-    withRecord.error?.code === "42703" || withRecord.error?.code === "PGRST204";
-  const loaded = missingColumn
-    ? await supabase
-        .from("medical_documents")
-        .select(
-          "id, drive_file_id, profile_id, original_filename, document_date, category, extracted_text",
-        )
-        .eq("id", parsedId.data)
-        .maybeSingle()
-    : withRecord;
 
   if (loaded.error || !loaded.data) {
+    if (loaded.error?.code === "42703" || loaded.error?.code === "PGRST204") {
+      return {
+        error: "Aplică migrațiile pentru titlu și imaginile din înregistrare.",
+      };
+    }
     return { error: "Documentul nu a fost găsit." };
   }
 
@@ -362,25 +345,16 @@ export async function deleteRecordFile(
         extracted_text: document.extracted_text ?? null,
       })
       .eq("id", successor.id);
-    const missingTitle =
-      (promoted.error?.code === "42703" || promoted.error?.code === "PGRST204") &&
-      (promoted.error.message ?? "").toLowerCase().includes("title");
-    if (missingTitle) {
-      const retry = await supabase
-        .from("medical_documents")
-        .update({
-          record_id: null,
-          document_date: document.document_date ?? null,
-          category: document.category ?? null,
-          extracted_text: document.extracted_text ?? null,
-        })
-        .eq("id", successor.id);
-      if (retry.error) {
-        console.error("deleteRecordFile", retry.error.code);
-        return { error: "Fișierul nu a putut fi șters." };
-      }
-    } else if (promoted.error) {
+    if (promoted.error) {
       console.error("deleteRecordFile", promoted.error.code);
+      if (
+        promoted.error.code === "42703" ||
+        promoted.error.code === "PGRST204"
+      ) {
+        return {
+          error: "Aplică migrațiile pentru titlu și imaginile din înregistrare.",
+        };
+      }
       return { error: "Fișierul nu a putut fi șters." };
     }
 
@@ -517,7 +491,7 @@ async function countRecordFiles(
 }
 
 function revalidateRecord(profileId: string, recordId?: string) {
-  revalidateApp(profileId, recordId);
+  revalidateMedicalData(profileId, recordId);
 }
 
 export async function addRecordFile(

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   disableBiometric,
   enrollBiometric,
@@ -18,6 +19,11 @@ type PasskeyRow = {
   created_at: string;
   last_used_at?: string | null;
 };
+
+type ConfirmTarget =
+  | { type: "passkey"; id: string; label: string }
+  | { type: "lock" }
+  | null;
 
 function formatPasskeyError(error: { message?: string; code?: string } | null) {
   const code = error?.code ?? "";
@@ -52,6 +58,7 @@ export function SecuritySettings({
   const [lockEnabled, setLockEnabled] = useState(false);
   const [lockPending, setLockPending] = useState(false);
 
+  const [confirm, setConfirm] = useState<ConfirmTarget>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -120,10 +127,7 @@ export function SecuritySettings({
     }
   }
 
-  async function onDeletePasskey(passkeyId: string, label: string) {
-    if (!window.confirm(`Ștergi passkey-ul „${label}”?`)) {
-      return;
-    }
+  async function onDeletePasskey(passkeyId: string) {
     setPasskeyPending(true);
     setError(null);
     setMessage(null);
@@ -136,6 +140,7 @@ export function SecuritySettings({
         setError(formatPasskeyError(deleteError));
         return;
       }
+      setConfirm(null);
       setMessage("Passkey șters.");
       await refreshPasskeys();
     } catch (err) {
@@ -162,12 +167,8 @@ export function SecuritySettings({
   }
 
   function onDisableLock() {
-    if (
-      !window.confirm("Dezactivezi blocarea ecranului pe acest dispozitiv?")
-    ) {
-      return;
-    }
     disableBiometric(userId);
+    setConfirm(null);
     setLockEnabled(false);
     setError(null);
     setMessage("Blocarea ecranului a fost dezactivată.");
@@ -188,6 +189,8 @@ export function SecuritySettings({
       <p className="text-muted-foreground">
         Folosește amprenta sau Face ID ca să intri în cont și, opțional, ca să
         blochezi ecranul pe acest dispozitiv după ce ești autentificat.
+        Blocarea ascunde interfața pe dispozitiv; nu înlocuiește parola și nu
+        închide sesiunea.
       </p>
       {error ? (
         <p role="alert" className="text-destructive">
@@ -232,7 +235,8 @@ export function SecuritySettings({
                     className="h-8 px-2 text-xs text-destructive"
                     disabled={pending}
                     onClick={() => {
-                      void onDeletePasskey(item.id, label);
+                      setError(null);
+                      setConfirm({ type: "passkey", id: item.id, label });
                     }}
                   >
                     Șterge
@@ -267,7 +271,10 @@ export function SecuritySettings({
             variant="outline"
             className="h-11 w-full sm:w-fit"
             disabled={pending}
-            onClick={onDisableLock}
+            onClick={() => {
+              setError(null);
+              setConfirm({ type: "lock" });
+            }}
           >
             Dezactivează blocarea
           </Button>
@@ -284,6 +291,38 @@ export function SecuritySettings({
           </Button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirm?.type === "passkey"}
+        title={
+          confirm?.type === "passkey"
+            ? `Ștergi passkey-ul „${confirm.label}”?`
+            : "Ștergi passkey-ul?"
+        }
+        description="Nu vei mai putea intra cu acest dispozitiv prin amprentă / Face ID până îl adaugi din nou."
+        confirmLabel="Șterge passkey"
+        pendingLabel="Se șterge…"
+        pending={passkeyPending}
+        onConfirm={() => {
+          if (confirm?.type === "passkey") {
+            void onDeletePasskey(confirm.id);
+          }
+        }}
+        onCancel={() => {
+          if (!passkeyPending) {
+            setConfirm(null);
+          }
+        }}
+      />
+      <ConfirmDialog
+        open={confirm?.type === "lock"}
+        title="Dezactivezi blocarea ecranului?"
+        description="Dosarul rămâne deschis pe acest dispozitiv fără amprentă după ce ești autentificat."
+        confirmLabel="Dezactivează"
+        pendingLabel="Se dezactivează…"
+        onConfirm={onDisableLock}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
 } from "@/app/(app)/profiles/document-actions";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { requireSensitiveUnlock } from "@/lib/sensitive-action";
 
 export function DeleteRecordButton({
   kind,
@@ -31,6 +32,12 @@ export function DeleteRecordButton({
   async function onConfirm() {
     setPending(true);
     setError(null);
+    const unlock = await requireSensitiveUnlock();
+    if (unlock.error) {
+      setError(unlock.error);
+      setPending(false);
+      return;
+    }
     const result = await deleteRecord(kind, id);
     if (result.error) {
       setError(result.error);

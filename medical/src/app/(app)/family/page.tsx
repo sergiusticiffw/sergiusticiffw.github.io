@@ -118,6 +118,13 @@ async function FamilySection() {
     }
   }
 
+  const roleNote =
+    access.role === "viewer"
+      ? "Ai rol de vizualizare: poți citi persoanele bifate pentru tine, dar nu poți adăuga sau modifica înregistrări."
+      : access.role === "editor"
+        ? "Ai rol de editor: poți modifica înregistrările persoanelor bifate pentru tine."
+        : null;
+
   return (
     <FamilyManager
       name={family?.name ?? "Familie"}
@@ -127,6 +134,7 @@ async function FamilySection() {
       grants={grants}
       accessNote={accessNote}
       isAdmin={access.role === "admin"}
+      roleNote={roleNote}
     />
   );
 }

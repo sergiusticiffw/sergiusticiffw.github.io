@@ -61,7 +61,9 @@ async function ProfileSection({
   ] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, display_name, birth_date, idnp, notes")
+        .select(
+          "id, display_name, birth_date, idnp, notes, allergies, chronic_conditions, current_medications, blood_type, emergency_notes",
+        )
         .eq("family_id", family.familyId)
         .eq("id", id)
         .maybeSingle(),
@@ -148,8 +150,52 @@ async function ProfileSection({
     identityDocsResult.error?.code === "PGRST205" ||
     (identityDocsResult.error?.message ?? "").includes("profile_identity_docs");
 
+  const healthMissing =
+    profileResult.error?.code === "42703" ||
+    profileResult.error?.code === "PGRST204";
+
+  let profileRow = profileResult.data as {
+    id: string;
+    display_name: string;
+    birth_date: string | null;
+    idnp: string | null;
+    notes: string | null;
+    allergies?: string | null;
+    chronic_conditions?: string | null;
+    current_medications?: string | null;
+    blood_type?: string | null;
+    emergency_notes?: string | null;
+  } | null;
+  let profileError = healthMissing ? null : profileResult.error;
+
+  if (healthMissing) {
+    const retry = await supabase
+      .from("profiles")
+      .select("id, display_name, birth_date, idnp, notes")
+      .eq("family_id", family.familyId)
+      .eq("id", id)
+      .maybeSingle();
+    profileError = retry.error;
+    profileRow = retry.data
+      ? {
+          ...(retry.data as {
+            id: string;
+            display_name: string;
+            birth_date: string | null;
+            idnp: string | null;
+            notes: string | null;
+          }),
+          allergies: null,
+          chronic_conditions: null,
+          current_medications: null,
+          blood_type: null,
+          emergency_notes: null,
+        }
+      : null;
+  }
+
   const listError =
-    profileResult.error ??
+    profileError ??
     documentsError ??
     consultationsResult.error ??
     labsResult.error ??
@@ -165,13 +211,20 @@ async function ProfileSection({
     );
   }
 
-  const profile = profileResult.data as {
-    id: string;
-    display_name: string;
-    birth_date: string | null;
-    idnp: string | null;
-    notes: string | null;
-  } | null;
+  const profile = profileRow
+    ? {
+        id: profileRow.id,
+        display_name: profileRow.display_name,
+        birth_date: profileRow.birth_date,
+        idnp: profileRow.idnp,
+        notes: profileRow.notes,
+        allergies: profileRow.allergies ?? null,
+        chronic_conditions: profileRow.chronic_conditions ?? null,
+        current_medications: profileRow.current_medications ?? null,
+        blood_type: profileRow.blood_type ?? null,
+        emergency_notes: profileRow.emergency_notes ?? null,
+      }
+    : null;
   if (!profile) {
     return <p className="text-sm text-destructive">Persoana nu a fost găsită.</p>;
   }

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { formatBirthDate } from "@/lib/format";
 import {
   parseRecordCategory,
@@ -38,9 +39,6 @@ function fold(value: string) {
 }
 
 const PAGE_SIZE = 10;
-
-const selectClass =
-  "h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
 
 export function RecordsList({
   records = [],
@@ -140,10 +138,9 @@ export function RecordsList({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="flex flex-col gap-1">
             <Label htmlFor="records-person">Persoană</Label>
-            <select
+            <Select
               id="records-person"
               value={personId}
-              className={selectClass}
               onChange={(event) => setPersonId(event.target.value)}
             >
               <option value="">Toate persoanele</option>
@@ -152,14 +149,13 @@ export function RecordsList({
                   {person.display_name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="records-category">Tip</Label>
-            <select
+            <Select
               id="records-category"
               value={category}
-              className={selectClass}
               onChange={(event) =>
                 setCategory(event.target.value as "" | RecordCategory)
               }
@@ -170,7 +166,7 @@ export function RecordsList({
                   {item}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="flex flex-col gap-1">
             <Label htmlFor="records-month">Lună</Label>
@@ -202,9 +198,36 @@ export function RecordsList({
         ) : null}
       </div>
       {matched.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Nicio înregistrare pentru aceste filtre.
-        </p>
+        <div className="flex flex-col gap-3 rounded-lg border border-dashed px-4 py-6">
+          {records.length === 0 ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Nicio înregistrare încă. Deschide o persoană și încarcă un
+                document sau adaugă o notă.
+              </p>
+              <Link
+                href="/profiles"
+                className="text-sm font-medium underline-offset-4 hover:underline"
+              >
+                Mergi la Persoane
+              </Link>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Nicio înregistrare pentru aceste filtre.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 w-fit"
+                onClick={clearFilters}
+              >
+                Șterge filtrele
+              </Button>
+            </>
+          )}
+        </div>
       ) : (
         <ul className="flex flex-col gap-3">
           {visible.map((record) => (

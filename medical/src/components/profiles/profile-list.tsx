@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { deleteProfile } from "@/app/(app)/profiles/actions";
 import { ProfileEntries } from "@/components/profiles/profile-entries";
 import { ProfileForm } from "@/components/profiles/profile-form";
 import { type ProfileIdentityDoc } from "@/components/profiles/profile-identity-docs";
 import {
+  InsuranceExpiryBanner,
   ProfileInsuranceSection,
   type ProfileInsurance,
 } from "@/components/profiles/profile-insurance";
@@ -22,6 +23,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { formatBirthDate } from "@/lib/format";
+import { requireSensitiveUnlock } from "@/lib/sensitive-action";
 
 const PAGE_SIZE = 5;
 
@@ -31,6 +33,11 @@ export type MedicalProfile = {
   birth_date: string | null;
   idnp: string | null;
   notes: string | null;
+  allergies: string | null;
+  chronic_conditions: string | null;
+  current_medications: string | null;
+  blood_type: string | null;
+  emergency_notes: string | null;
 };
 
 export type MedicalDocument = {
@@ -60,12 +67,22 @@ export type MedicalLabTest = {
   sample_date: string | null;
 };
 
-export function ProfileList({ profiles }: { profiles: MedicalProfile[] }) {
+export function ProfileList({
+  profiles,
+  emptyAction,
+}: {
+  profiles: MedicalProfile[];
+  emptyAction?: ReactNode;
+}) {
   if (profiles.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Nu există profiluri încă. Adaugă prima persoană din familie.
-      </p>
+      <div className="flex flex-col gap-3 rounded-lg border border-dashed px-4 py-6">
+        <p className="text-sm text-muted-foreground">
+          Nu există persoane încă. Adaugă prima persoană din familie ca să poți
+          încărca documente.
+        </p>
+        {emptyAction}
+      </div>
     );
   }
 
@@ -128,6 +145,12 @@ export function ProfileDetail({
   async function onDelete() {
     setPending(true);
     setError(null);
+    const unlock = await requireSensitiveUnlock();
+    if (unlock.error) {
+      setError(unlock.error);
+      setPending(false);
+      return;
+    }
     const result = await deleteProfile(profile.id);
     if (result.error) {
       setError(result.error);
@@ -157,6 +180,7 @@ export function ProfileDetail({
             {error}
           </p>
         ) : null}
+        <InsuranceExpiryBanner insurances={insurances} />
         {canWrite ? (
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button
@@ -248,6 +272,7 @@ export function ProfileDetail({
           profileName={profile.display_name}
           idnp={profile.idnp}
           driveConnected={driveConnected}
+          canConnectDrive={isAdmin}
         />
         ) : null}
         <ProfileInsuranceSection

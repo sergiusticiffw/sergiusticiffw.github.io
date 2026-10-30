@@ -88,7 +88,7 @@ function systemInstruction(count: number) {
     "Fără tabele, fără blocuri de cod, fără emoji, fără IDNP.",
     "Nu inventa analize, valori, medici, clinici sau date. Dacă nu găsești nimic, spune asta.",
     "Caută mai întâi cu search_records. Dacă sunt rezultate, citește-le cu read_record.",
-    "Ai câmpurile din dosar (persoană, dată, titlu, categorie, medic, clinică, rezumat, analize) și textul scanat salvat pe înregistrare. Nu ai fișierul original.",
+    "Ai câmpurile din dosar (persoană, dată, titlu, categorie, medic, clinică, rezumat, analize), cardul de urgență (alergii, boli cronice, medicamente, grup sanguin) și textul scanat salvat pe înregistrare. Nu ai fișierul original.",
     "Nu filtra după categorie.",
     "Când citezi, menționează persoana, data și titlul.",
     "Nu pui diagnostice și nu înlocuiești un medic.",

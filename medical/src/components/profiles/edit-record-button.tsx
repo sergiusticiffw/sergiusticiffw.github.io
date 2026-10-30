@@ -14,6 +14,7 @@ import type { PreviewFile } from "@/components/profiles/document-preview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES, MAX_RECORD_FILES } from "@/lib/files";
@@ -23,9 +24,7 @@ import {
   RECORD_CATEGORIES,
   type RecordCategory,
 } from "@/lib/record-category";
-
-const selectClass =
-  "h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
+import { requireSensitiveUnlock } from "@/lib/sensitive-action";
 
 export function EditRecordButton({
   kind,
@@ -223,6 +222,11 @@ export function EditRecordButton({
     setError(null);
     setPending("delete");
     try {
+      const unlock = await requireSensitiveUnlock();
+      if (unlock.error) {
+        setError(unlock.error);
+        return;
+      }
       const result = await deleteRecordFile(fileId);
       if (result.error) {
         setError(result.error);
@@ -287,9 +291,9 @@ export function EditRecordButton({
           <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="flex flex-col gap-1">
             <Label htmlFor={`record-category-${id}`}>Tip</Label>
-            <select
+            <Select
               id={`record-category-${id}`}
-              className={selectClass}
+              className="h-9"
               value={draftCategory}
               disabled={kind === "consultation"}
               onChange={(event) =>
@@ -301,7 +305,7 @@ export function EditRecordButton({
                   {item}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           {kind === "consultation" ? null : (
             <div className="flex flex-col gap-1">

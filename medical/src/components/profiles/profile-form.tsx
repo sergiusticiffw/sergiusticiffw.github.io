@@ -182,6 +182,7 @@ export function ProfileForm({
           </p>
         ) : null}
       </div>
+
       <ProfileIdentityFields
         idPrefix={idPrefix}
         doc={activeIdentityDoc}
@@ -227,11 +228,11 @@ export function AddProfileButton({
   return (
     <>
       <Button type="button" className="h-11 sm:w-fit" onClick={() => setOpen(true)}>
-        Adaugă profil
+        Adaugă persoană
       </Button>
       <FormDialog
         open={open}
-        title="Adaugă profil"
+        title="Adaugă persoană"
         pending={pending}
         onClose={() => {
           if (!pending) setOpen(false);
@@ -253,7 +254,7 @@ export function AddProfileButton({
               className="h-11 sm:w-fit"
               disabled={pending}
             >
-              {pending ? "Se salvează…" : "Adaugă profil"}
+              {pending ? "Se salvează…" : "Adaugă persoană"}
             </Button>
           </>
         }
@@ -265,7 +266,7 @@ export function AddProfileButton({
         <ProfileForm
           key={open ? "open" : "closed"}
           formId={formId}
-          submitLabel="Adaugă profil"
+          submitLabel="Adaugă persoană"
           hideActions
           driveConnected={driveConnected}
           onDone={() => setOpen(false)}

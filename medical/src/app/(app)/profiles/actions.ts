@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 
-import { revalidateApp } from "@/lib/data-cache";
+import { revalidateMedicalData } from "@/lib/data-cache";
 
 import { getAdminFamilyId, requireWriter } from "@/lib/auth";
 import { renameDriveFolder, trashDriveFile } from "@/lib/google-drive";
@@ -47,7 +47,6 @@ export async function createProfile(
     })
     .select("id")
     .single();
-
   if (error) {
     console.error("createProfile", error.code);
     if (error.code === "23505") {
@@ -56,7 +55,7 @@ export async function createProfile(
     return { error: "Profilul nu a putut fi salvat." };
   }
 
-  revalidateApp();
+  revalidateMedicalData();
   return { id: (data as { id: string }).id };
 }
 
@@ -95,7 +94,6 @@ export async function updateProfile(
     .eq("family_id", family.familyId)
     .select("id")
     .maybeSingle();
-
   if (error) {
     console.error("updateProfile", error.code);
     if (error.code === "23505") {
@@ -125,7 +123,7 @@ export async function updateProfile(
     }
   }
 
-  revalidateApp(parsedId.data);
+  revalidateMedicalData(parsedId.data);
   return {};
 }
 
@@ -183,6 +181,6 @@ export async function deleteProfile(id: string): Promise<ProfileActionResult> {
     return { error: "Profilul nu a fost găsit." };
   }
 
-  revalidateApp();
+  revalidateMedicalData();
   redirect("/profiles");
 }

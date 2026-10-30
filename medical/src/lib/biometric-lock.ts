@@ -193,6 +193,19 @@ export async function enrollBiometric(options: {
   }
 }
 
+/**
+ * For destructive actions: if screen-lock biometrics are enabled on this
+ * device, require a fresh assertion. No-op when lock is off.
+ */
+export async function confirmSensitiveUnlock(
+  userId: string,
+): Promise<{ error?: string }> {
+  if (!userId || !isBiometricEnabled(userId)) {
+    return {};
+  }
+  return assertBiometric(userId);
+}
+
 export async function assertBiometric(
   userId: string,
 ): Promise<{ error?: string }> {

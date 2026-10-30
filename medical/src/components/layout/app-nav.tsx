@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const links = [
   {
     href: "/profiles",
-    label: "Profiluri",
+    label: "Persoane",
     match: (path: string) => path === "/profiles" || path.startsWith("/profiles/"),
   },
   {
@@ -26,7 +26,7 @@ const links = [
   },
   {
     href: "/profile",
-    label: "Profil",
+    label: "Cont",
     match: (path: string) => path === "/profile" || path.startsWith("/profile/"),
   },
 ] as const;

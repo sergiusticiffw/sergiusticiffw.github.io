@@ -26,7 +26,7 @@ import { getGoogleConfig } from "@/lib/google-oauth";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
-  title: "Profil",
+  title: "Cont",
 };
 
 const roleLabels: Record<FamilyRole, string> = {

@@ -24,14 +24,11 @@ export type AiModelLimit = {
   quotaLimit?: number;
 };
 
-type MemoryDay = AiUsageDay;
-
-const SKIP_MS = 10 * 60_000;
-const memoryUsage = new Map<string, MemoryDay>();
-const memoryLimits = new Map<string, Map<string, AiModelLimit>>();
+/** Process-local model availability (not family quota). */
 const unavailableModels = new Set<string>();
 const modelCooldown = new Map<string, number>();
 let lastFailed: { model: string; until: number } | null = null;
+const SKIP_MS = 10 * 60_000;
 
 export function rememberSkip(model: string) {
   lastFailed = { model, until: Date.now() + SKIP_MS };
@@ -127,10 +124,6 @@ export function nextGeminiReset(now = new Date()) {
   return new Date(hi);
 }
 
-function memoryKey(familyId: string, date = geminiUsageDate()) {
-  return `${familyId}:${date}`;
-}
-
 function emptyDay(date: string): AiUsageDay {
   return {
     date,
@@ -143,7 +136,7 @@ function emptyDay(date: string): AiUsageDay {
 }
 
 function missingTable(code?: string) {
-  return code === "42P01" || code === "PGRST205" || code === "PGRST204";
+  return code === "42P01" || code === "PGRST205";
 }
 
 function parseDuration(value: string) {
@@ -218,48 +211,81 @@ export function quotaFromDetails(
   };
 }
 
-function readMemory(familyId: string) {
-  const date = geminiUsageDate();
-  const stored = memoryUsage.get(memoryKey(familyId, date));
-  if (stored?.date === date) {
-    return stored;
+async function persistUsage(
+  familyId: string,
+  delta: {
+    questions?: number;
+    requests?: number;
+    tokens?: number;
+    lastModel?: string;
+  },
+): Promise<AiUsageDay | null> {
+  try {
+    const supabase = await createClient();
+    const date = geminiUsageDate();
+    const { data, error } = await supabase
+      .from("ai_usage_days")
+      .select("questions, requests, tokens, last_model, updated_at")
+      .eq("family_id", familyId)
+      .eq("usage_date", date)
+      .maybeSingle();
+    if (error) {
+      if (missingTable(error.code)) {
+        console.error("persistAiUsage", "Aplică migrația ai_usage.");
+      } else {
+        console.error("persistAiUsage", error.code);
+      }
+      return null;
+    }
+
+    const row = data as {
+      questions: number;
+      requests: number;
+      tokens: number;
+      last_model: string | null;
+      updated_at: string;
+    } | null;
+    const updatedAt = new Date().toISOString();
+    const payload = {
+      family_id: familyId,
+      usage_date: date,
+      questions: (row?.questions ?? 0) + (delta.questions ?? 0),
+      requests: (row?.requests ?? 0) + (delta.requests ?? 0),
+      tokens: (row?.tokens ?? 0) + (delta.tokens ?? 0),
+      last_model: delta.lastModel ?? row?.last_model ?? null,
+      updated_at: updatedAt,
+    };
+
+    const saved = row
+      ? await supabase
+          .from("ai_usage_days")
+          .update(payload)
+          .eq("family_id", familyId)
+          .eq("usage_date", date)
+      : await supabase.from("ai_usage_days").insert(payload);
+
+    if (saved.error) {
+      if (!missingTable(saved.error.code)) {
+        console.error("persistAiUsage", saved.error.code);
+      }
+      return null;
+    }
+
+    return {
+      date,
+      questions: payload.questions,
+      requests: payload.requests,
+      tokens: payload.tokens,
+      lastModel: payload.last_model,
+      updatedAt,
+    };
+  } catch (error) {
+    console.error("persistAiUsage", error instanceof Error ? error.name : "unknown");
+    return null;
   }
-  const fresh = emptyDay(date);
-  memoryUsage.set(memoryKey(familyId, date), fresh);
-  return fresh;
-}
-
-function writeMemory(familyId: string, day: AiUsageDay) {
-  memoryUsage.set(memoryKey(familyId, day.date), day);
-}
-
-function familyLimits(familyId: string) {
-  const existing = memoryLimits.get(familyId);
-  if (existing) {
-    return existing;
-  }
-  const created = new Map<string, AiModelLimit>();
-  memoryLimits.set(familyId, created);
-  return created;
-}
-
-export function getMemoryUsage(familyId: string) {
-  return readMemory(familyId);
-}
-
-export function getMemoryLimits(familyId: string) {
-  const now = Date.now();
-  return [...familyLimits(familyId).values()].filter((limit) => limit.until > now);
 }
 
 export async function recordAiQuestion(familyId: string) {
-  const current = readMemory(familyId);
-  const next = {
-    ...current,
-    questions: current.questions + 1,
-    updatedAt: new Date().toISOString(),
-  };
-  writeMemory(familyId, next);
   await persistUsage(familyId, { questions: 1 });
 }
 
@@ -268,15 +294,6 @@ export async function recordAiRequest(input: {
   model: string;
   tokens: number;
 }) {
-  const current = readMemory(input.familyId);
-  const next = {
-    ...current,
-    requests: current.requests + 1,
-    tokens: current.tokens + Math.max(0, input.tokens),
-    lastModel: input.model,
-    updatedAt: new Date().toISOString(),
-  };
-  writeMemory(input.familyId, next);
   await persistUsage(input.familyId, {
     requests: 1,
     tokens: Math.max(0, input.tokens),
@@ -285,7 +302,7 @@ export async function recordAiRequest(input: {
 }
 
 export async function recordAiLimit(familyId: string, limit: AiModelLimit) {
-  familyLimits(familyId).set(limit.model, limit);
+  setModelCooldown(limit.model, limit.until);
   try {
     const supabase = await createClient();
     const { error } = await supabase.from("ai_model_limits").upsert({
@@ -307,69 +324,9 @@ export async function recordAiLimit(familyId: string, limit: AiModelLimit) {
   }
 }
 
-async function persistUsage(
-  familyId: string,
-  delta: {
-    questions?: number;
-    requests?: number;
-    tokens?: number;
-    lastModel?: string;
-  },
-) {
-  try {
-    const supabase = await createClient();
-    const date = geminiUsageDate();
-    const { data, error } = await supabase
-      .from("ai_usage_days")
-      .select("questions, requests, tokens, last_model")
-      .eq("family_id", familyId)
-      .eq("usage_date", date)
-      .maybeSingle();
-    if (error) {
-      if (!missingTable(error.code)) {
-        console.error("persistAiUsage", error.code);
-      }
-      return;
-    }
-
-    const row = data as {
-      questions: number;
-      requests: number;
-      tokens: number;
-      last_model: string | null;
-    } | null;
-    const payload = {
-      family_id: familyId,
-      usage_date: date,
-      questions: (row?.questions ?? 0) + (delta.questions ?? 0),
-      requests: (row?.requests ?? 0) + (delta.requests ?? 0),
-      tokens: (row?.tokens ?? 0) + (delta.tokens ?? 0),
-      last_model: delta.lastModel ?? row?.last_model ?? null,
-      updated_at: new Date().toISOString(),
-    };
-
-    const saved = row
-      ? await supabase
-          .from("ai_usage_days")
-          .update(payload)
-          .eq("family_id", familyId)
-          .eq("usage_date", date)
-      : await supabase.from("ai_usage_days").insert(payload);
-
-    if (saved.error && !missingTable(saved.error.code)) {
-      console.error("persistAiUsage", saved.error.code);
-    }
-  } catch (error) {
-    console.error("persistAiUsage", error instanceof Error ? error.name : "unknown");
-  }
-}
-
 export async function loadAiUsage(familyId: string) {
   const date = geminiUsageDate();
-  const memory = readMemory(familyId);
-  const limits = new Map(
-    getMemoryLimits(familyId).map((limit) => [limit.model, limit]),
-  );
+  const limits = new Map<string, AiModelLimit>();
 
   try {
     const supabase = await createClient();
@@ -407,13 +364,13 @@ export async function loadAiUsage(familyId: string) {
     const usage: AiUsageDay = stored
       ? {
           date: stored.usage_date,
-          questions: Math.max(stored.questions, memory.questions),
-          requests: Math.max(stored.requests, memory.requests),
-          tokens: Math.max(stored.tokens, memory.tokens),
-          lastModel: memory.lastModel ?? stored.last_model,
-          updatedAt: memory.updatedAt ?? stored.updated_at,
+          questions: stored.questions,
+          requests: stored.requests,
+          tokens: stored.tokens,
+          lastModel: stored.last_model,
+          updatedAt: stored.updated_at,
         }
-      : memory;
+      : emptyDay(date);
 
     const now = Date.now();
     for (const row of (limitsResult.data ?? []) as {
@@ -430,25 +387,22 @@ export async function loadAiUsage(familyId: string) {
       if (until <= now) {
         continue;
       }
-      const existing = limits.get(row.model);
-      if (!existing || existing.until < until) {
-        limits.set(row.model, {
-          model: row.model,
-          at: new Date(row.hit_at).getTime(),
-          until,
-          status: row.status,
-          daily: row.daily,
-          retryAfterSeconds: row.retry_after_seconds ?? undefined,
-          quotaId: row.quota_id ?? undefined,
-          quotaLimit: row.quota_limit ?? undefined,
-        });
-      }
+      limits.set(row.model, {
+        model: row.model,
+        at: new Date(row.hit_at).getTime(),
+        until,
+        status: row.status,
+        daily: row.daily,
+        retryAfterSeconds: row.retry_after_seconds ?? undefined,
+        quotaId: row.quota_id ?? undefined,
+        quotaLimit: row.quota_limit ?? undefined,
+      });
     }
 
     return withRuntime(usage, [...limits.values()]);
   } catch (error) {
     console.error("loadAiUsage", error instanceof Error ? error.name : "unknown");
-    return withRuntime(memory, [...limits.values()]);
+    return withRuntime(emptyDay(date), []);
   }
 }
 

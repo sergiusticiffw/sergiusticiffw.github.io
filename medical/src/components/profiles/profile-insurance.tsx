@@ -8,6 +8,7 @@ import {
   deleteInsurance,
   updateInsurance,
 } from "@/app/(app)/profiles/insurance-actions";
+import { DriveConnectCta } from "@/components/layout/drive-connect-cta";
 import { DocumentGallery } from "@/components/profiles/document-preview";
 import {
   type ProfileIdentityDoc,
@@ -21,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES } from "@/lib/files";
 import { formatBirthDate } from "@/lib/format";
+import { requireSensitiveUnlock } from "@/lib/sensitive-action";
 
 export type ProfileInsurance = {
   id: string;
@@ -43,6 +45,103 @@ function statusFor(start: string, end: string, today: string) {
   if (today < start) return "viitoare" as const;
   if (today > end) return "expirată" as const;
   return "activă" as const;
+}
+
+function daysUntil(end: string, today: string) {
+  const endDate = new Date(`${end}T00:00:00`);
+  const todayDate = new Date(`${today}T00:00:00`);
+  return Math.round(
+    (endDate.getTime() - todayDate.getTime()) / (24 * 60 * 60 * 1000),
+  );
+}
+
+type InsuranceStatus = "activă" | "expirată" | "viitoare";
+
+function statusBadgeClass(status: InsuranceStatus) {
+  const base =
+    "rounded-md border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide";
+  if (status === "activă") {
+    return `${base} border-emerald-600/30 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300`;
+  }
+  if (status === "viitoare") {
+    return `${base} border-sky-600/30 bg-sky-500/15 text-sky-800 dark:text-sky-300`;
+  }
+  return `${base} border-destructive/30 bg-destructive/15 text-destructive`;
+}
+
+function statusCardClass(status: InsuranceStatus, featured: boolean) {
+  if (!featured) {
+    if (status === "expirată") {
+      return "flex flex-col gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2";
+    }
+    if (status === "activă") {
+      return "flex flex-col gap-2 rounded-lg border border-emerald-600/25 bg-emerald-500/5 px-3 py-2";
+    }
+    return "flex flex-col gap-2 rounded-lg border border-sky-600/25 bg-sky-500/5 px-3 py-2";
+  }
+  if (status === "expirată") {
+    return "rounded-lg border-2 border-destructive/40 bg-destructive/5 px-3 py-3";
+  }
+  if (status === "activă") {
+    return "rounded-lg border-2 border-emerald-600/35 bg-emerald-500/5 px-3 py-3";
+  }
+  return "rounded-lg border-2 border-sky-600/35 bg-sky-500/5 px-3 py-3";
+}
+
+function statusTextClass(status: InsuranceStatus) {
+  if (status === "activă") {
+    return "font-medium text-emerald-700 dark:text-emerald-300";
+  }
+  if (status === "viitoare") {
+    return "font-medium text-sky-700 dark:text-sky-300";
+  }
+  return "font-medium text-destructive";
+}
+
+export function InsuranceExpiryBanner({
+  insurances,
+}: {
+  insurances: ProfileInsurance[];
+}) {
+  const today = todayInputValue();
+  const expiring = [...insurances]
+    .filter((item) => {
+      if (statusFor(item.start_date, item.end_date, today) !== "activă") {
+        return false;
+      }
+      const days = daysUntil(item.end_date, today);
+      return days >= 0 && days <= 30;
+    })
+    .sort((a, b) => a.end_date.localeCompare(b.end_date));
+
+  if (expiring.length === 0) {
+    return null;
+  }
+
+  const first = expiring[0];
+  const days = daysUntil(first.end_date, today);
+
+  return (
+    <div
+      role="status"
+      className="rounded-lg border border-amber-600/40 bg-amber-50 px-3 py-3 text-sm dark:bg-amber-950/30"
+    >
+      <p className="font-medium">
+        {days === 0
+          ? `Asigurarea „${first.title}” expiră azi.`
+          : days === 1
+            ? `Asigurarea „${first.title}” expiră mâine.`
+            : `Asigurarea „${first.title}” expiră în ${days} zile.`}
+      </p>
+      <p className="text-muted-foreground">
+        Valabilă până la {formatBirthDate(first.end_date)}
+        {expiring.length > 1
+          ? ` · încă ${expiring.length - 1} polițe pe cale să expire`
+          : ""}
+        .
+      </p>
+    </div>
+  );
 }
 
 function sortInsurances(items: ProfileInsurance[]) {
@@ -92,7 +191,7 @@ function InsuranceCard({
   identityDocs = [],
 }: {
   item: ProfileInsurance;
-  status: "activă" | "expirată" | "viitoare";
+  status: InsuranceStatus;
   featured: boolean;
   canEdit: boolean;
   onEdit: () => void;
@@ -101,13 +200,14 @@ function InsuranceCard({
 }) {
   if (!featured) {
     return (
-      <li className="flex flex-col gap-2 rounded-lg border border-dashed px-3 py-2 opacity-80">
+      <li className={statusCardClass(status, false)}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div className="min-w-0">
             <p className="truncate text-sm text-muted-foreground">{item.title}</p>
             <p className="text-xs text-muted-foreground">
               {formatBirthDate(item.start_date)} – {formatBirthDate(item.end_date)}
-              {` · ${status}`}
+              {" · "}
+              <span className={statusTextClass(status)}>{status}</span>
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -150,20 +250,10 @@ function InsuranceCard({
   const files = galleryFiles(item, identityDocs);
 
   return (
-    <div className="rounded-lg border-2 border-foreground/15 bg-muted/30 px-3 py-3">
+    <div className={statusCardClass(status, true)}>
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-sm font-medium">{item.title}</p>
-        <span
-          className={
-            status === "activă"
-              ? "rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300"
-              : status === "viitoare"
-                ? "rounded-md bg-sky-500/15 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300"
-                : "rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
-          }
-        >
-          {status}
-        </span>
+        <span className={statusBadgeClass(status)}>{status}</span>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
         {formatBirthDate(item.start_date)} – {formatBirthDate(item.end_date)}
@@ -364,11 +454,7 @@ function InsuranceForm({
         {fileName ? (
           <p className="text-xs text-muted-foreground">{fileName}</p>
         ) : null}
-        {!driveConnected ? (
-          <p className="text-xs text-muted-foreground">
-            Conectează Google Drive ca să atașezi polița.
-          </p>
-        ) : null}
+        {!driveConnected ? <DriveConnectCta /> : null}
       </div>
     </form>
   );
@@ -413,6 +499,12 @@ export function ProfileInsuranceSection({
     if (!deleting) return;
     setPendingDelete(true);
     setDeleteError(null);
+    const unlock = await requireSensitiveUnlock();
+    if (unlock.error) {
+      setDeleteError(unlock.error);
+      setPendingDelete(false);
+      return;
+    }
     const result = await deleteInsurance(deleting.id);
     setPendingDelete(false);
     if (result.error) {
@@ -438,26 +530,24 @@ export function ProfileInsuranceSection({
           </Button>
         ) : null}
       </div>
-      {insurances.length === 0 && identityDocs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Nicio asigurare adăugată încă.
-        </p>
-      ) : (
+      {insurances.length === 0 ? (
         <div className="flex flex-col gap-3">
-          {current ? (
-            <InsuranceCard
-              item={current}
-              status={statusFor(current.start_date, current.end_date, today)}
-              featured
-              canEdit={canEdit}
-              identityDocs={identityDocs}
-              onEdit={() => setEditing(current)}
-              onDelete={() => {
-                setDeleteError(null);
-                setDeleting(current);
-              }}
-            />
-          ) : identityDocs.some((doc) => doc.source_document_id) ? (
+          <div className="flex flex-col gap-2 rounded-lg border border-dashed px-3 py-4">
+            <p className="text-sm text-muted-foreground">
+              Nicio asigurare adăugată încă.
+            </p>
+            {canEdit ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 w-fit"
+                onClick={() => setAdding(true)}
+              >
+                Adaugă asigurare
+              </Button>
+            ) : null}
+          </div>
+          {identityDocs.some((doc) => doc.source_document_id) ? (
             <div className="rounded-lg border-2 border-foreground/15 bg-muted/30 px-3 py-3">
               <p className="mb-2 text-xs text-muted-foreground">Act</p>
               <DocumentGallery
@@ -474,6 +564,23 @@ export function ProfileInsuranceSection({
                 )}
               />
             </div>
+          ) : null}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {current ? (
+            <InsuranceCard
+              item={current}
+              status={statusFor(current.start_date, current.end_date, today)}
+              featured
+              canEdit={canEdit}
+              identityDocs={identityDocs}
+              onEdit={() => setEditing(current)}
+              onDelete={() => {
+                setDeleteError(null);
+                setDeleting(current);
+              }}
+            />
           ) : null}
           {history.length > 0 ? (
             <details className="group">

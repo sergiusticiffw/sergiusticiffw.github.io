@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateApp } from "@/lib/data-cache";
+import { revalidateMedicalData } from "@/lib/data-cache";
 
 import { getFamilyAccess, requireProfileWriter } from "@/lib/auth";
 import { readUploadedFiles } from "@/lib/files";
@@ -219,7 +219,7 @@ export async function saveDetectedDocument(
   }
 
   if (formData.get("finalize") === "1") {
-    revalidateApp(person.id);
+    revalidateMedicalData(person.id);
   }
   return {
     saved: true,

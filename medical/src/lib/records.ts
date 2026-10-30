@@ -51,7 +51,6 @@ export async function loadFamilyRecord(
   id: string,
 ): Promise<{ record: FamilyRecord | null; error: string | null }> {
   "use cache: private";
-  useFamilyCache();
   if (!UUID.test(id)) {
     return { record: null, error: "Înregistrarea nu a fost găsită." };
   }
@@ -64,38 +63,27 @@ export async function loadFamilyRecord(
     )
     .eq("id", id)
     .maybeSingle();
-  let documentError = withRecord.error;
-  let documentData = withRecord.data;
-  if (missingColumn(documentError?.code)) {
-    const retry = await supabase
-      .from("medical_documents")
-      .select(
-        "id, profile_id, original_filename, mime_type, document_date, category, extracted_text, record_id",
-      )
-      .eq("id", id)
-      .maybeSingle();
-    if (!retry.error) {
-      documentError = null;
-      documentData = retry.data ? { ...retry.data, title: null } : null;
-    } else {
-      const basic = await supabase
-        .from("medical_documents")
-        .select(
-          "id, profile_id, original_filename, mime_type, document_date, category, extracted_text",
-        )
-        .eq("id", id)
-        .maybeSingle();
-      documentError = basic.error;
-      documentData = basic.data
-        ? { ...basic.data, title: null, record_id: null }
-        : null;
-    }
-  }
+  const documentError = withRecord.error;
+  const documentData = withRecord.data;
 
   if (documentError) {
     console.error("loadFamilyRecord", documentError.code);
+    if (missingColumn(documentError.code)) {
+      return {
+        record: null,
+        error:
+          "Aplică migrațiile pentru titlu, text extras și imaginile din înregistrare.",
+      };
+    }
     return { record: null, error: "Înregistrarea nu a putut fi încărcată." };
   }
+
+  const profileIdForTag =
+    documentData &&
+    typeof (documentData as { profile_id?: string }).profile_id === "string"
+      ? (documentData as { profile_id: string }).profile_id
+      : undefined;
+  useFamilyCache(profileIdForTag);
 
   const document = documentData as {
     id: string;

@@ -8,6 +8,7 @@ import {
   deleteIdentityDoc,
   updateIdentityDoc,
 } from "@/app/(app)/profiles/identity-actions";
+import { DriveConnectCta } from "@/components/layout/drive-connect-cta";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES } from "@/lib/files";
+import { requireSensitiveUnlock } from "@/lib/sensitive-action";
 
 export type ProfileIdentityDoc = {
   id: string;
@@ -81,6 +83,12 @@ export function ProfileIdentityFields({
     }
     setPendingDelete(true);
     setDeleteError(null);
+    const unlock = await requireSensitiveUnlock();
+    if (unlock.error) {
+      setDeleteError(unlock.error);
+      setPendingDelete(false);
+      return;
+    }
     const result = await deleteIdentityDoc(doc.id);
     setPendingDelete(false);
     if (result.error) {
@@ -191,11 +199,7 @@ export function ProfileIdentityFields({
         {draft.file ? (
           <p className="text-xs text-muted-foreground">{draft.file.name}</p>
         ) : null}
-        {!driveConnected ? (
-          <p className="text-xs text-muted-foreground">
-            Conectează Google Drive ca să atașezi documentul.
-          </p>
-        ) : null}
+        {!driveConnected ? <DriveConnectCta /> : null}
       </div>
 
       <ConfirmDialog

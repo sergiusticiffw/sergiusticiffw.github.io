@@ -1,7 +1,7 @@
 "use server";
 
 import { getAdminFamilyId, getCurrentUser } from "@/lib/auth";
-import { revalidateApp } from "@/lib/data-cache";
+import { revalidateAccount } from "@/lib/data-cache";
 import { disconnectDrive } from "@/lib/google-drive";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -56,6 +56,6 @@ export async function disconnectGoogleDrive(): Promise<ProfileActionResult> {
     };
   }
 
-  revalidateApp();
+  revalidateAccount();
   return { message: "Google Drive a fost deconectat." };
 }

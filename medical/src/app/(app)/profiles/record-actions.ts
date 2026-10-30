@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidateApp } from "@/lib/data-cache";
+import { revalidateMedicalData } from "@/lib/data-cache";
 
 import { requireProfileWriter } from "@/lib/auth";
 import { readUploadedFiles } from "@/lib/files";
@@ -54,7 +54,7 @@ async function ownedProfile(profileId: string) {
 }
 
 function refresh(profileId: string) {
-  revalidateApp(profileId);
+  revalidateMedicalData(profileId);
 }
 
 function isMissingColumn(code: string | undefined) {

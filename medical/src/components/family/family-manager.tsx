@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 
 import {
   cancelInvite,
@@ -12,15 +12,16 @@ import {
   type FamilyActionResult,
 } from "@/app/(app)/family/actions";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { requireSensitiveUnlock } from "@/lib/sensitive-action";
 
 type FamilyRole = "admin" | "editor" | "viewer";
 
 const initial: FamilyActionResult = {};
-const selectClass =
-  "h-11 rounded-lg border border-input bg-transparent px-2.5 text-sm";
 
 const roleLabel: Record<FamilyRole, string> = {
   admin: "Administrator",
@@ -65,13 +66,13 @@ function Notice({ state }: { state: FamilyActionResult }) {
 
 function RoleSelect({ name, defaultValue }: { name: string; defaultValue: FamilyRole }) {
   return (
-    <select name={name} defaultValue={defaultValue} className={selectClass}>
+    <Select name={name} defaultValue={defaultValue} className="sm:w-auto">
       {(Object.keys(roleLabel) as FamilyRole[]).map((role) => (
         <option key={role} value={role}>
           {roleLabel[role]}
         </option>
       ))}
-    </select>
+    </Select>
   );
 }
 
@@ -83,6 +84,7 @@ export function FamilyManager({
   grants,
   accessNote,
   isAdmin,
+  roleNote = null,
 }: {
   name: string;
   members: FamilyMember[];
@@ -91,6 +93,7 @@ export function FamilyManager({
   grants: ProfileGrant[];
   accessNote: string | null;
   isAdmin: boolean;
+  roleNote?: string | null;
 }) {
   const [inviteOpen, setInviteOpen] = useState(false);
 
@@ -102,8 +105,23 @@ export function FamilyManager({
         <p className="text-sm">{name}</p>
       )}
 
+      {roleNote ? (
+        <p
+          role="status"
+          className="rounded-lg border border-dashed px-3 py-3 text-sm text-muted-foreground"
+        >
+          {roleNote}
+        </p>
+      ) : null}
+
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-medium">Membri</h2>
+        {isAdmin ? (
+          <p className="text-sm text-muted-foreground">
+            Administrator și editor pot modifica înregistrările persoanelor
+            bifate. „Doar vizualizare” permite doar citirea.
+          </p>
+        ) : null}
         <ul className="flex flex-col gap-2">
           {members.map((member) => (
             <li key={member.user_id} className="rounded-lg border px-3 py-2">
@@ -428,6 +446,9 @@ function ProfileAccessForm({
 
 function MemberRow({ member }: { member: FamilyMember }) {
   const [open, setOpen] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [removeUnlockPending, setRemoveUnlockPending] = useState(false);
   const [roleState, roleAction, rolePending] = useActionState(setMemberRole, initial);
   const [removeState, removeAction, removePending] = useActionState(removeMember, initial);
 
@@ -436,6 +457,13 @@ function MemberRow({ member }: { member: FamilyMember }) {
       setOpen(false);
     }
   }, [roleState.saved]);
+
+  useEffect(() => {
+    if (removeState.saved) {
+      setConfirmRemove(false);
+      setOpen(false);
+    }
+  }, [removeState.saved]);
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -488,20 +516,52 @@ function MemberRow({ member }: { member: FamilyMember }) {
             <RoleSelect name="role" defaultValue={member.role} />
             <Notice state={roleState} />
           </form>
-          <form action={removeAction} className="border-t pt-3">
-            <input type="hidden" name="userId" value={member.user_id} />
+          <div className="border-t pt-3">
             <Button
-              type="submit"
+              type="button"
               variant="destructive"
               className="h-11"
               disabled={removePending || rolePending}
+              onClick={() => setConfirmRemove(true)}
             >
-              {removePending ? "Se scoate…" : "Scoate din familie"}
+              Scoate din familie
             </Button>
             <Notice state={removeState} />
-          </form>
+          </div>
         </div>
       </FormDialog>
+      <ConfirmDialog
+        open={confirmRemove}
+        title={`Scoți pe ${member.email ?? "acest membru"} din familie?`}
+        description="Persoana pierde accesul la dosar. Poți invita din nou mai târziu."
+        confirmLabel="Scoate din familie"
+        pendingLabel="Se scoate…"
+        pending={removePending || removeUnlockPending}
+        error={removeError ?? removeState.error}
+        onConfirm={() => {
+          void (async () => {
+            setRemoveUnlockPending(true);
+            setRemoveError(null);
+            const unlock = await requireSensitiveUnlock();
+            setRemoveUnlockPending(false);
+            if (unlock.error) {
+              setRemoveError(unlock.error);
+              return;
+            }
+            const data = new FormData();
+            data.set("userId", member.user_id);
+            startTransition(() => {
+              removeAction(data);
+            });
+          })();
+        }}
+        onCancel={() => {
+          if (!removePending && !removeUnlockPending) {
+            setConfirmRemove(false);
+            setRemoveError(null);
+          }
+        }}
+      />
     </div>
   );
 }

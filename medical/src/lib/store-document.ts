@@ -126,48 +126,41 @@ export async function storePrivateDocument(input: {
     driveFileId = uploaded.driveFileId;
 
     const title = input.title?.trim().slice(0, 160) || null;
-    const baseRow = {
-      profile_id: input.profile.id,
-      drive_file_id: driveFileId,
-      original_filename: input.filename,
-      mime_type: input.mimeType,
-      file_size: input.size,
-      document_date: input.documentDate,
-      category: input.category || null,
-      extracted_text: input.extractedText || null,
-      ...(input.recordId ? { record_id: input.recordId } : {}),
-    };
-    let inserted = await supabase
+    const inserted = await supabase
       .from("medical_documents")
-      .insert({ ...baseRow, ...(title ? { title } : {}) })
+      .insert({
+        profile_id: input.profile.id,
+        drive_file_id: driveFileId,
+        original_filename: input.filename,
+        mime_type: input.mimeType,
+        file_size: input.size,
+        document_date: input.documentDate,
+        category: input.category || null,
+        extracted_text: input.extractedText || null,
+        ...(title ? { title } : {}),
+        ...(input.recordId ? { record_id: input.recordId } : {}),
+      })
       .select("id")
       .single();
-
-    const missingTitle =
-      (inserted.error?.code === "42703" || inserted.error?.code === "PGRST204") &&
-      (inserted.error.message ?? "").toLowerCase().includes("title");
-    if (missingTitle && title) {
-      inserted = await supabase
-        .from("medical_documents")
-        .insert({
-          ...baseRow,
-          extracted_text: `${title}\n\n${input.extractedText}`.slice(0, 20000) || null,
-        })
-        .select("id")
-        .single();
-    }
 
     const { data, error } = inserted;
     if (error || !data) {
       console.error("storePrivateDocument", error?.code);
       await trashDriveFile(input.familyId, driveFileId);
-      if (
-        (error?.code === "42703" || error?.code === "PGRST204") &&
-        input.recordId
-      ) {
-        return {
-          error: "Aplică migrația pentru mai multe imagini la o înregistrare.",
-        };
+      if (error?.code === "42703" || error?.code === "PGRST204") {
+        const message = (error.message ?? "").toLowerCase();
+        if (message.includes("title")) {
+          return { error: "Aplică migrația pentru titlul documentului." };
+        }
+        if (message.includes("record_id") || input.recordId) {
+          return {
+            error: "Aplică migrația pentru mai multe imagini la o înregistrare.",
+          };
+        }
+        if (message.includes("extracted_text")) {
+          return { error: "Aplică migrația pentru textul extras din document." };
+        }
+        return { error: "Schema documentelor este incompletă. Aplică migrațiile." };
       }
       if (
         error?.code === "23514" &&

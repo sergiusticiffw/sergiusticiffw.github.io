@@ -7,6 +7,7 @@ import { useState } from "react";
 import { disconnectGoogleDrive } from "@/app/(app)/profile/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { requireSensitiveUnlock } from "@/lib/sensitive-action";
 import { cn } from "@/lib/utils";
 
 export function DriveSettings({
@@ -43,6 +44,12 @@ export function DriveSettings({
   async function onDisconnect() {
     setPending(true);
     setError(null);
+    const unlock = await requireSensitiveUnlock();
+    if (unlock.error) {
+      setError(unlock.error);
+      setPending(false);
+      return;
+    }
     const result = await disconnectGoogleDrive();
     if (result.error) {
       setError(result.error);

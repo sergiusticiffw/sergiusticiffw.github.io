@@ -9,6 +9,11 @@ import { createClient } from "@/lib/supabase/server";
 export type CatalogPerson = {
   id: string;
   display_name: string;
+  allergies?: string | null;
+  chronic_conditions?: string | null;
+  current_medications?: string | null;
+  blood_type?: string | null;
+  emergency_notes?: string | null;
 };
 
 export type CatalogRecord = {
@@ -45,14 +50,19 @@ function redactIndex(value: string) {
 function fieldLines(entries: [string, string | number | null | undefined][]) {
   return entries
     .map(([label, value]) => {
-      const text = redactIndex(String(value ?? "").trim()).slice(0, 400);
+      const text = redactIndex(String(value ?? "").trim()).slice(0, 280);
       return text ? `${label}: ${text}` : "";
     })
     .filter(Boolean)
     .join("\n");
 }
 
-const MAX_SCANNED_TEXT = 8000;
+/** Cap extracted text sent to the model per record. */
+const MAX_SCANNED_TEXT = 3500;
+/** Cap catalog size for large families (newest first after sort). */
+const MAX_CATALOG_RECORDS = 80;
+/** Soft cap on documents fetched before grouping. */
+const MAX_DOCUMENTS_FETCH = 200;
 
 function scannedText(values: (string | null | undefined)[]) {
   return redactIndex(
@@ -75,7 +85,9 @@ export async function loadMedicalCatalog(
     await Promise.all([
       supabase
         .from("profiles")
-        .select("id, display_name")
+        .select(
+          "id, display_name, allergies, chronic_conditions, current_medications, blood_type, emergency_notes",
+        )
         .eq("family_id", familyId)
         .order("display_name", { ascending: true }),
       supabase
@@ -83,60 +95,52 @@ export async function loadMedicalCatalog(
         .select(
           "id, profile_id, original_filename, document_date, category, title, record_id, extracted_text",
         )
-        .order("document_date", { ascending: false }),
+        .order("document_date", { ascending: false })
+        .limit(MAX_DOCUMENTS_FETCH),
       supabase
         .from("consultations")
         .select(
           "id, profile_id, source_document_id, consultation_date, doctor_name, clinic_name, specialty, summary, recommendations",
         )
-        .order("consultation_date", { ascending: false }),
+        .order("consultation_date", { ascending: false })
+        .limit(MAX_CATALOG_RECORDS),
       supabase
         .from("lab_tests")
         .select(
           "id, profile_id, source_document_id, test_name, sample_date, result_value, result_text, unit, reference_text, laboratory",
         )
-        .order("sample_date", { ascending: false }),
+        .order("sample_date", { ascending: false })
+        .limit(MAX_CATALOG_RECORDS),
     ]);
 
-  let documentsError = documentsResult.error;
-  let documentsData = documentsResult.data;
+  const documentsError = documentsResult.error;
+  const documentsData = documentsResult.data;
   if (missingColumn(documentsError?.code)) {
-    const withText = await supabase
-      .from("medical_documents")
-      .select(
-        "id, profile_id, original_filename, document_date, category, record_id, extracted_text",
-      )
-      .order("document_date", { ascending: false });
-    if (!withText.error) {
-      documentsError = null;
-      documentsData = (withText.data ?? []).map((row) => ({ ...row, title: null }));
-    } else {
-      const withRecord = await supabase
-        .from("medical_documents")
-        .select(
-          "id, profile_id, original_filename, document_date, category, title, record_id",
-        )
-        .order("document_date", { ascending: false });
-      if (!withRecord.error) {
-        documentsError = null;
-        documentsData = (withRecord.data ?? []).map((row) => ({
-          ...row,
-          extracted_text: null,
-        }));
-      } else {
-        const retry = await supabase
-          .from("medical_documents")
-          .select("id, profile_id, original_filename, document_date, category")
-          .order("document_date", { ascending: false });
-        documentsError = retry.error;
-        documentsData = (retry.data ?? []).map((row) => ({
-          ...row,
-          title: null,
-          record_id: null,
-          extracted_text: null,
-        }));
-      }
-    }
+    return {
+      records: [],
+      people: [],
+      error:
+        "Aplică migrațiile pentru titlu, text extras și imaginile din înregistrare.",
+    };
+  }
+
+  let profilesError = profilesResult.error;
+  let profilesData = profilesResult.data;
+  if (missingColumn(profilesError?.code)) {
+    const retry = await supabase
+      .from("profiles")
+      .select("id, display_name")
+      .eq("family_id", familyId)
+      .order("display_name", { ascending: true });
+    profilesError = retry.error;
+    profilesData = (retry.data ?? []).map((row) => ({
+      ...row,
+      allergies: null,
+      chronic_conditions: null,
+      current_medications: null,
+      blood_type: null,
+      emergency_notes: null,
+    }));
   }
 
   let consultationsError = consultationsResult.error;
@@ -177,7 +181,7 @@ export async function loadMedicalCatalog(
   }
 
   const listError =
-    profilesResult.error ??
+    profilesError ??
     documentsError ??
     consultationsError ??
     labsError;
@@ -190,10 +194,7 @@ export async function loadMedicalCatalog(
     };
   }
 
-  const profiles = (profilesResult.data ?? []) as {
-    id: string;
-    display_name: string;
-  }[];
+  const profiles = (profilesData ?? []) as CatalogPerson[];
   const names = new Map(profiles.map((profile) => [profile.id, profile.display_name]));
   const profileIds = new Set(profiles.map((profile) => profile.id));
 
@@ -234,6 +235,31 @@ export async function loadMedicalCatalog(
   }[]).filter((item) => profileIds.has(item.profile_id));
 
   const records: CatalogRecord[] = [];
+
+  for (const person of profiles) {
+    const fields = fieldLines([
+      ["Persoană", person.display_name],
+      ["Grup sanguin", person.blood_type],
+      ["Alergii", person.allergies],
+      ["Boli cronice", person.chronic_conditions],
+      ["Medicamente", person.current_medications],
+      ["Note urgență", person.emergency_notes],
+    ]);
+    if (!fields) {
+      continue;
+    }
+    records.push({
+      id: `health:${person.id}`,
+      profileId: person.id,
+      profileName: person.display_name,
+      date: null,
+      category: "Urgență",
+      title: `Card de urgență · ${person.display_name}`,
+      fields,
+      text: "",
+      files: [],
+    });
+  }
 
   for (const item of documents.filter(
     (row) =>
@@ -346,7 +372,11 @@ export async function loadMedicalCatalog(
     return right.date.localeCompare(left.date);
   });
 
-  return { records, people: profiles, error: null };
+  return {
+    records: records.slice(0, MAX_CATALOG_RECORDS),
+    people: profiles,
+    error: null,
+  };
 }
 
 export type RecordIndexItem = {
@@ -383,41 +413,31 @@ export async function loadRecordsIndex(familyId: string): Promise<{
       supabase
         .from("medical_documents")
         .select("id, profile_id, original_filename, document_date, category, title, record_id")
-        .order("document_date", { ascending: false }),
+        .order("document_date", { ascending: false })
+        .limit(400),
       supabase
         .from("consultations")
         .select(
           "id, profile_id, source_document_id, consultation_date, doctor_name, summary",
         )
-        .order("consultation_date", { ascending: false }),
+        .order("consultation_date", { ascending: false })
+        .limit(200),
       supabase
         .from("lab_tests")
         .select("id, profile_id, source_document_id, test_name, category, sample_date")
-        .order("sample_date", { ascending: false }),
+        .order("sample_date", { ascending: false })
+        .limit(200),
     ]);
 
-  let documentsError = documentsResult.error;
-  let documentsData = documentsResult.data;
+  const documentsError = documentsResult.error;
+  const documentsData = documentsResult.data;
   if (missingColumn(documentsError?.code)) {
-    const withRecord = await supabase
-      .from("medical_documents")
-      .select("id, profile_id, original_filename, document_date, category, record_id")
-      .order("document_date", { ascending: false });
-    if (!withRecord.error) {
-      documentsError = null;
-      documentsData = (withRecord.data ?? []).map((row) => ({ ...row, title: null }));
-    } else {
-      const retry = await supabase
-        .from("medical_documents")
-        .select("id, profile_id, original_filename, document_date, category")
-        .order("document_date", { ascending: false });
-      documentsError = retry.error;
-      documentsData = (retry.data ?? []).map((row) => ({
-        ...row,
-        title: null,
-        record_id: null,
-      }));
-    }
+    return {
+      records: [],
+      people: [],
+      error:
+        "Aplică migrațiile pentru titlu și imaginile din înregistrare.",
+    };
   }
 
   const listError =

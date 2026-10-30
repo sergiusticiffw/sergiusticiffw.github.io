@@ -1,17 +1,25 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import {
   detectDocument,
   saveDetectedDocument,
 } from "@/app/(app)/profiles/scan-actions";
+import { DriveConnectCta } from "@/components/layout/drive-connect-cta";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { prepareUploads } from "@/lib/client-image";
-import { ACCEPTED_FILE_TYPES } from "@/lib/files";
+import {
+  ACCEPTED_FILE_TYPES,
+  MAX_DOCUMENT_BYTES,
+  MAX_RECORD_BYTES,
+  MAX_RECORD_FILES,
+} from "@/lib/files";
 import {
   DEFAULT_RECORD_CATEGORY,
   RECORD_CATEGORIES,
@@ -43,6 +51,13 @@ type RecordDraft = {
   body: string;
 };
 
+type ProgressState = {
+  phase: "prepare" | "detect" | "save";
+  current: number;
+  total: number;
+  fileName: string;
+};
+
 function suggestedTitle(file: File | undefined) {
   if (!file) {
     return "";
@@ -56,17 +71,22 @@ function todayInputValue() {
   return local.toISOString().slice(0, 10);
 }
 
-const selectClass =
-  "h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm";
+function formatMb(bytes: number) {
+  return (bytes / (1024 * 1024)).toFixed(bytes >= 10 * 1024 * 1024 ? 0 : 1);
+}
 
 export function HomeUpload({
   people,
   lockedProfileId,
+  driveConnected = true,
+  canConnectDrive = false,
   onSaved,
   onSaveActionChange,
 }: {
   people: UploadPerson[];
   lockedProfileId?: string;
+  driveConnected?: boolean;
+  canConnectDrive?: boolean;
   onSaved?: () => void;
   onSaveActionChange?: (action: HomeUploadSaveAction | null) => void;
 }) {
@@ -76,16 +96,20 @@ export function HomeUpload({
   const [pending, setPending] = useState<"detect" | "save" | "prepare" | null>(
     null,
   );
-  const [progress, setProgress] = useState<string | null>(null);
+  const [progress, setProgress] = useState<ProgressState | null>(null);
   const [extraction, setExtraction] = useState<Extraction | null>(null);
   const [draft, setDraft] = useState<RecordDraft | null>(null);
   const [profileId, setProfileId] = useState(lockedProfileId ?? "");
   const [matchedName, setMatchedName] = useState<string | null>(null);
   const [attachedTo, setAttachedTo] = useState<string | null>(null);
+  const [savedNames, setSavedNames] = useState<string[]>([]);
+  const [originalTotal, setOriginalTotal] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const saveRef = useRef<() => void>(() => undefined);
+  const cancelRef = useRef(false);
 
   function reset() {
+    cancelRef.current = true;
     setFiles([]);
     setFileKey((current) => current + 1);
     setExtraction(null);
@@ -93,16 +117,70 @@ export function HomeUpload({
     setProfileId(lockedProfileId ?? "");
     setMatchedName(null);
     setAttachedTo(null);
+    setSavedNames([]);
+    setOriginalTotal(0);
     setProgress(null);
+    setPending(null);
     setError(null);
   }
 
+  function cancelWork() {
+    cancelRef.current = true;
+    setPending(null);
+    setProgress(null);
+    setError("Operațiunea a fost anulată.");
+  }
+
+  async function takeFiles(chosen: File[]) {
+    setError(null);
+    setFiles([]);
+    setSavedNames([]);
+    setAttachedTo(null);
+    setOriginalTotal(0);
+    if (chosen.length === 0) {
+      return;
+    }
+    if (chosen.length > MAX_RECORD_FILES) {
+      setError(`Poți alege cel mult ${MAX_RECORD_FILES} fișiere pe înregistrare.`);
+      return;
+    }
+    cancelRef.current = false;
+    setPending("prepare");
+    setProgress({
+      phase: "prepare",
+      current: 0,
+      total: chosen.length,
+      fileName: chosen[0]?.name ?? "",
+    });
+    try {
+      const prepared = await prepareUploads(chosen);
+      if (cancelRef.current) {
+        return;
+      }
+      setFiles(prepared.files);
+      setOriginalTotal(prepared.files.length);
+      if (prepared.error) {
+        setError(prepared.error);
+      }
+    } finally {
+      if (!cancelRef.current) {
+        setPending(null);
+        setProgress(null);
+      }
+    }
+  }
+
   async function onDetect() {
+    if (!driveConnected) {
+      setError("Conectează Google Drive înainte să citești documentele.");
+      return;
+    }
     if (files.length === 0) {
       setError("Alege cel puțin un fișier.");
       return;
     }
 
+    cancelRef.current = false;
     setError(null);
     setPending("detect");
     const parts: string[] = [];
@@ -112,10 +190,25 @@ export function HomeUpload({
     let matched: string | null = null;
 
     for (const [index, file] of files.entries()) {
-      setProgress(`Se citește ${index + 1} din ${files.length}…`);
+      if (cancelRef.current) {
+        setPending(null);
+        setProgress(null);
+        return;
+      }
+      setProgress({
+        phase: "detect",
+        current: index + 1,
+        total: files.length,
+        fileName: file.name,
+      });
       const data = new FormData();
       data.append("file", file);
       const result = await detectDocument(data);
+      if (cancelRef.current) {
+        setPending(null);
+        setProgress(null);
+        return;
+      }
       const text = result.extraction?.extractedText.trim() ?? "";
       if (result.error || !text) {
         missed.push(file.name);
@@ -133,23 +226,28 @@ export function HomeUpload({
 
     setPending(null);
     setProgress(null);
+    if (cancelRef.current) {
+      return;
+    }
     if (parts.length === 0) {
-      setError("Documentele nu au putut fi citite. Încearcă fotografii mai clare sau alt fișier.");
+      setError(
+        "Documentele nu au putut fi citite. Încearcă fotografii mai clare sau alt fișier.",
+      );
       return;
     }
 
-    const extraction: Extraction = {
+    const nextExtraction: Extraction = {
       idnp,
       extractedText: parts.join("\n\n").slice(0, MAX_EXTRACTED_TEXT),
       consultation: emptyConsultation(),
       labTests: [],
     };
-    setExtraction(extraction);
+    setExtraction(nextExtraction);
     setDraft({
       category: DEFAULT_RECORD_CATEGORY,
       title: suggestedTitle(files[0]),
       date: todayInputValue(),
-      body: recordBody(extraction),
+      body: recordBody(nextExtraction),
     });
     setProfileId(lockedProfileId ?? matchedProfileId ?? "");
     setMatchedName(matched);
@@ -159,6 +257,10 @@ export function HomeUpload({
   }
 
   async function onSave() {
+    if (!driveConnected) {
+      setError("Conectează Google Drive înainte să salvezi.");
+      return;
+    }
     if (files.length === 0 || !draft || !extraction) {
       return;
     }
@@ -179,12 +281,25 @@ export function HomeUpload({
       return;
     }
 
+    cancelRef.current = false;
     setError(null);
     setPending("save");
     let primaryId = attachedTo;
+    const newlySaved: string[] = [];
     try {
       for (const [index, file] of files.entries()) {
-        setProgress(`Se salvează ${index + 1} din ${files.length}…`);
+        if (cancelRef.current) {
+          setAttachedTo(primaryId);
+          setSavedNames((current) => [...current, ...newlySaved]);
+          setFiles(files.slice(index));
+          return;
+        }
+        setProgress({
+          phase: "save",
+          current: savedNames.length + newlySaved.length + 1,
+          total: Math.max(originalTotal, savedNames.length + files.length),
+          fileName: file.name,
+        });
         const named =
           files.length > 1
             ? new File([file], `${index + 1}-${file.name}`, { type: file.type })
@@ -209,21 +324,26 @@ export function HomeUpload({
         const result = await saveDetectedDocument(data);
         if (result.error || !result.documentId) {
           setAttachedTo(primaryId);
+          setSavedNames((current) => [...current, ...newlySaved]);
           setFiles(files.slice(index));
           setError(
             result.error ??
-              `Imaginea ${index + 1} din ${files.length} nu a putut fi salvată.`,
+              `„${file.name}” nu a putut fi salvat. Apasă Salvează din nou pentru fișierele rămase.`,
           );
           return;
         }
         primaryId = primaryId ?? result.documentId;
         setAttachedTo(primaryId);
+        newlySaved.push(file.name);
       }
       reset();
       onSaved?.();
     } catch {
       setAttachedTo(primaryId);
-      setError("Înregistrarea nu a putut fi salvată. Încearcă din nou.");
+      setSavedNames((current) => [...current, ...newlySaved]);
+      setError(
+        "Înregistrarea nu a putut fi salvată. Apasă Salvează din nou pentru fișierele rămase.",
+      );
     } finally {
       setPending(null);
       setProgress(null);
@@ -242,18 +362,39 @@ export function HomeUpload({
       onSaveActionChange(null);
       return;
     }
+    const label =
+      pending === "save" && progress
+        ? `Se salvează ${progress.current}/${progress.total}…`
+        : savedNames.length > 0
+          ? "Salvează restul"
+          : "Salvează";
     onSaveActionChange({
-      label: pending === "save" ? progress ?? "Se salvează…" : "Salvează",
-      disabled: pending !== null,
+      label,
+      disabled: pending !== null || !driveConnected,
       onSave: () => {
         saveRef.current();
       },
     });
-  }, [draft, pending, progress, onSaveActionChange]);
+  }, [
+    draft,
+    pending,
+    progress,
+    savedNames.length,
+    driveConnected,
+    onSaveActionChange,
+  ]);
 
   useEffect(() => {
     return () => onSaveActionChange?.(null);
   }, [onSaveActionChange]);
+
+  const progressLabel = progress
+    ? progress.phase === "prepare"
+      ? "Se pregătesc fișierele…"
+      : progress.phase === "detect"
+        ? `Se citește ${progress.current} din ${progress.total}: ${progress.fileName}`
+        : `Se salvează ${progress.current} din ${progress.total}: ${progress.fileName}`
+    : null;
 
   if (draft) {
     const lockedPerson = people.find((person) => person.id === lockedProfileId);
@@ -267,10 +408,49 @@ export function HomeUpload({
 
     return (
       <div className="flex flex-col gap-4">
+        {!driveConnected ? (
+          <DriveConnectCta canConnect={canConnectDrive} />
+        ) : null}
         {error ? (
           <p role="alert" className="text-sm text-destructive">
             {error}
           </p>
+        ) : null}
+        {progressLabel ? (
+          <div className="flex flex-col gap-2" aria-live="polite">
+            <p className="text-sm text-muted-foreground">{progressLabel}</p>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 sm:w-fit"
+              onClick={cancelWork}
+            >
+              Anulează
+            </Button>
+          </div>
+        ) : null}
+        {savedNames.length > 0 ? (
+          <div className="rounded-lg border px-3 py-3 text-sm">
+            <p className="font-medium">
+              Salvate {savedNames.length}
+              {originalTotal > 0 ? ` din ${originalTotal}` : ""}
+            </p>
+            <ul className="mt-1 list-inside list-disc text-muted-foreground">
+              {savedNames.map((name) => (
+                <li key={name}>{name}</li>
+              ))}
+            </ul>
+            {files.length > 0 ? (
+              <>
+                <p className="mt-2 font-medium">Rămase</p>
+                <ul className="mt-1 list-inside list-disc text-muted-foreground">
+                  {files.map((file) => (
+                    <li key={`${file.name}-${file.size}`}>{file.name}</li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+          </div>
         ) : null}
         <p className="text-sm">
           {lockedProfileId
@@ -293,9 +473,8 @@ export function HomeUpload({
         {lockedProfileId ? null : (
           <div className="flex flex-col gap-2">
             <Label htmlFor="upload-person">Persoană</Label>
-            <select
+            <Select
               id="upload-person"
-              className={selectClass}
               value={profileId}
               onChange={(event) => setProfileId(event.target.value)}
             >
@@ -306,14 +485,13 @@ export function HomeUpload({
                   {person.idnp ? ` · ${person.idnp}` : ""}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         )}
         <div className="flex flex-col gap-2">
           <Label htmlFor="upload-category">Tip</Label>
-          <select
+          <Select
             id="upload-category"
-            className={selectClass}
             value={draft.category}
             onChange={(event) =>
               setDraft({
@@ -327,7 +505,7 @@ export function HomeUpload({
                 {category}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="upload-title">Titlu</Label>
@@ -367,22 +545,37 @@ export function HomeUpload({
             <Button
               type="button"
               className="h-11"
-              disabled={pending !== null}
+              disabled={pending !== null || !driveConnected}
               onClick={() => {
                 void onSave();
               }}
             >
-              {pending === "save" ? progress ?? "Se salvează…" : "Salvează"}
+              {pending === "save"
+                ? progressLabel ?? "Se salvează…"
+                : savedNames.length > 0
+                  ? "Salvează restul"
+                  : "Salvează"}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11"
-              disabled={pending !== null}
-              onClick={reset}
-            >
-              Renunță
-            </Button>
+            {pending === "save" ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11"
+                onClick={cancelWork}
+              >
+                Anulează
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11"
+                disabled={pending !== null}
+                onClick={reset}
+              >
+                Renunță
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -391,6 +584,9 @@ export function HomeUpload({
 
   return (
     <div className="flex flex-col gap-4">
+      {!driveConnected ? (
+        <DriveConnectCta canConnect={canConnectDrive} />
+      ) : null}
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}
@@ -398,8 +594,9 @@ export function HomeUpload({
       ) : null}
       <p className="text-sm text-muted-foreground">
         Poți alege mai multe fișiere pentru aceeași înregistrare: imagini, PDF,
-        Word (.docx) sau text (.txt). Textul este citit local, iar data și
-        textul se salvează o singură dată.
+        Word (.docx) sau text (.txt). Fotografiile se comprimă automat. Maxim{" "}
+        {MAX_RECORD_FILES} fișiere, ~{formatMb(MAX_DOCUMENT_BYTES)} MB pe
+        fișier la încărcare și ~{formatMb(MAX_RECORD_BYTES)} MB pe înregistrare.
       </p>
       <div className="flex flex-col gap-2 rounded-lg border border-dashed px-3 py-3">
         <Label htmlFor={lockedProfileId ? `upload-${lockedProfileId}` : "home-upload"}>
@@ -408,7 +605,7 @@ export function HomeUpload({
         <input
           ref={fileRef}
           id={lockedProfileId ? `upload-${lockedProfileId}` : "home-upload"}
-          key={fileKey}
+          key={`files-${fileKey}`}
           type="file"
           multiple
           accept={ACCEPTED_FILE_TYPES}
@@ -416,20 +613,7 @@ export function HomeUpload({
           disabled={pending !== null}
           onChange={(event) => {
             const chosen = Array.from(event.target.files ?? []);
-            setError(null);
-            setFiles([]);
-            if (chosen.length === 0) {
-              return;
-            }
-            setPending("prepare");
-            void prepareUploads(chosen)
-              .then((prepared) => {
-                setFiles(prepared.files);
-                if (prepared.error) {
-                  setError(prepared.error);
-                }
-              })
-              .finally(() => setPending(null));
+            void takeFiles(chosen);
           }}
         />
         <Button
@@ -444,25 +628,52 @@ export function HomeUpload({
         {files.length > 0 ? (
           <ul className="text-sm text-muted-foreground">
             {files.map((file) => (
-              <li key={`${file.name}-${file.size}-${file.lastModified}`}>{file.name}</li>
+              <li key={`${file.name}-${file.size}-${file.lastModified}`}>
+                {file.name}
+              </li>
             ))}
           </ul>
         ) : null}
       </div>
-      <Button
-        type="button"
-        className="h-11 sm:w-fit"
-        disabled={pending !== null || files.length === 0}
-        onClick={() => {
-          void onDetect();
-        }}
-      >
-        {pending === "prepare"
-          ? "Se pregătesc fișierele…"
-          : pending === "detect"
-            ? (progress ?? "Se citește…")
-            : "Citește documentele"}
-      </Button>
+      {progressLabel ? (
+        <div className="flex flex-col gap-2" aria-live="polite">
+          <p className="text-sm text-muted-foreground">{progressLabel}</p>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 sm:w-fit"
+            onClick={cancelWork}
+          >
+            Anulează
+          </Button>
+        </div>
+      ) : null}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <Button
+          type="button"
+          className="h-11 sm:w-fit"
+          disabled={
+            pending !== null || files.length === 0 || !driveConnected
+          }
+          onClick={() => {
+            void onDetect();
+          }}
+        >
+          {pending === "prepare"
+            ? "Se pregătesc fișierele…"
+            : pending === "detect"
+              ? (progressLabel ?? "Se citește…")
+              : "Citește documentele"}
+        </Button>
+        {!driveConnected && canConnectDrive ? (
+          <Link
+            href="/api/google/connect"
+            className="text-sm font-medium underline-offset-4 hover:underline"
+          >
+            Conectează Google Drive
+          </Link>
+        ) : null}
+      </div>
     </div>
   );
 }

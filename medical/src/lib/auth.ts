@@ -124,6 +124,12 @@ export async function requireProfileWriter(profileId: string) {
   if (access.role === "admin") {
     return { familyId: access.familyId, error: null };
   }
+  if (!canWrite(access.role)) {
+    return {
+      familyId: null,
+      error: "Rolul de vizualizare permite doar citirea dosarului.",
+    };
+  }
 
   const user = await getCurrentUser();
   const supabase = await createClient();

@@ -108,7 +108,7 @@ export function uploadSizeError(file: File) {
   if (file.size <= MAX_UPLOAD_BYTES) {
     return null;
   }
-  return `„${file.name}” are ${(file.size / 1024 / 1024).toFixed(1)} MB. Limita pentru un fișier este 3,5 MB.`;
+  return `„${file.name}” are ${(file.size / 1024 / 1024).toFixed(1)} MB. Limita la încărcare este 3,5 MB pe fișier (fotografiile se comprimă automat).`;
 }
 
 /** Shrinks every image; returns an error for any other file still too large. */
