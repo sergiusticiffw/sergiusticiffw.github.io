@@ -1,4 +1,5 @@
 import { GeminiFunctionDeclaration } from '../client';
+import { budgetToolDeclarations } from './budgetTools';
 import { loanToolDeclarations } from './loanTools';
 
 const filterProperties = {
@@ -78,6 +79,7 @@ export const toolDeclarations: GeminiFunctionDeclaration[] = [
       required: ['aFrom', 'aTo', 'bFrom', 'bTo'],
     },
   },
+  ...budgetToolDeclarations,
   {
     name: 'list_loans',
     description:

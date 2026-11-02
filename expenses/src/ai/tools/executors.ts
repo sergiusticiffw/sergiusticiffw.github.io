@@ -19,6 +19,7 @@ import {
   LOAN_EVENT_COLUMNS,
 } from '../loans';
 import type { LoanSource } from '../loanScenarios';
+import { BUDGET_TOOL_LABELS, budgetToolExecutors } from './budgetTools';
 import { LOAN_TOOL_LABELS, loanToolExecutors } from './loanTools';
 
 export interface ToolContext {
@@ -353,6 +354,7 @@ const executors: Record<string, (ctx: ToolContext, args: Args) => Record<string,
       : { loans: 0 },
   get_loan_detail: loanDetail,
   query_loan_payments: queryLoanPayments,
+  ...budgetToolExecutors,
   ...loanToolExecutors,
 };
 
@@ -374,5 +376,6 @@ export const TOOL_LABELS: Record<string, string> = {
   list_loans: 'Reviewing loans',
   get_loan_detail: 'Reading the loan',
   query_loan_payments: 'Looking up loan payments',
+  ...BUDGET_TOOL_LABELS,
   ...LOAN_TOOL_LABELS,
 };

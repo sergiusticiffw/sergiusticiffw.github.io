@@ -26,7 +26,7 @@ import { getAiItems } from '../data';
 import { buildLoanContext } from '../loans';
 import { buildChatSystemInstruction } from '../prompts';
 import { recordAiQuestion } from '../sessionStats';
-import { getShareDescriptions } from '../storage';
+import { getAiLanguage, getShareDescriptions } from '../storage';
 import { toolDeclarations } from '../tools/definitions';
 import { TOOL_LABELS, executeTool } from '../tools/executors';
 
@@ -112,7 +112,7 @@ export function useAiChat(apiKey: string) {
         userTurn,
       ];
       const systemInstruction = {
-        parts: [{ text: buildChatSystemInstruction(summary) }],
+        parts: [{ text: buildChatSystemInstruction(summary, getAiLanguage()) }],
       };
       const toolContext = {
         items,

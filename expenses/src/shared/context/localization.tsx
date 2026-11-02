@@ -401,6 +401,10 @@ const translations = {
     'assistant.calculating': 'Calculating totals',
     'assistant.summarizing': 'Summarizing the month',
     'assistant.comparing': 'Comparing periods',
+    'assistant.checkingBudgets': 'Checking budgets',
+    'assistant.comparingBudget': 'Comparing budget and spend',
+    'assistant.detectingSpikes': 'Detecting spend spikes',
+    'assistant.savingsTrend': 'Tracking savings rate',
     'assistant.reviewingLoans': 'Reviewing loans',
     'assistant.readingLoan': 'Reading the loan',
     'assistant.loanPayments': 'Looking up loan payments',
@@ -412,6 +416,8 @@ const translations = {
     'assistant.readingSchedule': 'Reading the payment schedule',
     'assistant.comparingLoans': 'Comparing loans',
     'assistant.prepayVsInvest': 'Comparing prepaying with investing',
+    'assistant.chartTitle': 'Chart',
+    'assistant.chartInvalid': 'Could not render the chart from the reply.',
 
     // Settings (UI branch)
     'theme.default': 'Default',
@@ -1221,6 +1227,10 @@ const translations = {
     'assistant.calculating': 'Calculez totaluri',
     'assistant.summarizing': 'Rezum luna',
     'assistant.comparing': 'Compar perioadele',
+    'assistant.checkingBudgets': 'Verific bugetele',
+    'assistant.comparingBudget': 'Compar bugetul cu cheltuielile',
+    'assistant.detectingSpikes': 'Caut creșteri neobișnuite',
+    'assistant.savingsTrend': 'Urmăresc rata de economisire',
     'assistant.reviewingLoans': 'Mă uit la credite',
     'assistant.readingLoan': 'Citesc creditul',
     'assistant.loanPayments': 'Caut plățile la credit',
@@ -1232,6 +1242,8 @@ const translations = {
     'assistant.readingSchedule': 'Citesc graficul de plăți',
     'assistant.comparingLoans': 'Compar creditele',
     'assistant.prepayVsInvest': 'Compar rambursarea cu investiția',
+    'assistant.chartTitle': 'Grafic',
+    'assistant.chartInvalid': 'Nu am putut afișa graficul din răspuns.',
 
     // Settings (UI branch)
     'theme.default': 'Implicit',

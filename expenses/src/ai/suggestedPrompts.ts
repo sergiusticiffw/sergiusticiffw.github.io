@@ -1,4 +1,7 @@
+import { aiText } from './aiLocale';
+import { CAPABILITY_PROMPTS } from './capabilityPrompts';
 import type { DataPrompt, PromptKind } from './dataPrompts';
+import { getAiLanguage } from './storage';
 
 const LOAN_SIMULATION_PROMPTS = [
   'Cât timp am economisit din perioada creditului datorită plăților anticipate?',
@@ -297,10 +300,16 @@ const genericKind = (text: string): PromptKind => {
 
 const poolFor = (kind: PromptKind, dataPrompts: DataPrompt[]): SuggestedPrompt[] => {
   const byText = new Map<string, SuggestedPrompt>();
+  const language = getAiLanguage();
   for (const prompt of dataPrompts) {
     if (prompt.kind === kind) byText.set(prompt.text, { text: prompt.text, personal: true, kind });
   }
   if (kind === 'loan' && !dataPrompts.some((prompt) => prompt.kind === 'loan')) return [];
+  for (const capability of CAPABILITY_PROMPTS) {
+    if (capability.kind !== kind) continue;
+    const text = aiText(capability.prompt, language);
+    if (!byText.has(text)) byText.set(text, { text, personal: false, kind });
+  }
   for (const text of SUGGESTED_PROMPTS) {
     if (genericKind(text) !== kind || byText.has(text)) continue;
     byText.set(text, { text, personal: false, kind });

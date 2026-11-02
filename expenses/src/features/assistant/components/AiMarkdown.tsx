@@ -1,5 +1,8 @@
 import DOMPurify from 'dompurify';
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
+import { splitAiMessageParts } from '../../../ai/chartSpec';
+
+const AiChart = lazy(() => import('./AiChart'));
 
 const escapeHtml = (value: string) =>
   value
@@ -131,7 +134,8 @@ const markdownToHtml = (source: string) => {
   return html.join('');
 };
 
-const AiMarkdown: React.FC<{ text: string }> = ({ text }) => {
+const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => {
+  if (!text.trim()) return null;
   const html = DOMPurify.sanitize(markdownToHtml(text), {
     ALLOWED_TAGS: [
       'p',
@@ -162,6 +166,29 @@ const AiMarkdown: React.FC<{ text: string }> = ({ text }) => {
       className="ai-markdown text-[0.95rem] leading-relaxed text-app-secondary [&_strong]:text-app-primary"
       dangerouslySetInnerHTML={{ __html: html }}
     />
+  );
+};
+
+const AiMarkdown: React.FC<{ text: string }> = ({ text }) => {
+  const parts = splitAiMessageParts(text);
+
+  return (
+    <div>
+      {parts.map((part, index) =>
+        part.kind === 'chart' ? (
+          <Suspense
+            key={`chart-${index}`}
+            fallback={
+              <div className="my-3 h-[260px] animate-pulse rounded-2xl border border-white/10 bg-white/[0.03]" />
+            }
+          >
+            <AiChart raw={part.raw} />
+          </Suspense>
+        ) : (
+          <MarkdownBlock key={`md-${index}`} text={part.text} />
+        )
+      )}
+    </div>
   );
 };
 
