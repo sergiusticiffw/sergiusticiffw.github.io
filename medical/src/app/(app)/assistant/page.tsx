@@ -2,8 +2,8 @@ import { Suspense } from "react";
 
 import { MedicalAssistant } from "@/components/assistant/medical-assistant";
 import { PageFallback } from "@/components/layout/page-fallback";
+import { loadRecordsIndex, suggestFromIndex } from "@/lib/assistant/catalog";
 import { getPageFamilyAccess } from "@/lib/auth";
-import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
   title: "Asistent",
@@ -15,6 +15,7 @@ const genericSuggestions = [
   "Ce analize recente există în dosar?",
   "Ce consultații sunt în dosar?",
   "Rezumă ultimele documente.",
+  "Compară analizele recente din dosar.",
 ];
 
 export default function AssistantPage() {
@@ -39,18 +40,29 @@ async function AssistantSection() {
     return <MedicalAssistant enabled suggestions={[]} />;
   }
 
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("family_id", family.familyId)
-    .order("display_name", { ascending: true })
-    .limit(2);
-  const people = (data ?? []) as { display_name: string }[];
+  const index = await loadRecordsIndex(family.familyId);
+  const fromDosar =
+    !index.error && index.records.length > 0
+      ? suggestFromIndex(index.records, index.people)
+      : [];
   const suggestions = [
-    ...people.map((person) => `Ce documente recente are ${person.display_name}?`),
-    ...genericSuggestions,
+    ...fromDosar,
+    ...genericSuggestions.filter(
+      (prompt) =>
+        !fromDosar.some(
+          (item) => item.toLocaleLowerCase("ro") === prompt.toLocaleLowerCase("ro"),
+        ),
+    ),
   ].slice(0, 4);
 
-  return <MedicalAssistant enabled suggestions={suggestions} />;
+  return (
+    <MedicalAssistant
+      enabled
+      suggestions={suggestions}
+      people={index.people.map((person) => ({
+        id: person.id,
+        display_name: person.display_name,
+      }))}
+    />
+  );
 }

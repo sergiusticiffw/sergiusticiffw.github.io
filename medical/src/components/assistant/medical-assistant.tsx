@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { AssistantAnswer } from "@/components/assistant/assistant-answer";
+import { AssistantSources } from "@/components/assistant/assistant-sources";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -15,19 +16,26 @@ import {
 } from "@/lib/assistant/chat-session";
 import { nextChatModel, retryModelLabel } from "@/lib/assistant/models";
 import type { AssistantResult, AssistantTurn } from "@/lib/assistant/types";
+import { formatDurationUntil } from "@/lib/format";
+
+const SCOPE_KEY = "medicalAssistantProfileScope";
 
 export function MedicalAssistant({
   enabled,
   suggestions,
+  people = [],
 }: {
   enabled: boolean;
   suggestions: string[];
+  people?: { id: string; display_name: string }[];
 }) {
   const [messages, setMessages] = useState<AssistantTurn[]>([]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [failedModel, setFailedModel] = useState<string | null>(null);
+  const [quotaUntil, setQuotaUntil] = useState<number | null>(null);
+  const [profileScope, setProfileScope] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -38,8 +46,16 @@ export function MedicalAssistant({
     setError(stored.error);
     setFailedModel(stored.failedModel);
     setPending(false);
+    try {
+      const saved = localStorage.getItem(SCOPE_KEY);
+      if (saved && people.some((person) => person.id === saved)) {
+        setProfileScope(saved);
+      }
+    } catch {
+      // ignore
+    }
     setReady(true);
-  }, []);
+  }, [people]);
 
   useEffect(() => {
     if (!ready) {
@@ -52,7 +68,6 @@ export function MedicalAssistant({
     saveChatSession();
   }, [ready, messages, error, failedModel, pending]);
 
-  // Same as expenses: leaving the tab aborts the request and leaves a retryable error.
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
@@ -66,6 +81,19 @@ export function MedicalAssistant({
     endRef.current?.scrollIntoView({ block: "end" });
   }, [messages, pending, error]);
 
+  function chooseScope(next: string | null) {
+    setProfileScope(next);
+    try {
+      if (next) {
+        localStorage.setItem(SCOPE_KEY, next);
+      } else {
+        localStorage.removeItem(SCOPE_KEY);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   async function ask(turns: AssistantTurn[], preferModel?: string) {
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -73,6 +101,7 @@ export function MedicalAssistant({
 
     setError(null);
     setFailedModel(null);
+    setQuotaUntil(null);
     setPending(true);
     chatSession.messages = turns;
     chatSession.error = null;
@@ -81,18 +110,37 @@ export function MedicalAssistant({
     saveChatSession();
 
     try {
-      const result = await askAssistant(turns, preferModel, controller.signal);
+      const scopeName = profileScope
+        ? people.find((person) => person.id === profileScope)?.display_name
+        : null;
+      const result = await askAssistant(
+        turns,
+        preferModel,
+        scopeName ?? null,
+        controller.signal,
+      );
       if (controller.signal.aborted) {
         return;
       }
       if (result.error || !result.answer) {
         setError(result.error ?? "Asistentul nu a răspuns.");
         setFailedModel(result.failedModel ?? preferModel ?? null);
+        setQuotaUntil(result.quota?.until ?? null);
         return;
       }
-      setMessages([...turns, { role: "assistant", text: result.answer }]);
+      setMessages([
+        ...turns,
+        {
+          role: "assistant",
+          text: result.answer,
+          ...(result.sources && result.sources.length > 0
+            ? { sources: result.sources }
+            : {}),
+        },
+      ]);
       setError(null);
       setFailedModel(null);
+      setQuotaUntil(null);
     } catch (askError) {
       if (controller.signal.aborted) {
         setError(INTERRUPTED);
@@ -136,6 +184,10 @@ export function MedicalAssistant({
 
   const canRetry = Boolean(error) && messages.at(-1)?.role === "user" && !pending;
   const altModel = canRetry ? nextChatModel(failedModel) : null;
+  const quotaWait =
+    quotaUntil && quotaUntil > Date.now()
+      ? formatDurationUntil(quotaUntil)
+      : null;
 
   if (!enabled) {
     return (
@@ -151,6 +203,35 @@ export function MedicalAssistant({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
+      {people.length > 1 ? (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            className={
+              profileScope == null
+                ? "rounded-full border border-foreground px-2.5 py-1 text-xs font-medium"
+                : "rounded-full border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
+            }
+            onClick={() => chooseScope(null)}
+          >
+            Toată familia
+          </button>
+          {people.map((person) => (
+            <button
+              key={person.id}
+              type="button"
+              className={
+                profileScope === person.id
+                  ? "rounded-full border border-foreground px-2.5 py-1 text-xs font-medium"
+                  : "rounded-full border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
+              }
+              onClick={() => chooseScope(person.id)}
+            >
+              {person.display_name}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-3">
         {messages.length === 0 ? (
           <div className="flex flex-col gap-3">
@@ -188,6 +269,9 @@ export function MedicalAssistant({
               <div key={`${message.role}-${index}`} className="flex justify-start">
                 <div className="max-w-[92%] rounded-2xl border bg-card px-3.5 py-2.5 text-sm shadow-sm">
                   <AssistantAnswer text={message.text} />
+                  {message.sources ? (
+                    <AssistantSources sources={message.sources} />
+                  ) : null}
                 </div>
               </div>
             ),
@@ -206,6 +290,11 @@ export function MedicalAssistant({
               <p role="alert" className="text-sm text-destructive">
                 {error}
               </p>
+              {quotaWait ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Estimare reset: ~{quotaWait}
+                </p>
+              ) : null}
               {canRetry ? (
                 <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <button
@@ -259,6 +348,7 @@ export function MedicalAssistant({
               setMessages([]);
               setError(null);
               setFailedModel(null);
+              setQuotaUntil(null);
               setPending(false);
             }}
           >
@@ -294,12 +384,13 @@ export function MedicalAssistant({
 async function askAssistant(
   messages: AssistantTurn[],
   preferModel: string | undefined,
+  profileScope: string | null,
   signal: AbortSignal,
 ): Promise<AssistantResult> {
   const response = await fetch("/api/assistant", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, preferModel }),
+    body: JSON.stringify({ messages, preferModel, profileScope }),
     signal,
   });
   if (signal.aborted) {

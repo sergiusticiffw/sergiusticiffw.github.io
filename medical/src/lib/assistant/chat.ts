@@ -1,8 +1,15 @@
 import "server-only";
 
-import { searchCatalog, type CatalogRecord } from "./catalog";
+import {
+  compareLabs,
+  readHealthCard,
+  searchCatalog,
+  type CatalogPerson,
+  type CatalogRecord,
+} from "./catalog";
 import { polishAnswer } from "./format-answer";
 import { AI_MODELS } from "./models";
+import type { AssistantSource } from "./types";
 import {
   getModelCooldown,
   isDailyQuota,
@@ -19,7 +26,7 @@ import {
   setModelCooldown,
 } from "./usage";
 
-const MAX_ROUNDS = 3;
+const MAX_ROUNDS = 5;
 const MAX_MODELS = 4;
 const REQUEST_MS = 12_000;
 const BUDGET_MS = 40_000;
@@ -52,11 +59,23 @@ const declarations = [
       properties: {
         query: {
           type: "STRING",
-          description: "Cuvinte din întrebare, fără categorie",
+          description:
+            "Cuvinte medicale din întrebare (simptom, analiză, medic). Fără lună/an și fără „rapoarte/documente”. Gol pentru listă pe interval.",
         },
         profile: { type: "STRING", description: "Numele persoanei, parțial" },
-        from: { type: "STRING", description: "Data de început, YYYY-MM-DD" },
-        to: { type: "STRING", description: "Data de sfârșit, YYYY-MM-DD" },
+        category: {
+          type: "STRING",
+          description:
+            "Categorie opțională: Analiză, Consultație, Investigație, Urgență",
+        },
+        from: {
+          type: "STRING",
+          description: "Data de început, YYYY-MM-DD (ex. 2024-10-01 pentru octombrie)",
+        },
+        to: {
+          type: "STRING",
+          description: "Data de sfârșit, YYYY-MM-DD (ex. 2024-10-31 pentru octombrie)",
+        },
         limit: { type: "INTEGER" },
       },
     },
@@ -77,9 +96,43 @@ const declarations = [
       },
     },
   },
+  {
+    name: "compare_labs",
+    description:
+      "Compară aceeași analiză în timp (valori pe date). Folosește pentru evoluție, trend, „cum a fost hemoglobina”.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        query: {
+          type: "STRING",
+          description: "Numele analizei (ex. hemoglobină, glicemie, TSH)",
+        },
+        profile: { type: "STRING", description: "Numele persoanei, parțial" },
+        from: { type: "STRING", description: "Data de început, YYYY-MM-DD" },
+        to: { type: "STRING", description: "Data de sfârșit, YYYY-MM-DD" },
+        limit: { type: "INTEGER" },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "read_health_card",
+    description:
+      "Citește cardul de urgență (alergii, boli cronice, medicamente, grup sanguin). Folosește pentru întrebări despre alergii/medicație/urgență.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        profile: {
+          type: "STRING",
+          description: "Numele persoanei; gol = toate cardurile din dosar",
+        },
+      },
+    },
+  },
 ];
 
-function systemInstruction(count: number) {
+function systemInstruction(count: number, people: CatalogPerson[]) {
+  const names = people.map((person) => person.display_name).filter(Boolean);
   return [
     "Ești asistentul medical al dosarului de familie.",
     "Răspunzi în română, scurt și clar.",
@@ -88,23 +141,59 @@ function systemInstruction(count: number) {
     "Fără tabele, fără blocuri de cod, fără emoji, fără IDNP.",
     "Nu inventa analize, valori, medici, clinici sau date. Dacă nu găsești nimic, spune asta.",
     "Caută mai întâi cu search_records. Dacă sunt rezultate, citește-le cu read_record.",
-    "Ai câmpurile din dosar (persoană, dată, titlu, categorie, medic, clinică, rezumat, analize), cardul de urgență (alergii, boli cronice, medicamente, grup sanguin) și textul scanat salvat pe înregistrare. Nu ai fișierul original.",
-    "Nu filtra după categorie.",
-    "Când citezi, menționează persoana, data și titlul.",
+    "Pentru evoluția unei analize folosește compare_labs.",
+    "Pentru alergii, medicamente curente, boli cronice sau grup sanguin folosește read_health_card.",
+    "Pentru întrebări pe lună/an (ex. octombrie 2024), folosește from/to ca YYYY-MM-DD și lasă query gol sau fără numele lunii — datele din dosar sunt ISO, nu „octombrie”.",
+    "„Rapoarte/documente/înregistrări” înseamnă tot dosarul din interval, nu un cuvânt de căutat în text.",
+    "Poți filtra cu category: Analiză, Consultație, Investigație.",
+    "Dacă un tool întoarce ambiguous/candidates, întreabă clar despre cine e vorba — nu amesteca persoanele.",
+    "Ai câmpurile din dosar (persoană, dată, titlu, categorie, medic, clinică, rezumat, analize), cardul de urgență și textul scanat salvat pe înregistrare. Nu ai fișierul original.",
+    "Când citezi, menționează persoana, data și titlul. Nu adăuga secțiune Surse — aplicația o atașează automat.",
     "Nu pui diagnostice și nu înlocuiești un medic.",
+    names.length > 0 ? `Persoane în dosar: ${names.join(", ")}.` : "",
     `Dosarul are ${count} înregistrări.`,
-  ].join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
-function runTool(records: CatalogRecord[], name: string, args: Record<string, unknown>) {
+function asSource(record: CatalogRecord): AssistantSource {
+  return {
+    id: record.id,
+    title: record.title,
+    date: record.date,
+    profile: record.profileName,
+    href: record.href,
+  };
+}
+
+function runTool(
+  records: CatalogRecord[],
+  people: CatalogPerson[],
+  name: string,
+  args: Record<string, unknown>,
+  cited: Map<string, AssistantSource>,
+) {
   if (name === "search_records") {
-    return searchCatalog(records, {
-      query: typeof args.query === "string" ? args.query : "",
-      profile: typeof args.profile === "string" ? args.profile : "",
-      from: typeof args.from === "string" ? args.from : "",
-      to: typeof args.to === "string" ? args.to : "",
-      limit: typeof args.limit === "number" ? args.limit : 12,
-    });
+    const result = searchCatalog(
+      records,
+      {
+        query: typeof args.query === "string" ? args.query : "",
+        profile: typeof args.profile === "string" ? args.profile : "",
+        category: typeof args.category === "string" ? args.category : "",
+        from: typeof args.from === "string" ? args.from : "",
+        to: typeof args.to === "string" ? args.to : "",
+        limit: typeof args.limit === "number" ? args.limit : 12,
+      },
+      people,
+    );
+    for (const item of result.records) {
+      const record = records.find((row) => row.id === item.id);
+      if (record) {
+        cited.set(record.id, asSource(record));
+      }
+    }
+    return result;
   }
 
   if (name === "read_record") {
@@ -118,16 +207,62 @@ function runTool(records: CatalogRecord[], name: string, args: Record<string, un
     if (found.length === 0) {
       return { error: "Înregistrarea nu este în dosar." };
     }
+    for (const record of found) {
+      cited.set(record.id, asSource(record));
+    }
     return {
       records: found.map((record) => ({
         id: record.id,
         profile: record.profileName,
         date: record.date,
         title: record.title,
+        href: record.href,
         fields: record.fields,
-        ...(record.text ? { text: record.text } : {}),
+        ...((record.fullText || record.text)
+          ? { text: record.fullText || record.text }
+          : {}),
       })),
     };
+  }
+
+  if (name === "compare_labs") {
+    const result = compareLabs(
+      records,
+      {
+        query: typeof args.query === "string" ? args.query : "",
+        profile: typeof args.profile === "string" ? args.profile : "",
+        from: typeof args.from === "string" ? args.from : "",
+        to: typeof args.to === "string" ? args.to : "",
+        limit: typeof args.limit === "number" ? args.limit : 20,
+      },
+      people,
+    );
+    if ("results" in result && Array.isArray(result.results)) {
+      for (const item of result.results) {
+        const record = records.find((row) => row.id === item.id);
+        if (record) {
+          cited.set(record.id, asSource(record));
+        }
+      }
+    }
+    return result;
+  }
+
+  if (name === "read_health_card") {
+    const result = readHealthCard(
+      records,
+      people,
+      typeof args.profile === "string" ? args.profile : "",
+    );
+    if ("records" in result && Array.isArray(result.records)) {
+      for (const item of result.records) {
+        const record = records.find((row) => row.id === item.id);
+        if (record) {
+          cited.set(record.id, asSource(record));
+        }
+      }
+    }
+    return result;
   }
 
   return { error: "Unealtă necunoscută." };
@@ -418,16 +553,23 @@ export async function answerMedicalQuestion(input: {
   familyId: string;
   messages: ChatTurn[];
   records: CatalogRecord[];
+  people: CatalogPerson[];
   preferModel?: string;
-}) {
+}): Promise<{ answer: string; sources: AssistantSource[] }> {
   await recordAiQuestion(input.familyId);
-  const instruction = systemInstruction(input.records.length);
+  const instruction = systemInstruction(input.records.length, input.people);
   const contents: Content[] = input.messages.slice(-6).map((message) => ({
     role: message.role === "assistant" ? "model" : "user",
     parts: [{ text: message.text.slice(0, 2000) }],
   }));
+  const cited = new Map<string, AssistantSource>();
 
   let model: string | undefined = input.preferModel;
+
+  const finish = (text: string) => ({
+    answer: polishAnswer(text || "Nu am găsit un răspuns în dosar."),
+    sources: [...cited.values()].slice(0, 12),
+  });
 
   for (let round = 0; round < MAX_ROUNDS; round += 1) {
     const step = await generate(
@@ -446,7 +588,7 @@ export async function answerMedicalQuestion(input: {
       .join("\n\n");
 
     if (calls.length === 0) {
-      return polishAnswer(text || "Nu am găsit un răspuns în dosar.");
+      return finish(text || "Nu am găsit un răspuns în dosar.");
     }
 
     contents.push({ role: "model", parts: step.parts, model: step.model });
@@ -458,14 +600,20 @@ export async function answerMedicalQuestion(input: {
           functionResponse: {
             ...(call.id ? { id: call.id } : {}),
             name: call.name,
-            response: runTool(input.records, call.name, call.args ?? {}),
+            response: runTool(
+              input.records,
+              input.people,
+              call.name,
+              call.args ?? {},
+              cited,
+            ),
           },
         };
       }),
     });
 
     if (text && round === MAX_ROUNDS - 1) {
-      return polishAnswer(text);
+      return finish(text);
     }
   }
 
@@ -481,5 +629,5 @@ export async function answerMedicalQuestion(input: {
     .map((part) => (part.thought ? "" : part.text?.trim() ?? ""))
     .filter(Boolean)
     .join("\n\n");
-  return polishAnswer(text || "Nu am putut încheia consultarea dosarului.");
+  return finish(text || "Nu am putut încheia consultarea dosarului.");
 }

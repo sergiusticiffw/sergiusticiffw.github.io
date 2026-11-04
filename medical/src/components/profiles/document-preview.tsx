@@ -113,7 +113,15 @@ function FileThumb({
   );
 }
 
-function PdfNativeView({ filename, url }: { filename: string; url: string }) {
+function PdfNativeView({
+  filename,
+  url,
+  onOpenNative,
+}: {
+  filename: string;
+  url: string;
+  onOpenNative?: () => void;
+}) {
   return (
     <div className="flex max-w-sm flex-col items-center gap-4 rounded-md bg-white/10 px-6 py-8 text-center">
       <PdfGlyph className="size-12 text-white/80" />
@@ -128,6 +136,7 @@ function PdfNativeView({ filename, url }: { filename: string; url: string }) {
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-medium text-neutral-950"
+        onClick={() => onOpenNative?.()}
       >
         Deschide PDF
       </a>
@@ -138,9 +147,11 @@ function PdfNativeView({ filename, url }: { filename: string; url: string }) {
 function FileView({
   file,
   preferNativePdf,
+  onOpenNativePdf,
 }: {
   file: PreviewFile;
   preferNativePdf: boolean;
+  onOpenNativePdf?: () => void;
 }) {
   const kind = previewKind(file.filename, file.mimeType);
   const url = viewUrl(file.id);
@@ -163,7 +174,13 @@ function FileView({
     );
   }
   if (kind === "pdf" && preferNativePdf) {
-    return <PdfNativeView filename={file.filename} url={url} />;
+    return (
+      <PdfNativeView
+        filename={file.filename}
+        url={url}
+        onOpenNative={onOpenNativePdf}
+      />
+    );
   }
   return (
     <iframe
@@ -183,6 +200,7 @@ export function DocumentGallery({
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const touchX = useRef<number | null>(null);
+  const leftForNativePdf = useRef(false);
   const preferNativePdf = useNativePdfViewer();
   const [index, setIndex] = useState(0);
   const [open, setOpen] = useState(false);
@@ -192,17 +210,29 @@ export function DocumentGallery({
   function show(next: number) {
     const file = files[next];
     setIndex(next);
-    setOpen(true);
     if (
       preferNativePdf &&
       file &&
       previewKind(file.filename, file.mimeType) === "pdf"
     ) {
-      window.open(viewUrl(file.id), "_blank", "noopener,noreferrer");
+      const opened = window.open(
+        viewUrl(file.id),
+        "_blank",
+        "noopener,noreferrer",
+      );
+      // Native viewer opened: never leave the interstitial behind.
+      if (opened) {
+        leftForNativePdf.current = true;
+        setOpen(false);
+        return;
+      }
     }
+    leftForNativePdf.current = false;
+    setOpen(true);
   }
 
   function close() {
+    leftForNativePdf.current = false;
     setOpen(false);
   }
 
@@ -227,6 +257,26 @@ export function DocumentGallery({
       dialog.close();
     }
   }, [open]);
+
+  // After returning from the native PDF viewer, drop the leftover interstitial.
+  useEffect(() => {
+    function onReturn() {
+      if (
+        !leftForNativePdf.current ||
+        document.visibilityState !== "visible"
+      ) {
+        return;
+      }
+      leftForNativePdf.current = false;
+      setOpen(false);
+    }
+    document.addEventListener("visibilitychange", onReturn);
+    window.addEventListener("pageshow", onReturn);
+    return () => {
+      document.removeEventListener("visibilitychange", onReturn);
+      window.removeEventListener("pageshow", onReturn);
+    };
+  }, []);
 
   useEffect(() => {
     if (files.length === 0) {
@@ -364,6 +414,9 @@ export function DocumentGallery({
                 key={current.id}
                 file={current}
                 preferNativePdf={preferNativePdf}
+                onOpenNativePdf={() => {
+                  leftForNativePdf.current = true;
+                }}
               />
             </div>
             {many ? (

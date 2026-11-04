@@ -28,6 +28,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as {
     messages?: unknown;
     preferModel?: unknown;
+    profileScope?: unknown;
   } | null;
   if (!body) {
     return NextResponse.json(
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
   const result = await askMedicalAssistant(
     asTurns(body.messages),
     typeof body.preferModel === "string" ? body.preferModel : undefined,
+    typeof body.profileScope === "string" ? body.profileScope : null,
   );
   return NextResponse.json(result);
 }

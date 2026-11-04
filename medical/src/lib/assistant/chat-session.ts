@@ -17,6 +17,33 @@ function empty(): StoredChat {
   return { messages: [], error: null, failedModel: null, awaiting: false };
 }
 
+function asSources(value: unknown): AssistantTurn["sources"] {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const sources = value.flatMap((item) => {
+    if (
+      !item ||
+      typeof item !== "object" ||
+      typeof item.id !== "string" ||
+      typeof item.title !== "string" ||
+      typeof item.profile !== "string"
+    ) {
+      return [];
+    }
+    return [
+      {
+        id: item.id,
+        title: item.title,
+        profile: item.profile,
+        date: typeof item.date === "string" ? item.date : null,
+        href: typeof item.href === "string" ? item.href : null,
+      },
+    ];
+  });
+  return sources.length > 0 ? sources : undefined;
+}
+
 function asTurns(value: unknown): AssistantTurn[] {
   if (!Array.isArray(value)) {
     return [];
@@ -31,7 +58,12 @@ function asTurns(value: unknown): AssistantTurn[] {
     ) {
       return [];
     }
-    return [{ role: item.role, text: item.text }];
+    const sources = asSources(
+      "sources" in item ? (item as { sources?: unknown }).sources : undefined,
+    );
+    return sources
+      ? [{ role: item.role, text: item.text, sources }]
+      : [{ role: item.role, text: item.text }];
   });
 }
 
