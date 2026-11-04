@@ -20,7 +20,7 @@ Style:
 - Format amounts with thousands separators and the currency, e.g. 12,450 MDL. Refer to categories by name, not id.
 - When suggesting savings, be concrete: which category, how much, based on which numbers.
 
-Charts (opt-in only):
+charts (opt-in only):
 - Include a chart ONLY when the user explicitly asks for one (e.g. chart, graph, plot, grafic, diagramă, vizualizare). If they did not ask, never emit a chart — use a markdown table instead.
 - When they ask, put exactly one fenced JSON block in the reply (you may still add a short text explanation around it):
 \`\`\`chart
@@ -28,13 +28,56 @@ Charts (opt-in only):
 \`\`\`
 - type must be column, bar, line or pie. For pie use {"type":"pie","title":"...","data":[{"name":"Food","y":1200}]}.
 - Numbers must come from DATA SUMMARY or tool results. Max 36 points, max 4 series. Prefer column for months, line for trends, pie for category shares. Do not invent sample data.
+
+Follow-up questions:
+- Add them only when the answer leaves a useful next step, such as one category, a spike, a comparison, a loan scenario or a chart they did not ask for. Skip them when the answer is complete, a short fact, a refusal, or there is nothing more to ask.
+- Phrase each one as a short offer you are making, not as a new question from the user. Name the specific thing from this answer (the category, month, hashtag, loan or comparison). Same language as the answer. Two or three, and only the offers that fit. Examples: "Vrei să-ți fac analiza pe Food?", "Vrei să comparăm asta cu anul trecut?", "Vrei aceleași calcule pentru altă categorie?".
+- If the user sends one of these offers back, treat it as a yes and do that analysis. Don't ask for confirmation again.
+- When you add them, end the reply with this fence and nothing after it.
+\`\`\`follow-ups
+Vrei să comparăm asta cu anul trecut?
+Vrei aceleași calcule pentru Food?
+\`\`\`
 `;
+
+const FOLLOW_UPS = '```follow-ups';
+
+/** Pulls the optional follow-up fence off the end of an answer. */
+export const splitFollowUps = (
+  text: string
+): { answer: string; followUps: string[] } => {
+  const start = text.toLowerCase().lastIndexOf(FOLLOW_UPS);
+  if (start < 0) {
+    const fenceAt = text.lastIndexOf('```');
+    const tail = fenceAt < 0 ? '' : text.slice(fenceAt);
+    const partial =
+      tail.length > 3 && FOLLOW_UPS.startsWith(tail.toLowerCase());
+    return {
+      answer: partial ? text.slice(0, fenceAt).trimEnd() : text,
+      followUps: [],
+    };
+  }
+
+  const body = text.slice(start + FOLLOW_UPS.length);
+  const close = body.indexOf('```');
+  const followUps =
+    close < 0
+      ? []
+      : body
+          .slice(0, close)
+          .split('\n')
+          .map((line) => line.replace(/^[-*\d.)\s]+/, '').trim())
+          .filter((line) => line.length >= 8 && line.length <= 140)
+          .slice(0, 3);
+
+  return { answer: text.slice(0, start).trimEnd(), followUps };
+};
 
 export const buildChatSystemInstruction = (
   summary: string,
   language: string
 ) =>
-  `${CHAT_SYSTEM_PROMPT}\n\nReply language: always write the entire answer in ${language}. Chart titles and series names must also be in ${language}.\n\nDATA SUMMARY\n${summary}`;
+  `${CHAT_SYSTEM_PROMPT}\n\nReply language: always write the entire answer in ${language}. Chart titles, series names and follow-up offers must also be in ${language}.\n\nDATA SUMMARY\n${summary}`;
 
 export const INSIGHT_SYSTEM_PROMPT = `You write short insight cards for a personal expense tracker. You receive one block of pre-computed data and a task, and return JSON.
 

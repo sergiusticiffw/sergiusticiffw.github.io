@@ -11,6 +11,8 @@ export interface ChatMessage {
   model?: string;
   /** Model that failed this turn, used to offer retry with the next one. */
   failedModel?: string;
+  /** Short next offers the model attached to this answer. */
+  followUps?: string[];
 }
 
 /** Messages kept on the device; older ones are dropped. */
@@ -36,6 +38,16 @@ export const markInterrupted = (messages: ChatMessage[]): ChatMessage[] =>
       : m
   );
 
+const sanitizeFollowUps = (value: unknown): string[] | undefined => {
+  if (!Array.isArray(value)) return undefined;
+  const questions = value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter((item) => item.length >= 8 && item.length <= 140)
+    .slice(0, 3);
+  return questions.length ? questions : undefined;
+};
+
 const load = (): { messages: ChatMessage[]; history: GeminiContent[] } => {
   try {
     const stored = JSON.parse(
@@ -45,7 +57,12 @@ const load = (): { messages: ChatMessage[]; history: GeminiContent[] } => {
       throw new Error();
     }
     return {
-      messages: markInterrupted(stored.messages),
+      messages: markInterrupted(
+        stored.messages.map((message: ChatMessage) => ({
+          ...message,
+          followUps: sanitizeFollowUps(message.followUps),
+        }))
+      ),
       history: stored.history,
     };
   } catch {

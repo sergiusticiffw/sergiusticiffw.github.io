@@ -95,8 +95,9 @@ const AssistantMessage: React.FC<{
   message: ChatMessage;
   onRetry?: () => void;
   onRetryAlt?: () => void;
+  onFollowUp?: (question: string) => void;
   altModel?: string | null;
-}> = ({ message, onRetry, onRetryAlt, altModel }) => {
+}> = ({ message, onRetry, onRetryAlt, onFollowUp, altModel }) => {
   const { t } = useLocalization();
   const [copied, setCopied] = useState(false);
   const copy = () => {
@@ -168,6 +169,22 @@ const AssistantMessage: React.FC<{
             )}
           </div>
         )}
+        {message.status === 'done' &&
+          !!message.followUps?.length &&
+          onFollowUp && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {message.followUps.map((question) => (
+                <button
+                  key={question}
+                  type="button"
+                  onClick={() => onFollowUp(question)}
+                  className="rounded-full border border-white/12 bg-white/[0.07] px-3.5 py-2 text-left text-[0.8rem] leading-snug text-app-primary transition-colors hover:border-[var(--color-app-accent)] hover:text-[var(--color-app-accent)]"
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+          )}
       </div>
     </div>
   );
@@ -231,11 +248,13 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
     send(pendingPrompt);
   }, [pendingPrompt, hasData, online, busy, navigate, location.pathname, send]);
 
-  const lastText = messages[messages.length - 1]?.text;
+  const lastMessage = messages[messages.length - 1];
+  const lastText = lastMessage?.text;
+  const lastFollowUps = lastMessage?.followUps?.length;
   useEffect(() => {
     if (browsingSuggestions) return;
     endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages.length, lastText, browsingSuggestions]);
+  }, [messages.length, lastText, lastFollowUps, browsingSuggestions]);
 
   useEffect(() => {
     const el = inputRef.current;
@@ -344,8 +363,9 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 md:px-6 lg:px-8">
           {messages.map((message, index) => {
+            const latest = index === messages.length - 1;
             const canRetry =
-              index === messages.length - 1 &&
+              latest &&
               (message.status === 'error' || message.status === 'stopped') &&
               online &&
               !busy;
@@ -366,6 +386,7 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
                 onRetryAlt={
                   altModel ? () => retry(message.id, altModel) : undefined
                 }
+                onFollowUp={latest && !busy ? submit : undefined}
                 altModel={altModel}
               />
             );
