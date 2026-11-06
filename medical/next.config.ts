@@ -28,6 +28,9 @@ const sharedHeaders = [
 
 const pageHeaders = [
   ...sharedHeaders,
+  ...(isDev
+    ? [{ key: "Cache-Control", value: "no-store" }]
+    : []),
   { key: "X-Frame-Options", value: "DENY" },
   {
     key: "Content-Security-Policy",

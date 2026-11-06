@@ -1,4 +1,4 @@
-const CACHE = "dosar-shell-v1";
+const CACHE = "dosar-shell-v2";
 const SHELL = ["/offline.html", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -36,8 +36,8 @@ function isApi(url) {
 function isStaticAsset(url) {
   return (
     url.origin === self.location.origin &&
-    (url.pathname.startsWith("/_next/static/") ||
-      url.pathname.startsWith("/icons/") ||
+    !url.pathname.startsWith("/_next/") &&
+    (url.pathname.startsWith("/icons/") ||
       url.pathname === "/offline.html" ||
       url.pathname.endsWith(".png") ||
       url.pathname.endsWith(".svg") ||
