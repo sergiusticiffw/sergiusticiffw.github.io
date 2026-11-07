@@ -1,6 +1,9 @@
 "use server";
 
-import { revalidateMedicalData } from "@/lib/data-cache";
+import {
+  revalidateMedicalData,
+  revalidateProfileDocsCard,
+} from "@/lib/data-cache";
 
 import { requireProfileWriter } from "@/lib/auth";
 import { readUploadedFile } from "@/lib/files";
@@ -59,6 +62,7 @@ async function ownedProfile(profileId: string) {
 }
 
 function refresh(profileId: string) {
+  revalidateProfileDocsCard(profileId);
   revalidateMedicalData(profileId);
 }
 

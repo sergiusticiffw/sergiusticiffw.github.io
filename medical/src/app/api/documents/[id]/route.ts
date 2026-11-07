@@ -74,12 +74,28 @@ export async function GET(
   }
 
   try {
+    const etag = `"${document.drive_file_id}"`;
+    const ifNoneMatch = request.headers.get("if-none-match");
+    if (ifNoneMatch === etag) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          ETag: etag,
+          "Cache-Control": document.mime_type.startsWith("image/")
+            ? "private, max-age=31536000, immutable"
+            : "private, no-store",
+          "X-Content-Type-Options": "nosniff",
+        },
+      });
+    }
+
     const driveResponse = await downloadDriveFile(
       family.familyId,
       document.drive_file_id,
     );
     const download = new URL(request.url).searchParams.get("download") === "1";
     const filename = safeFilename(document.original_filename);
+    const isImage = document.mime_type.startsWith("image/");
     return new NextResponse(driveResponse.body, {
       headers: {
         "Content-Type":
@@ -87,7 +103,10 @@ export async function GET(
             ? "text/plain; charset=utf-8"
             : document.mime_type,
         "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${filename}"`,
-        "Cache-Control": "private, no-store",
+        "Cache-Control": isImage
+          ? "private, max-age=31536000, immutable"
+          : "private, no-store",
+        ETag: etag,
         "X-Content-Type-Options": "nosniff",
       },
     });

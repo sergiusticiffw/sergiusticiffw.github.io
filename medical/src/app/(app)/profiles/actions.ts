@@ -2,7 +2,10 @@
 
 import { redirect } from "next/navigation";
 
-import { revalidateMedicalData } from "@/lib/data-cache";
+import {
+  revalidateMedicalData,
+  revalidateProfileDocsCard,
+} from "@/lib/data-cache";
 
 import { getAdminFamilyId, requireWriter } from "@/lib/auth";
 import { renameDriveFolder, trashDriveFile } from "@/lib/google-drive";
@@ -181,6 +184,7 @@ export async function deleteProfile(id: string): Promise<ProfileActionResult> {
     return { error: "Profilul nu a fost găsit." };
   }
 
+  revalidateProfileDocsCard(parsedId.data);
   revalidateMedicalData();
   redirect("/profiles");
 }
