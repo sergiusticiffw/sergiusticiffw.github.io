@@ -1,5 +1,6 @@
-const CACHE = "dosar-shell-v2";
+const CACHE = "dosar-shell-v3";
 const SHELL = ["/offline.html", "/icons/icon-192.png", "/icons/icon-512.png"];
+const NAVIGATE_TIMEOUT_MS = 8_000;
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -11,17 +12,15 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
+  // Do not clients.claim() — on iOS that race often yields a blank white screen.
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key !== CACHE)
-            .map((key) => caches.delete(key)),
-        ),
-      )
-      .then(() => self.clients.claim()),
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE)
+          .map((key) => caches.delete(key)),
+      ),
+    ),
   );
 });
 
@@ -46,6 +45,25 @@ function isStaticAsset(url) {
   );
 }
 
+async function offlineResponse() {
+  const cached = await caches.match("/offline.html");
+  return (
+    cached ||
+    new Response("Offline", {
+      status: 503,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    })
+  );
+}
+
+function fetchWithTimeout(request, ms) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  return fetch(request, { signal: controller.signal }).finally(() => {
+    clearTimeout(timer);
+  });
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
     return;
@@ -63,16 +81,9 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request).catch(async () => {
-        const cached = await caches.match("/offline.html");
-        return (
-          cached ||
-          new Response("Offline", {
-            status: 503,
-            headers: { "Content-Type": "text/plain; charset=utf-8" },
-          })
-        );
-      }),
+      fetchWithTimeout(event.request, NAVIGATE_TIMEOUT_MS).catch(() =>
+        offlineResponse(),
+      ),
     );
     return;
   }

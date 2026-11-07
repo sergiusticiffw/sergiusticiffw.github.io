@@ -22,6 +22,21 @@ import {
   shouldRelockAfterIdle,
 } from "@/lib/biometric-lock";
 
+/** iOS home-screen PWAs hang if Face ID is auto-prompted on first paint. */
+function isIosStandalonePwa() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const standaloneMedia = window.matchMedia("(display-mode: standalone)").matches;
+  const iosStandalone = "standalone" in navigator && Boolean(
+    (navigator as Navigator & { standalone?: boolean }).standalone,
+  );
+  if (!standaloneMedia && !iosStandalone) {
+    return false;
+  }
+  return /iP(hone|od|ad)/.test(navigator.userAgent);
+}
+
 export function BiometricLockGate({
   userId,
   email,
@@ -59,6 +74,10 @@ export function BiometricLockGate({
 
   useEffect(() => {
     if (!ready || !locked || usePassword) {
+      return;
+    }
+    if (isIosStandalonePwa()) {
+      // Show the unlock UI; user taps Deblochează (avoids WebKit freeze).
       return;
     }
     let cancelled = false;
