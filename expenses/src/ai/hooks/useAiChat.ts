@@ -16,9 +16,12 @@ import {
 import { AI_LIMITS, AI_MODELS } from '../config';
 import {
   ChatMessage,
+  TransactionPrefill,
   chatSession,
   clearChatSession,
   markInterrupted,
+  pushToolNotes,
+  recentToolNotesText,
   saveChatSession,
 } from '../chatSession';
 import { buildDataSummary } from '../context/summary';
@@ -27,14 +30,39 @@ import { buildLoanContext } from '../loans';
 import { buildChatSystemInstruction, splitFollowUps } from '../prompts';
 import { recordAiQuestion } from '../sessionStats';
 import { getAiLanguage, getShareDescriptions } from '../storage';
-import { toolDeclarations } from '../tools/definitions';
+import { getToolDeclarations } from '../tools/definitions';
 import { TOOL_LABELS, executeTool } from '../tools/executors';
+import { summarizeToolResult } from '../tools/expenseTools';
 
 const newId = () => `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 /** Keeps the last N user+model pairs. Past turns are already text-only. */
 const trimHistory = (history: GeminiContent[]) =>
   history.slice(-AI_LIMITS.maxHistoryTurns * 2);
+
+const prefillFromSuggest = (
+  result: Record<string, unknown>
+): TransactionPrefill | undefined => {
+  const payload = result.prefill;
+  if (!payload || typeof payload !== 'object') return undefined;
+  const raw = payload as Record<string, unknown>;
+  const categoryId = String(raw.categoryId || result.categoryId || '').trim();
+  let description = String(raw.description || result.query || '').trim();
+  const tags = Array.isArray(raw.tags)
+    ? raw.tags.map((tag) => String(tag).trim()).filter(Boolean)
+    : [];
+  for (const tag of tags) {
+    const hash = tag.startsWith('#') ? tag : `#${tag}`;
+    if (!description.toLowerCase().includes(hash.toLowerCase())) {
+      description = description ? `${description} ${hash}` : hash;
+    }
+  }
+  if (!categoryId && !description) return undefined;
+  return {
+    field_category: categoryId,
+    field_description: description,
+  };
+};
 
 export function useAiChat(apiKey: string) {
   const raw = useExpenseRaw();
@@ -52,10 +80,12 @@ export function useAiChat(apiKey: string) {
     () => buildLoanContext(loans, loanPayments, shareDescriptions),
     [loans, loanPayments, shareDescriptions]
   );
+  const hasLoans = loanContext.snapshots.length > 0;
   const summary = useMemo(() => {
     const base = buildDataSummary(items, currency || 'MDL', shareDescriptions);
     return loanContext.summary ? `${base}\n\n${loanContext.summary}` : base;
   }, [items, currency, shareDescriptions, loanContext.summary]);
+  const declarations = useMemo(() => getToolDeclarations(hasLoans), [hasLoans]);
 
   useEffect(() => {
     chatSession.messages = messages;
@@ -112,7 +142,15 @@ export function useAiChat(apiKey: string) {
         userTurn,
       ];
       const systemInstruction = {
-        parts: [{ text: buildChatSystemInstruction(summary, getAiLanguage()) }],
+        parts: [
+          {
+            text: buildChatSystemInstruction(
+              summary,
+              getAiLanguage(),
+              recentToolNotesText()
+            ),
+          },
+        ],
       };
       const toolContext = {
         items,
@@ -125,6 +163,8 @@ export function useAiChat(apiKey: string) {
       let previousText = '';
       let tokens = 0;
       let model: string | undefined;
+      let prefill: TransactionPrefill | undefined;
+      const turnNotes: string[] = [];
 
       try {
         for (let round = 0; round <= AI_LIMITS.maxToolRounds; round++) {
@@ -132,7 +172,7 @@ export function useAiChat(apiKey: string) {
           const request: GeminiRequest = {
             systemInstruction,
             contents,
-            tools: [{ functionDeclarations: toolDeclarations }],
+            tools: [{ functionDeclarations: declarations }],
             ...(forceAnswer && {
               toolConfig: { functionCallingConfig: { mode: 'NONE' } },
             }),
@@ -178,13 +218,20 @@ export function useAiChat(apiKey: string) {
           });
           contents.push({
             role: 'user',
-            parts: result.functionCalls.map((call) => ({
-              functionResponse: {
-                ...(call.id && { id: call.id }),
-                name: call.name,
-                response: executeTool(call.name, call.args, toolContext),
-              },
-            })),
+            parts: result.functionCalls.map((call) => {
+              const response = executeTool(call.name, call.args, toolContext);
+              turnNotes.push(summarizeToolResult(call.name, call.args, response));
+              if (call.name === 'suggest_category') {
+                prefill = prefillFromSuggest(response) || prefill;
+              }
+              return {
+                functionResponse: {
+                  ...(call.id && { id: call.id }),
+                  name: call.name,
+                  response,
+                },
+              };
+            }),
           });
         }
 
@@ -193,6 +240,7 @@ export function useAiChat(apiKey: string) {
           throw new AiError('unknown', 'Empty response');
         }
 
+        pushToolNotes(turnNotes);
         chatSession.history = [
           ...chatSession.history,
           userTurn,
@@ -205,6 +253,7 @@ export function useAiChat(apiKey: string) {
           tokens,
           model,
           ...(followUps.length && { followUps }),
+          ...(prefill && { prefill }),
         });
       } catch (error) {
         const stopped = controller.signal.aborted;
@@ -215,6 +264,7 @@ export function useAiChat(apiKey: string) {
           model ||
           AI_MODELS.chat[0];
         const partial = splitFollowUps(previousText).answer;
+        if (turnNotes.length) pushToolNotes(turnNotes);
         patchMessage(assistantId, {
           text:
             stopped || !partial
@@ -224,13 +274,23 @@ export function useAiChat(apiKey: string) {
           activity: undefined,
           tokens: tokens || undefined,
           failedModel,
+          ...(prefill && { prefill }),
         });
       } finally {
         abortRef.current = null;
         setBusy(false);
       }
     },
-    [apiKey, busy, items, loanContext, patchMessage, shareDescriptions, summary]
+    [
+      apiKey,
+      busy,
+      declarations,
+      items,
+      loanContext,
+      patchMessage,
+      shareDescriptions,
+      summary,
+    ]
   );
 
   /** Re-asks the question behind a failed answer, replacing both messages. */

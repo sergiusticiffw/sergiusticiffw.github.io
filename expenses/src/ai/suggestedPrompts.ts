@@ -30,6 +30,9 @@ export const SUGGESTED_PROMPTS = [
   'Ajută-mă să categorisez: detergent, cafea la restaurant și benzină',
   'Ce diferență e între Locuință și Articole casnice/Provizii?',
   'În ce categorie pun un abonament Netflix?',
+  'Am mai cumpărat ceva asemănător cu un covor?',
+  'Ce tag-uri am pe categoria Articole casnice?',
+  'Care sunt cheltuielile mele recurente sau abonamentele?',
 
   // Current month
   'Cum arată luna curentă față de media mea?',

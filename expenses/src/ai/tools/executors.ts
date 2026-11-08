@@ -20,6 +20,7 @@ import {
 } from '../loans';
 import type { LoanSource } from '../loanScenarios';
 import { BUDGET_TOOL_LABELS, budgetToolExecutors } from './budgetTools';
+import { EXPENSE_TOOL_LABELS, expenseToolExecutors } from './expenseTools';
 import { LOAN_TOOL_LABELS, loanToolExecutors } from './loanTools';
 
 export interface ToolContext {
@@ -328,9 +329,10 @@ const queryLoanPayments = (ctx: ToolContext, args: Args) => {
   }
   const from = startOf(args.from);
   const to = endOf(args.to);
-  rows = rows.filter(
-    (payment) => (!from || payment.date >= from) && (!to || payment.date <= to)
-  );
+  rows = rows
+    .filter((payment) => (!from || payment.date >= from) && (!to || payment.date <= to))
+    .slice()
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   const limit = clampLimit(args.limit, AI_LIMITS.toolRowsDefault, AI_LIMITS.toolRowsMax);
   const shown = rows.slice(0, limit);
   return {
@@ -354,6 +356,7 @@ const executors: Record<string, (ctx: ToolContext, args: Args) => Record<string,
       : { loans: 0 },
   get_loan_detail: loanDetail,
   query_loan_payments: queryLoanPayments,
+  ...expenseToolExecutors,
   ...budgetToolExecutors,
   ...loanToolExecutors,
 };
@@ -376,6 +379,7 @@ export const TOOL_LABELS: Record<string, string> = {
   list_loans: 'Reviewing loans',
   get_loan_detail: 'Reading the loan',
   query_loan_payments: 'Looking up loan payments',
+  ...EXPENSE_TOOL_LABELS,
   ...BUDGET_TOOL_LABELS,
   ...LOAN_TOOL_LABELS,
 };

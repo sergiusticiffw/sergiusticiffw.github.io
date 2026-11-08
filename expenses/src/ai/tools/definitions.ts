@@ -1,5 +1,6 @@
 import { GeminiFunctionDeclaration } from '../client';
 import { budgetToolDeclarations } from './budgetTools';
+import { expenseToolDeclarations } from './expenseTools';
 import { loanToolDeclarations } from './loanTools';
 
 const filterProperties = {
@@ -23,7 +24,7 @@ const filterProperties = {
   maxAmount: { type: 'number' },
 };
 
-export const toolDeclarations: GeminiFunctionDeclaration[] = [
+const coreToolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'aggregate',
     description:
@@ -57,7 +58,7 @@ export const toolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'get_month_summary',
     description:
-      'Totals, income, savings, per-category spend vs previous 3/12 month averages, biggest expenses and, for the current month, a projection.',
+      'Totals, income, savings, per-category spend vs previous 3/12 month averages, biggest expenses and, for the current month, a projection. Prefer this for month overviews that are not about budget caps. For "am I on budget" use get_budget_status instead.',
     parameters: {
       type: 'object',
       properties: { month: { type: 'string', description: 'YYYY-MM' } },
@@ -79,7 +80,11 @@ export const toolDeclarations: GeminiFunctionDeclaration[] = [
       required: ['aFrom', 'aTo', 'bFrom', 'bTo'],
     },
   },
+  ...expenseToolDeclarations,
   ...budgetToolDeclarations,
+];
+
+const loanReadDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'list_loans',
     description:
@@ -103,7 +108,7 @@ export const toolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'query_loan_payments',
     description:
-      'Loan events: payments, fees, rate changes, new principal, new recurring installment and method changes. Optional loan name and date range. Planned rows are marked.',
+      'Loan events: payments, fees, rate changes, new principal, new recurring installment and method changes. Optional loan name and date range. Planned rows are marked. Newest first.',
     parameters: {
       type: 'object',
       properties: {
@@ -114,5 +119,17 @@ export const toolDeclarations: GeminiFunctionDeclaration[] = [
       },
     },
   },
+];
+
+/** All declarations (including loans). Prefer getToolDeclarations when loan presence is known. */
+export const toolDeclarations: GeminiFunctionDeclaration[] = [
+  ...coreToolDeclarations,
+  ...loanReadDeclarations,
   ...loanToolDeclarations,
 ];
+
+/** Skip loan tools entirely when the user has no loans — fewer tokens, less model confusion. */
+export const getToolDeclarations = (hasLoans: boolean): GeminiFunctionDeclaration[] =>
+  hasLoans
+    ? toolDeclarations
+    : coreToolDeclarations;

@@ -1,6 +1,13 @@
 import type { GeminiContent } from './client';
 import { AI_LIMITS, AI_MODELS, AI_STORAGE_KEYS } from './config';
 
+export interface TransactionPrefill {
+  field_category: string;
+  field_description: string;
+  field_amount?: string;
+  field_date?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -13,10 +20,13 @@ export interface ChatMessage {
   failedModel?: string;
   /** Short next offers the model attached to this answer. */
   followUps?: string[];
+  /** Prefill for Add Transaction when suggest_category (or similar) ran. */
+  prefill?: TransactionPrefill;
 }
 
 /** Messages kept on the device; older ones are dropped. */
 const MAX_STORED_MESSAGES = 60;
+const MAX_TOOL_NOTES = 3;
 
 const interruptedText = () =>
   localStorage.getItem('language') === 'ro'
@@ -48,7 +58,29 @@ const sanitizeFollowUps = (value: unknown): string[] | undefined => {
   return questions.length ? questions : undefined;
 };
 
-const load = (): { messages: ChatMessage[]; history: GeminiContent[] } => {
+const sanitizePrefill = (value: unknown): TransactionPrefill | undefined => {
+  if (!value || typeof value !== 'object') return undefined;
+  const raw = value as Record<string, unknown>;
+  const field_category = String(raw.field_category || '').trim();
+  const field_description = String(raw.field_description || '').trim();
+  if (!field_category && !field_description) return undefined;
+  return {
+    field_category,
+    field_description,
+    ...(typeof raw.field_amount === 'string' && raw.field_amount
+      ? { field_amount: raw.field_amount }
+      : {}),
+    ...(typeof raw.field_date === 'string' && raw.field_date
+      ? { field_date: raw.field_date }
+      : {}),
+  };
+};
+
+const load = (): {
+  messages: ChatMessage[];
+  history: GeminiContent[];
+  toolNotes: string[];
+} => {
   try {
     const stored = JSON.parse(
       localStorage.getItem(AI_STORAGE_KEYS.chat) || 'null'
@@ -61,12 +93,20 @@ const load = (): { messages: ChatMessage[]; history: GeminiContent[] } => {
         stored.messages.map((message: ChatMessage) => ({
           ...message,
           followUps: sanitizeFollowUps(message.followUps),
+          prefill: sanitizePrefill(message.prefill),
         }))
       ),
       history: stored.history,
+      toolNotes: Array.isArray(stored.toolNotes)
+        ? stored.toolNotes
+            .filter((note: unknown): note is string => typeof note === 'string')
+            .map((note: string) => note.trim())
+            .filter(Boolean)
+            .slice(-MAX_TOOL_NOTES)
+        : [],
     };
   } catch {
-    return { messages: [], history: [] };
+    return { messages: [], history: [], toolNotes: [] };
   }
 };
 
@@ -77,12 +117,15 @@ const load = (): { messages: ChatMessage[]; history: GeminiContent[] } => {
 export const chatSession: {
   messages: ChatMessage[];
   history: GeminiContent[];
+  /** Compact tool summaries from recent turns, injected into the next system prompt. */
+  toolNotes: string[];
 } = load();
 
 export const saveChatSession = () => {
   const data = {
     messages: chatSession.messages.slice(-MAX_STORED_MESSAGES),
     history: chatSession.history.slice(-AI_LIMITS.maxHistoryTurns * 2),
+    toolNotes: chatSession.toolNotes.slice(-MAX_TOOL_NOTES),
   };
   try {
     localStorage.setItem(AI_STORAGE_KEYS.chat, JSON.stringify(data));
@@ -97,5 +140,17 @@ window.addEventListener('pagehide', saveChatSession);
 export const clearChatSession = () => {
   chatSession.messages = [];
   chatSession.history = [];
+  chatSession.toolNotes = [];
   localStorage.removeItem(AI_STORAGE_KEYS.chat);
 };
+
+export const pushToolNotes = (lines: string[]) => {
+  const note = lines
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join('\n');
+  if (!note) return;
+  chatSession.toolNotes = [...chatSession.toolNotes, note].slice(-MAX_TOOL_NOTES);
+};
+
+export const recentToolNotesText = () => chatSession.toolNotes.join('\n---\n');

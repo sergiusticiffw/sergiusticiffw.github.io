@@ -25,6 +25,30 @@ export const CAPABILITY_PROMPTS: {
   {
     kind: 'expense',
     prompt: L(
+      'Am mai cumpărat ceva asemănător cu un covor?',
+      'Have I bought something similar to a carpet before?',
+      'Покупал ли я уже что-то похожее на ковёр?'
+    ),
+  },
+  {
+    kind: 'expense',
+    prompt: L(
+      'Care sunt cheltuielile mele recurente sau abonamentele?',
+      'What are my recurring expenses or subscriptions?',
+      'Какие у меня регулярные расходы или подписки?'
+    ),
+  },
+  {
+    kind: 'expense',
+    prompt: L(
+      'Ce tag-uri am pe categoria Articole casnice?',
+      'Which tags do I have on the Household category?',
+      'Какие теги у меня в категории товаров для дома?'
+    ),
+  },
+  {
+    kind: 'expense',
+    prompt: L(
       'Cum arată luna curentă față de media mea?',
       'How does this month look versus my usual average?',
       'Как выглядит текущий месяц по сравнению с моим обычным средним?'

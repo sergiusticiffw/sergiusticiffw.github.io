@@ -11,6 +11,7 @@ import {
   FiMic,
   FiMicOff,
   FiPieChart,
+  FiPlus,
   FiRefreshCw,
   FiRotateCcw,
   FiShuffle,
@@ -75,6 +76,11 @@ const ACTIVITY_KEYS: Record<string, string> = {
   'Reading the schedule': 'assistant.readingSchedule',
   'Comparing loans': 'assistant.comparingLoans',
   'Comparing prepay and invest': 'assistant.prepayVsInvest',
+  'Simulating combined loan changes': 'assistant.simulatingScenario',
+  'Suggesting a category': 'assistant.suggestingCategory',
+  'Listing category tags': 'assistant.listingTags',
+  'Finding similar expenses': 'assistant.findingSimilar',
+  'Detecting recurring expenses': 'assistant.detectingRecurring',
 };
 
 const useOnline = () => {
@@ -96,15 +102,19 @@ const AssistantMessage: React.FC<{
   onRetry?: () => void;
   onRetryAlt?: () => void;
   onFollowUp?: (question: string) => void;
+  onAddPrefill?: () => void;
   altModel?: string | null;
-}> = ({ message, onRetry, onRetryAlt, onFollowUp, altModel }) => {
+}> = ({ message, onRetry, onRetryAlt, onFollowUp, onAddPrefill, altModel }) => {
   const { t } = useLocalization();
   const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard?.writeText(message.text).then(() => {
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.text);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard may be blocked (non-secure context / permissions).
+    }
   };
   const activity = message.activity
     ? t(ACTIVITY_KEYS[message.activity] || 'assistant.working')
@@ -124,20 +134,25 @@ const AssistantMessage: React.FC<{
         )}
         {message.text && <AiMarkdown text={message.text} />}
         {message.status !== 'streaming' && message.text && (
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-app-muted">
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-app-muted">
             <button
               type="button"
               onClick={copy}
               aria-label={t('assistant.copy')}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-app-muted hover:bg-white/5 hover:text-app-secondary"
+              className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 transition-colors ${
+                copied
+                  ? 'bg-emerald-500/15 text-emerald-300'
+                  : 'text-app-muted hover:bg-white/5 hover:text-app-secondary'
+              }`}
             >
               {copied ? <FiCheck /> : <FiCopy />}
+              <span>{copied ? t('assistant.copied') : t('assistant.copy')}</span>
             </button>
             {onRetry && (
               <button
                 type="button"
                 onClick={onRetry}
-                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 hover:bg-white/5 hover:text-app-secondary"
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 hover:bg-white/5 hover:text-app-secondary"
               >
                 <FiRefreshCw />
                 {t('assistant.retry')}
@@ -147,7 +162,7 @@ const AssistantMessage: React.FC<{
               <button
                 type="button"
                 onClick={onRetryAlt}
-                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 hover:bg-white/5 hover:text-app-secondary"
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 hover:bg-white/5 hover:text-app-secondary"
               >
                 <FiRefreshCw />
                 {t('assistant.retryWith').replace(
@@ -157,17 +172,27 @@ const AssistantMessage: React.FC<{
               </button>
             )}
             {message.status === 'stopped' && (
-              <span>{t('assistant.stopped')}</span>
+              <span className="px-1.5">{t('assistant.stopped')}</span>
             )}
             {!!message.tokens && (
-              <span>
+              <span className="px-1.5">
                 {formatTokens(message.tokens)} {t('assistant.tokens')}
               </span>
             )}
             {modelLabel(message.model) && (
-              <span>{modelLabel(message.model)}</span>
+              <span className="px-1.5">{modelLabel(message.model)}</span>
             )}
           </div>
+        )}
+        {message.status === 'done' && message.prefill && onAddPrefill && (
+          <button
+            type="button"
+            onClick={onAddPrefill}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--color-app-accent)]/40 bg-[var(--color-app-accent)]/10 px-3.5 py-2 text-[0.8rem] font-medium text-[var(--color-app-accent)] transition-colors hover:bg-[var(--color-app-accent)]/20"
+          >
+            <FiPlus />
+            {t('assistant.addWithCategory')}
+          </button>
         )}
         {message.status === 'done' &&
           !!message.followUps?.length &&
@@ -387,6 +412,15 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
                   altModel ? () => retry(message.id, altModel) : undefined
                 }
                 onFollowUp={latest && !busy ? submit : undefined}
+                onAddPrefill={
+                  message.prefill
+                    ? () =>
+                        navigate({
+                          to: '/expenses',
+                          state: { prefill: message.prefill },
+                        })
+                    : undefined
+                }
                 altModel={altModel}
               />
             );

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useAuthState } from '@shared/context/context';
 import { useExpenseData } from '@stores/expenseStore';
 import { useNotification } from '@shared/context/notification';
@@ -58,6 +59,9 @@ const NewHome = () => {
   const [showDeleteModal, setShowDeleteModal] = useState<string | false>(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [addFormValues, setAddFormValues] = useState<Record<string, string>>(
+    {}
+  );
   const [focusedItem, setFocusedItem] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [transactionFormSubmitting, setTransactionFormSubmitting] =
@@ -65,6 +69,40 @@ const NewHome = () => {
   const [activeView, setActiveView] = useState<'list' | 'calendar'>('list');
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const apiClient = useApiClient();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const routePrefill = (
+    location.state as
+      | {
+          prefill?: {
+            field_category?: string;
+            field_description?: string;
+            field_amount?: string;
+            field_date?: string;
+          };
+        }
+      | undefined
+  )?.prefill;
+
+  useEffect(() => {
+    if (!routePrefill) return;
+    setAddFormValues({
+      ...(routePrefill.field_category
+        ? { field_category: routePrefill.field_category }
+        : {}),
+      ...(routePrefill.field_description
+        ? { field_description: routePrefill.field_description }
+        : {}),
+      ...(routePrefill.field_amount
+        ? { field_amount: routePrefill.field_amount }
+        : {}),
+      ...(routePrefill.field_date
+        ? { field_date: routePrefill.field_date }
+        : {}),
+    });
+    setShowAddModal(true);
+    navigate({ to: location.pathname, replace: true, state: {} });
+  }, [routePrefill, navigate, location.pathname]);
 
   // Event-driven pending sync tracking (no polling) - for expenses
   const pendingSyncIds = usePendingSyncIds(['expense']);
@@ -417,6 +455,7 @@ const NewHome = () => {
         onClose={(e) => {
           e.preventDefault();
           setShowAddModal(false);
+          setAddFormValues({});
         }}
         title={t('transactionForm.addTransaction')}
         footer={
@@ -438,14 +477,16 @@ const NewHome = () => {
         }
       >
         <TransactionForm
+          key={`add-${addFormValues.field_category || ''}-${addFormValues.field_description || ''}`}
           formType="add"
-          values={{}}
+          values={addFormValues}
           hideSubmitButton={true}
           onFormReady={(_submitHandler, isSubmitting) => {
             setTransactionFormSubmitting(isSubmitting);
           }}
           onSuccess={() => {
             setShowAddModal(false);
+            setAddFormValues({});
           }}
         />
       </VaulDrawer>
@@ -612,7 +653,10 @@ const NewHome = () => {
           {!filterPanelOpen && (
             <button
               className={FAB_CLASS}
-              onClick={() => setShowAddModal(true)}
+              onClick={() => {
+                setAddFormValues({});
+                setShowAddModal(true);
+              }}
               title={t('transactionForm.addTransaction')}
             >
               <FiPlus />
