@@ -9,6 +9,22 @@ export const CAPABILITY_PROMPTS: {
   {
     kind: 'expense',
     prompt: L(
+      'Dacă cumpăr un covor, în ce categorie să-l pun?',
+      'If I buy a carpet, which category should I put it in?',
+      'Если я куплю ковёр, в какую категорию его поставить?'
+    ),
+  },
+  {
+    kind: 'expense',
+    prompt: L(
+      'Ajută-mă să categorisez: unde pun detergent, unde pun o lampă?',
+      'Help me categorize: where do detergent and a lamp go?',
+      'Помоги категоризировать: куда поставить моющее средство и лампу?'
+    ),
+  },
+  {
+    kind: 'expense',
+    prompt: L(
       'Cum arată luna curentă față de media mea?',
       'How does this month look versus my usual average?',
       'Как выглядит текущий месяц по сравнению с моим обычным средним?'

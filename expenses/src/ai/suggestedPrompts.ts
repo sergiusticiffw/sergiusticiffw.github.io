@@ -21,6 +21,16 @@ const LOAN_SIMULATION_PROMPTS = [
 ];
 
 export const SUGGESTED_PROMPTS = [
+  // Categorization help
+  'Dacă cumpăr un covor, în ce categorie să-l pun?',
+  'Unde pun o mașină de spălat: Locuință sau Articole casnice?',
+  'În ce categorie intră o lampă de birou?',
+  'Dacă iau flori pentru cineva, e Cadouri sau Personal?',
+  'Unde categorizez o plată la stomatolog?',
+  'Ajută-mă să categorisez: detergent, cafea la restaurant și benzină',
+  'Ce diferență e între Locuință și Articole casnice/Provizii?',
+  'În ce categorie pun un abonament Netflix?',
+
   // Current month
   'Cum arată luna curentă față de media mea?',
   'Cât voi cheltui până la sfârșitul lunii, în ritmul actual?',
