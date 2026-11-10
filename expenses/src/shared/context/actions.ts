@@ -10,6 +10,7 @@ import {
 } from '../../crypto/encryptionState';
 import { resetTagsOnLogout } from '../../tags/catalog';
 import { clearUnlockOnLogout, markUnlocked } from '../../features/privacy/biometricLock';
+import { hydrateEmergencyFund } from '../../features/goals/store';
 import { getStoredCurrentUser } from '@shared/utils/authStorage';
 
 export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
@@ -35,6 +36,7 @@ export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
       );
       const currency = (data.current_user as { currency?: string })?.currency;
       if (currency) hydrateSettings({ currency });
+      hydrateEmergencyFund();
       const uid = String(
         (data.current_user as { uid?: string | number }).uid ?? ''
       );

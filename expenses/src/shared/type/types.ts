@@ -213,4 +213,6 @@ export interface SettingsState {
   currency: string;
   theme: string;
   onboardingComplete: boolean;
+  /** Emergency fund / Goals feature. Off by default. */
+  goalsEnabled: boolean;
 }

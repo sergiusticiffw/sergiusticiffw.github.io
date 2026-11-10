@@ -1,10 +1,12 @@
 import { Link } from '@tanstack/react-router';
 import { useLocalization } from '@shared/context/localization';
+import { useGoalsEnabled } from '@stores/settingsStore';
 import {
   FiHome,
   FiBarChart2,
   FiDollarSign,
   FiCreditCard,
+  FiShield,
   FiUser,
   FiZap,
 } from 'react-icons/fi';
@@ -12,6 +14,7 @@ import React, { useState } from 'react';
 
 const Navbar = () => {
   const { t } = useLocalization();
+  const goalsEnabled = useGoalsEnabled();
   const [cssClass, setCssClass] = useState('closed');
   // const [xDown, setXDown] = useState<number | null>(null);
   // const [yDown, setYDown] = useState<number | null>(null);
@@ -55,7 +58,7 @@ const Navbar = () => {
             title={t('nav.home')}
             activeOptions={{ exact: true }}
             activeProps={{ className: 'active' }}
-            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            className="text-app-muted text-[24px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiHome />
           </Link>
@@ -65,7 +68,7 @@ const Navbar = () => {
             to="/expenses/charts"
             title={t('nav.charts')}
             activeProps={{ className: 'active' }}
-            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            className="text-app-muted text-[24px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiBarChart2 />
           </Link>
@@ -75,7 +78,7 @@ const Navbar = () => {
             to="/expenses/income"
             title={t('nav.income')}
             activeProps={{ className: 'active' }}
-            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            className="text-app-muted text-[24px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiDollarSign />
           </Link>
@@ -85,17 +88,29 @@ const Navbar = () => {
             to="/expenses/loans"
             title={t('nav.loans')}
             activeProps={{ className: 'active' }}
-            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            className="text-app-muted text-[24px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiCreditCard />
           </Link>
         </li>
+        {goalsEnabled && (
+          <li className="h-full flex-1 flex items-center justify-center">
+            <Link
+              to="/expenses/goals"
+              title={t('nav.goals')}
+              activeProps={{ className: 'active' }}
+              className="text-app-muted text-[24px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            >
+              <FiShield />
+            </Link>
+          </li>
+        )}
         <li className="h-full flex-1 flex items-center justify-center">
           <Link
             to="/expenses/assistant"
             title={t('nav.assistant')}
             activeProps={{ className: 'active' }}
-            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            className="text-app-muted text-[24px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiZap />
           </Link>
@@ -105,7 +120,7 @@ const Navbar = () => {
             to="/expenses/user"
             title={t('nav.profile')}
             activeProps={{ className: 'active' }}
-            className="text-app-muted text-[28px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
+            className="text-app-muted text-[24px] h-full w-full flex items-center justify-center transition-all duration-200 hover:text-app-secondary hover:[&_svg]:scale-110 [&.active]:!text-[var(--color-app-accent)] [&.active_svg]:[stroke-width:2.5] [&.active_svg]:[filter:drop-shadow(0_2px_8px_var(--color-app-accent-shadow))]"
           >
             <FiUser />
           </Link>

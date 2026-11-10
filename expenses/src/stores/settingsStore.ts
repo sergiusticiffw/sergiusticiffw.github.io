@@ -7,6 +7,7 @@ import { DEFAULT_THEME_ID, normalizeThemeId } from '@shared/constants/themes';
 
 const THEME_KEY = 'theme';
 const ONBOARDING_KEY = 'onboardingComplete';
+const GOALS_ENABLED_KEY = 'goalsEnabled';
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -31,6 +32,7 @@ const initialState: SettingsState = {
   currency: 'MDL',
   theme: readTheme(),
   onboardingComplete: readJson(ONBOARDING_KEY, false),
+  goalsEnabled: readJson(GOALS_ENABLED_KEY, false),
 };
 
 const settingsStore = new Store<SettingsState>(initialState);
@@ -51,6 +53,10 @@ export function useOnboardingComplete(): boolean {
   return useStore(settingsStore, (s) => s.onboardingComplete);
 }
 
+export function useGoalsEnabled(): boolean {
+  return useStore(settingsStore, (s) => s.goalsEnabled);
+}
+
 function persist<K extends keyof SettingsState>(key: string, value: SettingsState[K]) {
   localStorage.setItem(key, JSON.stringify(value));
 }
@@ -67,6 +73,11 @@ export function setSettingsTheme(theme: string): void {
 export function setOnboardingComplete(value: boolean): void {
   persist(ONBOARDING_KEY, value);
   settingsStore.setState((s) => ({ ...s, onboardingComplete: value }));
+}
+
+export function setGoalsEnabled(value: boolean): void {
+  persist(GOALS_ENABLED_KEY, value);
+  settingsStore.setState((s) => ({ ...s, goalsEnabled: value }));
 }
 
 export function hydrateSettings(partial: Partial<SettingsState>): void {

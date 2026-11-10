@@ -6,13 +6,24 @@ import {
   setSettingsCurrency,
   useSettingsTheme,
   setSettingsTheme,
+  useGoalsEnabled,
+  setGoalsEnabled,
 } from '@stores/settingsStore';
 import { APP_THEMES } from '@shared/constants/themes';
 import { useNotification } from '@shared/context/notification';
 import { useLocalization } from '@shared/context/localization';
 import { logout } from '@shared/context/actions';
 import { useNavigate } from '@tanstack/react-router';
-import { FiUser, FiLogOut, FiSettings, FiBarChart2, FiDroplet, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import {
+  FiUser,
+  FiLogOut,
+  FiSettings,
+  FiBarChart2,
+  FiDroplet,
+  FiShield,
+  FiChevronDown,
+  FiChevronUp,
+} from 'react-icons/fi';
 import ChartsVisibilityDnd from '@shared/components/ChartsVisibilityDnd';
 import { fetchRequest, buildApiUrl } from '@shared/utils/utils';
 import {
@@ -33,6 +44,17 @@ import PrivacySettings from '../../../features/privacy/PrivacySettings';
 import BiometricSettings from '../../../features/privacy/BiometricSettings';
 import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 import { googleLogout } from '@react-oauth/google';
+import { DriveError } from '../../../crypto/driveVault';
+import {
+  readGoalsFromDrive,
+  requireSessionUid,
+  saveGoalsToDrive,
+} from '../../../features/goals/driveSync';
+import {
+  getEmergencyFund,
+  replaceEmergencyFund,
+} from '../../../features/goals/store';
+import { newerEmergencyFund } from '../../../features/goals/model';
 
 const Profile = () => {
   const showNotification = useNotification();
@@ -42,6 +64,8 @@ const Profile = () => {
   const { userDetails, token } = useAuthState();
   const currency = useSettingsCurrency();
   const currentTheme = useSettingsTheme();
+  const goalsEnabled = useGoalsEnabled();
+  const [goalsSyncing, setGoalsSyncing] = useState(false);
   const [state, setState] = useState(() => ({
     visibleCharts: readStoredVisibleCharts(),
   }));
@@ -50,6 +74,62 @@ const Profile = () => {
   );
   const [chartsAccordionOpen, setChartsAccordionOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Pull Goals package (enabled + all fund fields) from Drive on Profile open.
+  useEffect(() => {
+    let cancelled = false;
+    const pull = async () => {
+      if (!navigator.onLine) return;
+      try {
+        const uid = requireSessionUid();
+        const remote = await readGoalsFromDrive(uid);
+        if (cancelled || !remote) return;
+        const localFund = getEmergencyFund();
+        const merged = newerEmergencyFund(localFund, remote.fund);
+        replaceEmergencyFund(merged);
+        const remoteWins =
+          !localFund.updatedAt ||
+          (Boolean(remote.fund.updatedAt) &&
+            (remote.fund.updatedAt as string) >= (localFund.updatedAt || ''));
+        if (remoteWins) setGoalsEnabled(remote.enabled);
+      } catch {
+        // Local toggle still works if Drive auth is cancelled.
+      }
+    };
+    pull();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleGoalsEnabledChange = async (checked: boolean) => {
+    setGoalsEnabled(checked);
+    const stamped = {
+      ...getEmergencyFund(),
+      updatedAt: new Date().toISOString(),
+    };
+    replaceEmergencyFund(stamped);
+
+    if (!navigator.onLine) {
+      showNotification(t('goals.savedOffline'), notificationType.SUCCESS);
+      return;
+    }
+
+    setGoalsSyncing(true);
+    try {
+      const uid = requireSessionUid();
+      await saveGoalsToDrive(uid, { fund: stamped, enabled: checked });
+      showNotification(t('goals.savedDrive'), notificationType.SUCCESS);
+    } catch (err) {
+      const message =
+        err instanceof DriveError
+          ? t('goals.syncErrorDrive')
+          : t('goals.syncError');
+      showNotification(message, notificationType.ERROR);
+    } finally {
+      setGoalsSyncing(false);
+    }
+  };
 
   const handleLanguageChange = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -254,6 +334,35 @@ const Profile = () => {
         <AiSettings />
 
         <TagSettings />
+
+        {/* Emergency fund / Goals */}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
+          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
+            <FiShield />
+            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
+              {t('profile.goalsSettings')}
+            </h3>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <span
+                id="goals-enabled-label"
+                className="block text-body text-app-secondary"
+              >
+                {t('profile.goalsEnable')}
+              </span>
+              <p className="m-0 mt-1 text-xs text-app-muted">
+                {t('profile.goalsEnableHint')}
+              </p>
+            </div>
+            <Switch
+              checked={goalsEnabled}
+              onCheckedChange={handleGoalsEnabledChange}
+              disabled={goalsSyncing}
+              aria-labelledby="goals-enabled-label"
+            />
+          </div>
+        </div>
 
         {/* Charts Settings (accordion, closed by default) */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden md:rounded-[10px] transition-colors active:border-white/10">

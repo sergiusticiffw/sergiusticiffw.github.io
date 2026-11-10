@@ -23,7 +23,9 @@ export {
   useSettings,
   useSettingsCurrency,
   useSettingsTheme,
+  useGoalsEnabled,
   setSettingsCurrency,
   setSettingsTheme,
+  setGoalsEnabled,
   hydrateSettings,
 } from './settingsStore';

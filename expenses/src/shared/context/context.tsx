@@ -13,6 +13,7 @@ import { expenseDispatch } from '@stores/expenseStore';
 import { hydrateSettings } from '@stores/settingsStore';
 import { refreshStatus } from '../../crypto/encryptionState';
 import { refreshTagCatalog } from '../../tags/store';
+import { hydrateEmergencyFund } from '../../features/goals/store';
 
 const AuthStateContext = React.createContext<AuthState | null>(null);
 const AuthDispatchContext =
@@ -40,6 +41,7 @@ function SyncEffect(): null {
   useEffect(() => {
     if (!token || !userIsLoggedIn) return;
     if (currency) hydrateSettings({ currency });
+    hydrateEmergencyFund();
     refreshStatus(true);
     refreshTagCatalog();
     import('@shared/utils/indexedDB').then(

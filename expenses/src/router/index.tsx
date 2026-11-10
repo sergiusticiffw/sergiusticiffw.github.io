@@ -18,9 +18,11 @@ import Login from '@shared/pages/Login';
 import NewHome from '@features/expenses/pages/NewHome';
 import Loans from '@features/loans/pages/Loans';
 import Loan from '@features/loans/pages/Loan';
+import Goals from '@features/goals/pages/Goals';
 import { logger } from '@shared/utils/logger';
 import { getStoredToken } from '@shared/utils/authStorage';
 import { useAuthState } from '@shared/context/context';
+import { settingsStore } from '@stores/settingsStore';
 import {
   needsEncryptionKey,
   useEncryptionState,
@@ -31,6 +33,13 @@ import BiometricLockGate from '../features/privacy/BiometricLockGate';
 
 function requireAuth() {
   if (!getStoredToken()) throw redirect({ to: '/expenses/login' });
+}
+
+function requireGoalsEnabled() {
+  requireAuth();
+  if (!settingsStore.state.goalsEnabled) {
+    throw redirect({ to: '/expenses/user' });
+  }
 }
 
 function RootComponent() {
@@ -121,6 +130,13 @@ const loanIdRoute = createRoute({
   component: Loan,
 });
 
+const goalsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/expenses/goals',
+  beforeLoad: requireGoalsEnabled,
+  component: Goals,
+});
+
 const assistantRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/expenses/assistant',
@@ -143,6 +159,7 @@ const routeTree = rootRoute.addChildren([
   incomeRoute,
   loansRoute,
   loanIdRoute,
+  goalsRoute,
   assistantRoute,
   userRoute,
 ]);

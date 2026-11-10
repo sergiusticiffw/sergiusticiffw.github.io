@@ -1,4 +1,4 @@
-// Google Drive App Data as a vault for the encryption key only (never for expense data).
+// Google Drive App Data vault: encryption key + small preference files (never expense rows).
 // Uses a Google Identity Services popup, so the page state (e.g. a generated key) survives.
 import { normalizeKey } from './keyFormat';
 
@@ -144,14 +144,16 @@ const driveFetch = async (url: string, init: RequestInit = {}) => {
   return response;
 };
 
-const findFile = async (): Promise<string | null> => {
-  const query = encodeURIComponent(`name='${FILE_NAME}'`);
+const findFileByName = async (name: string): Promise<string | null> => {
+  const query = encodeURIComponent(`name='${name}'`);
   const response = await driveFetch(
     `${API}?spaces=appDataFolder&q=${query}&fields=files(id,name)&pageSize=10`
   );
   const { files } = await response.json();
   return files?.[0]?.id ?? null;
 };
+
+const findFile = async (): Promise<string | null> => findFileByName(FILE_NAME);
 
 const readFile = async (id: string): Promise<VaultFile | null> => {
   const response = await driveFetch(`${API}/${id}?alt=media`);
@@ -161,6 +163,54 @@ const readFile = async (id: string): Promise<VaultFile | null> => {
   } catch {
     return null;
   }
+};
+
+/** Read a JSON file from Drive appDataFolder, or null if missing. */
+export const readAppDataJson = async (
+  name: string
+): Promise<unknown | null> => {
+  const id = await findFileByName(name);
+  if (!id) return null;
+  const response = await driveFetch(`${API}/${id}?alt=media`);
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
+/** Create or overwrite a JSON file in Drive appDataFolder. */
+export const writeAppDataJson = async (
+  name: string,
+  content: object
+): Promise<void> => {
+  const body = new Blob([JSON.stringify(content)], {
+    type: 'application/json',
+  });
+  const id = await findFileByName(name);
+  if (id) {
+    await driveFetch(`${UPLOAD_API}/${id}?uploadType=media`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
+    return;
+  }
+  const metadata = {
+    name,
+    parents: ['appDataFolder'],
+    mimeType: 'application/json',
+  };
+  const form = new FormData();
+  form.append(
+    'metadata',
+    new Blob([JSON.stringify(metadata)], { type: 'application/json' })
+  );
+  form.append('file', body);
+  await driveFetch(`${UPLOAD_API}?uploadType=multipart&fields=id`, {
+    method: 'POST',
+    body: form,
+  });
 };
 
 /** Returns the stored key for this user, or null if there's none. */
@@ -183,12 +233,13 @@ export const saveKeyToDrive = async (uid: string, keyText: string): Promise<void
     throw new DriveKeyConflictError(existing);
   }
   if (!existing) {
-    const metadata = { name: FILE_NAME, parents: ['appDataFolder'], mimeType: 'application/json' };
-    const content: VaultFile = { v: 1, uid: String(uid), key, createdAt: new Date().toISOString() };
-    const body = new FormData();
-    body.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-    body.append('file', new Blob([JSON.stringify(content)], { type: 'application/json' }));
-    await driveFetch(`${UPLOAD_API}?uploadType=multipart&fields=id`, { method: 'POST', body });
+    const content: VaultFile = {
+      v: 1,
+      uid: String(uid),
+      key,
+      createdAt: new Date().toISOString(),
+    };
+    await writeAppDataJson(FILE_NAME, content);
   }
   if ((await readKeyFromDrive(uid)) !== key) {
     throw new DriveError("The key couldn't be verified in Google Drive. Copy it somewhere safe instead.");
