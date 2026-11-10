@@ -7,7 +7,7 @@ interface AmountFieldProps {
   id: string;
   name: string;
   label: string;
-  hint: string;
+  hint?: string;
   value: string;
   onChange: (value: string) => void;
   currency: string;
@@ -15,6 +15,8 @@ interface AmountFieldProps {
   required?: boolean;
   placeholder?: string;
   size?: 'lg' | 'md';
+  /** Allow withdrawals as negative amounts (ledger only). */
+  allowNegative?: boolean;
 }
 
 export function AmountField({
@@ -29,10 +31,14 @@ export function AmountField({
   required = false,
   placeholder = '0',
   size = 'md',
+  allowNegative = false,
 }: AmountFieldProps) {
   const [focused, setFocused] = useState(false);
   const numeric = Number(value);
-  const showPreview = Number.isFinite(numeric) && numeric > 0;
+  const showPreview =
+    Number.isFinite(numeric) &&
+    numeric !== 0 &&
+    (allowNegative || numeric > 0);
 
   return (
     <div>
@@ -69,7 +75,7 @@ export function AmountField({
             name={name}
             type="number"
             inputMode="decimal"
-            min={0}
+            min={allowNegative ? undefined : 0}
             step="0.01"
             required={required}
             value={value}
@@ -96,9 +102,17 @@ export function AmountField({
           </span>
         </div>
         <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] px-4 py-2.5 sm:px-5">
-          <span className="text-caption text-app-muted">{hint}</span>
+          <span className="text-caption text-app-muted">{hint ?? ''}</span>
           {showPreview && (
-            <span className="text-caption tabular-nums text-app-secondary">
+            <span
+              className={cn(
+                'text-caption tabular-nums',
+                numeric < 0
+                  ? 'text-[color-mix(in_srgb,var(--color-expense)_85%,white)]'
+                  : 'text-app-secondary'
+              )}
+            >
+              {numeric > 0 ? '+' : ''}
               {formatNumber(numeric)} {currency}
             </span>
           )}

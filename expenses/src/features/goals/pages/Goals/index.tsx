@@ -3,7 +3,7 @@ import {
   FiCalendar,
   FiCloud,
   FiCloudOff,
-  FiFlag,
+  FiEdit2,
   FiLoader,
   FiPlusCircle,
   FiShield,
@@ -18,37 +18,82 @@ import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/ex
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useLocalization } from '@shared/context/localization';
 import { useNotification } from '@shared/context/notification';
-import { PageHeader, StatCard, StatsGrid } from '@shared/components/Common';
+import {
+  DeleteConfirmDrawer,
+  PageHeader,
+  StatCard,
+  StatsGrid,
+} from '@shared/components/Common';
+import VaulDrawer from '@shared/components/VaulDrawer';
 import { Card, ProgressRing, SettingsSection, cn } from '@shared/ui';
 import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
 import { formatNumber } from '@shared/utils/utils';
 import { notificationType } from '@shared/utils/constants';
 import { DriveError } from '../../../../crypto/driveVault';
 import { AmountField } from '../../components/AmountField';
+import ContributionHistory from '../../components/ContributionHistory';
 import {
+  NON_ESSENTIAL_CATEGORY_LABEL_KEYS,
   TARGET_MONTH_OPTIONS,
   TargetMonths,
   averageMonthlySpend,
+  currentMonthKey,
+  groupContributionsByMonth,
   monthsCovered,
   monthsToGoal,
   newerEmergencyFund,
   parseAmount,
+  parseLedgerAmount,
   progressRatio,
   resolveTarget,
 } from '../../model';
 import {
+  hasDriveAccessToken,
   readGoalsFromDrive,
+  readGoalsFromDriveSilent,
   requireSessionUid,
   saveGoalsToDrive,
 } from '../../driveSync';
 import {
+  addEmergencyFundContribution,
   getEmergencyFund,
+  removeEmergencyFundContribution,
   replaceEmergencyFund,
   setEmergencyFund,
+  updateEmergencyFundContribution,
   useEmergencyFund,
 } from '../../store';
+import { getMonthNames } from '@shared/utils/constants';
 
-type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error' | 'offline';
+type SyncStatus =
+  | 'idle'
+  | 'syncing'
+  | 'synced'
+  | 'local'
+  | 'error'
+  | 'offline';
+
+const applyRemoteBundle = (
+  remote: Awaited<ReturnType<typeof readGoalsFromDrive>>,
+  localEnabled: boolean
+) => {
+  const localFund = getEmergencyFund();
+  const merged = newerEmergencyFund(localFund, remote?.fund ?? null);
+  replaceEmergencyFund(merged);
+
+  let enabled = localEnabled;
+  if (remote) {
+    const remoteWins =
+      !localFund.updatedAt ||
+      (Boolean(remote.fund.updatedAt) &&
+        (remote.fund.updatedAt as string) >= (localFund.updatedAt || ''));
+    if (remoteWins) {
+      enabled = remote.enabled;
+      setGoalsEnabled(remote.enabled);
+    }
+  }
+  return { merged, enabled, localFund, remote };
+};
 
 const Goals = () => {
   const { t } = useLocalization();
@@ -60,18 +105,24 @@ const Goals = () => {
   const apiClient = useApiClient();
   const noData = data.groupedData === null;
 
-  const [balanceInput, setBalanceInput] = useState(String(fund.balance || ''));
-  const [customTargetInput, setCustomTargetInput] = useState(
-    fund.customTarget != null ? String(fund.customTarget) : ''
-  );
   const [contributionInput, setContributionInput] = useState(
     fund.monthlyContribution != null ? String(fund.monthlyContribution) : ''
   );
   const [targetMonths, setTargetMonths] = useState<TargetMonths>(
     fund.targetMonths
   );
+  const [addAmountInput, setAddAmountInput] = useState('');
+  const [addMonth, setAddMonth] = useState(currentMonthKey);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editAmountInput, setEditAmountInput] = useState('');
+  const [editMonth, setEditMonth] = useState(currentMonthKey);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  const monthNames = getMonthNames();
 
   useEffect(() => {
     if (noData && apiClient) {
@@ -80,22 +131,13 @@ const Goals = () => {
   }, [noData, apiClient, dataDispatch]);
 
   useEffect(() => {
-    setBalanceInput(fund.balance ? String(fund.balance) : '');
-    setCustomTargetInput(
-      fund.customTarget != null ? String(fund.customTarget) : ''
-    );
     setContributionInput(
       fund.monthlyContribution != null ? String(fund.monthlyContribution) : ''
     );
     setTargetMonths(fund.targetMonths);
-  }, [
-    fund.balance,
-    fund.customTarget,
-    fund.monthlyContribution,
-    fund.targetMonths,
-  ]);
+  }, [fund.monthlyContribution, fund.targetMonths]);
 
-  // Pull full Goals package from Drive (balance, target, contribution, enabled).
+  // Silent pull on open — never open a Google login popup automatically.
   useEffect(() => {
     let cancelled = false;
     const pull = async () => {
@@ -103,44 +145,19 @@ const Goals = () => {
         setSyncStatus('offline');
         return;
       }
+      if (!hasDriveAccessToken()) {
+        setSyncStatus('local');
+        return;
+      }
       setSyncStatus('syncing');
       try {
         const uid = requireSessionUid();
-        const remote = await readGoalsFromDrive(uid);
+        const remote = await readGoalsFromDriveSilent(uid);
         if (cancelled) return;
-
-        const localFund = getEmergencyFund();
-        const merged = newerEmergencyFund(localFund, remote?.fund ?? null);
-        replaceEmergencyFund(merged);
-
-        let enabled = goalsEnabled;
-        if (remote) {
-          const remoteWins =
-            !localFund.updatedAt ||
-            (Boolean(remote.fund.updatedAt) &&
-              (remote.fund.updatedAt as string) >= (localFund.updatedAt || ''));
-          if (remoteWins) {
-            enabled = remote.enabled;
-            setGoalsEnabled(remote.enabled);
-          }
-        }
-
-        const localWins =
-          Boolean(merged.updatedAt) &&
-          (!remote?.fund.updatedAt ||
-            (merged.updatedAt as string) > remote.fund.updatedAt);
-        if (localWins) {
-          await saveGoalsToDrive(uid, { fund: merged, enabled });
-        }
-
-        if (!cancelled) setSyncStatus('synced');
-      } catch (err) {
-        if (cancelled) return;
-        setSyncStatus('error');
-        // Silent on first open if user cancels Google popup — local still works.
-        if (!(err instanceof DriveError)) {
-          showNotification(t('goals.syncError'), notificationType.ERROR);
-        }
+        applyRemoteBundle(remote, goalsEnabled);
+        if (!cancelled) setSyncStatus(remote ? 'synced' : 'local');
+      } catch {
+        if (!cancelled) setSyncStatus('local');
       }
     };
     pull();
@@ -150,43 +167,212 @@ const Goals = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot on mount
   }, []);
 
+  /** Interactive Drive sync — only from a button click (may show Google consent once). */
+  const handleSyncDrive = async () => {
+    if (!navigator.onLine) {
+      setSyncStatus('offline');
+      showNotification(t('goals.savedOffline'), notificationType.SUCCESS);
+      return;
+    }
+    setSyncStatus('syncing');
+    try {
+      const uid = requireSessionUid();
+      const remote = await readGoalsFromDrive(uid);
+      const { merged, enabled, remote: remoteBundle } = applyRemoteBundle(
+        remote,
+        goalsEnabled
+      );
+      const localWins =
+        Boolean(merged.updatedAt) &&
+        (!remoteBundle?.fund.updatedAt ||
+          (merged.updatedAt as string) > remoteBundle.fund.updatedAt);
+      if (localWins || !remoteBundle) {
+        await saveGoalsToDrive(uid, { fund: merged, enabled });
+      }
+      setSyncStatus('synced');
+      showNotification(t('goals.synced'), notificationType.SUCCESS);
+    } catch (err) {
+      setSyncStatus('error');
+      const message =
+        err instanceof DriveError
+          ? t('goals.syncErrorDrive')
+          : t('goals.syncError');
+      showNotification(message, notificationType.ERROR);
+    }
+  };
+
   const avgSpend = useMemo(
     () => averageMonthlySpend(data.raw ?? []),
     [data.raw]
   );
 
-  const draftCustomTarget = parseAmount(customTargetInput);
+  const historyByMonth = useMemo(
+    () => groupContributionsByMonth(fund.contributions ?? []),
+    [fund.contributions]
+  );
+
   const draftContribution = parseAmount(contributionInput);
-  const draftBalance = parseAmount(balanceInput) ?? 0;
+  const balance = fund.balance ?? 0;
 
   const draftFund = {
     ...fund,
-    balance: draftBalance,
     targetMonths,
-    customTarget: draftCustomTarget,
     monthlyContribution: draftContribution,
   };
 
   const target = resolveTarget(draftFund, avgSpend);
-  const covered = monthsCovered(draftBalance, avgSpend);
-  const ratio = progressRatio(draftBalance, target);
-  const eta = monthsToGoal(draftBalance, target, draftContribution);
-  const left = Math.max(0, target - draftBalance);
+  const covered = monthsCovered(balance, avgSpend);
+  const ratio = progressRatio(balance, target);
+  const eta = monthsToGoal(balance, target, draftContribution);
+  const left = Math.max(0, target - balance);
+
+  const persistFundToDrive = async (next: typeof fund) => {
+    if (!navigator.onLine) {
+      setSyncStatus('offline');
+      return false;
+    }
+    const uid = requireSessionUid();
+    await saveGoalsToDrive(uid, { fund: next, enabled: goalsEnabled });
+    setSyncStatus('synced');
+    return true;
+  };
+
+  const handleAddSaving = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const amount = parseLedgerAmount(addAmountInput);
+    if (amount == null) {
+      showNotification(t('goals.invalidAddAmount'), notificationType.ERROR);
+      return;
+    }
+    if (!/^\d{4}-\d{2}$/.test(addMonth)) {
+      showNotification(t('goals.invalidAddAmount'), notificationType.ERROR);
+      return;
+    }
+
+    setAdding(true);
+    setSyncStatus('syncing');
+    try {
+      const next = addEmergencyFundContribution(amount, addMonth);
+      setAddAmountInput('');
+      const synced = await persistFundToDrive(next);
+      showNotification(
+        synced
+          ? amount < 0
+            ? t('goals.addWithdrawalDone')
+            : t('goals.addSavingDone')
+          : t('goals.savedOffline'),
+        notificationType.SUCCESS
+      );
+    } catch (err) {
+      setSyncStatus('error');
+      const message =
+        err instanceof DriveError
+          ? t('goals.syncErrorDrive')
+          : t('goals.syncError');
+      showNotification(message, notificationType.ERROR);
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const openEditContribution = (id: string) => {
+    const entry = (fund.contributions ?? []).find((item) => item.id === id);
+    if (!entry) return;
+    setEditId(id);
+    setEditAmountInput(String(entry.amount));
+    setEditMonth(entry.month);
+  };
+
+  const closeEditContribution = () => {
+    setEditId(null);
+    setEditAmountInput('');
+    setEditMonth(currentMonthKey);
+  };
+
+  const handleEditContribution = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editId) return;
+    const amount = parseLedgerAmount(editAmountInput);
+    if (amount == null) {
+      showNotification(t('goals.invalidAddAmount'), notificationType.ERROR);
+      return;
+    }
+    if (!/^\d{4}-\d{2}$/.test(editMonth)) {
+      showNotification(t('goals.invalidAddAmount'), notificationType.ERROR);
+      return;
+    }
+
+    setEditing(true);
+    setSyncStatus('syncing');
+    try {
+      const next = updateEmergencyFundContribution(editId, {
+        amount,
+        month: editMonth,
+      });
+      if (!next) {
+        showNotification(t('goals.syncError'), notificationType.ERROR);
+        return;
+      }
+      closeEditContribution();
+      const synced = await persistFundToDrive(next);
+      showNotification(
+        synced ? t('goals.editContributionDone') : t('goals.savedOffline'),
+        notificationType.SUCCESS
+      );
+    } catch (err) {
+      setSyncStatus('error');
+      const message =
+        err instanceof DriveError
+          ? t('goals.syncErrorDrive')
+          : t('goals.syncError');
+      showNotification(message, notificationType.ERROR);
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const handleDeleteContribution = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    setSyncStatus('syncing');
+    try {
+      const next = removeEmergencyFundContribution(deleteId);
+      if (!next) {
+        showNotification(t('goals.syncError'), notificationType.ERROR);
+        return;
+      }
+      setDeleteId(null);
+      const synced = await persistFundToDrive(next);
+      showNotification(
+        synced ? t('goals.deleteContributionDone') : t('goals.savedOffline'),
+        notificationType.SUCCESS
+      );
+    } catch (err) {
+      setSyncStatus('error');
+      const message =
+        err instanceof DriveError
+          ? t('goals.syncErrorDrive')
+          : t('goals.syncError');
+      showNotification(message, notificationType.ERROR);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const deletePreview = useMemo(() => {
+    if (!deleteId) return null;
+    const entry = (fund.contributions ?? []).find((item) => item.id === deleteId);
+    if (!entry) return null;
+    return {
+      variant: 'payment' as const,
+      dt: entry.createdAt,
+      dsc: entry.month,
+      sum: entry.amount,
+    };
+  }, [deleteId, fund.contributions]);
 
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
-    const balance = parseAmount(balanceInput);
-    if (balance == null) {
-      showNotification(t('goals.invalidBalance'), notificationType.ERROR);
-      return;
-    }
-    const customRaw = customTargetInput.trim();
-    const customTarget =
-      customRaw === '' ? null : parseAmount(customTargetInput);
-    if (customRaw !== '' && customTarget == null) {
-      showNotification(t('goals.invalidTarget'), notificationType.ERROR);
-      return;
-    }
     const contribRaw = contributionInput.trim();
     const monthlyContribution =
       contribRaw === '' ? null : parseAmount(contributionInput);
@@ -199,20 +385,14 @@ const Goals = () => {
     setSyncStatus('syncing');
     try {
       const next = setEmergencyFund({
-        balance,
         targetMonths,
-        customTarget,
         monthlyContribution,
       });
-      if (!navigator.onLine) {
-        setSyncStatus('offline');
-        showNotification(t('goals.savedOffline'), notificationType.SUCCESS);
-        return;
-      }
-      const uid = requireSessionUid();
-      await saveGoalsToDrive(uid, { fund: next, enabled: goalsEnabled });
-      setSyncStatus('synced');
-      showNotification(t('goals.savedDrive'), notificationType.SUCCESS);
+      const synced = await persistFundToDrive(next);
+      showNotification(
+        synced ? t('goals.savedDrive') : t('goals.savedOffline'),
+        notificationType.SUCCESS
+      );
     } catch (err) {
       setSyncStatus('error');
       const message =
@@ -248,11 +428,13 @@ const Goals = () => {
       ? t('goals.syncing')
       : syncStatus === 'synced'
         ? t('goals.synced')
-        : syncStatus === 'offline'
-          ? t('goals.offline')
-          : syncStatus === 'error'
-            ? t('goals.syncFailed')
-            : null;
+        : syncStatus === 'local'
+          ? t('goals.localOnly')
+          : syncStatus === 'offline'
+            ? t('goals.offline')
+            : syncStatus === 'error'
+              ? t('goals.syncFailed')
+              : null;
 
   return (
     <div className={PAGE_CONTAINER_CLASS}>
@@ -275,7 +457,7 @@ const Goals = () => {
               className="tabular-nums text-app-primary m-0 mt-1 font-extrabold tracking-tight leading-[1.05] break-words"
               style={{ fontSize: 'clamp(1.75rem, 8vw, 2.5rem)' }}
             >
-              {formatNumber(draftBalance)}
+              {formatNumber(balance)}
             </p>
             <p className="m-0 mt-2 text-caption text-app-secondary/90">
               {coverageLabel}
@@ -301,27 +483,44 @@ const Goals = () => {
           </p>
         )}
         {syncLabel && (
-          <p
-            className={cn(
-              'm-0 flex items-center gap-2 text-caption',
-              syncStatus === 'error' || syncStatus === 'offline'
-                ? 'text-app-muted'
-                : 'text-[color-mix(in_srgb,var(--color-income)_85%,white)]'
+          <div className="flex items-center justify-between gap-3">
+            <p
+              className={cn(
+                'm-0 flex items-center gap-2 text-caption',
+                syncStatus === 'error' ||
+                  syncStatus === 'offline' ||
+                  syncStatus === 'local'
+                  ? 'text-app-muted'
+                  : 'text-[color-mix(in_srgb,var(--color-income)_85%,white)]'
+              )}
+            >
+              {syncStatus === 'syncing' ? (
+                <FiLoader className="animate-spin shrink-0" aria-hidden />
+              ) : syncStatus === 'error' ||
+                syncStatus === 'offline' ||
+                syncStatus === 'local' ? (
+                <FiCloudOff className="shrink-0" aria-hidden />
+              ) : (
+                <FiCloud className="shrink-0" aria-hidden />
+              )}
+              {syncLabel}
+            </p>
+            {(syncStatus === 'local' ||
+              syncStatus === 'error' ||
+              syncStatus === 'offline') && (
+              <button
+                type="button"
+                onClick={handleSyncDrive}
+                className="shrink-0 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1 text-caption font-semibold text-app-secondary hover:border-white/25 hover:text-app-primary"
+              >
+                {t('goals.syncNow')}
+              </button>
             )}
-          >
-            {syncStatus === 'syncing' ? (
-              <FiLoader className="animate-spin shrink-0" aria-hidden />
-            ) : syncStatus === 'error' || syncStatus === 'offline' ? (
-              <FiCloudOff className="shrink-0" aria-hidden />
-            ) : (
-              <FiCloud className="shrink-0" aria-hidden />
-            )}
-            {syncLabel}
-          </p>
+          </div>
         )}
       </Card>
 
-      <StatsGrid columns={2} className="gap-2 mb-4 sm:gap-2">
+      <StatsGrid columns={2} className="gap-2 mb-2 sm:gap-2">
         <StatCard
           value={target > 0 ? formatNumber(target) : '—'}
           label={t('goals.target')}
@@ -338,25 +537,80 @@ const Goals = () => {
         />
         <StatCard value={etaLabel} label={t('goals.eta')} />
       </StatsGrid>
+      <p className="m-0 mb-5 text-caption text-app-muted leading-relaxed">
+        {t('goals.excludedCategories').replace(
+          '{categories}',
+          NON_ESSENTIAL_CATEGORY_LABEL_KEYS.map((key) => t(key)).join(', ')
+        )}
+      </p>
+
+      <SettingsSection
+        title={t('goals.addSavingTitle')}
+        description={t('goals.addSavingDescription')}
+      >
+        <form onSubmit={handleAddSaving} className="flex flex-col gap-4">
+          <AmountField
+            id="goals-add-amount"
+            name="addAmount"
+            label={t('goals.addSavingAmount')}
+            hint={t('goals.addSavingAmountHint')}
+            value={addAmountInput}
+            onChange={setAddAmountInput}
+            currency={currency}
+            icon={FiPlusCircle}
+            size="lg"
+            allowNegative
+          />
+          <div>
+            <label
+              htmlFor="goals-add-month"
+              className="m-0 mb-2 flex items-center gap-2 text-micro font-semibold uppercase tracking-widest text-app-muted"
+            >
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--color-app-accent)_18%,transparent)] text-[var(--color-app-accent)]">
+                <FiCalendar className="h-3.5 w-3.5" aria-hidden />
+              </span>
+              {t('goals.addSavingMonth')}
+            </label>
+            <input
+              id="goals-add-month"
+              name="addMonth"
+              type="month"
+              value={addMonth}
+              onChange={(e) => setAddMonth(e.target.value)}
+              className="form-input w-full"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={adding}
+            className={BTN_SUBMIT_CLASS}
+          >
+            {adding ? (
+              <FiLoader className="animate-spin" aria-hidden />
+            ) : (
+              <FiPlusCircle aria-hidden />
+            )}
+            {adding ? t('goals.addSavingBusy') : t('goals.addSaving')}
+          </button>
+        </form>
+      </SettingsSection>
+
+      <SettingsSection title={t('goals.historyTitle')}>
+        <ContributionHistory
+          groups={historyByMonth}
+          monthNames={monthNames}
+          currency={currency}
+          onEdit={openEditContribution}
+          onDelete={setDeleteId}
+        />
+      </SettingsSection>
 
       <SettingsSection
         title={t('goals.editTitle')}
         description={t('goals.editDescription')}
       >
         <form onSubmit={handleSave} className="flex flex-col gap-5">
-          <AmountField
-            id="goals-balance"
-            name="balance"
-            label={t('goals.balanceLabel')}
-            hint={t('goals.balanceHint')}
-            value={balanceInput}
-            onChange={setBalanceInput}
-            currency={currency}
-            icon={FiShield}
-            required
-            size="lg"
-          />
-
           <div>
             <p className="m-0 mb-2 flex items-center gap-2 text-micro font-semibold uppercase tracking-widest text-app-muted">
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--color-app-accent)_18%,transparent)] text-[var(--color-app-accent)]">
@@ -394,32 +648,18 @@ const Goals = () => {
               </div>
               <div className="border-t border-white/[0.06] px-4 py-2.5 sm:px-5">
                 <span className="text-caption text-app-muted">
-                  {draftCustomTarget != null && draftCustomTarget > 0
-                    ? t('goals.customTargetActive')
-                    : avgSpend > 0
-                      ? t('goals.suggestedTarget').replace(
-                          '{amount}',
-                          formatNumber(
-                            Number((avgSpend * targetMonths).toFixed(0))
-                          )
+                  {avgSpend > 0
+                    ? t('goals.suggestedTarget').replace(
+                        '{amount}',
+                        formatNumber(
+                          Number((avgSpend * targetMonths).toFixed(0))
                         )
-                      : t('goals.targetMonthsDriveHint')}
+                      )
+                    : t('goals.targetMonthsDriveHint')}
                 </span>
               </div>
             </div>
           </div>
-
-          <AmountField
-            id="goals-custom-target"
-            name="customTarget"
-            label={t('goals.customTargetLabel')}
-            hint={t('goals.customTargetHint')}
-            value={customTargetInput}
-            onChange={setCustomTargetInput}
-            currency={currency}
-            icon={FiFlag}
-            placeholder={t('goals.customTargetPlaceholder')}
-          />
 
           <AmountField
             id="goals-contribution"
@@ -447,6 +687,79 @@ const Goals = () => {
           </button>
         </form>
       </SettingsSection>
+
+      <DeleteConfirmDrawer
+        open={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={handleDeleteContribution}
+        title={t('goals.deleteContributionTitle')}
+        message={t('goals.deleteContributionMessage')}
+        isSubmitting={deleting}
+        item={deletePreview}
+      />
+
+      <VaulDrawer
+        show={!!editId}
+        onClose={(e) => {
+          e?.preventDefault();
+          closeEditContribution();
+        }}
+        title={t('goals.editContributionTitle')}
+        footer={
+          <button
+            type="submit"
+            form="goals-edit-contribution-form"
+            disabled={editing}
+            className={BTN_SUBMIT_CLASS}
+          >
+            {editing ? (
+              <FiLoader className="animate-spin" aria-hidden />
+            ) : (
+              <FiEdit2 aria-hidden />
+            )}
+            {editing ? t('goals.saving') : t('goals.editContributionSave')}
+          </button>
+        }
+      >
+        <form
+          id="goals-edit-contribution-form"
+          onSubmit={handleEditContribution}
+          className="flex flex-col gap-4"
+        >
+          <AmountField
+            id="goals-edit-amount"
+            name="editAmount"
+            label={t('goals.addSavingAmount')}
+            hint={t('goals.addSavingAmountHint')}
+            value={editAmountInput}
+            onChange={setEditAmountInput}
+            currency={currency}
+            icon={FiPlusCircle}
+            size="lg"
+            allowNegative
+          />
+          <div>
+            <label
+              htmlFor="goals-edit-month"
+              className="m-0 mb-2 flex items-center gap-2 text-micro font-semibold uppercase tracking-widest text-app-muted"
+            >
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--color-app-accent)_18%,transparent)] text-[var(--color-app-accent)]">
+                <FiCalendar className="h-3.5 w-3.5" aria-hidden />
+              </span>
+              {t('goals.addSavingMonth')}
+            </label>
+            <input
+              id="goals-edit-month"
+              name="editMonth"
+              type="month"
+              value={editMonth}
+              onChange={(e) => setEditMonth(e.target.value)}
+              className="form-input w-full"
+              required
+            />
+          </div>
+        </form>
+      </VaulDrawer>
     </div>
   );
 };

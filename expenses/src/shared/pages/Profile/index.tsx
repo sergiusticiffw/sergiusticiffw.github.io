@@ -46,7 +46,7 @@ import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
 import { googleLogout } from '@react-oauth/google';
 import { DriveError } from '../../../crypto/driveVault';
 import {
-  readGoalsFromDrive,
+  readGoalsFromDriveSilent,
   requireSessionUid,
   saveGoalsToDrive,
 } from '../../../features/goals/driveSync';
@@ -75,14 +75,14 @@ const Profile = () => {
   const [chartsAccordionOpen, setChartsAccordionOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Pull Goals package (enabled + all fund fields) from Drive on Profile open.
+  // Silent pull only — never open a Google login popup on Profile visit.
   useEffect(() => {
     let cancelled = false;
     const pull = async () => {
       if (!navigator.onLine) return;
       try {
         const uid = requireSessionUid();
-        const remote = await readGoalsFromDrive(uid);
+        const remote = await readGoalsFromDriveSilent(uid);
         if (cancelled || !remote) return;
         const localFund = getEmergencyFund();
         const merged = newerEmergencyFund(localFund, remote.fund);
@@ -93,7 +93,7 @@ const Profile = () => {
             (remote.fund.updatedAt as string) >= (localFund.updatedAt || ''));
         if (remoteWins) setGoalsEnabled(remote.enabled);
       } catch {
-        // Local toggle still works if Drive auth is cancelled.
+        // Keep local toggle; interactive Drive auth happens on save/toggle.
       }
     };
     pull();

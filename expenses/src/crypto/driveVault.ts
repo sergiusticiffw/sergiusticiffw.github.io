@@ -32,7 +32,56 @@ interface VaultFile {
   createdAt: string;
 }
 
-let cachedToken: { value: string; expiresAt: number } | null = null;
+type DriveToken = { value: string; expiresAt: number };
+
+const TOKEN_STORAGE_KEY = 'driveAppDataToken';
+
+const readStoredToken = (): DriveToken | null => {
+  try {
+    const raw = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<DriveToken>;
+    if (
+      typeof parsed.value === 'string' &&
+      typeof parsed.expiresAt === 'number' &&
+      parsed.expiresAt - Date.now() > 60 * 1000
+    ) {
+      return { value: parsed.value, expiresAt: parsed.expiresAt };
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+};
+
+const persistToken = (token: DriveToken) => {
+  cachedToken = token;
+  try {
+    sessionStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(token));
+  } catch {
+    /* ignore */
+  }
+};
+
+const clearToken = () => {
+  cachedToken = null;
+  try {
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+};
+
+let cachedToken: DriveToken | null = readStoredToken();
+
+/** True when a usable Drive appData token is already in this browser session. */
+export const hasDriveAccessToken = (): boolean => {
+  if (cachedToken && cachedToken.expiresAt - Date.now() > 60 * 1000) {
+    return true;
+  }
+  cachedToken = readStoredToken();
+  return Boolean(cachedToken);
+};
 
 const gsiReady = () => Boolean((window as any).google?.accounts?.oauth2);
 
@@ -83,8 +132,12 @@ export const preloadGoogleIdentity = async (): Promise<void> => {
   }
 };
 
+/**
+ * Interactive token request — call only from a user gesture (click/save).
+ * Uses prompt:'' so Google skips the account picker when access was already granted.
+ */
 const getAccessToken = async (): Promise<string> => {
-  if (cachedToken && cachedToken.expiresAt - Date.now() > 60 * 1000) {
+  if (hasDriveAccessToken() && cachedToken) {
     return cachedToken.value;
   }
   await preloadGoogleIdentity();
@@ -105,17 +158,16 @@ const getAccessToken = async (): Promise<string> => {
           reject(new DriveError('Allow access to app data in Google Drive to continue.'));
           return;
         }
-        cachedToken = {
+        persistToken({
           value: response.access_token,
           expiresAt: Date.now() + Number(response.expires_in || 3600) * 1000,
-        };
+        });
         resolve(response.access_token);
       },
       error_callback: () => reject(new DriveError('The Google window was closed.')),
     });
-    // Empty prompt reuses the login token (email/profile only). Drive then
-    // answers 403 on appDataFolder. Ask for the Drive scope when it is missing.
-    client.requestAccessToken();
+    // Empty prompt: no account chooser if the Drive scope was already granted.
+    client.requestAccessToken({ prompt: '' });
   });
 };
 
@@ -124,13 +176,25 @@ export const authorizeDrive = async () => {
   await getAccessToken();
 };
 
-const driveFetch = async (url: string, init: RequestInit = {}) => {
-  const token = await getAccessToken();
+const driveFetch = async (
+  url: string,
+  init: RequestInit = {},
+  interactive = true
+) => {
+  let token: string | null = null;
+  if (interactive) {
+    token = await getAccessToken();
+  } else if (hasDriveAccessToken() && cachedToken) {
+    token = cachedToken.value;
+  }
+  if (!token) {
+    throw new DriveError('No Drive token');
+  }
   const response = await fetch(url, {
     ...init,
     headers: { Authorization: `Bearer ${token}`, ...(init.headers || {}) },
   });
-  if (response.status === 401 || response.status === 403) cachedToken = null;
+  if (response.status === 401 || response.status === 403) clearToken();
   if (!response.ok) {
     let detail = '';
     try {
@@ -144,10 +208,15 @@ const driveFetch = async (url: string, init: RequestInit = {}) => {
   return response;
 };
 
-const findFileByName = async (name: string): Promise<string | null> => {
+const findFileByName = async (
+  name: string,
+  interactive = true
+): Promise<string | null> => {
   const query = encodeURIComponent(`name='${name}'`);
   const response = await driveFetch(
-    `${API}?spaces=appDataFolder&q=${query}&fields=files(id,name)&pageSize=10`
+    `${API}?spaces=appDataFolder&q=${query}&fields=files(id,name)&pageSize=10`,
+    {},
+    interactive
   );
   const { files } = await response.json();
   return files?.[0]?.id ?? null;
@@ -167,11 +236,14 @@ const readFile = async (id: string): Promise<VaultFile | null> => {
 
 /** Read a JSON file from Drive appDataFolder, or null if missing. */
 export const readAppDataJson = async (
-  name: string
+  name: string,
+  options?: { silent?: boolean }
 ): Promise<unknown | null> => {
-  const id = await findFileByName(name);
+  const interactive = !options?.silent;
+  if (!interactive && !hasDriveAccessToken()) return null;
+  const id = await findFileByName(name, interactive);
   if (!id) return null;
-  const response = await driveFetch(`${API}/${id}?alt=media`);
+  const response = await driveFetch(`${API}/${id}?alt=media`, {}, interactive);
   try {
     return await response.json();
   } catch {
