@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthDispatch, useAuthState } from '../../context';
 import { useExpenseData } from '@stores/expenseStore';
+import { loanDispatch } from '@stores/loanStore';
 import {
   useSettingsCurrency,
   setSettingsCurrency,
@@ -21,6 +22,10 @@ import {
   FiBarChart2,
   FiDroplet,
   FiShield,
+  FiDatabase,
+  FiDownload,
+  FiLoader,
+  FiRefreshCw,
   FiChevronDown,
   FiChevronUp,
 } from 'react-icons/fi';
@@ -42,7 +47,11 @@ import AiSettings from '@features/assistant/components/AiSettings';
 import TagSettings from '../../../features/profile/TagSettings';
 import PrivacySettings from '../../../features/privacy/PrivacySettings';
 import BiometricSettings from '../../../features/privacy/BiometricSettings';
-import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
+import {
+  PAGE_CONTAINER_CLASS,
+  BTN_SUBMIT_CLASS,
+} from '@shared/utils/layoutClasses';
+import { useApiClient } from '@shared/hooks/useApiClient';
 import { googleLogout } from '@react-oauth/google';
 import { DriveError } from '../../../crypto/driveVault';
 import {
@@ -55,6 +64,18 @@ import {
   replaceEmergencyFund,
 } from '../../../features/goals/store';
 import { newerEmergencyFund } from '../../../features/goals/model';
+import { buildBackupSnapshot } from '../../../features/backup/buildBackup';
+import {
+  downloadBackupJson,
+  downloadDriveBackupById,
+  formatBackupSize,
+  getLastBackupAt,
+  listDriveBackups,
+  pruneDriveBackups,
+  setLastBackupAt,
+  uploadBackupToDrive,
+  type DriveBackupListItem,
+} from '../../../features/backup/driveBackup';
 
 const Profile = () => {
   const showNotification = useNotification();
@@ -65,7 +86,18 @@ const Profile = () => {
   const currency = useSettingsCurrency();
   const currentTheme = useSettingsTheme();
   const goalsEnabled = useGoalsEnabled();
+  const apiClient = useApiClient();
   const [goalsSyncing, setGoalsSyncing] = useState(false);
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [backupList, setBackupList] = useState<DriveBackupListItem[]>([]);
+  const [backupListLoading, setBackupListLoading] = useState(false);
+  const [backupListLoaded, setBackupListLoaded] = useState(false);
+  const [downloadingBackupId, setDownloadingBackupId] = useState<string | null>(
+    null
+  );
+  const [lastBackupAt, setLastBackupAtState] = useState<string | null>(() =>
+    getLastBackupAt()
+  );
   const [state, setState] = useState(() => ({
     visibleCharts: readStoredVisibleCharts(),
   }));
@@ -128,6 +160,71 @@ const Profile = () => {
       showNotification(message, notificationType.ERROR);
     } finally {
       setGoalsSyncing(false);
+    }
+  };
+
+  const refreshBackupList = async (silent = false) => {
+    setBackupListLoading(true);
+    try {
+      if (!silent) {
+        await pruneDriveBackups();
+      }
+      const files = await listDriveBackups({ silent });
+      setBackupList(files);
+      setBackupListLoaded(true);
+    } catch {
+      if (!silent) {
+        showNotification(t('profile.backupListError'), notificationType.ERROR);
+      }
+    } finally {
+      setBackupListLoading(false);
+    }
+  };
+
+  const handleBackupToDrive = async () => {
+    setBackupBusy(true);
+    try {
+      const uid = requireSessionUid();
+      const snapshot = await buildBackupSnapshot(uid, {
+        apiClient,
+        expenseDispatch: dataDispatch,
+        loanDispatch,
+      });
+      downloadBackupJson(snapshot);
+
+      try {
+        await uploadBackupToDrive(snapshot);
+        setLastBackupAt(snapshot.createdAt);
+        setLastBackupAtState(snapshot.createdAt);
+        showNotification(t('profile.backupDone'), notificationType.SUCCESS);
+        await refreshBackupList(true);
+      } catch (err) {
+        const message =
+          err instanceof DriveError
+            ? t('profile.backupErrorDrive')
+            : t('profile.backupDownloaded');
+        showNotification(message, notificationType.ERROR);
+      }
+    } catch {
+      showNotification(t('profile.backupError'), notificationType.ERROR);
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
+  const handleDownloadDriveBackup = async (item: DriveBackupListItem) => {
+    setDownloadingBackupId(item.id);
+    try {
+      await downloadDriveBackupById(item.id, item.name);
+      showNotification(t('profile.backupDownloadDone'), notificationType.SUCCESS);
+    } catch (err) {
+      const message =
+        err instanceof DriveError
+          ? t('profile.backupErrorDrive')
+          : t('profile.backupDownloadError');
+      showNotification(message, notificationType.ERROR);
+    } finally {
+      setDownloadingBackupId(null);
     }
   };
 
@@ -361,6 +458,116 @@ const Profile = () => {
               disabled={goalsSyncing}
               aria-labelledby="goals-enabled-label"
             />
+          </div>
+        </div>
+
+        {/* Manual full-data backup */}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
+          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
+            <FiDatabase />
+            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
+              {t('profile.backupTitle')}
+            </h3>
+          </div>
+          <p className="m-0 mb-4 text-xs text-app-muted leading-relaxed">
+            {t('profile.backupHint')}
+          </p>
+          {lastBackupAt && (
+            <p className="m-0 mb-3 text-caption text-app-secondary">
+              {t('profile.backupLastAt').replace(
+                '{date}',
+                new Date(lastBackupAt).toLocaleString(
+                  language === 'ro' ? 'ro-RO' : 'en-US'
+                )
+              )}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={handleBackupToDrive}
+            disabled={backupBusy || backupListLoading}
+            className={BTN_SUBMIT_CLASS}
+          >
+            {backupBusy ? (
+              <FiLoader className="animate-spin" aria-hidden />
+            ) : (
+              <FiDatabase aria-hidden />
+            )}
+            {backupBusy ? t('profile.backupBusy') : t('profile.backupButton')}
+          </button>
+
+          <div className="mt-4 border-t border-white/[0.06] pt-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h4 className="m-0 text-xs font-semibold uppercase tracking-wider text-app-muted">
+                {t('profile.backupListTitle')}
+              </h4>
+              <button
+                type="button"
+                onClick={() => refreshBackupList(false)}
+                disabled={backupListLoading || backupBusy}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1 text-caption font-semibold text-app-secondary hover:border-white/25 hover:text-app-primary disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {backupListLoading ? (
+                  <FiLoader className="animate-spin" aria-hidden />
+                ) : (
+                  <FiRefreshCw aria-hidden />
+                )}
+                {backupListLoading
+                  ? t('profile.backupListLoading')
+                  : t('profile.backupListLoad')}
+              </button>
+            </div>
+
+            {backupListLoaded && backupList.length === 0 && !backupListLoading && (
+              <p className="m-0 text-caption text-app-muted">
+                {t('profile.backupListEmpty')}
+              </p>
+            )}
+
+            {backupList.length > 0 && (
+              <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                {backupList.map((item) => {
+                  const when = item.createdAt
+                    ? new Date(item.createdAt).toLocaleString(
+                        language === 'ro' ? 'ro-RO' : 'en-US'
+                      )
+                    : item.name;
+                  const downloading = downloadingBackupId === item.id;
+                  return (
+                    <li
+                      key={item.id}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                    >
+                      <div className="min-w-0">
+                        <p className="m-0 truncate text-sm font-medium text-app-primary">
+                          {when}
+                        </p>
+                        <p className="m-0 mt-0.5 truncate text-caption text-app-muted">
+                          {formatBackupSize(item.sizeBytes)} · {item.name}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadDriveBackup(item)}
+                        disabled={downloading || backupBusy}
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-caption font-semibold text-app-secondary hover:border-white/25 hover:text-app-primary disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={t('profile.backupDownload')}
+                        title={t('profile.backupDownload')}
+                      >
+                        {downloading ? (
+                          <FiLoader className="animate-spin" aria-hidden />
+                        ) : (
+                          <FiDownload aria-hidden />
+                        )}
+                        {downloading
+                          ? t('profile.backupDownloading')
+                          : t('profile.backupDownload')}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </div>
 

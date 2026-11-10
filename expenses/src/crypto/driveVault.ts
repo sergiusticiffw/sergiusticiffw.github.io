@@ -1,5 +1,6 @@
-// Google Drive App Data vault: encryption key + small preference files (never expense rows).
-// Uses a Google Identity Services popup, so the page state (e.g. a generated key) survives.
+// Google Drive App Data vault: encryption key, preference files, and optional
+// user-triggered full backups (expenses-backup.json). Uses a Google Identity
+// Services popup, so the page state (e.g. a generated key) survives.
 import { normalizeKey } from './keyFormat';
 
 const GOOGLE_CLIENT_ID =
@@ -251,6 +252,62 @@ export const readAppDataJson = async (
   }
 };
 
+/** Read a JSON file by Drive file id. */
+export const readAppDataJsonById = async (
+  id: string,
+  options?: { silent?: boolean }
+): Promise<unknown | null> => {
+  const interactive = !options?.silent;
+  if (!interactive && !hasDriveAccessToken()) return null;
+  const response = await driveFetch(`${API}/${id}?alt=media`, {}, interactive);
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+};
+
+export interface AppDataFileMeta {
+  id: string;
+  name: string;
+  createdTime?: string;
+  modifiedTime?: string;
+  size?: string;
+}
+
+/** List App Data files whose name contains `nameContains` (newest first). */
+export const listAppDataFiles = async (
+  nameContains: string,
+  options?: { silent?: boolean; pageSize?: number }
+): Promise<AppDataFileMeta[]> => {
+  const interactive = !options?.silent;
+  if (!interactive && !hasDriveAccessToken()) return [];
+  const pageSize = options?.pageSize ?? 50;
+  const query = encodeURIComponent(`name contains '${nameContains.replace(/'/g, "\\'")}'`);
+  const fields = encodeURIComponent(
+    'files(id,name,createdTime,modifiedTime,size)'
+  );
+  const response = await driveFetch(
+    `${API}?spaces=appDataFolder&q=${query}&fields=${fields}&pageSize=${pageSize}&orderBy=modifiedTime desc`,
+    {},
+    interactive
+  );
+  const body = await response.json();
+  const files = Array.isArray(body?.files) ? body.files : [];
+  return files
+    .filter(
+      (f: Partial<AppDataFileMeta>) =>
+        typeof f?.id === 'string' && typeof f?.name === 'string'
+    )
+    .map((f: AppDataFileMeta) => ({
+      id: f.id,
+      name: f.name,
+      createdTime: f.createdTime,
+      modifiedTime: f.modifiedTime,
+      size: f.size,
+    }));
+};
+
 /** Create or overwrite a JSON file in Drive appDataFolder. */
 export const writeAppDataJson = async (
   name: string,
@@ -323,4 +380,9 @@ export const deleteKeyFromDrive = async (): Promise<void> => {
   if (id) {
     await driveFetch(`${API}/${id}`, { method: 'DELETE' });
   }
+};
+
+/** Delete an App Data file by id. */
+export const deleteAppDataFileById = async (id: string): Promise<void> => {
+  await driveFetch(`${API}/${id}`, { method: 'DELETE' });
 };
