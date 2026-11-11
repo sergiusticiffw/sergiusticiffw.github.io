@@ -5,7 +5,11 @@ import {
   useLoanLoading,
   useLoanPayments,
 } from '@stores/loanStore';
-import { useSettingsCurrency } from '@stores/settingsStore';
+import {
+  useGoalsEnabled,
+  useSettingsCurrency,
+} from '@stores/settingsStore';
+import { useEmergencyFund } from '@features/goals/store';
 import {
   AiError,
   GeminiContent,
@@ -33,6 +37,7 @@ import { getAiLanguage, getShareDescriptions } from '../storage';
 import { getToolDeclarations } from '../tools/definitions';
 import { TOOL_LABELS, executeTool } from '../tools/executors';
 import { summarizeToolResult } from '../tools/expenseTools';
+import { formatGoalsSummary } from '../tools/goalTools';
 
 const newId = () => `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
@@ -70,6 +75,8 @@ export function useAiChat(apiKey: string) {
   const loanPayments = useLoanPayments();
   const loanLoading = useLoanLoading();
   const currency = useSettingsCurrency();
+  const goalsEnabled = useGoalsEnabled();
+  const emergencyFund = useEmergencyFund();
   const [messages, setMessages] = useState<ChatMessage[]>(chatSession.messages);
   const [busy, setBusy] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -82,10 +89,24 @@ export function useAiChat(apiKey: string) {
   );
   const hasLoans = loanContext.snapshots.length > 0;
   const summary = useMemo(() => {
-    const base = buildDataSummary(items, currency || 'MDL', shareDescriptions);
-    return loanContext.summary ? `${base}\n\n${loanContext.summary}` : base;
-  }, [items, currency, shareDescriptions, loanContext.summary]);
-  const declarations = useMemo(() => getToolDeclarations(hasLoans), [hasLoans]);
+    let text = buildDataSummary(items, currency || 'MDL', shareDescriptions);
+    if (loanContext.summary) text = `${text}\n\n${loanContext.summary}`;
+    if (goalsEnabled) {
+      text = `${text}\n\n${formatGoalsSummary(emergencyFund, items)}`;
+    }
+    return text;
+  }, [
+    items,
+    currency,
+    shareDescriptions,
+    loanContext.summary,
+    goalsEnabled,
+    emergencyFund,
+  ]);
+  const declarations = useMemo(
+    () => getToolDeclarations({ hasLoans, goalsEnabled }),
+    [hasLoans, goalsEnabled]
+  );
 
   useEffect(() => {
     chatSession.messages = messages;
@@ -158,6 +179,8 @@ export function useAiChat(apiKey: string) {
         loans: loanContext.snapshots,
         loanPayments: loanContext.payments,
         loanSources: loanContext.sources,
+        goalsEnabled,
+        emergencyFund: goalsEnabled ? emergencyFund : null,
       };
 
       let previousText = '';
@@ -285,6 +308,8 @@ export function useAiChat(apiKey: string) {
       apiKey,
       busy,
       declarations,
+      emergencyFund,
+      goalsEnabled,
       items,
       loanContext,
       patchMessage,

@@ -19,8 +19,10 @@ import {
   LOAN_EVENT_COLUMNS,
 } from '../loans';
 import type { LoanSource } from '../loanScenarios';
+import type { EmergencyFundState } from '@features/goals/model';
 import { BUDGET_TOOL_LABELS, budgetToolExecutors } from './budgetTools';
 import { EXPENSE_TOOL_LABELS, expenseToolExecutors } from './expenseTools';
+import { GOAL_TOOL_LABELS, goalToolExecutors } from './goalTools';
 import { LOAN_TOOL_LABELS, loanToolExecutors } from './loanTools';
 
 export interface ToolContext {
@@ -29,6 +31,8 @@ export interface ToolContext {
   loans: AiLoanSnapshot[];
   loanPayments: AiLoanPayment[];
   loanSources: Map<string, LoanSource>;
+  goalsEnabled: boolean;
+  emergencyFund: EmergencyFundState | null;
 }
 
 type Args = Record<string, any>;
@@ -359,6 +363,7 @@ const executors: Record<string, (ctx: ToolContext, args: Args) => Record<string,
   ...expenseToolExecutors,
   ...budgetToolExecutors,
   ...loanToolExecutors,
+  ...goalToolExecutors,
 };
 
 export const executeTool = (name: string, args: Args | undefined, ctx: ToolContext) => {
@@ -382,4 +387,5 @@ export const TOOL_LABELS: Record<string, string> = {
   ...EXPENSE_TOOL_LABELS,
   ...BUDGET_TOOL_LABELS,
   ...LOAN_TOOL_LABELS,
+  ...GOAL_TOOL_LABELS,
 };

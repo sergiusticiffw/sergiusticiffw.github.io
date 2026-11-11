@@ -516,6 +516,10 @@ export const summarizeToolResult = (
       return `detect_spend_spikes(${args?.month || 'current'})`;
     case 'get_savings_rate_trend':
       return `get_savings_rate_trend`;
+    case 'get_emergency_fund':
+      return `get_emergency_fund -> balance=${result.balance ?? '?'}`;
+    case 'query_fund_movements':
+      return `query_fund_movements -> ${result.shown ?? '?'}/${result.matched ?? '?'} rows`;
     default:
       if (name.startsWith('simulate_') || name.startsWith('get_') || name.startsWith('solve_') || name.startsWith('allocate_') || name.startsWith('compare_') || name.startsWith('list_') || name.startsWith('query_')) {
         const loan = args?.loan ? ` loan=${args.loan}` : '';

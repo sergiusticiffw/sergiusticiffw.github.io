@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { FiEye, FiEyeOff, FiZap } from 'react-icons/fi';
+import {
+  FiChevronDown,
+  FiChevronUp,
+  FiEye,
+  FiEyeOff,
+  FiZap,
+} from 'react-icons/fi';
 import { useNotification } from '@shared/context';
 import { useLocalization } from '@shared/context/localization';
 import { notificationType } from '@shared/utils/constants';
@@ -26,6 +32,7 @@ const AiSettings = () => {
   const showNotification = useNotification();
   const { t } = useLocalization();
   const { apiKey, status, save, synced } = useAiApiKey();
+  const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [reveal, setReveal] = useState(false);
@@ -93,14 +100,29 @@ const AiSettings = () => {
   };
 
   return (
-    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px]">
-      <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
-        <FiZap />
-        <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
-          {t('profile.aiTitle')}
-        </h3>
-      </div>
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden md:rounded-[10px] transition-colors active:border-white/10">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="w-full flex items-center justify-between gap-2.5 py-5 px-5 md:py-4 md:px-4 text-left bg-transparent border-none cursor-pointer [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:shrink-0"
+        aria-expanded={open}
+      >
+        <div className="flex items-center gap-2.5 [&_svg]:text-[var(--color-app-accent)]">
+          <FiZap />
+          <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
+            {t('profile.aiTitle')}
+          </h3>
+        </div>
+        {open ? (
+          <FiChevronUp className="text-app-muted" aria-hidden />
+        ) : (
+          <FiChevronDown className="text-app-muted" aria-hidden />
+        )}
+      </button>
 
+      {open && (
+      <div className="px-5 pb-5 pt-0 md:px-4 md:pb-4 border-t border-white/[0.06]">
+      <div className="pt-4 md:pt-3">
       {status === 'loading' ? (
         <p className="text-sm text-app-muted">{t('common.loading')}</p>
       ) : apiKey && !editing ? (
@@ -282,6 +304,9 @@ const AiSettings = () => {
           <p className="m-0 text-xs text-app-muted">{t('profile.aiNoPause')}</p>
         )}
       </div>
+      </div>
+      </div>
+      )}
     </div>
   );
 };

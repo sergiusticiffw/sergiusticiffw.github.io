@@ -105,6 +105,7 @@ const Profile = () => {
     readCustomChartsEnabled
   );
   const [chartsAccordionOpen, setChartsAccordionOpen] = useState(false);
+  const [backupAccordionOpen, setBackupAccordionOpen] = useState(false);
   const navigate = useNavigate();
 
   // Silent pull only — never open a Google login popup on Profile visit.
@@ -432,143 +433,136 @@ const Profile = () => {
 
         <TagSettings />
 
-        {/* Emergency fund / Goals */}
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
-          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
-            <FiShield />
-            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
-              {t('profile.goalsSettings')}
-            </h3>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <span
-                id="goals-enabled-label"
-                className="block text-body text-app-secondary"
-              >
-                {t('profile.goalsEnable')}
-              </span>
-              <p className="m-0 mt-1 text-xs text-app-muted">
-                {t('profile.goalsEnableHint')}
-              </p>
-            </div>
-            <Switch
-              checked={goalsEnabled}
-              onCheckedChange={handleGoalsEnabledChange}
-              disabled={goalsSyncing}
-              aria-labelledby="goals-enabled-label"
-            />
-          </div>
-        </div>
-
-        {/* Manual full-data backup */}
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
-          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
-            <FiDatabase />
-            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
-              {t('profile.backupTitle')}
-            </h3>
-          </div>
-          <p className="m-0 mb-4 text-xs text-app-muted leading-relaxed">
-            {t('profile.backupHint')}
-          </p>
-          {lastBackupAt && (
-            <p className="m-0 mb-3 text-caption text-app-secondary">
-              {t('profile.backupLastAt').replace(
-                '{date}',
-                new Date(lastBackupAt).toLocaleString(
-                  language === 'ro' ? 'ro-RO' : 'en-US'
-                )
-              )}
-            </p>
-          )}
+        {/* Manual full-data backup (accordion, closed by default) */}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden md:rounded-[10px] transition-colors active:border-white/10">
           <button
             type="button"
-            onClick={handleBackupToDrive}
-            disabled={backupBusy || backupListLoading}
-            className={BTN_SUBMIT_CLASS}
+            onClick={() => setBackupAccordionOpen((o) => !o)}
+            className="w-full flex items-center justify-between gap-2.5 py-5 px-5 md:py-4 md:px-4 text-left bg-transparent border-none cursor-pointer [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:shrink-0"
+            aria-expanded={backupAccordionOpen}
           >
-            {backupBusy ? (
-              <FiLoader className="animate-spin" aria-hidden />
-            ) : (
-              <FiDatabase aria-hidden />
-            )}
-            {backupBusy ? t('profile.backupBusy') : t('profile.backupButton')}
-          </button>
-
-          <div className="mt-4 border-t border-white/[0.06] pt-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h4 className="m-0 text-xs font-semibold uppercase tracking-wider text-app-muted">
-                {t('profile.backupListTitle')}
-              </h4>
-              <button
-                type="button"
-                onClick={() => refreshBackupList(false)}
-                disabled={backupListLoading || backupBusy}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1 text-caption font-semibold text-app-secondary hover:border-white/25 hover:text-app-primary disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {backupListLoading ? (
-                  <FiLoader className="animate-spin" aria-hidden />
-                ) : (
-                  <FiRefreshCw aria-hidden />
-                )}
-                {backupListLoading
-                  ? t('profile.backupListLoading')
-                  : t('profile.backupListLoad')}
-              </button>
+            <div className="flex items-center gap-2.5 [&_svg]:text-[var(--color-app-accent)]">
+              <FiDatabase />
+              <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
+                {t('profile.backupTitle')}
+              </h3>
             </div>
-
-            {backupListLoaded && backupList.length === 0 && !backupListLoading && (
-              <p className="m-0 text-caption text-app-muted">
-                {t('profile.backupListEmpty')}
-              </p>
+            {backupAccordionOpen ? (
+              <FiChevronUp className="text-app-muted" aria-hidden />
+            ) : (
+              <FiChevronDown className="text-app-muted" aria-hidden />
             )}
-
-            {backupList.length > 0 && (
-              <ul className="m-0 flex list-none flex-col gap-2 p-0">
-                {backupList.map((item) => {
-                  const when = item.createdAt
-                    ? new Date(item.createdAt).toLocaleString(
+          </button>
+          {backupAccordionOpen && (
+            <div className="px-5 pb-5 pt-0 md:px-4 md:pb-4 border-t border-white/[0.06]">
+              <div className="pt-4 md:pt-3">
+                <p className="m-0 mb-4 text-xs text-app-muted leading-relaxed">
+                  {t('profile.backupHint')}
+                </p>
+                {lastBackupAt && (
+                  <p className="m-0 mb-3 text-caption text-app-secondary">
+                    {t('profile.backupLastAt').replace(
+                      '{date}',
+                      new Date(lastBackupAt).toLocaleString(
                         language === 'ro' ? 'ro-RO' : 'en-US'
                       )
-                    : item.name;
-                  const downloading = downloadingBackupId === item.id;
-                  return (
-                    <li
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                    )}
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={handleBackupToDrive}
+                  disabled={backupBusy || backupListLoading}
+                  className={BTN_SUBMIT_CLASS}
+                >
+                  {backupBusy ? (
+                    <FiLoader className="animate-spin" aria-hidden />
+                  ) : (
+                    <FiDatabase aria-hidden />
+                  )}
+                  {backupBusy
+                    ? t('profile.backupBusy')
+                    : t('profile.backupButton')}
+                </button>
+
+                <div className="mt-4 border-t border-white/[0.06] pt-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h4 className="m-0 text-xs font-semibold uppercase tracking-wider text-app-muted">
+                      {t('profile.backupListTitle')}
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => refreshBackupList(false)}
+                      disabled={backupListLoading || backupBusy}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1 text-caption font-semibold text-app-secondary hover:border-white/25 hover:text-app-primary disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <div className="min-w-0">
-                        <p className="m-0 truncate text-sm font-medium text-app-primary">
-                          {when}
-                        </p>
-                        <p className="m-0 mt-0.5 truncate text-caption text-app-muted">
-                          {formatBackupSize(item.sizeBytes)} · {item.name}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadDriveBackup(item)}
-                        disabled={downloading || backupBusy}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-caption font-semibold text-app-secondary hover:border-white/25 hover:text-app-primary disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label={t('profile.backupDownload')}
-                        title={t('profile.backupDownload')}
-                      >
-                        {downloading ? (
-                          <FiLoader className="animate-spin" aria-hidden />
-                        ) : (
-                          <FiDownload aria-hidden />
-                        )}
-                        {downloading
-                          ? t('profile.backupDownloading')
-                          : t('profile.backupDownload')}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
+                      {backupListLoading ? (
+                        <FiLoader className="animate-spin" aria-hidden />
+                      ) : (
+                        <FiRefreshCw aria-hidden />
+                      )}
+                      {backupListLoading
+                        ? t('profile.backupListLoading')
+                        : t('profile.backupListLoad')}
+                    </button>
+                  </div>
+
+                  {backupListLoaded &&
+                    backupList.length === 0 &&
+                    !backupListLoading && (
+                      <p className="m-0 text-caption text-app-muted">
+                        {t('profile.backupListEmpty')}
+                      </p>
+                    )}
+
+                  {backupList.length > 0 && (
+                    <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                      {backupList.map((item) => {
+                        const when = item.createdAt
+                          ? new Date(item.createdAt).toLocaleString(
+                              language === 'ro' ? 'ro-RO' : 'en-US'
+                            )
+                          : item.name;
+                        const downloading = downloadingBackupId === item.id;
+                        return (
+                          <li
+                            key={item.id}
+                            className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5"
+                          >
+                            <div className="min-w-0">
+                              <p className="m-0 truncate text-sm font-medium text-app-primary">
+                                {when}
+                              </p>
+                              <p className="m-0 mt-0.5 truncate text-caption text-app-muted">
+                                {formatBackupSize(item.sizeBytes)} · {item.name}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadDriveBackup(item)}
+                              disabled={downloading || backupBusy}
+                              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1.5 text-caption font-semibold text-app-secondary hover:border-white/25 hover:text-app-primary disabled:cursor-not-allowed disabled:opacity-50"
+                              aria-label={t('profile.backupDownload')}
+                              title={t('profile.backupDownload')}
+                            >
+                              {downloading ? (
+                                <FiLoader className="animate-spin" aria-hidden />
+                              ) : (
+                                <FiDownload aria-hidden />
+                              )}
+                              {downloading
+                                ? t('profile.backupDownloading')
+                                : t('profile.backupDownload')}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Charts Settings (accordion, closed by default) */}
@@ -626,6 +620,35 @@ const Profile = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Emergency fund / Goals */}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
+          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
+            <FiShield />
+            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
+              {t('profile.goalsSettings')}
+            </h3>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <span
+                id="goals-enabled-label"
+                className="block text-body text-app-secondary"
+              >
+                {t('profile.goalsEnable')}
+              </span>
+              <p className="m-0 mt-1 text-xs text-app-muted">
+                {t('profile.goalsEnableHint')}
+              </p>
+            </div>
+            <Switch
+              checked={goalsEnabled}
+              onCheckedChange={handleGoalsEnabledChange}
+              disabled={goalsSyncing}
+              aria-labelledby="goals-enabled-label"
+            />
+          </div>
         </div>
 
         <BiometricSettings

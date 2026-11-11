@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { FiHash, FiX } from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp, FiHash, FiX } from 'react-icons/fi';
 import { useNotification } from '@shared/context/notification';
 import { useLocalization } from '@shared/context/localization';
 import { notificationType } from '@shared/utils/constants';
@@ -231,22 +231,43 @@ const TagEditor = ({ initial }: { initial: TagCatalog }) => {
 const TagSettings = () => {
   const { t } = useLocalization();
   const { catalog, status } = useTagCatalogState();
+  const [open, setOpen] = useState(false);
 
   return (
-    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px]">
-      <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
-        <FiHash />
-        <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
-          {t('profile.tagsTitle')}
-        </h3>
-      </div>
-      {status === 'ready' ? (
-        <TagEditor
-          key={catalogSignature(catalog.mode, catalog.custom)}
-          initial={catalog}
-        />
-      ) : (
-        <p className="m-0 text-xs text-app-muted">{t('profile.tagsLoading')}</p>
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden md:rounded-[10px] transition-colors active:border-white/10">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="w-full flex items-center justify-between gap-2.5 py-5 px-5 md:py-4 md:px-4 text-left bg-transparent border-none cursor-pointer [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:shrink-0"
+        aria-expanded={open}
+      >
+        <div className="flex items-center gap-2.5 [&_svg]:text-[var(--color-app-accent)]">
+          <FiHash />
+          <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
+            {t('profile.tagsTitle')}
+          </h3>
+        </div>
+        {open ? (
+          <FiChevronUp className="text-app-muted" aria-hidden />
+        ) : (
+          <FiChevronDown className="text-app-muted" aria-hidden />
+        )}
+      </button>
+      {open && (
+        <div className="px-5 pb-5 pt-0 md:px-4 md:pb-4 border-t border-white/[0.06]">
+          <div className="pt-4 md:pt-3">
+            {status === 'ready' ? (
+              <TagEditor
+                key={catalogSignature(catalog.mode, catalog.custom)}
+                initial={catalog}
+              />
+            ) : (
+              <p className="m-0 text-xs text-app-muted">
+                {t('profile.tagsLoading')}
+              </p>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
