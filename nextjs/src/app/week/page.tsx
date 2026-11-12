@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CategoryScale,
   Chart,
@@ -26,11 +26,42 @@ Chart.register(
 )
 
 const SCRIPT = 'https://telegram.org/js/telegram-web-app.js'
+const MAX_RANGE_DAYS = 90
 
 type WeekRatePoint = {
   date: string
   usd: number | null
   eur: number | null
+}
+
+const fieldClass =
+  'w-full max-w-[300px] px-3.5 py-3 rounded-xl border border-white/20 bg-white/[0.06] text-inherit text-base'
+const labelClass = 'block mb-1.5 text-sm'
+
+function toIsoLocal(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function defaultRangeIso(): { from: string; to: string } {
+  const to = new Date()
+  const from = new Date(to.getFullYear(), to.getMonth(), to.getDate() - 6)
+  return { from: toIsoLocal(from), to: toIsoLocal(to) }
+}
+
+function isoToDDMMYYYY(iso: string): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim())
+  if (!m) return null
+  return `${m[3]}.${m[2]}.${m[1]}`
+}
+
+function inclusiveDaysIso(fromIso: string, toIso: string): number | null {
+  const from = Date.parse(`${fromIso}T00:00:00Z`)
+  const to = Date.parse(`${toIso}T00:00:00Z`)
+  if (!Number.isFinite(from) || !Number.isFinite(to)) return null
+  return Math.round((to - from) / 86_400_000) + 1
 }
 
 function shortLabel(bnmDate: string): string {
@@ -45,12 +76,27 @@ function firstLastLabel(values: (number | null)[]): string | null {
 }
 
 export default function WeekChartPage() {
+  const defaults = useMemo(() => defaultRangeIso(), [])
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const chartRef = useRef<Chart | null>(null)
   const [ready, setReady] = useState(false)
+  const [fromIso, setFromIso] = useState(defaults.from)
+  const [toIso, setToIso] = useState(defaults.to)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [points, setPoints] = useState<WeekRatePoint[] | null>(null)
+
+  const fromBnm = useMemo(() => isoToDDMMYYYY(fromIso), [fromIso])
+  const toBnm = useMemo(() => isoToDDMMYYYY(toIso), [toIso])
+  const dayCount = useMemo(() => inclusiveDaysIso(fromIso, toIso), [fromIso, toIso])
+
+  const rangeError = useMemo(() => {
+    if (!fromBnm || !toBnm) return 'Invalid date.'
+    if (dayCount == null) return 'Invalid date.'
+    if (dayCount < 1) return 'From must be on or before To.'
+    if (dayCount > MAX_RANGE_DAYS) return `Range too long. Maximum is ${MAX_RANGE_DAYS} days.`
+    return null
+  }, [fromBnm, toBnm, dayCount])
 
   useEffect(() => {
     const finish = () => {
@@ -73,13 +119,21 @@ export default function WeekChartPage() {
   }, [])
 
   useEffect(() => {
+    if (rangeError || !fromBnm || !toBnm) {
+      setPoints(null)
+      setLoading(false)
+      setError(rangeError)
+      return
+    }
+
     let cancelled = false
 
     async function load() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch('/api/bot/week-rates')
+        const qs = new URLSearchParams({ from: fromBnm!, to: toBnm! })
+        const res = await fetch(`/api/bot/week-rates?${qs}`)
         const data = await res.json().catch(() => null)
         if (!res.ok || !data?.ok || !Array.isArray(data.points)) {
           throw new Error(data?.error || 'Could not load rates.')
@@ -99,7 +153,7 @@ export default function WeekChartPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [fromBnm, toBnm, rangeError])
 
   useEffect(() => {
     if (!points || !canvasRef.current) return
@@ -132,6 +186,7 @@ export default function WeekChartPage() {
             tension: 0.25,
             pointRadius: 4,
             pointHoverRadius: 6,
+            hidden: true,
           },
         ],
       },
@@ -193,10 +248,41 @@ export default function WeekChartPage() {
   return (
     <div className="min-h-screen p-5 bg-[#0a0a0a] text-[#ededed] font-[system-ui,sans-serif]">
       <h1 className="text-xl mb-2">Week chart</h1>
-      <p className="text-sm opacity-85 mb-4">BNM EUR &amp; USD — last 7 days. Tap points for details.</p>
+      <p className="text-sm opacity-85 mb-4">
+        BNM EUR &amp; USD — select a range (default last 7 days). Tap points for details.
+      </p>
+
+      <label className={labelClass} htmlFor="from">
+        From
+      </label>
+      <input
+        id="from"
+        type="date"
+        value={fromIso}
+        onChange={(e) => setFromIso(e.target.value)}
+        className={fieldClass}
+      />
+
+      <label className={`${labelClass} mt-4`} htmlFor="to">
+        To
+      </label>
+      <input
+        id="to"
+        type="date"
+        value={toIso}
+        onChange={(e) => setToIso(e.target.value)}
+        className={fieldClass}
+      />
+
+      {fromBnm && toBnm && !rangeError ? (
+        <p className="mt-3 text-sm opacity-90">
+          Range: <strong>{fromBnm}</strong> → <strong>{toBnm}</strong>
+          {dayCount != null ? ` (${dayCount} days)` : null}
+        </p>
+      ) : null}
 
       {usdSummary || eurSummary ? (
-        <p className="text-sm opacity-90 mb-4">
+        <p className="text-sm opacity-90 mt-3 mb-2">
           {usdSummary ? (
             <>
               USD: <strong>{usdSummary}</strong>
@@ -211,11 +297,11 @@ export default function WeekChartPage() {
         </p>
       ) : null}
 
-      {loading ? <p className="text-sm opacity-70">Loading rates…</p> : null}
-      {error ? <p className="text-[#f87171] text-sm">{error}</p> : null}
+      {loading ? <p className="mt-3 text-sm opacity-70">Loading rates…</p> : null}
+      {error ? <p className="mt-3 text-[#f87171] text-sm">{error}</p> : null}
 
       {!loading && !error && points ? (
-        <div className="relative w-full h-[320px] mt-2">
+        <div className="relative w-full h-[320px] mt-3">
           <canvas ref={canvasRef} />
         </div>
       ) : null}
