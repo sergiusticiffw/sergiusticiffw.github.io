@@ -10,7 +10,7 @@ import { getTodayDate, getTomorrowDate, getYesterdayDate } from '@/server/bot/da
 import { getPublicSiteBaseUrl } from '@/server/bot/publicSiteUrl'
 import { signChatId } from '@/server/bot/sign'
 import { isSubscribeChatType } from '@/server/bot/chatTypes'
-import { sendDigestMessage } from '@/server/bot/digest'
+import { sendDigestMessage, sendMonthlyDigestMessage } from '@/server/bot/digest'
 import {
   getMessageLikeFromUpdate,
   normalizeChatId,
@@ -207,6 +207,21 @@ export async function POST(req: NextRequest): Promise<Response> {
           botToken,
           chatId,
           text: 'Could not build the weekly digest. Try again later.',
+          replyMarkup: REMOVE_KEYBOARD,
+        }).catch(() => {})
+      }
+      return Response.json({ ok: true })
+    }
+
+    if (parsed && parsed.cmd === '/monthly') {
+      try {
+        await sendMonthlyDigestMessage({ botToken, chatId })
+      } catch (err) {
+        console.error('[telegram webhook] sendMonthlyDigestMessage failed', err)
+        await sendTelegramMessage({
+          botToken,
+          chatId,
+          text: 'Could not build the monthly digest. Try again later.',
           replyMarkup: REMOVE_KEYBOARD,
         }).catch(() => {})
       }

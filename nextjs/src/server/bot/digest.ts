@@ -1,3 +1,4 @@
+import { getSmartMonthlyRange } from '@/server/bot/date'
 import { defaultLastWeekRange, fetchRatesForRange, type WeekRatePoint } from '@/server/bot/weekChart'
 import { sendTelegramMessage } from '@/server/bot/telegram'
 
@@ -78,12 +79,17 @@ function formatCurrencyBlock(label: string, stats: CurrencyStats | null): string
   ].join('\n')
 }
 
-export function formatDigestMessage(points: WeekRatePoint[], from: string, to: string): string {
+export function formatDigestMessage(
+  points: WeekRatePoint[],
+  from: string,
+  to: string,
+  title = '📊 Digest BNM',
+): string {
   const usd = summarizeCurrency(points, 'usd')
   const eur = summarizeCurrency(points, 'eur')
 
   return [
-    `📊 Digest BNM — ${from} → ${to}`,
+    `${title} — ${from} → ${to}`,
     '',
     formatCurrencyBlock('USD', usd),
     '',
@@ -115,5 +121,35 @@ export async function sendDigestMessage({
     botToken,
     chatId,
     text: formatDigestMessage(points, from, to),
+  })
+}
+
+export async function sendMonthlyDigestMessage({
+  botToken,
+  chatId,
+}: {
+  botToken: string
+  chatId: number
+}): Promise<void> {
+  const { from, to, mode } = getSmartMonthlyRange()
+  const points = await fetchRatesForRange(from, to)
+  const hasAny = points.some((p) => p.usd != null || p.eur != null)
+
+  if (!hasAny) {
+    await sendTelegramMessage({
+      botToken,
+      chatId,
+      text:
+        mode === 'last_30'
+          ? 'Could not fetch BNM rates for the last 30 days. Try again later.'
+          : 'Could not fetch BNM rates for this month so far. Try again later.',
+    })
+    return
+  }
+
+  await sendTelegramMessage({
+    botToken,
+    chatId,
+    text: formatDigestMessage(points, from, to, '📊 Monthly Digest BNM'),
   })
 }

@@ -50,3 +50,25 @@ export function getYesterdayDate(timeZone = 'Europe/Chisinau') {
   return getShiftedDate(-1, timeZone)
 }
 
+/**
+ * Smart monthly digest window (Europe/Chisinau by default):
+ * - days 1–15 → last 30 calendar days inclusive (today − 29 … today)
+ * - day 16+ → month-to-date (01.MM.YYYY … today)
+ */
+export function getSmartMonthlyRange(timeZone = 'Europe/Chisinau'): {
+  from: string
+  to: string
+  mode: 'last_30' | 'month_to_date'
+} {
+  const { year, month, day } = getLocalParts(new Date(), timeZone)
+  const to = formatDDMMYYYY(year, month, day)
+
+  if (day <= 15) {
+    const from = shiftBnmDate(to, -29) ?? to
+    return { from, to, mode: 'last_30' }
+  }
+
+  const from = formatDDMMYYYY(year, month, 1)
+  return { from, to, mode: 'month_to_date' }
+}
+
