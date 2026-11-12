@@ -9,6 +9,7 @@ export function formatHelp(): string {
     'Available commands:',
     '',
     '/start - Subscribe to daily updates',
+    '/stop - Unsubscribe from daily updates',
     '/help - Show this help',
     '/today - Get today’s USD and EUR (BNM) and current DXY',
     '/yesterday - Get yesterday’s USD and EUR (BNM) and current DXY',

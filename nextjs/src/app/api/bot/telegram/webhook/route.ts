@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 
-import { addSubscriber } from '@/server/bot/kvSubscribers'
+import { addSubscriber, removeSubscriber } from '@/server/bot/kvSubscribers'
 import { formatDailyMessage, formatHelp, isStartCommand, parseCommand } from '@/server/bot/commands'
 import { parseConvertArg, sendConvertMessage } from '@/server/bot/convert'
 import { BNM_DATE_REGEX, sendDateRatesMessage } from '@/server/bot/dateRatesReply'
@@ -138,6 +138,27 @@ export async function POST(req: NextRequest): Promise<Response> {
         botToken,
         chatId,
         text: 'Subscribed! Use /help to see commands.',
+        replyMarkup: REMOVE_KEYBOARD,
+      })
+      return Response.json({ ok: true })
+    }
+
+    if (parsed && parsed.cmd === '/stop') {
+      if (!isSubscribeChatType(chatType)) return Response.json({ ok: true })
+      try {
+        await removeSubscriber(chatId)
+      } catch {
+        await sendTelegramMessage({
+          botToken,
+          chatId,
+          text: 'Could not update your subscription (storage error). Check server logs / KV env vars.',
+        })
+        return Response.json({ ok: true })
+      }
+      await sendTelegramMessage({
+        botToken,
+        chatId,
+        text: 'Unsubscribed from daily updates. Use /start to subscribe again.',
         replyMarkup: REMOVE_KEYBOARD,
       })
       return Response.json({ ok: true })
