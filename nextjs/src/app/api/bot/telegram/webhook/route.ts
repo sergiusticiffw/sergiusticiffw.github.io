@@ -16,7 +16,6 @@ import {
   sendTelegramMessage,
   type ReplyMarkup,
 } from '@/server/bot/telegram'
-import { sendWeekChartMessage } from '@/server/bot/weekChart'
 
 export const runtime = 'nodejs'
 export const maxDuration = 20
@@ -47,6 +46,13 @@ function buildConvertUrl(chatId: number): string | null {
   if (!base) return null
   const token = signChatId(chatId)
   return `${base}/convert?c=${chatId}&t=${token}`
+}
+
+function buildWeekUrl(chatId: number): string | null {
+  const base = getPublicSiteBaseUrl()
+  if (!base) return null
+  const token = signChatId(chatId)
+  return `${base}/week?c=${chatId}&t=${token}`
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -142,7 +148,31 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
 
     if (parsed && parsed.cmd === '/week') {
-      await sendWeekChartMessage({ botToken, chatId })
+      const weekUrl = buildWeekUrl(chatId)
+      if (weekUrl) {
+        const isPrivate = chatType === 'private'
+        await sendTelegramMessage({
+          botToken,
+          chatId,
+          text: 'Open the interactive EUR & USD chart for the last 7 days:',
+          replyMarkup: {
+            inline_keyboard: [
+              [
+                isPrivate
+                  ? { text: '📈 Open week chart', web_app: { url: weekUrl } }
+                  : { text: '📈 Open week chart', url: weekUrl },
+              ],
+            ],
+          },
+        })
+      } else {
+        await sendTelegramMessage({
+          botToken,
+          chatId,
+          text: 'Week chart is not configured (missing public site URL).',
+          replyMarkup: REMOVE_KEYBOARD,
+        })
+      }
       return Response.json({ ok: true })
     }
 
