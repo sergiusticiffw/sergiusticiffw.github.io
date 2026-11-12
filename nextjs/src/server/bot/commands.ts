@@ -14,6 +14,7 @@ export function formatHelp(): string {
     '/yesterday - Get yesterday’s USD and EUR (BNM) and current DXY',
     '/tomorrow - Get tomorrow’s USD and EUR (BNM) and current DXY',
     '/week - Open interactive EUR & USD chart (Web App) for the last 7 days (BNM)',
+    '/digest - Weekly text summary: min / max / Δ for USD & EUR (last 7 days, BNM)',
     '/date - Open date picker (Web App), or /date DD.MM.YYYY (BNM + DXY)',
     '/convert - Open converter form, or /convert <amount> <currency> [DD.MM.YYYY]',
   ].join('\n')

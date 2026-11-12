@@ -10,6 +10,7 @@ import { getTodayDate, getTomorrowDate, getYesterdayDate } from '@/server/bot/da
 import { getPublicSiteBaseUrl } from '@/server/bot/publicSiteUrl'
 import { signChatId } from '@/server/bot/sign'
 import { isSubscribeChatType } from '@/server/bot/chatTypes'
+import { sendDigestMessage } from '@/server/bot/digest'
 import {
   getMessageLikeFromUpdate,
   normalizeChatId,
@@ -172,6 +173,21 @@ export async function POST(req: NextRequest): Promise<Response> {
           text: 'Week chart is not configured (missing public site URL).',
           replyMarkup: REMOVE_KEYBOARD,
         })
+      }
+      return Response.json({ ok: true })
+    }
+
+    if (parsed && parsed.cmd === '/digest') {
+      try {
+        await sendDigestMessage({ botToken, chatId })
+      } catch (err) {
+        console.error('[telegram webhook] sendDigestMessage failed', err)
+        await sendTelegramMessage({
+          botToken,
+          chatId,
+          text: 'Could not build the weekly digest. Try again later.',
+          replyMarkup: REMOVE_KEYBOARD,
+        }).catch(() => {})
       }
       return Response.json({ ok: true })
     }
