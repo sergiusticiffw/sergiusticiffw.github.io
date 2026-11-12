@@ -63,6 +63,36 @@ export async function sendTelegramMessage({
   throw new Error(`Telegram sendMessage failed for chat_id=${chatId}: [${code}] ${desc}`)
 }
 
+export async function sendTelegramPhoto({
+  botToken,
+  chatId,
+  photoUrl,
+  caption,
+}: {
+  botToken: string
+  chatId: number
+  photoUrl: string
+  caption?: string
+}): Promise<void> {
+  const url = `https://api.telegram.org/bot${botToken}/sendPhoto`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      photo: photoUrl,
+      ...(caption ? { caption } : {}),
+    }),
+  })
+
+  const data: any = await res.json().catch(() => null)
+  if (data?.ok === true) return
+
+  const code = data?.error_code ?? res.status
+  const desc = data?.description ?? res.statusText ?? 'Unknown Telegram error'
+  throw new Error(`Telegram sendPhoto failed for chat_id=${chatId}: [${code}] ${desc}`)
+}
+
 export async function setTelegramWebhook({
   botToken,
   url,

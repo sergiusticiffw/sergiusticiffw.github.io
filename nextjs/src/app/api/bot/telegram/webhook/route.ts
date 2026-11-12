@@ -16,6 +16,7 @@ import {
   sendTelegramMessage,
   type ReplyMarkup,
 } from '@/server/bot/telegram'
+import { sendWeekChartMessage } from '@/server/bot/weekChart'
 
 export const runtime = 'nodejs'
 export const maxDuration = 20
@@ -137,6 +138,11 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     if (parsed && parsed.cmd === '/help') {
       await sendTelegramMessage({ botToken, chatId, text: formatHelp(), replyMarkup: REMOVE_KEYBOARD })
+      return Response.json({ ok: true })
+    }
+
+    if (parsed && parsed.cmd === '/week') {
+      await sendWeekChartMessage({ botToken, chatId })
       return Response.json({ ok: true })
     }
 
