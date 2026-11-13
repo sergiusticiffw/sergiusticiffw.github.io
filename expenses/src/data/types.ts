@@ -39,6 +39,21 @@ export interface WriteResult {
   raw?: unknown;
 }
 
+/** Portable prefs synced in `profiles.preferences` (Supabase). */
+export type ProfilePreferences = {
+  v: 1;
+  theme?: string;
+  language?: 'en' | 'ro' | string;
+  onboardingComplete?: boolean;
+  goalsEnabled?: boolean;
+  visibleCharts?: string[];
+  customChartsEnabled?: boolean;
+  aiLanguage?: string;
+  aiShareDescriptions?: boolean;
+  aiChat?: unknown;
+  emergencyFund?: Record<string, unknown>;
+};
+
 export interface UserProfile {
   uid: string;
   currency?: string;
@@ -46,6 +61,7 @@ export interface UserProfile {
   gemini_api_key?: string;
   tag_mode?: TagMode;
   custom_tags?: TagCatalog['custom'];
+  preferences?: ProfilePreferences | Record<string, unknown>;
   /** Raw provider payload when callers need Drupal field shapes. */
   raw?: Record<string, unknown>;
 }
@@ -56,6 +72,7 @@ export interface ProfilePatch {
   gemini_api_key?: string | null;
   tag_mode?: TagMode;
   custom_tags?: TagCatalog['custom'];
+  preferences?: ProfilePreferences | Record<string, unknown>;
 }
 
 export type TransactionRecord = TransactionOrIncomeItem & {

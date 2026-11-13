@@ -16,15 +16,8 @@ import { getTagCatalog, refreshTagCatalog } from '../../tags/store';
 import { getStoredApiKey } from '../../ai/storage';
 import { fetchApiKeyFromServer } from '../../ai/apiKey';
 import type { GoalsDriveBundle } from '../goals/driveSync';
-import {
-  hasDriveAccessToken,
-  loadAndClaimGoalsFromDrive,
-  readGoalsFromDriveSilent,
-  requireGoalsOwnerKey,
-} from '../goals/driveSync';
-import { getEmergencyFund, replaceEmergencyFund } from '../goals/store';
-import { newerEmergencyFund } from '../goals/model';
-import { setGoalsEnabled, settingsStore } from '../../stores/settingsStore';
+import { getEmergencyFund } from '../goals/store';
+import { settingsStore } from '../../stores/settingsStore';
 import {
   getExpensesFromDB,
   getLoansFromDB,
@@ -192,48 +185,11 @@ const goalsAreMeaningful = (bundle: GoalsDriveBundle | null | undefined) => {
 };
 
 /** Merge local Goals with Drive (may prompt for Drive access when exporting). */
-const loadGoalsForBackup = async (): Promise<GoalsDriveBundle> => {
-  const localFund = getEmergencyFund();
-  let enabled = !!settingsStore.state.goalsEnabled;
-  let remote: GoalsDriveBundle | null = null;
-  let ownerKey = '';
-  try {
-    ownerKey = requireGoalsOwnerKey();
-  } catch {
-    ownerKey = '';
-  }
-
-  if (navigator.onLine && ownerKey) {
-    try {
-      // Interactive: user clicked Backup — OK to request Drive if needed.
-      const loaded = await loadAndClaimGoalsFromDrive(ownerKey);
-      remote = loaded.bundle;
-    } catch {
-      try {
-        if (hasDriveAccessToken()) {
-          remote = await readGoalsFromDriveSilent(ownerKey);
-        }
-      } catch {
-        remote = null;
-      }
-    }
-  }
-
-  const mergedFund = newerEmergencyFund(localFund, remote?.fund ?? null);
-  if (remote) {
-    const remoteWins =
-      !localFund.updatedAt ||
-      (Boolean(remote.fund.updatedAt) &&
-        (remote.fund.updatedAt as string) >= (localFund.updatedAt || ''));
-    if (remoteWins) enabled = remote.enabled;
-  }
-
-  // Keep local stores in sync with what we export.
-  replaceEmergencyFund(mergedFund);
-  setGoalsEnabled(enabled);
-
-  return { fund: mergedFund, enabled };
-};
+/** Goals for backup — local / Supabase-hydrated store only (no Drive). */
+const loadGoalsForBackup = async (): Promise<GoalsDriveBundle> => ({
+  fund: getEmergencyFund(),
+  enabled: !!settingsStore.state.goalsEnabled,
+});
 
 export interface BuildBackupOptions {
   apiClient?: DataProvider | null;

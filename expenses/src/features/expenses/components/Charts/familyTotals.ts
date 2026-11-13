@@ -53,6 +53,63 @@ export type SharedCategorySpend = {
   color?: string;
 };
 
+export type FamilyAggregateFilters = {
+  category?: string;
+  dateRange?: { start: string; end: string } | null;
+};
+
+/** Filter month×category aggregates by category and YYYY-MM overlap with dateRange. */
+export const filterFamilyAggregateItems = (
+  items: AiItem[],
+  filters: FamilyAggregateFilters = {}
+): AiItem[] => {
+  const category = filters.category?.trim() || '';
+  const range = filters.dateRange;
+  const hasRange = !!(range?.start && range?.end);
+  const startMonth = hasRange ? range!.start.slice(0, 7) : '';
+  const endMonth = hasRange ? range!.end.slice(0, 7) : '';
+
+  return items.filter((item) => {
+    if (item.kind !== 'expense' || item.month.length !== 7) return false;
+    if (category && String(item.cat || '') !== category) return false;
+    if (hasRange && (item.month < startMonth || item.month > endMonth)) {
+      return false;
+    }
+    return true;
+  });
+};
+
+/**
+ * Resolve items for family charts.
+ * Search/tag need personal row details → use personalItems (typically from filtered_raw).
+ * Otherwise use family aggregates filtered by category + dateRange.
+ */
+export const resolveFamilyChartItems = (options: {
+  familyItems: AiItem[];
+  shared: Set<string>;
+  personalItems: AiItem[];
+  category?: string;
+  textFilter?: string;
+  selectedTag?: string;
+  dateRange?: { start: string; end: string } | null;
+}): AiItem[] => {
+  const {
+    familyItems,
+    shared,
+    personalItems,
+    category = '',
+    textFilter = '',
+    selectedTag = '',
+    dateRange = null,
+  } = options;
+
+  if (textFilter.trim() || selectedTag.trim()) {
+    return sharedTotalsFromItems(personalItems, shared);
+  }
+
+  return filterFamilyAggregateItems(familyItems, { category, dateRange });
+};
+
 /** Collapse AiItems to category spend for one YYYY-MM month. */
 export const categorySpendForMonth = (
   items: AiItem[],
@@ -63,6 +120,29 @@ export const categorySpendForMonth = (
   const totals = new Map<string, number>();
   for (const item of items) {
     if (item.kind !== 'expense' || item.month !== monthKey) continue;
+    const id = item.cat || '0';
+    totals.set(id, (totals.get(id) || 0) + item.amount);
+  }
+  return [...totals.entries()]
+    .map(([id, amount]) => ({
+      id,
+      label: labelFor(id),
+      amount,
+      color: colorFor?.(id),
+    }))
+    .filter((row) => row.amount > 0)
+    .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label));
+};
+
+/** Collapse AiItems to category spend across all months. */
+export const categorySpendAllTime = (
+  items: AiItem[],
+  labelFor: (id: string) => string,
+  colorFor?: (id: string) => string | undefined
+): SharedCategorySpend[] => {
+  const totals = new Map<string, number>();
+  for (const item of items) {
+    if (item.kind !== 'expense') continue;
     const id = item.cat || '0';
     totals.set(id, (totals.get(id) || 0) + item.amount);
   }

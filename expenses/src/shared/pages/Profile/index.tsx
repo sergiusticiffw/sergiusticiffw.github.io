@@ -58,16 +58,14 @@ import { googleLogout } from '@react-oauth/google';
 import { DriveError } from '../../../crypto/driveVault';
 import {
   applyGoalsBackupBundle,
-  loadAndClaimGoalsFromDrive,
   requireGoalsOwnerKey,
   requireSessionUid,
-  saveGoalsToDrive,
 } from '../../../features/goals/driveSync';
 import {
   getEmergencyFund,
   replaceEmergencyFund,
 } from '../../../features/goals/store';
-import { newerEmergencyFund } from '../../../features/goals/model';
+import { persistGoalsToSupabase } from '../../../features/profile/preferencesSync';
 import {
   buildBackupSnapshot,
   type ExpensesBackupSnapshot,
@@ -131,39 +129,6 @@ const Profile = () => {
   const navigate = useNavigate();
   const isSupabase = getDataProviderKind() === 'supabase';
 
-  // Silent pull only — never open a Google login popup on Profile visit.
-  useEffect(() => {
-    let cancelled = false;
-    const pull = async () => {
-      if (!navigator.onLine) return;
-      try {
-        const uid = requireGoalsOwnerKey();
-        const { bundle: remote, claimed } = await loadAndClaimGoalsFromDrive(
-          uid,
-          { silent: true }
-        );
-        if (cancelled || !remote) return;
-        const localFund = getEmergencyFund();
-        const merged = newerEmergencyFund(localFund, remote.fund);
-        replaceEmergencyFund(merged);
-        const remoteWins =
-          !localFund.updatedAt ||
-          (Boolean(remote.fund.updatedAt) &&
-            (remote.fund.updatedAt as string) >= (localFund.updatedAt || ''));
-        if (remoteWins) setGoalsEnabled(remote.enabled);
-        if (claimed) {
-          showNotification(t('goals.claimed'), notificationType.SUCCESS);
-        }
-      } catch {
-        // Keep local toggle; interactive Drive auth happens on save/toggle.
-      }
-    };
-    pull();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const handleGoalsEnabledChange = async (checked: boolean) => {
     setGoalsEnabled(checked);
     const stamped = {
@@ -177,17 +142,23 @@ const Profile = () => {
       return;
     }
 
+    if (getDataProviderKind() !== 'supabase') {
+      showNotification(t('goals.localOnly'), notificationType.SUCCESS);
+      return;
+    }
+
     setGoalsSyncing(true);
     try {
-      const uid = requireGoalsOwnerKey();
-      await saveGoalsToDrive(uid, { fund: stamped, enabled: checked });
-      showNotification(t('goals.savedDrive'), notificationType.SUCCESS);
-    } catch (err) {
-      const message =
-        err instanceof DriveError
-          ? t('goals.syncErrorDrive')
-          : t('goals.syncError');
-      showNotification(message, notificationType.ERROR);
+      const ok = await persistGoalsToSupabase({
+        fund: stamped,
+        enabled: checked,
+      });
+      showNotification(
+        ok ? t('goals.savedDrive') : t('goals.localOnly'),
+        notificationType.SUCCESS
+      );
+    } catch {
+      showNotification(t('goals.syncError'), notificationType.ERROR);
     } finally {
       setGoalsSyncing(false);
     }
@@ -365,12 +336,12 @@ const Profile = () => {
     );
   };
 
-  const handleLogout = (
+  const handleLogout = async (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     event.preventDefault();
     googleLogout();
-    logout(dispatch, dataDispatch);
+    await logout(dispatch, dataDispatch);
     navigate({ to: '/expenses/login' });
   };
 
@@ -380,10 +351,10 @@ const Profile = () => {
       showNotification(t('error.unknown'), notificationType.ERROR);
       return;
     }
-    const result = await apiClient.updateProfile(
-      String(userDetails.current_user.uid),
-      { currency: newCurrency }
-    );
+    const uid = String(userDetails.current_user.uid);
+    const result = await apiClient.updateProfile(uid, {
+      currency: newCurrency,
+    });
     if (result.success && result.data) {
       const saved =
         result.data.currency ||
@@ -427,6 +398,16 @@ const Profile = () => {
     setState((prev) => ({ ...prev, visibleCharts: visible }));
   };
 
+  const currentUser =
+    userDetails && typeof userDetails === 'object'
+      ? userDetails.current_user
+      : undefined;
+
+  // After LOGOUT, auth clears userDetails before navigate finishes — avoid crash.
+  if (!currentUser) {
+    return null;
+  }
+
   return (
     <div className={`${PAGE_CONTAINER_CLASS} flex flex-col items-center pt-5 md:pt-4`}>
       {/* Header */}
@@ -449,7 +430,7 @@ const Profile = () => {
           <div className="flex items-center gap-3 py-3 md:py-2.5">
             <div className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] shrink-0" />
             <div className="text-[0.9rem] md:text-sm text-app-secondary font-medium tracking-tight">
-              {userDetails.current_user.name}
+              {currentUser.name}
             </div>
           </div>
         </div>

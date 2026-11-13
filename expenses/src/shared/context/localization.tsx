@@ -140,18 +140,18 @@ const translations = {
     'goals.save': 'Save fund',
     'goals.saving': 'Saving…',
     'goals.saved': 'Emergency fund updated',
-    'goals.savedDrive': 'Emergency fund saved to Google Drive',
+    'goals.savedDrive': 'Emergency fund saved to your account',
     'goals.savedOffline': 'Saved on this device — will sync when online',
     'goals.syncing': 'Syncing with Google Drive…',
-    'goals.synced': 'Synced with Google Drive',
-    'goals.localOnly': 'Saved on this device — tap Sync for Google Drive',
+    'goals.synced': 'Synced with your account',
+    'goals.localOnly': 'Saved on this device only',
     'goals.syncNow': 'Sync',
     'goals.offline': 'Offline — using this device only',
-    'goals.syncFailed': 'Drive sync unavailable — local copy kept',
+    'goals.syncFailed': 'Cloud sync unavailable — local copy kept',
     'goals.syncError': 'Could not sync the emergency fund',
-    'goals.syncErrorDrive': 'Could not save to Google Drive. Check access and try again.',
+    'goals.syncErrorDrive': 'Could not save Goals to your account. Try again.',
     'goals.claimed':
-      'Goals recovered from your previous account on this Google Drive.',
+      'Goals recovered for this account.',
     'goals.invalidContribution': 'Enter a valid contribution',
 
     // Offline
@@ -484,8 +484,12 @@ const translations = {
       'Pick shared categories in Profile → Family budget.',
     'family.totalsError': 'Could not load family totals.',
     'family.totalsSpent': 'combined this month',
+    'family.totalsSpentAllTime': 'combined all time',
+    'family.totalsEmptyAllTime':
+      'No shared-category spend for this filter yet.',
     'family.totalsHint': 'Combined totals for shared categories',
     'family.chartTitle': 'Family shared · {month}',
+    'family.chartTitleAllTime': 'Family shared · all time',
     'family.leaveConfirmTitle': 'Leave family?',
     'family.leaveConfirmMessage':
       'You will lose access to the shared family budget. Your own expenses stay private.',
@@ -1138,18 +1142,18 @@ const translations = {
     'goals.save': 'Salvează fondul',
     'goals.saving': 'Se salvează…',
     'goals.saved': 'Fondul de urgență a fost actualizat',
-    'goals.savedDrive': 'Fondul de urgență a fost salvat în Google Drive',
+    'goals.savedDrive': 'Fondul de urgență a fost salvat în cont',
     'goals.savedOffline': 'Salvat pe acest dispozitiv — se sincronizează când ești online',
     'goals.syncing': 'Se sincronizează cu Google Drive…',
-    'goals.synced': 'Sincronizat cu Google Drive',
-    'goals.localOnly': 'Salvat pe acest dispozitiv — apasă Sync pentru Google Drive',
+    'goals.synced': 'Sincronizat cu contul tău',
+    'goals.localOnly': 'Salvat doar pe acest dispozitiv',
     'goals.syncNow': 'Sync',
     'goals.offline': 'Offline — doar pe acest dispozitiv',
-    'goals.syncFailed': 'Sync Drive indisponibil — copia locală e păstrată',
+    'goals.syncFailed': 'Sync cloud indisponibil — copia locală e păstrată',
     'goals.syncError': 'Nu s-a putut sincroniza fondul de urgență',
-    'goals.syncErrorDrive': 'Nu s-a putut salva în Google Drive. Verifică accesul și încearcă din nou.',
+    'goals.syncErrorDrive': 'Nu s-a putut salva Goals în cont. Încearcă din nou.',
     'goals.claimed':
-      'Goals au fost preluate de pe contul anterior din acest Google Drive.',
+      'Goals au fost recuperate pentru acest cont.',
     'goals.invalidContribution': 'Introdu o contribuție validă',
 
     // Offline
@@ -1485,8 +1489,12 @@ const translations = {
       'Alege categoriile comune în Profil → Buget de familie.',
     'family.totalsError': 'Nu s-au putut încărca totalurile familiei.',
     'family.totalsSpent': 'combinat luna asta',
+    'family.totalsSpentAllTime': 'combinat pe tot timpul',
+    'family.totalsEmptyAllTime':
+      'Nicio cheltuială pe categoriile comune pentru acest filtru.',
     'family.totalsHint': 'Totaluri combinate pe categoriile comune',
     'family.chartTitle': 'Cheltuieli comune · {month}',
+    'family.chartTitleAllTime': 'Cheltuieli comune · tot timpul',
     'family.leaveConfirmTitle': 'Părăsești familia?',
     'family.leaveConfirmMessage':
       'Nu vei mai avea acces la bugetul comun. Cheltuielile tale rămân private.',
@@ -2055,6 +2063,9 @@ export const LocalizationProvider: React.FC<LocalizationProviderProps> = ({
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('language', lang);
+    void import('../../features/profile/preferencesSync')
+      .then((m) => m.schedulePreferencesPush({ language: lang }))
+      .catch(() => undefined);
   };
 
   const t = (key: string): string => {
@@ -2066,6 +2077,16 @@ export const LocalizationProvider: React.FC<LocalizationProviderProps> = ({
     // Update document language attribute
     document.documentElement.lang = language;
   }, [language]);
+
+  useEffect(() => {
+    const onPrefsLanguage = (event: Event) => {
+      const lang = (event as CustomEvent<string>).detail;
+      if (lang === 'en' || lang === 'ro') setLanguageState(lang);
+    };
+    window.addEventListener('expenses:prefs-language', onPrefsLanguage);
+    return () =>
+      window.removeEventListener('expenses:prefs-language', onPrefsLanguage);
+  }, []);
 
   const value: LocalizationContextType = {
     language,

@@ -49,9 +49,10 @@ export function createSupabaseDataProvider(): DataProvider {
       (stored.refresh_token as string | undefined) ||
       ((stored as { refreshToken?: string }).refreshToken as string | undefined) ||
       '';
+    const storedUid = String(stored?.current_user?.uid || '');
 
     // Keep the Supabase client JWT in sync so auth.uid() works in RLS/RPC.
-    const { data: existing } = await supabase.auth.getSession();
+    let { data: existing } = await supabase.auth.getSession();
     const sessionToken = existing.session?.access_token || '';
     if (token && sessionToken !== token) {
       if (refresh) {
@@ -59,15 +60,26 @@ export function createSupabaseDataProvider(): DataProvider {
           .setSession({ access_token: token, refresh_token: refresh })
           .catch(() => undefined);
       } else if (!existing.session) {
-        // Fall back to whatever Supabase persisted from OAuth.
         await supabase.auth.refreshSession().catch(() => undefined);
       }
+      ({ data: existing } = await supabase.auth.getSession());
     } else if (!existing.session) {
       await supabase.auth.refreshSession().catch(() => undefined);
+      ({ data: existing } = await supabase.auth.getSession());
     }
 
-    const { data } = await supabase.auth.getUser();
-    userId = data.user?.id || String(stored?.current_user?.uid || userId || '');
+    // Prefer session / cached uid — avoid /auth/v1/user on every API call.
+    const sessionUid = existing.session?.user?.id
+      ? String(existing.session.user.id)
+      : '';
+    if (sessionUid) {
+      userId = sessionUid;
+    } else if (storedUid) {
+      userId = storedUid;
+    } else if (!userId) {
+      const { data } = await supabase.auth.getUser();
+      userId = data.user?.id ? String(data.user.id) : '';
+    }
     return { supabase, userId };
   };
 

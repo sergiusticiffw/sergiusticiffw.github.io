@@ -270,38 +270,42 @@ const FamilySettings: React.FC = () => {
               {t('family.members')}
             </h4>
             <ul className="m-0 flex list-none flex-col gap-2 p-0">
-              {household.members.map((m) => (
-                <li
-                  key={m.user_id}
-                  className="flex items-center justify-between gap-2 rounded-lg bg-white/[0.03] px-3 py-2 text-sm"
-                >
-                  <span className="text-app-secondary">
-                    {m.user_id === myUid
-                      ? t('family.you')
-                      : m.user_id.slice(0, 8) + '…'}{' '}
-                    <span className="text-app-muted">({m.role})</span>
-                  </span>
-                  {isManager &&
-                    m.role !== 'owner' &&
-                    m.user_id !== myUid && (
-                      <button
-                        type="button"
-                        disabled={busy}
-                        aria-label={t('family.removeMember')}
-                        onClick={() =>
-                          setConfirm({
-                            type: 'remove',
-                            userId: m.user_id,
-                            label: m.user_id.slice(0, 8) + '…',
-                          })
-                        }
-                        className="text-red-400 p-1.5"
-                      >
-                        <FiUserMinus />
-                      </button>
-                    )}
-                </li>
-              ))}
+              {household.members.map((m) => {
+                const label =
+                  m.user_id === myUid
+                    ? t('family.you')
+                    : m.email || m.name || m.user_id.slice(0, 8) + '…';
+                return (
+                  <li
+                    key={m.user_id}
+                    className="flex items-center justify-between gap-2 rounded-lg bg-white/[0.03] px-3 py-2 text-sm"
+                  >
+                    <span className="text-app-secondary min-w-0 break-all">
+                      {label}{' '}
+                      <span className="text-app-muted">({m.role})</span>
+                    </span>
+                    {isManager &&
+                      m.role !== 'owner' &&
+                      m.user_id !== myUid && (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          aria-label={t('family.removeMember')}
+                          onClick={() =>
+                            setConfirm({
+                              type: 'remove',
+                              userId: m.user_id,
+                              label,
+                            })
+                          }
+                          className="text-red-400 p-1.5 shrink-0"
+                        >
+                          <FiUserMinus />
+                        </button>
+                      )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
 

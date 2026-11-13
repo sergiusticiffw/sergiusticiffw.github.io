@@ -13,7 +13,7 @@ import {
   markUnlocked,
 } from '../../features/privacy/biometricLock';
 import { hydrateEmergencyFund } from '../../features/goals/store';
-import { hydrateGoalsFromDriveSilent } from '../../features/goals/driveSync';
+import { pullPreferencesFromProfile } from '../../features/profile/preferencesSync';
 import { getStoredCurrentUser } from '@shared/utils/authStorage';
 import {
   getAuthProvider,
@@ -39,9 +39,8 @@ const persistSession = (dispatch: any, data: AuthSession) => {
     hydrateSettings({ currency: data.current_user.currency });
   }
   hydrateEmergencyFund();
-  // Pull emergency fund from Drive when a token already exists (e.g. after
-  // Classic → New); claims Drupal-uid files for the Supabase uid.
-  void hydrateGoalsFromDriveSilent();
+  // Supabase: pull theme/language/charts/AI/goals prefs from profiles.
+  void pullPreferencesFromProfile();
   const uid = String(data.current_user.uid ?? '');
   if (uid) markUnlocked(uid);
   return stored;
@@ -120,21 +119,28 @@ export const logout = async (dispatch: any, dataDispatch: any) => {
   );
   if (uid) clearUnlockOnLogout(uid);
 
+  // Clear local session first so Login / requireAuth stop treating us as signed in
+  // (avoids bounce back to /expenses while Supabase signOut is still in flight).
+  localStorage.removeItem('currentUser');
+  localStorage.removeItem('token');
+  dispatch({ type: 'LOGOUT' });
+  dataDispatch({ type: 'REMOVE_DATA' });
+  resetEncryptionState();
+  resetTagsOnLogout();
+  // Keep expenses.dataProvider preference so next login uses the same backend.
+  resetProviders();
+  clearChatSession();
+  clearAiLocalData();
+  void import('../../features/profile/acceptFamilyInvites').then((m) =>
+    m.resetFamilyInvitesCheck()
+  );
+
   try {
     await getAuthProvider().logout();
   } catch {
     // ignore provider logout errors
   }
 
-  await dispatch({ type: 'LOGOUT' });
-  await dataDispatch({ type: 'REMOVE_DATA' });
-  resetEncryptionState();
-  resetTagsOnLogout();
-  localStorage.removeItem('currentUser');
-  localStorage.removeItem('token');
-  // Keep expenses.dataProvider preference so next login uses the same backend.
-  resetProviders();
-  clearChatSession();
-  clearAiLocalData();
-  await clearExpensesDB();
+  // Don't block the login redirect on IndexedDB cleanup.
+  void clearExpensesDB();
 };

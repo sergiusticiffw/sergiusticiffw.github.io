@@ -132,6 +132,29 @@ export const saveChatSession = () => {
   } catch {
     // Storage full: keep the chat in memory only.
   }
+  void import('../features/profile/preferencesSync')
+    .then((m) => m.schedulePreferencesPush({ aiChat: data }))
+    .catch(() => undefined);
+};
+
+/** Snapshot for profiles.preferences sync. */
+export const readChatSessionForPrefs = () => ({
+  messages: chatSession.messages.slice(-MAX_STORED_MESSAGES),
+  history: chatSession.history.slice(-AI_LIMITS.maxHistoryTurns * 2),
+  toolNotes: chatSession.toolNotes.slice(-MAX_TOOL_NOTES),
+});
+
+/** Apply chat blob from Supabase preferences (login pull). */
+export const hydrateChatSessionFromPrefs = (raw: unknown): void => {
+  try {
+    localStorage.setItem(AI_STORAGE_KEYS.chat, JSON.stringify(raw));
+  } catch {
+    // ignore quota
+  }
+  const next = load();
+  chatSession.messages = next.messages;
+  chatSession.history = next.history;
+  chatSession.toolNotes = next.toolNotes;
 };
 
 // Saves the in-progress question too when the page is reloaded or closed mid-answer.

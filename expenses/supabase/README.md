@@ -34,7 +34,7 @@ Login uses **Supabase Google OAuth redirect** (not a raw Google access token). L
 
 Imports transactions, incomes, loans, payments, profile (tags + Gemini key + currency), and Goals. Loan IDs are remapped so payments stay linked.
 
-Goals also live in Google Drive App Data (`emergency-fund.json`). After login, open **Goals** or **Profile** — the app can claim a Drupal-uid Drive file for your new Supabase uid.
+Goals (emergency fund) sync to `profiles.preferences` on Supabase — not Google Drive. Drive is only used for optional full JSON backups.
 
 Create a fresh backup from Profile while still on Drupal (`VITE_DATA_PROVIDER=drupal`) so profile + goals fields are included.
 
@@ -44,6 +44,8 @@ Run after init:
 1. [`migrations/20260328130000_family_households.sql`](migrations/20260328130000_family_households.sql)
 2. [`migrations/20260328131000_create_household_rpc.sql`](migrations/20260328131000_create_household_rpc.sql) (RPC + grants — fixes RLS on create)
 3. [`migrations/20260328132000_family_aggregates_only.sql`](migrations/20260328132000_family_aggregates_only.sql) (drop partner-row SELECT; aggregate RPC only)
+4. [`migrations/20260328133000_household_member_emails.sql`](migrations/20260328133000_household_member_emails.sql) (member list shows email, not UUID)
+5. [`migrations/20260328134000_profile_preferences.sql`](migrations/20260328134000_profile_preferences.sql) (`profiles.preferences` jsonb — theme, language, charts, AI prefs, goals cache)
 
 Family budget shows **combined totals per shared category** — not partner transaction lists. Each member keeps edit/delete on their own rows only.
 

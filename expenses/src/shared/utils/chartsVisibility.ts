@@ -18,6 +18,9 @@ export function readCustomChartsEnabled(): boolean {
 
 export function writeCustomChartsEnabled(value: boolean): void {
   localStorage.setItem(CUSTOM_CHARTS_KEY, JSON.stringify(value));
+  void import('../../features/profile/preferencesSync')
+    .then((m) => m.schedulePreferencesPush({ customChartsEnabled: value }))
+    .catch(() => undefined);
 }
 
 export function readStoredVisibleCharts(): string[] {
@@ -30,6 +33,9 @@ export function readStoredVisibleCharts(): string[] {
 
 export function writeStoredVisibleCharts(value: string[]): void {
   localStorage.setItem(VISIBLE_CHARTS_KEY, JSON.stringify(value));
+  void import('../../features/profile/preferencesSync')
+    .then((m) => m.schedulePreferencesPush({ visibleCharts: value }))
+    .catch(() => undefined);
 }
 
 export function getEffectiveVisibleCharts(): string[] {

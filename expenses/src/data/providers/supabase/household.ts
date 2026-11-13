@@ -49,34 +49,57 @@ export const loadHousehold = async (
     };
   }
 
-  const [{ data: members }, { data: invites }, { data: cats }] =
-    await Promise.all([
-      supabase
-        .from('household_members')
-        .select('user_id, role, joined_at')
-        .eq('household_id', hid),
-      supabase
-        .from('household_invites')
-        .select('id, email, status, invited_by, created_at, expires_at')
-        .eq('household_id', hid)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('household_shared_categories')
-        .select('category_id')
-        .eq('household_id', hid),
-    ]);
+  const [
+    { data: membersRpc, error: membersRpcErr },
+    { data: invites },
+    { data: cats },
+  ] = await Promise.all([
+    supabase.rpc('household_members_with_email', {
+      p_household_id: hid,
+    }),
+    supabase
+      .from('household_invites')
+      .select('id, email, status, invited_by, created_at, expires_at')
+      .eq('household_id', hid)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('household_shared_categories')
+      .select('category_id')
+      .eq('household_id', hid),
+  ]);
+
+  // Fallback if RPC not migrated yet.
+  let memberRows: Array<{
+    user_id: string;
+    role: string;
+    joined_at?: string;
+    email?: string | null;
+  }> = Array.isArray(membersRpc) ? membersRpc : [];
+  if (membersRpcErr || !memberRows.length) {
+    const { data: members } = await supabase
+      .from('household_members')
+      .select('user_id, role, joined_at')
+      .eq('household_id', hid);
+    memberRows = (members || []).map((m) => ({
+      user_id: String(m.user_id),
+      role: String(m.role),
+      joined_at: m.joined_at,
+      email: null,
+    }));
+  }
 
   const household: Household = {
     id: String(house.id),
     name: house.name || 'Family',
     created_by: String(house.created_by),
     my_role: myRole,
-    members: (members || []).map(
+    members: memberRows.map(
       (m): HouseholdMember => ({
         user_id: String(m.user_id),
         role: m.role as HouseholdRole,
         joined_at: m.joined_at,
+        email: m.email ? String(m.email).trim().toLowerCase() : undefined,
       })
     ),
     invites: (invites || []).map(

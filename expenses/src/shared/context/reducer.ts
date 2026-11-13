@@ -81,8 +81,10 @@ export const AuthReducer = (initialState: AuthState, action: ActionType) => {
     case 'LOGOUT':
       return {
         ...initialState,
-        user: '',
+        userDetails: '',
         token: '',
+        loading: false,
+        errorMessage: null,
         userIsLoggedIn: false,
       };
 

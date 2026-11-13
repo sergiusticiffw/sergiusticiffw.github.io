@@ -1,9 +1,6 @@
 // IndexedDB utilities for caching expense data
-import {
-  processLoans,
-  processPayments,
-  buildApiUrl,
-} from '@shared/utils/utils';
+import { processLoans, processPayments } from '@shared/utils/loanSort';
+import { buildApiUrl } from '@shared/utils/apiBase';
 import { logger } from '@shared/utils/logger';
 import { resolveDataProviderKind } from '../../data/providerPreference';
 
@@ -136,10 +133,6 @@ export async function getExpensesFromDB(): Promise<any[] | null> {
   }
 }
 
-// Sort loans consistently (by created timestamp descending, newest first)
-// Uses exported helper function for consistency
-const sortLoans = processLoans;
-
 // Save loans data to IndexedDB
 export async function saveLoansToDB(data: any[]): Promise<void> {
   try {
@@ -184,7 +177,7 @@ export async function getLoansFromDB(): Promise<any[] | null> {
         const data = request.result as any[];
         transaction.oncomplete = () => db.close();
         // Sort data before returning to match consistent order
-        const sortedData = data.length > 0 ? sortLoans(data) : null;
+        const sortedData = data.length > 0 ? processLoans(data) : null;
         resolve(sortedData);
       };
       request.onerror = () => {

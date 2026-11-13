@@ -674,44 +674,8 @@ export function processDataSync(data: TransactionOrIncomeItem[]) {
   };
 }
 
-// Helper function to process and sort payments (exported for reuse)
-export const processPayments = (payments: any[]): any[] => {
-  return payments
-    .map((payment: any) => {
-      if (!payment.cr && payment.fdt) {
-        payment.cr = new Date(payment.fdt).getTime();
-      }
-      return payment;
-    })
-    .sort((a: any, b: any) => {
-      const dateA = new Date(a.fdt || 0).getTime();
-      const dateB = new Date(b.fdt || 0).getTime();
-      const dateComparison = dateB - dateA;
-
-      if (dateComparison !== 0) return dateComparison;
-
-      // For same date, sort by created timestamp (descending - newest first)
-      const crA = a.cr || new Date(a.fdt || 0).getTime();
-      const crB = b.cr || new Date(b.fdt || 0).getTime();
-      return crB - crA;
-    });
-};
-
-// Helper function to process and sort loans (exported for reuse)
-export const processLoans = (loans: any[]): any[] => {
-  return loans
-    .map((loan: any) => {
-      if (!loan.cr && loan.sdt) {
-        loan.cr = new Date(loan.sdt).getTime();
-      }
-      return loan;
-    })
-    .sort((a: any, b: any) => {
-      const crA = a.cr || (a.sdt ? new Date(a.sdt).getTime() : 0);
-      const crB = b.cr || (b.sdt ? new Date(b.sdt).getTime() : 0);
-      return crB - crA; // Descending order (newest first)
-    });
-};
+// Re-export from dependency-free module (avoids indexedDB ↔ utils init cycle)
+export { processLoans, processPayments } from './loanSort';
 
 export const formatNumber = (value: unknown): string => {
   // Get user's language preference from localStorage or default to 'en'

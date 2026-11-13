@@ -7,6 +7,7 @@ export type {
   AuthSession,
   DataProviderKind,
   ProfilePatch,
+  ProfilePreferences,
   ProviderResult,
   ProviderUser,
   UserProfile,

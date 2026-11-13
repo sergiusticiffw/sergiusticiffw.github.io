@@ -8,3 +8,4 @@ export { default as MonthlyComparisonIncomeTrend } from './MonthlyComparisonInco
 export { default as MonthlySavingsTrend } from './MonthlySavingsTrend';
 export { default as SavingsHistory } from './SavingsHistory';
 export { default as FamilySharedSpend } from './FamilySharedSpend';
+export { default as FamilySharedAllTime } from './FamilySharedAllTime';

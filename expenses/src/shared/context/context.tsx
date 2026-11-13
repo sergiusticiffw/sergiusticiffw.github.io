@@ -38,9 +38,14 @@ export const useAuthDispatch = (): React.Dispatch<ActionType> => {
 function SyncEffect(): null {
   const { token, userIsLoggedIn, currency } = useAuthState();
 
+  // Currency hydrate only — do not re-run invites/tags when currency changes.
   useEffect(() => {
     if (!token || !userIsLoggedIn) return;
     if (currency) hydrateSettings({ currency });
+  }, [token, userIsLoggedIn, currency]);
+
+  useEffect(() => {
+    if (!token || !userIsLoggedIn) return;
     hydrateEmergencyFund();
     refreshStatus(true);
     refreshTagCatalog();
@@ -63,7 +68,7 @@ function SyncEffect(): null {
     );
     const cleanup = setupNetworkListener(token, expenseDispatch);
     return cleanup;
-  }, [token, userIsLoggedIn, currency]);
+  }, [token, userIsLoggedIn]);
 
   return null;
 }

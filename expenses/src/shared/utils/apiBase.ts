@@ -31,6 +31,13 @@ export function getApiBaseUrl(): string {
   return API_PRIMARY_URL;
 }
 
+/** Build API URL without double slashes */
+export function buildApiUrl(path: string): string {
+  const base = getApiBaseUrl().replace(/\/+$/, '');
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${p}`.replace(/([^:]\/)\/+/g, '$1');
+}
+
 /** Convert URL from primary to proxy (for retry) */
 export function toProxyUrl(url: string): string {
   if (url.startsWith(API_PRIMARY_URL)) {

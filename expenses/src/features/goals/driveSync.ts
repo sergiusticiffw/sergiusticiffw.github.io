@@ -294,17 +294,24 @@ export const saveEmergencyFundToDrive = async (
   await saveGoalsToDrive(ownerKey, { fund: state, enabled });
 };
 
-/** Apply a Goals bundle from a backup JSON (local + optional Drive rewrite). */
+/** Apply a Goals bundle from a backup JSON (local + Supabase prefs, never Drive). */
 export const applyGoalsBackupBundle = async (
-  ownerKey: string,
+  _ownerKey: string,
   bundle: GoalsDriveBundle,
-  options?: { writeDrive?: boolean }
+  options?: { writeDrive?: boolean; writeSupabase?: boolean }
 ): Promise<void> => {
   replaceEmergencyFund(bundle.fund);
   setGoalsEnabled(!!bundle.enabled);
-  if (options?.writeDrive !== false && navigator.onLine) {
+  const writeCloud = options?.writeSupabase !== false && options?.writeDrive !== false;
+  if (writeCloud && navigator.onLine) {
     try {
-      await saveGoalsToDrive(ownerKey, bundle);
+      const { persistGoalsToSupabase } = await import(
+        '../profile/preferencesSync'
+      );
+      await persistGoalsToSupabase({
+        fund: bundle.fund,
+        enabled: !!bundle.enabled,
+      });
     } catch {
       // Local apply still succeeded.
     }

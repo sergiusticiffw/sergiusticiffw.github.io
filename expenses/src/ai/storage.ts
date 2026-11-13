@@ -19,6 +19,9 @@ export const getShareDescriptions = (): boolean =>
 
 export const setShareDescriptions = (value: boolean) => {
   localStorage.setItem(AI_STORAGE_KEYS.shareDescriptions, String(value));
+  void import('../features/profile/preferencesSync')
+    .then((m) => m.schedulePreferencesPush({ aiShareDescriptions: value }))
+    .catch(() => undefined);
 };
 
 export const getAiLanguage = (): string => {
@@ -30,6 +33,9 @@ export const getAiLanguage = (): string => {
 
 export const setAiLanguage = (value: string) => {
   localStorage.setItem(AI_STORAGE_KEYS.language, value);
+  void import('../features/profile/preferencesSync')
+    .then((m) => m.schedulePreferencesPush({ aiLanguage: value }))
+    .catch(() => undefined);
 };
 
 export type InsightTone =

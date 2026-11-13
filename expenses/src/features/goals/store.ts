@@ -83,6 +83,13 @@ const persist = (state: EmergencyFundState) => {
   if (!owner) return;
   activeOwner = owner;
   writeStored(owner, state);
+  void import('../profile/preferencesSync')
+    .then((m) =>
+      m.schedulePreferencesPush({
+        emergencyFund: state as unknown as Record<string, unknown>,
+      })
+    )
+    .catch(() => undefined);
 };
 
 /** Reload from localStorage for the signed-in user (call after login). */

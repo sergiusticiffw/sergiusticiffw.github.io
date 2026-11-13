@@ -65,19 +65,28 @@ export function setSettingsCurrency(currency: string): void {
   settingsStore.setState((s) => ({ ...s, currency }));
 }
 
+const pushPrefs = (patch: Record<string, unknown>) => {
+  void import('../features/profile/preferencesSync')
+    .then((m) => m.schedulePreferencesPush(patch))
+    .catch(() => undefined);
+};
+
 export function setSettingsTheme(theme: string): void {
   localStorage.setItem(THEME_KEY, JSON.stringify(theme));
   settingsStore.setState((s) => ({ ...s, theme }));
+  pushPrefs({ theme });
 }
 
 export function setOnboardingComplete(value: boolean): void {
   persist(ONBOARDING_KEY, value);
   settingsStore.setState((s) => ({ ...s, onboardingComplete: value }));
+  pushPrefs({ onboardingComplete: value });
 }
 
 export function setGoalsEnabled(value: boolean): void {
   persist(GOALS_ENABLED_KEY, value);
   settingsStore.setState((s) => ({ ...s, goalsEnabled: value }));
+  pushPrefs({ goalsEnabled: value });
 }
 
 export function hydrateSettings(partial: Partial<SettingsState>): void {

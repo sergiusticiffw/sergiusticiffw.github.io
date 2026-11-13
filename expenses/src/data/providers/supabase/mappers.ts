@@ -209,6 +209,10 @@ export const profileFromRow = (row: any): UserProfile => ({
   gemini_api_key: row.gemini_api_key || '',
   tag_mode: row.tag_mode === 'custom' ? 'custom' : 'default',
   custom_tags: (row.custom_tags as TagCatalog['custom']) || {},
+  preferences:
+    row.preferences && typeof row.preferences === 'object'
+      ? row.preferences
+      : undefined,
   raw: row,
 });
 
@@ -225,5 +229,6 @@ export const profileUpdateFromPatch = (patch: ProfilePatch) => {
   }
   if (patch.tag_mode !== undefined) update.tag_mode = patch.tag_mode;
   if (patch.custom_tags !== undefined) update.custom_tags = patch.custom_tags;
+  if (patch.preferences !== undefined) update.preferences = patch.preferences;
   return update;
 };

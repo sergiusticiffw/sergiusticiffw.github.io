@@ -12,7 +12,6 @@ import { useExpenseData } from '@stores/expenseStore';
 import {
   useGoalsEnabled,
   useSettingsCurrency,
-  setGoalsEnabled,
 } from '@stores/settingsStore';
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
 import { useApiClient } from '@shared/hooks/useApiClient';
@@ -29,7 +28,6 @@ import { Card, ProgressRing, SettingsSection, cn } from '@shared/ui';
 import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
 import { formatNumber } from '@shared/utils/utils';
 import { notificationType } from '@shared/utils/constants';
-import { DriveError } from '../../../../crypto/driveVault';
 import { AmountField } from '../../components/AmountField';
 import ContributionHistory from '../../components/ContributionHistory';
 import {
@@ -41,19 +39,11 @@ import {
   groupContributionsByMonth,
   monthsCovered,
   monthsToGoal,
-  newerEmergencyFund,
   parseAmount,
   parseLedgerAmount,
   progressRatio,
   resolveTarget,
 } from '../../model';
-import {
-  hasDriveAccessToken,
-  loadAndClaimGoalsFromDrive,
-  requireGoalsOwnerKey,
-  saveGoalsToDrive,
-  type GoalsDriveBundle,
-} from '../../driveSync';
 import {
   addEmergencyFundContribution,
   getEmergencyFund,
@@ -63,6 +53,8 @@ import {
   updateEmergencyFundContribution,
   useEmergencyFund,
 } from '../../store';
+import { persistGoalsToSupabase } from '../../../profile/preferencesSync';
+import { getDataProviderKind } from '../../../../data';
 import { getMonthNames } from '@shared/utils/constants';
 
 type SyncStatus =
@@ -72,28 +64,6 @@ type SyncStatus =
   | 'local'
   | 'error'
   | 'offline';
-
-const applyRemoteBundle = (
-  remote: GoalsDriveBundle | null,
-  localEnabled: boolean
-) => {
-  const localFund = getEmergencyFund();
-  const merged = newerEmergencyFund(localFund, remote?.fund ?? null);
-  replaceEmergencyFund(merged);
-
-  let enabled = localEnabled;
-  if (remote) {
-    const remoteWins =
-      !localFund.updatedAt ||
-      (Boolean(remote.fund.updatedAt) &&
-        (remote.fund.updatedAt as string) >= (localFund.updatedAt || ''));
-    if (remoteWins) {
-      enabled = remote.enabled;
-      setGoalsEnabled(remote.enabled);
-    }
-  }
-  return { merged, enabled, localFund, remote };
-};
 
 const Goals = () => {
   const { t } = useLocalization();
@@ -137,73 +107,45 @@ const Goals = () => {
     setTargetMonths(fund.targetMonths);
   }, [fund.monthlyContribution, fund.targetMonths]);
 
-  // Silent pull on open — never open a Google login popup automatically.
-  // Claims Drupal-era Drive files when uid changed (Supabase).
+  // Mark sync status from provider (prefs already pulled at login for Supabase).
   useEffect(() => {
-    let cancelled = false;
-    const pull = async () => {
-      if (!navigator.onLine) {
-        setSyncStatus('offline');
-        return;
-      }
-      if (!hasDriveAccessToken()) {
-        setSyncStatus('local');
-        return;
-      }
-      setSyncStatus('syncing');
-      try {
-        const ownerKey = requireGoalsOwnerKey();
-        const { bundle: remote, claimed } = await loadAndClaimGoalsFromDrive(
-          ownerKey,
-          { silent: true }
-        );
-        if (cancelled) return;
-        applyRemoteBundle(remote, goalsEnabled);
-        if (!cancelled) {
-          setSyncStatus(remote ? 'synced' : 'local');
-          if (claimed) {
-            showNotification(t('goals.claimed'), notificationType.SUCCESS);
-          }
-        }
-      } catch {
-        if (!cancelled) setSyncStatus('local');
-      }
-    };
-    pull();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot on mount
+    if (!navigator.onLine) {
+      setSyncStatus('offline');
+      return;
+    }
+    if (getDataProviderKind() === 'supabase') {
+      setSyncStatus('synced');
+    } else {
+      setSyncStatus('local');
+    }
   }, []);
 
-  /** Interactive Drive sync — only from a button click (may show Google consent once). */
-  const handleSyncDrive = async () => {
+  /** Push Goals to Supabase profiles.preferences. */
+  const handleSyncCloud = async () => {
     if (!navigator.onLine) {
       setSyncStatus('offline');
       showNotification(t('goals.savedOffline'), notificationType.SUCCESS);
       return;
     }
+    if (getDataProviderKind() !== 'supabase') {
+      setSyncStatus('local');
+      showNotification(t('goals.localOnly'), notificationType.SUCCESS);
+      return;
+    }
     setSyncStatus('syncing');
     try {
-      const ownerKey = requireGoalsOwnerKey();
-      const { bundle: remote, claimed } = await loadAndClaimGoalsFromDrive(
-        ownerKey
-      );
-      const { merged, enabled } = applyRemoteBundle(remote, goalsEnabled);
-      // Always rewrite so the Drive file is stamped with email ownership.
-      await saveGoalsToDrive(ownerKey, { fund: merged, enabled });
-      setSyncStatus('synced');
+      const ok = await persistGoalsToSupabase({
+        fund: getEmergencyFund(),
+        enabled: goalsEnabled,
+      });
+      setSyncStatus(ok ? 'synced' : 'local');
       showNotification(
-        claimed ? t('goals.claimed') : t('goals.synced'),
+        ok ? t('goals.synced') : t('goals.localOnly'),
         notificationType.SUCCESS
       );
-    } catch (err) {
+    } catch {
       setSyncStatus('error');
-      const message =
-        err instanceof DriveError
-          ? t('goals.syncErrorDrive')
-          : t('goals.syncError');
-      showNotification(message, notificationType.ERROR);
+      showNotification(t('goals.syncError'), notificationType.ERROR);
     }
   };
 
@@ -232,15 +174,21 @@ const Goals = () => {
   const eta = monthsToGoal(balance, target, draftContribution);
   const left = Math.max(0, target - balance);
 
-  const persistFundToDrive = async (next: typeof fund) => {
+  const persistFundToCloud = async (next: typeof fund) => {
     if (!navigator.onLine) {
       setSyncStatus('offline');
       return false;
     }
-    const ownerKey = requireGoalsOwnerKey();
-    await saveGoalsToDrive(ownerKey, { fund: next, enabled: goalsEnabled });
-    setSyncStatus('synced');
-    return true;
+    if (getDataProviderKind() !== 'supabase') {
+      setSyncStatus('local');
+      return false;
+    }
+    const ok = await persistGoalsToSupabase({
+      fund: next,
+      enabled: goalsEnabled,
+    });
+    setSyncStatus(ok ? 'synced' : 'local');
+    return ok;
   };
 
   const handleAddSaving = async (event: React.FormEvent) => {
@@ -260,7 +208,7 @@ const Goals = () => {
     try {
       const next = addEmergencyFundContribution(amount, addMonth);
       setAddAmountInput('');
-      const synced = await persistFundToDrive(next);
+      const synced = await persistFundToCloud(next);
       showNotification(
         synced
           ? amount < 0
@@ -269,13 +217,9 @@ const Goals = () => {
           : t('goals.savedOffline'),
         notificationType.SUCCESS
       );
-    } catch (err) {
+    } catch {
       setSyncStatus('error');
-      const message =
-        err instanceof DriveError
-          ? t('goals.syncErrorDrive')
-          : t('goals.syncError');
-      showNotification(message, notificationType.ERROR);
+      showNotification(t('goals.syncError'), notificationType.ERROR);
     } finally {
       setAdding(false);
     }
@@ -320,18 +264,14 @@ const Goals = () => {
         return;
       }
       closeEditContribution();
-      const synced = await persistFundToDrive(next);
+      const synced = await persistFundToCloud(next);
       showNotification(
         synced ? t('goals.editContributionDone') : t('goals.savedOffline'),
         notificationType.SUCCESS
       );
-    } catch (err) {
+    } catch {
       setSyncStatus('error');
-      const message =
-        err instanceof DriveError
-          ? t('goals.syncErrorDrive')
-          : t('goals.syncError');
-      showNotification(message, notificationType.ERROR);
+      showNotification(t('goals.syncError'), notificationType.ERROR);
     } finally {
       setEditing(false);
     }
@@ -348,18 +288,14 @@ const Goals = () => {
         return;
       }
       setDeleteId(null);
-      const synced = await persistFundToDrive(next);
+      const synced = await persistFundToCloud(next);
       showNotification(
         synced ? t('goals.deleteContributionDone') : t('goals.savedOffline'),
         notificationType.SUCCESS
       );
-    } catch (err) {
+    } catch {
       setSyncStatus('error');
-      const message =
-        err instanceof DriveError
-          ? t('goals.syncErrorDrive')
-          : t('goals.syncError');
-      showNotification(message, notificationType.ERROR);
+      showNotification(t('goals.syncError'), notificationType.ERROR);
     } finally {
       setDeleting(false);
     }
@@ -394,18 +330,14 @@ const Goals = () => {
         targetMonths,
         monthlyContribution,
       });
-      const synced = await persistFundToDrive(next);
+      const synced = await persistFundToCloud(next);
       showNotification(
         synced ? t('goals.savedDrive') : t('goals.savedOffline'),
         notificationType.SUCCESS
       );
-    } catch (err) {
+    } catch {
       setSyncStatus('error');
-      const message =
-        err instanceof DriveError
-          ? t('goals.syncErrorDrive')
-          : t('goals.syncError');
-      showNotification(message, notificationType.ERROR);
+      showNotification(t('goals.syncError'), notificationType.ERROR);
     } finally {
       setSaving(false);
     }
@@ -517,7 +449,7 @@ const Goals = () => {
               syncStatus === 'synced') && (
               <button
                 type="button"
-                onClick={handleSyncDrive}
+                onClick={handleSyncCloud}
                 className="shrink-0 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1 text-caption font-semibold text-app-secondary hover:border-white/25 hover:text-app-primary"
               >
                 {t('goals.syncNow')}
