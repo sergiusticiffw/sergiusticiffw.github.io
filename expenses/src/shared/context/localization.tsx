@@ -492,11 +492,15 @@ const translations = {
       'Pick shared categories in Profile → Family budget.',
     'family.totalsError': 'Could not load family totals.',
     'family.totalsSpent': 'combined this month',
+    'family.totalsSpentYear': 'combined this year',
     'family.totalsSpentAllTime': 'combined all time',
+    'family.totalsEmptyYear':
+      'No shared-category spend this year yet.',
     'family.totalsEmptyAllTime':
       'No shared-category spend for this filter yet.',
     'family.totalsHint': 'Combined totals for shared categories',
     'family.chartTitle': 'Family shared · {month}',
+    'family.chartTitleYear': 'Family shared · {year}',
     'family.chartTitleAllTime': 'Family shared · all time',
     'family.memberBreakdown': 'Contribution by member',
     'family.memberBreakdownEmpty': 'No member split for this category.',
@@ -1508,11 +1512,15 @@ const translations = {
       'Alege categoriile comune în Profil → Buget de familie.',
     'family.totalsError': 'Nu s-au putut încărca totalurile familiei.',
     'family.totalsSpent': 'combinat luna asta',
+    'family.totalsSpentYear': 'combinat anul ăsta',
     'family.totalsSpentAllTime': 'combinat pe tot timpul',
+    'family.totalsEmptyYear':
+      'Nicio cheltuială pe categoriile comune în anul ăsta.',
     'family.totalsEmptyAllTime':
       'Nicio cheltuială pe categoriile comune pentru acest filtru.',
     'family.totalsHint': 'Totaluri combinate pe categoriile comune',
     'family.chartTitle': 'Cheltuieli comune · {month}',
+    'family.chartTitleYear': 'Cheltuieli comune · {year}',
     'family.chartTitleAllTime': 'Cheltuieli comune · tot timpul',
     'family.memberBreakdown': 'Contribuție pe membru',
     'family.memberBreakdownEmpty': 'Nicio împărțire pe membru pentru categoria asta.',

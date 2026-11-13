@@ -21,6 +21,7 @@ import DailyAverage from '@features/expenses/components/DailyAverage/DailyAverag
 import DailyAverageTrend from '@features/expenses/components/Charts/DailyAverageTrend';
 import LastTwoMonthsAverage from '@features/expenses/components/Home/LastTwoMonthsAverage';
 import FamilySharedSpend from '@features/expenses/components/Charts/FamilySharedSpend';
+import FamilySharedYear from '@features/expenses/components/Charts/FamilySharedYear';
 import FamilySharedAllTime from '@features/expenses/components/Charts/FamilySharedAllTime';
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
 import { useApiClient } from '@shared/hooks/useApiClient';
@@ -159,6 +160,7 @@ const Charts = () => {
           {getDataProviderKind() === 'supabase' && (
             <div className="p-0 border-none bg-transparent flex flex-col gap-8">
               <FamilySharedSpend />
+              <FamilySharedYear />
               <FamilySharedAllTime />
             </div>
           )}

@@ -167,10 +167,38 @@ export const categorySpendAllTime = (
     .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label));
 };
 
+/** Collapse AiItems to category spend for one calendar year (YYYY). */
+export const categorySpendForYear = (
+  items: AiItem[],
+  yearKey: string,
+  labelFor: (id: string) => string,
+  colorFor?: (id: string) => string | undefined
+): SharedCategorySpend[] => {
+  const totals = new Map<string, number>();
+  for (const item of items) {
+    if (item.kind !== 'expense' || item.month.length !== 7) continue;
+    if (item.month.slice(0, 4) !== yearKey) continue;
+    const id = item.cat || '0';
+    totals.set(id, (totals.get(id) || 0) + item.amount);
+  }
+  return [...totals.entries()]
+    .map(([id, amount]) => ({
+      id,
+      label: labelFor(id),
+      amount,
+      color: colorFor?.(id),
+    }))
+    .filter((row) => row.amount > 0)
+    .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label));
+};
+
 /** Filter member aggregates by category + dateRange (YYYY-MM overlap). */
 export const filterMemberTotals = (
   rows: FamilyCategoryMemberTotal[],
-  filters: FamilyAggregateFilters & { monthKey?: string | null } = {}
+  filters: FamilyAggregateFilters & {
+    monthKey?: string | null;
+    yearKey?: string | null;
+  } = {}
 ): FamilyCategoryMemberTotal[] => {
   const category = filters.category?.trim() || '';
   const range = filters.dateRange;
@@ -178,11 +206,13 @@ export const filterMemberTotals = (
   const startMonth = hasRange ? range!.start.slice(0, 7) : '';
   const endMonth = hasRange ? range!.end.slice(0, 7) : '';
   const monthKey = filters.monthKey || '';
+  const yearKey = filters.yearKey || '';
 
   return rows.filter((row) => {
     if (row.month.length !== 7 || row.total <= 0) return false;
     if (category && row.category_id !== category) return false;
     if (monthKey && row.month !== monthKey) return false;
+    if (yearKey && !row.month.startsWith(yearKey)) return false;
     if (hasRange && (row.month < startMonth || row.month > endMonth)) {
       return false;
     }
