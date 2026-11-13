@@ -20,6 +20,7 @@ import {
   hasDriveAccessToken,
   loadAndClaimGoalsFromDrive,
   readGoalsFromDriveSilent,
+  requireGoalsOwnerKey,
 } from '../goals/driveSync';
 import { getEmergencyFund, replaceEmergencyFund } from '../goals/store';
 import { newerEmergencyFund } from '../goals/model';
@@ -191,20 +192,26 @@ const goalsAreMeaningful = (bundle: GoalsDriveBundle | null | undefined) => {
 };
 
 /** Merge local Goals with Drive (may prompt for Drive access when exporting). */
-const loadGoalsForBackup = async (uid: string): Promise<GoalsDriveBundle> => {
+const loadGoalsForBackup = async (): Promise<GoalsDriveBundle> => {
   const localFund = getEmergencyFund();
   let enabled = !!settingsStore.state.goalsEnabled;
   let remote: GoalsDriveBundle | null = null;
+  let ownerKey = '';
+  try {
+    ownerKey = requireGoalsOwnerKey();
+  } catch {
+    ownerKey = '';
+  }
 
-  if (navigator.onLine) {
+  if (navigator.onLine && ownerKey) {
     try {
       // Interactive: user clicked Backup — OK to request Drive if needed.
-      const loaded = await loadAndClaimGoalsFromDrive(uid);
+      const loaded = await loadAndClaimGoalsFromDrive(ownerKey);
       remote = loaded.bundle;
     } catch {
       try {
         if (hasDriveAccessToken()) {
-          remote = await readGoalsFromDriveSilent(uid);
+          remote = await readGoalsFromDriveSilent(ownerKey);
         }
       } catch {
         remote = null;
@@ -269,7 +276,7 @@ export async function buildBackupSnapshot(
   const { transactions, incomes } = splitRaw(raw);
   const [profile, goals] = await Promise.all([
     loadProfile(String(uid), apiClient, accessToken),
-    loadGoalsForBackup(String(uid)),
+    loadGoalsForBackup(),
   ]);
 
   // Prefer a meaningful goals payload; still include stub so importers see the key.

@@ -215,7 +215,7 @@ const findFileByName = async (
 ): Promise<string | null> => {
   const query = encodeURIComponent(`name='${name}'`);
   const response = await driveFetch(
-    `${API}?spaces=appDataFolder&q=${query}&fields=files(id,name)&pageSize=10`,
+    `${API}?spaces=appDataFolder&q=${query}&fields=files(id,name)&pageSize=10&orderBy=modifiedTime desc`,
     {},
     interactive
   );

@@ -35,9 +35,15 @@ const sessionFromSupabase = async (
     encryption_status = mapped.encryption_status;
   }
 
+  const normalizedEmail = String(email || name || '')
+    .trim()
+    .toLowerCase();
+  const sessionEmail =
+    normalizedEmail.includes('@') ? normalizedEmail : undefined;
   return {
     current_user: {
       uid: userId,
+      email: sessionEmail,
       name,
       currency,
       encryption_status,
@@ -123,9 +129,15 @@ export function createSupabaseAuthProvider(): AuthProvider {
       );
       const uid = String(stored.current_user?.uid || '');
       if (!token || !uid) return null;
+      const emailRaw = String(
+        stored.current_user?.email || stored.current_user?.name || ''
+      )
+        .trim()
+        .toLowerCase();
       return {
         current_user: {
           uid,
+          email: emailRaw.includes('@') ? emailRaw : undefined,
           name: stored.current_user?.name,
           currency: stored.current_user?.currency,
           encryption_status: stored.current_user?.encryption_status,

@@ -50,7 +50,7 @@ import {
 import {
   hasDriveAccessToken,
   loadAndClaimGoalsFromDrive,
-  requireSessionUid,
+  requireGoalsOwnerKey,
   saveGoalsToDrive,
   type GoalsDriveBundle,
 } from '../../driveSync';
@@ -152,9 +152,9 @@ const Goals = () => {
       }
       setSyncStatus('syncing');
       try {
-        const uid = requireSessionUid();
+        const ownerKey = requireGoalsOwnerKey();
         const { bundle: remote, claimed } = await loadAndClaimGoalsFromDrive(
-          uid,
+          ownerKey,
           { silent: true }
         );
         if (cancelled) return;
@@ -185,19 +185,13 @@ const Goals = () => {
     }
     setSyncStatus('syncing');
     try {
-      const uid = requireSessionUid();
-      const { bundle: remote, claimed } = await loadAndClaimGoalsFromDrive(uid);
-      const { merged, enabled, remote: remoteBundle } = applyRemoteBundle(
-        remote,
-        goalsEnabled
+      const ownerKey = requireGoalsOwnerKey();
+      const { bundle: remote, claimed } = await loadAndClaimGoalsFromDrive(
+        ownerKey
       );
-      const localWins =
-        Boolean(merged.updatedAt) &&
-        (!remoteBundle?.fund.updatedAt ||
-          (merged.updatedAt as string) > remoteBundle.fund.updatedAt);
-      if (localWins || !remoteBundle || claimed) {
-        await saveGoalsToDrive(uid, { fund: merged, enabled });
-      }
+      const { merged, enabled } = applyRemoteBundle(remote, goalsEnabled);
+      // Always rewrite so the Drive file is stamped with email ownership.
+      await saveGoalsToDrive(ownerKey, { fund: merged, enabled });
       setSyncStatus('synced');
       showNotification(
         claimed ? t('goals.claimed') : t('goals.synced'),
@@ -243,8 +237,8 @@ const Goals = () => {
       setSyncStatus('offline');
       return false;
     }
-    const uid = requireSessionUid();
-    await saveGoalsToDrive(uid, { fund: next, enabled: goalsEnabled });
+    const ownerKey = requireGoalsOwnerKey();
+    await saveGoalsToDrive(ownerKey, { fund: next, enabled: goalsEnabled });
     setSyncStatus('synced');
     return true;
   };
@@ -519,7 +513,8 @@ const Goals = () => {
             </p>
             {(syncStatus === 'local' ||
               syncStatus === 'error' ||
-              syncStatus === 'offline') && (
+              syncStatus === 'offline' ||
+              syncStatus === 'synced') && (
               <button
                 type="button"
                 onClick={handleSyncDrive}

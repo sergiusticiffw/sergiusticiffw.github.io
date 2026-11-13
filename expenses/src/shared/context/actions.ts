@@ -13,6 +13,7 @@ import {
   markUnlocked,
 } from '../../features/privacy/biometricLock';
 import { hydrateEmergencyFund } from '../../features/goals/store';
+import { hydrateGoalsFromDriveSilent } from '../../features/goals/driveSync';
 import { getStoredCurrentUser } from '@shared/utils/authStorage';
 import {
   getAuthProvider,
@@ -38,6 +39,9 @@ const persistSession = (dispatch: any, data: AuthSession) => {
     hydrateSettings({ currency: data.current_user.currency });
   }
   hydrateEmergencyFund();
+  // Pull emergency fund from Drive when a token already exists (e.g. after
+  // Classic → New); claims Drupal-uid files for the Supabase uid.
+  void hydrateGoalsFromDriveSilent();
   const uid = String(data.current_user.uid ?? '');
   if (uid) markUnlocked(uid);
   return stored;

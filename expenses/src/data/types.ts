@@ -9,6 +9,8 @@ export type DataProviderKind = 'drupal' | 'supabase';
 
 export interface ProviderUser {
   uid: string;
+  /** Google email — stable across Drupal ↔ Supabase for the same person. */
+  email?: string;
   name?: string;
   currency?: string;
   encryption_status?: string;

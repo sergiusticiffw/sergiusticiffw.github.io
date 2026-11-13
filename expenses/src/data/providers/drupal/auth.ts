@@ -10,10 +10,16 @@ const toSession = (data: any): AuthSession | null => {
   const uid = String(
     data.current_user.uid ?? data.current_user?.uid?.[0]?.value ?? ''
   );
+  const name = data.current_user.name;
+  const mail = data.current_user.mail || data.current_user.email;
+  const emailRaw = String(mail || name || '')
+    .trim()
+    .toLowerCase();
   return {
     current_user: {
       uid,
-      name: data.current_user.name,
+      email: emailRaw.includes('@') ? emailRaw : undefined,
+      name,
       currency: data.current_user.currency,
       encryption_status: data.current_user.encryption_status,
     },

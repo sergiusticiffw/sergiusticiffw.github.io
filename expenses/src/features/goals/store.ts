@@ -15,34 +15,55 @@ import {
 
 const STORAGE_PREFIX = 'emergencyFund:';
 
-const storageKey = (uid: string) => `${STORAGE_PREFIX}${uid}`;
+/** Prefer email so Classic ↔ New share the same local Goals cache. */
+const storageOwnerKey = (): string => {
+  const session = getSession();
+  const email = String(session?.email || '')
+    .trim()
+    .toLowerCase();
+  if (email.includes('@')) return email;
+  return session?.uid ? String(session.uid) : '';
+};
 
-const readStored = (uid: string): EmergencyFundState => {
+const storageKey = (owner: string) => `${STORAGE_PREFIX}${owner}`;
+
+const readStored = (owner: string): EmergencyFundState => {
   try {
-    const raw = localStorage.getItem(storageKey(uid));
-    if (!raw) return defaultEmergencyFund();
+    const raw = localStorage.getItem(storageKey(owner));
+    if (!raw) {
+      // Migrate legacy uid-keyed cache into email key once.
+      const uid = getSession()?.uid;
+      if (uid && owner !== String(uid)) {
+        const legacy = localStorage.getItem(storageKey(String(uid)));
+        if (legacy) {
+          localStorage.setItem(storageKey(owner), legacy);
+          return normalizeEmergencyFund(JSON.parse(legacy));
+        }
+      }
+      return defaultEmergencyFund();
+    }
     return normalizeEmergencyFund(JSON.parse(raw));
   } catch {
     return defaultEmergencyFund();
   }
 };
 
-const writeStored = (uid: string, state: EmergencyFundState) => {
-  localStorage.setItem(storageKey(uid), JSON.stringify(state));
+const writeStored = (owner: string, state: EmergencyFundState) => {
+  localStorage.setItem(storageKey(owner), JSON.stringify(state));
 };
 
 /** Load and rewrite if normalize changed balance (e.g. doubled ledger). */
-const loadAndReconcile = (uid: string): EmergencyFundState => {
-  const next = readStored(uid);
+const loadAndReconcile = (owner: string): EmergencyFundState => {
+  const next = readStored(owner);
   try {
-    const raw = localStorage.getItem(storageKey(uid));
+    const raw = localStorage.getItem(storageKey(owner));
     if (!raw) return next;
     const parsed = JSON.parse(raw) as { balance?: number };
     if (
       typeof parsed.balance === 'number' &&
       parsed.balance !== next.balance
     ) {
-      writeStored(uid, next);
+      writeStored(owner, next);
     }
   } catch {
     // ignore rewrite failures
@@ -50,26 +71,26 @@ const loadAndReconcile = (uid: string): EmergencyFundState => {
   return next;
 };
 
-const initialUid = getSession()?.uid ?? '';
+const initialOwner = storageOwnerKey();
 const emergencyFundStore = new Store<EmergencyFundState>(
-  initialUid ? loadAndReconcile(initialUid) : defaultEmergencyFund()
+  initialOwner ? loadAndReconcile(initialOwner) : defaultEmergencyFund()
 );
 
-let activeUid = initialUid;
+let activeOwner = initialOwner;
 
 const persist = (state: EmergencyFundState) => {
-  const uid = getSession()?.uid ?? activeUid;
-  if (!uid) return;
-  activeUid = uid;
-  writeStored(uid, state);
+  const owner = storageOwnerKey() || activeOwner;
+  if (!owner) return;
+  activeOwner = owner;
+  writeStored(owner, state);
 };
 
 /** Reload from localStorage for the signed-in user (call after login). */
 export function hydrateEmergencyFund(): void {
-  const uid = getSession()?.uid ?? '';
-  activeUid = uid;
+  const owner = storageOwnerKey();
+  activeOwner = owner;
   emergencyFundStore.setState(() =>
-    uid ? loadAndReconcile(uid) : defaultEmergencyFund()
+    owner ? loadAndReconcile(owner) : defaultEmergencyFund()
   );
 }
 
@@ -148,7 +169,7 @@ export function replaceEmergencyFund(state: EmergencyFundState): void {
 export function resetEmergencyFund(): void {
   const next = defaultEmergencyFund();
   emergencyFundStore.setState(() => next);
-  if (activeUid) writeStored(activeUid, next);
+  if (activeOwner) writeStored(activeOwner, next);
 }
 
 export { emergencyFundStore };

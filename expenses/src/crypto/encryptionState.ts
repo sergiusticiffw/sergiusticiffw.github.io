@@ -26,6 +26,8 @@ export const isTransitional = (status: EncryptionStatus | null) =>
 interface Session {
   uid: string;
   token: string;
+  /** Normalized Google email when known (preferred Drive Goals owner key). */
+  email?: string;
 }
 
 const readStoredUser = (): any => {
@@ -37,11 +39,27 @@ const readStoredUser = (): any => {
   }
 };
 
+const normalizeEmail = (value: unknown): string | undefined => {
+  const raw = String(value ?? '')
+    .trim()
+    .toLowerCase();
+  if (!raw || !raw.includes('@')) return undefined;
+  return raw;
+};
+
 export const getSession = (): Session | null => {
   const user = readStoredUser();
   const uid = user?.current_user?.uid;
   const token = user?.access_token || user?.jwt_token;
-  return uid && token ? { uid: String(uid), token: String(token) } : null;
+  if (!uid || !token) return null;
+  const email =
+    normalizeEmail(user?.current_user?.email) ||
+    normalizeEmail(user?.current_user?.name);
+  return {
+    uid: String(uid),
+    token: String(token),
+    ...(email ? { email } : {}),
+  };
 };
 
 let snapshot: EncryptionSnapshot = {

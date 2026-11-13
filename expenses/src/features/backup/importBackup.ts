@@ -10,7 +10,10 @@ import {
   BACKUP_KIND,
   type ExpensesBackupSnapshot,
 } from './buildBackup';
-import { applyGoalsBackupBundle } from '../goals/driveSync';
+import {
+  applyGoalsBackupBundle,
+  requireGoalsOwnerKey,
+} from '../goals/driveSync';
 import { setStoredApiKey } from '../../ai/storage';
 import {
   applyImportedTagCatalog,
@@ -453,8 +456,14 @@ export async function importBackupToSupabase(
       (Array.isArray(goalsFund.contributions) &&
         goalsFund.contributions.length > 0));
   if (goalsMeaningful && goalsFund) {
+    let goalsOwner = userId;
+    try {
+      goalsOwner = requireGoalsOwnerKey();
+    } catch {
+      goalsOwner = userId;
+    }
     await applyGoalsBackupBundle(
-      userId,
+      goalsOwner,
       {
         fund: goalsFund,
         enabled: !!backup.goals?.enabled,

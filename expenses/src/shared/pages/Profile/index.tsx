@@ -59,6 +59,7 @@ import { DriveError } from '../../../crypto/driveVault';
 import {
   applyGoalsBackupBundle,
   loadAndClaimGoalsFromDrive,
+  requireGoalsOwnerKey,
   requireSessionUid,
   saveGoalsToDrive,
 } from '../../../features/goals/driveSync';
@@ -136,7 +137,7 @@ const Profile = () => {
     const pull = async () => {
       if (!navigator.onLine) return;
       try {
-        const uid = requireSessionUid();
+        const uid = requireGoalsOwnerKey();
         const { bundle: remote, claimed } = await loadAndClaimGoalsFromDrive(
           uid,
           { silent: true }
@@ -178,7 +179,7 @@ const Profile = () => {
 
     setGoalsSyncing(true);
     try {
-      const uid = requireSessionUid();
+      const uid = requireGoalsOwnerKey();
       await saveGoalsToDrive(uid, { fund: stamped, enabled: checked });
       showNotification(t('goals.savedDrive'), notificationType.SUCCESS);
     } catch (err) {
@@ -248,8 +249,8 @@ const Profile = () => {
       const snapshot = await downloadDriveBackupById(item.id, item.name);
       if (snapshot.goals?.fund) {
         try {
-          const uid = requireSessionUid();
-          await applyGoalsBackupBundle(uid, {
+          const ownerKey = requireGoalsOwnerKey();
+          await applyGoalsBackupBundle(ownerKey, {
             fund: snapshot.goals.fund,
             enabled: !!snapshot.goals.enabled,
           });
