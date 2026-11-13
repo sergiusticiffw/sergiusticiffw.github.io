@@ -192,6 +192,25 @@ export const categorySpendForYear = (
     .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label));
 };
 
+/** Distinct YYYY-MM months with expense amount > 0 (optionally scoped to a year). */
+export const countExpenseMonths = (
+  items: AiItem[],
+  yearKey?: string
+): number => {
+  const months = new Set<string>();
+  for (const item of items) {
+    if (item.kind !== 'expense' || item.month.length !== 7) continue;
+    if (item.amount <= 0) continue;
+    if (yearKey && item.month.slice(0, 4) !== yearKey) continue;
+    months.add(item.month);
+  }
+  return months.size;
+};
+
+/** Monthly average from a period total and month count. */
+export const monthlyAverage = (total: number, monthCount: number): number =>
+  monthCount > 0 ? total / monthCount : 0;
+
 /** Filter member aggregates by category + dateRange (YYYY-MM overlap). */
 export const filterMemberTotals = (
   rows: FamilyCategoryMemberTotal[],

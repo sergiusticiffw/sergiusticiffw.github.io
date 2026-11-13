@@ -494,6 +494,7 @@ const translations = {
     'family.totalsSpent': 'combined this month',
     'family.totalsSpentYear': 'combined this year',
     'family.totalsSpentAllTime': 'combined all time',
+    'family.totalsAvgMonth': 'avg / month',
     'family.totalsEmptyYear':
       'No shared-category spend this year yet.',
     'family.totalsEmptyAllTime':
@@ -1514,6 +1515,7 @@ const translations = {
     'family.totalsSpent': 'combinat luna asta',
     'family.totalsSpentYear': 'combinat anul ăsta',
     'family.totalsSpentAllTime': 'combinat pe tot timpul',
+    'family.totalsAvgMonth': 'medie / lună',
     'family.totalsEmptyYear':
       'Nicio cheltuială pe categoriile comune în anul ăsta.',
     'family.totalsEmptyAllTime':

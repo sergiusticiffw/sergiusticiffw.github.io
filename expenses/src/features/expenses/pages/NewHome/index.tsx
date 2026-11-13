@@ -19,6 +19,7 @@ import { TransactionsList } from '@shared/components/TransactionsList';
 import { HeroSpendCard } from '@shared/components/HeroSpendCard';
 import BudgetRings from '@features/expenses/components/budgets/BudgetRings';
 import CalendarView from '@features/expenses/components/CalendarView';
+import FamilySharedSpend from '@features/expenses/components/Charts/FamilySharedSpend';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionForm from '@features/expenses/components/TransactionForm';
 import {
@@ -563,57 +564,91 @@ const NewHome = () => {
             </div>
 
             {/* Content - List or Calendar */}
-            {filteredTransactions.length === 0 ? (
-              <NoData
-                icon={<FiDollarSign />}
-                title={t('home.noTransactionsFound')}
-                description={
-                  hasFilters
-                    ? t('home.tryDifferentFilters')
-                    : t('home.noDataDesc')
-                }
-                action={
-                  hasFilters
-                    ? {
-                        label: t('common.clearFilters'),
-                        onClick: () => {
-                          setSearchText('');
-                          setSelectedCategory('');
-                          setSelectedTag('');
-                          setDateRange(null);
-                          setCurrentMonthIndex(0);
-                        },
-                      }
-                    : undefined
-                }
-              />
-            ) : activeView === 'list' ? (
-              <div>
-                <TransactionsList
-                  transactions={filteredTransactions.map((tx) => ({
-                    ...tx,
-                    dsc: tx.dsc ?? '',
-                  }))}
-                  pendingSyncIds={pendingSyncIds}
-                  onEdit={handleEdit}
-                  onDelete={(id) => setShowDeleteModal(id)}
-                  groupByDay
-                  toolbarEnd={viewToggle}
+            {activeView === 'list' ? (
+              filteredTransactions.length === 0 ? (
+                <NoData
+                  icon={<FiDollarSign />}
+                  title={t('home.noTransactionsFound')}
+                  description={
+                    hasFilters
+                      ? t('home.tryDifferentFilters')
+                      : t('home.noDataDesc')
+                  }
+                  action={
+                    hasFilters
+                      ? {
+                          label: t('common.clearFilters'),
+                          onClick: () => {
+                            setSearchText('');
+                            setSelectedCategory('');
+                            setSelectedTag('');
+                            setDateRange(null);
+                            setCurrentMonthIndex(0);
+                          },
+                        }
+                      : undefined
+                  }
                 />
-              </div>
+              ) : (
+                <div>
+                  <TransactionsList
+                    transactions={filteredTransactions.map((tx) => ({
+                      ...tx,
+                      dsc: tx.dsc ?? '',
+                    }))}
+                    pendingSyncIds={pendingSyncIds}
+                    onEdit={handleEdit}
+                    onDelete={(id) => setShowDeleteModal(id)}
+                    groupByDay
+                    toolbarEnd={viewToggle}
+                  />
+                </div>
+              )
             ) : (
               <div className="mb-8">
                 <div className="flex items-center justify-end gap-1 mb-2">
                   {viewToggle}
                 </div>
-                <CalendarView
-                  transactions={filteredTransactions}
-                  currentMonth={currentMonth}
-                  pendingSyncIds={pendingSyncIds}
-                  onMonthChange={handleMonthSwipe}
-                  onEdit={handleEdit}
-                  onDelete={(id) => setShowDeleteModal(id)}
-                />
+                {filteredTransactions.length === 0 ? (
+                  <NoData
+                    icon={<FiDollarSign />}
+                    title={t('home.noTransactionsFound')}
+                    description={
+                      hasFilters
+                        ? t('home.tryDifferentFilters')
+                        : t('home.noDataDesc')
+                    }
+                    action={
+                      hasFilters
+                        ? {
+                            label: t('common.clearFilters'),
+                            onClick: () => {
+                              setSearchText('');
+                              setSelectedCategory('');
+                              setSelectedTag('');
+                              setDateRange(null);
+                              setCurrentMonthIndex(0);
+                            },
+                          }
+                        : undefined
+                    }
+                  />
+                ) : (
+                  <CalendarView
+                    transactions={filteredTransactions}
+                    currentMonth={currentMonth}
+                    pendingSyncIds={pendingSyncIds}
+                    onMonthChange={handleMonthSwipe}
+                    onEdit={handleEdit}
+                    onDelete={(id) => setShowDeleteModal(id)}
+                  />
+                )}
+                <div className="mt-8">
+                  <FamilySharedSpend
+                    monthLabel={currentMonth}
+                    monthNavigation={false}
+                  />
+                </div>
               </div>
             )}
           </div>

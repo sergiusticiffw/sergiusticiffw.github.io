@@ -23,14 +23,17 @@ import {
 import { useFamilySharedTotals } from './useFamilySharedTotals';
 
 export interface FamilySharedSpendProps {
-  /** Initial month label ("November 2026"). Defaults to current month. */
+  /** Initial / controlled month label ("November 2026"). Defaults to current month. */
   monthLabel?: string;
   visible?: boolean;
+  /** When false, month follows `monthLabel` only (no swipe/chevrons). */
+  monthNavigation?: boolean;
 }
 
 const FamilySharedSpend: React.FC<FamilySharedSpendProps> = ({
   monthLabel,
   visible = true,
+  monthNavigation = true,
 }) => {
   const { t } = useLocalization();
   const currency = useSettingsCurrency();
@@ -97,11 +100,11 @@ const FamilySharedSpend: React.FC<FamilySharedSpendProps> = ({
   }, [chartItems, viewedKey]);
 
   const monthIndex = viewedKey ? monthKeys.indexOf(viewedKey) : -1;
-  const canSwipeMonths = monthKeys.length > 1;
+  const canSwipeMonths = monthNavigation && monthKeys.length > 1;
 
   const handleMonthSwipe = useCallback(
     (direction: 'prev' | 'next') => {
-      if (monthIndex < 0) return;
+      if (!monthNavigation || monthIndex < 0) return;
       // monthKeys are newest-first (same as Home calendar).
       if (direction === 'prev' && monthIndex < monthKeys.length - 1) {
         setViewedKey(monthKeys[monthIndex + 1]);
@@ -109,7 +112,7 @@ const FamilySharedSpend: React.FC<FamilySharedSpendProps> = ({
         setViewedKey(monthKeys[monthIndex - 1]);
       }
     },
-    [monthIndex, monthKeys]
+    [monthNavigation, monthIndex, monthKeys]
   );
 
   const monthSwipeHandlers = useHorizontalMonthSwipe(

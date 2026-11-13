@@ -17,7 +17,9 @@ import CategoryDonutBreakdown from './CategoryDonutBreakdown';
 import FamilyCategorySpendList from './FamilyCategorySpendList';
 import {
   categorySpendForYear,
+  countExpenseMonths,
   filterMemberTotals,
+  monthlyAverage,
   resolveFamilyChartItems,
 } from './familyTotals';
 import { useFamilySharedTotals } from './useFamilySharedTotals';
@@ -136,6 +138,11 @@ const FamilySharedYear: React.FC<FamilySharedYearProps> = ({
     [rows]
   );
 
+  const avgMonthly = useMemo(() => {
+    if (!viewedYear) return 0;
+    return monthlyAverage(total, countExpenseMonths(chartItems, viewedYear));
+  }, [chartItems, total, viewedYear]);
+
   const donutData = useMemo(
     () =>
       rows.map((row) => ({
@@ -193,7 +200,7 @@ const FamilySharedYear: React.FC<FamilySharedYearProps> = ({
               {loading && rows.length === 0
                 ? t('family.totalsLoading')
                 : rows.length > 0
-                  ? `${formatNumber(total)} ${currency} · ${t('family.totalsSpentYear')}`
+                  ? `${formatNumber(total)} ${currency} · ${t('family.totalsSpentYear')} · ${formatNumber(avgMonthly)} ${currency} ${t('family.totalsAvgMonth')}`
                   : hasShared
                     ? t('family.totalsEmptyYear')
                     : t('family.totalsNoShared')}
