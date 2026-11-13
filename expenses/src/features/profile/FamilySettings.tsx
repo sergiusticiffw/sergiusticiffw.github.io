@@ -497,30 +497,19 @@ const FamilySettings: React.FC = () => {
                   </div>
                 )}
 
-                {isManager && (
-                  <button
-                    type="button"
-                    onClick={openCategories}
-                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm font-medium text-app-secondary hover:bg-white/[0.05]"
-                  >
-                    <span className="flex items-center gap-2">
-                      <FiGrid className="text-[var(--color-app-accent)]" />
-                      {t('family.sharedCategories')}
-                    </span>
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-app-muted">
-                      {household.shared_categories.length}
-                    </span>
-                  </button>
-                )}
-
-                {!isManager && household.shared_categories.length > 0 && (
-                  <p className="m-0 text-sm text-app-muted">
-                    {t('family.sharedCount').replace(
-                      '{count}',
-                      String(household.shared_categories.length)
-                    )}
-                  </p>
-                )}
+                <button
+                  type="button"
+                  onClick={openCategories}
+                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm font-medium text-app-secondary hover:bg-white/[0.05]"
+                >
+                  <span className="flex items-center gap-2">
+                    <FiGrid className="text-[var(--color-app-accent)]" />
+                    {t('family.sharedCategories')}
+                  </span>
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-app-muted">
+                    {household.shared_categories.length}
+                  </span>
+                </button>
 
                 {household.my_role !== 'owner' && isDesktop && (
                   <button
@@ -578,32 +567,62 @@ const FamilySettings: React.FC = () => {
         }}
         title={t('family.sharedCategories')}
         footer={
-          <button
-            type="button"
-            disabled={busy}
-            onClick={onSaveCategories}
-            className={BTN_SUBMIT_CLASS}
-          >
-            {t('family.saveCategories')}
-          </button>
+          isManager ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={onSaveCategories}
+              className={BTN_SUBMIT_CLASS}
+            >
+              {t('family.saveCategories')}
+            </button>
+          ) : undefined
         }
       >
-        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-          {categoryOptions.map((cat) => (
-            <label
-              key={cat.value}
-              className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-app-secondary hover:bg-white/[0.03]"
-            >
-              <input
-                type="checkbox"
-                checked={selectedCats.includes(cat.value)}
-                onChange={() => toggleCat(cat.value)}
-                className="accent-[var(--color-app-accent)]"
-              />
-              {cat.label}
-            </label>
-          ))}
-        </div>
+        {isManager ? (
+          <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+            {categoryOptions.map((cat) => (
+              <label
+                key={cat.value}
+                className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-app-secondary hover:bg-white/[0.03]"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedCats.includes(cat.value)}
+                  onChange={() => toggleCat(cat.value)}
+                  className="accent-[var(--color-app-accent)]"
+                />
+                {cat.label}
+              </label>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <p className="m-0 text-sm text-app-muted">
+              {t('family.sharedCategoriesViewHint')}
+            </p>
+            {(household?.shared_categories.length ?? 0) === 0 ? (
+              <p className="m-0 text-sm text-app-muted">
+                {t('family.sharedCategoriesEmpty')}
+              </p>
+            ) : (
+              <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+                {household!.shared_categories.map((id) => {
+                  const label =
+                    categoryOptions.find((c) => c.value === id)?.label || id;
+                  return (
+                    <li
+                      key={id}
+                      className="rounded-lg bg-white/[0.03] px-3 py-2 text-sm text-app-primary"
+                    >
+                      {label}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        )}
       </VaulDrawer>
 
       <VaulDrawer

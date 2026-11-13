@@ -468,6 +468,9 @@ const translations = {
     'family.sharedCategories': 'Shared categories',
     'family.saveCategories': 'Save categories',
     'family.sharedCount': '{count} categories shared',
+    'family.sharedCategoriesViewHint':
+      'These categories are shared in your family budget (combined totals only).',
+    'family.sharedCategoriesEmpty': 'No shared categories yet.',
     'family.leave': 'Leave family',
     'family.created': 'Family created.',
     'family.saved': 'Family updated.',
@@ -1477,6 +1480,9 @@ const translations = {
     'family.sharedCategories': 'Categorii comune',
     'family.saveCategories': 'Salvează categoriile',
     'family.sharedCount': '{count} categorii comune',
+    'family.sharedCategoriesViewHint':
+      'Aceste categorii sunt comune în bugetul familiei (doar totaluri combinate).',
+    'family.sharedCategoriesEmpty': 'Nicio categorie comună încă.',
     'family.leave': 'Părăsește familia',
     'family.created': 'Familia a fost creată.',
     'family.saved': 'Familia a fost actualizată.',
