@@ -1,6 +1,7 @@
 import { GeminiFunctionDeclaration } from '../client';
 import { budgetToolDeclarations } from './budgetTools';
 import { expenseToolDeclarations } from './expenseTools';
+import { familyToolDeclarations } from './familyTools';
 import { goalToolDeclarations } from './goalTools';
 import { loanToolDeclarations } from './loanTools';
 
@@ -122,23 +123,26 @@ const loanReadDeclarations: GeminiFunctionDeclaration[] = [
   },
 ];
 
-/** All declarations (including loans + goals). Prefer getToolDeclarations when presence is known. */
+/** All declarations (including loans + goals + family). Prefer getToolDeclarations when presence is known. */
 export const toolDeclarations: GeminiFunctionDeclaration[] = [
   ...coreToolDeclarations,
   ...loanReadDeclarations,
   ...loanToolDeclarations,
   ...goalToolDeclarations,
+  ...familyToolDeclarations,
 ];
 
 export interface ToolDeclarationOptions {
   hasLoans: boolean;
   goalsEnabled: boolean;
+  hasFamily?: boolean;
 }
 
-/** Skip loan/goals tools when unused — fewer tokens, less model confusion. */
+/** Skip loan/goals/family tools when unused — fewer tokens, less model confusion. */
 export const getToolDeclarations = ({
   hasLoans,
   goalsEnabled,
+  hasFamily = false,
 }: ToolDeclarationOptions): GeminiFunctionDeclaration[] => {
   let list = [...coreToolDeclarations];
   if (hasLoans) {
@@ -146,6 +150,9 @@ export const getToolDeclarations = ({
   }
   if (goalsEnabled) {
     list = [...list, ...goalToolDeclarations];
+  }
+  if (hasFamily) {
+    list = [...list, ...familyToolDeclarations];
   }
   return list;
 };

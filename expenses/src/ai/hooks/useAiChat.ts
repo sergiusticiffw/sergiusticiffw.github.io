@@ -37,6 +37,10 @@ import { getAiLanguage, getShareDescriptions } from '../storage';
 import { getToolDeclarations } from '../tools/definitions';
 import { TOOL_LABELS, executeTool } from '../tools/executors';
 import { summarizeToolResult } from '../tools/expenseTools';
+import {
+  formatFamilySummary,
+  loadFamilyAiContext,
+} from '../tools/familyTools';
 import { formatGoalsSummary } from '../tools/goalTools';
 
 const newId = () => `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -103,11 +107,6 @@ export function useAiChat(apiKey: string) {
     goalsEnabled,
     emergencyFund,
   ]);
-  const declarations = useMemo(
-    () => getToolDeclarations({ hasLoans, goalsEnabled }),
-    [hasLoans, goalsEnabled]
-  );
-
   useEffect(() => {
     chatSession.messages = messages;
     // Streaming updates are frequent; the finished answer is saved once.
@@ -162,27 +161,6 @@ export function useAiChat(apiKey: string) {
         ...trimHistory(chatSession.history),
         userTurn,
       ];
-      const systemInstruction = {
-        parts: [
-          {
-            text: buildChatSystemInstruction(
-              summary,
-              getAiLanguage(),
-              recentToolNotesText()
-            ),
-          },
-        ],
-      };
-      const toolContext = {
-        items,
-        shareDescriptions,
-        loans: loanContext.snapshots,
-        loanPayments: loanContext.payments,
-        loanSources: loanContext.sources,
-        goalsEnabled,
-        emergencyFund: goalsEnabled ? emergencyFund : null,
-      };
-
       let previousText = '';
       let tokens = 0;
       let model: string | undefined;
@@ -190,12 +168,43 @@ export function useAiChat(apiKey: string) {
       const turnNotes: string[] = [];
 
       try {
+        const family = await loadFamilyAiContext();
+        const turnSummary = family
+          ? `${summary}\n\n${formatFamilySummary(family)}`
+          : summary;
+        const turnDeclarations = getToolDeclarations({
+          hasLoans,
+          goalsEnabled,
+          hasFamily: !!family,
+        });
+        const systemInstruction = {
+          parts: [
+            {
+              text: buildChatSystemInstruction(
+                turnSummary,
+                getAiLanguage(),
+                recentToolNotesText()
+              ),
+            },
+          ],
+        };
+        const toolContext = {
+          items,
+          shareDescriptions,
+          loans: loanContext.snapshots,
+          loanPayments: loanContext.payments,
+          loanSources: loanContext.sources,
+          goalsEnabled,
+          emergencyFund: goalsEnabled ? emergencyFund : null,
+          family,
+        };
+
         for (let round = 0; round <= AI_LIMITS.maxToolRounds; round++) {
           const forceAnswer = round === AI_LIMITS.maxToolRounds;
           const request: GeminiRequest = {
             systemInstruction,
             contents,
-            tools: [{ functionDeclarations: declarations }],
+            tools: [{ functionDeclarations: turnDeclarations }],
             ...(forceAnswer && {
               toolConfig: { functionCallingConfig: { mode: 'NONE' } },
             }),
@@ -307,9 +316,9 @@ export function useAiChat(apiKey: string) {
     [
       apiKey,
       busy,
-      declarations,
       emergencyFund,
       goalsEnabled,
+      hasLoans,
       items,
       loanContext,
       patchMessage,
