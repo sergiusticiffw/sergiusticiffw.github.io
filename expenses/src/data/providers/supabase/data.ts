@@ -730,5 +730,18 @@ export function createSupabaseDataProvider(): DataProvider {
         };
       }
     },
+
+    async listFamilyCategoryMemberTotals() {
+      if (!isOnline()) return failOffline();
+      try {
+        const { supabase } = await ensureAuth();
+        return householdApi.listFamilyCategoryMemberTotals(supabase);
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
   };
 }

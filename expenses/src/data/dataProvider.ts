@@ -1,6 +1,7 @@
 import type {
   ApiLoan,
   DataProviderKind,
+  FamilyCategoryMemberTotal,
   FamilyCategoryTotal,
   Household,
   LoanRecord,
@@ -73,6 +74,10 @@ export interface DataProvider {
   >;
   /** Shared-category monthly totals for the household (aggregates only). */
   listFamilyCategoryTotals(): Promise<ProviderResult<FamilyCategoryTotal[]>>;
+  /** Per-member shared-category totals (aggregates only). */
+  listFamilyCategoryMemberTotals(): Promise<
+    ProviderResult<FamilyCategoryMemberTotal[]>
+  >;
 }
 
 export type { TransactionRecord, LoanRecord, PaymentRecord };

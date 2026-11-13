@@ -20,6 +20,7 @@ export type {
   HouseholdInvite,
   HouseholdRole,
   FamilyCategoryTotal,
+  FamilyCategoryMemberTotal,
 } from './types';
 export {
   createProviders,

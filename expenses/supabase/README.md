@@ -46,6 +46,7 @@ Run after init:
 3. [`migrations/20260328132000_family_aggregates_only.sql`](migrations/20260328132000_family_aggregates_only.sql) (drop partner-row SELECT; aggregate RPC only)
 4. [`migrations/20260328133000_household_member_emails.sql`](migrations/20260328133000_household_member_emails.sql) (member list shows email, not UUID)
 5. [`migrations/20260328134000_profile_preferences.sql`](migrations/20260328134000_profile_preferences.sql) (`profiles.preferences` jsonb — theme, language, charts, AI prefs, goals cache)
+6. [`migrations/20260328135000_family_member_category_totals.sql`](migrations/20260328135000_family_member_category_totals.sql) (per-member shared-category aggregates for chart drill-down)
 
 Family budget shows **combined totals per shared category** — not partner transaction lists. Each member keeps edit/delete on their own rows only.
 

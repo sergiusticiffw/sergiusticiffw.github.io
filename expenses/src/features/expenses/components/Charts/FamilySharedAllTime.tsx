@@ -2,8 +2,9 @@ import React, { useMemo } from 'react';
 import { useStore } from '@tanstack/react-store';
 import { expenseStore } from '@stores/expenseStore';
 import { useSettingsCurrency } from '@stores/settingsStore';
+import { useAuthState } from '@shared/context/context';
 import { useLocalization } from '@shared/context/localization';
-import { Card, cn } from '@shared/ui';
+import { Card } from '@shared/ui';
 import { getCategoryColor } from '@shared/ui/CategoryIcon';
 import { formatNumber } from '@shared/utils/utils';
 import { getCategories } from '@shared/utils/constants';
@@ -11,6 +12,7 @@ import type { TransactionOrIncomeItem } from '@shared/type/types';
 import { getAiItems } from '../../../../ai/data';
 import { getDataProviderKind } from '../../../../data';
 import CategoryDonutBreakdown from './CategoryDonutBreakdown';
+import FamilyCategorySpendList from './FamilyCategorySpendList';
 import {
   categorySpendAllTime,
   resolveFamilyChartItems,
@@ -27,7 +29,9 @@ const FamilySharedAllTime: React.FC<FamilySharedAllTimeProps> = ({
   const { t } = useLocalization();
   const currency = useSettingsCurrency();
   const categories = getCategories();
-  const { household, familyItems, sharedCategoryIds, loading } =
+  const { userDetails } = useAuthState();
+  const myUid = String(userDetails?.current_user?.uid || '');
+  const { household, familyItems, memberTotals, sharedCategoryIds, loading } =
     useFamilySharedTotals();
 
   const category = useStore(expenseStore, (s) => s.category ?? '');
@@ -35,13 +39,14 @@ const FamilySharedAllTime: React.FC<FamilySharedAllTimeProps> = ({
   const selectedTag = useStore(expenseStore, (s) => s.selectedTag ?? '');
   const dateRange = useStore(expenseStore, (s) => s.dateRange ?? null);
   const filteredRaw = useStore(expenseStore, (s) => s.filtered_raw);
+  const personalOnly = !!(textFilter.trim() || selectedTag.trim());
 
   const personalFilteredItems = useMemo(() => {
-    if (!textFilter.trim() && !selectedTag.trim()) return [];
+    if (!personalOnly) return [];
     return getAiItems(
       (filteredRaw as TransactionOrIncomeItem[] | undefined) ?? []
     );
-  }, [filteredRaw, textFilter, selectedTag]);
+  }, [filteredRaw, personalOnly]);
 
   const chartItems = useMemo(
     () =>
@@ -127,45 +132,18 @@ const FamilySharedAllTime: React.FC<FamilySharedAllTimeProps> = ({
         {rows.length > 0 && (
           <>
             <CategoryDonutBreakdown data={donutData} currency={currency} />
-            <ul className="m-0 list-none px-4 pb-4 pt-1">
-              {rows.map((row) => {
-                const pct = total > 0 ? (row.amount / total) * 100 : 0;
-                return (
-                  <li
-                    key={row.id}
-                    className="border-b border-white/5 py-2.5 last:border-b-0"
-                  >
-                    <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                      <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-app-primary">
-                        <span
-                          className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-                          style={{ background: row.color || '#94a3b8' }}
-                          aria-hidden
-                        />
-                        <span className="truncate">{row.label}</span>
-                      </span>
-                      <span className="shrink-0 text-sm font-semibold tabular-nums text-app-primary">
-                        {formatNumber(row.amount)}
-                      </span>
-                    </div>
-                    <div
-                      className="h-1 overflow-hidden rounded-full bg-white/[0.06]"
-                      role="presentation"
-                    >
-                      <div
-                        className={cn(
-                          'h-full rounded-full transition-[width] duration-500 ease-out'
-                        )}
-                        style={{
-                          width: `${Math.min(100, pct)}%`,
-                          background: row.color || '#94a3b8',
-                        }}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+            <FamilyCategorySpendList
+              rows={rows}
+              categoryTotal={total}
+              memberTotals={memberTotals}
+              members={household.members || []}
+              myUid={myUid}
+              monthKey={null}
+              categoryFilter={category}
+              dateRange={dateRange}
+              personalOnly={personalOnly}
+              personalItems={personalFilteredItems}
+            />
           </>
         )}
       </Card>

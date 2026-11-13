@@ -4,6 +4,7 @@ import { useApiClient } from '@shared/hooks/useApiClient';
 import { getAiItems, type AiItem } from '../../../../ai/data';
 import {
   getDataProviderKind,
+  type FamilyCategoryMemberTotal,
   type Household,
 } from '../../../../data';
 import { sharedTotalsFromItems, totalsToAiItems } from './familyTotals';
@@ -11,6 +12,7 @@ import { sharedTotalsFromItems, totalsToAiItems } from './familyTotals';
 type SharedSnapshot = {
   household: Household | null;
   familyItems: AiItem[];
+  memberTotals: FamilyCategoryMemberTotal[];
 };
 
 /** Module cache so monthly + all-time charts share one household/RPC fetch. */
@@ -25,7 +27,7 @@ const loadFamilySharedTotals = async (
 ): Promise<SharedSnapshot> => {
   const house = await api.getHousehold();
   if (!house.success || !house.data) {
-    return { household: null, familyItems: [] };
+    return { household: null, familyItems: [], memberTotals: [] };
   }
 
   const household = house.data;
@@ -34,17 +36,26 @@ const loadFamilySharedTotals = async (
   );
   const local = sharedTotalsFromItems(personalItems, shared);
 
-  const result = await api.listFamilyCategoryTotals();
-  if (result.success && result.data && result.data.length > 0) {
-    return { household, familyItems: totalsToAiItems(result.data) };
-  }
+  const [totalsResult, memberResult] = await Promise.all([
+    api.listFamilyCategoryTotals(),
+    api.listFamilyCategoryMemberTotals(),
+  ]);
 
-  return { household, familyItems: local };
+  const familyItems =
+    totalsResult.success && totalsResult.data && totalsResult.data.length > 0
+      ? totalsToAiItems(totalsResult.data)
+      : local;
+
+  const memberTotals =
+    memberResult.success && memberResult.data ? memberResult.data : [];
+
+  return { household, familyItems, memberTotals };
 };
 
 export type UseFamilySharedTotalsResult = {
   household: Household | null;
   familyItems: AiItem[];
+  memberTotals: FamilyCategoryMemberTotal[];
   sharedCategoryIds: Set<string>;
   loading: boolean;
 };
@@ -62,6 +73,9 @@ export const useFamilySharedTotals = (): UseFamilySharedTotalsResult => {
   const [familyItems, setFamilyItems] = useState<AiItem[]>(
     cached?.familyItems ?? []
   );
+  const [memberTotals, setMemberTotals] = useState<FamilyCategoryMemberTotal[]>(
+    cached?.memberTotals ?? []
+  );
   const [loading, setLoading] = useState(!cached);
 
   const personalItems = useMemo(
@@ -74,6 +88,7 @@ export const useFamilySharedTotals = (): UseFamilySharedTotalsResult => {
     if (getDataProviderKind() !== 'supabase' || !api) {
       setHousehold(null);
       setFamilyItems([]);
+      setMemberTotals([]);
       setLoading(false);
       return;
     }
@@ -84,6 +99,7 @@ export const useFamilySharedTotals = (): UseFamilySharedTotalsResult => {
       if (cancelled) return;
       setHousehold(snapshot.household);
       setFamilyItems(snapshot.familyItems);
+      setMemberTotals(snapshot.memberTotals);
       setLoading(false);
     };
 
@@ -127,5 +143,11 @@ export const useFamilySharedTotals = (): UseFamilySharedTotalsResult => {
     [household]
   );
 
-  return { household, familyItems, sharedCategoryIds, loading };
+  return {
+    household,
+    familyItems,
+    memberTotals,
+    sharedCategoryIds,
+    loading,
+  };
 };

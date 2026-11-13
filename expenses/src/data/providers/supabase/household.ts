@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
+  FamilyCategoryMemberTotal,
   FamilyCategoryTotal,
   Household,
   HouseholdInvite,
@@ -343,5 +344,33 @@ export const listFamilyCategoryTotals = async (
       month: String(row.month),
       total: Number(row.total) || 0,
     })),
+  };
+};
+
+export const listFamilyCategoryMemberTotals = async (
+  supabase: SupabaseClient
+): Promise<ProviderResult<FamilyCategoryMemberTotal[]>> => {
+  const { data, error } = await supabase.rpc(
+    'family_shared_category_member_totals'
+  );
+  if (error) return { success: false, error: new Error(error.message) };
+
+  const rows = (data || []) as Array<{
+    category_id: string;
+    month: string;
+    user_id: string;
+    total: number | string;
+  }>;
+
+  return {
+    success: true,
+    data: rows
+      .map((row) => ({
+        category_id: String(row.category_id),
+        month: String(row.month),
+        user_id: String(row.user_id),
+        total: Number(row.total) || 0,
+      }))
+      .filter((row) => row.total > 0 && row.month.length === 7),
   };
 };

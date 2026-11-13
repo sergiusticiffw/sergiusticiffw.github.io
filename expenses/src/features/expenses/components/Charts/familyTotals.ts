@@ -1,5 +1,15 @@
 import type { AiItem } from '../../../../ai/data';
-import type { FamilyCategoryTotal } from '../../../../data';
+import type {
+  FamilyCategoryMemberTotal,
+  FamilyCategoryTotal,
+} from '../../../../data';
+
+export type MemberCategorySpend = {
+  userId: string;
+  label: string;
+  amount: number;
+  isYou?: boolean;
+};
 
 /** Turn RPC month×category totals into AiItems (no partner row details). */
 export const totalsToAiItems = (totals: FamilyCategoryTotal[]): AiItem[] =>
@@ -155,4 +165,72 @@ export const categorySpendAllTime = (
     }))
     .filter((row) => row.amount > 0)
     .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label));
+};
+
+/** Filter member aggregates by category + dateRange (YYYY-MM overlap). */
+export const filterMemberTotals = (
+  rows: FamilyCategoryMemberTotal[],
+  filters: FamilyAggregateFilters & { monthKey?: string | null } = {}
+): FamilyCategoryMemberTotal[] => {
+  const category = filters.category?.trim() || '';
+  const range = filters.dateRange;
+  const hasRange = !!(range?.start && range?.end);
+  const startMonth = hasRange ? range!.start.slice(0, 7) : '';
+  const endMonth = hasRange ? range!.end.slice(0, 7) : '';
+  const monthKey = filters.monthKey || '';
+
+  return rows.filter((row) => {
+    if (row.month.length !== 7 || row.total <= 0) return false;
+    if (category && row.category_id !== category) return false;
+    if (monthKey && row.month !== monthKey) return false;
+    if (hasRange && (row.month < startMonth || row.month > endMonth)) {
+      return false;
+    }
+    return true;
+  });
+};
+
+/** Per-member spend for one category (optionally one month, or summed all-time). */
+export const memberSpendForCategory = (
+  rows: FamilyCategoryMemberTotal[],
+  categoryId: string,
+  labelFor: (userId: string) => { label: string; isYou?: boolean },
+  options: { monthKey?: string | null } = {}
+): MemberCategorySpend[] => {
+  const monthKey = options.monthKey || '';
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    if (row.category_id !== categoryId) continue;
+    if (monthKey && row.month !== monthKey) continue;
+    totals.set(row.user_id, (totals.get(row.user_id) || 0) + row.total);
+  }
+  return [...totals.entries()]
+    .map(([userId, amount]) => {
+      const meta = labelFor(userId);
+      return {
+        userId,
+        label: meta.label,
+        amount,
+        isYou: meta.isYou,
+      };
+    })
+    .filter((row) => row.amount > 0)
+    .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label));
+};
+
+/** Personal-only member breakdown when Charts search/tag filters are active. */
+export const personalMemberSpendForCategory = (
+  items: AiItem[],
+  categoryId: string,
+  myUid: string,
+  myLabel: string
+): MemberCategorySpend[] => {
+  let amount = 0;
+  for (const item of items) {
+    if (item.kind !== 'expense') continue;
+    if (String(item.cat || '') !== categoryId) continue;
+    amount += item.amount;
+  }
+  if (amount <= 0 || !myUid) return [];
+  return [{ userId: myUid, label: myLabel, amount, isYou: true }];
 };

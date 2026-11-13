@@ -241,5 +241,11 @@ export function createDrupalDataProvider(): DataProvider {
         error: new Error('Family accounts require Supabase'),
       };
     },
+    async listFamilyCategoryMemberTotals() {
+      return {
+        success: false,
+        error: new Error('Family accounts require Supabase'),
+      };
+    },
   };
 }

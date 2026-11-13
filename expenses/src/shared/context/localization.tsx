@@ -490,6 +490,9 @@ const translations = {
     'family.totalsHint': 'Combined totals for shared categories',
     'family.chartTitle': 'Family shared · {month}',
     'family.chartTitleAllTime': 'Family shared · all time',
+    'family.memberBreakdown': 'Contribution by member',
+    'family.memberBreakdownEmpty': 'No member split for this category.',
+    'family.memberYou': 'You',
     'family.leaveConfirmTitle': 'Leave family?',
     'family.leaveConfirmMessage':
       'You will lose access to the shared family budget. Your own expenses stay private.',
@@ -1495,6 +1498,9 @@ const translations = {
     'family.totalsHint': 'Totaluri combinate pe categoriile comune',
     'family.chartTitle': 'Cheltuieli comune · {month}',
     'family.chartTitleAllTime': 'Cheltuieli comune · tot timpul',
+    'family.memberBreakdown': 'Contribuție pe membru',
+    'family.memberBreakdownEmpty': 'Nicio împărțire pe membru pentru categoria asta.',
+    'family.memberYou': 'Tu',
     'family.leaveConfirmTitle': 'Părăsești familia?',
     'family.leaveConfirmMessage':
       'Nu vei mai avea acces la bugetul comun. Cheltuielile tale rămân private.',

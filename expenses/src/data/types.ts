@@ -131,4 +131,13 @@ export interface FamilyCategoryTotal {
   total: number;
 }
 
+/** Per-member shared-category aggregate — still no transaction row details. */
+export interface FamilyCategoryMemberTotal {
+  category_id: string;
+  /** YYYY-MM */
+  month: string;
+  user_id: string;
+  total: number;
+}
+
 export type { ApiLoan, ApiPaymentItem, TransactionOrIncomeItem, TagCatalog };
