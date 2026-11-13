@@ -38,8 +38,9 @@ const FamilySettings: React.FC = () => {
   const [open, setOpen] = useState(false);
 
   const reload = useCallback(async () => {
-    if (!api || getDataProviderKind() !== 'supabase') {
+    if (!api || getDataProviderKind() !== 'supabase' || !myUid) {
       setLoading(false);
+      if (!myUid) setHousehold(null);
       return;
     }
     setLoading(true);
@@ -54,7 +55,7 @@ const FamilySettings: React.FC = () => {
       showNotification(result.error.message, notificationType.ERROR);
     }
     setLoading(false);
-  }, [api, showNotification]);
+  }, [api, myUid, showNotification]);
 
   useEffect(() => {
     reload();

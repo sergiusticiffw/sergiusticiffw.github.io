@@ -30,42 +30,112 @@ export function createSupabaseDataProvider(): DataProvider {
   let token = '';
   let hooks: DataProviderHooks = {};
   let userId = '';
+  /** Avoid hammering /auth/v1/token after a bad refresh. */
+  let authSyncFailed = false;
 
   const failOffline = <T,>(): ProviderResult<T> => ({
     success: false,
     error: new Error('No internet connection'),
   });
 
+  const readStoredAuth = () => {
+    try {
+      return JSON.parse(localStorage.getItem('currentUser') || '{}') as Record<
+        string,
+        unknown
+      >;
+    } catch {
+      return {};
+    }
+  };
+
+  const persistClientSession = (session: {
+    access_token: string;
+    refresh_token: string;
+  }) => {
+    try {
+      const stored = readStoredAuth();
+      const next = {
+        ...stored,
+        access_token: session.access_token,
+        jwt_token: session.access_token,
+        refresh_token: session.refresh_token,
+      };
+      localStorage.setItem('currentUser', JSON.stringify(next));
+      token = session.access_token;
+    } catch {
+      // ignore
+    }
+  };
+
+  const sessionStillValid = (expiresAt: number | undefined) => {
+    if (!expiresAt) return false;
+    return expiresAt > Math.floor(Date.now() / 1000) + 30;
+  };
+
+  const applySession = (session: {
+    access_token: string;
+    refresh_token: string;
+    user?: { id?: string } | null;
+  }) => {
+    authSyncFailed = false;
+    persistClientSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    });
+    if (session.user?.id) userId = String(session.user.id);
+  };
+
   const ensureAuth = async () => {
     const supabase = getSupabaseClient();
-    const stored = (() => {
-      try {
-        return JSON.parse(localStorage.getItem('currentUser') || '{}');
-      } catch {
-        return {};
-      }
-    })();
+    const stored = readStoredAuth();
     const refresh =
       (stored.refresh_token as string | undefined) ||
       ((stored as { refreshToken?: string }).refreshToken as string | undefined) ||
       '';
-    const storedUid = String(stored?.current_user?.uid || '');
+    const storedUid = String(
+      (stored.current_user as { uid?: string } | undefined)?.uid || ''
+    );
 
-    // Keep the Supabase client JWT in sync so auth.uid() works in RLS/RPC.
     let { data: existing } = await supabase.auth.getSession();
-    const sessionToken = existing.session?.access_token || '';
-    if (token && sessionToken !== token) {
-      if (refresh) {
-        await supabase.auth
-          .setSession({ access_token: token, refresh_token: refresh })
-          .catch(() => undefined);
-      } else if (!existing.session) {
-        await supabase.auth.refreshSession().catch(() => undefined);
+    const live = existing.session;
+    const liveOk =
+      !!live?.access_token && sessionStillValid(live.expires_at);
+
+    if (liveOk && live) {
+      // Client already has a fresh JWT (possibly rotated by autoRefresh).
+      if (live.access_token !== token || live.refresh_token !== refresh) {
+        applySession(live);
       }
-      ({ data: existing } = await supabase.auth.getSession());
-    } else if (!existing.session) {
-      await supabase.auth.refreshSession().catch(() => undefined);
-      ({ data: existing } = await supabase.auth.getSession());
+    } else if (!authSyncFailed) {
+      // 1) Refresh via client storage first (avoids stale app refresh_token 400s).
+      let restored = false;
+      if (live?.refresh_token || refresh) {
+        const { data, error } = await supabase.auth.refreshSession();
+        if (!error && data.session) {
+          existing = data;
+          applySession(data.session);
+          restored = true;
+        }
+      }
+      // 2) Fall back to restoring from app-stored tokens.
+      if (!restored && token && refresh) {
+        const { data, error } = await supabase.auth.setSession({
+          access_token: token,
+          refresh_token: refresh,
+        });
+        if (!error && data.session) {
+          existing = data;
+          applySession(data.session);
+          restored = true;
+        }
+      }
+      if (!restored) {
+        authSyncFailed = true;
+        if (token || refresh || live) {
+          hooks.onSessionExpired?.();
+        }
+      }
     }
 
     // Prefer session / cached uid — avoid /auth/v1/user on every API call.
@@ -74,22 +144,34 @@ export function createSupabaseDataProvider(): DataProvider {
       : '';
     if (sessionUid) {
       userId = sessionUid;
-    } else if (storedUid) {
+    } else if (storedUid && !authSyncFailed) {
       userId = storedUid;
-    } else if (!userId) {
-      const { data } = await supabase.auth.getUser();
-      userId = data.user?.id ? String(data.user.id) : '';
+    } else if (authSyncFailed) {
+      userId = '';
     }
-    return { supabase, userId };
+    return {
+      supabase,
+      userId,
+      authenticated: !authSyncFailed && sessionStillValid(existing.session?.expires_at),
+    };
   };
 
-  const onAuthError = (error: { message?: string; code?: string } | null) => {
-    const msg = error?.message || '';
+  const onAuthError = (error: {
+    message?: string;
+    code?: string;
+    status?: number;
+  } | null) => {
+    const msg = (error?.message || '').toLowerCase();
     if (
-      msg.toLowerCase().includes('jwt') ||
-      msg.toLowerCase().includes('session') ||
-      error?.code === 'PGRST301'
+      msg.includes('jwt') ||
+      msg.includes('session') ||
+      msg.includes('refresh') ||
+      msg.includes('expired') ||
+      msg.includes('unauthorized') ||
+      error?.code === 'PGRST301' ||
+      error?.status === 401
     ) {
+      authSyncFailed = true;
       hooks.onSessionExpired?.();
     }
   };
@@ -117,9 +199,15 @@ export function createSupabaseDataProvider(): DataProvider {
   return {
     kind: 'supabase',
 
-    configure(nextToken: string, nextHooks: DataProviderHooks = {}) {
+    configure(nextToken: string, nextHooks?: DataProviderHooks) {
+      if (nextToken && nextToken !== token) {
+        authSyncFailed = false;
+      }
       token = nextToken;
-      hooks = nextHooks;
+      // Merge hooks — bare configure(token) must not wipe onSessionExpired.
+      if (nextHooks) {
+        hooks = { ...hooks, ...nextHooks };
+      }
       try {
         const stored = JSON.parse(localStorage.getItem('currentUser') || '{}');
         userId = String(stored?.current_user?.uid || '');
@@ -469,8 +557,22 @@ export function createSupabaseDataProvider(): DataProvider {
     ): Promise<ProviderResult<UserProfile>> {
       if (!isOnline()) return failOffline();
       try {
-        const { supabase } = await ensureAuth();
-        const row = { id: uid, ...profileUpdateFromPatch(patch) };
+        const { supabase, userId: authUid, authenticated } = await ensureAuth();
+        if (!authenticated) {
+          return {
+            success: false,
+            error: new Error('Not authenticated'),
+          };
+        }
+        // RLS: auth.uid() must equal profiles.id — never upsert with a stale uid.
+        const profileId = authUid || uid;
+        if (!profileId) {
+          return {
+            success: false,
+            error: new Error('Not authenticated'),
+          };
+        }
+        const row = { id: profileId, ...profileUpdateFromPatch(patch) };
         const { data, error } = await supabase
           .from('profiles')
           .upsert(row, { onConflict: 'id' })

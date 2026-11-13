@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   FiCalendar,
-  FiCloud,
-  FiCloudOff,
   FiEdit2,
   FiLoader,
   FiPlusCircle,
@@ -46,9 +44,7 @@ import {
 } from '../../model';
 import {
   addEmergencyFundContribution,
-  getEmergencyFund,
   removeEmergencyFundContribution,
-  replaceEmergencyFund,
   setEmergencyFund,
   updateEmergencyFundContribution,
   useEmergencyFund,
@@ -56,14 +52,6 @@ import {
 import { persistGoalsToSupabase } from '../../../profile/preferencesSync';
 import { getDataProviderKind } from '../../../../data';
 import { getMonthNames } from '@shared/utils/constants';
-
-type SyncStatus =
-  | 'idle'
-  | 'syncing'
-  | 'synced'
-  | 'local'
-  | 'error'
-  | 'offline';
 
 const Goals = () => {
   const { t } = useLocalization();
@@ -91,7 +79,6 @@ const Goals = () => {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const monthNames = getMonthNames();
 
   useEffect(() => {
@@ -106,48 +93,6 @@ const Goals = () => {
     );
     setTargetMonths(fund.targetMonths);
   }, [fund.monthlyContribution, fund.targetMonths]);
-
-  // Mark sync status from provider (prefs already pulled at login for Supabase).
-  useEffect(() => {
-    if (!navigator.onLine) {
-      setSyncStatus('offline');
-      return;
-    }
-    if (getDataProviderKind() === 'supabase') {
-      setSyncStatus('synced');
-    } else {
-      setSyncStatus('local');
-    }
-  }, []);
-
-  /** Push Goals to Supabase profiles.preferences. */
-  const handleSyncCloud = async () => {
-    if (!navigator.onLine) {
-      setSyncStatus('offline');
-      showNotification(t('goals.savedOffline'), notificationType.SUCCESS);
-      return;
-    }
-    if (getDataProviderKind() !== 'supabase') {
-      setSyncStatus('local');
-      showNotification(t('goals.localOnly'), notificationType.SUCCESS);
-      return;
-    }
-    setSyncStatus('syncing');
-    try {
-      const ok = await persistGoalsToSupabase({
-        fund: getEmergencyFund(),
-        enabled: goalsEnabled,
-      });
-      setSyncStatus(ok ? 'synced' : 'local');
-      showNotification(
-        ok ? t('goals.synced') : t('goals.localOnly'),
-        notificationType.SUCCESS
-      );
-    } catch {
-      setSyncStatus('error');
-      showNotification(t('goals.syncError'), notificationType.ERROR);
-    }
-  };
 
   const avgSpend = useMemo(
     () => averageMonthlySpend(data.raw ?? []),
@@ -174,21 +119,14 @@ const Goals = () => {
   const eta = monthsToGoal(balance, target, draftContribution);
   const left = Math.max(0, target - balance);
 
+  /** Silent account persist (Supabase prefs). Local store already saved. */
   const persistFundToCloud = async (next: typeof fund) => {
-    if (!navigator.onLine) {
-      setSyncStatus('offline');
-      return false;
-    }
-    if (getDataProviderKind() !== 'supabase') {
-      setSyncStatus('local');
-      return false;
-    }
-    const ok = await persistGoalsToSupabase({
+    if (!navigator.onLine) return false;
+    if (getDataProviderKind() !== 'supabase') return false;
+    return persistGoalsToSupabase({
       fund: next,
       enabled: goalsEnabled,
     });
-    setSyncStatus(ok ? 'synced' : 'local');
-    return ok;
   };
 
   const handleAddSaving = async (event: React.FormEvent) => {
@@ -204,7 +142,6 @@ const Goals = () => {
     }
 
     setAdding(true);
-    setSyncStatus('syncing');
     try {
       const next = addEmergencyFundContribution(amount, addMonth);
       setAddAmountInput('');
@@ -218,7 +155,6 @@ const Goals = () => {
         notificationType.SUCCESS
       );
     } catch {
-      setSyncStatus('error');
       showNotification(t('goals.syncError'), notificationType.ERROR);
     } finally {
       setAdding(false);
@@ -236,7 +172,8 @@ const Goals = () => {
   const closeEditContribution = () => {
     setEditId(null);
     setEditAmountInput('');
-    setEditMonth(currentMonthKey);
+    // Must call: setState(fn) treats a bare function as an updater.
+    setEditMonth(currentMonthKey());
   };
 
   const handleEditContribution = async (event: React.FormEvent) => {
@@ -253,7 +190,6 @@ const Goals = () => {
     }
 
     setEditing(true);
-    setSyncStatus('syncing');
     try {
       const next = updateEmergencyFundContribution(editId, {
         amount,
@@ -270,7 +206,6 @@ const Goals = () => {
         notificationType.SUCCESS
       );
     } catch {
-      setSyncStatus('error');
       showNotification(t('goals.syncError'), notificationType.ERROR);
     } finally {
       setEditing(false);
@@ -280,7 +215,6 @@ const Goals = () => {
   const handleDeleteContribution = async () => {
     if (!deleteId) return;
     setDeleting(true);
-    setSyncStatus('syncing');
     try {
       const next = removeEmergencyFundContribution(deleteId);
       if (!next) {
@@ -294,7 +228,6 @@ const Goals = () => {
         notificationType.SUCCESS
       );
     } catch {
-      setSyncStatus('error');
       showNotification(t('goals.syncError'), notificationType.ERROR);
     } finally {
       setDeleting(false);
@@ -324,7 +257,6 @@ const Goals = () => {
     }
 
     setSaving(true);
-    setSyncStatus('syncing');
     try {
       const next = setEmergencyFund({
         targetMonths,
@@ -336,7 +268,6 @@ const Goals = () => {
         notificationType.SUCCESS
       );
     } catch {
-      setSyncStatus('error');
       showNotification(t('goals.syncError'), notificationType.ERROR);
     } finally {
       setSaving(false);
@@ -360,19 +291,6 @@ const Goals = () => {
             '{months}',
             formatNumber(Number(eta.toFixed(1)))
           );
-
-  const syncLabel =
-    syncStatus === 'syncing'
-      ? t('goals.syncing')
-      : syncStatus === 'synced'
-        ? t('goals.synced')
-        : syncStatus === 'local'
-          ? t('goals.localOnly')
-          : syncStatus === 'offline'
-            ? t('goals.offline')
-            : syncStatus === 'error'
-              ? t('goals.syncFailed')
-              : null;
 
   return (
     <div className={PAGE_CONTAINER_CLASS}>
@@ -419,43 +337,6 @@ const Goals = () => {
               .replace('{left}', formatNumber(left))
               .replace('{target}', formatNumber(target))}
           </p>
-        )}
-        {syncLabel && (
-          <div className="flex items-center justify-between gap-3">
-            <p
-              className={cn(
-                'm-0 flex items-center gap-2 text-caption',
-                syncStatus === 'error' ||
-                  syncStatus === 'offline' ||
-                  syncStatus === 'local'
-                  ? 'text-app-muted'
-                  : 'text-[color-mix(in_srgb,var(--color-income)_85%,white)]'
-              )}
-            >
-              {syncStatus === 'syncing' ? (
-                <FiLoader className="animate-spin shrink-0" aria-hidden />
-              ) : syncStatus === 'error' ||
-                syncStatus === 'offline' ||
-                syncStatus === 'local' ? (
-                <FiCloudOff className="shrink-0" aria-hidden />
-              ) : (
-                <FiCloud className="shrink-0" aria-hidden />
-              )}
-              {syncLabel}
-            </p>
-            {(syncStatus === 'local' ||
-              syncStatus === 'error' ||
-              syncStatus === 'offline' ||
-              syncStatus === 'synced') && (
-              <button
-                type="button"
-                onClick={handleSyncCloud}
-                className="shrink-0 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1 text-caption font-semibold text-app-secondary hover:border-white/25 hover:text-app-primary"
-              >
-                {t('goals.syncNow')}
-              </button>
-            )}
-          </div>
         )}
       </Card>
 

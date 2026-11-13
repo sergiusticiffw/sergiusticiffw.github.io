@@ -149,23 +149,77 @@ export const schedulePreferencesPush = (
   }, DEBOUNCE_MS);
 };
 
-export const flushPreferencesPush = async (): Promise<void> => {
-  if (applyingRemote) return;
-  if (getDataProviderKind() !== 'supabase') return;
+const isUuid = (value: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    value
+  );
+
+const restorePending = (patch: Partial<ProfilePreferences>) => {
+  pendingPatch = { ...patch, ...pendingPatch };
+};
+
+/** True when Supabase client has a non-expired access token (or can refresh). */
+export const ensureFreshSupabaseSession = async (): Promise<boolean> => {
+  if (getDataProviderKind() !== 'supabase') return false;
+  try {
+    const { getSupabaseClient } = await import(
+      '../../data/providers/supabase/client'
+    );
+    const supabase = getSupabaseClient();
+    const { data } = await supabase.auth.getSession();
+    const expiresAt = data.session?.expires_at ?? 0;
+    const fresh =
+      !!data.session?.access_token &&
+      expiresAt > Math.floor(Date.now() / 1000) + 30;
+    if (fresh) return true;
+    // No refresh token → skip quietly (do not hit /auth/v1/token).
+    if (!data.session?.refresh_token) return false;
+
+    const { data: refreshed, error } = await supabase.auth.refreshSession();
+    return !error && !!refreshed.session?.access_token;
+  } catch {
+    return false;
+  }
+};
+
+export const flushPreferencesPush = async (): Promise<boolean> => {
+  if (applyingRemote) return false;
+  if (getDataProviderKind() !== 'supabase') return false;
   const session = getSession();
   const token = getStoredToken();
-  if (!session?.uid || !token) return;
+  if (!session?.uid || !token || !isUuid(session.uid)) return false;
+  if (!(await ensureFreshSupabaseSession())) {
+    return false;
+  }
 
   const patch = pendingPatch;
   pendingPatch = {};
   const next = mergePreferences(readLocalPreferences(), patch);
 
   try {
+    const { getSupabaseClient } = await import(
+      '../../data/providers/supabase/client'
+    );
+    const { data: auth } = await getSupabaseClient().auth.getSession();
+    const liveToken = auth.session?.access_token;
+    if (!liveToken) {
+      restorePending(patch);
+      return false;
+    }
+
     const provider = getDataProvider();
-    provider.configure(token);
-    await provider.updateProfile(session.uid, { preferences: next });
+    provider.configure(liveToken);
+    const result = await provider.updateProfile(session.uid, {
+      preferences: next,
+    });
+    if (!result.success) {
+      restorePending(patch);
+      return false;
+    }
+    return true;
   } catch {
-    // Keep local; next edit retries.
+    restorePending(patch);
+    return false;
   }
 };
 
@@ -181,7 +235,7 @@ export const persistGoalsToSupabase = async (options?: {
   if (!navigator.onLine) return false;
   const session = getSession();
   const token = getStoredToken();
-  if (!session?.uid || !token) return false;
+  if (!session?.uid || !token || !isUuid(session.uid)) return false;
 
   const fund =
     options?.fund != null
@@ -196,8 +250,7 @@ export const persistGoalsToSupabase = async (options?: {
     emergencyFund: fund,
     goalsEnabled: enabled,
   });
-  await flushPreferencesPush();
-  return true;
+  return flushPreferencesPush();
 };
 
 /** Pull prefs from profile after Supabase login. Remote wins for missing locals. */
@@ -205,7 +258,9 @@ export const pullPreferencesFromProfile = async (): Promise<boolean> => {
   if (getDataProviderKind() !== 'supabase') return false;
   const session = getSession();
   const token = getStoredToken();
-  if (!session?.uid || !token || !navigator.onLine) return false;
+  if (!session?.uid || !token || !isUuid(session.uid) || !navigator.onLine) {
+    return false;
+  }
 
   try {
     const provider = getDataProvider();

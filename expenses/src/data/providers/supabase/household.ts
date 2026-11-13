@@ -25,10 +25,14 @@ export const loadHousehold = async (
     }>
   ) => Promise<{ data: T[]; error: { message: string; code?: string } | null }>
 ): Promise<ProviderResult<Household | null>> => {
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+  // Empty string is not a valid UUID — PostgREST returns 22P02.
+  if (!userId) return { success: true, data: null };
+
   const { data: membership, error: memErr } = await supabase
     .from('household_members')
     .select('household_id, role')
-    .eq('user_id', (await supabase.auth.getUser()).data.user?.id || '')
+    .eq('user_id', userId)
     .maybeSingle();
 
   if (memErr) return { success: false, error: new Error(memErr.message) };
