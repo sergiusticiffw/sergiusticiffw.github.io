@@ -57,7 +57,7 @@ import {
 } from '@shared/utils/layoutClasses';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { googleLogout } from '@react-oauth/google';
-import { DriveError } from '../../../crypto/driveVault';
+import { authorizeDrive, DriveError } from '../../../crypto/driveVault';
 import {
   applyGoalsBackupBundle,
   requireGoalsOwnerKey,
@@ -171,14 +171,20 @@ const Profile = () => {
     setBackupListLoading(true);
     try {
       if (!silent) {
+        // Same iOS constraint: authorize inside the click before Drive API calls.
+        await authorizeDrive();
         await pruneDriveBackups();
       }
       const files = await listDriveBackups({ silent });
       setBackupList(files);
       setBackupListLoaded(true);
-    } catch {
+    } catch (err) {
       if (!silent) {
-        showNotification(t('profile.backupListError'), notificationType.ERROR);
+        const message =
+          err instanceof DriveError && err.message
+            ? err.message
+            : t('profile.backupListError');
+        showNotification(message, notificationType.ERROR);
       }
     } finally {
       setBackupListLoading(false);
@@ -188,6 +194,19 @@ const Profile = () => {
   const handleBackupToDrive = async () => {
     setBackupBusy(true);
     try {
+      // iOS Safari: GIS popup must open from the click before long awaits,
+      // otherwise Drive auth is blocked and upload fails.
+      try {
+        await authorizeDrive();
+      } catch (err) {
+        const detail =
+          err instanceof DriveError && err.message
+            ? err.message
+            : t('profile.backupErrorDrive');
+        showNotification(detail, notificationType.ERROR);
+        return;
+      }
+
       const uid = requireSessionUid();
       const snapshot = await buildBackupSnapshot(uid, {
         apiClient,
@@ -195,18 +214,27 @@ const Profile = () => {
         expenseDispatch: dataDispatch,
         loanDispatch,
       });
-      downloadBackupJson(snapshot);
 
       try {
         await uploadBackupToDrive(snapshot);
         setLastBackupAt(snapshot.createdAt);
         setLastBackupAtState(snapshot.createdAt);
+        try {
+          downloadBackupJson(snapshot);
+        } catch {
+          /* iOS may block the local download; Drive upload already succeeded */
+        }
         showNotification(t('profile.backupDone'), notificationType.SUCCESS);
         await refreshBackupList(true);
       } catch (err) {
+        try {
+          downloadBackupJson(snapshot);
+        } catch {
+          /* ignore */
+        }
         const message =
           err instanceof DriveError
-            ? t('profile.backupErrorDrive')
+            ? err.message || t('profile.backupErrorDrive')
             : t('profile.backupDownloaded');
         showNotification(message, notificationType.ERROR);
       }
