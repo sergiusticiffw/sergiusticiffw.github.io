@@ -11,6 +11,8 @@ interface DeleteConfirmDrawerProps {
   onConfirm: () => void;
   title: string;
   message?: string;
+  /** Defaults to common.delete */
+  confirmLabel?: string;
   isSubmitting?: boolean;
   item?: DeleteItemPreviewProps | null;
 }
@@ -21,6 +23,7 @@ const DeleteConfirmDrawer: React.FC<DeleteConfirmDrawerProps> = ({
   onConfirm,
   title,
   message,
+  confirmLabel,
   isSubmitting = false,
   item,
 }) => {
@@ -85,7 +88,7 @@ const DeleteConfirmDrawer: React.FC<DeleteConfirmDrawerProps> = ({
               ) : (
                 <>
                   <FiTrash2 />
-                  {t('common.delete')}
+                  {confirmLabel || t('common.delete')}
                 </>
               )}
             </button>

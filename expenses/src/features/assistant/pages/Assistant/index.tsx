@@ -556,19 +556,24 @@ const Assistant = () => {
       </h1>
       {status === 'loading' && <LoadingSpinner />}
       {status === 'missing' && (
-        <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-app-accent)]/15 text-[var(--color-app-accent)]">
-            <FiKey className="text-[26px]" />
-          </div>
-          <p className="max-w-sm text-sm leading-relaxed text-app-secondary">
-            {t('assistant.needKey')}
-          </p>
-          <Link
-            to="/expenses/user"
-            className="mt-5 inline-flex items-center justify-center rounded-lg bg-[var(--color-app-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--color-btn-on-accent)]"
+        <div className="grid w-full min-h-0 flex-1 place-items-center px-6 py-8">
+          <div
+            className="box-border text-center"
+            style={{ width: 'min(100%, 22rem)' }}
           >
-            {t('assistant.openProfile')}
-          </Link>
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-app-accent)]/15 text-[var(--color-app-accent)]">
+              <FiKey className="text-[26px]" aria-hidden />
+            </div>
+            <p className="m-0 text-sm leading-relaxed text-balance text-app-secondary">
+              {t('assistant.needKey')}
+            </p>
+            <Link
+              to="/expenses/user"
+              className="mt-6 flex min-h-[44px] w-full items-center justify-center whitespace-nowrap rounded-xl bg-[var(--color-app-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--color-btn-on-accent)] transition-opacity hover:opacity-90"
+            >
+              {t('assistant.openProfile')}
+            </Link>
+          </div>
         </div>
       )}
       {status === 'ready' && <Chat apiKey={apiKey} />}

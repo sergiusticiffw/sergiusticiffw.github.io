@@ -49,10 +49,10 @@ import {
 } from '../../model';
 import {
   hasDriveAccessToken,
-  readGoalsFromDrive,
-  readGoalsFromDriveSilent,
+  loadAndClaimGoalsFromDrive,
   requireSessionUid,
   saveGoalsToDrive,
+  type GoalsDriveBundle,
 } from '../../driveSync';
 import {
   addEmergencyFundContribution,
@@ -74,7 +74,7 @@ type SyncStatus =
   | 'offline';
 
 const applyRemoteBundle = (
-  remote: Awaited<ReturnType<typeof readGoalsFromDrive>>,
+  remote: GoalsDriveBundle | null,
   localEnabled: boolean
 ) => {
   const localFund = getEmergencyFund();
@@ -138,6 +138,7 @@ const Goals = () => {
   }, [fund.monthlyContribution, fund.targetMonths]);
 
   // Silent pull on open — never open a Google login popup automatically.
+  // Claims Drupal-era Drive files when uid changed (Supabase).
   useEffect(() => {
     let cancelled = false;
     const pull = async () => {
@@ -152,10 +153,18 @@ const Goals = () => {
       setSyncStatus('syncing');
       try {
         const uid = requireSessionUid();
-        const remote = await readGoalsFromDriveSilent(uid);
+        const { bundle: remote, claimed } = await loadAndClaimGoalsFromDrive(
+          uid,
+          { silent: true }
+        );
         if (cancelled) return;
         applyRemoteBundle(remote, goalsEnabled);
-        if (!cancelled) setSyncStatus(remote ? 'synced' : 'local');
+        if (!cancelled) {
+          setSyncStatus(remote ? 'synced' : 'local');
+          if (claimed) {
+            showNotification(t('goals.claimed'), notificationType.SUCCESS);
+          }
+        }
       } catch {
         if (!cancelled) setSyncStatus('local');
       }
@@ -177,7 +186,7 @@ const Goals = () => {
     setSyncStatus('syncing');
     try {
       const uid = requireSessionUid();
-      const remote = await readGoalsFromDrive(uid);
+      const { bundle: remote, claimed } = await loadAndClaimGoalsFromDrive(uid);
       const { merged, enabled, remote: remoteBundle } = applyRemoteBundle(
         remote,
         goalsEnabled
@@ -186,11 +195,14 @@ const Goals = () => {
         Boolean(merged.updatedAt) &&
         (!remoteBundle?.fund.updatedAt ||
           (merged.updatedAt as string) > remoteBundle.fund.updatedAt);
-      if (localWins || !remoteBundle) {
+      if (localWins || !remoteBundle || claimed) {
         await saveGoalsToDrive(uid, { fund: merged, enabled });
       }
       setSyncStatus('synced');
-      showNotification(t('goals.synced'), notificationType.SUCCESS);
+      showNotification(
+        claimed ? t('goals.claimed') : t('goals.synced'),
+        notificationType.SUCCESS
+      );
     } catch (err) {
       setSyncStatus('error');
       const message =

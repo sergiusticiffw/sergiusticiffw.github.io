@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuthDispatch, useAuthState } from '../../context';
 import { useExpenseData } from '@stores/expenseStore';
 import { loanDispatch } from '@stores/loanStore';
@@ -24,13 +24,13 @@ import {
   FiShield,
   FiDatabase,
   FiDownload,
+  FiUpload,
   FiLoader,
   FiRefreshCw,
   FiChevronDown,
   FiChevronUp,
 } from 'react-icons/fi';
 import ChartsVisibilityDnd from '@shared/components/ChartsVisibilityDnd';
-import { fetchRequest, buildApiUrl } from '@shared/utils/utils';
 import {
   notificationType,
   availableCharts,
@@ -45,8 +45,10 @@ import {
 import { Switch } from '@shared/ui';
 import AiSettings from '@features/assistant/components/AiSettings';
 import TagSettings from '../../../features/profile/TagSettings';
+import FamilySettings from '../../../features/profile/FamilySettings';
 import PrivacySettings from '../../../features/privacy/PrivacySettings';
 import BiometricSettings from '../../../features/privacy/BiometricSettings';
+import { getDataProviderKind } from '../../../data';
 import {
   PAGE_CONTAINER_CLASS,
   BTN_SUBMIT_CLASS,
@@ -55,7 +57,8 @@ import { useApiClient } from '@shared/hooks/useApiClient';
 import { googleLogout } from '@react-oauth/google';
 import { DriveError } from '../../../crypto/driveVault';
 import {
-  readGoalsFromDriveSilent,
+  applyGoalsBackupBundle,
+  loadAndClaimGoalsFromDrive,
   requireSessionUid,
   saveGoalsToDrive,
 } from '../../../features/goals/driveSync';
@@ -64,7 +67,10 @@ import {
   replaceEmergencyFund,
 } from '../../../features/goals/store';
 import { newerEmergencyFund } from '../../../features/goals/model';
-import { buildBackupSnapshot } from '../../../features/backup/buildBackup';
+import {
+  buildBackupSnapshot,
+  type ExpensesBackupSnapshot,
+} from '../../../features/backup/buildBackup';
 import {
   downloadBackupJson,
   downloadDriveBackupById,
@@ -76,6 +82,15 @@ import {
   uploadBackupToDrive,
   type DriveBackupListItem,
 } from '../../../features/backup/driveBackup';
+import {
+  ImportBackupError,
+  importBackupToSupabase,
+  readBackupFile,
+  type ImportBackupProgress,
+} from '../../../features/backup/importBackup';
+import { fetchExpenses as fetchExpensesService } from '../../../features/expenses/api/expenses';
+import { fetchLoans as fetchLoansService } from '../../../features/loans/api/loans';
+import { DeleteConfirmDrawer } from '@shared/components/Common';
 
 const Profile = () => {
   const showNotification = useNotification();
@@ -106,7 +121,14 @@ const Profile = () => {
   );
   const [chartsAccordionOpen, setChartsAccordionOpen] = useState(false);
   const [backupAccordionOpen, setBackupAccordionOpen] = useState(false);
+  const [importBusy, setImportBusy] = useState(false);
+  const [importProgress, setImportProgress] =
+    useState<ImportBackupProgress | null>(null);
+  const [pendingImport, setPendingImport] =
+    useState<ExpensesBackupSnapshot | null>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const isSupabase = getDataProviderKind() === 'supabase';
 
   // Silent pull only — never open a Google login popup on Profile visit.
   useEffect(() => {
@@ -115,7 +137,10 @@ const Profile = () => {
       if (!navigator.onLine) return;
       try {
         const uid = requireSessionUid();
-        const remote = await readGoalsFromDriveSilent(uid);
+        const { bundle: remote, claimed } = await loadAndClaimGoalsFromDrive(
+          uid,
+          { silent: true }
+        );
         if (cancelled || !remote) return;
         const localFund = getEmergencyFund();
         const merged = newerEmergencyFund(localFund, remote.fund);
@@ -125,6 +150,9 @@ const Profile = () => {
           (Boolean(remote.fund.updatedAt) &&
             (remote.fund.updatedAt as string) >= (localFund.updatedAt || ''));
         if (remoteWins) setGoalsEnabled(remote.enabled);
+        if (claimed) {
+          showNotification(t('goals.claimed'), notificationType.SUCCESS);
+        }
       } catch {
         // Keep local toggle; interactive Drive auth happens on save/toggle.
       }
@@ -188,6 +216,7 @@ const Profile = () => {
       const uid = requireSessionUid();
       const snapshot = await buildBackupSnapshot(uid, {
         apiClient,
+        accessToken: token,
         expenseDispatch: dataDispatch,
         loanDispatch,
       });
@@ -216,8 +245,30 @@ const Profile = () => {
   const handleDownloadDriveBackup = async (item: DriveBackupListItem) => {
     setDownloadingBackupId(item.id);
     try {
-      await downloadDriveBackupById(item.id, item.name);
-      showNotification(t('profile.backupDownloadDone'), notificationType.SUCCESS);
+      const snapshot = await downloadDriveBackupById(item.id, item.name);
+      if (snapshot.goals?.fund) {
+        try {
+          const uid = requireSessionUid();
+          await applyGoalsBackupBundle(uid, {
+            fund: snapshot.goals.fund,
+            enabled: !!snapshot.goals.enabled,
+          });
+          showNotification(
+            t('profile.backupDownloadDoneGoals'),
+            notificationType.SUCCESS
+          );
+        } catch {
+          showNotification(
+            t('profile.backupDownloadDone'),
+            notificationType.SUCCESS
+          );
+        }
+      } else {
+        showNotification(
+          t('profile.backupDownloadDone'),
+          notificationType.SUCCESS
+        );
+      }
     } catch (err) {
       const message =
         err instanceof DriveError
@@ -228,6 +279,79 @@ const Profile = () => {
       setDownloadingBackupId(null);
     }
   };
+
+  const runImportBackup = async (snapshot: ExpensesBackupSnapshot) => {
+    if (!isSupabase || !token) return;
+    setImportBusy(true);
+    setImportProgress({ phase: 'auth', done: 0, total: 1 });
+    try {
+      const stored = (() => {
+        try {
+          return JSON.parse(localStorage.getItem('currentUser') || '{}');
+        } catch {
+          return {};
+        }
+      })();
+      const result = await importBackupToSupabase(snapshot, {
+        accessToken: token,
+        refreshToken: stored.refresh_token,
+        onProgress: setImportProgress,
+      });
+      if (apiClient) {
+        await Promise.all([
+          fetchExpensesService(apiClient, dataDispatch),
+          fetchLoansService(apiClient, loanDispatch),
+        ]).catch(() => undefined);
+      }
+      const summary = t('profile.importDone')
+        .replace('{tx}', String(result.transactions))
+        .replace('{loans}', String(result.loans))
+        .replace('{payments}', String(result.payments));
+      showNotification(summary, notificationType.SUCCESS);
+    } catch (err) {
+      const message =
+        err instanceof ImportBackupError
+          ? err.message
+          : t('profile.importError');
+      showNotification(message, notificationType.ERROR);
+    } finally {
+      setImportBusy(false);
+      setImportProgress(null);
+      setPendingImport(null);
+      if (importFileRef.current) importFileRef.current.value = '';
+    }
+  };
+
+  const handleImportFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const snapshot = await readBackupFile(file);
+      setPendingImport(snapshot);
+    } catch (err) {
+      const message =
+        err instanceof ImportBackupError
+          ? err.message
+          : t('profile.importError');
+      showNotification(message, notificationType.ERROR);
+      if (importFileRef.current) importFileRef.current.value = '';
+    }
+  };
+
+  const importProgressLabel = (() => {
+    if (!importProgress) return '';
+    const { phase, done, total } = importProgress;
+    if (phase === 'done') return t('profile.importPhaseDone');
+    if (total > 0 && (phase === 'transactions' || phase === 'loans' || phase === 'payments')) {
+      return t('profile.importPhaseCount')
+        .replace('{phase}', t(`profile.importPhase.${phase}`))
+        .replace('{done}', String(done))
+        .replace('{total}', String(total));
+    }
+    return t(`profile.importPhase.${phase}`);
+  })();
 
   const handleLanguageChange = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -249,39 +373,33 @@ const Profile = () => {
     navigate({ to: '/expenses/login' });
   };
 
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const fetchOptions = {
-      method: 'PATCH',
-      headers: new Headers({
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'JWT-Authorization': 'Bearer ' + token,
-      }),
-      body: JSON.stringify({ field_currency: [event.target.value] }),
-    };
-    const url = buildApiUrl(`/user/${userDetails.current_user.uid}?_format=json`);
-    fetchRequest(
-      url,
-      fetchOptions,
-      dataDispatch,
-      dispatch,
-      (data: { uid?: number; field_currency?: { value: string }[] }) => {
-        if (data.uid && data.field_currency?.[0]) {
-          const newCurrency = data.field_currency[0].value;
-          userDetails.current_user.currency = newCurrency;
-          localStorage.setItem('currentUser', JSON.stringify(userDetails));
-          setSettingsCurrency(newCurrency);
-          dispatch({
-            type: 'UPDATE_USER',
-            payload: { currency: newCurrency },
-          });
-          setBlink(true);
-          setTimeout(() => setBlink(false), 2000);
-        } else {
-          showNotification(t('error.unknown'), notificationType.ERROR);
-        }
-      }
+  const handleChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCurrency = event.target.value;
+    if (!apiClient || !userDetails?.current_user?.uid) {
+      showNotification(t('error.unknown'), notificationType.ERROR);
+      return;
+    }
+    const result = await apiClient.updateProfile(
+      String(userDetails.current_user.uid),
+      { currency: newCurrency }
     );
+    if (result.success && result.data) {
+      const saved =
+        result.data.currency ||
+        (result.data.raw as any)?.field_currency?.[0]?.value ||
+        newCurrency;
+      userDetails.current_user.currency = saved;
+      localStorage.setItem('currentUser', JSON.stringify(userDetails));
+      setSettingsCurrency(saved);
+      dispatch({
+        type: 'UPDATE_USER',
+        payload: { currency: saved },
+      });
+      setBlink(true);
+      setTimeout(() => setBlink(false), 2000);
+    } else {
+      showNotification(t('error.unknown'), notificationType.ERROR);
+    }
   };
 
   const sortedCurrencies = Object.entries(currencies).sort((a, b) => {
@@ -334,6 +452,8 @@ const Profile = () => {
             </div>
           </div>
         </div>
+
+        {getDataProviderKind() === 'supabase' && <FamilySettings />}
 
         {/* Theme */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
@@ -472,7 +592,7 @@ const Profile = () => {
                 <button
                   type="button"
                   onClick={handleBackupToDrive}
-                  disabled={backupBusy || backupListLoading}
+                  disabled={backupBusy || backupListLoading || importBusy}
                   className={BTN_SUBMIT_CLASS}
                 >
                   {backupBusy ? (
@@ -484,6 +604,39 @@ const Profile = () => {
                     ? t('profile.backupBusy')
                     : t('profile.backupButton')}
                 </button>
+
+                {isSupabase && (
+                  <div className="mt-4 border-t border-white/[0.06] pt-4">
+                    <h4 className="m-0 mb-2 text-xs font-semibold uppercase tracking-wider text-app-muted">
+                      {t('profile.importTitle')}
+                    </h4>
+                    <p className="m-0 mb-3 text-xs text-app-muted leading-relaxed">
+                      {t('profile.importHint')}
+                    </p>
+                    <input
+                      ref={importFileRef}
+                      type="file"
+                      accept="application/json,.json"
+                      className="hidden"
+                      onChange={handleImportFileChange}
+                    />
+                    <button
+                      type="button"
+                      disabled={importBusy || backupBusy}
+                      onClick={() => importFileRef.current?.click()}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-app-secondary hover:border-white/25 hover:text-app-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {importBusy ? (
+                        <FiLoader className="animate-spin" aria-hidden />
+                      ) : (
+                        <FiUpload aria-hidden />
+                      )}
+                      {importBusy
+                        ? importProgressLabel || t('profile.importBusy')
+                        : t('profile.importButton')}
+                    </button>
+                  </div>
+                )}
 
                 <div className="mt-4 border-t border-white/[0.06] pt-4">
                   <div className="mb-3 flex items-center justify-between gap-3">
@@ -668,6 +821,43 @@ const Profile = () => {
           {t('profile.signOut')}
         </button>
       </div>
+
+      <DeleteConfirmDrawer
+        open={!!pendingImport && !importBusy}
+        onClose={() => {
+          setPendingImport(null);
+          if (importFileRef.current) importFileRef.current.value = '';
+        }}
+        onConfirm={() => pendingImport && runImportBackup(pendingImport)}
+        isSubmitting={importBusy}
+        title={t('profile.importConfirmTitle')}
+        message={
+          pendingImport
+            ? t('profile.importConfirmMessage')
+                .replace(
+                  '{tx}',
+                  String(
+                    (pendingImport.transactions?.length || 0) +
+                      (pendingImport.incomes?.length || 0)
+                  )
+                )
+                .replace(
+                  '{loans}',
+                  String(pendingImport.loans?.length || 0)
+                )
+                .replace(
+                  '{payments}',
+                  String(
+                    (pendingImport.payments || []).reduce(
+                      (n, g) => n + (g.data?.length || 0),
+                      0
+                    )
+                  )
+                )
+            : undefined
+        }
+        confirmLabel={t('profile.importConfirmAction')}
+      />
     </div>
   );
 };

@@ -11,6 +11,8 @@
       "@features/goals/*": ["src/features/goals/*"],
       "@features/assistant/*": ["src/features/assistant/*"],
       "@stores/*": ["src/stores/*"],
+      "@data/*": ["src/data/*"],
+      "@data": ["src/data/index.ts"],
       "@router": ["src/router/index.tsx"]
     },
     "lib": ["dom", "dom.iterable", "esnext"],

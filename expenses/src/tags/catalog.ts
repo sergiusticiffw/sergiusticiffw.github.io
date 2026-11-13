@@ -85,7 +85,7 @@ export const normalizeTagInput = (input: string): string | null => {
   return tag;
 };
 
-const sanitizeMap = (value: unknown): TagMap => {
+export const sanitizeMap = (value: unknown): TagMap => {
   if (!value || typeof value !== 'object') return {};
   const map: TagMap = {};
   for (const [key, tags] of Object.entries(value as Record<string, unknown>)) {

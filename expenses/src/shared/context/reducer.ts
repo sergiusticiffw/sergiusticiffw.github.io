@@ -65,7 +65,10 @@ export const AuthReducer = (initialState: AuthState, action: ActionType) => {
       return {
         ...initialState,
         userDetails: action.payload,
-        token: action.payload.jwt_token,
+        token:
+          action.payload.access_token ||
+          action.payload.jwt_token ||
+          '',
         loading: false,
         userIsLoggedIn: true,
         currency: action.payload.current_user.currency || 'MDL',

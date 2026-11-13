@@ -311,18 +311,27 @@ export const listAppDataFiles = async (
 /** Create or overwrite a JSON file in Drive appDataFolder. */
 export const writeAppDataJson = async (
   name: string,
-  content: object
+  content: object,
+  options?: { silent?: boolean }
 ): Promise<void> => {
+  const interactive = !options?.silent;
+  if (!interactive && !hasDriveAccessToken()) {
+    throw new DriveError('No Drive token');
+  }
   const body = new Blob([JSON.stringify(content)], {
     type: 'application/json',
   });
-  const id = await findFileByName(name);
+  const id = await findFileByName(name, interactive);
   if (id) {
-    await driveFetch(`${UPLOAD_API}/${id}?uploadType=media`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body,
-    });
+    await driveFetch(
+      `${UPLOAD_API}/${id}?uploadType=media`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      },
+      interactive
+    );
     return;
   }
   const metadata = {
@@ -336,10 +345,14 @@ export const writeAppDataJson = async (
     new Blob([JSON.stringify(metadata)], { type: 'application/json' })
   );
   form.append('file', body);
-  await driveFetch(`${UPLOAD_API}?uploadType=multipart&fields=id`, {
-    method: 'POST',
-    body: form,
-  });
+  await driveFetch(
+    `${UPLOAD_API}?uploadType=multipart&fields=id`,
+    {
+      method: 'POST',
+      body: form,
+    },
+    interactive
+  );
 };
 
 /** Returns the stored key for this user, or null if there's none. */

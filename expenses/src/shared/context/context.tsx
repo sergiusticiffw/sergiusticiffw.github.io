@@ -44,6 +44,15 @@ function SyncEffect(): null {
     hydrateEmergencyFund();
     refreshStatus(true);
     refreshTagCatalog();
+    import('../../features/profile/acceptFamilyInvites').then(
+      ({ acceptFamilyInvitesIfNeeded }) => {
+        acceptFamilyInvitesIfNeeded(token).then((result) => {
+          if (result && result.accepted > 0) {
+            logger.log(`Accepted ${result.accepted} family invite(s)`);
+          }
+        });
+      }
+    );
     import('@shared/utils/indexedDB').then(
       ({ cleanupInvalidSyncOperations }) => {
         cleanupInvalidSyncOperations().then((count) => {

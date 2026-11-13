@@ -1,9 +1,9 @@
 /**
  * Loans API Service
- * Centralized service for loan-related API operations
+ * Uses the active DataProvider (Drupal | Supabase).
  */
 
-import { ApiClient, API_ENDPOINTS } from '@shared/api/client';
+import type { DataProvider } from '../../../data';
 import {
   getLoansFromDB,
   saveLoansToDB,
@@ -21,12 +21,10 @@ import { isMigrationActive, reportCorrupt } from '../../../crypto/encryptionStat
  * Fetch payments for a loan; on API failure, reuse cached payments for this loan if present.
  */
 async function fetchLoanPayments(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   loanId: string
 ): Promise<{ loanId: string; data: any[] }> {
-  const response = await apiClient.get<any[]>(
-    API_ENDPOINTS.LOAN_PAYMENTS(loanId)
-  );
+  const response = await dataProvider.listPayments(loanId);
 
   if (!response.success || !response.data) {
     if (isIndexedDBAvailable()) {
@@ -65,7 +63,7 @@ let loansFetchInFlight: Promise<void> | null = null;
  * Fetch loans with offline-first approach
  */
 export async function fetchLoans(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   dataDispatch: (action: any) => void
 ): Promise<void> {
   if (loansFetchInFlight) {
@@ -87,8 +85,7 @@ export async function fetchLoans(
       return;
     }
 
-    // Fetch fresh data from API
-    const response = await apiClient.get<any[]>(API_ENDPOINTS.LOANS);
+    const response = await dataProvider.listLoans();
 
     if (!response.success || !response.data) {
       if (isIndexedDBAvailable()) {
@@ -115,7 +112,7 @@ export async function fetchLoans(
       response.data,
       cachedLoans,
       cachedPayments,
-      (loanId) => fetchLoanPayments(apiClient, loanId)
+      (loanId) => fetchLoanPayments(dataProvider, loanId)
     );
     reportCorrupt('loans', decoded.corrupt);
     if (decoded.lockedLoans > 0 && decoded.loans.length === 0) {
@@ -129,8 +126,6 @@ export async function fetchLoans(
     const processedLoans = processLoans(decoded.loans);
 
     if (isIndexedDBAvailable()) {
-      // If there are pending local changes, don't overwrite local cache/UI with server snapshot.
-      // Local cache was already loaded above; sync will reconcile when online.
       const hasPending = await hasPendingSyncOperations(['loan', 'payment']);
       if (hasPending) {
         await updateLoansUILocally(dataDispatch);
@@ -202,10 +197,10 @@ async function decodeLoanBundle(
  * Create loan
  */
 export async function createLoan(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
-  const response = await apiClient.post(API_ENDPOINTS.CREATE_NODE, nodeData);
+  const response = await dataProvider.createLoan(nodeData);
 
   return {
     success: response.success,
@@ -218,11 +213,11 @@ export async function createLoan(
  * Update loan
  */
 export async function updateLoan(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   id: string,
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
-  const response = await apiClient.patch(API_ENDPOINTS.LOAN(id), nodeData);
+  const response = await dataProvider.updateLoan(id, nodeData);
 
   return {
     success: response.success,
@@ -235,10 +230,10 @@ export async function updateLoan(
  * Delete loan
  */
 export async function deleteLoan(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   id: string
 ): Promise<{ success: boolean; error?: Error }> {
-  const response = await apiClient.delete(API_ENDPOINTS.LOAN(id));
+  const response = await dataProvider.deleteLoan(id);
 
   return {
     success: response.success,
@@ -250,10 +245,10 @@ export async function deleteLoan(
  * Create payment
  */
 export async function createPayment(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
-  const response = await apiClient.post(API_ENDPOINTS.CREATE_NODE, nodeData);
+  const response = await dataProvider.createPayment(nodeData);
 
   return {
     success: response.success,
@@ -266,11 +261,11 @@ export async function createPayment(
  * Update payment
  */
 export async function updatePayment(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   id: string,
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
-  const response = await apiClient.patch(API_ENDPOINTS.EXPENSE(id), nodeData);
+  const response = await dataProvider.updatePayment(id, nodeData);
 
   return {
     success: response.success,
@@ -283,10 +278,10 @@ export async function updatePayment(
  * Delete payment
  */
 export async function deletePayment(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   id: string
 ): Promise<{ success: boolean; error?: Error }> {
-  const response = await apiClient.delete(API_ENDPOINTS.EXPENSE(id));
+  const response = await dataProvider.deletePayment(id);
 
   return {
     success: response.success,

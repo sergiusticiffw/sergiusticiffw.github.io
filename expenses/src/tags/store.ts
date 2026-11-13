@@ -1,15 +1,12 @@
 import { useSyncExternalStore } from 'react';
-import { buildApiUrl } from '@shared/utils/utils';
 import { getSession } from '../crypto/encryptionState';
+import { getDataProvider } from '../data';
 import {
-  CUSTOM_TAGS_FIELD,
-  TAG_MODE_FIELD,
   TagCatalog,
   catalogFromUser,
   emptyCatalog,
   readTagCache,
   registerTagLogout,
-  serializeCustomTags,
   writeTagCache,
 } from './catalog';
 
@@ -57,19 +54,20 @@ export const resetTagCatalog = () => {
 
 registerTagLogout(resetTagCatalog);
 
-const userRequest = (
-  method: string,
-  token: string,
-  body?: unknown
-): RequestInit => ({
-  method,
-  headers: new Headers({
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-    'JWT-Authorization': `Bearer ${token}`,
-  }),
-  ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-});
+const catalogFromProfile = (profile: {
+  tag_mode?: TagCatalog['mode'];
+  custom_tags?: TagCatalog['custom'];
+  raw?: Record<string, unknown>;
+}): TagCatalog => {
+  if (profile.tag_mode || profile.custom_tags) {
+    return {
+      mode: profile.tag_mode === 'custom' ? 'custom' : 'default',
+      custom: profile.custom_tags || {},
+    };
+  }
+  if (profile.raw) return catalogFromUser(profile.raw);
+  return emptyCatalog();
+};
 
 export const refreshTagCatalog = async () => {
   const session = getSession();
@@ -91,13 +89,11 @@ export const refreshTagCatalog = async () => {
   }
 
   try {
-    const options = userRequest('GET', session.token);
-    const response = await fetch(
-      buildApiUrl(`/user/${session.uid}?_format=json`),
-      options
-    );
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const catalog = catalogFromUser(await response.json());
+    const provider = getDataProvider();
+    provider.configure(session.token);
+    const result = await provider.getProfile(session.uid);
+    if (!result.success || !result.data) throw new Error('profile failed');
+    const catalog = catalogFromProfile(result.data);
     if (id !== requestId) return;
     writeTagCache(session.uid, catalog);
     publish({ uid: session.uid, catalog, status: 'ready' });
@@ -113,22 +109,29 @@ export const saveTagCatalog = async (
   const session = getSession();
   if (!session) throw new Error('Not signed in');
 
-  const options = userRequest('PATCH', session.token, {
-    [TAG_MODE_FIELD]: [{ value: catalog.mode }],
-    [CUSTOM_TAGS_FIELD]: serializeCustomTags(catalog.custom),
+  const provider = getDataProvider();
+  provider.configure(session.token);
+  const result = await provider.updateProfile(session.uid, {
+    tag_mode: catalog.mode,
+    custom_tags: catalog.custom,
   });
-  const response = await fetch(
-    buildApiUrl(`/user/${session.uid}?_format=json`),
-    options
-  );
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!result.success || !result.data) {
+    throw new Error(result.error?.message || 'Failed to save tags');
+  }
 
-  const user = await response.json().catch(() => null);
-  const saved =
-    user?.[TAG_MODE_FIELD] ? catalogFromUser(user) : catalog;
+  const saved = catalogFromProfile(result.data);
   writeTagCache(session.uid, saved);
   publish({ uid: session.uid, catalog: saved, status: 'ready' });
   return saved;
+};
+
+/** Apply tags from a backup import into local cache/UI (DB write already done). */
+export const applyImportedTagCatalog = (
+  uid: string,
+  catalog: TagCatalog
+): void => {
+  writeTagCache(uid, catalog);
+  publish({ uid: String(uid), catalog, status: 'ready' });
 };
 
 export function getTagCatalog(): TagCatalog {

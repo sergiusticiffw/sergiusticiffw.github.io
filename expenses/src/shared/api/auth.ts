@@ -1,51 +1,50 @@
 /**
- * Authentication API Service
- * Centralized service for authentication operations
+ * Authentication API Service — delegates to the active AuthProvider.
  */
 
-import { createApiClient, API_ENDPOINTS, ApiClient } from '@shared/api/client';
-import { LoginPayload, UserData } from '@shared/type/types';
+import { LoginPayload } from '@shared/type/types';
+import { getAuthProvider, getDataProviderKind } from '../../data';
+import type { AuthSession } from '../../data';
 
 /**
  * Login user with Google OAuth
  */
 export async function loginUser(
-  loginPayload: LoginPayload
-): Promise<{ success: boolean; data?: UserData; error?: Error }> {
-  // Create temporary client without token for login
-  const apiClient = createApiClient({
-    token: '',
-    skipAuth: true,
-  });
+  loginPayload: LoginPayload = {}
+): Promise<{
+  success: boolean;
+  data?: AuthSession | { redirecting: true };
+  error?: Error;
+}> {
+  const kind = getDataProviderKind();
+  if (kind === 'supabase') {
+    const idToken =
+      loginPayload.id_token && loginPayload.id_token.split('.').length === 3
+        ? loginPayload.id_token
+        : undefined;
+    return getAuthProvider().loginWithGoogle(idToken);
+  }
 
-  const response = await apiClient.post<UserData>(
-    API_ENDPOINTS.LOGIN,
-    loginPayload,
-    {
-      skipAuth: true, // Login doesn't require auth
-    }
-  );
+  const token = loginPayload.access_token || loginPayload.id_token;
+  if (!token) {
+    return { success: false, error: new Error('Missing Google token') };
+  }
 
-  return {
-    success: response.success,
-    data: response.data || undefined,
-    error: response.error || undefined,
-  };
+  return getAuthProvider().loginWithGoogle(token);
 }
 
 /**
- * Refresh authentication token
+ * Refresh authentication session
  */
-export async function refreshToken(
-  apiClient: ApiClient
-): Promise<{ success: boolean; token?: string; error?: Error }> {
-  const response = await apiClient.get<{ token: string }>(
-    API_ENDPOINTS.TOKEN_REFRESH
-  );
-
+export async function refreshToken(): Promise<{
+  success: boolean;
+  token?: string;
+  error?: Error;
+}> {
+  const result = await getAuthProvider().refreshSession();
   return {
-    success: response.success,
-    token: response.data?.token,
-    error: response.error || undefined,
+    success: result.success,
+    token: result.data?.access_token,
+    error: result.error,
   };
 }

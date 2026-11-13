@@ -1,4 +1,8 @@
-import { loginUser, logout } from '@shared/context/actions';
+import {
+  loginUser,
+  logout,
+  restoreSupabaseSession,
+} from '@shared/context/actions';
 import { AuthProvider, useAuthDispatch, useAuthState } from './context';
 import {
   NotificationProvider,
@@ -11,7 +15,7 @@ import {
 import { ThemeProvider } from './theme';
 
 export { AuthProvider, useAuthState, useAuthDispatch };
-export { loginUser, logout };
+export { loginUser, logout, restoreSupabaseSession };
 export {
   useNotification,
   NotificationProvider,

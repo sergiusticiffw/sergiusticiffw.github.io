@@ -1,4 +1,3 @@
-import { getApiBaseUrl } from '@shared/utils/apiBase';
 import {
   isIndexedDBAvailable,
   isOnline,
@@ -10,9 +9,7 @@ import { TransactionOrIncomeItem } from '@shared/type/types';
 import type { VoiceMoneyEntry } from '../../../ai/parseVoiceEntry';
 import { isWriteBlocked } from '../../../crypto/encryptionState';
 import { encodeNodeBody } from '../../../crypto/nodeCodec';
-
-const createUrl = () =>
-  `${getApiBaseUrl().replace(/\/+$/, '')}/node?_format=json`.replace(/([^:]\/)\/+/g, '$1');
+import { getDataProvider } from '../../../data';
 
 const nodeFor = (entry: VoiceMoneyEntry) => ({
   type: entry.kind === 'income' ? 'incomes' : 'transaction',
@@ -23,7 +20,10 @@ const nodeFor = (entry: VoiceMoneyEntry) => ({
   ...(entry.kind === 'expense' ? { field_category: [entry.category] } : {}),
 });
 
-const itemFor = (entry: VoiceMoneyEntry, id?: string): TransactionOrIncomeItem => ({
+const itemFor = (
+  entry: VoiceMoneyEntry,
+  id?: string
+): TransactionOrIncomeItem => ({
   id: id || '',
   dt: entry.date,
   sum: entry.amount,
@@ -33,13 +33,14 @@ const itemFor = (entry: VoiceMoneyEntry, id?: string): TransactionOrIncomeItem =
   cr: Date.now(),
 });
 
-const saveOne = async (entry: VoiceMoneyEntry, token: string, url: string) => {
+const saveOne = async (entry: VoiceMoneyEntry, token: string) => {
   if (isWriteBlocked()) {
     throw new Error('write-blocked');
   }
   const node = nodeFor(entry);
   const entityType = entry.kind === 'income' ? 'income' : 'expense';
   const encoded = await encodeNodeBody(node);
+  const url = 'provider:create';
 
   const persistOffline = async () => {
     await saveOffline(itemFor(entry), node, 'add', entityType, url, 'POST');
@@ -54,20 +55,13 @@ const saveOne = async (entry: VoiceMoneyEntry, token: string, url: string) => {
   }
 
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: new Headers({
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'JWT-Authorization': `Bearer ${token}`,
-      }),
-      body: JSON.stringify(encoded.body),
-    });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    const serverId = data?.nid?.[0]?.value?.toString() || data?.nid?.toString();
-    if (!serverId) throw new Error('No ID returned from server');
-    await saveExpenseLocally(itemFor(entry, serverId), true);
+    const provider = getDataProvider();
+    provider.configure(token);
+    const result = await provider.createTransaction(encoded.body);
+    if (!result.success || !result.data?.id) {
+      throw result.error || new Error('No ID returned from server');
+    }
+    await saveExpenseLocally(itemFor(entry, result.data.id), true);
     return false;
   } catch (error) {
     logger.error('Voice entry fell back to offline save:', error);
@@ -75,16 +69,15 @@ const saveOne = async (entry: VoiceMoneyEntry, token: string, url: string) => {
   }
 };
 
-/** Creates expense/income nodes the same way the forms do. Returns whether any row was stored offline. */
+/** Creates expense/income rows the same way the forms do. Returns whether any row was stored offline. */
 export async function saveMoneyEntries(
   entries: VoiceMoneyEntry[],
   token: string,
   dataDispatch: (action: any) => void
 ): Promise<{ offline: boolean }> {
-  const url = createUrl();
   let offline = false;
   for (const entry of entries) {
-    if (await saveOne(entry, token, url)) offline = true;
+    if (await saveOne(entry, token)) offline = true;
   }
   await updateUILocally(dataDispatch);
   return { offline };

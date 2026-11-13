@@ -5,11 +5,13 @@ import {
   writeAppDataJson,
 } from '../../crypto/driveVault';
 import { getSession } from '../../crypto/encryptionState';
+import { setGoalsEnabled } from '../../stores/settingsStore';
 import {
   Contribution,
   EmergencyFundState,
   normalizeEmergencyFund,
 } from './model';
+import { replaceEmergencyFund } from './store';
 
 export const EMERGENCY_FUND_DRIVE_FILE = 'emergency-fund.json';
 
@@ -28,6 +30,21 @@ interface DriveEmergencyFundFile {
   monthlyContribution: number | null;
   contributions?: Contribution[];
   updatedAt: string | null;
+}
+
+/** Drive file exists but was written under a different account uid (e.g. Drupal → Supabase). */
+export class GoalsDriveUidMismatchError extends DriveError {
+  foreignUid: string;
+  bundle: GoalsDriveBundle;
+
+  constructor(foreignUid: string, bundle: GoalsDriveBundle) {
+    super(
+      'The emergency fund in this Google Drive belongs to a different account.'
+    );
+    this.name = 'GoalsDriveUidMismatchError';
+    this.foreignUid = foreignUid;
+    this.bundle = bundle;
+  }
 }
 
 const toDrivePayload = (
@@ -51,27 +68,28 @@ const fromDriveFile = (
   enabled: typeof file.enabled === 'boolean' ? file.enabled : false,
 });
 
+const isEmptyBundle = (bundle: GoalsDriveBundle) =>
+  !bundle.fund.updatedAt &&
+  bundle.fund.balance <= 0 &&
+  bundle.fund.monthlyContribution == null &&
+  bundle.fund.contributions.length === 0 &&
+  !bundle.enabled;
+
 const parseGoalsFile = (
   uid: string,
-  raw: unknown
+  raw: unknown,
+  options?: { allowForeignUid?: boolean }
 ): GoalsDriveBundle | null => {
   if (!raw || typeof raw !== 'object') return null;
   const file = raw as Partial<DriveEmergencyFundFile>;
-  if (file.uid != null && String(file.uid) !== String(uid)) {
-    throw new DriveError(
-      'The emergency fund in this Google Drive belongs to a different account.'
-    );
-  }
   const bundle = fromDriveFile(file);
-  // Treat never-saved empty remote as missing.
-  if (
-    !bundle.fund.updatedAt &&
-    bundle.fund.balance <= 0 &&
-    bundle.fund.monthlyContribution == null &&
-    bundle.fund.contributions.length === 0 &&
-    !bundle.enabled
-  ) {
-    return null;
+  if (isEmptyBundle(bundle)) return null;
+
+  if (file.uid != null && String(file.uid) !== String(uid)) {
+    if (options?.allowForeignUid) {
+      return bundle;
+    }
+    throw new GoalsDriveUidMismatchError(String(file.uid), bundle);
   }
   return bundle;
 };
@@ -98,6 +116,38 @@ export const readGoalsFromDriveSilent = async (
   return parseGoalsFile(uid, raw);
 };
 
+export type GoalsDriveLoadResult = {
+  bundle: GoalsDriveBundle | null;
+  /** True when file belonged to another uid and was rewritten for this user. */
+  claimed: boolean;
+};
+
+/**
+ * Load Goals from Drive. If the file belongs to a previous account uid
+ * (Drupal → Supabase), claim it for the current uid and rewrite the file.
+ */
+export const loadAndClaimGoalsFromDrive = async (
+  uid: string,
+  options?: { silent?: boolean }
+): Promise<GoalsDriveLoadResult> => {
+  const silent = !!options?.silent;
+  if (silent && !hasDriveAccessToken()) {
+    return { bundle: null, claimed: false };
+  }
+
+  const raw = await readAppDataJson(EMERGENCY_FUND_DRIVE_FILE, { silent });
+  if (!raw) return { bundle: null, claimed: false };
+
+  try {
+    return { bundle: parseGoalsFile(uid, raw), claimed: false };
+  } catch (error) {
+    if (!(error instanceof GoalsDriveUidMismatchError)) throw error;
+    // Adopt the orphaned Drupal-era file for the current Supabase uid.
+    await saveGoalsToDrive(uid, error.bundle, { silent });
+    return { bundle: error.bundle, claimed: true };
+  }
+};
+
 export { hasDriveAccessToken };
 
 /** @deprecated use readGoalsFromDrive */
@@ -111,9 +161,14 @@ export const readEmergencyFundFromDrive = async (
 /** Save full Goals package into Google Drive App Data. */
 export const saveGoalsToDrive = async (
   uid: string,
-  bundle: GoalsDriveBundle
+  bundle: GoalsDriveBundle,
+  options?: { silent?: boolean }
 ): Promise<void> => {
-  await writeAppDataJson(EMERGENCY_FUND_DRIVE_FILE, toDrivePayload(uid, bundle));
+  await writeAppDataJson(
+    EMERGENCY_FUND_DRIVE_FILE,
+    toDrivePayload(uid, bundle),
+    options
+  );
 };
 
 /** Save fund fields; keeps / sets enabled on the Drive file. */
@@ -123,6 +178,23 @@ export const saveEmergencyFundToDrive = async (
   enabled = false
 ): Promise<void> => {
   await saveGoalsToDrive(uid, { fund: state, enabled });
+};
+
+/** Apply a Goals bundle from a backup JSON (local + optional Drive rewrite). */
+export const applyGoalsBackupBundle = async (
+  uid: string,
+  bundle: GoalsDriveBundle,
+  options?: { writeDrive?: boolean }
+): Promise<void> => {
+  replaceEmergencyFund(bundle.fund);
+  setGoalsEnabled(!!bundle.enabled);
+  if (options?.writeDrive !== false && navigator.onLine) {
+    try {
+      await saveGoalsToDrive(uid, bundle);
+    } catch {
+      // Local apply still succeeded.
+    }
+  }
 };
 
 export const requireSessionUid = (): string => {

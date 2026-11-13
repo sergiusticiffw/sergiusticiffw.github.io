@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from 'react';
-import { apiFetch } from './apiUrl';
 import { clearKeyText, hasStoredKey, saveKeyText } from './keyStore';
 
 export type EncryptionStatus = 'off' | 'migrating' | 'on' | 'unlocking';
@@ -41,8 +40,8 @@ const readStoredUser = (): any => {
 export const getSession = (): Session | null => {
   const user = readStoredUser();
   const uid = user?.current_user?.uid;
-  const token = user?.jwt_token;
-  return uid && token ? { uid: String(uid), token } : null;
+  const token = user?.access_token || user?.jwt_token;
+  return uid && token ? { uid: String(uid), token: String(token) } : null;
 };
 
 let snapshot: EncryptionSnapshot = {
@@ -94,7 +93,7 @@ export const applyLoginStatus = (value: unknown) => {
 
 let pendingRefresh: Promise<EncryptionStatus | null> | null = null;
 
-/** Re-reads field_encryption_status from Drupal. Keeps the current value if the request fails. */
+/** Re-reads encryption_status from the active profile provider. */
 export const refreshStatus = (force = false): Promise<EncryptionStatus | null> => {
   if (!force && snapshot.status && Date.now() - lastStatusCheck < STATUS_MAX_AGE_MS) {
     return Promise.resolve(snapshot.status);
@@ -104,18 +103,20 @@ export const refreshStatus = (force = false): Promise<EncryptionStatus | null> =
     return Promise.resolve(snapshot.status);
   }
   if (!pendingRefresh) {
-    pendingRefresh = apiFetch(`/user/${session.uid}?_format=json`, {
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'JWT-Authorization': `Bearer ${session.token}`,
-      },
-    })
-      .then(async (response) => {
-        if (!response.ok) return snapshot.status;
-        const user = await response.json();
+    pendingRefresh = import('../data')
+      .then(({ getDataProvider }) => {
+        const provider = getDataProvider();
+        provider.configure(session.token);
+        return provider.getProfile(session.uid);
+      })
+      .then((result) => {
+        if (!result.success || !result.data) return snapshot.status;
         const status =
-          parseStatus(user?.field_encryption_status?.[0]?.value) ?? 'off';
+          parseStatus(result.data.encryption_status) ??
+          parseStatus(
+            (result.data.raw as any)?.field_encryption_status?.[0]?.value
+          ) ??
+          'off';
         setStatus(status);
         return status;
       })

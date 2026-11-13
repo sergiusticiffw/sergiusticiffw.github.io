@@ -35,7 +35,10 @@ const hasCategory = (type: string) => type === 'transaction';
 
 /** Works with both the /api/expenses list rows and full node JSON. */
 export const extractPayload = (record: any): string | null => {
-  const value = record?.payload ?? first(record?.field_encrypted_payload);
+  const value =
+    record?.encrypted_payload ??
+    record?.payload ??
+    first(record?.field_encrypted_payload);
   return typeof value === 'string' && value.trim() ? value.trim() : null;
 };
 
@@ -238,6 +241,8 @@ export const encodeNodeBody = async (data: any): Promise<EncodeResult> => {
     body: {
       ...encryptedNodeShell(type, ref || undefined),
       field_encrypted_payload: [payload],
+      // Domain / Supabase column (Drupal adapter ignores unknown keys).
+      encrypted_payload: payload,
     },
   };
 };
@@ -254,7 +259,12 @@ export const decodeBundleRecord = async <T extends Record<string, unknown>>(
 ): Promise<BundleDecodeResult<T>> => {
   const id = asText((record as { id?: unknown }).id);
   const payload = extractPayload(record);
-  const { payload: _payload, field_encrypted_payload: _field, ...rest } = record as any;
+  const {
+    payload: _payload,
+    field_encrypted_payload: _field,
+    encrypted_payload: _enc,
+    ...rest
+  } = record as any;
   if (!payload) {
     return { kind: 'ok', item: rest as T };
   }

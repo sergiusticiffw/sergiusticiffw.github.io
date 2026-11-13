@@ -128,7 +128,7 @@ const isSnapshot = (raw: unknown): raw is ExpensesBackupSnapshot => {
   if (!raw || typeof raw !== 'object') return false;
   const s = raw as Partial<ExpensesBackupSnapshot>;
   return (
-    s.v === 1 &&
+    (s.v === 1 || s.v === 2) &&
     s.kind === BACKUP_KIND &&
     typeof s.uid === 'string' &&
     typeof s.createdAt === 'string' &&
@@ -139,16 +139,17 @@ const isSnapshot = (raw: unknown): raw is ExpensesBackupSnapshot => {
   );
 };
 
-/** Download one Drive backup file to the device. */
+/** Download one Drive backup file to the device. Returns the snapshot. */
 export const downloadDriveBackupById = async (
   id: string,
   fallbackName: string
-): Promise<void> => {
+): Promise<ExpensesBackupSnapshot> => {
   const raw = await readAppDataJsonById(id);
   if (!isSnapshot(raw)) {
     throw new Error('Invalid backup file');
   }
   downloadBackupJson(raw, fallbackName);
+  return raw;
 };
 
 export const formatBackupSize = (bytes: number | null): string => {

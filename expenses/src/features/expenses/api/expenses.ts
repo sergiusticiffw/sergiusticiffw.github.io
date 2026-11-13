@@ -1,9 +1,9 @@
 /**
  * Expenses API Service
- * Centralized service for expense-related API operations
+ * Uses the active DataProvider (Drupal | Supabase).
  */
 
-import { ApiClient, API_ENDPOINTS } from '@shared/api/client';
+import type { DataProvider } from '../../../data';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import {
   getExpensesFromDB,
@@ -31,7 +31,7 @@ let expensesFetchInFlight: Promise<void> | null = null;
  * Fetch expenses with offline-first approach
  */
 export async function fetchExpenses(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   dataDispatch: (action: any) => void,
   options: FetchExpensesOptions = {}
 ): Promise<void> {
@@ -86,13 +86,7 @@ export async function fetchExpenses(
       return;
     }
 
-    // Fetch fresh data from API (when offline, get() returns success: false immediately)
-    const response = await apiClient.get<TransactionOrIncomeItem[]>(
-      API_ENDPOINTS.EXPENSES,
-      {
-        skipRetry: false, // Use retry for expenses
-      }
-    );
+    const response = await dataProvider.listTransactions();
 
     if (!response.success || !response.data) {
       // Offline or network error: ensure UI shows cached data and loading is false
@@ -209,7 +203,8 @@ async function decodeExpenseRecords(records: any[]): Promise<{
   let corrupt = 0;
 
   for (const record of records) {
-    const { payload, field_encrypted_payload, ...rest } = record || {};
+    const { payload, field_encrypted_payload, encrypted_payload, ...rest } =
+      record || {};
     const dt = rest.dt ? String(rest.dt) : '';
     const base: TransactionOrIncomeItem = {
       ...rest,
@@ -220,7 +215,7 @@ async function decodeExpenseRecords(records: any[]): Promise<{
       cr: rest.cr || (dt ? new Date(dt).getTime() : Date.now()),
     };
     const result = await decodeServerItem(
-      { ...record, payload, field_encrypted_payload },
+      { ...record, payload, field_encrypted_payload, encrypted_payload },
       base
     );
     if (result.kind === 'ok') {
@@ -239,10 +234,10 @@ async function decodeExpenseRecords(records: any[]): Promise<{
  * Create expense/income
  */
 export async function createExpense(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
-  const response = await apiClient.post(API_ENDPOINTS.CREATE_NODE, nodeData);
+  const response = await dataProvider.createTransaction(nodeData);
 
   return {
     success: response.success,
@@ -255,11 +250,11 @@ export async function createExpense(
  * Update expense/income
  */
 export async function updateExpense(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   id: string,
   nodeData: any
 ): Promise<{ success: boolean; data?: any; error?: Error }> {
-  const response = await apiClient.patch(API_ENDPOINTS.EXPENSE(id), nodeData);
+  const response = await dataProvider.updateTransaction(id, nodeData);
 
   return {
     success: response.success,
@@ -272,10 +267,10 @@ export async function updateExpense(
  * Delete expense/income
  */
 export async function deleteExpense(
-  apiClient: ApiClient,
+  dataProvider: DataProvider,
   id: string
 ): Promise<{ success: boolean; error?: Error }> {
-  const response = await apiClient.delete(API_ENDPOINTS.EXPENSE(id));
+  const response = await dataProvider.deleteTransaction(id);
 
   return {
     success: response.success,

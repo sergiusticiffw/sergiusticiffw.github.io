@@ -113,7 +113,10 @@ export interface ItemTotal {
 }
 
 export interface LoginPayload {
-  access_token: string;
+  /** Google OAuth access token (Drupal provider). */
+  access_token?: string;
+  /** Google ID token / credential JWT (Supabase provider). */
+  id_token?: string;
 }
 
 export interface UserData {

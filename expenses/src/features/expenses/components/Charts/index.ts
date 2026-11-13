@@ -7,3 +7,4 @@ export { default as YearIncomeAverageTrend } from '@features/incomes/components/
 export { default as MonthlyComparisonIncomeTrend } from './MonthlyComparisonIncomeTrend';
 export { default as MonthlySavingsTrend } from './MonthlySavingsTrend';
 export { default as SavingsHistory } from './SavingsHistory';
+export { default as FamilySharedSpend } from './FamilySharedSpend';

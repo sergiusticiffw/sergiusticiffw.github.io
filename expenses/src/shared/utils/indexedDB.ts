@@ -5,18 +5,24 @@ import {
   buildApiUrl,
 } from '@shared/utils/utils';
 import { logger } from '@shared/utils/logger';
+import { resolveDataProviderKind } from '../../data/providerPreference';
 
-const DB_NAME = 'expensesDB';
 const DB_VERSION = 3; // Incremented for sync queue store
 const STORE_EXPENSES = 'expenses';
 const STORE_LOANS = 'loans';
 const STORE_PAYMENTS = 'payments';
 const STORE_SYNC_QUEUE = 'syncQueue';
 
+/** Isolate offline cache per backend so Drupal ↔ Supabase never mix. */
+const dbNameForProvider = (): string => {
+  const kind = resolveDataProviderKind();
+  return kind === 'supabase' ? 'expensesDB_supabase' : 'expensesDB';
+};
+
 // Open IndexedDB database
 export function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    const request = indexedDB.open(dbNameForProvider(), DB_VERSION);
 
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
@@ -555,8 +561,9 @@ export interface SyncOperation {
   id?: number;
   type: 'create' | 'update' | 'delete';
   entityType: 'expense' | 'income' | 'loan' | 'payment';
-  url: string;
-  method: string;
+  /** Legacy Drupal URL — optional; sync uses DataProvider + localId. */
+  url?: string;
+  method?: string;
   data?: any;
   localId?: string;
   status?: 'pending' | 'synced' | 'failed';

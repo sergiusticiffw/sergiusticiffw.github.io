@@ -11,5 +11,9 @@ export function getStoredCurrentUser(): Record<string, unknown> | null {
 
 export function getStoredToken(): string {
   const user = getStoredCurrentUser();
-  return (user?.jwt_token as string) ?? '';
+  return (
+    (user?.access_token as string) ||
+    (user?.jwt_token as string) ||
+    ''
+  );
 }

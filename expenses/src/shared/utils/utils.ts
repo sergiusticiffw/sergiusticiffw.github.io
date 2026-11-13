@@ -274,6 +274,19 @@ export const fetchRequest = (
     });
 };
 
+const providerDelete = async (
+  token: string,
+  kind: 'transaction' | 'loan' | 'payment',
+  id: string
+) => {
+  const { getDataProvider } = await import('../../data');
+  const provider = getDataProvider();
+  provider.configure(token);
+  if (kind === 'loan') return provider.deleteLoan(id);
+  if (kind === 'payment') return provider.deletePayment(id);
+  return provider.deleteTransaction(id);
+};
+
 export const deleteNode = async (
   nid: string,
   token: string,
@@ -284,12 +297,8 @@ export const deleteNode = async (
   // For transactions/income/payments: implement offline-first approach
   if (dataDispatch && isIndexedDBAvailable()) {
     try {
-      const {
-        deleteExpenseLocally,
-        getExpensesFromDB,
-        getPaymentsFromDB,
-        isOnline,
-      } = await import('./indexedDB');
+      const { getExpensesFromDB, getPaymentsFromDB, isOnline } =
+        await import('./indexedDB');
       const {
         deleteOffline,
         deletePaymentOffline,
@@ -299,7 +308,6 @@ export const deleteNode = async (
 
       // Check if it's a payment (has loanId)
       if (loanId) {
-        // Handle payment deletion
         const payments = (await getPaymentsFromDB()) || [];
         const loanPayments = payments.find((p: any) => p.loanId === loanId);
         const paymentToDelete = loanPayments?.data?.find(
@@ -307,33 +315,21 @@ export const deleteNode = async (
         );
 
         if (paymentToDelete) {
-          const url = `${getApiBaseUrl()}/node/${nid}?_format=json`;
-
-          // Delete offline (saves locally and adds to sync queue)
+          const url = `provider:delete:${nid}`;
           await deletePaymentOffline(loanId, nid, url);
-
-          // Update UI with local data
           await updateLoansUILocally(dataDispatch);
-
-          // Call callback immediately
           callback({ ok: true } as Response);
 
-          // Try to sync if online
           if (isOnline()) {
-            const fetchOptions = createAuthenticatedFetchOptions(
-              token,
-              'DELETE'
-            );
-            fetch(url, fetchOptions)
-              .then(async (response) => {
-                if (response.ok) {
-                  // Remove from sync queue on success
+            providerDelete(token, 'payment', nid)
+              .then(async (result) => {
+                if (result.success) {
                   const { getPendingSyncOperations, removeSyncOperation } =
                     await import('./indexedDB');
                   const pendingOps = await getPendingSyncOperations();
                   const op = pendingOps.find(
                     (o) =>
-                      o.url === url &&
+                      o.localId === nid &&
                       o.status === 'pending' &&
                       o.entityType === 'payment'
                   );
@@ -347,50 +343,30 @@ export const deleteNode = async (
               });
           }
         } else {
-          // Payment not found locally, try to delete from server
-          const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
-          fetch(
-            `${getApiBaseUrl()}/node/${nid}?_format=json`,
-            fetchOptions
-          ).then((response) => {
-            callback(response);
-          });
+          const result = await providerDelete(token, 'payment', nid);
+          callback({ ok: result.success } as Response);
         }
       } else {
-        // Handle expense/income deletion
         const currentData = (await getExpensesFromDB()) || [];
         const itemToDelete = currentData.find((item: any) => item.id === nid);
 
         if (itemToDelete) {
-          // Determine entity type
           const entityType =
             itemToDelete.type === 'transaction' ? 'expense' : 'income';
-          const url = `${getApiBaseUrl()}/node/${nid}?_format=json`;
-
-          // Delete offline (saves locally and adds to sync queue)
+          const url = `provider:delete:${nid}`;
           await deleteOffline(nid, entityType, url);
-
-          // Update UI with local data
           await updateUILocally(dataDispatch);
-
-          // Call callback immediately
           callback({ ok: true } as Response);
 
-          // Try to sync if online
           if (isOnline()) {
-            const fetchOptions = createAuthenticatedFetchOptions(
-              token,
-              'DELETE'
-            );
-            fetch(url, fetchOptions)
-              .then(async (response) => {
-                if (response.ok) {
-                  // Remove from sync queue on success
+            providerDelete(token, 'transaction', nid)
+              .then(async (result) => {
+                if (result.success) {
                   const { getPendingSyncOperations, removeSyncOperation } =
                     await import('./indexedDB');
                   const pendingOps = await getPendingSyncOperations();
                   const op = pendingOps.find(
-                    (o) => o.url === url && o.status === 'pending'
+                    (o) => o.localId === nid && o.status === 'pending'
                   );
                   if (op && op.id) {
                     await removeSyncOperation(op.id);
@@ -404,14 +380,8 @@ export const deleteNode = async (
         } else if (isWriteBlocked()) {
           callback(null);
         } else {
-          // Item not found locally, try to delete from server
-          const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
-          fetch(
-            `${getApiBaseUrl()}/node/${nid}?_format=json`,
-            fetchOptions
-          ).then((response) => {
-            callback(response);
-          });
+          const result = await providerDelete(token, 'transaction', nid);
+          callback({ ok: result.success } as Response);
         }
       }
     } catch (error) {
@@ -420,22 +390,28 @@ export const deleteNode = async (
         return;
       }
       console.error('Error in offline delete:', error);
-      // Fallback to original behavior
-      const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
-      fetch(`${getApiBaseUrl()}/node/${nid}?_format=json`, fetchOptions).then(
-        (response) => {
-          callback(response);
-        }
-      );
+      try {
+        const result = await providerDelete(
+          token,
+          loanId ? 'payment' : 'transaction',
+          nid
+        );
+        callback({ ok: result.success } as Response);
+      } catch {
+        callback(null);
+      }
     }
   } else {
-    // Original behavior if no dataDispatch or IndexedDB not available
-    const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
-    fetch(`${getApiBaseUrl()}/node/${nid}?_format=json`, fetchOptions).then(
-      (response) => {
-        callback(response);
-      }
-    );
+    try {
+      const result = await providerDelete(
+        token,
+        loanId ? 'payment' : 'transaction',
+        nid
+      );
+      callback({ ok: result.success } as Response);
+    } catch {
+      callback(null);
+    }
   }
 };
 
@@ -447,40 +423,32 @@ export const deleteLoan = async (
   onSuccess: () => void
 ) => {
   const normalizedId = String(nid ?? '');
-  // Add null checks for dispatch functions
   if (!dataDispatch || !dispatch) {
     console.error('Dispatch functions not available for delete loan');
     return;
   }
 
-  // Implement offline-first approach for loans
   if (isIndexedDBAvailable()) {
     try {
       const { isOnline } = await import('./indexedDB');
       const { deleteLoanOffline, updateLoansUILocally } =
         await import('./offlineAPI');
 
-      const url = `${getApiBaseUrl()}/node/${normalizedId}?_format=json`;
-
-      // Always apply local delete + enqueue sync operation (idempotent).
-      // This guarantees immediate UI update even when cache is missing/out of sync.
+      const url = `provider:delete:${normalizedId}`;
       await deleteLoanOffline(normalizedId, url);
       await updateLoansUILocally(dataDispatch);
       onSuccess();
 
-      // Try to sync if online
       if (isOnline()) {
-        const fetchOptions = createAuthenticatedFetchOptions(token, 'DELETE');
-        fetch(url, fetchOptions)
-          .then(async (response) => {
-            if (response.ok) {
-              // Remove from sync queue on success
+        providerDelete(token, 'loan', normalizedId)
+          .then(async (result) => {
+            if (result.success) {
               const { getPendingSyncOperations, removeSyncOperation } =
                 await import('./indexedDB');
               const pendingOps = await getPendingSyncOperations();
               const op = pendingOps.find(
                 (o) =>
-                  o.url === url &&
+                  o.localId === normalizedId &&
                   o.status === 'pending' &&
                   o.entityType === 'loan'
               );
@@ -498,26 +466,12 @@ export const deleteLoan = async (
         return;
       }
       console.error('Error in offline delete loan:', error);
-      // Fallback to original behavior
-      fetchFromAPI(
-        `${getApiBaseUrl()}/node/${normalizedId}?_format=json`,
-        token,
-        dataDispatch,
-        dispatch,
-        onSuccess,
-        'DELETE'
-      );
+      const result = await providerDelete(token, 'loan', normalizedId);
+      if (result.success) onSuccess();
     }
   } else {
-    // Original behavior if IndexedDB not available
-    fetchFromAPI(
-      `${getApiBaseUrl()}/node/${normalizedId}?_format=json`,
-      token,
-      dataDispatch,
-      dispatch,
-      onSuccess,
-      'DELETE'
-    );
+    const result = await providerDelete(token, 'loan', normalizedId);
+    if (result.success) onSuccess();
   }
 };
 

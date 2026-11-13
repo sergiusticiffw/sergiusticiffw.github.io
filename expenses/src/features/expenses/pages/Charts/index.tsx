@@ -20,10 +20,12 @@ import MonthlyAverageTrend from '@features/expenses/components/Charts/MonthlyAve
 import DailyAverage from '@features/expenses/components/DailyAverage/DailyAverage';
 import DailyAverageTrend from '@features/expenses/components/Charts/DailyAverageTrend';
 import LastTwoMonthsAverage from '@features/expenses/components/Home/LastTwoMonthsAverage';
+import FamilySharedSpend from '@features/expenses/components/Charts/FamilySharedSpend';
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { Loader } from '@shared/components/Common';
 import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils/layoutClasses';
+import { getDataProviderKind } from '../../../../data';
 
 const componentMap = {
   MonthlyTotals,
@@ -152,6 +154,12 @@ const Charts = () => {
               </div>
             ) : null;
           })}
+
+          {getDataProviderKind() === 'supabase' && (
+            <div className="p-0 border-none bg-transparent">
+              <FamilySharedSpend />
+            </div>
+          )}
         </div>
       )}
 

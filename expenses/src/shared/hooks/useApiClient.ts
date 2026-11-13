@@ -1,37 +1,6 @@
 /**
- * Hook for creating and managing API client instance
+ * @deprecated Prefer useDataProvider from ./useDataProvider
+ * Kept as a thin alias so existing imports keep working.
  */
 
-import { useMemo } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { createApiClient, ApiClient } from '@shared/api/client';
-import { useAuthState, useAuthDispatch } from '@shared/context/context';
-import { useNotification } from '@shared/context/notification';
-import { useExpenseData } from '@stores/expenseStore';
-
-/**
- * Hook to get API client instance
- */
-export function useApiClient(): ApiClient | null {
-  const authState = useAuthState();
-  const showNotification = useNotification();
-  const { dataDispatch } = useExpenseData();
-  const dispatch = useAuthDispatch();
-  const navigate = useNavigate();
-
-  const apiClient = useMemo(() => {
-    if (!authState?.token) {
-      return null;
-    }
-
-    return createApiClient({
-      token: authState.token,
-      showNotification,
-      dataDispatch,
-      dispatch,
-      onSessionExpired: () => navigate({ to: '/expenses/login' }),
-    });
-  }, [authState?.token, showNotification, dataDispatch, dispatch, navigate]);
-
-  return apiClient;
-}
+export { useDataProvider as useApiClient, useDataProvider } from './useDataProvider';

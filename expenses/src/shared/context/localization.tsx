@@ -150,6 +150,8 @@ const translations = {
     'goals.syncFailed': 'Drive sync unavailable — local copy kept',
     'goals.syncError': 'Could not sync the emergency fund',
     'goals.syncErrorDrive': 'Could not save to Google Drive. Check access and try again.',
+    'goals.claimed':
+      'Goals recovered from your previous account on this Google Drive.',
     'goals.invalidContribution': 'Enter a valid contribution',
 
     // Offline
@@ -278,7 +280,29 @@ const translations = {
       'Shows Goals in the navigation. Syncs with Google Drive across your devices.',
     'profile.backupTitle': 'Data backup',
     'profile.backupHint':
-      'Downloads a JSON copy and uploads expenses, incomes, loans, and payments to Google Drive. Keeps the latest 5 backups.',
+      'Full export: expenses, incomes, loans, payments, tags, Gemini API key, and Goals (local + Google Drive). Downloads JSON and keeps the latest 5 copies on Drive.',
+    'profile.backupDownloadDoneGoals':
+      'Backup downloaded — Goals from the file were applied to this account.',
+    'profile.importTitle': 'Import from backup JSON',
+    'profile.importHint':
+      'For a new Supabase account: pick an expenses-full-backup JSON (from Drupal or Drive). Imports transactions, loans, payments, tags, Gemini key, and Goals.',
+    'profile.importButton': 'Choose backup file…',
+    'profile.importBusy': 'Importing…',
+    'profile.importConfirmTitle': 'Import this backup?',
+    'profile.importConfirmMessage':
+      'Upsert {tx} transactions/incomes, {loans} loans, and {payments} payments into this Supabase account. Re-importing the same backup updates existing rows — no duplicates.',
+    'profile.importConfirmAction': 'Import',
+    'profile.importDone':
+      'Upserted {tx} transactions, {loans} loans, {payments} payments.',
+    'profile.importError': 'Could not import the backup file',
+    'profile.importPhase.auth': 'Checking session…',
+    'profile.importPhase.profile': 'Importing profile…',
+    'profile.importPhase.transactions': 'Transactions',
+    'profile.importPhase.loans': 'Loans',
+    'profile.importPhase.payments': 'Payments',
+    'profile.importPhase.goals': 'Importing Goals…',
+    'profile.importPhaseDone': 'Finishing…',
+    'profile.importPhaseCount': '{phase}: {done}/{total}',
     'profile.backupButton': 'Backup to Drive',
     'profile.backupBusy': 'Backing up…',
     'profile.backupDone': 'Backup downloaded and saved to Google Drive',
@@ -424,6 +448,51 @@ const translations = {
     'profile.tagsLoading': 'Loading your tags…',
     'profile.tagsInvalid': 'Use letters, numbers, and spaces.',
     'profile.tagsDuplicate': 'Already in this list.',
+    'family.title': 'Family budget',
+    'family.hint':
+      'Share selected expense categories. Everyone keeps their own records private — Family budget shows only combined totals per shared category.',
+    'family.namePlaceholder': 'Family name',
+    'family.create': 'Create family',
+    'family.rename': 'Save name',
+    'family.members': 'Members',
+    'family.you': 'You',
+    'family.invite': 'Invite by email',
+    'family.emailPlaceholder': 'partner@email.com',
+    'family.sendInvite': 'Invite',
+    'family.inviteHint':
+      'They must sign in with Google using this email. No email is sent automatically.',
+    'family.revoke': 'Revoke invite',
+    'family.removeMember': 'Remove member',
+    'family.sharedCategories': 'Shared categories',
+    'family.saveCategories': 'Save categories',
+    'family.sharedCount': '{count} categories shared',
+    'family.leave': 'Leave family',
+    'family.created': 'Family created.',
+    'family.saved': 'Family updated.',
+    'family.categoriesSaved': 'Shared categories saved.',
+    'family.inviteSent': 'Invite saved. Ask them to sign in with that email.',
+    'family.memberRemoved': 'Member removed.',
+    'family.left': 'You left the family.',
+    'family.error': 'Something went wrong.',
+    'family.joined': 'You joined a family budget.',
+    'family.scopePersonal': 'Personal',
+    'family.scopeFamily': 'Family',
+    'family.totalsLoading': 'Loading family totals…',
+    'family.totalsEmpty':
+      'No shared-category spend this month yet.',
+    'family.totalsNoShared':
+      'Pick shared categories in Profile → Family budget.',
+    'family.totalsError': 'Could not load family totals.',
+    'family.totalsSpent': 'combined this month',
+    'family.totalsHint': 'Combined totals for shared categories',
+    'family.chartTitle': 'Family shared · {month}',
+    'family.leaveConfirmTitle': 'Leave family?',
+    'family.leaveConfirmMessage':
+      'You will lose access to the shared family budget. Your own expenses stay private.',
+    'family.removeConfirmTitle': 'Remove member?',
+    'family.removeConfirmMessage':
+      'Remove {member} from this family? They will no longer see shared totals.',
+    'common.uncategorized': 'Uncategorized',
     'profile.aiTitle': 'AI assistant',
     'profile.aiKey': 'Gemini API key',
     'profile.aiPaste': 'Paste your Gemini API key',
@@ -533,6 +602,13 @@ const translations = {
     'login.signInWithGoogle': 'Sign in with Google',
     'login.subtitle':
       'Sign in with Google to access expenses, income and loans.',
+    'login.chooseBackend': 'Account type',
+    'login.backendDrupal': 'Classic',
+    'login.backendSupabase': 'New',
+    'login.backendDrupalHint':
+      'Use your existing Drupal account and data.',
+    'login.backendSupabaseHint':
+      'Use the new Supabase account. Import a backup if you are migrating.',
 
     // Charts Page
     'charts.title': 'Analytics & Charts',
@@ -1072,6 +1148,8 @@ const translations = {
     'goals.syncFailed': 'Sync Drive indisponibil — copia locală e păstrată',
     'goals.syncError': 'Nu s-a putut sincroniza fondul de urgență',
     'goals.syncErrorDrive': 'Nu s-a putut salva în Google Drive. Verifică accesul și încearcă din nou.',
+    'goals.claimed':
+      'Goals au fost preluate de pe contul anterior din acest Google Drive.',
     'goals.invalidContribution': 'Introdu o contribuție validă',
 
     // Offline
@@ -1202,7 +1280,29 @@ const translations = {
       'Afișează Obiective în navigare. Se sincronizează cu Google Drive pe fiecare dispozitiv.',
     'profile.backupTitle': 'Backup date',
     'profile.backupHint':
-      'Descarcă un JSON și urcă cheltuielile, veniturile, împrumuturile și plățile în Google Drive. Păstrează ultimele 5 backup-uri.',
+      'Export complet: cheltuieli, venituri, împrumuturi, plăți, tag-uri, cheia Gemini și Goals (local + Google Drive). Descarcă JSON și păstrează ultimele 5 copii pe Drive.',
+    'profile.backupDownloadDoneGoals':
+      'Backup descărcat — Goals din fișier au fost aplicate pe acest cont.',
+    'profile.importTitle': 'Import din backup JSON',
+    'profile.importHint':
+      'Pentru un cont Supabase nou: alege un JSON expenses-full-backup (din Drupal sau Drive). Importă tranzacții, împrumuturi, plăți, tag-uri, cheia Gemini și Goals.',
+    'profile.importButton': 'Alege fișierul backup…',
+    'profile.importBusy': 'Se importă…',
+    'profile.importConfirmTitle': 'Importi acest backup?',
+    'profile.importConfirmMessage':
+      'Upsert {tx} tranzacții/venituri, {loans} împrumuturi și {payments} plăți pe acest cont Supabase. Reimportul aceluiași backup actualizează rândurile — fără duplicate.',
+    'profile.importConfirmAction': 'Importă',
+    'profile.importDone':
+      'Upsert: {tx} tranzacții, {loans} împrumuturi, {payments} plăți.',
+    'profile.importError': 'Nu s-a putut importa fișierul de backup',
+    'profile.importPhase.auth': 'Se verifică sesiunea…',
+    'profile.importPhase.profile': 'Se importă profilul…',
+    'profile.importPhase.transactions': 'Tranzacții',
+    'profile.importPhase.loans': 'Împrumuturi',
+    'profile.importPhase.payments': 'Plăți',
+    'profile.importPhase.goals': 'Se importă Goals…',
+    'profile.importPhaseDone': 'Se finalizează…',
+    'profile.importPhaseCount': '{phase}: {done}/{total}',
     'profile.backupButton': 'Backup în Drive',
     'profile.backupBusy': 'Se face backup…',
     'profile.backupDone': 'Backup descărcat și salvat în Google Drive',
@@ -1348,6 +1448,52 @@ const translations = {
     'profile.tagsLoading': 'Se încarcă etichetele…',
     'profile.tagsInvalid': 'Folosește litere, cifre și spații.',
     'profile.tagsDuplicate': 'Există deja în această listă.',
+    'family.title': 'Buget de familie',
+    'family.hint':
+      'Împarte categorii de cheltuieli. Fiecare își păstrează înregistrările private — bugetul Familie arată doar totalurile combinate pe categoria comună.',
+    'family.namePlaceholder': 'Nume familie',
+    'family.create': 'Creează familia',
+    'family.rename': 'Salvează numele',
+    'family.members': 'Membri',
+    'family.you': 'Tu',
+    'family.invite': 'Invită pe email',
+    'family.emailPlaceholder': 'partener@email.com',
+    'family.sendInvite': 'Invită',
+    'family.inviteHint':
+      'Trebuie să se autentifice cu Google pe acest email. Nu se trimite email automat.',
+    'family.revoke': 'Anulează invitația',
+    'family.removeMember': 'Elimină membru',
+    'family.sharedCategories': 'Categorii comune',
+    'family.saveCategories': 'Salvează categoriile',
+    'family.sharedCount': '{count} categorii comune',
+    'family.leave': 'Părăsește familia',
+    'family.created': 'Familia a fost creată.',
+    'family.saved': 'Familia a fost actualizată.',
+    'family.categoriesSaved': 'Categoriile comune au fost salvate.',
+    'family.inviteSent':
+      'Invitația e salvată. Cere-le să se autentifice cu acel email.',
+    'family.memberRemoved': 'Membrul a fost eliminat.',
+    'family.left': 'Ai părăsit familia.',
+    'family.error': 'A apărut o eroare.',
+    'family.joined': 'Te-ai alăturat unui buget de familie.',
+    'family.scopePersonal': 'Personal',
+    'family.scopeFamily': 'Familie',
+    'family.totalsLoading': 'Se încarcă totalurile familiei…',
+    'family.totalsEmpty':
+      'Nicio cheltuială pe categoriile comune în luna asta.',
+    'family.totalsNoShared':
+      'Alege categoriile comune în Profil → Buget de familie.',
+    'family.totalsError': 'Nu s-au putut încărca totalurile familiei.',
+    'family.totalsSpent': 'combinat luna asta',
+    'family.totalsHint': 'Totaluri combinate pe categoriile comune',
+    'family.chartTitle': 'Cheltuieli comune · {month}',
+    'family.leaveConfirmTitle': 'Părăsești familia?',
+    'family.leaveConfirmMessage':
+      'Nu vei mai avea acces la bugetul comun. Cheltuielile tale rămân private.',
+    'family.removeConfirmTitle': 'Elimini membrul?',
+    'family.removeConfirmMessage':
+      'Elimini pe {member} din familie? Nu va mai vedea totalurile comune.',
+    'common.uncategorized': 'Fără categorie',
     'profile.aiTitle': 'Asistent AI',
     'profile.aiKey': 'Cheie API Gemini',
     'profile.aiPaste': 'Lipește cheia API Gemini',
@@ -1457,6 +1603,13 @@ const translations = {
     'login.signInWithGoogle': 'Conectare cu Google',
     'login.subtitle':
       'Conectează-te cu Google pentru a accesa cheltuielile, veniturile și împrumuturile.',
+    'login.chooseBackend': 'Tip cont',
+    'login.backendDrupal': 'Clasic',
+    'login.backendSupabase': 'Nou',
+    'login.backendDrupalHint':
+      'Folosește contul și datele Drupal existente.',
+    'login.backendSupabaseHint':
+      'Folosește contul nou Supabase. Importă un backup dacă migrezi.',
 
     // Charts Page
     'charts.title': 'Analize și Grafice',

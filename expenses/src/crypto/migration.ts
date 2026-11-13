@@ -7,7 +7,6 @@
 import { useSyncExternalStore } from 'react';
 import { getPendingSyncOperations } from '@shared/utils/indexedDB';
 import { logger } from '@shared/utils/logger';
-import { apiFetch } from './apiUrl';
 import { aadFor, decryptPayload, encryptPayload, PlainPayload, samePlain } from './cipher';
 import {
   EncryptionStatus,
@@ -27,6 +26,7 @@ import {
   recordType,
   toPlain,
 } from './nodeCodec';
+import { getAuthProvider, getDataProvider } from '../data';
 
 export type Direction = 'lock' | 'unlock';
 export type Phase = 'prepare' | 'transform' | 'verify' | 'cleanup' | 'finalize';
@@ -206,31 +206,6 @@ const addFailure = (record: ListRecord, reason: string) => {
 // HTTP with retry
 // ---------------------------------------------------------------------------
 
-const jsonHeaders = (token: string) => ({
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
-  'JWT-Authorization': `Bearer ${token}`,
-});
-
-const sessionExpired = async (token: string) => {
-  try {
-    const response = await apiFetch('/jwt/token', { headers: jsonHeaders(token) });
-    return response.status === 403;
-  } catch {
-    return false;
-  }
-};
-
-const readErrorMessage = async (response: Response) => {
-  try {
-    const body = await response.json();
-    if (body?.message) return String(body.message);
-  } catch {
-    // Not JSON.
-  }
-  return `HTTP ${response.status}`;
-};
-
 const waitBeforeRetry = async (ms: number) => {
   for (let left = Math.ceil(ms / 1000); left > 0; left -= 1) {
     checkPause();
@@ -245,7 +220,9 @@ const waitBeforeRetry = async (ms: number) => {
 
 type RequestResult = { gone: true } | { gone: false; data: any };
 
-const request = async (method: string, path: string, body?: unknown): Promise<RequestResult> => {
+const withProviderRetry = async <T,>(
+  run: () => Promise<{ success: boolean; data?: T; error?: Error }>
+): Promise<RequestResult> => {
   for (let attempt = 0; ; attempt += 1) {
     checkPause();
     const session = getSession();
@@ -256,43 +233,43 @@ const request = async (method: string, path: string, body?: unknown): Promise<Re
       throw new PauseSignal("You're offline. Continue when you're back online.");
     }
 
-    let response: Response | null = null;
-    try {
-      response = await apiFetch(path, {
-        method,
-        headers: jsonHeaders(session.token),
-        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-      });
-    } catch {
-      response = null;
-    }
+    const provider = getDataProvider();
+    provider.configure(session.token);
 
-    if (response) {
-      if (response.ok) {
+    try {
+      const result = await run();
+      if (result.success) {
         recordRequest();
-        const data = response.status === 204 ? null : await response.json().catch(() => null);
-        return { gone: false, data };
+        return { gone: false, data: result.data ?? null };
       }
-      if (response.status === 404) {
+      const msg = result.error?.message || '';
+      if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
         return { gone: true };
       }
-      if (response.status === 403) {
-        if (await sessionExpired(session.token)) {
+      if (
+        msg.toLowerCase().includes('session') ||
+        msg.includes('403') ||
+        msg.toLowerCase().includes('jwt')
+      ) {
+        const refresh = await getAuthProvider().refreshSession();
+        if (!refresh.success) {
           throw new PauseSignal(
-            'Your session expired. Log out, log in again and continue. You\'ll need your key.'
+            "Your session expired. Log out, log in again and continue. You'll need your key."
           );
         }
         throw new ItemError('Access denied (403).');
       }
-      if (response.status !== 429 && response.status < 500) {
-        throw new ItemError(await readErrorMessage(response));
+      if (attempt >= RETRY_DELAYS_MS.length) {
+        throw new PauseSignal("The server isn't responding. Try again in a bit.");
       }
+      await waitBeforeRetry(RETRY_DELAYS_MS[attempt]);
+    } catch (error) {
+      if (error instanceof PauseSignal || error instanceof ItemError) throw error;
+      if (attempt >= RETRY_DELAYS_MS.length) {
+        throw new PauseSignal("The server isn't responding. Try again in a bit.");
+      }
+      await waitBeforeRetry(RETRY_DELAYS_MS[attempt]);
     }
-
-    if (attempt >= RETRY_DELAYS_MS.length) {
-      throw new PauseSignal("The server isn't responding. Try again in a bit.");
-    }
-    await waitBeforeRetry(RETRY_DELAYS_MS[attempt]);
   }
 };
 
@@ -318,11 +295,13 @@ const mapPayment = (row: any, loanId: string): ListRecord => ({
 });
 
 const fetchList = async (): Promise<ListRecord[]> => {
-  const expenses = await request('GET', '/api/expenses');
+  const expenses = await withProviderRetry(() =>
+    getDataProvider().listTransactions()
+  );
   if (expenses.gone || !Array.isArray(expenses.data)) {
     throw new Error("Couldn't load your items from the server.");
   }
-  const loans = await request('GET', '/api/loans');
+  const loans = await withProviderRetry(() => getDataProvider().listLoans());
   if (loans.gone || !Array.isArray(loans.data)) {
     throw new Error("Couldn't load your loans from the server.");
   }
@@ -333,7 +312,9 @@ const fetchList = async (): Promise<ListRecord[]> => {
   ];
   for (const loan of loans.data) {
     const loanId = String(loan.id);
-    const payments = await request('GET', `/api/payments/${loanId}`);
+    const payments = await withProviderRetry(() =>
+      getDataProvider().listPayments(loanId)
+    );
     if (payments.gone || !Array.isArray(payments.data)) {
       throw new Error("Couldn't load payments from the server.");
     }
@@ -342,17 +323,33 @@ const fetchList = async (): Promise<ListRecord[]> => {
   return records.filter((record) => record.id && record.id !== 'undefined');
 };
 
-const patchNode = (record: ListRecord, body: Record<string, unknown>) =>
-  request('PATCH', `/node/${record.id}?_format=json`, body);
+const patchNode = (record: ListRecord, body: Record<string, unknown>) => {
+  const type = record.type;
+  return withProviderRetry(async () => {
+    const provider = getDataProvider();
+    if (type === 'loan') {
+      return provider.updateLoan(record.id, body);
+    }
+    if (type === 'payment') {
+      return provider.updatePayment(record.id, body);
+    }
+    return provider.updateTransaction(record.id, body);
+  });
+};
 
 const saveStatus = async (status: EncryptionStatus) => {
   const session = getSession();
   if (!session) throw new PauseSignal('Log in again to continue.');
-  const result = await request('PATCH', `/user/${session.uid}?_format=json`, {
-    field_encryption_status: [{ value: status }],
-  });
-  const saved = !result.gone && result.data?.field_encryption_status?.[0]?.value;
-  if (saved !== status) {
+  const result = await withProviderRetry(() =>
+    getDataProvider().updateProfile(session.uid, {
+      encryption_status: status,
+    })
+  );
+  const savedStatus =
+    !result.gone &&
+    (result.data?.encryption_status ||
+      result.data?.raw?.field_encryption_status?.[0]?.value);
+  if (savedStatus !== status) {
     throw new Error("Couldn't save the lock status on your profile.");
   }
   setStatus(status);
@@ -737,11 +734,13 @@ export const runPreflight = async (flush: () => Promise<void>): Promise<Prefligh
   let serverOk = false;
   if (online && session) {
     try {
+      const provider = getDataProvider();
+      provider.configure(session.token);
       const [expensesResponse, loansResponse] = await Promise.all([
-        apiFetch('/api/expenses', { headers: jsonHeaders(session.token) }),
-        apiFetch('/api/loans', { headers: jsonHeaders(session.token) }),
+        provider.listTransactions(),
+        provider.listLoans(),
       ]);
-      serverOk = expensesResponse.ok && loansResponse.ok;
+      serverOk = !!expensesResponse.success && !!loansResponse.success;
     } catch {
       serverOk = false;
     }

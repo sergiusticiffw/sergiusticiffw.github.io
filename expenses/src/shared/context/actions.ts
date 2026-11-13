@@ -1,6 +1,5 @@
-import { LoginPayload, UserData } from '@shared/type/types';
+import { LoginPayload } from '@shared/type/types';
 import { clearExpensesDB } from '@shared/utils/indexedDB';
-import { buildApiUrl } from '@shared/utils/utils';
 import { hydrateSettings } from '@stores/settingsStore';
 import { clearChatSession } from '../../ai/chatSession';
 import { clearAiLocalData } from '../../ai/storage';
@@ -9,45 +8,105 @@ import {
   resetEncryptionState,
 } from '../../crypto/encryptionState';
 import { resetTagsOnLogout } from '../../tags/catalog';
-import { clearUnlockOnLogout, markUnlocked } from '../../features/privacy/biometricLock';
+import {
+  clearUnlockOnLogout,
+  markUnlocked,
+} from '../../features/privacy/biometricLock';
 import { hydrateEmergencyFund } from '../../features/goals/store';
 import { getStoredCurrentUser } from '@shared/utils/authStorage';
+import {
+  getAuthProvider,
+  getDataProviderKind,
+  resetProviders,
+  setDataProviderKind,
+} from '../../data';
+import type { AuthSession } from '../../data';
+
+const persistSession = (dispatch: any, data: AuthSession) => {
+  const kind = data.provider || getDataProviderKind();
+  setDataProviderKind(kind);
+  const stored = {
+    ...data,
+    provider: kind,
+    jwt_token: data.access_token,
+    access_token: data.access_token,
+  };
+  dispatch({ type: 'LOGIN_SUCCESS', payload: stored });
+  localStorage.setItem('currentUser', JSON.stringify(stored));
+  applyLoginStatus(data.current_user.encryption_status);
+  if (data.current_user.currency) {
+    hydrateSettings({ currency: data.current_user.currency });
+  }
+  hydrateEmergencyFund();
+  const uid = String(data.current_user.uid ?? '');
+  if (uid) markUnlocked(uid);
+  return stored;
+};
 
 export const loginUser = async (dispatch: any, loginPayload: LoginPayload) => {
-  const requestOptions = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(loginPayload),
-  };
-
   try {
     dispatch({ type: 'REQUEST_LOGIN' });
-    const response = await fetch(
-      buildApiUrl('/user/login/google?_format=json'),
-      requestOptions
-    );
-    const data: UserData = await response.json();
+    const auth = getAuthProvider();
+    const kind = getDataProviderKind();
 
-    if (data.current_user) {
-      dispatch({ type: 'LOGIN_SUCCESS', payload: data });
-      localStorage.setItem('currentUser', JSON.stringify(data));
-      applyLoginStatus(
-        (data.current_user as { encryption_status?: string })?.encryption_status
-      );
-      const currency = (data.current_user as { currency?: string })?.currency;
-      if (currency) hydrateSettings({ currency });
-      hydrateEmergencyFund();
-      const uid = String(
-        (data.current_user as { uid?: string | number }).uid ?? ''
-      );
-      if (uid) markUnlocked(uid);
-      return data;
+    if (kind === 'supabase') {
+      // Prefer a real ID token JWT; otherwise start OAuth redirect (never send access_token).
+      const idToken =
+        loginPayload.id_token && loginPayload.id_token.split('.').length === 3
+          ? loginPayload.id_token
+          : undefined;
+      const result = await auth.loginWithGoogle(idToken);
+      if (!result.success) {
+        dispatch({
+          type: 'LOGIN_ERROR',
+          error: result.error?.message || 'Login failed',
+        });
+        return;
+      }
+      if (
+        result.data &&
+        'redirecting' in result.data &&
+        result.data.redirecting
+      ) {
+        // Browser navigates to Google / Supabase; session restored on return.
+        return { redirecting: true };
+      }
+      if (!result.data || !('current_user' in result.data)) {
+        dispatch({ type: 'LOGIN_ERROR', error: 'Login failed' });
+        return;
+      }
+      return persistSession(dispatch, result.data as AuthSession);
     }
 
-    dispatch({ type: 'LOGIN_ERROR', error: data.errors[0] });
+    const googleToken =
+      loginPayload.access_token || loginPayload.id_token;
+    if (!googleToken) {
+      dispatch({ type: 'LOGIN_ERROR', error: 'Missing Google token' });
+      return;
+    }
+
+    const result = await auth.loginWithGoogle(googleToken);
+    if (!result.success || !result.data || !('current_user' in result.data)) {
+      dispatch({
+        type: 'LOGIN_ERROR',
+        error: result.error?.message || 'Login failed',
+      });
+      return;
+    }
+
+    return persistSession(dispatch, result.data as AuthSession);
   } catch (error) {
     dispatch({ type: 'LOGIN_ERROR', error: error });
   }
+};
+
+/** After Supabase OAuth redirect, pull the client session into app state. */
+export const restoreSupabaseSession = async (dispatch: any) => {
+  const auth = getAuthProvider();
+  if (auth.kind !== 'supabase' || !auth.restoreClientSession) return null;
+  const result = await auth.restoreClientSession();
+  if (!result.success || !result.data) return null;
+  return persistSession(dispatch, result.data);
 };
 
 export const logout = async (dispatch: any, dataDispatch: any) => {
@@ -57,14 +116,21 @@ export const logout = async (dispatch: any, dataDispatch: any) => {
   );
   if (uid) clearUnlockOnLogout(uid);
 
+  try {
+    await getAuthProvider().logout();
+  } catch {
+    // ignore provider logout errors
+  }
+
   await dispatch({ type: 'LOGOUT' });
   await dataDispatch({ type: 'REMOVE_DATA' });
   resetEncryptionState();
   resetTagsOnLogout();
   localStorage.removeItem('currentUser');
   localStorage.removeItem('token');
+  // Keep expenses.dataProvider preference so next login uses the same backend.
+  resetProviders();
   clearChatSession();
   clearAiLocalData();
-  // Clear IndexedDB cache on logout
   await clearExpensesDB();
 };
