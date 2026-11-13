@@ -286,7 +286,10 @@ const translations = {
     'profile.importTitle': 'Import from backup JSON',
     'profile.importHint':
       'For a new Supabase account: pick an expenses-full-backup JSON (from Drupal or Drive). Imports transactions, loans, payments, tags, Gemini key, and Goals.',
+    'profile.importDisabledHint':
+      'Migration is marked complete for this account. Backup import is disabled.',
     'profile.importButton': 'Choose backup file…',
+    'profile.importDisabledButton': 'Import disabled',
     'profile.importBusy': 'Importing…',
     'profile.importConfirmTitle': 'Import this backup?',
     'profile.importConfirmMessage':
@@ -1298,7 +1301,10 @@ const translations = {
     'profile.importTitle': 'Import din backup JSON',
     'profile.importHint':
       'Pentru un cont Supabase nou: alege un JSON expenses-full-backup (din Drupal sau Drive). Importă tranzacții, împrumuturi, plăți, tag-uri, cheia Gemini și Goals.',
+    'profile.importDisabledHint':
+      'Migrarea e marcată ca finalizată pe acest cont. Importul din backup e dezactivat.',
     'profile.importButton': 'Alege fișierul backup…',
+    'profile.importDisabledButton': 'Import dezactivat',
     'profile.importBusy': 'Se importă…',
     'profile.importConfirmTitle': 'Importi acest backup?',
     'profile.importConfirmMessage':

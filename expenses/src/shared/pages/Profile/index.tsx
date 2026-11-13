@@ -9,6 +9,8 @@ import {
   setSettingsTheme,
   useGoalsEnabled,
   setGoalsEnabled,
+  useOnboardingComplete,
+  setOnboardingComplete,
 } from '@stores/settingsStore';
 import { APP_THEMES } from '@shared/constants/themes';
 import { useNotification } from '@shared/context/notification';
@@ -100,6 +102,7 @@ const Profile = () => {
   const currency = useSettingsCurrency();
   const currentTheme = useSettingsTheme();
   const goalsEnabled = useGoalsEnabled();
+  const onboardingComplete = useOnboardingComplete();
   const apiClient = useApiClient();
   const [goalsSyncing, setGoalsSyncing] = useState(false);
   const [backupBusy, setBackupBusy] = useState(false);
@@ -253,7 +256,7 @@ const Profile = () => {
   };
 
   const runImportBackup = async (snapshot: ExpensesBackupSnapshot) => {
-    if (!isSupabase || !token) return;
+    if (!isSupabase || !token || onboardingComplete) return;
     setImportBusy(true);
     setImportProgress({ phase: 'auth', done: 0, total: 1 });
     try {
@@ -275,6 +278,7 @@ const Profile = () => {
           fetchLoansService(apiClient, loanDispatch),
         ]).catch(() => undefined);
       }
+      setOnboardingComplete(true);
       const summary = t('profile.importDone')
         .replace('{tx}', String(result.transactions))
         .replace('{loans}', String(result.loans))
@@ -297,6 +301,10 @@ const Profile = () => {
   const handleImportFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
+    if (onboardingComplete) {
+      if (importFileRef.current) importFileRef.current.value = '';
+      return;
+    }
     const file = event.target.files?.[0];
     if (!file) return;
     try {
@@ -593,7 +601,9 @@ const Profile = () => {
                       {t('profile.importTitle')}
                     </h4>
                     <p className="m-0 mb-3 text-xs text-app-muted leading-relaxed">
-                      {t('profile.importHint')}
+                      {onboardingComplete
+                        ? t('profile.importDisabledHint')
+                        : t('profile.importHint')}
                     </p>
                     <input
                       ref={importFileRef}
@@ -604,8 +614,13 @@ const Profile = () => {
                     />
                     <button
                       type="button"
-                      disabled={importBusy || backupBusy}
-                      onClick={() => importFileRef.current?.click()}
+                      disabled={
+                        onboardingComplete || importBusy || backupBusy
+                      }
+                      onClick={() => {
+                        if (onboardingComplete) return;
+                        importFileRef.current?.click();
+                      }}
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-app-secondary hover:border-white/25 hover:text-app-primary disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {importBusy ? (
@@ -615,7 +630,9 @@ const Profile = () => {
                       )}
                       {importBusy
                         ? importProgressLabel || t('profile.importBusy')
-                        : t('profile.importButton')}
+                        : onboardingComplete
+                          ? t('profile.importDisabledButton')
+                          : t('profile.importButton')}
                     </button>
                   </div>
                 )}

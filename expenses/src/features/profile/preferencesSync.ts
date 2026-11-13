@@ -60,7 +60,7 @@ export const readLocalPreferences = (): ProfilePreferences => {
     v: 1,
     theme: settingsStore.state.theme || DEFAULT_THEME_ID,
     language: readLanguage(),
-    onboardingComplete: !!settingsStore.state.onboardingComplete,
+    // onboardingComplete is never taken from local defaults — see flushPreferencesPush.
     goalsEnabled: !!settingsStore.state.goalsEnabled,
     visibleCharts: readStoredVisibleCharts(),
     customChartsEnabled: readCustomChartsEnabled(),
@@ -209,12 +209,50 @@ export const flushPreferencesPush = async (): Promise<boolean> => {
 
     const provider = getDataProvider();
     provider.configure(liveToken);
+
+    // Full preferences replace would otherwise clobber onboardingComplete with
+    // the local default (false). Only rewrite it when explicitly patched.
+    if (!Object.prototype.hasOwnProperty.call(patch, 'onboardingComplete')) {
+      const existing = await provider.getProfile(session.uid);
+      if (!existing.success) {
+        restorePending(patch);
+        return false;
+      }
+      const remote = existing.data?.preferences as
+        | ProfilePreferences
+        | undefined;
+      if (typeof remote?.onboardingComplete === 'boolean') {
+        next.onboardingComplete = remote.onboardingComplete;
+      } else {
+        delete next.onboardingComplete;
+      }
+    }
+
     const result = await provider.updateProfile(session.uid, {
       preferences: next,
     });
     if (!result.success) {
       restorePending(patch);
       return false;
+    }
+
+    // Keep local UI in sync with whatever we persisted (no re-push).
+    if (typeof next.onboardingComplete === 'boolean') {
+      applyingRemote = true;
+      try {
+        localStorage.setItem(
+          'onboardingComplete',
+          JSON.stringify(next.onboardingComplete)
+        );
+        settingsStore.setState((s) => ({
+          ...s,
+          onboardingComplete: next.onboardingComplete as boolean,
+        }));
+      } finally {
+        void Promise.resolve().then(() => {
+          applyingRemote = false;
+        });
+      }
     }
     return true;
   } catch {
