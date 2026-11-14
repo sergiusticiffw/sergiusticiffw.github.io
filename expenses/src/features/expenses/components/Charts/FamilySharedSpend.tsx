@@ -140,6 +140,20 @@ const FamilySharedSpend: React.FC<FamilySharedSpendProps> = ({
     [rows]
   );
 
+  const avgDaily = useMemo(() => {
+    if (!viewedKey || total <= 0) return 0;
+    const [y, m] = viewedKey.split('-').map(Number);
+    if (!y || !m) return 0;
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const now = new Date();
+    const isCurrent =
+      now.getFullYear() === y && now.getMonth() + 1 === m;
+    const divisor = isCurrent
+      ? Math.max(now.getDate(), 1)
+      : Math.max(daysInMonth, 1);
+    return total / divisor;
+  }, [viewedKey, total]);
+
   const donutData = useMemo(
     () =>
       rows.map((row) => ({
@@ -178,7 +192,7 @@ const FamilySharedSpend: React.FC<FamilySharedSpendProps> = ({
               {loading && rows.length === 0
                 ? t('family.totalsLoading')
                 : rows.length > 0
-                  ? `${formatNumber(total)} ${currency} · ${t('family.totalsSpent')}`
+                  ? `${formatNumber(total)} ${currency} · ${t('family.totalsSpent')} · ${formatNumber(avgDaily)} ${currency} ${t('family.totalsAvgDay')}`
                   : hasShared
                     ? t('family.totalsEmpty')
                     : t('family.totalsNoShared')}
