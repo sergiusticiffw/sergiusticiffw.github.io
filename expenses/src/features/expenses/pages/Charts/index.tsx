@@ -22,6 +22,7 @@ import DailyAverageTrend from '@features/expenses/components/Charts/DailyAverage
 import LastTwoMonthsAverage from '@features/expenses/components/Home/LastTwoMonthsAverage';
 import FamilySharedYear from '@features/expenses/components/Charts/FamilySharedYear';
 import FamilySharedAllTime from '@features/expenses/components/Charts/FamilySharedAllTime';
+import FamilyIncomeShare from '@features/expenses/components/Charts/FamilyIncomeShare';
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { Loader } from '@shared/components/Common';
@@ -160,6 +161,7 @@ const Charts = () => {
             <div className="p-0 border-none bg-transparent flex flex-col gap-8">
               <FamilySharedYear />
               <FamilySharedAllTime />
+              <FamilyIncomeShare />
             </div>
           )}
         </div>

@@ -10,3 +10,6 @@ export { default as SavingsHistory } from './SavingsHistory';
 export { default as FamilySharedSpend } from './FamilySharedSpend';
 export { default as FamilySharedYear } from './FamilySharedYear';
 export { default as FamilySharedAllTime } from './FamilySharedAllTime';
+export { default as FamilyIncomeShare } from './FamilyIncomeShare';
+export { default as FamilyGoalsProgress } from './FamilyGoalsProgress';
+export { default as FamilyTotalsBanner } from './FamilyTotalsBanner';

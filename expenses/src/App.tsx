@@ -6,6 +6,8 @@ import { ErrorBoundary } from '@shared/components/Common';
 import React from 'react';
 import { router } from '@router';
 import { logger } from '@shared/utils/logger';
+import FamilyInviteWatcher from './features/profile/FamilyInviteWatcher';
+import FamilyActivityWatcher from './features/profile/FamilyActivityWatcher';
 
 const App: React.FC = () => {
   return (
@@ -22,6 +24,8 @@ const App: React.FC = () => {
         <ThemeProvider>
           <LocalizationProvider>
             <NotificationProvider>
+              <FamilyInviteWatcher />
+              <FamilyActivityWatcher />
               <RouterProvider router={router} />
             </NotificationProvider>
           </LocalizationProvider>

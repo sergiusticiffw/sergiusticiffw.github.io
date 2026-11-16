@@ -232,6 +232,48 @@ export function createDrupalDataProvider(): DataProvider {
         error: new Error('Family accounts require Supabase'),
       };
     },
+    async transferOwnership() {
+      return {
+        success: false,
+        error: new Error('Family accounts require Supabase'),
+      };
+    },
+    async deleteHousehold() {
+      return {
+        success: false,
+        error: new Error('Family accounts require Supabase'),
+      };
+    },
+    async setMemberRole() {
+      return {
+        success: false,
+        error: new Error('Family accounts require Supabase'),
+      };
+    },
+    async setMyDisplayName() {
+      return {
+        success: false,
+        error: new Error('Family accounts require Supabase'),
+      };
+    },
+    async upsertCategoryGoal() {
+      return {
+        success: false,
+        error: new Error('Family accounts require Supabase'),
+      };
+    },
+    async deleteCategoryGoal() {
+      return {
+        success: false,
+        error: new Error('Family accounts require Supabase'),
+      };
+    },
+    async listHouseholdActivity() {
+      return {
+        success: false,
+        error: new Error('Family accounts require Supabase'),
+      };
+    },
     async acceptPendingInvites() {
       return { success: true, data: { accepted: 0 } };
     },
@@ -242,6 +284,18 @@ export function createDrupalDataProvider(): DataProvider {
       };
     },
     async listFamilyCategoryMemberTotals() {
+      return {
+        success: false,
+        error: new Error('Family accounts require Supabase'),
+      };
+    },
+    async listFamilyIncomeTotals() {
+      return {
+        success: false,
+        error: new Error('Family accounts require Supabase'),
+      };
+    },
+    async listFamilyIncomeMemberTotals() {
       return {
         success: false,
         error: new Error('Family accounts require Supabase'),

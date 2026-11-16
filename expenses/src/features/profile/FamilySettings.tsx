@@ -8,6 +8,9 @@ import {
   FiEdit2,
   FiUserPlus,
   FiGrid,
+  FiShield,
+  FiTarget,
+  FiActivity,
 } from 'react-icons/fi';
 import { useLocalization } from '@shared/context/localization';
 import { useNotification } from '@shared/context/notification';
@@ -20,15 +23,27 @@ import { isDesktopLayout } from '@shared/utils/isDesktopLayout';
 import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
 import { getDataProviderKind, type Household } from '../../data';
 import { useAuthState } from '@shared/context/context';
+import { clearFamilySharedTotalsCache } from '../expenses/components/Charts/useFamilySharedTotals';
 
 const categoryOptions = categories.filter((c) => c.value);
 
 type ConfirmAction =
   | { type: 'leave' }
+  | { type: 'delete' }
+  | { type: 'transfer'; userId: string; label: string }
   | { type: 'remove'; userId: string; label: string }
   | null;
 
 const NAME_SWIPE_ID = 'family-name';
+
+const activityLabel = (
+  t: (key: string) => string,
+  eventType: string
+): string => {
+  const key = `family.activity.${eventType}`;
+  const translated = t(key);
+  return translated === key ? t('family.activity.unknown') : translated;
+};
 
 const FamilySettings: React.FC = () => {
   const { t } = useLocalization();
@@ -44,10 +59,14 @@ const FamilySettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState('Family');
+  const [displayName, setDisplayName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteOpen, setInviteOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [goalsOpen, setGoalsOpen] = useState(false);
+  const [goalCategory, setGoalCategory] = useState('');
+  const [goalLimit, setGoalLimit] = useState('');
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
   const [confirm, setConfirm] = useState<ConfirmAction>(null);
   const [open, setOpen] = useState(false);
@@ -74,6 +93,8 @@ const FamilySettings: React.FC = () => {
       if (result.data) {
         setName(result.data.name);
         setSelectedCats(result.data.shared_categories);
+        const me = result.data.members.find((m) => m.user_id === myUid);
+        setDisplayName(me?.display_name || '');
         setRenameOpen(false);
       }
     } else if (result.error) {
@@ -92,6 +113,7 @@ const FamilySettings: React.FC = () => {
 
   const isManager =
     household?.my_role === 'owner' || household?.my_role === 'admin';
+  const isOwner = household?.my_role === 'owner';
 
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
@@ -113,6 +135,7 @@ const FamilySettings: React.FC = () => {
         );
         return;
       }
+      clearFamilySharedTotalsCache();
       setHousehold(result.data!);
       setSelectedCats(result.data!.shared_categories);
       showNotification(t('family.created'), notificationType.SUCCESS);
@@ -139,6 +162,21 @@ const FamilySettings: React.FC = () => {
       showNotification(t('family.saved'), notificationType.SUCCESS);
     });
 
+  const onSaveDisplayName = () =>
+    run(async () => {
+      if (!api) return;
+      const result = await api.setMyDisplayName(displayName.trim());
+      if (!result.success) {
+        showNotification(
+          result.error?.message || t('family.error'),
+          notificationType.ERROR
+        );
+        return;
+      }
+      setHousehold(result.data!);
+      showNotification(t('family.displayNameSaved'), notificationType.SUCCESS);
+    });
+
   const onSaveCategories = () =>
     run(async () => {
       if (!api) return;
@@ -150,6 +188,7 @@ const FamilySettings: React.FC = () => {
         );
         return;
       }
+      clearFamilySharedTotalsCache();
       setHousehold(result.data!);
       setCategoriesOpen(false);
       showNotification(t('family.categoriesSaved'), notificationType.SUCCESS);
@@ -201,6 +240,7 @@ const FamilySettings: React.FC = () => {
         );
         return;
       }
+      clearFamilySharedTotalsCache();
       setConfirm(null);
       setHousehold(result.data!);
       showNotification(t('family.memberRemoved'), notificationType.SUCCESS);
@@ -217,14 +257,104 @@ const FamilySettings: React.FC = () => {
         );
         return;
       }
+      clearFamilySharedTotalsCache();
       setConfirm(null);
       setHousehold(null);
       showNotification(t('family.left'), notificationType.SUCCESS);
     });
 
+  const onTransfer = (uid: string) =>
+    run(async () => {
+      if (!api) return;
+      const result = await api.transferOwnership(uid);
+      if (!result.success) {
+        showNotification(
+          result.error?.message || t('family.error'),
+          notificationType.ERROR
+        );
+        return;
+      }
+      clearFamilySharedTotalsCache();
+      setConfirm(null);
+      setHousehold(result.data!);
+      showNotification(t('family.ownershipTransferred'), notificationType.SUCCESS);
+    });
+
+  const onDeleteHousehold = () =>
+    run(async () => {
+      if (!api) return;
+      const result = await api.deleteHousehold();
+      if (!result.success) {
+        showNotification(
+          result.error?.message || t('family.error'),
+          notificationType.ERROR
+        );
+        return;
+      }
+      clearFamilySharedTotalsCache();
+      setConfirm(null);
+      setHousehold(null);
+      showNotification(t('family.deleted'), notificationType.SUCCESS);
+    });
+
+  const onToggleRole = (uid: string, current: string) =>
+    run(async () => {
+      if (!api || !isOwner) return;
+      const next = current === 'admin' ? 'member' : 'admin';
+      const result = await api.setMemberRole(uid, next);
+      if (!result.success) {
+        showNotification(
+          result.error?.message || t('family.error'),
+          notificationType.ERROR
+        );
+        return;
+      }
+      setHousehold(result.data!);
+      showNotification(t('family.roleUpdated'), notificationType.SUCCESS);
+    });
+
+  const onSaveGoal = () =>
+    run(async () => {
+      if (!api || !goalCategory.trim()) return;
+      const limit = Number(goalLimit);
+      if (!Number.isFinite(limit) || limit <= 0) {
+        showNotification(t('family.goalInvalid'), notificationType.ERROR);
+        return;
+      }
+      const result = await api.upsertCategoryGoal(goalCategory, limit);
+      if (!result.success) {
+        showNotification(
+          result.error?.message || t('family.error'),
+          notificationType.ERROR
+        );
+        return;
+      }
+      setHousehold(result.data!);
+      setGoalCategory('');
+      setGoalLimit('');
+      showNotification(t('family.goalSaved'), notificationType.SUCCESS);
+    });
+
+  const onDeleteGoal = (categoryId: string) =>
+    run(async () => {
+      if (!api) return;
+      const result = await api.deleteCategoryGoal(categoryId);
+      if (!result.success) {
+        showNotification(
+          result.error?.message || t('family.error'),
+          notificationType.ERROR
+        );
+        return;
+      }
+      setHousehold(result.data!);
+      showNotification(t('family.goalDeleted'), notificationType.SUCCESS);
+    });
+
   const onConfirmAction = () => {
     if (!confirm) return;
     if (confirm.type === 'leave') onLeave();
+    else if (confirm.type === 'delete') onDeleteHousehold();
+    else if (confirm.type === 'transfer') onTransfer(confirm.userId);
     else onRemove(confirm.userId);
   };
 
@@ -250,7 +380,7 @@ const FamilySettings: React.FC = () => {
       }
       if (isManager && m.role !== 'owner' && userId !== myUid) {
         const label =
-          m.email || m.name || m.user_id.slice(0, 8) + '…';
+          m.display_name || m.email || m.name || m.user_id.slice(0, 8) + '…';
         setConfirm({ type: 'remove', userId, label });
       }
       return;
@@ -266,6 +396,39 @@ const FamilySettings: React.FC = () => {
     if (isManager && role !== 'owner' && userId !== myUid) return true;
     return false;
   };
+
+  const confirmTitle =
+    confirm?.type === 'leave'
+      ? t('family.leaveConfirmTitle')
+      : confirm?.type === 'delete'
+        ? t('family.deleteConfirmTitle')
+        : confirm?.type === 'transfer'
+          ? t('family.transferConfirmTitle')
+          : t('family.removeConfirmTitle');
+
+  const confirmMessage =
+    confirm?.type === 'leave'
+      ? t('family.leaveConfirmMessage')
+      : confirm?.type === 'delete'
+        ? t('family.deleteConfirmMessage')
+        : confirm?.type === 'transfer'
+          ? t('family.transferConfirmMessage').replace(
+              '{member}',
+              confirm.label
+            )
+          : t('family.removeConfirmMessage').replace(
+              '{member}',
+              confirm?.type === 'remove' ? confirm.label : ''
+            );
+
+  const confirmLabel =
+    confirm?.type === 'leave'
+      ? t('family.leave')
+      : confirm?.type === 'delete'
+        ? t('family.delete')
+        : confirm?.type === 'transfer'
+          ? t('family.transferOwnership')
+          : t('family.removeMember');
 
   return (
     <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden md:rounded-[10px] transition-colors active:border-white/10">
@@ -380,6 +543,29 @@ const FamilySettings: React.FC = () => {
                   </p>
                 )}
 
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-app-muted">
+                    {t('family.displayName')}
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder={t('family.displayNamePlaceholder')}
+                      className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-app-primary outline-none focus:border-[var(--color-app-accent)]"
+                    />
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={onSaveDisplayName}
+                      className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-sm text-app-secondary hover:bg-white/[0.05] disabled:opacity-50"
+                    >
+                      {t('common.save')}
+                    </button>
+                  </div>
+                </div>
+
                 <div>
                   <h4 className="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-app-muted">
                     {t('family.members')}
@@ -389,7 +575,10 @@ const FamilySettings: React.FC = () => {
                       const label =
                         m.user_id === myUid
                           ? t('family.you')
-                          : m.email || m.name || m.user_id.slice(0, 8) + '…';
+                          : m.display_name ||
+                            m.email ||
+                            m.name ||
+                            m.user_id.slice(0, 8) + '…';
                       const rowId = `member-${m.user_id}`;
                       const allowDelete = canDeleteMember(m.user_id, m.role);
                       const isThisSwiped = swipedItemId === rowId;
@@ -450,26 +639,66 @@ const FamilySettings: React.FC = () => {
                               {label}{' '}
                               <span className="text-app-muted">({m.role})</span>
                             </span>
-                            {isDesktop &&
-                              isManager &&
-                              m.role !== 'owner' &&
-                              m.user_id !== myUid && (
-                                <button
-                                  type="button"
-                                  disabled={busy}
-                                  aria-label={t('family.removeMember')}
-                                  onClick={() =>
-                                    setConfirm({
-                                      type: 'remove',
-                                      userId: m.user_id,
-                                      label,
-                                    })
-                                  }
-                                  className="shrink-0 p-1.5 text-red-400"
-                                >
-                                  <FiUserMinus />
-                                </button>
-                              )}
+                            <span className="flex shrink-0 items-center gap-1">
+                              {isDesktop &&
+                                isOwner &&
+                                m.role !== 'owner' &&
+                                m.user_id !== myUid && (
+                                  <button
+                                    type="button"
+                                    disabled={busy}
+                                    aria-label={t('family.toggleRole')}
+                                    title={t('family.toggleRole')}
+                                    onClick={() =>
+                                      onToggleRole(m.user_id, m.role)
+                                    }
+                                    className="p-1.5 text-[var(--color-app-accent)]"
+                                  >
+                                    <FiShield />
+                                  </button>
+                                )}
+                              {isDesktop &&
+                                isOwner &&
+                                m.role !== 'owner' &&
+                                m.user_id !== myUid && (
+                                  <button
+                                    type="button"
+                                    disabled={busy}
+                                    aria-label={t('family.transferOwnership')}
+                                    title={t('family.transferOwnership')}
+                                    onClick={() =>
+                                      setConfirm({
+                                        type: 'transfer',
+                                        userId: m.user_id,
+                                        label,
+                                      })
+                                    }
+                                    className="p-1.5 text-app-muted hover:text-app-primary"
+                                  >
+                                    <FiUsers />
+                                  </button>
+                                )}
+                              {isDesktop &&
+                                isManager &&
+                                m.role !== 'owner' &&
+                                m.user_id !== myUid && (
+                                  <button
+                                    type="button"
+                                    disabled={busy}
+                                    aria-label={t('family.removeMember')}
+                                    onClick={() =>
+                                      setConfirm({
+                                        type: 'remove',
+                                        userId: m.user_id,
+                                        label,
+                                      })
+                                    }
+                                    className="p-1.5 text-red-400"
+                                  >
+                                    <FiUserMinus />
+                                  </button>
+                                )}
+                            </span>
                           </div>
                         </li>
                       );
@@ -478,23 +707,21 @@ const FamilySettings: React.FC = () => {
                 </div>
 
                 {isManager && (
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => setInviteOpen(true)}
-                      className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm font-medium text-app-secondary hover:bg-white/[0.05]"
-                    >
-                      <span className="flex items-center gap-2">
-                        <FiUserPlus className="text-[var(--color-app-accent)]" />
-                        {t('family.invite')}
+                  <button
+                    type="button"
+                    onClick={() => setInviteOpen(true)}
+                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm font-medium text-app-secondary hover:bg-white/[0.05]"
+                  >
+                    <span className="flex items-center gap-2">
+                      <FiUserPlus className="text-[var(--color-app-accent)]" />
+                      {t('family.invite')}
+                    </span>
+                    {household.invites.length > 0 && (
+                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-app-muted">
+                        {household.invites.length}
                       </span>
-                      {household.invites.length > 0 && (
-                        <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-app-muted">
-                          {household.invites.length}
-                        </span>
-                      )}
-                    </button>
-                  </div>
+                    )}
+                  </button>
                 )}
 
                 <button
@@ -511,6 +738,47 @@ const FamilySettings: React.FC = () => {
                   </span>
                 </button>
 
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGoalCategory(household.shared_categories[0] || '');
+                    setGoalsOpen(true);
+                  }}
+                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm font-medium text-app-secondary hover:bg-white/[0.05]"
+                >
+                  <span className="flex items-center gap-2">
+                    <FiTarget className="text-[var(--color-app-accent)]" />
+                    {t('family.goals')}
+                  </span>
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-app-muted">
+                    {(household.goals || []).length}
+                  </span>
+                </button>
+
+                {(household.activity || []).length > 0 && (
+                  <div>
+                    <h4 className="m-0 mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-app-muted">
+                      <FiActivity size={12} />
+                      {t('family.activityTitle')}
+                    </h4>
+                    <ul className="m-0 flex max-h-40 list-none flex-col gap-1.5 overflow-y-auto p-0">
+                      {(household.activity || []).slice(0, 12).map((item) => (
+                        <li
+                          key={item.id}
+                          className="rounded-lg bg-white/[0.03] px-3 py-2 text-xs text-app-muted"
+                        >
+                          <span className="text-app-secondary">
+                            {activityLabel(t, String(item.event_type))}
+                          </span>
+                          <span className="ml-2 opacity-70">
+                            {new Date(item.created_at).toLocaleString()}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 {household.my_role !== 'owner' && isDesktop && (
                   <button
                     type="button"
@@ -520,6 +788,22 @@ const FamilySettings: React.FC = () => {
                   >
                     {t('family.leave')}
                   </button>
+                )}
+
+                {isOwner && (
+                  <div className="flex flex-col gap-2">
+                    <p className="m-0 text-xs text-app-muted">
+                      {t('family.ownerLeaveHint')}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setConfirm({ type: 'delete' })}
+                      className="rounded-lg border border-red-500/30 px-3 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50"
+                    >
+                      {t('family.delete')}
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -626,6 +910,89 @@ const FamilySettings: React.FC = () => {
       </VaulDrawer>
 
       <VaulDrawer
+        show={goalsOpen}
+        onClose={(e) => {
+          e.preventDefault();
+          if (busy) return;
+          setGoalsOpen(false);
+        }}
+        title={t('family.goals')}
+        footer={
+          isManager ? (
+            <button
+              type="button"
+              disabled={busy || !goalCategory || !goalLimit.trim()}
+              onClick={onSaveGoal}
+              className={BTN_SUBMIT_CLASS}
+            >
+              {t('family.goalSave')}
+            </button>
+          ) : undefined
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <p className="m-0 text-sm text-app-muted">{t('family.goalsHint')}</p>
+          <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+            {(household?.goals || []).length === 0 ? (
+              <li className="text-sm text-app-muted">{t('family.goalsEmpty')}</li>
+            ) : (
+              (household?.goals || []).map((g) => {
+                const label =
+                  categoryOptions.find((c) => c.value === g.category_id)
+                    ?.label || g.category_id;
+                return (
+                  <li
+                    key={g.category_id}
+                    className="flex items-center justify-between gap-2 rounded-lg bg-white/[0.03] px-3 py-2 text-sm"
+                  >
+                    <span className="text-app-primary">
+                      {label}: {g.monthly_limit}
+                    </span>
+                    {isManager && (
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => onDeleteGoal(g.category_id)}
+                        className="p-1 text-red-400"
+                        aria-label={t('family.goalDelete')}
+                      >
+                        <FiTrash2 />
+                      </button>
+                    )}
+                  </li>
+                );
+              })
+            )}
+          </ul>
+          {isManager && (
+            <div className="flex flex-col gap-2">
+              <select
+                value={goalCategory}
+                onChange={(e) => setGoalCategory(e.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-app-primary outline-none"
+              >
+                <option value="">{t('family.goalPickCategory')}</option>
+                {(household?.shared_categories || []).map((id) => (
+                  <option key={id} value={id}>
+                    {categoryOptions.find((c) => c.value === id)?.label || id}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={goalLimit}
+                onChange={(e) => setGoalLimit(e.target.value)}
+                placeholder={t('family.goalLimitPlaceholder')}
+                className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-app-primary outline-none focus:border-[var(--color-app-accent)]"
+              />
+            </div>
+          )}
+        </div>
+      </VaulDrawer>
+
+      <VaulDrawer
         show={inviteOpen}
         onClose={(e) => {
           e.preventDefault();
@@ -714,7 +1081,7 @@ const FamilySettings: React.FC = () => {
                         }
                       >
                         <span>
-                          {inv.email} · {inv.status}
+                          {inv.email} · {t('family.inviteWaiting')}
                         </span>
                         {isDesktop && (
                           <button
@@ -742,24 +1109,9 @@ const FamilySettings: React.FC = () => {
         onClose={() => !busy && setConfirm(null)}
         onConfirm={onConfirmAction}
         isSubmitting={busy}
-        title={
-          confirm?.type === 'leave'
-            ? t('family.leaveConfirmTitle')
-            : t('family.removeConfirmTitle')
-        }
-        message={
-          confirm?.type === 'leave'
-            ? t('family.leaveConfirmMessage')
-            : t('family.removeConfirmMessage').replace(
-                '{member}',
-                confirm?.type === 'remove' ? confirm.label : ''
-              )
-        }
-        confirmLabel={
-          confirm?.type === 'leave'
-            ? t('family.leave')
-            : t('family.removeMember')
-        }
+        title={confirmTitle}
+        message={confirmMessage}
+        confirmLabel={confirmLabel}
       />
     </div>
   );

@@ -705,6 +705,111 @@ export function createSupabaseDataProvider(): DataProvider {
       }
     },
 
+    async transferOwnership(newOwnerUserId: string) {
+      if (!isOnline()) return failOffline();
+      try {
+        const { supabase } = await ensureAuth();
+        const reload = () => householdApi.loadHousehold(supabase, fetchAllRows);
+        return householdApi.transferOwnership(
+          supabase,
+          newOwnerUserId,
+          reload
+        );
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
+
+    async deleteHousehold() {
+      if (!isOnline()) return failOffline();
+      try {
+        const { supabase } = await ensureAuth();
+        return householdApi.deleteHousehold(supabase);
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
+
+    async setMemberRole(userId, role) {
+      if (!isOnline()) return failOffline();
+      try {
+        const { supabase } = await ensureAuth();
+        const reload = () => householdApi.loadHousehold(supabase, fetchAllRows);
+        return householdApi.setMemberRole(supabase, userId, role, reload);
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
+
+    async setMyDisplayName(name: string) {
+      if (!isOnline()) return failOffline();
+      try {
+        const { supabase } = await ensureAuth();
+        const reload = () => householdApi.loadHousehold(supabase, fetchAllRows);
+        return householdApi.setMyDisplayName(supabase, name, reload);
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
+
+    async upsertCategoryGoal(categoryId: string, monthlyLimit: number) {
+      if (!isOnline()) return failOffline();
+      try {
+        const { supabase } = await ensureAuth();
+        const reload = () => householdApi.loadHousehold(supabase, fetchAllRows);
+        return householdApi.upsertCategoryGoal(
+          supabase,
+          categoryId,
+          monthlyLimit,
+          reload
+        );
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
+
+    async deleteCategoryGoal(categoryId: string) {
+      if (!isOnline()) return failOffline();
+      try {
+        const { supabase } = await ensureAuth();
+        const reload = () => householdApi.loadHousehold(supabase, fetchAllRows);
+        return householdApi.deleteCategoryGoal(supabase, categoryId, reload);
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
+
+    async listHouseholdActivity() {
+      if (!isOnline()) return failOffline();
+      try {
+        const { supabase } = await ensureAuth();
+        return householdApi.listHouseholdActivity(supabase);
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
+
     async acceptPendingInvites() {
       if (!isOnline()) return failOffline();
       try {
@@ -736,6 +841,32 @@ export function createSupabaseDataProvider(): DataProvider {
       try {
         const { supabase } = await ensureAuth();
         return householdApi.listFamilyCategoryMemberTotals(supabase);
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
+
+    async listFamilyIncomeTotals() {
+      if (!isOnline()) return failOffline();
+      try {
+        const { supabase } = await ensureAuth();
+        return householdApi.listFamilyIncomeTotals(supabase);
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
+
+    async listFamilyIncomeMemberTotals() {
+      if (!isOnline()) return failOffline();
+      try {
+        const { supabase } = await ensureAuth();
+        return householdApi.listFamilyIncomeMemberTotals(supabase);
       } catch (error) {
         return {
           success: false,

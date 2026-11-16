@@ -20,6 +20,8 @@ import { HeroSpendCard } from '@shared/components/HeroSpendCard';
 import BudgetRings from '@features/expenses/components/budgets/BudgetRings';
 import CalendarView from '@features/expenses/components/CalendarView';
 import FamilySharedSpend from '@features/expenses/components/Charts/FamilySharedSpend';
+import FamilyIncomeShare from '@features/expenses/components/Charts/FamilyIncomeShare';
+import FamilyGoalsProgress from '@features/expenses/components/Charts/FamilyGoalsProgress';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import TransactionForm from '@features/expenses/components/TransactionForm';
 import {
@@ -648,6 +650,8 @@ const NewHome = () => {
                     monthLabel={currentMonth}
                     monthNavigation={false}
                   />
+                  <FamilyGoalsProgress monthLabel={currentMonth} />
+                  <FamilyIncomeShare monthLabel={currentMonth} />
                 </div>
               </div>
             )}

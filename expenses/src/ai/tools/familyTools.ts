@@ -46,13 +46,14 @@ let cache: { uid: string; at: number; snapshot: FamilyAiSnapshot | null } | null
 
 const memberLabel = (m: HouseholdMember, myUid: string): FamilyAiMember => {
   const isYou = m.user_id === myUid;
+  const display = (m.display_name || '').trim();
   const email = (m.email || '').trim();
   const name = (m.name || '').trim();
   return {
     userId: m.user_id,
     label: isYou
       ? 'You'
-      : email || name || `${m.user_id.slice(0, 8)}…`,
+      : display || email || name || `${m.user_id.slice(0, 8)}…`,
     role: m.role,
     isYou,
   };

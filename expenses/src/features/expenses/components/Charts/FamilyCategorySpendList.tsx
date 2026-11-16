@@ -38,6 +38,8 @@ const memberLabel = (
     return { label: youLabel, isYou: true };
   }
   const member = members.find((m) => m.user_id === userId);
+  const display = (member?.display_name || '').trim();
+  if (display) return { label: display };
   const email = (member?.email || '').trim();
   if (email) return { label: email };
   const name = (member?.name || '').trim();

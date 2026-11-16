@@ -3,11 +3,43 @@ import type {
   FamilyCategoryMemberTotal,
   FamilyCategoryTotal,
   Household,
+  HouseholdActivityItem,
+  HouseholdCategoryGoal,
   HouseholdInvite,
   HouseholdMember,
   HouseholdRole,
   ProviderResult,
 } from '../../types';
+
+const mapAggregateRows = (
+  rows: Array<{
+    category_id: string;
+    month: string;
+    total: number | string;
+  }>
+): FamilyCategoryTotal[] =>
+  rows.map((row) => ({
+    category_id: String(row.category_id),
+    month: String(row.month),
+    total: Number(row.total) || 0,
+  }));
+
+const mapMemberAggregateRows = (
+  rows: Array<{
+    category_id: string;
+    month: string;
+    user_id: string;
+    total: number | string;
+  }>
+): FamilyCategoryMemberTotal[] =>
+  rows
+    .map((row) => ({
+      category_id: String(row.category_id),
+      month: String(row.month),
+      user_id: String(row.user_id),
+      total: Number(row.total) || 0,
+    }))
+    .filter((row) => row.total > 0 && row.month.length === 7);
 
 const unsupported = <T,>(msg = 'Households require Supabase'): ProviderResult<T> => ({
   success: false,
@@ -58,6 +90,8 @@ export const loadHousehold = async (
     { data: membersRpc, error: membersRpcErr },
     { data: invites },
     { data: cats },
+    goalsRes,
+    activityRes,
   ] = await Promise.all([
     supabase.rpc('household_members_with_email', {
       p_household_id: hid,
@@ -72,7 +106,21 @@ export const loadHousehold = async (
       .from('household_shared_categories')
       .select('category_id')
       .eq('household_id', hid),
+    supabase
+      .from('household_category_goals')
+      .select('category_id, monthly_limit, updated_at')
+      .eq('household_id', hid),
+    supabase
+      .from('household_activity')
+      .select('id, event_type, actor_id, payload, created_at')
+      .eq('household_id', hid)
+      .order('created_at', { ascending: false })
+      .limit(30),
   ]);
+
+  // Goals/activity tables may be missing until hardening migration is applied.
+  const goals = goalsRes.error ? null : goalsRes.data;
+  const activity = activityRes.error ? null : activityRes.data;
 
   // Fallback if RPC not migrated yet.
   let memberRows: Array<{
@@ -80,17 +128,27 @@ export const loadHousehold = async (
     role: string;
     joined_at?: string;
     email?: string | null;
+    display_name?: string | null;
   }> = Array.isArray(membersRpc) ? membersRpc : [];
   if (membersRpcErr || !memberRows.length) {
-    const { data: members } = await supabase
+    let membersQuery = await supabase
       .from('household_members')
-      .select('user_id, role, joined_at')
+      .select('user_id, role, joined_at, display_name')
       .eq('household_id', hid);
-    memberRows = (members || []).map((m) => ({
+    if (membersQuery.error) {
+      membersQuery = await supabase
+        .from('household_members')
+        .select('user_id, role, joined_at')
+        .eq('household_id', hid);
+    }
+    memberRows = (membersQuery.data || []).map((m) => ({
       user_id: String(m.user_id),
       role: String(m.role),
       joined_at: m.joined_at,
       email: null,
+      display_name: (m as { display_name?: string }).display_name
+        ? String((m as { display_name?: string }).display_name)
+        : null,
     }));
   }
 
@@ -105,6 +163,9 @@ export const loadHousehold = async (
         role: m.role as HouseholdRole,
         joined_at: m.joined_at,
         email: m.email ? String(m.email).trim().toLowerCase() : undefined,
+        display_name: m.display_name
+          ? String(m.display_name).trim()
+          : undefined,
       })
     ),
     invites: (invites || []).map(
@@ -118,6 +179,22 @@ export const loadHousehold = async (
       })
     ),
     shared_categories: (cats || []).map((c) => String(c.category_id)),
+    goals: (goals || []).map(
+      (g): HouseholdCategoryGoal => ({
+        category_id: String(g.category_id),
+        monthly_limit: Number(g.monthly_limit) || 0,
+        updated_at: g.updated_at,
+      })
+    ),
+    activity: (activity || []).map(
+      (a): HouseholdActivityItem => ({
+        id: String(a.id),
+        event_type: String(a.event_type),
+        actor_id: a.actor_id ? String(a.actor_id) : null,
+        payload: (a.payload as Record<string, unknown>) || {},
+        created_at: String(a.created_at),
+      })
+    ),
   };
 
   return { success: true, data: household };
@@ -196,19 +273,29 @@ export const updateSharedCategories = async (
       error: current.error || new Error('No household'),
     };
   }
-  const hid = current.data.id;
-  const { error: delErr } = await supabase
-    .from('household_shared_categories')
-    .delete()
-    .eq('household_id', hid);
-  if (delErr) return { success: false, error: new Error(delErr.message) };
-
   const unique = [...new Set(categoryIds.map(String).filter(Boolean))];
-  if (unique.length) {
-    const { error: insErr } = await supabase
+  const { error: rpcErr } = await supabase.rpc(
+    'replace_household_shared_categories',
+    { p_category_ids: unique }
+  );
+
+  // Fallback for environments that have not applied the hardening migration yet.
+  if (rpcErr) {
+    const hid = current.data.id;
+    const { error: delErr } = await supabase
       .from('household_shared_categories')
-      .insert(unique.map((category_id) => ({ household_id: hid, category_id })));
-    if (insErr) return { success: false, error: new Error(insErr.message) };
+      .delete()
+      .eq('household_id', hid);
+    if (delErr) return { success: false, error: new Error(delErr.message) };
+
+    if (unique.length) {
+      const { error: insErr } = await supabase
+        .from('household_shared_categories')
+        .insert(
+          unique.map((category_id) => ({ household_id: hid, category_id }))
+        );
+      if (insErr) return { success: false, error: new Error(insErr.message) };
+    }
   }
 
   const loaded = await reload();
@@ -282,10 +369,16 @@ export const removeMember = async (
       error: current.error || new Error('No household'),
     };
   }
+  const hid = current.data.id;
+  await supabase.rpc('log_household_activity', {
+    p_household_id: hid,
+    p_event_type: 'member_removed',
+    p_payload: { user_id: userId },
+  });
   const { error } = await supabase
     .from('household_members')
     .delete()
-    .eq('household_id', current.data.id)
+    .eq('household_id', hid)
     .eq('user_id', userId);
   if (error) return { success: false, error: new Error(error.message) };
   const loaded = await reload();
@@ -300,12 +393,147 @@ export const leaveHousehold = async (
 ): Promise<ProviderResult<void>> => {
   const uid = (await supabase.auth.getUser()).data.user?.id;
   if (!uid) return unsupported('Not signed in');
+  const { data: membership } = await supabase
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', uid)
+    .maybeSingle();
+  const hid = membership?.household_id
+    ? String(membership.household_id)
+    : null;
+  if (hid) {
+    await supabase.rpc('log_household_activity', {
+      p_household_id: hid,
+      p_event_type: 'member_left',
+      p_payload: { user_id: uid },
+    });
+  }
   const { error } = await supabase
     .from('household_members')
     .delete()
     .eq('user_id', uid);
   if (error) return { success: false, error: new Error(error.message) };
   return { success: true };
+};
+
+export const transferOwnership = async (
+  supabase: SupabaseClient,
+  newOwnerUserId: string,
+  reload: () => Promise<ProviderResult<Household | null>>
+): Promise<ProviderResult<Household>> => {
+  const { error } = await supabase.rpc('transfer_household_ownership', {
+    p_new_owner: newOwnerUserId,
+  });
+  if (error) return { success: false, error: new Error(error.message) };
+  const loaded = await reload();
+  if (!loaded.success || !loaded.data) {
+    return { success: false, error: loaded.error || new Error('Reload failed') };
+  }
+  return { success: true, data: loaded.data };
+};
+
+export const deleteHousehold = async (
+  supabase: SupabaseClient
+): Promise<ProviderResult<void>> => {
+  const { error } = await supabase.rpc('delete_my_household');
+  if (error) return { success: false, error: new Error(error.message) };
+  return { success: true };
+};
+
+export const setMemberRole = async (
+  supabase: SupabaseClient,
+  userId: string,
+  role: Extract<HouseholdRole, 'admin' | 'member'>,
+  reload: () => Promise<ProviderResult<Household | null>>
+): Promise<ProviderResult<Household>> => {
+  const { error } = await supabase.rpc('set_household_member_role', {
+    p_user_id: userId,
+    p_role: role,
+  });
+  if (error) return { success: false, error: new Error(error.message) };
+  const loaded = await reload();
+  if (!loaded.success || !loaded.data) {
+    return { success: false, error: loaded.error || new Error('Reload failed') };
+  }
+  return { success: true, data: loaded.data };
+};
+
+export const setMyDisplayName = async (
+  supabase: SupabaseClient,
+  name: string,
+  reload: () => Promise<ProviderResult<Household | null>>
+): Promise<ProviderResult<Household>> => {
+  const { error } = await supabase.rpc('set_my_household_display_name', {
+    p_name: name,
+  });
+  if (error) return { success: false, error: new Error(error.message) };
+  const loaded = await reload();
+  if (!loaded.success || !loaded.data) {
+    return { success: false, error: loaded.error || new Error('Reload failed') };
+  }
+  return { success: true, data: loaded.data };
+};
+
+export const upsertCategoryGoal = async (
+  supabase: SupabaseClient,
+  categoryId: string,
+  monthlyLimit: number,
+  reload: () => Promise<ProviderResult<Household | null>>
+): Promise<ProviderResult<Household>> => {
+  const { error } = await supabase.rpc('upsert_household_category_goal', {
+    p_category_id: categoryId,
+    p_monthly_limit: monthlyLimit,
+  });
+  if (error) return { success: false, error: new Error(error.message) };
+  const loaded = await reload();
+  if (!loaded.success || !loaded.data) {
+    return { success: false, error: loaded.error || new Error('Reload failed') };
+  }
+  return { success: true, data: loaded.data };
+};
+
+export const deleteCategoryGoal = async (
+  supabase: SupabaseClient,
+  categoryId: string,
+  reload: () => Promise<ProviderResult<Household | null>>
+): Promise<ProviderResult<Household>> => {
+  const { error } = await supabase.rpc('delete_household_category_goal', {
+    p_category_id: categoryId,
+  });
+  if (error) return { success: false, error: new Error(error.message) };
+  const loaded = await reload();
+  if (!loaded.success || !loaded.data) {
+    return { success: false, error: loaded.error || new Error('Reload failed') };
+  }
+  return { success: true, data: loaded.data };
+};
+
+export const listHouseholdActivity = async (
+  supabase: SupabaseClient
+): Promise<ProviderResult<HouseholdActivityItem[]>> => {
+  const hid = (
+    await supabase.rpc('my_household_id')
+  ).data as string | null;
+  if (!hid) return { success: true, data: [] };
+  const { data, error } = await supabase
+    .from('household_activity')
+    .select('id, event_type, actor_id, payload, created_at')
+    .eq('household_id', hid)
+    .order('created_at', { ascending: false })
+    .limit(30);
+  if (error) return { success: false, error: new Error(error.message) };
+  return {
+    success: true,
+    data: (data || []).map(
+      (a): HouseholdActivityItem => ({
+        id: String(a.id),
+        event_type: String(a.event_type),
+        actor_id: a.actor_id ? String(a.actor_id) : null,
+        payload: (a.payload as Record<string, unknown>) || {},
+        created_at: String(a.created_at),
+      })
+    ),
+  };
 };
 
 export const acceptPendingInvites = async (
@@ -330,20 +558,15 @@ export const listFamilyCategoryTotals = async (
 ): Promise<ProviderResult<FamilyCategoryTotal[]>> => {
   const { data, error } = await supabase.rpc('family_shared_category_totals');
   if (error) return { success: false, error: new Error(error.message) };
-
-  const rows = (data || []) as Array<{
-    category_id: string;
-    month: string;
-    total: number | string;
-  }>;
-
   return {
     success: true,
-    data: rows.map((row) => ({
-      category_id: String(row.category_id),
-      month: String(row.month),
-      total: Number(row.total) || 0,
-    })),
+    data: mapAggregateRows(
+      (data || []) as Array<{
+        category_id: string;
+        month: string;
+        total: number | string;
+      }>
+    ),
   };
 };
 
@@ -354,23 +577,52 @@ export const listFamilyCategoryMemberTotals = async (
     'family_shared_category_member_totals'
   );
   if (error) return { success: false, error: new Error(error.message) };
-
-  const rows = (data || []) as Array<{
-    category_id: string;
-    month: string;
-    user_id: string;
-    total: number | string;
-  }>;
-
   return {
     success: true,
-    data: rows
-      .map((row) => ({
-        category_id: String(row.category_id),
-        month: String(row.month),
-        user_id: String(row.user_id),
-        total: Number(row.total) || 0,
-      }))
-      .filter((row) => row.total > 0 && row.month.length === 7),
+    data: mapMemberAggregateRows(
+      (data || []) as Array<{
+        category_id: string;
+        month: string;
+        user_id: string;
+        total: number | string;
+      }>
+    ),
+  };
+};
+
+export const listFamilyIncomeTotals = async (
+  supabase: SupabaseClient
+): Promise<ProviderResult<FamilyCategoryTotal[]>> => {
+  const { data, error } = await supabase.rpc('family_shared_income_totals');
+  if (error) return { success: false, error: new Error(error.message) };
+  return {
+    success: true,
+    data: mapAggregateRows(
+      (data || []) as Array<{
+        category_id: string;
+        month: string;
+        total: number | string;
+      }>
+    ),
+  };
+};
+
+export const listFamilyIncomeMemberTotals = async (
+  supabase: SupabaseClient
+): Promise<ProviderResult<FamilyCategoryMemberTotal[]>> => {
+  const { data, error } = await supabase.rpc(
+    'family_shared_income_member_totals'
+  );
+  if (error) return { success: false, error: new Error(error.message) };
+  return {
+    success: true,
+    data: mapMemberAggregateRows(
+      (data || []) as Array<{
+        category_id: string;
+        month: string;
+        user_id: string;
+        total: number | string;
+      }>
+    ),
   };
 };

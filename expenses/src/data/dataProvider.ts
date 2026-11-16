@@ -4,6 +4,9 @@ import type {
   FamilyCategoryMemberTotal,
   FamilyCategoryTotal,
   Household,
+  HouseholdActivityItem,
+  HouseholdCategoryGoal,
+  HouseholdRole,
   LoanRecord,
   PaymentRecord,
   ProfilePatch,
@@ -69,6 +72,19 @@ export interface DataProvider {
   revokeInvite(inviteId: string): Promise<ProviderResult<Household>>;
   removeMember(userId: string): Promise<ProviderResult<Household>>;
   leaveHousehold(): Promise<ProviderResult<void>>;
+  transferOwnership(newOwnerUserId: string): Promise<ProviderResult<Household>>;
+  deleteHousehold(): Promise<ProviderResult<void>>;
+  setMemberRole(
+    userId: string,
+    role: Extract<HouseholdRole, 'admin' | 'member'>
+  ): Promise<ProviderResult<Household>>;
+  setMyDisplayName(name: string): Promise<ProviderResult<Household>>;
+  upsertCategoryGoal(
+    categoryId: string,
+    monthlyLimit: number
+  ): Promise<ProviderResult<Household>>;
+  deleteCategoryGoal(categoryId: string): Promise<ProviderResult<Household>>;
+  listHouseholdActivity(): Promise<ProviderResult<HouseholdActivityItem[]>>;
   acceptPendingInvites(): Promise<
     ProviderResult<{ accepted: number; already_member?: boolean }>
   >;
@@ -76,6 +92,11 @@ export interface DataProvider {
   listFamilyCategoryTotals(): Promise<ProviderResult<FamilyCategoryTotal[]>>;
   /** Per-member shared-category totals (aggregates only). */
   listFamilyCategoryMemberTotals(): Promise<
+    ProviderResult<FamilyCategoryMemberTotal[]>
+  >;
+  /** Shared-category income aggregates (privacy-preserving). */
+  listFamilyIncomeTotals(): Promise<ProviderResult<FamilyCategoryTotal[]>>;
+  listFamilyIncomeMemberTotals(): Promise<
     ProviderResult<FamilyCategoryMemberTotal[]>
   >;
 }

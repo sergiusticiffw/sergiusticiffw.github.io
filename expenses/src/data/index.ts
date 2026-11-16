@@ -19,6 +19,8 @@ export type {
   HouseholdMember,
   HouseholdInvite,
   HouseholdRole,
+  HouseholdCategoryGoal,
+  HouseholdActivityItem,
   FamilyCategoryTotal,
   FamilyCategoryMemberTotal,
 } from './types';

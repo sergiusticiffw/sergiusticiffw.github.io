@@ -11,6 +11,7 @@ import { useLocalization } from '@shared/context/localization';
 import { Card, cn } from '@shared/ui';
 import { formatNumber } from '@shared/utils/utils';
 import { getAiItems, localToday } from '../../../../ai/data';
+import { getDataProviderKind } from '../../../../data';
 import {
   BudgetRing,
   BudgetWindow,
@@ -25,6 +26,9 @@ import {
   monthPaceForView,
   summarizeBudgets,
 } from '../../budgets/model';
+import { useFamilySharedTotals } from '../Charts/useFamilySharedTotals';
+
+type BudgetScope = 'personal' | 'family';
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
@@ -284,12 +288,37 @@ const BudgetRings: React.FC<BudgetRingsProps> = ({
 }) => {
   const { t } = useLocalization();
   const { data } = useExpenseData();
+  const {
+    household,
+    familyItems,
+    totalsSource,
+  } = useFamilySharedTotals();
+  const familyAvailable =
+    getDataProviderKind() === 'supabase' && !!household;
+  const [scope, setScope] = useState<BudgetScope>('personal');
+
+  useEffect(() => {
+    if (!familyAvailable && scope === 'family') setScope('personal');
+  }, [familyAvailable, scope]);
+
   const viewedKey = useMemo(
     () => (monthLabel ? labelToMonthKey(monthLabel) : null),
     [monthLabel]
   );
 
-  const items = useMemo(() => getAiItems(data.raw || []), [data.raw]);
+  const personalItems = useMemo(
+    () => getAiItems(data.raw || []),
+    [data.raw]
+  );
+  const items = useMemo(() => {
+    if (scope === 'family' && familyAvailable) {
+      // Family RPC items are already expense aggregates; encryption falls back to personal shared cats.
+      return familyItems.length > 0 || totalsSource === 'rpc'
+        ? familyItems
+        : personalItems;
+    }
+    return personalItems;
+  }, [scope, familyAvailable, familyItems, totalsSource, personalItems]);
   const today = localToday();
   const pace = viewedKey ? monthPaceForView(viewedKey, today) : 0;
 
@@ -441,6 +470,7 @@ const BudgetRings: React.FC<BudgetRingsProps> = ({
           <span className="min-w-0 flex-1">
             <span className="block text-base font-bold text-app-primary">
               {t('budgetRings.title').replace('{month}', monthName)}
+              {scope === 'family' ? ` · ${t('family.scopeFamily')}` : ''}
             </span>
             {rings.length > 0 ? (
               <span className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-app-muted">
@@ -491,6 +521,46 @@ const BudgetRings: React.FC<BudgetRingsProps> = ({
         >
           <div className="overflow-hidden">
             <div className="px-4 pb-4 pt-2">
+              {familyAvailable && (
+                <div
+                  className="mb-3 flex w-full rounded-full bg-white/[0.06] p-0.5"
+                  role="group"
+                  aria-label={t('family.scopeGroup')}
+                  data-no-month-swipe
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {(['personal', 'family'] as BudgetScope[]).map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={scope === value}
+                      className={cn(
+                        'min-h-8 flex-1 rounded-full border-0 px-1.5 py-1.5 text-[0.7rem] font-semibold cursor-pointer transition-colors duration-200',
+                        scope === value
+                          ? 'bg-[var(--color-app-accent)] font-bold text-[var(--color-btn-on-accent)] shadow-[0_1px_6px_var(--color-app-accent-shadow)]'
+                          : 'bg-transparent text-app-muted hover:text-app-primary'
+                      )}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setScope(value);
+                      }}
+                    >
+                      {value === 'personal'
+                        ? t('family.scopePersonal')
+                        : t('family.scopeFamily')}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {scope === 'family' &&
+                (totalsSource === 'encryption_local' ||
+                  totalsSource === 'personal_fallback') && (
+                  <p className="mb-3 mt-0 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs leading-snug text-amber-100/90">
+                    {totalsSource === 'encryption_local'
+                      ? t('family.bannerEncryption')
+                      : t('family.bannerPersonalFallback')}
+                  </p>
+                )}
               {rings.length === 0 ? (
                 <p className="m-0 text-sm text-app-muted">{emptyMessage}</p>
               ) : (

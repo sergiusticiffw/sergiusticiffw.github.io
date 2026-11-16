@@ -102,6 +102,7 @@ export interface HouseholdMember {
   joined_at?: string;
   email?: string;
   name?: string;
+  display_name?: string;
 }
 
 export interface HouseholdInvite {
@@ -113,6 +114,31 @@ export interface HouseholdInvite {
   expires_at?: string;
 }
 
+export interface HouseholdCategoryGoal {
+  category_id: string;
+  monthly_limit: number;
+  updated_at?: string;
+}
+
+export type HouseholdActivityEvent =
+  | 'member_joined'
+  | 'member_left'
+  | 'member_removed'
+  | 'member_role_changed'
+  | 'shared_categories_updated'
+  | 'ownership_transferred'
+  | 'goal_updated'
+  | 'goal_deleted'
+  | string;
+
+export interface HouseholdActivityItem {
+  id: string;
+  event_type: HouseholdActivityEvent;
+  actor_id?: string | null;
+  payload?: Record<string, unknown>;
+  created_at: string;
+}
+
 export interface Household {
   id: string;
   name: string;
@@ -121,6 +147,8 @@ export interface Household {
   members: HouseholdMember[];
   invites: HouseholdInvite[];
   shared_categories: string[];
+  goals?: HouseholdCategoryGoal[];
+  activity?: HouseholdActivityItem[];
 }
 
 /** Aggregated family spend — no individual partner transactions. */

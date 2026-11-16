@@ -20,6 +20,7 @@ import {
   categorySpendForMonth,
   resolveFamilyChartItems,
 } from './familyTotals';
+import FamilyTotalsBanner from './FamilyTotalsBanner';
 import { useFamilySharedTotals } from './useFamilySharedTotals';
 
 export interface FamilySharedSpendProps {
@@ -40,8 +41,14 @@ const FamilySharedSpend: React.FC<FamilySharedSpendProps> = ({
   const categories = getCategories();
   const { userDetails } = useAuthState();
   const myUid = String(userDetails?.current_user?.uid || '');
-  const { household, familyItems, memberTotals, sharedCategoryIds, loading } =
-    useFamilySharedTotals();
+  const {
+    household,
+    familyItems,
+    memberTotals,
+    sharedCategoryIds,
+    loading,
+    totalsSource,
+  } = useFamilySharedTotals();
 
   const category = useStore(expenseStore, (s) => s.category ?? '');
   const textFilter = useStore(expenseStore, (s) => s.textFilter ?? '');
@@ -222,6 +229,11 @@ const FamilySharedSpend: React.FC<FamilySharedSpendProps> = ({
             </div>
           )}
         </div>
+
+        <FamilyTotalsBanner
+          totalsSource={totalsSource}
+          personalOnly={personalOnly}
+        />
 
         {rows.length > 0 && (
           <>
