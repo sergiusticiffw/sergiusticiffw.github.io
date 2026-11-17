@@ -71,9 +71,13 @@ const Charts = () => {
     }
   }, [data, dataDispatch, noData, apiClient]);
 
-  // Load visible charts from localStorage
+  // Load visible charts from localStorage; refresh when cloud prefs arrive.
   useEffect(() => {
-    setVisibleCharts(getEffectiveVisibleCharts());
+    const refresh = () => setVisibleCharts(getEffectiveVisibleCharts());
+    refresh();
+    window.addEventListener('expenses:prefs-applied', refresh);
+    return () =>
+      window.removeEventListener('expenses:prefs-applied', refresh);
   }, []);
 
   // Update filters in context

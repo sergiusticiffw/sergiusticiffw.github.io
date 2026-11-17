@@ -49,6 +49,10 @@ function SyncEffect(): null {
     hydrateEmergencyFund();
     refreshStatus(true);
     refreshTagCatalog();
+    // Pull cloud prefs on refresh (not only on fresh login).
+    void import('../../features/profile/preferencesSync').then((m) =>
+      m.pullPreferencesFromProfile()
+    );
     import('@shared/utils/indexedDB').then(
       ({ cleanupInvalidSyncOperations }) => {
         cleanupInvalidSyncOperations().then((count) => {
@@ -58,7 +62,19 @@ function SyncEffect(): null {
       }
     );
     const cleanup = setupNetworkListener(token, expenseDispatch);
-    return cleanup;
+
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      void import('../../features/profile/preferencesSync').then((m) =>
+        m.pullPreferencesFromProfile()
+      );
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      cleanup();
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [token, userIsLoggedIn]);
 
   return null;

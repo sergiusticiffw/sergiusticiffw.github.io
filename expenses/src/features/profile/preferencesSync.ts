@@ -49,6 +49,7 @@ import {
 
 const DEBOUNCE_MS = 500;
 const LANG_EVENT = 'expenses:prefs-language';
+const PREFS_APPLIED_EVENT = 'expenses:prefs-applied';
 
 let applyingRemote = false;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -133,8 +134,9 @@ export const applyPreferencesLocally = (
     }
   } finally {
     // Allow microtasks from setters to finish before re-enabling push.
-    queuePromise.resolve().then(() => {
+    void Promise.resolve().then(() => {
       applyingRemote = false;
+      window.dispatchEvent(new CustomEvent(PREFS_APPLIED_EVENT));
     });
   }
 };
@@ -176,7 +178,7 @@ const restorePending = (patch: Partial<ProfilePreferences>) => {
   pendingPatch = { ...patch, ...pendingPatch };
 };
 
-/** True when Supabase client has a non-expired access token (or can refresh). */
+/** True when Supabase client has a non-expired access token (or can refresh/restore). */
 export const ensureFreshSupabaseSession = async (): Promise<boolean> => {
   if (getDataProviderKind() !== 'supabase') return false;
   try {
@@ -190,11 +192,33 @@ export const ensureFreshSupabaseSession = async (): Promise<boolean> => {
       !!data.session?.access_token &&
       expiresAt > Math.floor(Date.now() / 1000) + 30;
     if (fresh) return true;
-    // No refresh token → skip quietly (do not hit /auth/v1/token).
-    if (!data.session?.refresh_token) return false;
 
-    const { data: refreshed, error } = await supabase.auth.refreshSession();
-    return !error && !!refreshed.session?.access_token;
+    // Prefer client refresh when a refresh token is already in auth storage.
+    if (data.session?.refresh_token) {
+      const { data: refreshed, error } = await supabase.auth.refreshSession();
+      if (!error && !!refreshed.session?.access_token) return true;
+    }
+
+    // Same fallback as the data provider: restore from app-stored tokens.
+    // Without this, prefs flush fails while currency/profile API still works.
+    const access = getStoredToken();
+    let refresh = '';
+    try {
+      const stored = JSON.parse(localStorage.getItem('currentUser') || '{}') as {
+        refresh_token?: string;
+        refreshToken?: string;
+      };
+      refresh = stored.refresh_token || stored.refreshToken || '';
+    } catch {
+      refresh = '';
+    }
+    if (!access || !refresh) return false;
+
+    const { data: restored, error } = await supabase.auth.setSession({
+      access_token: access,
+      refresh_token: refresh,
+    });
+    return !error && !!restored.session?.access_token;
   } catch {
     return false;
   }
@@ -410,4 +434,4 @@ export const pullPreferencesFromProfile = async (): Promise<boolean> => {
   }
 };
 
-export { LANG_EVENT };
+export { LANG_EVENT, PREFS_APPLIED_EVENT };

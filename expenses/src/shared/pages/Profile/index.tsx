@@ -131,6 +131,17 @@ const Profile = () => {
   const [customChartsEnabled, setCustomChartsEnabled] = useState(
     readCustomChartsEnabled
   );
+
+  useEffect(() => {
+    const onPrefsApplied = () => {
+      setCustomChartsEnabled(readCustomChartsEnabled());
+      setState({ visibleCharts: readStoredVisibleCharts() });
+    };
+    window.addEventListener('expenses:prefs-applied', onPrefsApplied);
+    return () =>
+      window.removeEventListener('expenses:prefs-applied', onPrefsApplied);
+  }, []);
+
   const [chartsAccordionOpen, setChartsAccordionOpen] = useState(false);
   const [backupAccordionOpen, setBackupAccordionOpen] = useState(false);
   const [importBusy, setImportBusy] = useState(false);
@@ -167,7 +178,7 @@ const Profile = () => {
         enabled: checked,
       });
       showNotification(
-        ok ? t('goals.savedDrive') : t('goals.localOnly'),
+        ok ? t('goals.savedDrive') : t('goals.syncErrorDrive'),
         ok ? notificationType.SUCCESS : notificationType.ERROR
       );
     } catch {
@@ -193,7 +204,7 @@ const Profile = () => {
     try {
       const ok = await persistNetWorthToSupabase({ enabled: checked });
       showNotification(
-        ok ? t('notification.profileUpdated') : t('goals.localOnly'),
+        ok ? t('notification.profileUpdated') : t('goals.syncErrorDrive'),
         ok ? notificationType.SUCCESS : notificationType.ERROR
       );
     } catch {
@@ -414,7 +425,7 @@ const Profile = () => {
 
     const ok = await persistLanguageToSupabase(newLanguage);
     showNotification(
-      ok ? t('notification.profileUpdated') : t('goals.localOnly'),
+      ok ? t('notification.profileUpdated') : t('goals.syncErrorDrive'),
       ok ? notificationType.SUCCESS : notificationType.ERROR
     );
   };
@@ -492,7 +503,7 @@ const Profile = () => {
     });
     if (options.notify || !ok) {
       showNotification(
-        ok ? t('notification.profileUpdated') : t('goals.localOnly'),
+        ok ? t('notification.profileUpdated') : t('goals.syncErrorDrive'),
         ok ? notificationType.SUCCESS : notificationType.ERROR
       );
     }
