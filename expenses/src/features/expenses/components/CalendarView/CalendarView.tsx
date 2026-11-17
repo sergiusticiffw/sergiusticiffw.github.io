@@ -1,15 +1,25 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { formatNumber, getLocale } from '@shared/utils/utils';
 import { useLocalization } from '@shared/context/localization';
+import { useAuthState } from '@shared/context/context';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import { TransactionsList } from '@shared/components/TransactionsList';
 import Month from '@features/expenses/components/Home/Month';
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import IncomeTable from '@features/incomes/components/Income/IncomeTable';
+import { labelToMonthKey } from '@features/expenses/budgets/model';
+import { getSession } from '../../../../crypto/encryptionState';
+import { getDataProviderKind } from '../../../../data';
+import FamilyDaySpendSection from '@features/expenses/components/Charts/FamilyDaySpendSection';
+import {
+  clearFamilyDailyTotalsCache,
+  useFamilyDailyTotals,
+} from '@features/expenses/components/Charts/useFamilyDailyTotals';
 
+/** Calendar day drawer: personal txs + other members' shared category totals. */
 interface Transaction {
   id: string;
   dsc: string;
@@ -44,8 +54,49 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   // Month swipe is handled by the parent page (covers Budget Rings + calendar).
   void _onMonthChange;
   const { language } = useLocalization();
+  const { userDetails } = useAuthState();
+  // Prefer live session uid so partner filter matches RPC user_id.
+  const myUid = String(
+    getSession()?.uid ||
+      (userDetails &&
+      typeof userDetails === 'object' &&
+      userDetails.current_user?.uid) ||
+      ''
+  );
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showDayModal, setShowDayModal] = useState(false);
+
+  const monthKey = useMemo(() => {
+    if (variant !== 'expense') return null;
+    const fromLabel = labelToMonthKey(currentMonth);
+    if (fromLabel) return fromLabel;
+    // Fallback: first personal tx date in the loaded set.
+    const dt = transactions.find((tx) => tx.dt)?.dt;
+    return dt && dt.length >= 7 ? dt.slice(0, 7) : null;
+  }, [currentMonth, variant, transactions]);
+
+  const familyEnabled =
+    variant === 'expense' && getDataProviderKind() === 'supabase';
+
+  useEffect(() => {
+    if (familyEnabled) clearFamilyDailyTotalsCache();
+  }, [familyEnabled, monthKey]);
+
+  const {
+    household,
+    rows: memberDailyRows,
+    sharedCategoryIds,
+    totalsSource,
+    loading: familyLoading,
+    partnerDaysWithSpend,
+    partnerDayTotal,
+  } = useFamilyDailyTotals(familyEnabled ? monthKey : null);
+
+  const partnerDays = useMemo(
+    () => (familyEnabled ? partnerDaysWithSpend(myUid) : new Set<string>()),
+    [familyEnabled, partnerDaysWithSpend, myUid]
+  );
+
   // Group transactions by date
   const transactionsByDate = useMemo(() => {
     return transactions.reduce(
@@ -61,33 +112,47 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     );
   }, [transactions]);
 
-  // Calculate total per day
-  const dailyTotals = Object.entries(transactionsByDate).map(
-    ([date, dayTransactions]) => {
-      const total = dayTransactions.reduce(
-        (sum, t) =>
-          sum + (typeof t.sum === 'string' ? parseFloat(t.sum) : t.sum),
-        0
-      );
-      return {
-        date,
-        total,
-        count: dayTransactions.length,
-      };
-    }
-  );
-
-  // Create events for calendar
-  const events = dailyTotals.map(({ date, total, count }) => ({
-    id: date, // Add id for event click
-    date,
-    title: `${formatNumber(total)}`,
-    allDay: true,
-    extendedProps: {
-      total,
-      count,
-    },
-  }));
+  const events = useMemo(() => {
+    const dates = new Set<string>([
+      ...Object.keys(transactionsByDate),
+      ...partnerDays,
+    ]);
+    return [...dates]
+      .map((date) => {
+        const dayTransactions = transactionsByDate[date] || [];
+        const personalTotal = dayTransactions.reduce(
+          (sum, tx) =>
+            sum +
+            (typeof tx.sum === 'string'
+              ? parseFloat(tx.sum)
+              : Number(tx.sum) || 0),
+          0
+        );
+        const othersTotal = familyEnabled
+          ? partnerDayTotal(date, myUid)
+          : 0;
+        if (dayTransactions.length === 0 && othersTotal <= 0) return null;
+        const showPersonal = dayTransactions.length > 0;
+        return {
+          id: date,
+          date,
+          title: `${formatNumber(showPersonal ? personalTotal : othersTotal)}`,
+          allDay: true,
+          extendedProps: {
+            total: showPersonal ? personalTotal : othersTotal,
+            count: dayTransactions.length,
+            partnerOnly: !showPersonal,
+          },
+        };
+      })
+      .filter((event): event is NonNullable<typeof event> => !!event);
+  }, [
+    transactionsByDate,
+    partnerDays,
+    familyEnabled,
+    partnerDayTotal,
+    myUid,
+  ]);
 
   type AmountTier = 'amount-low' | 'amount-medium' | 'amount-high';
 
@@ -103,7 +168,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     return 'bg-red-600/90 text-white';
   };
 
-  // Get month index from name
   const getMonthIndex = (monthName: string) => {
     const months = [
       'January',
@@ -122,27 +186,36 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     return months.indexOf(monthName);
   };
 
-  // Handle event click (when clicking on days with transactions)
-  const handleEventClick = (event: { event: { id?: string } }) => {
-    const clickedDate = event.event.id;
-    if (clickedDate) {
-      const dayTransactions = transactionsByDate[clickedDate];
-
-      if (dayTransactions && dayTransactions.length > 0) {
-        setSelectedDate(clickedDate);
-        setShowDayModal(true);
-      }
+  const openDay = (clickedDate: string) => {
+    const dayTransactions = transactionsByDate[clickedDate] || [];
+    const hasPartner =
+      familyEnabled && !!household && partnerDays.has(clickedDate);
+    if (dayTransactions.length > 0 || hasPartner) {
+      setSelectedDate(clickedDate);
+      setShowDayModal(true);
     }
   };
 
-  // Get transactions for selected date
+  const handleEventClick = (event: { event: { id?: string } }) => {
+    const clickedDate = event.event.id;
+    if (clickedDate) openDay(clickedDate);
+  };
+
   const selectedDayTransactions = selectedDate
     ? transactionsByDate[selectedDate] || []
     : [];
   const selectedDayTotal = selectedDayTransactions.reduce(
-    (sum, t) => sum + (typeof t.sum === 'string' ? parseFloat(t.sum) : t.sum),
+    (sum, tx) =>
+      sum +
+      (typeof tx.sum === 'string' ? parseFloat(tx.sum) : Number(tx.sum) || 0),
     0
   );
+
+  const showPartnerSection =
+    familyEnabled &&
+    !!household &&
+    !!selectedDate &&
+    sharedCategoryIds.size > 0;
 
   return (
     <div
@@ -173,13 +246,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         eventClick={handleEventClick}
         eventContent={(eventInfo) => {
           const amount = eventInfo.event.extendedProps.total;
-          const count = eventInfo.event.extendedProps.count;
+          const count = eventInfo.event.extendedProps.count as number;
+          const partnerOnly = !!eventInfo.event.extendedProps.partnerOnly;
           const baseClasses =
             'px-3 py-2 rounded-lg flex flex-col items-center justify-center min-h-10 border-0 outline-none text-center font-semibold leading-tight shadow-[0_1px_3px_rgba(0,0,0,0.2)] box-border ';
           const colorClasses =
             variant === 'income'
               ? 'bg-green-500/90 text-white'
-              : getEventColorClasses(getExpenseTier(amount));
+              : partnerOnly
+                ? 'bg-[var(--color-app-accent)]/90 text-white'
+                : getEventColorClasses(getExpenseTier(amount));
           const responsiveClasses =
             'max-[640px]:px-2.5 max-[640px]:py-1.5 max-[640px]:min-h-9 max-[640px]:rounded-md';
 
@@ -190,9 +266,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
               <div className="text-[0.95rem] font-bold mb-0.5 leading-tight tracking-wide max-[640px]:text-[0.8rem]">
                 {eventInfo.event.title}
               </div>
-              <div className="text-[0.65rem] font-medium opacity-95 max-[640px]:text-[0.58rem]">
-                {count} items
-              </div>
+              {!partnerOnly && (
+                <div className="text-[0.65rem] font-medium opacity-95 max-[640px]:text-[0.58rem]">
+                  {count} items
+                </div>
+              )}
             </div>
           );
         }}
@@ -212,14 +290,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
       )}
 
-      {/* Day Transactions Drawer */}
       <VaulDrawer
         show={showDayModal && !!selectedDate}
         onClose={() => setShowDayModal(false)}
         title={
           selectedDate
             ? (() => {
-                // Use user's language for date formatting
                 const locale = getLocale(language);
                 return new Date(selectedDate).toLocaleDateString(locale, {
                   day: 'numeric',
@@ -230,9 +306,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             : ''
         }
         topContent={
-          <>
-            Total: <strong>{formatNumber(selectedDayTotal)}</strong>
-          </>
+          selectedDayTransactions.length > 0 ? (
+            <>
+              Total: <strong>{formatNumber(selectedDayTotal)}</strong>
+            </>
+          ) : undefined
         }
       >
         {variant === 'income' ? (
@@ -253,31 +331,46 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             hideDateSortButton
           />
         ) : (
-          <TransactionsList
-            variant="expense"
-            transactions={(
-              selectedDayTransactions as TransactionOrIncomeItem[]
-            ).map((tx) => ({
-              id: tx.id,
-              dsc: tx.dsc ?? '',
-              sum: tx.sum,
-              cat: tx.cat,
-              dt: tx.dt,
-            }))}
-            pendingSyncIds={pendingSyncIds}
-            changedItems={changedItems as Record<string, { type?: string }>}
-            groupByDay={false}
-            hideDateColumn
-            hideSort
-            onEdit={(id) => {
-              setShowDayModal(false);
-              onEdit?.(id);
-            }}
-            onDelete={(id) => {
-              setShowDayModal(false);
-              onDelete?.(id);
-            }}
-          />
+          <>
+            {selectedDayTransactions.length > 0 && (
+              <TransactionsList
+                variant="expense"
+                transactions={(
+                  selectedDayTransactions as TransactionOrIncomeItem[]
+                ).map((tx) => ({
+                  id: tx.id,
+                  dsc: tx.dsc ?? '',
+                  sum: tx.sum,
+                  cat: tx.cat,
+                  dt: tx.dt,
+                }))}
+                pendingSyncIds={pendingSyncIds}
+                changedItems={changedItems as Record<string, { type?: string }>}
+                groupByDay={false}
+                hideDateColumn
+                hideSort
+                onEdit={(id) => {
+                  setShowDayModal(false);
+                  onEdit?.(id);
+                }}
+                onDelete={(id) => {
+                  setShowDayModal(false);
+                  onDelete?.(id);
+                }}
+              />
+            )}
+            {showPartnerSection && selectedDate && (
+              <FamilyDaySpendSection
+                dayKey={selectedDate}
+                rows={memberDailyRows}
+                myUid={myUid}
+                members={household?.members || []}
+                sharedCategoryIds={sharedCategoryIds}
+                totalsSource={totalsSource}
+                loading={familyLoading}
+              />
+            )}
+          </>
         )}
       </VaulDrawer>
     </div>

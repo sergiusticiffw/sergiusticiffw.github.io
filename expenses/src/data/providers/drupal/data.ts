@@ -289,6 +289,12 @@ export function createDrupalDataProvider(): DataProvider {
         error: new Error('Family accounts require Supabase'),
       };
     },
+    async listFamilyCategoryDailyTotals() {
+      return {
+        success: false,
+        error: new Error('Family accounts require Supabase'),
+      };
+    },
     async listFamilyIncomeTotals() {
       return {
         success: false,

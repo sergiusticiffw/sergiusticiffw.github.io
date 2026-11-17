@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
+  FamilyCategoryDailyTotal,
   FamilyCategoryMemberTotal,
   FamilyCategoryTotal,
   Household,
@@ -588,6 +589,47 @@ export const listFamilyCategoryMemberTotals = async (
       }>
     ),
   };
+};
+
+export const listFamilyCategoryDailyTotals = async (
+  supabase: SupabaseClient,
+  month: string
+): Promise<ProviderResult<FamilyCategoryDailyTotal[]>> => {
+  if (!month || month.length !== 7) {
+    return { success: true, data: [] };
+  }
+  const { data, error } = await supabase.rpc(
+    'family_shared_category_daily_totals',
+    { p_month: month }
+  );
+  if (error) return { success: false, error: new Error(error.message) };
+  const raw = (data || []) as Array<Record<string, unknown>>;
+  // Require per-member user_id (migration 20260328137100). Older 3-column
+  // RPC responses cannot attribute spend to partners — treat as failure.
+  const mapped = raw
+    .map((row) => ({
+      category_id: String(row.category_id ?? ''),
+      day: String(row.day ?? '').slice(0, 10),
+      user_id: String(row.user_id ?? row.userId ?? '').trim(),
+      total: Number(row.total) || 0,
+    }))
+    .filter(
+      (row) =>
+        row.total > 0 &&
+        row.day.length === 10 &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          row.user_id
+        )
+    );
+  if (raw.length > 0 && mapped.length === 0) {
+    return {
+      success: false,
+      error: new Error(
+        'family_shared_category_daily_totals missing user_id — apply migration 20260328137100'
+      ),
+    };
+  }
+  return { success: true, data: mapped };
 };
 
 export const listFamilyIncomeTotals = async (

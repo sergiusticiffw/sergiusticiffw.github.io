@@ -164,6 +164,15 @@ export interface FamilyCategoryTotal {
   total: number;
 }
 
+/** Day×category×member shared spend — aggregates only (calendar drawer). */
+export interface FamilyCategoryDailyTotal {
+  category_id: string;
+  /** YYYY-MM-DD */
+  day: string;
+  user_id: string;
+  total: number;
+}
+
 /** Per-member shared-category aggregate — still no transaction row details. */
 export interface FamilyCategoryMemberTotal {
   category_id: string;

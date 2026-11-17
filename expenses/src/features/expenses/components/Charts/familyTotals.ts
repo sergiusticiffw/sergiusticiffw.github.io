@@ -1,5 +1,6 @@
 import type { AiItem } from '../../../../ai/data';
 import type {
+  FamilyCategoryDailyTotal,
   FamilyCategoryMemberTotal,
   FamilyCategoryTotal,
 } from '../../../../data';
@@ -165,6 +166,103 @@ export const categorySpendAllTime = (
     }))
     .filter((row) => row.amount > 0)
     .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label));
+};
+
+const isMemberUid = (id: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    String(id || '').trim()
+  );
+
+export const sameUserId = (a: string, b: string): boolean => {
+  const x = String(a || '')
+    .trim()
+    .toLowerCase();
+  const y = String(b || '')
+    .trim()
+    .toLowerCase();
+  return !!x && !!y && x === y;
+};
+
+/** True when the row belongs to another household member (not me). */
+export const isOtherMemberRow = (
+  row: Pick<FamilyCategoryDailyTotal, 'user_id' | 'total'>,
+  myUid: string
+): boolean => {
+  if (row.total <= 0) return false;
+  if (!isMemberUid(row.user_id)) return false;
+  if (!myUid || !isMemberUid(myUid)) return false;
+  return !sameUserId(row.user_id, myUid);
+};
+
+/**
+ * Other members' category spend for one YYYY-MM-DD (excludes current user).
+ * Aggregates only — no transaction details.
+ */
+export const partnerCategorySpendForDay = (
+  rows: FamilyCategoryDailyTotal[],
+  dayKey: string,
+  myUid: string,
+  labelFor: (id: string) => string,
+  colorFor?: (id: string) => string | undefined
+): SharedCategorySpend[] => {
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    if (row.day !== dayKey) continue;
+    if (!isOtherMemberRow(row, myUid)) continue;
+    const id = row.category_id || '0';
+    totals.set(id, (totals.get(id) || 0) + row.total);
+  }
+  return [...totals.entries()]
+    .map(([id, amount]) => ({
+      id,
+      label: labelFor(id),
+      amount,
+      color: colorFor?.(id),
+    }))
+    .filter((row) => row.amount > 0)
+    .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label));
+};
+
+/** Days where another member has shared-category spend (excludes myUid). */
+export const partnerDaysWithSpend = (
+  rows: FamilyCategoryDailyTotal[],
+  myUid: string
+): Set<string> => {
+  const days = new Set<string>();
+  for (const row of rows) {
+    if (!isOtherMemberRow(row, myUid)) continue;
+    days.add(row.day);
+  }
+  return days;
+};
+
+export const partnerDayTotal = (
+  rows: FamilyCategoryDailyTotal[],
+  dayKey: string,
+  myUid: string
+): number => {
+  let total = 0;
+  for (const row of rows) {
+    if (row.day !== dayKey) continue;
+    if (!isOtherMemberRow(row, myUid)) continue;
+    total += row.total;
+  }
+  return total;
+};
+
+/** Other member user_ids with spend on a given day. */
+export const partnerUserIdsForDay = (
+  rows: FamilyCategoryDailyTotal[],
+  dayKey: string,
+  myUid: string
+): string[] => {
+  const ids = new Set<string>();
+  for (const row of rows) {
+    if (row.day !== dayKey) continue;
+    if (!isOtherMemberRow(row, myUid)) continue;
+    ids.add(String(row.user_id).trim().toLowerCase());
+  }
+  return [...ids];
 };
 
 /** Collapse AiItems to category spend for one calendar year (YYYY). */

@@ -13,3 +13,4 @@ export { default as FamilySharedAllTime } from './FamilySharedAllTime';
 export { default as FamilyIncomeShare } from './FamilyIncomeShare';
 export { default as FamilyGoalsProgress } from './FamilyGoalsProgress';
 export { default as FamilyTotalsBanner } from './FamilyTotalsBanner';
+export { default as FamilyDaySpendSection } from './FamilyDaySpendSection';

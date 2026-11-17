@@ -1,6 +1,7 @@
 import type {
   ApiLoan,
   DataProviderKind,
+  FamilyCategoryDailyTotal,
   FamilyCategoryMemberTotal,
   FamilyCategoryTotal,
   Household,
@@ -94,6 +95,10 @@ export interface DataProvider {
   listFamilyCategoryMemberTotals(): Promise<
     ProviderResult<FamilyCategoryMemberTotal[]>
   >;
+  /** Shared-category day totals for one YYYY-MM (calendar drawer). */
+  listFamilyCategoryDailyTotals(
+    month: string
+  ): Promise<ProviderResult<FamilyCategoryDailyTotal[]>>;
   /** Shared-category income aggregates (privacy-preserving). */
   listFamilyIncomeTotals(): Promise<ProviderResult<FamilyCategoryTotal[]>>;
   listFamilyIncomeMemberTotals(): Promise<

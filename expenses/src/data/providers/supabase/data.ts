@@ -849,6 +849,19 @@ export function createSupabaseDataProvider(): DataProvider {
       }
     },
 
+    async listFamilyCategoryDailyTotals(month: string) {
+      if (!isOnline()) return failOffline();
+      try {
+        const { supabase } = await ensureAuth();
+        return householdApi.listFamilyCategoryDailyTotals(supabase, month);
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+    },
+
     async listFamilyIncomeTotals() {
       if (!isOnline()) return failOffline();
       try {

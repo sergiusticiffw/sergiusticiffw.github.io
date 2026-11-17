@@ -22,6 +22,7 @@ export type {
   HouseholdCategoryGoal,
   HouseholdActivityItem,
   FamilyCategoryTotal,
+  FamilyCategoryDailyTotal,
   FamilyCategoryMemberTotal,
 } from './types';
 export {
