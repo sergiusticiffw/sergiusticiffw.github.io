@@ -29,7 +29,7 @@ const FamilyTotalsBanner: React.FC<FamilyTotalsBannerProps> = ({
 
   return (
     <p
-      className={`mx-4 mb-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs leading-snug text-amber-100/90 ${className}`}
+      className={`mx-4 mb-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs leading-snug text-app-muted ${className}`}
       role="status"
     >
       {message}

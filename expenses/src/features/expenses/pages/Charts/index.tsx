@@ -28,7 +28,8 @@ import { useApiClient } from '@shared/hooks/useApiClient';
 import { Loader } from '@shared/components/Common';
 import { PAGE_CONTAINER_CLASS, BTN_SUBMIT_CLASS, FAB_CLASS } from '@shared/utils/layoutClasses';
 import { getDataProviderKind } from '../../../../data';
-
+import NetWorthCard from '@features/netWorth/components/NetWorthCard';
+import { useNetWorthEnabled } from '@stores/settingsStore';
 const componentMap = {
   MonthlyTotals,
   YearAverageTrend,
@@ -45,6 +46,7 @@ const componentMap = {
 const Charts = () => {
   const { data, dataDispatch } = useExpenseData();
   const { t } = useLocalization();
+  const netWorthEnabled = useNetWorthEnabled();
   const noData = data.groupedData === null;
   const noEntries = Object.keys(data.raw || {}).length === 0;
   const loading = data.loading;
@@ -164,6 +166,8 @@ const Charts = () => {
               <FamilyIncomeShare />
             </div>
           )}
+
+          {netWorthEnabled && <NetWorthCard />}
         </div>
       )}
 

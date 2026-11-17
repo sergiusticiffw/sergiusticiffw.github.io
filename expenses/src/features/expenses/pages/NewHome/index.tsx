@@ -645,7 +645,7 @@ const NewHome = () => {
                     onDelete={(id) => setShowDeleteModal(id)}
                   />
                 )}
-                <div className="mt-8">
+                <div className="mt-8 flex flex-col gap-8">
                   <FamilySharedSpend
                     monthLabel={currentMonth}
                     monthNavigation={false}

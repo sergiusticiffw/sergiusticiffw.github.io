@@ -8,6 +8,7 @@ import { DEFAULT_THEME_ID, normalizeThemeId } from '@shared/constants/themes';
 const THEME_KEY = 'theme';
 const ONBOARDING_KEY = 'onboardingComplete';
 const GOALS_ENABLED_KEY = 'goalsEnabled';
+const NET_WORTH_ENABLED_KEY = 'netWorthEnabled';
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -33,6 +34,7 @@ const initialState: SettingsState = {
   theme: readTheme(),
   onboardingComplete: readJson(ONBOARDING_KEY, false),
   goalsEnabled: readJson(GOALS_ENABLED_KEY, false),
+  netWorthEnabled: readJson(NET_WORTH_ENABLED_KEY, false),
 };
 
 const settingsStore = new Store<SettingsState>(initialState);
@@ -55,6 +57,10 @@ export function useOnboardingComplete(): boolean {
 
 export function useGoalsEnabled(): boolean {
   return useStore(settingsStore, (s) => s.goalsEnabled);
+}
+
+export function useNetWorthEnabled(): boolean {
+  return useStore(settingsStore, (s) => s.netWorthEnabled);
 }
 
 function persist<K extends keyof SettingsState>(key: string, value: SettingsState[K]) {
@@ -87,6 +93,12 @@ export function setGoalsEnabled(value: boolean): void {
   persist(GOALS_ENABLED_KEY, value);
   settingsStore.setState((s) => ({ ...s, goalsEnabled: value }));
   pushPrefs({ goalsEnabled: value });
+}
+
+export function setNetWorthEnabled(value: boolean): void {
+  persist(NET_WORTH_ENABLED_KEY, value);
+  settingsStore.setState((s) => ({ ...s, netWorthEnabled: value }));
+  pushPrefs({ netWorthEnabled: value });
 }
 
 export function hydrateSettings(partial: Partial<SettingsState>): void {

@@ -24,8 +24,10 @@ export {
   useSettingsCurrency,
   useSettingsTheme,
   useGoalsEnabled,
+  useNetWorthEnabled,
   setSettingsCurrency,
   setSettingsTheme,
   setGoalsEnabled,
+  setNetWorthEnabled,
   hydrateSettings,
 } from './settingsStore';

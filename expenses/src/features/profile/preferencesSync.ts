@@ -9,6 +9,7 @@ import { getSession } from '../../crypto/encryptionState';
 import {
   hydrateSettings,
   setGoalsEnabled,
+  setNetWorthEnabled,
   setOnboardingComplete,
   setSettingsTheme,
   settingsStore,
@@ -39,6 +40,12 @@ import {
   type EmergencyFundState,
 } from '../goals/model';
 import { DEFAULT_THEME_ID, normalizeThemeId } from '@shared/constants/themes';
+import {
+  getNetWorthAssets,
+  getNetWorthCash,
+  hydrateNetWorthAssetsFromPrefs,
+  hydrateNetWorthCashFromPrefs,
+} from '../netWorth/assetsStore';
 
 const DEBOUNCE_MS = 500;
 const LANG_EVENT = 'expenses:prefs-language';
@@ -62,12 +69,15 @@ export const readLocalPreferences = (): ProfilePreferences => {
     language: readLanguage(),
     // onboardingComplete is never taken from local defaults — see flushPreferencesPush.
     goalsEnabled: !!settingsStore.state.goalsEnabled,
+    netWorthEnabled: !!settingsStore.state.netWorthEnabled,
     visibleCharts: readStoredVisibleCharts(),
     customChartsEnabled: readCustomChartsEnabled(),
     aiLanguage: getAiLanguage(),
     aiShareDescriptions: getShareDescriptions(),
     aiChat: readChatSessionForPrefs(),
     emergencyFund: fund as unknown as Record<string, unknown>,
+    netWorthCash: getNetWorthCash(),
+    netWorthAssets: getNetWorthAssets() as unknown as Record<string, unknown>,
   };
 };
 
@@ -93,6 +103,9 @@ export const applyPreferencesLocally = (
     if (typeof p.goalsEnabled === 'boolean') {
       setGoalsEnabled(p.goalsEnabled);
     }
+    if (typeof p.netWorthEnabled === 'boolean') {
+      setNetWorthEnabled(p.netWorthEnabled);
+    }
     if (Array.isArray(p.visibleCharts)) {
       writeStoredVisibleCharts(p.visibleCharts.filter((c) => typeof c === 'string'));
     }
@@ -112,6 +125,11 @@ export const applyPreferencesLocally = (
       const remote = normalizeEmergencyFund(p.emergencyFund);
       const merged = newerEmergencyFund(getEmergencyFund(), remote);
       replaceEmergencyFund(merged);
+    }
+    if (p.netWorthAssets && typeof p.netWorthAssets === 'object') {
+      hydrateNetWorthAssetsFromPrefs(p.netWorthAssets);
+    } else if (typeof p.netWorthCash === 'number') {
+      hydrateNetWorthCashFromPrefs(p.netWorthCash);
     }
   } finally {
     // Allow microtasks from setters to finish before re-enabling push.

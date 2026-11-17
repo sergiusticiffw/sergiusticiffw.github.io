@@ -66,6 +66,7 @@ export const AI_STORAGE_KEYS = {
   chat: 'aiChat',
   modelCooldowns: 'aiModelCooldowns',
   modelLimits: 'aiModelLimits',
+  debug: 'aiDebug',
 };
 
 export const AI_LANGUAGES = ['Romanian', 'English', 'Russian'] as const;

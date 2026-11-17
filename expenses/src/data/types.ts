@@ -46,12 +46,17 @@ export type ProfilePreferences = {
   language?: 'en' | 'ro' | string;
   onboardingComplete?: boolean;
   goalsEnabled?: boolean;
+  netWorthEnabled?: boolean;
   visibleCharts?: string[];
   customChartsEnabled?: boolean;
   aiLanguage?: string;
   aiShareDescriptions?: boolean;
   aiChat?: unknown;
   emergencyFund?: Record<string, unknown>;
+  /** Optional cash / accounts balance for net worth (legacy). */
+  netWorthCash?: number;
+  /** Cash + custom assets (apartment, car, …) for net worth. */
+  netWorthAssets?: Record<string, unknown>;
 };
 
 export interface UserProfile {

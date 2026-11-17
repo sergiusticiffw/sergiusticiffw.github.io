@@ -218,4 +218,6 @@ export interface SettingsState {
   onboardingComplete: boolean;
   /** Emergency fund / Goals feature. Off by default. */
   goalsEnabled: boolean;
+  /** Net worth feature. Off by default. */
+  netWorthEnabled: boolean;
 }

@@ -13,6 +13,7 @@ import { Switch } from '@shared/ui';
 import { AI_LANGUAGES, modelLabel } from '../../../ai/config';
 import { maskApiKey } from '../../../ai/apiKey';
 import { describeAiError, testApiKey } from '../../../ai/client';
+import { isAiDebugEnabled, setAiDebugEnabled } from '../../../ai/debug';
 import { useAiApiKey } from '../../../ai/hooks/useAiApiKey';
 import { getSessionAiStats } from '../../../ai/sessionStats';
 import {
@@ -39,6 +40,7 @@ const AiSettings = () => {
   const [busy, setBusy] = useState(false);
   const [share, setShare] = useState(getShareDescriptions);
   const [language, setLanguage] = useState(getAiLanguage);
+  const [debug, setDebug] = useState(isAiDebugEnabled);
   const stats = getSessionAiStats();
   const lastModel =
     stats.usage.lastModel || stats.lastFailed?.model || null;
@@ -255,6 +257,24 @@ const AiSettings = () => {
       </div>
       <p className="mt-2 text-xs leading-relaxed text-app-muted">
         {t('profile.aiShareHint')}
+      </p>
+
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <span id="ai-debug-label" className="text-sm text-app-secondary">
+          {t('profile.aiDebug')}
+        </span>
+        <Switch
+          checked={debug}
+          aria-labelledby="ai-debug-label"
+          onCheckedChange={(checked) => {
+            setAiDebugEnabled(checked);
+            setDebug(checked);
+          }}
+        />
+      </div>
+      <p className="mt-2 text-xs leading-relaxed text-app-muted">
+        {t('profile.aiDebugHint')}
+        {debug ? ` · ${t('profile.aiDebugOn')}` : ''}
       </p>
 
       <div className="mt-4 flex flex-col gap-2 border-t border-white/[0.06] pt-3 text-sm">

@@ -23,6 +23,9 @@ export default defineConfig({
       '@features/assistant': fileURLToPath(
         new URL('./src/features/assistant', import.meta.url)
       ),
+      '@features/netWorth': fileURLToPath(
+        new URL('./src/features/netWorth', import.meta.url)
+      ),
     },
   },
   server: {

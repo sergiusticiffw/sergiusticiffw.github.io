@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { useLocalization } from '@shared/context/localization';
 import { useSettingsCurrency } from '@stores/settingsStore';
-import { Card } from '@shared/ui';
 import { formatNumber } from '@shared/utils/utils';
 import { getCategories } from '@shared/utils/constants';
 import { getDataProviderKind } from '../../../../data';
@@ -49,21 +48,17 @@ const FamilyGoalsProgress: React.FC<FamilyGoalsProgressProps> = ({
   }
 
   return (
-    <section className="mb-5">
-      <Card
-        variant="surface"
-        padding="none"
-        className="border-[var(--color-border-subtle)] overflow-hidden"
-      >
-        <div className="px-4 pt-3.5 pb-2">
-          <h3 className="m-0 text-base font-bold text-app-primary">
+    <section>
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+        <div className="px-4 pt-4 pb-3">
+          <h3 className="m-0 text-center text-xl font-semibold uppercase tracking-wide text-[#e0e0e3]">
             {t('family.goals')}
           </h3>
-          <p className="mt-0.5 mb-0 text-sm text-app-muted">
+          <p className="mt-1.5 mb-0 text-center text-sm text-white/60">
             {t('family.goalsHint')}
           </p>
         </div>
-        <ul className="m-0 list-none px-4 pb-3">
+        <ul className="m-0 list-none border-t border-white/10">
           {goals.map((goal) => {
             const spent = spentByCat.get(goal.category_id) || 0;
             const limit = goal.monthly_limit;
@@ -73,16 +68,19 @@ const FamilyGoalsProgress: React.FC<FamilyGoalsProgressProps> = ({
               categories.find((c) => c.value === goal.category_id)?.label ||
               goal.category_id;
             return (
-              <li key={goal.category_id} className="border-t border-white/[0.04] py-2.5">
-                <div className="mb-1.5 flex items-center justify-between gap-2 text-sm">
-                  <span className="min-w-0 truncate text-app-secondary">
+              <li
+                key={goal.category_id}
+                className="border-b border-white/5 px-4 py-3 last:border-b-0"
+              >
+                <div className="mb-1.5 flex items-center justify-between gap-2 text-[0.95rem]">
+                  <span className="min-w-0 truncate font-medium text-white">
                     {label}
                   </span>
                   <span
                     className={
                       over
                         ? 'tabular-nums text-rose-300'
-                        : 'tabular-nums text-app-muted'
+                        : 'tabular-nums text-white/70'
                     }
                   >
                     {formatNumber(spent)} / {formatNumber(limit)} {currency}
@@ -103,7 +101,7 @@ const FamilyGoalsProgress: React.FC<FamilyGoalsProgressProps> = ({
             );
           })}
         </ul>
-      </Card>
+      </div>
     </section>
   );
 };

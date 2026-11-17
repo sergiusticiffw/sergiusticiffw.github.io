@@ -29,6 +29,7 @@ import { useLoan } from '@stores/loanStore';
 import { modelLabel, nextChatModel } from '../../../../ai/config';
 import { ChatMessage } from '../../../../ai/chatSession';
 import { getAiItems } from '../../../../ai/data';
+import { isAiDebugEnabled } from '../../../../ai/debug';
 import { buildLoanPrompts } from '../../../../ai/loans';
 import { buildDataPrompts } from '../../../../ai/dataPrompts';
 import { useAiApiKey } from '../../../../ai/hooks/useAiApiKey';
@@ -40,6 +41,7 @@ import {
   pickSuggestedPrompts,
 } from '../../../../ai/suggestedPrompts';
 import type { PromptKind } from '../../../../ai/dataPrompts';
+import AiDebugPanel from '../../components/AiDebugPanel';
 import AiMarkdown from '../../components/AiMarkdown';
 
 const formatTokens = (tokens: number) =>
@@ -210,6 +212,9 @@ const AssistantMessage: React.FC<{
               ))}
             </div>
           )}
+        {isAiDebugEnabled() && message.debug ? (
+          <AiDebugPanel trace={message.debug} />
+        ) : null}
       </div>
     </div>
   );
@@ -523,7 +528,10 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
           className={`mt-2 text-center text-xs ${speech.error ? 'text-red-400' : 'text-app-muted'}`}
           role={speech.error ? 'alert' : undefined}
         >
-          {speech.error || t('assistant.disclaimer')}
+          {speech.error ||
+            (isAiDebugEnabled()
+              ? t('assistant.debugDisclaimer')
+              : t('assistant.disclaimer'))}
         </p>
       </div>
     </div>

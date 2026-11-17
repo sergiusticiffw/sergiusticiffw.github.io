@@ -9,6 +9,8 @@ import {
   setSettingsTheme,
   useGoalsEnabled,
   setGoalsEnabled,
+  useNetWorthEnabled,
+  setNetWorthEnabled,
   useOnboardingComplete,
   setOnboardingComplete,
 } from '@stores/settingsStore';
@@ -24,6 +26,7 @@ import {
   FiBarChart2,
   FiDroplet,
   FiShield,
+  FiPieChart,
   FiDatabase,
   FiDownload,
   FiUpload,
@@ -102,6 +105,7 @@ const Profile = () => {
   const currency = useSettingsCurrency();
   const currentTheme = useSettingsTheme();
   const goalsEnabled = useGoalsEnabled();
+  const netWorthEnabled = useNetWorthEnabled();
   const onboardingComplete = useOnboardingComplete();
   const apiClient = useApiClient();
   const [goalsSyncing, setGoalsSyncing] = useState(false);
@@ -799,6 +803,42 @@ const Profile = () => {
                 )}
               </div>
             </div>
+          )}
+        </div>
+
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
+          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
+            <FiPieChart />
+            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
+              {t('profile.netWorth')}
+            </h3>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <span
+                id="net-worth-enabled-label"
+                className="block text-body text-app-secondary"
+              >
+                {t('profile.netWorthEnable')}
+              </span>
+              <p className="m-0 mt-1 text-xs text-app-muted">
+                {t('profile.netWorthEnableHint')}
+              </p>
+            </div>
+            <Switch
+              checked={netWorthEnabled}
+              onCheckedChange={setNetWorthEnabled}
+              aria-labelledby="net-worth-enabled-label"
+            />
+          </div>
+          {netWorthEnabled && (
+            <button
+              type="button"
+              className="mt-3 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm font-medium text-app-secondary hover:bg-white/[0.07] hover:text-app-primary cursor-pointer"
+              onClick={() => navigate({ to: '/expenses/net-worth' })}
+            >
+              {t('profile.netWorthOpen')}
+            </button>
           )}
         </div>
 

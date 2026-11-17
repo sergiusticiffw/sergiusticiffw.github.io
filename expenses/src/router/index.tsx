@@ -19,6 +19,7 @@ import NewHome from '@features/expenses/pages/NewHome';
 import Loans from '@features/loans/pages/Loans';
 import Loan from '@features/loans/pages/Loan';
 import Goals from '@features/goals/pages/Goals';
+import NetWorth from '@features/netWorth/pages/NetWorth';
 import { logger } from '@shared/utils/logger';
 import { getStoredToken } from '@shared/utils/authStorage';
 import { useAuthState } from '@shared/context/context';
@@ -38,6 +39,13 @@ function requireAuth() {
 function requireGoalsEnabled() {
   requireAuth();
   if (!settingsStore.state.goalsEnabled) {
+    throw redirect({ to: '/expenses/user' });
+  }
+}
+
+function requireNetWorthEnabled() {
+  requireAuth();
+  if (!settingsStore.state.netWorthEnabled) {
     throw redirect({ to: '/expenses/user' });
   }
 }
@@ -137,6 +145,13 @@ const goalsRoute = createRoute({
   component: Goals,
 });
 
+const netWorthRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/expenses/net-worth',
+  beforeLoad: requireNetWorthEnabled,
+  component: NetWorth,
+});
+
 const assistantRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/expenses/assistant',
@@ -160,6 +175,7 @@ const routeTree = rootRoute.addChildren([
   loansRoute,
   loanIdRoute,
   goalsRoute,
+  netWorthRoute,
   assistantRoute,
   userRoute,
 ]);

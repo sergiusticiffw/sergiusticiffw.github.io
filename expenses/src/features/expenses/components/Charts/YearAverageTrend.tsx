@@ -25,7 +25,6 @@ import {
 import { getCategoryColor } from '@shared/ui/CategoryIcon';
 import CategoryDonutBreakdown from './CategoryDonutBreakdown';
 import type { TransactionOrIncomeItem } from '@shared/type/types';
-
 const YearAverageTrend = () => {
   const view = useExpenseChartView();
   const raw = useStore(expenseStore, (s) => s.raw);

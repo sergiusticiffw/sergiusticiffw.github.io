@@ -92,7 +92,7 @@ const FamilyCategorySpendList: React.FC<FamilyCategorySpendListProps> = ({
   };
 
   return (
-    <ul className="m-0 list-none px-4 pb-4 pt-1">
+    <ul className="m-0 list-none border-t border-white/10">
       {rows.map((row) => {
         const pct = categoryTotal > 0 ? (row.amount / categoryTotal) * 100 : 0;
         const open = openId === row.id;
@@ -102,16 +102,16 @@ const FamilyCategorySpendList: React.FC<FamilyCategorySpendListProps> = ({
         return (
           <li
             key={row.id}
-            className="border-b border-white/5 py-2.5 last:border-b-0"
+            className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02]"
           >
             <button
               type="button"
-              className="w-full cursor-pointer border-0 bg-transparent p-0 text-left"
+              className="w-full cursor-pointer border-0 bg-transparent px-4 py-3 text-left"
               aria-expanded={open}
               onClick={() => setOpenId(open ? null : row.id)}
             >
               <div className="mb-1.5 flex items-baseline justify-between gap-3">
-                <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-app-primary">
+                <span className="flex min-w-0 items-center gap-2 text-[0.95rem] font-medium text-white">
                   <span
                     className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
                     style={{ background: row.color || '#94a3b8' }}
@@ -121,13 +121,13 @@ const FamilyCategorySpendList: React.FC<FamilyCategorySpendListProps> = ({
                   <FiChevronDown
                     size={14}
                     className={cn(
-                      'shrink-0 text-app-muted transition-transform duration-200',
+                      'shrink-0 text-white/50 transition-transform duration-200',
                       open && 'rotate-180'
                     )}
                     aria-hidden
                   />
                 </span>
-                <span className="shrink-0 text-sm font-semibold tabular-nums text-app-primary">
+                <span className="shrink-0 text-[0.95rem] font-medium tabular-nums text-white">
                   {formatNumber(row.amount)}
                 </span>
               </div>
@@ -146,12 +146,12 @@ const FamilyCategorySpendList: React.FC<FamilyCategorySpendListProps> = ({
             </button>
 
             {open && (
-              <div className="mt-2.5 space-y-2 border-t border-white/[0.04] pt-2.5 pl-1">
-                <p className="m-0 text-xs text-app-muted">
+              <div className="space-y-2 border-t border-white/5 px-4 pb-3 pt-2.5 pl-5">
+                <p className="m-0 text-xs text-white/50">
                   {t('family.memberBreakdown')}
                 </p>
                 {membersRows.length === 0 ? (
-                  <p className="m-0 text-xs text-app-muted">
+                  <p className="m-0 text-xs text-white/50">
                     {t('family.memberBreakdownEmpty')}
                   </p>
                 ) : (
@@ -166,13 +166,13 @@ const FamilyCategorySpendList: React.FC<FamilyCategorySpendListProps> = ({
                           <div className="mb-1 flex items-baseline justify-between gap-3">
                             <span
                               className={cn(
-                                'min-w-0 truncate text-xs text-app-secondary',
-                                member.isYou && 'font-semibold text-app-primary'
+                                'min-w-0 truncate text-xs text-white/70',
+                                member.isYou && 'font-semibold text-white'
                               )}
                             >
                               {member.label}
                             </span>
-                            <span className="shrink-0 text-xs font-semibold tabular-nums text-app-primary">
+                            <span className="shrink-0 text-xs font-semibold tabular-nums text-white">
                               {formatNumber(member.amount)}
                             </span>
                           </div>

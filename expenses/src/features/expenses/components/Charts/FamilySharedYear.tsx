@@ -6,7 +6,7 @@ import { useSettingsCurrency } from '@stores/settingsStore';
 import { useAuthState } from '@shared/context/context';
 import { useLocalization } from '@shared/context/localization';
 import { useHorizontalMonthSwipe } from '@shared/hooks/useHorizontalMonthSwipe';
-import { Card, IconButton } from '@shared/ui';
+import { IconButton } from '@shared/ui';
 import { getCategoryColor } from '@shared/ui/CategoryIcon';
 import { formatNumber } from '@shared/utils/utils';
 import { getCategories } from '@shared/utils/constants';
@@ -192,29 +192,11 @@ const FamilySharedYear: React.FC<FamilySharedYearProps> = ({
   const hasShared = (household.shared_categories || []).length > 0;
 
   return (
-    <section className="mb-5" {...yearSwipeHandlers}>
-      <Card
-        variant="surface"
-        padding="none"
-        className="border-[var(--color-border-subtle)] overflow-hidden"
-      >
-        <div className="flex items-start gap-2 px-4 pt-3.5 pb-2">
-          <div className="min-w-0 flex-1">
-            <h3 className="m-0 text-base font-bold text-app-primary">
-              {t('family.chartTitleYear').replace('{year}', viewedYear)}
-            </h3>
-            <p className="mt-0.5 mb-0 text-sm text-app-muted">
-              {loading && rows.length === 0
-                ? t('family.totalsLoading')
-                : rows.length > 0
-                  ? `${formatNumber(total)} ${currency} · ${t('family.totalsSpentYear')} · ${formatNumber(avgMonthly)} ${currency} ${t('family.totalsAvgMonth')}`
-                  : hasShared
-                    ? t('family.totalsEmptyYear')
-                    : t('family.totalsNoShared')}
-            </p>
-          </div>
+    <section {...yearSwipeHandlers}>
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+        <div className="relative px-4 pt-4 pb-3">
           {canSwipeYears && (
-            <div className="hidden md:flex shrink-0 items-center gap-0.5 pt-0.5">
+            <div className="absolute top-3.5 right-3 hidden items-center gap-0.5 md:flex">
               <IconButton
                 variant="ghost"
                 size="sm"
@@ -235,6 +217,18 @@ const FamilySharedYear: React.FC<FamilySharedYearProps> = ({
               </IconButton>
             </div>
           )}
+          <h3 className="m-0 text-center text-xl font-semibold uppercase tracking-wide text-[#e0e0e3]">
+            {t('family.chartTitleYear').replace('{year}', viewedYear)}
+          </h3>
+          <p className="mt-1.5 mb-0 text-center text-sm text-white/60">
+            {loading && rows.length === 0
+              ? t('family.totalsLoading')
+              : rows.length > 0
+                ? `${formatNumber(total)} ${currency} · ${t('family.totalsSpentYear')} · ${formatNumber(avgMonthly)} ${currency} ${t('family.totalsAvgMonth')}`
+                : hasShared
+                  ? t('family.totalsEmptyYear')
+                  : t('family.totalsNoShared')}
+          </p>
         </div>
 
         <FamilyTotalsBanner
@@ -259,7 +253,7 @@ const FamilySharedYear: React.FC<FamilySharedYearProps> = ({
             />
           </>
         )}
-      </Card>
+      </div>
     </section>
   );
 };

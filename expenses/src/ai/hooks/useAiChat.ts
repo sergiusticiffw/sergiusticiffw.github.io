@@ -14,6 +14,7 @@ import {
   AiError,
   GeminiContent,
   GeminiRequest,
+  StreamDebugEvent,
   describeAiError,
   streamGenerate,
 } from '../client';
@@ -29,6 +30,18 @@ import {
   saveChatSession,
 } from '../chatSession';
 import { buildDataSummary } from '../context/summary';
+import {
+  createDebugTrace,
+  finishDebugTrace,
+  formatDebugBytes,
+  formatDebugMs,
+  formatDebugUsage,
+  isAiDebugEnabled,
+  pushDebugStep,
+  snapshotRequest,
+  snapshotResponse,
+  snapshotTrace,
+} from '../debug';
 import { getAiItems } from '../data';
 import { buildLoanContext } from '../loans';
 import { buildChatSystemInstruction, splitFollowUps } from '../prompts';
@@ -48,6 +61,80 @@ const newId = () => `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 /** Keeps the last N user+model pairs. Past turns are already text-only. */
 const trimHistory = (history: GeminiContent[]) =>
   history.slice(-AI_LIMITS.maxHistoryTurns * 2);
+
+const logStreamDebug = (
+  event: StreamDebugEvent,
+  addDebug: (step: Parameters<typeof pushDebugStep>[1]) => void
+) => {
+  switch (event.type) {
+    case 'skipped':
+      addDebug({
+        kind: 'warn',
+        title: `Skipped ${event.model}`,
+        subtitle:
+          event.reason === 'cooldown'
+            ? `On cooldown${event.until ? ` until ${new Date(event.until).toLocaleTimeString()}` : ''}`
+            : 'Not available for this key',
+        data: {
+          model: event.model,
+          reason: event.reason,
+          until: event.until,
+        },
+      });
+      return;
+    case 'attempt': {
+      const payload = snapshotRequest(event.model, event.url, event.request);
+      addDebug({
+        kind: 'request',
+        title: event.model,
+        subtitle: `${formatDebugBytes(payload)} · ${event.request.contents.length} turn${
+          event.request.contents.length === 1 ? '' : 's'
+        }`,
+        data: payload,
+      });
+      return;
+    }
+    case 'http_error':
+      addDebug({
+        kind: 'error',
+        title: `HTTP ${event.status} · ${event.model}`,
+        subtitle: event.error.message,
+        durationMs: event.durationMs,
+        data: {
+          model: event.model,
+          status: event.status,
+          kind: event.error.kind,
+          message: event.error.message,
+          daily: event.error.daily,
+          retryAfterSeconds: event.error.retryAfterSeconds,
+          quota: event.error.quota,
+        },
+      });
+      return;
+    case 'success': {
+      const payload = snapshotResponse(event.result, event.chunkCount);
+      const calls = event.result.functionCalls.length;
+      addDebug({
+        kind: 'response',
+        title: event.model,
+        subtitle: [
+          event.result.finishReason,
+          calls
+            ? `${calls} tool call${calls === 1 ? '' : 's'}`
+            : event.result.text
+              ? 'text'
+              : 'empty',
+          `${event.chunkCount} chunk${event.chunkCount === 1 ? '' : 's'}`,
+          formatDebugUsage(event.result.usage),
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        durationMs: event.durationMs,
+        data: payload,
+      });
+    }
+  }
+};
 
 const prefillFromSuggest = (
   result: Record<string, unknown>
@@ -138,6 +225,10 @@ export function useAiChat(apiKey: string) {
       recordAiQuestion();
 
       const assistantId = newId();
+      const trace = isAiDebugEnabled() ? createDebugTrace() : null;
+      const publishDebug = () => {
+        if (trace) patchMessage(assistantId, { debug: snapshotTrace(trace) });
+      };
       setMessages((prev) => [
         ...prev,
         { id: newId(), role: 'user', text: trimmed, status: 'done' },
@@ -147,6 +238,7 @@ export function useAiChat(apiKey: string) {
           text: '',
           status: 'streaming',
           activity: 'Thinking',
+          ...(trace && { debug: snapshotTrace(trace) }),
         },
       ]);
       setBusy(true);
@@ -166,6 +258,33 @@ export function useAiChat(apiKey: string) {
       let model: string | undefined;
       let prefill: TransactionPrefill | undefined;
       const turnNotes: string[] = [];
+
+      const addDebug = (step: Parameters<typeof pushDebugStep>[1]) => {
+        if (!trace) return;
+        pushDebugStep(trace, step);
+        publishDebug();
+      };
+
+      addDebug({
+        kind: 'info',
+        title: 'Turn started',
+        subtitle: `${items.length.toLocaleString()} items · ~${Math.round(summary.length / 4).toLocaleString()} summary tokens`,
+        data: {
+          question: trimmed,
+          language: getAiLanguage(),
+          shareDescriptions,
+          currency,
+          itemCount: items.length,
+          historyTurns: Math.floor(chatSession.history.length / 2),
+          summaryChars: summary.length,
+          summaryTokensEstimate: Math.round(summary.length / 4),
+          preferModel: preferModel || null,
+          maxToolRounds: AI_LIMITS.maxToolRounds,
+          maxOutputTokens: AI_LIMITS.chatMaxOutputTokens,
+          goalsEnabled,
+          hasLoans,
+        },
+      });
 
       try {
         const family = await loadFamilyAiContext();
@@ -214,6 +333,22 @@ export function useAiChat(apiKey: string) {
             },
           };
 
+          if (forceAnswer) {
+            addDebug({
+              kind: 'warn',
+              title: 'Forcing an answer',
+              subtitle: `Reached ${AI_LIMITS.maxToolRounds} tool rounds`,
+            });
+          }
+
+          addDebug({
+            kind: 'info',
+            title: `Round ${round + 1}`,
+            subtitle: forceAnswer
+              ? 'Model must answer without tools'
+              : 'Model may call tools',
+          });
+
           const result = await streamGenerate({
             apiKey,
             tier: 'chat',
@@ -227,6 +362,7 @@ export function useAiChat(apiKey: string) {
                 ).answer,
                 activity: undefined,
               }),
+            onDebug: (event) => logStreamDebug(event, addDebug),
           });
 
           const stepTokens = result.usage.totalTokenCount || 0;
@@ -251,8 +387,26 @@ export function useAiChat(apiKey: string) {
           contents.push({
             role: 'user',
             parts: result.functionCalls.map((call) => {
+              const started = Date.now();
               const response = executeTool(call.name, call.args, toolContext);
-              turnNotes.push(summarizeToolResult(call.name, call.args, response));
+              const summaryLine = summarizeToolResult(
+                call.name,
+                call.args,
+                response
+              );
+              turnNotes.push(summaryLine);
+              addDebug({
+                kind: 'tool',
+                title: call.name,
+                subtitle: TOOL_LABELS[call.name] || 'Working',
+                summary: summaryLine,
+                durationMs: Date.now() - started,
+                data: {
+                  id: call.id || null,
+                  arguments: call.args || {},
+                  result: response,
+                },
+              });
               if (call.name === 'suggest_category') {
                 prefill = prefillFromSuggest(response) || prefill;
               }
@@ -278,6 +432,25 @@ export function useAiChat(apiKey: string) {
           userTurn,
           { role: 'model', parts: [{ text: answer }] },
         ];
+        if (trace) {
+          addDebug({
+            kind: 'info',
+            title: 'Turn finished',
+            subtitle: [
+              formatDebugMs(Date.now() - trace.startedAt),
+              tokens ? `${tokens.toLocaleString()} tokens` : '',
+              model || '',
+            ]
+              .filter(Boolean)
+              .join(' · '),
+            data: {
+              answer,
+              followUps,
+              tokens,
+              model,
+            },
+          });
+        }
         patchMessage(assistantId, {
           text: answer,
           status: 'done',
@@ -286,6 +459,7 @@ export function useAiChat(apiKey: string) {
           model,
           ...(followUps.length && { followUps }),
           ...(prefill && { prefill }),
+          ...(trace && { debug: finishDebugTrace(trace) }),
         });
       } catch (error) {
         const stopped = controller.signal.aborted;
@@ -297,6 +471,24 @@ export function useAiChat(apiKey: string) {
           AI_MODELS.chat[0];
         const partial = splitFollowUps(previousText).answer;
         if (turnNotes.length) pushToolNotes(turnNotes);
+        if (trace) {
+          addDebug({
+            kind: stopped ? 'warn' : 'error',
+            title: stopped ? 'Stopped' : 'Turn failed',
+            subtitle: errorText,
+            data:
+              error instanceof AiError
+                ? {
+                    kind: error.kind,
+                    message: error.message,
+                    model: error.model,
+                    daily: error.daily,
+                    retryAfterSeconds: error.retryAfterSeconds,
+                    quota: error.quota,
+                  }
+                : { message: (error as Error)?.message || String(error) },
+          });
+        }
         patchMessage(assistantId, {
           text:
             stopped || !partial
@@ -307,6 +499,7 @@ export function useAiChat(apiKey: string) {
           tokens: tokens || undefined,
           failedModel,
           ...(prefill && { prefill }),
+          ...(trace && { debug: finishDebugTrace(trace) }),
         });
       } finally {
         abortRef.current = null;
@@ -316,6 +509,7 @@ export function useAiChat(apiKey: string) {
     [
       apiKey,
       busy,
+      currency,
       emergencyFund,
       goalsEnabled,
       hasLoans,
