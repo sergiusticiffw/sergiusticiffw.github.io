@@ -7,7 +7,7 @@ import {
 } from '@features/loans/utils/amortization';
 import type { LoanLiability } from './model';
 
-const round2 = (value: number) => Math.round(value * 100) / 100;
+const roundWhole = (value: number) => Math.round(value);
 
 const paymentsForLoan = (
   loanId: string,
@@ -34,14 +34,14 @@ const liability = (input: {
   interest: number;
   status: LoanLiability['status'];
 }): LoanLiability => {
-  const principal = round2(Math.max(0, input.principal));
-  const interest = round2(Math.max(0, input.interest));
+  const principal = roundWhole(Math.max(0, input.principal));
+  const interest = roundWhole(Math.max(0, input.interest));
   return {
     id: input.id,
     name: input.name,
     principal,
     interest,
-    remaining: round2(principal + interest),
+    remaining: roundWhole(principal + interest),
     status: input.status,
   };
 };

@@ -41,7 +41,8 @@ export type NetWorthSnapshot = {
   netWorth: number;
 };
 
-const round2 = (value: number) => Math.round(value * 100) / 100;
+/** Whole currency units only — no cents/bani. */
+const roundWhole = (value: number) => Math.round(value);
 
 const newId = () =>
   typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
@@ -75,7 +76,7 @@ export const createNetWorthAsset = (input: {
   return {
     id: newId(),
     name,
-    value: round2(value),
+    value: roundWhole(value),
     kind: isValidAssetKind(input.kind) ? input.kind : 'other',
   };
 };
@@ -84,7 +85,7 @@ export const sanitizeNetWorthAssets = (value: unknown): NetWorthAssetsState => {
   if (!value || typeof value !== 'object') return emptyNetWorthAssets();
   const raw = value as Partial<NetWorthAssetsState> & { cash?: unknown };
   const cashRaw = Number(raw.cash);
-  const cash = Number.isFinite(cashRaw) ? round2(cashRaw) : 0;
+  const cash = Number.isFinite(cashRaw) ? roundWhole(cashRaw) : 0;
   const items: NetWorthAsset[] = [];
   const seen = new Set<string>();
   if (Array.isArray(raw.items)) {
@@ -104,7 +105,7 @@ export const sanitizeNetWorthAssets = (value: unknown): NetWorthAssetsState => {
       items.push({
         id,
         name,
-        value: round2(amount),
+        value: roundWhole(amount),
         kind: isValidAssetKind(item.kind) ? item.kind : 'other',
       });
     }
@@ -126,33 +127,35 @@ export const buildNetWorth = (input: {
   customAssets?: NetWorthAsset[];
   loans: LoanLiability[];
 }): NetWorthSnapshot => {
-  const emergencyFund = round2(Math.max(0, Number(input.emergencyFund) || 0));
-  const cash = round2(Number(input.cash) || 0);
+  const emergencyFund = roundWhole(
+    Math.max(0, Number(input.emergencyFund) || 0)
+  );
+  const cash = roundWhole(Number(input.cash) || 0);
   const customAssets = (input.customAssets || [])
     .map((asset) => ({
       ...asset,
-      value: round2(Math.max(0, Number(asset.value) || 0)),
+      value: roundWhole(Math.max(0, Number(asset.value) || 0)),
     }))
     .filter((asset) => asset.name);
-  const customAssetsTotal = round2(
+  const customAssetsTotal = roundWhole(
     customAssets.reduce((sum, asset) => sum + asset.value, 0)
   );
   const loans = input.loans
     .map((loan) => {
-      const principal = round2(Math.max(0, Number(loan.principal) || 0));
-      const interest = round2(Math.max(0, Number(loan.interest) || 0));
+      const principal = roundWhole(Math.max(0, Number(loan.principal) || 0));
+      const interest = roundWhole(Math.max(0, Number(loan.interest) || 0));
       return {
         ...loan,
         principal,
         interest,
-        remaining: round2(principal + interest),
+        remaining: roundWhole(principal + interest),
       };
     })
     .filter((loan) => loan.status !== 'completed' || loan.remaining > 0);
-  const liabilities = round2(
+  const liabilities = roundWhole(
     loans.reduce((sum, loan) => sum + loan.remaining, 0)
   );
-  const assets = round2(emergencyFund + cash + customAssetsTotal);
+  const assets = roundWhole(emergencyFund + cash + customAssetsTotal);
   return {
     assets,
     emergencyFund,
@@ -161,6 +164,6 @@ export const buildNetWorth = (input: {
     customAssetsTotal,
     liabilities,
     loans,
-    netWorth: round2(assets - liabilities),
+    netWorth: roundWhole(assets - liabilities),
   };
 };
