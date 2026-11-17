@@ -210,6 +210,11 @@ export const flushPreferencesPush = async (): Promise<boolean> => {
     return false;
   }
 
+  if (debounceTimer) {
+    clearTimeout(debounceTimer);
+    debounceTimer = null;
+  }
+
   const patch = pendingPatch;
   pendingPatch = {};
   const next = mergePreferences(readLocalPreferences(), patch);
@@ -280,6 +285,19 @@ export const flushPreferencesPush = async (): Promise<boolean> => {
 };
 
 /**
+ * Persist UI language to Supabase profiles.preferences immediately.
+ * Returns false when offline / not Supabase / not signed in / push failed.
+ */
+export const persistLanguageToSupabase = async (
+  language: 'en' | 'ro'
+): Promise<boolean> => {
+  if (getDataProviderKind() !== 'supabase') return false;
+  if (!navigator.onLine) return false;
+  schedulePreferencesPush({ language });
+  return flushPreferencesPush();
+};
+
+/**
  * Persist Goals (emergency fund + enabled flag) to Supabase profiles.preferences.
  * No Google Drive. Returns false when offline / not Supabase / not signed in.
  */
@@ -305,6 +323,64 @@ export const persistGoalsToSupabase = async (options?: {
   schedulePreferencesPush({
     emergencyFund: fund,
     goalsEnabled: enabled,
+  });
+  return flushPreferencesPush();
+};
+
+/**
+ * Persist Charts visibility settings to Supabase profiles.preferences immediately.
+ * Returns false when offline / not Supabase / not signed in / push failed.
+ */
+export const persistChartsToSupabase = async (options?: {
+  visibleCharts?: string[];
+  customChartsEnabled?: boolean;
+}): Promise<boolean> => {
+  if (getDataProviderKind() !== 'supabase') return false;
+  if (!navigator.onLine) return false;
+  const session = getSession();
+  const token = getStoredToken();
+  if (!session?.uid || !token || !isUuid(session.uid)) return false;
+
+  schedulePreferencesPush({
+    visibleCharts: options?.visibleCharts ?? readStoredVisibleCharts(),
+    customChartsEnabled:
+      options?.customChartsEnabled !== undefined
+        ? options.customChartsEnabled
+        : readCustomChartsEnabled(),
+  });
+  return flushPreferencesPush();
+};
+
+/**
+ * Persist Net Worth (enabled + assets) to Supabase profiles.preferences immediately.
+ * Returns false when offline / not Supabase / not signed in / push failed.
+ */
+export const persistNetWorthToSupabase = async (options?: {
+  enabled?: boolean;
+  assets?: Record<string, unknown>;
+}): Promise<boolean> => {
+  if (getDataProviderKind() !== 'supabase') return false;
+  if (!navigator.onLine) return false;
+  const session = getSession();
+  const token = getStoredToken();
+  if (!session?.uid || !token || !isUuid(session.uid)) return false;
+
+  const assets =
+    options?.assets != null
+      ? options.assets
+      : (getNetWorthAssets() as unknown as Record<string, unknown>);
+  const enabled =
+    options?.enabled !== undefined
+      ? options.enabled
+      : !!settingsStore.state.netWorthEnabled;
+
+  schedulePreferencesPush({
+    netWorthEnabled: enabled,
+    netWorthCash:
+      typeof (assets as { cash?: unknown }).cash === 'number'
+        ? (assets as { cash: number }).cash
+        : getNetWorthCash(),
+    netWorthAssets: assets,
   });
   return flushPreferencesPush();
 };

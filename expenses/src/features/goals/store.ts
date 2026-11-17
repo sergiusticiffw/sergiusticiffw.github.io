@@ -83,7 +83,7 @@ const persist = (state: EmergencyFundState) => {
   if (!owner) return;
   activeOwner = owner;
   writeStored(owner, state);
-  // Only queue cloud sync when a fresh Supabase session exists — avoids 401 spam.
+  // Queue cloud sync when a fresh Supabase session exists — UI awaits flush.
   void import('../profile/preferencesSync')
     .then(async (m) => {
       if (!(await m.ensureFreshSupabaseSession())) return;

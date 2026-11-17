@@ -2318,6 +2318,7 @@ export const LocalizationProvider: React.FC<LocalizationProviderProps> = ({
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('language', lang);
+    // Debounced push kept as backup; Profile awaits an immediate flush.
     void import('../../features/profile/preferencesSync')
       .then((m) => m.schedulePreferencesPush({ language: lang }))
       .catch(() => undefined);

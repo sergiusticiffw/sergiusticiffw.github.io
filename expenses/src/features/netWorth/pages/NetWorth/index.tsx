@@ -39,10 +39,13 @@ import {
 } from '../../model';
 import {
   addNetWorthAsset,
+  getNetWorthAssets,
   removeNetWorthAsset,
   updateNetWorthAsset,
   useNetWorthAssets,
 } from '../../assetsStore';
+import { persistNetWorthToSupabase } from '../../../profile/preferencesSync';
+import { getDataProviderKind } from '../../../../data';
 
 type AssetDraft = {
   id?: string;
@@ -120,7 +123,15 @@ const NetWorth = () => {
     setAssetOpen(true);
   };
 
-  const saveAsset = () => {
+  const persistAssetsToCloud = async () => {
+    if (!navigator.onLine) return false;
+    if (getDataProviderKind() !== 'supabase') return false;
+    return persistNetWorthToSupabase({
+      assets: getNetWorthAssets() as unknown as Record<string, unknown>,
+    });
+  };
+
+  const saveAsset = async () => {
     const value = parseFloat(assetDraft.value.replace(',', '.'));
     if (!Number.isFinite(value) || value < 0) {
       showNotification(t('netWorth.assetInvalid'), notificationType.ERROR);
@@ -132,41 +143,52 @@ const NetWorth = () => {
       return;
     }
     setSavingAsset(true);
-    if (assetDraft.id) {
-      const updated = updateNetWorthAsset(assetDraft.id, {
-        name,
-        value,
-        kind: assetDraft.kind,
-      });
-      setSavingAsset(false);
-      if (!updated) {
-        showNotification(t('netWorth.assetInvalid'), notificationType.ERROR);
-        return;
+    try {
+      if (assetDraft.id) {
+        const updated = updateNetWorthAsset(assetDraft.id, {
+          name,
+          value,
+          kind: assetDraft.kind,
+        });
+        if (!updated) {
+          showNotification(t('netWorth.assetInvalid'), notificationType.ERROR);
+          return;
+        }
+      } else {
+        const created = addNetWorthAsset({
+          name,
+          value,
+          kind: assetDraft.kind,
+        });
+        if (!created) {
+          showNotification(t('netWorth.assetInvalid'), notificationType.ERROR);
+          return;
+        }
       }
-      showNotification(t('netWorth.assetSaved'), notificationType.SUCCESS);
-    } else {
-      const created = addNetWorthAsset({
-        name,
-        value,
-        kind: assetDraft.kind,
-      });
+      const synced = await persistAssetsToCloud();
+      showNotification(
+        synced ? t('netWorth.assetSaved') : t('goals.savedOffline'),
+        notificationType.SUCCESS
+      );
+      setAssetOpen(false);
+      setAssetDraft(emptyDraft());
+    } catch {
+      showNotification(t('goals.syncError'), notificationType.ERROR);
+    } finally {
       setSavingAsset(false);
-      if (!created) {
-        showNotification(t('netWorth.assetInvalid'), notificationType.ERROR);
-        return;
-      }
-      showNotification(t('netWorth.assetSaved'), notificationType.SUCCESS);
     }
-    setAssetOpen(false);
-    setAssetDraft(emptyDraft());
   };
 
-  const deleteAsset = () => {
+  const deleteAsset = async () => {
     if (!assetDraft.id) return;
     removeNetWorthAsset(assetDraft.id);
     setAssetOpen(false);
     setAssetDraft(emptyDraft());
-    showNotification(t('netWorth.assetDeleted'), notificationType.SUCCESS);
+    const synced = await persistAssetsToCloud();
+    showNotification(
+      synced ? t('netWorth.assetDeleted') : t('goals.savedOffline'),
+      notificationType.SUCCESS
+    );
   };
 
   const loading = data.loading && !data.loans;

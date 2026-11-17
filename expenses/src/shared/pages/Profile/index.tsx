@@ -70,7 +70,12 @@ import {
   getEmergencyFund,
   replaceEmergencyFund,
 } from '../../../features/goals/store';
-import { persistGoalsToSupabase } from '../../../features/profile/preferencesSync';
+import {
+  persistChartsToSupabase,
+  persistGoalsToSupabase,
+  persistLanguageToSupabase,
+  persistNetWorthToSupabase,
+} from '../../../features/profile/preferencesSync';
 import {
   buildBackupSnapshot,
   type ExpensesBackupSnapshot,
@@ -109,6 +114,7 @@ const Profile = () => {
   const onboardingComplete = useOnboardingComplete();
   const apiClient = useApiClient();
   const [goalsSyncing, setGoalsSyncing] = useState(false);
+  const [netWorthSyncing, setNetWorthSyncing] = useState(false);
   const [backupBusy, setBackupBusy] = useState(false);
   const [backupList, setBackupList] = useState<DriveBackupListItem[]>([]);
   const [backupListLoading, setBackupListLoading] = useState(false);
@@ -162,12 +168,38 @@ const Profile = () => {
       });
       showNotification(
         ok ? t('goals.savedDrive') : t('goals.localOnly'),
-        notificationType.SUCCESS
+        ok ? notificationType.SUCCESS : notificationType.ERROR
       );
     } catch {
       showNotification(t('goals.syncError'), notificationType.ERROR);
     } finally {
       setGoalsSyncing(false);
+    }
+  };
+
+  const handleNetWorthEnabledChange = async (checked: boolean) => {
+    setNetWorthEnabled(checked);
+
+    if (!navigator.onLine) {
+      showNotification(t('goals.savedOffline'), notificationType.SUCCESS);
+      return;
+    }
+    if (getDataProviderKind() !== 'supabase') {
+      showNotification(t('goals.localOnly'), notificationType.SUCCESS);
+      return;
+    }
+
+    setNetWorthSyncing(true);
+    try {
+      const ok = await persistNetWorthToSupabase({ enabled: checked });
+      showNotification(
+        ok ? t('notification.profileUpdated') : t('goals.localOnly'),
+        ok ? notificationType.SUCCESS : notificationType.ERROR
+      );
+    } catch {
+      showNotification(t('goals.syncError'), notificationType.ERROR);
+    } finally {
+      setNetWorthSyncing(false);
     }
   };
 
@@ -365,14 +397,25 @@ const Profile = () => {
     return t(`profile.importPhase.${phase}`);
   })();
 
-  const handleLanguageChange = (
+  const handleLanguageChange = async (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const newLanguage = event.target.value as 'en' | 'ro';
     setLanguage(newLanguage);
+
+    if (!navigator.onLine) {
+      showNotification(t('goals.savedOffline'), notificationType.SUCCESS);
+      return;
+    }
+    if (getDataProviderKind() !== 'supabase') {
+      showNotification(t('goals.localOnly'), notificationType.SUCCESS);
+      return;
+    }
+
+    const ok = await persistLanguageToSupabase(newLanguage);
     showNotification(
-      t('notification.profileUpdated'),
-      notificationType.SUCCESS
+      ok ? t('notification.profileUpdated') : t('goals.localOnly'),
+      ok ? notificationType.SUCCESS : notificationType.ERROR
     );
   };
 
@@ -419,14 +462,6 @@ const Profile = () => {
   });
   const [blink, setBlink] = useState(false);
 
-  useEffect(() => {
-    writeStoredVisibleCharts(state.visibleCharts);
-  }, [state.visibleCharts]);
-
-  useEffect(() => {
-    writeCustomChartsEnabled(customChartsEnabled);
-  }, [customChartsEnabled]);
-
   const visibleChartsOrdered = state.visibleCharts.filter((c) =>
     availableCharts.includes(c)
   );
@@ -434,8 +469,54 @@ const Profile = () => {
     (c) => !state.visibleCharts.includes(c)
   );
 
-  const handleVisibleChartsChange = (visible: string[]) => {
+  const syncChartsToCloud = async (options: {
+    visibleCharts: string[];
+    customChartsEnabled: boolean;
+    notify: boolean;
+  }) => {
+    if (!navigator.onLine) {
+      if (options.notify) {
+        showNotification(t('goals.savedOffline'), notificationType.SUCCESS);
+      }
+      return;
+    }
+    if (getDataProviderKind() !== 'supabase') {
+      if (options.notify) {
+        showNotification(t('goals.localOnly'), notificationType.SUCCESS);
+      }
+      return;
+    }
+    const ok = await persistChartsToSupabase({
+      visibleCharts: options.visibleCharts,
+      customChartsEnabled: options.customChartsEnabled,
+    });
+    if (options.notify || !ok) {
+      showNotification(
+        ok ? t('notification.profileUpdated') : t('goals.localOnly'),
+        ok ? notificationType.SUCCESS : notificationType.ERROR
+      );
+    }
+  };
+
+  const handleCustomChartsEnabledChange = async (checked: boolean) => {
+    setCustomChartsEnabled(checked);
+    writeCustomChartsEnabled(checked);
+    await syncChartsToCloud({
+      visibleCharts: state.visibleCharts,
+      customChartsEnabled: checked,
+      notify: true,
+    });
+  };
+
+  const handleVisibleChartsChange = async (visible: string[]) => {
     setState((prev) => ({ ...prev, visibleCharts: visible }));
+    writeStoredVisibleCharts(visible);
+    // Silent sync while dragging/reordering — toast only on failure.
+    await syncChartsToCloud({
+      visibleCharts: visible,
+      customChartsEnabled,
+      notify: false,
+    });
   };
 
   const currentUser =
@@ -784,7 +865,7 @@ const Profile = () => {
                   </span>
                   <Switch
                     checked={customChartsEnabled}
-                    onCheckedChange={setCustomChartsEnabled}
+                    onCheckedChange={handleCustomChartsEnabledChange}
                     aria-labelledby="charts-customize-label"
                   />
                 </div>
@@ -827,7 +908,8 @@ const Profile = () => {
             </div>
             <Switch
               checked={netWorthEnabled}
-              onCheckedChange={setNetWorthEnabled}
+              onCheckedChange={handleNetWorthEnabledChange}
+              disabled={netWorthSyncing}
               aria-labelledby="net-worth-enabled-label"
             />
           </div>

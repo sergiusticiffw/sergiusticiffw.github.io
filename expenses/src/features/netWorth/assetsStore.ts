@@ -100,6 +100,7 @@ const writeState = (next: NetWorthAssetsState, syncRemote = true) => {
   }
   emit();
   if (syncRemote) {
+    // Debounced backup; Net Worth / Profile UI awaits an immediate flush.
     void import('../profile/preferencesSync')
       .then((m) =>
         m.schedulePreferencesPush({
