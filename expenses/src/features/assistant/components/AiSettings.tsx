@@ -16,7 +16,10 @@ import { describeAiError, testApiKey } from '../../../ai/client';
 import { isAiDebugEnabled, setAiDebugEnabled } from '../../../ai/debug';
 import { useAiApiKey } from '../../../ai/hooks/useAiApiKey';
 import { getSessionAiStats } from '../../../ai/sessionStats';
-import { PREFS_APPLIED_EVENT } from '../../profile/preferencesSync';
+import {
+  PREFS_APPLIED_EVENT,
+  pullPreferencesFromProfile,
+} from '../../profile/preferencesSync';
 import {
   getAiLanguage,
   getShareDescriptions,
@@ -47,6 +50,8 @@ const AiSettings = () => {
   useEffect(() => {
     const refresh = () => setStatsVersion((version) => version + 1);
     window.addEventListener(PREFS_APPLIED_EVENT, refresh);
+    // Fetch what the other devices used since this one last synced.
+    void pullPreferencesFromProfile();
     return () => window.removeEventListener(PREFS_APPLIED_EVENT, refresh);
   }, []);
   const stats = getSessionAiStats();
