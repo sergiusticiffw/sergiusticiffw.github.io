@@ -362,7 +362,12 @@ const queryLoanPayments = (ctx: ToolContext, args: Args) => {
   };
 };
 
-const executors: Record<string, (ctx: ToolContext, args: Args) => Record<string, unknown>> = {
+type ToolOutput = Record<string, unknown>;
+
+const executors: Record<
+  string,
+  (ctx: ToolContext, args: Args) => ToolOutput | Promise<ToolOutput>
+> = {
   query_transactions: queryTransactions,
   aggregate,
   get_month_summary: monthSummary,
@@ -381,11 +386,15 @@ const executors: Record<string, (ctx: ToolContext, args: Args) => Record<string,
   ...familyToolExecutors,
 };
 
-export const executeTool = (name: string, args: Args | undefined, ctx: ToolContext) => {
+export const executeTool = async (
+  name: string,
+  args: Args | undefined,
+  ctx: ToolContext
+): Promise<ToolOutput> => {
   const executor = executors[name];
   if (!executor) return { error: `Unknown tool ${name}` };
   try {
-    return executor(ctx, args || {});
+    return await executor(ctx, args || {});
   } catch (error) {
     return { error: (error as Error).message };
   }

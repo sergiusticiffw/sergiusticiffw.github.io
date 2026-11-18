@@ -192,7 +192,17 @@ export const pushToolNotes = (lines: string[]) => {
 
 /** Tool notes can quote the user's own search text, so they are withheld when descriptions are not shared. */
 export const recentToolNotesText = (shareDescriptions = true) =>
-  shareDescriptions ? chatSession.toolNotes.join('\n---\n') : '';
+  shareDescriptions
+    ? chatSession.toolNotes
+        .map((note) =>
+          note
+            .split('\n')
+            .filter((line) => !line.includes('-> error:'))
+            .join('\n')
+        )
+        .filter(Boolean)
+        .join('\n---\n')
+    : '';
 
 const CHART_FENCE = /```chart[\s\S]*?(```|$)/gi;
 

@@ -12,7 +12,10 @@ import {
   monthPaceForView,
 } from '@features/expenses/budgets/model';
 import { sharedTotalsFromItems } from '@features/expenses/components/Charts/familyTotals';
-import { getEncryptionSnapshot, getSession } from '../../crypto/encryptionState';
+import {
+  getEncryptionSnapshot,
+  getSession,
+} from '../../crypto/encryptionState';
 import {
   getDataProvider,
   getDataProviderKind,
@@ -59,9 +62,6 @@ export type FamilyAiSnapshot = {
   goals: HouseholdCategoryGoal[];
   invites: HouseholdInvite[];
   activity: HouseholdActivityItem[];
-  /** Day x category x member rows for `dailyMonths` only. */
-  dailyRows: FamilyCategoryDailyTotal[];
-  dailyMonths: string[];
   totalsSource: FamilyAiSource;
 };
 
@@ -84,9 +84,14 @@ type RemoteFamily = {
   incomeTotals: FamilyCategoryTotal[];
   incomeMemberTotals: FamilyCategoryMemberTotal[];
   activity: HouseholdActivityItem[];
-  dailyRows: FamilyCategoryDailyTotal[];
-  dailyMonths: string[];
 };
+
+/** Daily rows are fetched per month on demand, then kept briefly. */
+const MAX_DAILY_MONTHS = 24;
+let dailyCache = new Map<
+  string,
+  { at: number; rows: FamilyCategoryDailyTotal[] }
+>();
 
 let cache: {
   uid: string;
@@ -98,6 +103,7 @@ let cache: {
 /** Drop the prefetched household data (membership, shared categories or goals changed). */
 export const clearFamilyAiCache = (): void => {
   cache = null;
+  dailyCache = new Map();
 };
 
 const memberLabel = (m: HouseholdMember, myUid: string): FamilyAiMember => {
@@ -121,10 +127,8 @@ const shiftMonth = (month: string, delta: number) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 };
 
-const ok = <T>(result: {
-  success: boolean;
-  data?: T;
-}): T | null => (result.success && result.data ? result.data : null);
+const ok = <T>(result: { success: boolean; data?: T }): T | null =>
+  result.success && result.data ? result.data : null;
 
 const fetchRemote = async (
   encrypted: boolean
@@ -139,9 +143,6 @@ const fetchRemote = async (
   if (!house.success || !house.data) return null;
   const household = house.data;
 
-  const current = localToday().slice(0, 7);
-  const dailyMonths = [current, shiftMonth(current, -1)];
-
   const activityPromise = provider.listHouseholdActivity();
   // Encrypted rows have blank server amounts and categories: skip the RPCs.
   if (encrypted) {
@@ -152,22 +153,16 @@ const fetchRemote = async (
       incomeTotals: [],
       incomeMemberTotals: [],
       activity: ok(await activityPromise) ?? [],
-      dailyRows: [],
-      dailyMonths: [],
     };
   }
 
-  const [totals, members, income, incomeMembers, activity, ...daily] =
-    await Promise.all([
-      provider.listFamilyCategoryTotals(),
-      provider.listFamilyCategoryMemberTotals(),
-      provider.listFamilyIncomeTotals(),
-      provider.listFamilyIncomeMemberTotals(),
-      activityPromise,
-      ...dailyMonths.map((month) =>
-        provider.listFamilyCategoryDailyTotals(month)
-      ),
-    ]);
+  const [totals, members, income, incomeMembers, activity] = await Promise.all([
+    provider.listFamilyCategoryTotals(),
+    provider.listFamilyCategoryMemberTotals(),
+    provider.listFamilyIncomeTotals(),
+    provider.listFamilyIncomeMemberTotals(),
+    activityPromise,
+  ]);
 
   return {
     household,
@@ -176,8 +171,6 @@ const fetchRemote = async (
     incomeTotals: ok(income) ?? [],
     incomeMemberTotals: ok(incomeMembers) ?? [],
     activity: ok(activity) ?? [],
-    dailyRows: daily.flatMap((result) => ok(result) ?? []),
-    dailyMonths,
   };
 };
 
@@ -235,8 +228,6 @@ const buildSnapshot = (
       (invite) => invite.status === 'pending'
     ),
     activity: remote.activity,
-    dailyRows: rpc ? remote.dailyRows : [],
-    dailyMonths: rpc ? remote.dailyMonths : [],
     totalsSource,
   };
 };
@@ -277,9 +268,9 @@ export const loadFamilyAiContext = async (
 
 const SOURCE_NOTES: Record<Exclude<FamilyAiSource, 'rpc'>, string> = {
   personal_fallback:
-    'Family totals are not available from the server right now, so these figures only include the user\'s own spending in shared categories. Say so; do not present them as the household total.',
+    "Family totals are not available from the server right now, so these figures only include the user's own spending in shared categories. Say so; do not present them as the household total.",
   encryption_local:
-    'Encryption is on, so other members\' amounts cannot be read. These figures only include the user\'s own spending in shared categories. Say so; do not present them as the household total.',
+    "Encryption is on, so other members' amounts cannot be read. These figures only include the user's own spending in shared categories. Say so; do not present them as the household total.",
 };
 
 /** Adds the data source (and a caveat when it is not the household total) to a result. */
@@ -398,7 +389,10 @@ const requireFamily = (
 
 const MONTH = /^\d{4}-\d{2}$/;
 
-const parseMonth = (value: unknown, fallback: string): string | { error: string } => {
+const parseMonth = (
+  value: unknown,
+  fallback: string
+): string | { error: string } => {
   if (value == null || value === '') return fallback;
   const month = String(value).slice(0, 7);
   if (!MONTH.test(month)) return { error: 'month must be YYYY-MM' };
@@ -500,7 +494,10 @@ const getFamilyOverview = (ctx: FamilyToolContext, _args: Args): ToolResult => {
   });
 };
 
-const getFamilySharedTotals = (ctx: FamilyToolContext, args: Args): ToolResult => {
+const getFamilySharedTotals = (
+  ctx: FamilyToolContext,
+  args: Args
+): ToolResult => {
   const family = requireFamily(ctx);
   if ('error' in family) return family;
 
@@ -670,7 +667,7 @@ const getFamilyIncome = (ctx: FamilyToolContext, args: Args): ToolResult => {
   if (family.totalsSource === 'encryption_local') {
     return {
       error:
-        'Family income is not readable while encryption is on (other members\' amounts are encrypted).',
+        "Family income is not readable while encryption is on (other members' amounts are encrypted).",
     };
   }
   const range = parseRange(args, localToday().slice(0, 7));
@@ -713,7 +710,53 @@ const getFamilyIncome = (ctx: FamilyToolContext, args: Args): ToolResult => {
   });
 };
 
-const getFamilyDailySpend = (ctx: FamilyToolContext, args: Args): ToolResult => {
+/** Months from `start` to `end` inclusive (YYYY-MM). */
+const monthsBetween = (start: string, end: string): string[] => {
+  const months: string[] = [];
+  for (let m = start; m <= end && months.length <= MAX_DAILY_MONTHS;) {
+    months.push(m);
+    m = shiftMonth(m, 1);
+  }
+  return months;
+};
+
+/** Daily household rows for the given months, fetched on demand and cached briefly. */
+const loadDailyRows = async (
+  family: FamilyAiSnapshot,
+  months: string[]
+): Promise<{ rows: FamilyCategoryDailyTotal[]; failed: string[] }> => {
+  const provider = getDataProvider();
+  const token = getStoredToken() || getSession()?.token;
+  if (token) provider.configure(token);
+  const now = Date.now();
+  const failed: string[] = [];
+  const results = await Promise.all(
+    months.map(async (month) => {
+      const key = `${family.myUid}|${month}`;
+      const hit = dailyCache.get(key);
+      if (hit && now - hit.at < CACHE_TTL_MS) return hit.rows;
+      try {
+        const result = await provider.listFamilyCategoryDailyTotals(month);
+        const rows = ok(result);
+        if (!rows) {
+          failed.push(month);
+          return [];
+        }
+        dailyCache.set(key, { at: now, rows });
+        return rows;
+      } catch {
+        failed.push(month);
+        return [];
+      }
+    })
+  );
+  return { rows: results.flat(), failed };
+};
+
+const getFamilyDailySpend = async (
+  ctx: FamilyToolContext,
+  args: Args
+): Promise<ToolResult> => {
   const family = requireFamily(ctx);
   if ('error' in family) return family;
   if (family.totalsSource !== 'rpc') {
@@ -727,14 +770,15 @@ const getFamilyDailySpend = (ctx: FamilyToolContext, args: Args): ToolResult => 
     typeof args.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(args.day)
       ? args.day
       : '';
-  const month = parseMonth(
-    args.month,
-    day ? day.slice(0, 7) : localToday().slice(0, 7)
-  );
-  if (typeof month !== 'string') return month;
-  if (!family.dailyMonths.includes(month)) {
+  const current = localToday().slice(0, 7);
+  const range = day
+    ? { start: day.slice(0, 7), end: day.slice(0, 7) }
+    : parseRange(args, current);
+  if ('error' in range) return range;
+  const months = monthsBetween(range.start, range.end);
+  if (months.length > MAX_DAILY_MONTHS) {
     return {
-      error: `Daily data is only available for ${family.dailyMonths.join(' and ')}.`,
+      error: `Daily data is limited to ${MAX_DAILY_MONTHS} months at a time. Narrow from/to.`,
     };
   }
 
@@ -751,9 +795,15 @@ const getFamilyDailySpend = (ctx: FamilyToolContext, args: Args): ToolResult => 
     categoryId = found;
   }
 
-  const rows = family.dailyRows.filter(
+  const loaded = await loadDailyRows(family, months);
+  if (loaded.failed.length === months.length) {
+    return {
+      error: `Daily family data could not be loaded for ${loaded.failed.join(', ')}.`,
+    };
+  }
+
+  const rows = loaded.rows.filter(
     (row) =>
-      row.day.startsWith(month) &&
       (!day || row.day === day) &&
       (!member || row.user_id.toLowerCase() === member.userId.toLowerCase()) &&
       (!categoryId || row.category_id === categoryId)
@@ -782,7 +832,8 @@ const getFamilyDailySpend = (ctx: FamilyToolContext, args: Args): ToolResult => 
   );
 
   return withSource(family, {
-    month,
+    from: months[0],
+    to: months[months.length - 1],
     day: day || null,
     total: round(total),
     daysWithSpend: perDay.size,
@@ -790,6 +841,9 @@ const getFamilyDailySpend = (ctx: FamilyToolContext, args: Args): ToolResult => 
     groupedBy: groupBy,
     columns: `${groupBy}|amount`,
     truncated: entries.length > MAX_DAILY_ROWS,
+    ...(loaded.failed.length && {
+      note: `Could not load ${loaded.failed.join(', ')}; those months are missing from the figures.`,
+    }),
     rows: entries
       .slice(0, MAX_DAILY_ROWS)
       .map(([key, amount]) => `${key}|${round(amount)}`)
@@ -800,9 +854,14 @@ const getFamilyDailySpend = (ctx: FamilyToolContext, args: Args): ToolResult => 
 const detailOf = (payload: Record<string, unknown> | undefined) => {
   if (!payload) return '';
   return Object.entries(payload)
-    .filter(([, value]) => ['string', 'number', 'boolean'].includes(typeof value))
+    .filter(([, value]) =>
+      ['string', 'number', 'boolean'].includes(typeof value)
+    )
     .slice(0, 4)
-    .map(([key, value]) => `${key}=${String(value).slice(0, 40).replace(/\|/g, '/')}`)
+    .map(
+      ([key, value]) =>
+        `${key}=${String(value).slice(0, 40).replace(/\|/g, '/')}`
+    )
     .join(' ');
 };
 
@@ -849,7 +908,10 @@ export const familyToolDeclarations: GeminiFunctionDeclaration[] = [
     parameters: {
       type: 'object',
       properties: {
-        month: { type: 'string', description: 'YYYY-MM. Default current month.' },
+        month: {
+          type: 'string',
+          description: 'YYYY-MM. Default current month.',
+        },
         from: { type: 'string', description: 'Start month YYYY-MM (range).' },
         to: { type: 'string', description: 'End month YYYY-MM (range).' },
         categories: {
@@ -888,7 +950,10 @@ export const familyToolDeclarations: GeminiFunctionDeclaration[] = [
     parameters: {
       type: 'object',
       properties: {
-        month: { type: 'string', description: 'YYYY-MM. Default current month.' },
+        month: {
+          type: 'string',
+          description: 'YYYY-MM. Default current month.',
+        },
       },
     },
   },
@@ -899,7 +964,10 @@ export const familyToolDeclarations: GeminiFunctionDeclaration[] = [
     parameters: {
       type: 'object',
       properties: {
-        month: { type: 'string', description: 'YYYY-MM. Default current month.' },
+        month: {
+          type: 'string',
+          description: 'YYYY-MM. Default current month.',
+        },
         from: { type: 'string', description: 'Start month YYYY-MM (range).' },
         to: { type: 'string', description: 'End month YYYY-MM (range).' },
       },
@@ -908,14 +976,22 @@ export const familyToolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'get_family_daily_spend',
     description:
-      'Shared-category spend per day (aggregates, no transaction details), for the current or previous month only. Optional day (YYYY-MM-DD), member (name or "me"), category, and groupBy day (default), member or category. Also returns the busiest day. Use for "what did my partner spend yesterday" or "which day did we spend most".',
+      'Shared-category spend per day (aggregates, no transaction details) for ANY month, e.g. "the busiest family day in August". Optional month (YYYY-MM, default current) or from/to months (max 24), day (YYYY-MM-DD), member (name or "me"), category, and groupBy day (default), member or category. Also returns the busiest day. Use for "what did my partner spend yesterday" or "which day did we spend most".',
     parameters: {
       type: 'object',
       properties: {
-        month: { type: 'string', description: 'YYYY-MM, current or previous month.' },
+        month: {
+          type: 'string',
+          description: 'YYYY-MM. Default current month.',
+        },
+        from: { type: 'string', description: 'Start month YYYY-MM (range).' },
+        to: { type: 'string', description: 'End month YYYY-MM (range).' },
         day: { type: 'string', description: 'YYYY-MM-DD.' },
         member: { type: 'string', description: 'Member name, or "me".' },
-        category: { type: 'string', description: 'Shared category id or name.' },
+        category: {
+          type: 'string',
+          description: 'Shared category id or name.',
+        },
         groupBy: { type: 'string', enum: ['day', 'member', 'category'] },
       },
     },
@@ -927,7 +1003,10 @@ export const familyToolDeclarations: GeminiFunctionDeclaration[] = [
     parameters: {
       type: 'object',
       properties: {
-        limit: { type: 'integer', description: 'Max events, default 20, max 50.' },
+        limit: {
+          type: 'integer',
+          description: 'Max events, default 20, max 50.',
+        },
       },
     },
   },
@@ -935,7 +1014,7 @@ export const familyToolDeclarations: GeminiFunctionDeclaration[] = [
 
 export const familyToolExecutors: Record<
   string,
-  (ctx: FamilyToolContext, args: Args) => ToolResult
+  (ctx: FamilyToolContext, args: Args) => ToolResult | Promise<ToolResult>
 > = {
   get_family_overview: getFamilyOverview,
   get_family_shared_totals: getFamilySharedTotals,

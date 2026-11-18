@@ -56,10 +56,7 @@ import { getAiLanguage, getShareDescriptions } from '../storage';
 import { getToolDeclarations } from '../tools/definitions';
 import { TOOL_LABELS, executeTool } from '../tools/executors';
 import { summarizeToolResult } from '../tools/expenseTools';
-import {
-  formatFamilySummary,
-  loadFamilyAiContext,
-} from '../tools/familyTools';
+import { formatFamilySummary, loadFamilyAiContext } from '../tools/familyTools';
 import { formatGoalsSummary } from '../tools/goalTools';
 import { formatNetWorthSummary } from '../tools/netWorthTools';
 
@@ -458,41 +455,49 @@ export function useAiChat(apiKey: string) {
           });
           contents.push({
             role: 'user',
-            parts: result.functionCalls.map((call) => {
-              const started = Date.now();
-              const response = executeTool(call.name, call.args, toolContext);
-              const summaryLine = summarizeToolResult(
-                call.name,
-                call.args,
-                response
-              );
-              turnNotes.push(summaryLine);
-              addDebug({
-                kind: 'tool',
-                title: call.name,
-                subtitle: TOOL_LABELS[call.name] || 'Working',
-                summary: summaryLine,
-                durationMs: Date.now() - started,
-                data: {
-                  id: call.id || null,
-                  arguments: call.args || {},
-                  result: response,
-                },
-              });
-              if (
-                call.name === 'suggest_category' ||
-                call.name === 'prepare_transaction'
-              ) {
-                prefill = prefillFromSuggest(response) || prefill;
-              }
-              return {
-                functionResponse: {
-                  ...(call.id && { id: call.id }),
-                  name: call.name,
-                  response,
-                },
-              };
-            }),
+            parts: await Promise.all(
+              result.functionCalls.map(async (call) => {
+                const started = Date.now();
+                const response = await executeTool(
+                  call.name,
+                  call.args,
+                  toolContext
+                );
+                const summaryLine = summarizeToolResult(
+                  call.name,
+                  call.args,
+                  response
+                );
+                // A failed call says nothing durable; keeping it would make the
+              // model repeat the failure instead of trying the tool again.
+              if (!response.error) turnNotes.push(summaryLine);
+                addDebug({
+                  kind: 'tool',
+                  title: call.name,
+                  subtitle: TOOL_LABELS[call.name] || 'Working',
+                  summary: summaryLine,
+                  durationMs: Date.now() - started,
+                  data: {
+                    id: call.id || null,
+                    arguments: call.args || {},
+                    result: response,
+                  },
+                });
+                if (
+                  call.name === 'suggest_category' ||
+                  call.name === 'prepare_transaction'
+                ) {
+                  prefill = prefillFromSuggest(response) || prefill;
+                }
+                return {
+                  functionResponse: {
+                    ...(call.id && { id: call.id }),
+                    name: call.name,
+                    response,
+                  },
+                };
+              })
+            ),
           });
         }
 
@@ -502,10 +507,7 @@ export function useAiChat(apiKey: string) {
         }
 
         pushToolNotes(turnNotes);
-        chatSession.history = [
-          ...chatSession.history,
-          ...savedTurns(answer),
-        ];
+        chatSession.history = [...chatSession.history, ...savedTurns(answer)];
         if (trace) {
           addDebug({
             kind: 'info',
