@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   FiCreditCard,
@@ -18,7 +18,10 @@ import { fetchLoans as fetchLoansService } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useLocalization } from '@shared/context/localization';
 import { useNotification } from '@shared/context/notification';
+import useSwipeActions from '@shared/hooks/useSwipeActions';
+import { isDesktopLayout } from '@shared/utils/isDesktopLayout';
 import {
+  DeleteConfirmDrawer,
   FormField,
   Loader,
   LoadingSpinner,
@@ -78,6 +81,18 @@ const NetWorth = () => {
   const [assetOpen, setAssetOpen] = useState(false);
   const [assetDraft, setAssetDraft] = useState<AssetDraft>(emptyDraft);
   const [savingAsset, setSavingAsset] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const assetsListRef = useRef<HTMLUListElement>(null);
+  const isDesktop = isDesktopLayout();
+  const {
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    deleteVisible,
+    editVisible,
+    swipedItemId,
+  } = useSwipeActions();
 
   useEffect(() => {
     if (!data.loans && apiClient) {
@@ -179,16 +194,27 @@ const NetWorth = () => {
     }
   };
 
+  const handleEditById = (id: string) => {
+    const asset = assetsState.items.find((item) => item.id === id);
+    if (asset) openEditAsset(asset);
+  };
+
   const deleteAsset = async () => {
-    if (!assetDraft.id) return;
-    removeNetWorthAsset(assetDraft.id);
-    setAssetOpen(false);
-    setAssetDraft(emptyDraft());
-    const synced = await persistAssetsToCloud();
-    showNotification(
-      synced ? t('netWorth.assetDeleted') : t('goals.savedOffline'),
-      notificationType.SUCCESS
-    );
+    if (!deleteId) return;
+    setDeleting(true);
+    try {
+      removeNetWorthAsset(deleteId);
+      setDeleteId(null);
+      const synced = await persistAssetsToCloud();
+      showNotification(
+        synced ? t('netWorth.assetDeleted') : t('goals.savedOffline'),
+        notificationType.SUCCESS
+      );
+    } catch {
+      showNotification(t('goals.syncError'), notificationType.ERROR);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const loading = data.loading && !data.loans;
@@ -236,7 +262,10 @@ const NetWorth = () => {
                 {formatNumber(snapshot.assets)} {currency}
               </span>
             </div>
-            <ul className="m-0 p-0 list-none">
+            <ul
+              ref={assetsListRef}
+              className="m-0 p-0 list-none overflow-x-hidden"
+            >
               <li
                 className={`flex items-center justify-between gap-3 px-4 py-3 ${
                   snapshot.customAssets.length > 0
@@ -271,42 +300,104 @@ const NetWorth = () => {
               </li>
               {snapshot.customAssets.map((asset, index, list) => {
                 const Icon = kindIcon(asset.kind);
+                const isThisItemSwiped = swipedItemId === asset.id;
                 return (
                   <li
                     key={asset.id}
-                    className={`flex items-center justify-between gap-3 px-4 py-3 ${
+                    className={`relative overflow-hidden ${
                       index < list.length - 1
                         ? 'border-b border-white/[0.04]'
                         : ''
                     }`}
                   >
-                    <div className="min-w-0 flex items-start gap-2.5">
-                      <Icon
-                        className="mt-0.5 shrink-0 text-app-muted"
-                        size={15}
-                        aria-hidden
-                      />
-                      <div className="min-w-0">
-                        <p className="m-0 text-sm text-app-primary truncate">
-                          {asset.name}
-                        </p>
-                        <p className="m-0 mt-0.5 text-[11px] text-app-muted">
-                          {kindLabel(asset.kind)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-sm font-semibold tabular-nums text-app-secondary">
-                        {formatNumber(asset.value)}
-                      </span>
-                      <button
-                        type="button"
-                        className="p-1.5 border-none bg-transparent text-app-muted hover:text-app-primary cursor-pointer"
-                        onClick={() => openEditAsset(asset)}
-                        aria-label={t('netWorth.editAsset')}
+                    {!isDesktop && (
+                      <div
+                        data-swipe-actions
+                        className={`absolute inset-0 z-[1] flex items-center justify-between opacity-0 transition-opacity duration-200 pointer-events-none ${
+                          isThisItemSwiped && (deleteVisible || editVisible)
+                            ? 'opacity-100'
+                            : ''
+                        }`}
                       >
-                        <FiEdit2 size={15} />
-                      </button>
+                        {isThisItemSwiped && deleteVisible && (
+                          <div className="absolute left-3 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white shadow-[0_2px_12px_rgba(239,68,68,0.4)] [&_svg]:text-[1.1rem]">
+                            <FiTrash2 />
+                          </div>
+                        )}
+                        {isThisItemSwiped && editVisible && (
+                          <div className="absolute right-3 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] text-white shadow-[0_2px_12px_var(--color-app-accent-shadow)] [&_svg]:text-[1.1rem]">
+                            <FiEdit2 />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div
+                      data-id={asset.id}
+                      className="relative z-[1] flex items-center justify-between gap-3 px-4 py-3 bg-[var(--color-app-bg)] [background-image:linear-gradient(rgba(255,255,255,0.03),rgba(255,255,255,0.03))]"
+                      style={{ touchAction: 'pan-y pan-x pinch-zoom' }}
+                      onTouchStart={
+                        !isDesktop
+                          ? (e) => handleTouchStart(e, asset.id, assetsListRef)
+                          : undefined
+                      }
+                      onTouchMove={
+                        !isDesktop
+                          ? (e) => handleTouchMove(e, assetsListRef)
+                          : undefined
+                      }
+                      onTouchEnd={
+                        !isDesktop
+                          ? (e) =>
+                              handleTouchEnd(
+                                e,
+                                assetsListRef,
+                                asset.id,
+                                handleEditById,
+                                setDeleteId
+                              )
+                          : undefined
+                      }
+                    >
+                      <div className="min-w-0 flex items-start gap-2.5">
+                        <Icon
+                          className="mt-0.5 shrink-0 text-app-muted"
+                          size={15}
+                          aria-hidden
+                        />
+                        <div className="min-w-0">
+                          <p className="m-0 text-sm text-app-primary truncate">
+                            {asset.name}
+                          </p>
+                          <p className="m-0 mt-0.5 text-[11px] text-app-muted">
+                            {kindLabel(asset.kind)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-sm font-semibold tabular-nums text-app-secondary">
+                          {formatNumber(asset.value)}
+                        </span>
+                        {isDesktop && (
+                          <>
+                            <button
+                              type="button"
+                              className="p-1.5 border-none bg-transparent text-app-muted hover:text-app-primary cursor-pointer"
+                              onClick={() => openEditAsset(asset)}
+                              aria-label={t('netWorth.editAsset')}
+                            >
+                              <FiEdit2 size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              className="p-1.5 border-none bg-transparent text-app-muted hover:text-app-primary cursor-pointer"
+                              onClick={() => setDeleteId(asset.id)}
+                              aria-label={t('netWorth.deleteAsset')}
+                            >
+                              <FiTrash2 size={15} />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </li>
                 );
@@ -492,18 +583,16 @@ const NetWorth = () => {
               <span>{t('netWorth.saveAsset')}</span>
             )}
           </button>
-          {assetDraft.id && (
-            <button
-              type="button"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-expense)]/40 bg-transparent px-4 py-2.5 text-sm font-medium text-[var(--color-expense)] cursor-pointer hover:bg-[var(--color-expense)]/10"
-              onClick={deleteAsset}
-            >
-              <FiTrash2 size={15} aria-hidden />
-              {t('netWorth.deleteAsset')}
-            </button>
-          )}
         </div>
       </VaulDrawer>
+
+      <DeleteConfirmDrawer
+        open={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={deleteAsset}
+        title={t('netWorth.deleteAsset')}
+        isSubmitting={deleting}
+      />
     </div>
   );
 };
