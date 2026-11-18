@@ -31,6 +31,10 @@ import {
   readChatSessionForPrefs,
 } from '../../ai/chatSession';
 import {
+  hydrateAiUsageFromPrefs,
+  readAiUsageForPrefs,
+} from '../../ai/sessionStats';
+import {
   getEmergencyFund,
   replaceEmergencyFund,
 } from '../goals/store';
@@ -76,6 +80,7 @@ export const readLocalPreferences = (): ProfilePreferences => {
     aiLanguage: getAiLanguage(),
     aiShareDescriptions: getShareDescriptions(),
     aiChat: readChatSessionForPrefs(),
+    aiUsage: readAiUsageForPrefs(),
     emergencyFund: fund as unknown as Record<string, unknown>,
     netWorthCash: getNetWorthCash(),
     netWorthAssets: getNetWorthAssets() as unknown as Record<string, unknown>,
@@ -121,6 +126,9 @@ export const applyPreferencesLocally = (
     }
     if (p.aiChat != null) {
       hydrateChatSessionFromPrefs(p.aiChat);
+    }
+    if (p.aiUsage != null) {
+      hydrateAiUsageFromPrefs(p.aiUsage);
     }
     if (p.emergencyFund && typeof p.emergencyFund === 'object') {
       const remote = normalizeEmergencyFund(p.emergencyFund);
@@ -268,6 +276,10 @@ export const flushPreferencesPush = async (): Promise<boolean> => {
       const remote = existing.data?.preferences as
         | ProfilePreferences
         | undefined;
+      // The whole preferences object is replaced below: fold in the other
+      // devices' usage first so this write never erases it.
+      if (remote?.aiUsage != null) hydrateAiUsageFromPrefs(remote.aiUsage);
+      next.aiUsage = readAiUsageForPrefs();
       if (typeof remote?.onboardingComplete === 'boolean') {
         next.onboardingComplete = remote.onboardingComplete;
       } else {

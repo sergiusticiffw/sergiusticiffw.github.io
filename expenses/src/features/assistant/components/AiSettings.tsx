@@ -1,5 +1,5 @@
 import { LuSparkles } from 'react-icons/lu';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FiChevronDown,
   FiChevronUp,
@@ -16,6 +16,7 @@ import { describeAiError, testApiKey } from '../../../ai/client';
 import { isAiDebugEnabled, setAiDebugEnabled } from '../../../ai/debug';
 import { useAiApiKey } from '../../../ai/hooks/useAiApiKey';
 import { getSessionAiStats } from '../../../ai/sessionStats';
+import { PREFS_APPLIED_EVENT } from '../../profile/preferencesSync';
 import {
   getAiLanguage,
   getShareDescriptions,
@@ -41,6 +42,13 @@ const AiSettings = () => {
   const [share, setShare] = useState(getShareDescriptions);
   const [language, setLanguage] = useState(getAiLanguage);
   const [debug, setDebug] = useState(isAiDebugEnabled);
+  // Usage from other devices arrives with the synced preferences.
+  const [, setStatsVersion] = useState(0);
+  useEffect(() => {
+    const refresh = () => setStatsVersion((version) => version + 1);
+    window.addEventListener(PREFS_APPLIED_EVENT, refresh);
+    return () => window.removeEventListener(PREFS_APPLIED_EVENT, refresh);
+  }, []);
   const stats = getSessionAiStats();
   const lastModel =
     stats.usage.lastModel || stats.lastFailed?.model || null;

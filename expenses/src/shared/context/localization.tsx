@@ -639,7 +639,7 @@ const translations = {
     'profile.aiDebugHint':
       'New replies show every step, payload, and response. Not saved with chat history.',
     'profile.aiDebugOn': 'Debug on',
-    'profile.aiStatsHint': 'Questions, requests and tokens are for this visit only and are not saved. A model pause stays on this device so that model is skipped until the limit passes. The Gemini daily quota resets at midnight Pacific time.',
+    'profile.aiStatsHint': 'Questions, requests and tokens are for today, added up across all your devices, and reset with the Gemini daily quota at midnight Pacific time. A model pause stays on this device so that model is skipped until the limit passes.',
     'profile.aiQuestions': 'Questions',
     'profile.aiRequests': 'Gemini requests',
     'profile.aiTokens': 'Tokens used',
@@ -1784,7 +1784,7 @@ const translations = {
     'profile.aiDebugHint':
       'Răspunsurile noi arată fiecare pas, payload și răspuns. Nu se salvează în istoricul chatului.',
     'profile.aiDebugOn': 'Debug activ',
-    'profile.aiStatsHint': 'Întrebările, cererile și tokenii sunt doar pentru vizita asta și nu se salvează. Pauza unui model rămâne pe dispozitiv ca să fie sărit până trece limita. Cota zilnică Gemini se resetează la miezul nopții, ora Pacific.',
+    'profile.aiStatsHint': 'Întrebările, cererile și tokenii sunt pentru azi, adunate de pe toate dispozitivele tale, și se resetează odată cu cota zilnică Gemini, la miezul nopții ora Pacific. Pauza unui model rămâne pe dispozitiv ca să fie sărit până trece limita.',
     'profile.aiQuestions': 'Întrebări',
     'profile.aiRequests': 'Cereri către Gemini',
     'profile.aiTokens': 'Tokeni folosiți',

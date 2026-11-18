@@ -52,6 +52,8 @@ export type ProfilePreferences = {
   aiLanguage?: string;
   aiShareDescriptions?: boolean;
   aiChat?: unknown;
+  /** Today's AI usage per device: `{ date, devices }`. Resets with the Gemini daily quota. */
+  aiUsage?: unknown;
   emergencyFund?: Record<string, unknown>;
   /** Optional cash / accounts balance for net worth (legacy). */
   netWorthCash?: number;
