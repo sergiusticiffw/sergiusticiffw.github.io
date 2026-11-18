@@ -1,7 +1,12 @@
 import { extractHashtags } from '@shared/utils/utils';
 import { AiItem, categoryLabel, localToday } from './data';
 
-export type PromptKind = 'expense' | 'income' | 'loan';
+export type PromptKind =
+  | 'expense'
+  | 'income'
+  | 'loan'
+  | 'family'
+  | 'netWorth';
 
 export interface DataPrompt {
   text: string;

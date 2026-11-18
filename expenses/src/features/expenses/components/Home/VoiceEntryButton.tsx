@@ -25,6 +25,12 @@ import {
 } from '../../../../ai/parseVoiceEntry';
 import { saveMoneyEntries } from '../../api/saveMoneyEntries';
 
+/** A draft keeps a stable id so editing a field never remounts its card. */
+type Draft = VoiceMoneyEntry & { uid: string };
+
+let draftCounter = 0;
+const nextDraftId = () => `draft-${(draftCounter += 1)}`;
+
 type Phase = 'closed' | 'listening' | 'parsing' | 'review' | 'error' | 'needKey';
 
 const RETRY_BUTTON_CLASS =
@@ -58,7 +64,7 @@ const VoiceEntryButton = ({
   const categories = getCategories();
   const [phase, setPhase] = useState<Phase>('closed');
   const [transcript, setTranscript] = useState('');
-  const [drafts, setDrafts] = useState<VoiceMoneyEntry[]>([]);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [failedModel, setFailedModel] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -142,7 +148,7 @@ const VoiceEntryButton = ({
         setPhase('error');
         return;
       }
-      setDrafts(items);
+      setDrafts(items.map((item) => ({ ...item, uid: nextDraftId() })));
       setPhase('review');
     } catch (error) {
       if ((error as Error)?.name === 'AbortError' || controller.signal.aborted) return;
@@ -204,7 +210,7 @@ const VoiceEntryButton = ({
     if (!canSave || saving) return;
     setSaving(true);
     try {
-      const prepared = drafts.map((entry) => ({
+      const prepared = drafts.map(({ uid: _uid, ...entry }) => ({
         ...entry,
         description: entry.tags.reduce(
           (text, tag) => addTagToText(text, tag),
@@ -363,7 +369,7 @@ const VoiceEntryButton = ({
             )}
             {drafts.map((entry, index) => (
               <div
-                key={`${entry.description}-${index}`}
+                key={entry.uid}
                 className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3"
               >
                 <FormField

@@ -1,10 +1,10 @@
+import { LuSparkles } from 'react-icons/lu';
 import React, { useState } from 'react';
 import {
   FiChevronDown,
   FiChevronUp,
   FiEye,
   FiEyeOff,
-  FiZap,
 } from 'react-icons/fi';
 import { useNotification } from '@shared/context';
 import { useLocalization } from '@shared/context/localization';
@@ -110,7 +110,7 @@ const AiSettings = () => {
         aria-expanded={open}
       >
         <div className="flex items-center gap-2.5 [&_svg]:text-[var(--color-app-accent)]">
-          <FiZap />
+          <LuSparkles />
           <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
             {t('profile.aiTitle')}
           </h3>

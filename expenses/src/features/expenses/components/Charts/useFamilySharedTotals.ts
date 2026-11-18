@@ -3,6 +3,7 @@ import { useExpenseData } from '@stores/expenseStore';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useEncryptionState } from '../../../../crypto/encryptionState';
 import { getAiItems, type AiItem } from '../../../../ai/data';
+import { clearFamilyAiCache } from '../../../../ai/tools/familyTools';
 import {
   getDataProviderKind,
   type FamilyCategoryMemberTotal,
@@ -262,6 +263,7 @@ export const useFamilySharedTotals = (): UseFamilySharedTotalsResult => {
 
 /** Clear module cache (e.g. after household membership changes). */
 export const clearFamilySharedTotalsCache = (): void => {
+  clearFamilyAiCache();
   cached = null;
   cachedKey = null;
   inFlight = null;

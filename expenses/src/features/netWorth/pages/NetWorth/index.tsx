@@ -491,7 +491,7 @@ const NetWorth = () => {
                         </span>
                         <Link
                           to="/expenses/loan/$id"
-                          params={{ id: loan.id }}
+                          params={{ id: String(loan.id) }}
                           className="p-1.5 text-app-muted hover:text-app-primary"
                           aria-label={t('netWorth.openLoan')}
                         >

@@ -50,6 +50,8 @@ export const AI_LIMITS = {
   maxToolRounds: 5,
   /** Past user+model turns kept in the request (older ones are dropped). */
   maxHistoryTurns: 8,
+  /** After this long without a finished request, the chat offers a smaller model. */
+  slowRequestMs: 5000,
   toolRowsDefault: 50,
   toolRowsMax: 300,
   toolGroupsDefault: 60,

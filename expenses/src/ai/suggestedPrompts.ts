@@ -311,13 +311,21 @@ const genericKind = (text: string): PromptKind => {
   return 'expense';
 };
 
+/** Offered only when the user has that data (loans) or feature enabled (family, net worth). */
+const OPTIONAL_KINDS: PromptKind[] = ['loan', 'family', 'netWorth'];
+
 const poolFor = (kind: PromptKind, dataPrompts: DataPrompt[]): SuggestedPrompt[] => {
   const byText = new Map<string, SuggestedPrompt>();
   const language = getAiLanguage();
   for (const prompt of dataPrompts) {
     if (prompt.kind === kind) byText.set(prompt.text, { text: prompt.text, personal: true, kind });
   }
-  if (kind === 'loan' && !dataPrompts.some((prompt) => prompt.kind === 'loan')) return [];
+  if (
+    OPTIONAL_KINDS.includes(kind) &&
+    !dataPrompts.some((prompt) => prompt.kind === kind)
+  ) {
+    return [];
+  }
   for (const capability of CAPABILITY_PROMPTS) {
     if (capability.kind !== kind) continue;
     const text = aiText(capability.prompt, language);
@@ -355,17 +363,21 @@ const takeNext = (
  * Six questions, drawn at random and mixed across expenses, income and loans.
  * Questions already shown are skipped until every question of that mix has
  * been used once; then the cycle starts again, still without repeating inside
- * the new batch. Loan questions appear only when the user actually has loans.
+ * the new batch. Loan, family and net worth questions appear only when the
+ * user has loans or those features are active.
  */
 export const pickSuggestedPrompts = (
   dataPrompts: DataPrompt[] = [],
   count = 6,
   seen: ReadonlySet<string> = new Set()
 ): { prompts: SuggestedPrompt[]; seen: Set<string> } => {
-  const hasLoans = dataPrompts.some((prompt) => prompt.kind === 'loan');
-  const kinds: PromptKind[] = hasLoans
-    ? ['expense', 'income', 'loan']
-    : ['expense', 'income'];
+  const kinds: PromptKind[] = [
+    'expense',
+    'income',
+    ...OPTIONAL_KINDS.filter((kind) =>
+      dataPrompts.some((prompt) => prompt.kind === kind)
+    ),
+  ];
   const start = Math.floor(Math.random() * kinds.length);
   const order = [...kinds.slice(start), ...kinds.slice(0, start)];
   const pools = new Map(kinds.map((kind) => [kind, poolFor(kind, dataPrompts)]));

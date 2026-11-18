@@ -1,3 +1,4 @@
+import { LuSparkles } from 'react-icons/lu';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import {
@@ -10,6 +11,7 @@ import {
   FiList,
   FiMic,
   FiMicOff,
+  FiDollarSign,
   FiPieChart,
   FiPlus,
   FiRefreshCw,
@@ -17,7 +19,7 @@ import {
   FiShuffle,
   FiSquare,
   FiTrendingUp,
-  FiZap,
+  FiUsers,
 } from 'react-icons/fi';
 import LoadingSpinner from '@shared/components/Common/LoadingSpinner';
 import { useLocalization } from '@shared/context/localization';
@@ -26,7 +28,16 @@ import { fetchLoans } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useExpenseData, useExpenseRaw } from '@stores/expenseStore';
 import { useLoan } from '@stores/loanStore';
+import { useGoalsEnabled, useNetWorthEnabled } from '@stores/settingsStore';
 import { modelLabel, nextChatModel } from '../../../../ai/config';
+import {
+  buildFamilyPrompts,
+  buildNetWorthPrompts,
+} from '../../../../ai/featurePrompts';
+import {
+  loadFamilyAiContext,
+  type FamilyAiSnapshot,
+} from '../../../../ai/tools/familyTools';
 import { ChatMessage } from '../../../../ai/chatSession';
 import { getAiItems } from '../../../../ai/data';
 import { isAiDebugEnabled } from '../../../../ai/debug';
@@ -54,6 +65,47 @@ const PROMPT_KIND: Record<
   expense: { label: 'assistant.kindExpense', icon: FiPieChart },
   income: { label: 'assistant.kindIncome', icon: FiTrendingUp },
   loan: { label: 'assistant.kindLoan', icon: FiCreditCard },
+  family: { label: 'assistant.kindFamily', icon: FiUsers },
+  netWorth: { label: 'assistant.kindNetWorth', icon: FiDollarSign },
+};
+
+const useCopy = (text: string) => {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard may be blocked (non-secure context / permissions).
+    }
+  };
+  return { copied, copy };
+};
+
+const UserMessage: React.FC<{ text: string }> = ({ text }) => {
+  const { t } = useLocalization();
+  const { copied, copy } = useCopy(text);
+  return (
+    <div className="flex items-center justify-end gap-1.5">
+      <button
+        type="button"
+        onClick={copy}
+        aria-label={t('assistant.copy')}
+        title={copied ? t('assistant.copied') : t('assistant.copy')}
+        className={`shrink-0 rounded-md p-1.5 text-xs transition-colors ${
+          copied
+            ? 'bg-emerald-500/15 text-emerald-300'
+            : 'text-app-muted hover:bg-white/5 hover:text-app-secondary'
+        }`}
+      >
+        {copied ? <FiCheck /> : <FiCopy />}
+      </button>
+      <div className="max-w-[85%] rounded-2xl bg-[var(--color-app-accent)]/15 px-3.5 py-2 text-sm text-app-primary">
+        {text}
+      </div>
+    </div>
+  );
 };
 
 const ACTIVITY_KEYS: Record<string, string> = {
@@ -106,18 +158,21 @@ const AssistantMessage: React.FC<{
   onFollowUp?: (question: string) => void;
   onAddPrefill?: () => void;
   altModel?: string | null;
-}> = ({ message, onRetry, onRetryAlt, onFollowUp, onAddPrefill, altModel }) => {
+  /** Shown while the request is slow: restart with a smaller model. */
+  slowAltModel?: string | null;
+  onSwitchSlow?: () => void;
+}> = ({
+  message,
+  onRetry,
+  onRetryAlt,
+  onFollowUp,
+  onAddPrefill,
+  altModel,
+  slowAltModel,
+  onSwitchSlow,
+}) => {
   const { t } = useLocalization();
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(message.text);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard may be blocked (non-secure context / permissions).
-    }
-  };
+  const { copied, copy } = useCopy(message.text);
   const activity = message.activity
     ? t(ACTIVITY_KEYS[message.activity] || 'assistant.working')
     : '';
@@ -128,11 +183,27 @@ const AssistantMessage: React.FC<{
         className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-app-accent)]/15 text-[var(--color-app-accent)]"
         aria-hidden
       >
-        <FiZap />
+        <LuSparkles />
       </div>
       <div className="min-w-0 flex-1">
         {message.activity && !message.text && (
           <p className="animate-pulse text-sm text-app-muted">{activity}…</p>
+        )}
+        {message.status === 'streaming' && slowAltModel && onSwitchSlow && (
+          <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-app-muted">
+            <span>{t('assistant.slowHint')}</span>
+            <button
+              type="button"
+              onClick={onSwitchSlow}
+              className="inline-flex items-center gap-1.5 rounded-md border border-white/12 bg-white/[0.07] px-2.5 py-1.5 text-app-primary transition-colors hover:border-[var(--color-app-accent)] hover:text-[var(--color-app-accent)]"
+            >
+              <FiRefreshCw />
+              {t('assistant.slowRetryWith').replace(
+                '{model}',
+                modelLabel(slowAltModel) || slowAltModel
+              )}
+            </button>
+          </div>
         )}
         {message.text && <AiMarkdown text={message.text} />}
         {message.status !== 'streaming' && message.text && (
@@ -222,8 +293,17 @@ const AssistantMessage: React.FC<{
 
 const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
   const { t } = useLocalization();
-  const { messages, busy, send, retry, stop, reset, hasData, loans } =
-    useAiChat(apiKey);
+  const {
+    messages,
+    busy,
+    send,
+    retry,
+    stop,
+    switchModel,
+    reset,
+    hasData,
+    loans,
+  } = useAiChat(apiKey);
   const [input, setInput] = useState('');
   const raw = useExpenseRaw();
   const [suggestions, setSuggestions] = useState<SuggestedPrompt[] | null>(
@@ -231,20 +311,43 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
   );
   const [browsingSuggestions, setBrowsingSuggestions] = useState(false);
   const seenSuggestions = useRef(new Set<string>());
+  const netWorthEnabled = useNetWorthEnabled();
+  const goalsEnabled = useGoalsEnabled();
+  const [family, setFamily] = useState<FamilyAiSnapshot | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadFamilyAiContext(getAiItems(raw || []))
+      .then((snapshot) => {
+        if (!cancelled) setFamily(snapshot);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [raw]);
+
   const shuffleSuggestions = useCallback(() => {
     const next = pickSuggestedPrompts(
       [
         ...buildDataPrompts(getAiItems(raw || []), getShareDescriptions()),
         ...buildLoanPrompts(loans),
+        ...buildFamilyPrompts(family),
+        ...buildNetWorthPrompts({
+          enabled: netWorthEnabled,
+          goalsEnabled,
+          hasLoans: loans.length > 0,
+        }),
       ],
       6,
       seenSuggestions.current
     );
     seenSuggestions.current = next.seen;
     setSuggestions(next.prompts);
-  }, [raw, loans]);
+  }, [raw, loans, family, netWorthEnabled, goalsEnabled]);
 
-  const sourceKey = `${raw?.length ? 'expenses' : ''}:${loans.length}`;
+  const sourceKey = `${raw?.length ? 'expenses' : ''}:${loans.length}:${
+    family ? `${family.totalsSource}${family.goals.length}` : ''
+  }:${netWorthEnabled}:${goalsEnabled}`;
   const pickedFor = useRef('');
   useEffect(() => {
     if (!raw?.length && !loans.length) return;
@@ -402,12 +505,12 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
             const altModel = canRetry
               ? nextChatModel(message.failedModel || message.model)
               : null;
+            const slowAltModel =
+              message.status === 'streaming' && message.slowModel
+                ? nextChatModel(message.slowModel)
+                : null;
             return message.role === 'user' ? (
-              <div key={message.id} className="flex justify-end">
-                <div className="max-w-[85%] rounded-2xl bg-[var(--color-app-accent)]/15 px-3.5 py-2 text-sm text-app-primary">
-                  {message.text}
-                </div>
-              </div>
+              <UserMessage key={message.id} text={message.text} />
             ) : (
               <AssistantMessage
                 key={message.id}
@@ -415,6 +518,12 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
                 onRetry={canRetry ? () => retry(message.id) : undefined}
                 onRetryAlt={
                   altModel ? () => retry(message.id, altModel) : undefined
+                }
+                slowAltModel={slowAltModel}
+                onSwitchSlow={
+                  slowAltModel
+                    ? () => switchModel(message.id, slowAltModel)
+                    : undefined
                 }
                 onFollowUp={latest && !busy ? submit : undefined}
                 onAddPrefill={

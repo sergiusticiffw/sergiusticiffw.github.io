@@ -4,6 +4,7 @@ import { expenseToolDeclarations } from './expenseTools';
 import { familyToolDeclarations } from './familyTools';
 import { goalToolDeclarations } from './goalTools';
 import { loanToolDeclarations } from './loanTools';
+import { netWorthToolDeclarations } from './netWorthTools';
 
 const filterProperties = {
   kind: {
@@ -36,7 +37,7 @@ const coreToolDeclarations: GeminiFunctionDeclaration[] = [
       properties: {
         groupBy: {
           type: 'string',
-          enum: ['month', 'year', 'category', 'description', 'hashtag', 'weekday'],
+          enum: ['month', 'year', 'category', 'description', 'hashtag', 'weekday', 'day'],
         },
         ...filterProperties,
         sort: { type: 'string', enum: ['total_desc', 'count_desc', 'key_asc', 'key_desc'] },
@@ -129,6 +130,7 @@ export const toolDeclarations: GeminiFunctionDeclaration[] = [
   ...loanReadDeclarations,
   ...loanToolDeclarations,
   ...goalToolDeclarations,
+  ...netWorthToolDeclarations,
   ...familyToolDeclarations,
 ];
 
@@ -136,13 +138,15 @@ export interface ToolDeclarationOptions {
   hasLoans: boolean;
   goalsEnabled: boolean;
   hasFamily?: boolean;
+  netWorthEnabled?: boolean;
 }
 
-/** Skip loan/goals/family tools when unused — fewer tokens, less model confusion. */
+/** Skip loan/goals/net-worth/family tools when unused — fewer tokens, less model confusion. */
 export const getToolDeclarations = ({
   hasLoans,
   goalsEnabled,
   hasFamily = false,
+  netWorthEnabled = false,
 }: ToolDeclarationOptions): GeminiFunctionDeclaration[] => {
   let list = [...coreToolDeclarations];
   if (hasLoans) {
@@ -150,6 +154,9 @@ export const getToolDeclarations = ({
   }
   if (goalsEnabled) {
     list = [...list, ...goalToolDeclarations];
+  }
+  if (netWorthEnabled) {
+    list = [...list, ...netWorthToolDeclarations];
   }
   if (hasFamily) {
     list = [...list, ...familyToolDeclarations];

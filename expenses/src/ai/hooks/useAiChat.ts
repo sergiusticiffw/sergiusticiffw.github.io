@@ -7,9 +7,13 @@ import {
 } from '@stores/loanStore';
 import {
   useGoalsEnabled,
+  useNetWorthEnabled,
   useSettingsCurrency,
 } from '@stores/settingsStore';
 import { useEmergencyFund } from '@features/goals/store';
+import { computeLoanLiabilities } from '@features/netWorth/loanLiabilities';
+import { buildNetWorth } from '@features/netWorth/model';
+import { useNetWorthAssets } from '@features/netWorth/assetsStore';
 import {
   AiError,
   GeminiContent,
@@ -24,10 +28,12 @@ import {
   TransactionPrefill,
   chatSession,
   clearChatSession,
+  historyForRequest,
   markInterrupted,
   pushToolNotes,
   recentToolNotesText,
   saveChatSession,
+  toHistoryText,
 } from '../chatSession';
 import { buildDataSummary } from '../context/summary';
 import {
@@ -55,12 +61,9 @@ import {
   loadFamilyAiContext,
 } from '../tools/familyTools';
 import { formatGoalsSummary } from '../tools/goalTools';
+import { formatNetWorthSummary } from '../tools/netWorthTools';
 
 const newId = () => `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-
-/** Keeps the last N user+model pairs. Past turns are already text-only. */
-const trimHistory = (history: GeminiContent[]) =>
-  history.slice(-AI_LIMITS.maxHistoryTurns * 2);
 
 const logStreamDebug = (
   event: StreamDebugEvent,
@@ -153,10 +156,14 @@ const prefillFromSuggest = (
       description = description ? `${description} ${hash}` : hash;
     }
   }
-  if (!categoryId && !description) return undefined;
+  const amount = Number(raw.amount);
+  const date = String(raw.date || '').trim();
+  if (!categoryId && !description && !(amount > 0)) return undefined;
   return {
     field_category: categoryId,
     field_description: description,
+    ...(amount > 0 ? { field_amount: String(amount) } : {}),
+    ...(/^\d{4}-\d{2}-\d{2}$/.test(date) ? { field_date: date } : {}),
   };
 };
 
@@ -168,9 +175,19 @@ export function useAiChat(apiKey: string) {
   const currency = useSettingsCurrency();
   const goalsEnabled = useGoalsEnabled();
   const emergencyFund = useEmergencyFund();
+  const netWorthEnabled = useNetWorthEnabled();
+  const netWorthAssets = useNetWorthAssets();
   const [messages, setMessages] = useState<ChatMessage[]>(chatSession.messages);
   const [busy, setBusy] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  // State updates are async, so two quick sends could both pass the `busy` check.
+  const busyRef = useRef(false);
+  // Set while a request is aborted on purpose to resend it with another model.
+  const switchingRef = useRef<string | null>(null);
+  const [pendingSwitch, setPendingSwitch] = useState<{
+    assistantId: string;
+    model: string;
+  } | null>(null);
 
   const shareDescriptions = getShareDescriptions();
   const items = useMemo(() => getAiItems(raw || []), [raw]);
@@ -179,11 +196,38 @@ export function useAiChat(apiKey: string) {
     [loans, loanPayments, shareDescriptions]
   );
   const hasLoans = loanContext.snapshots.length > 0;
+  const loansLoaded = loans !== null;
+  // Same figures as the Net Worth page. The emergency fund counts only when Goals is on.
+  const netWorth = useMemo(
+    () =>
+      netWorthEnabled
+        ? buildNetWorth({
+            emergencyFund: goalsEnabled ? emergencyFund.balance : 0,
+            cash: 0,
+            customAssets: netWorthAssets.items,
+            loans: computeLoanLiabilities(loans, loanPayments),
+          })
+        : null,
+    [
+      netWorthEnabled,
+      goalsEnabled,
+      emergencyFund.balance,
+      netWorthAssets.items,
+      loans,
+      loanPayments,
+    ]
+  );
   const summary = useMemo(() => {
     let text = buildDataSummary(items, currency || 'MDL', shareDescriptions);
     if (loanContext.summary) text = `${text}\n\n${loanContext.summary}`;
     if (goalsEnabled) {
       text = `${text}\n\n${formatGoalsSummary(emergencyFund, items)}`;
+    }
+    if (netWorth) {
+      text = `${text}\n\n${formatNetWorthSummary(netWorth, {
+        goalsEnabled,
+        loansLoaded,
+      })}`;
     }
     return text;
   }, [
@@ -193,6 +237,8 @@ export function useAiChat(apiKey: string) {
     loanContext.summary,
     goalsEnabled,
     emergencyFund,
+    netWorth,
+    loansLoaded,
   ]);
   useEffect(() => {
     chatSession.messages = messages;
@@ -221,7 +267,8 @@ export function useAiChat(apiKey: string) {
   const send = useCallback(
     async (question: string, preferModel?: string) => {
       const trimmed = question.trim();
-      if (!trimmed || busy || !apiKey) return;
+      if (!trimmed || busy || busyRef.current || !apiKey) return;
+      busyRef.current = true;
       recordAiQuestion();
 
       const assistantId = newId();
@@ -250,8 +297,16 @@ export function useAiChat(apiKey: string) {
         parts: [{ text: trimmed }],
       };
       const contents: GeminiContent[] = [
-        ...trimHistory(chatSession.history),
+        ...historyForRequest(chatSession.history, shareDescriptions),
         userTurn,
+      ];
+      const savedTurns = (answerText: string): GeminiContent[] => [
+        { ...userTurn, shared: shareDescriptions },
+        {
+          role: 'model',
+          parts: [{ text: toHistoryText(answerText) }],
+          shared: shareDescriptions,
+        },
       ];
       let previousText = '';
       let tokens = 0;
@@ -287,7 +342,7 @@ export function useAiChat(apiKey: string) {
       });
 
       try {
-        const family = await loadFamilyAiContext();
+        const family = await loadFamilyAiContext(items);
         const turnSummary = family
           ? `${summary}\n\n${formatFamilySummary(family)}`
           : summary;
@@ -295,6 +350,7 @@ export function useAiChat(apiKey: string) {
           hasLoans,
           goalsEnabled,
           hasFamily: !!family,
+          netWorthEnabled: !!netWorth,
         });
         const systemInstruction = {
           parts: [
@@ -302,7 +358,7 @@ export function useAiChat(apiKey: string) {
               text: buildChatSystemInstruction(
                 turnSummary,
                 getAiLanguage(),
-                recentToolNotesText()
+                recentToolNotesText(shareDescriptions)
               ),
             },
           ],
@@ -316,6 +372,9 @@ export function useAiChat(apiKey: string) {
           goalsEnabled,
           emergencyFund: goalsEnabled ? emergencyFund : null,
           family,
+          netWorthEnabled: !!netWorth,
+          netWorth,
+          loansLoaded,
         };
 
         for (let round = 0; round <= AI_LIMITS.maxToolRounds; round++) {
@@ -349,6 +408,13 @@ export function useAiChat(apiKey: string) {
               : 'Model may call tools',
           });
 
+          // Offer a smaller model when this request runs too long.
+          let attemptModel: string | undefined;
+          const slowTimer = setTimeout(() => {
+            patchMessage(assistantId, {
+              slowModel: attemptModel || preferModel || AI_MODELS.chat[0],
+            });
+          }, AI_LIMITS.slowRequestMs);
           const result = await streamGenerate({
             apiKey,
             tier: 'chat',
@@ -362,7 +428,13 @@ export function useAiChat(apiKey: string) {
                 ).answer,
                 activity: undefined,
               }),
-            onDebug: (event) => logStreamDebug(event, addDebug),
+            onDebug: (event) => {
+              if (event.type === 'attempt') attemptModel = event.model;
+              logStreamDebug(event, addDebug);
+            },
+          }).finally(() => {
+            clearTimeout(slowTimer);
+            patchMessage(assistantId, { slowModel: undefined });
           });
 
           const stepTokens = result.usage.totalTokenCount || 0;
@@ -407,7 +479,10 @@ export function useAiChat(apiKey: string) {
                   result: response,
                 },
               });
-              if (call.name === 'suggest_category') {
+              if (
+                call.name === 'suggest_category' ||
+                call.name === 'prepare_transaction'
+              ) {
                 prefill = prefillFromSuggest(response) || prefill;
               }
               return {
@@ -429,8 +504,7 @@ export function useAiChat(apiKey: string) {
         pushToolNotes(turnNotes);
         chatSession.history = [
           ...chatSession.history,
-          userTurn,
-          { role: 'model', parts: [{ text: answer }] },
+          ...savedTurns(answer),
         ];
         if (trace) {
           addDebug({
@@ -470,7 +544,17 @@ export function useAiChat(apiKey: string) {
           model ||
           AI_MODELS.chat[0];
         const partial = splitFollowUps(previousText).answer;
-        if (turnNotes.length) pushToolNotes(turnNotes);
+        // A switch resends the same question, so nothing from this attempt is kept.
+        const switching = switchingRef.current === assistantId;
+        if (turnNotes.length && !switching) pushToolNotes(turnNotes);
+        // A stopped answer stays in the model's context. Failed ones are not
+        // saved because "retry" asks the same question again.
+        if (stopped && partial && !switching) {
+          chatSession.history = [
+            ...chatSession.history,
+            ...savedTurns(partial),
+          ];
+        }
         if (trace) {
           addDebug({
             kind: stopped ? 'warn' : 'error',
@@ -503,6 +587,7 @@ export function useAiChat(apiKey: string) {
         });
       } finally {
         abortRef.current = null;
+        busyRef.current = false;
         setBusy(false);
       }
     },
@@ -515,6 +600,8 @@ export function useAiChat(apiKey: string) {
       hasLoans,
       items,
       loanContext,
+      loansLoaded,
+      netWorth,
       patchMessage,
       shareDescriptions,
       summary,
@@ -538,6 +625,22 @@ export function useAiChat(apiKey: string) {
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
+  /** Aborts the running request and asks the same question again with `model`. */
+  const switchModel = useCallback((assistantId: string, model: string) => {
+    if (!abortRef.current) return;
+    switchingRef.current = assistantId;
+    setPendingSwitch({ assistantId, model });
+    abortRef.current.abort();
+  }, []);
+
+  useEffect(() => {
+    if (busy || !pendingSwitch) return;
+    const { assistantId, model } = pendingSwitch;
+    setPendingSwitch(null);
+    switchingRef.current = null;
+    retry(assistantId, model);
+  }, [busy, pendingSwitch, retry]);
+
   const reset = useCallback(() => {
     abortRef.current?.abort();
     clearChatSession();
@@ -550,6 +653,7 @@ export function useAiChat(apiKey: string) {
     send,
     retry,
     stop,
+    switchModel,
     reset,
     hasData:
       (loans !== null || !loanLoading) &&

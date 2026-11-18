@@ -224,6 +224,71 @@ const suggestCategory = (ctx: ExpenseToolContext, args: Args): ToolResult => {
   };
 };
 
+const resolveCategoryArg = (raw: unknown): string => {
+  const needle = String(raw ?? '').trim();
+  if (!needle) return '';
+  if (CATEGORY_IDS.includes(needle)) return needle;
+  const norm = normalizeText(needle);
+  const found = categories.find(
+    (c) => c.value && normalizeText(c.label) === norm
+  );
+  return found?.value || '';
+};
+
+/**
+ * Builds a prefill for the Add Transaction form. Nothing is saved: the user
+ * taps "Add with category" and confirms the form.
+ */
+const prepareTransaction = (ctx: ExpenseToolContext, args: Args): ToolResult => {
+  const description = String(args.description || '').trim().slice(0, 120);
+  const amountRaw = Number(args.amount);
+  const amount = Number.isFinite(amountRaw) && amountRaw > 0 ? round(amountRaw) : null;
+  const dateRaw = String(args.date || '').trim();
+  const date =
+    /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) && !Number.isNaN(Date.parse(dateRaw))
+      ? dateRaw
+      : null;
+  if (!description && amount == null) {
+    return { error: 'Give at least a description or an amount.' };
+  }
+
+  let categoryId = resolveCategoryArg(args.category);
+  let tags: string[] = [];
+  let finalDescription = description;
+  let confidence: unknown = categoryId ? 'given' : null;
+  if (!categoryId && description.length >= 2) {
+    const suggestion = suggestCategory(ctx, { query: description });
+    categoryId = String(suggestion.categoryId || '');
+    confidence = suggestion.confidence;
+    const prefill = suggestion.prefill as
+      | { description?: string; tags?: string[] }
+      | undefined;
+    tags = prefill?.tags ?? [];
+    finalDescription = prefill?.description || description;
+  }
+
+  return {
+    categoryId: categoryId || null,
+    category: categoryId ? categoryLabel(categoryId) || categoryId : null,
+    categoryConfidence: confidence,
+    description: finalDescription,
+    amount,
+    date,
+    missing: [
+      ...(amount == null ? ['amount'] : []),
+      ...(date ? [] : ['date (the form defaults to today)']),
+    ],
+    prefill: {
+      categoryId,
+      description: finalDescription,
+      tags,
+      amount,
+      date,
+    },
+    note: 'Nothing was saved. The user must tap the add button under your answer and confirm the form.',
+  };
+};
+
 const listCategoryTags = (_ctx: ExpenseToolContext, args: Args): ToolResult => {
   const catalog = getTagCatalog();
   const only = args.category ? String(args.category) : '';
@@ -417,6 +482,23 @@ export const expenseToolDeclarations: GeminiFunctionDeclaration[] = [
     },
   },
   {
+    name: 'prepare_transaction',
+    description:
+      'Prepare an expense for the Add Transaction form from what the user said ("add 150 for lunch yesterday"). Pass amount, date (YYYY-MM-DD, resolve "today"/"yesterday" from TODAY in DATA SUMMARY), description and optionally a category id or name; the category is suggested from history when omitted. This never saves anything: it shows an add button the user must tap and confirm. Use it only when the user asks to add or record an expense.',
+    parameters: {
+      type: 'object',
+      properties: {
+        amount: { type: 'number', description: 'Amount in the user currency, positive.' },
+        date: { type: 'string', description: 'YYYY-MM-DD. Omit to use today.' },
+        description: { type: 'string', description: 'Short description, e.g. "lunch".' },
+        category: {
+          type: 'string',
+          description: 'Optional category id from CATEGORIES or its name.',
+        },
+      },
+    },
+  },
+  {
     name: 'list_category_tags',
     description:
       'Active hashtag/tag suggestions per expense category (or one category). Use when suggesting tags to attach, or when the user asks which tags exist for a category.',
@@ -472,6 +554,7 @@ export const expenseToolExecutors: Record<
   (ctx: ExpenseToolContext, args: Args) => ToolResult
 > = {
   suggest_category: suggestCategory,
+  prepare_transaction: prepareTransaction,
   list_category_tags: listCategoryTags,
   find_similar_expenses: findSimilarExpenses,
   detect_recurring: detectRecurring,
@@ -479,13 +562,52 @@ export const expenseToolExecutors: Record<
 
 export const EXPENSE_TOOL_LABELS: Record<string, string> = {
   suggest_category: 'Suggesting a category',
+  prepare_transaction: 'Preparing the expense',
   list_category_tags: 'Listing category tags',
   find_similar_expenses: 'Finding similar expenses',
   detect_recurring: 'Detecting recurring expenses',
 };
 
 /** Compact one-line notes for follow-up context. */
+const FIGURE_SKIP = new Set(['columns', 'error', 'truncated', 'rows']);
+const MAX_FIGURES = 8;
+const MAX_FIGURES_CHARS = 240;
+
+/** Top-level scalar fields of a tool result ("total=1200 matched=12"), so follow-ups can reuse them. */
+const keyFigures = (result: ToolResult): string => {
+  const parts: string[] = [];
+  for (const [key, value] of Object.entries(result)) {
+    if (parts.length >= MAX_FIGURES) break;
+    if (FIGURE_SKIP.has(key) || /Columns$/.test(key)) continue;
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      parts.push(`${key}=${Math.round(value * 100) / 100}`);
+    } else if (
+      typeof value === 'string' &&
+      value.length > 0 &&
+      value.length <= 40 &&
+      !value.includes('\n')
+    ) {
+      parts.push(`${key}=${value}`);
+    }
+  }
+  const text = parts.join(' ');
+  return text.length > MAX_FIGURES_CHARS
+    ? `${text.slice(0, MAX_FIGURES_CHARS - 1)}…`
+    : text;
+};
+
 export const summarizeToolResult = (
+  name: string,
+  args: Args | undefined,
+  result: ToolResult
+): string => {
+  const base = describeToolCall(name, args, result);
+  if (result.error) return base;
+  const figures = keyFigures(result);
+  return figures ? `${base} | ${figures}` : base;
+};
+
+const describeToolCall = (
   name: string,
   args: Args | undefined,
   result: ToolResult
@@ -494,6 +616,8 @@ export const summarizeToolResult = (
   switch (name) {
     case 'suggest_category':
       return `suggest_category(${JSON.stringify(args?.query || '')}) -> ${result.category} (${result.categoryId}) ${result.confidence}`;
+    case 'prepare_transaction':
+      return `prepare_transaction(${JSON.stringify(args?.description || '')}) -> ${result.category ?? '?'} amount=${result.amount ?? '?'}`;
     case 'list_category_tags':
       return `list_category_tags(${args?.category || 'all'}) -> ${result.groupCount ?? 0} groups`;
     case 'find_similar_expenses':
@@ -523,7 +647,12 @@ export const summarizeToolResult = (
     default:
       if (name.startsWith('simulate_') || name.startsWith('get_') || name.startsWith('solve_') || name.startsWith('allocate_') || name.startsWith('compare_') || name.startsWith('list_') || name.startsWith('query_')) {
         const loan = args?.loan ? ` loan=${args.loan}` : '';
-        return `${name}${loan}`;
+        const given = Object.entries(args || {})
+          .filter(([key, value]) => key !== 'loan' && value != null && typeof value !== 'object')
+          .slice(0, 5)
+          .map(([key, value]) => `${key}=${String(value).slice(0, 24)}`)
+          .join(' ');
+        return `${name}${loan}${given ? ` (${given})` : ''}`;
       }
       return name;
   }

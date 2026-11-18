@@ -29,8 +29,13 @@ import {
 } from './familyTools';
 import { GOAL_TOOL_LABELS, goalToolExecutors } from './goalTools';
 import { LOAN_TOOL_LABELS, loanToolExecutors } from './loanTools';
+import {
+  NET_WORTH_TOOL_LABELS,
+  netWorthToolExecutors,
+  type NetWorthToolContext,
+} from './netWorthTools';
 
-export interface ToolContext {
+export interface ToolContext extends NetWorthToolContext {
   items: AiItem[];
   shareDescriptions: boolean;
   loans: AiLoanSnapshot[];
@@ -122,6 +127,8 @@ const groupKeys = (item: AiItem, groupBy: string): string[] => {
     }
     case 'weekday':
       return [WEEKDAYS[new Date(`${item.date}T12:00:00`).getDay()]];
+    case 'day':
+      return [item.date];
     default:
       return [item.month];
   }
@@ -370,6 +377,7 @@ const executors: Record<string, (ctx: ToolContext, args: Args) => Record<string,
   ...budgetToolExecutors,
   ...loanToolExecutors,
   ...goalToolExecutors,
+  ...netWorthToolExecutors,
   ...familyToolExecutors,
 };
 
@@ -395,5 +403,6 @@ export const TOOL_LABELS: Record<string, string> = {
   ...BUDGET_TOOL_LABELS,
   ...LOAN_TOOL_LABELS,
   ...GOAL_TOOL_LABELS,
+  ...NET_WORTH_TOOL_LABELS,
   ...FAMILY_TOOL_LABELS,
 };

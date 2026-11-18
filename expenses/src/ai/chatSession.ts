@@ -19,6 +19,8 @@ export interface ChatMessage {
   model?: string;
   /** Model that failed this turn, used to offer retry with the next one. */
   failedModel?: string;
+  /** In-memory only: set while a request runs past AI_LIMITS.slowRequestMs. */
+  slowModel?: string;
   /** Short next offers the model attached to this answer. */
   followUps?: string[];
   /** Prefill for Add Transaction when suggest_category (or similar) ran. */
@@ -44,6 +46,7 @@ export const markInterrupted = (messages: ChatMessage[]): ChatMessage[] =>
           ...m,
           status: 'error',
           activity: undefined,
+          slowModel: undefined,
           text: m.text || interruptedText(),
           // So "Retry with another model" can offer the next candidate.
           failedModel: m.failedModel || m.model || AI_MODELS.chat[0],
@@ -187,4 +190,29 @@ export const pushToolNotes = (lines: string[]) => {
   chatSession.toolNotes = [...chatSession.toolNotes, note].slice(-MAX_TOOL_NOTES);
 };
 
-export const recentToolNotesText = () => chatSession.toolNotes.join('\n---\n');
+/** Tool notes can quote the user's own search text, so they are withheld when descriptions are not shared. */
+export const recentToolNotesText = (shareDescriptions = true) =>
+  shareDescriptions ? chatSession.toolNotes.join('\n---\n') : '';
+
+const CHART_FENCE = /```chart[\s\S]*?(```|$)/gi;
+
+/**
+ * Answer text as kept for the model's next turns. Chart JSON is dropped (it is
+ * only useful to the UI and costs tokens on every later request).
+ */
+export const toHistoryText = (answer: string) =>
+  answer.replace(CHART_FENCE, '[chart shown to the user]').trim();
+
+/**
+ * Past turns safe to send now. When descriptions are not shared, only turns
+ * written under that setting qualify: earlier answers may quote descriptions,
+ * and turns saved before this flag existed are treated the same way.
+ */
+export const historyForRequest = (
+  history: GeminiContent[],
+  shareDescriptions: boolean
+) =>
+  (shareDescriptions
+    ? history
+    : history.filter((content) => content.shared === false)
+  ).slice(-AI_LIMITS.maxHistoryTurns * 2);

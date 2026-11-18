@@ -24,6 +24,11 @@ export interface GeminiContent {
   parts: GeminiPart[];
   /** Model that produced this turn. Local only, never sent to the API. */
   model?: string;
+  /**
+   * Whether description sharing was on when this turn was written. Local only,
+   * never sent to the API. Missing means unknown (older saved chats).
+   */
+  shared?: boolean;
 }
 
 export interface GeminiFunctionDeclaration {
@@ -125,7 +130,7 @@ const cooldownUntil = (error: AiError) =>
 const SKIP_SIGNATURE = 'skip_thought_signature_validator';
 
 const contentsFor = (contents: GeminiContent[], model: string) =>
-  contents.map(({ model: author, ...content }) =>
+  contents.map(({ model: author, shared: _shared, ...content }) =>
     author && author !== model
       ? {
           ...content,
