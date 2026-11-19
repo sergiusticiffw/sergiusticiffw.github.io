@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useAuthState } from '@shared/context/context';
 import { useExpenseData } from '@stores/expenseStore';
@@ -9,6 +9,7 @@ import {
   deleteNode,
   formatNumber,
   hasTag,
+  parseMonthString,
 } from '@shared/utils/utils';
 import { getCategories, notificationType } from '@shared/utils/constants';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
@@ -46,6 +47,22 @@ import {
 import { TransactionOrIncomeItem } from '@shared/type/types';
 import { fetchExpenses as fetchExpensesService } from '@features/expenses/api/expenses';
 import { useApiClient } from '@shared/hooks/useApiClient';
+
+/**
+ * Month to open on. `months` is newest first, so future-dated records sit at
+ * the front; pick the current calendar month, or the closest month before it.
+ */
+const defaultMonthIndex = (months: string[]): number => {
+  if (months.length === 0) return 0;
+  const now = new Date();
+  const current = now.getFullYear() * 12 + now.getMonth();
+  const index = months.findIndex((label) => {
+    const date = parseMonthString(label);
+    return !!date && date.getFullYear() * 12 + date.getMonth() <= current;
+  });
+  // Only future months exist: the last one is the closest to today.
+  return index === -1 ? months.length - 1 : index;
+};
 
 const NewHome = () => {
   useChartsThemeSync();
@@ -132,7 +149,12 @@ const NewHome = () => {
 
   // Get months from current view (filtered or unfiltered) for list navigation
   const months = items.groupedData ? Object.keys(items.groupedData) : [];
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(() =>
+    defaultMonthIndex(months)
+  );
+  // True until the month list has loaded (or after a filter change), so the
+  // first non-empty list opens on the current month, not the newest record.
+  const pendingMonthReset = useRef(months.length === 0);
 
   // Ensure currentMonthIndex is valid when months array changes
   useEffect(() => {
@@ -148,18 +170,22 @@ const NewHome = () => {
 
   const currentMonth = months[currentMonthIndex] || months[0] || '';
 
-  // Reset to most recent month when filters are applied
+  // Go back to the current month when filters change. The filtered month list
+  // arrives on the next render, so the reset is also applied once it changes.
   const hasDateRangeFilter = !!(dateRange?.start && dateRange?.end);
   useEffect(() => {
-    if (
-      searchText !== '' ||
-      selectedCategory !== '' ||
-      selectedTag !== '' ||
-      hasDateRangeFilter
-    ) {
-      setCurrentMonthIndex(0);
-    }
+    pendingMonthReset.current = true;
+    setCurrentMonthIndex(defaultMonthIndex(months));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on filter change
   }, [searchText, selectedCategory, selectedTag, hasDateRangeFilter]);
+
+  const monthsSignature = months.join('|');
+  useEffect(() => {
+    if (!pendingMonthReset.current || months.length === 0) return;
+    pendingMonthReset.current = false;
+    setCurrentMonthIndex(defaultMonthIndex(months));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the month list
+  }, [monthsSignature]);
 
   const handleEdit = (id: string) => {
     const item = items.groupedData[currentMonth].find(
