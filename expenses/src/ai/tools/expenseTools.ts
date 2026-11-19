@@ -464,6 +464,103 @@ const detectRecurring = (ctx: ExpenseToolContext, args: Args): ToolResult => {
   };
 };
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+const MONTH_ONLY = /^\d{4}-\d{2}$/;
+const DAY_MS = 86_400_000;
+
+/** Whole days since 1970-01-01 for a YYYY-MM-DD string (UTC, so no timezone drift). */
+const dayNumber = (date: string) => {
+  const [y, m, d] = date.split('-').map(Number);
+  return Math.round(Date.UTC(y, m - 1, d) / DAY_MS);
+};
+
+const dateOfDayNumber = (n: number) => new Date(n * DAY_MS).toISOString().slice(0, 10);
+
+/** `YYYY-MM` becomes the first or last day of that month; `YYYY-MM-DD` is kept. */
+const boundOf = (value: unknown, end: boolean): string | null => {
+  if (typeof value !== 'string') return null;
+  const v = value.trim();
+  if (DATE_ONLY.test(v)) return v;
+  if (MONTH_ONLY.test(v)) {
+    if (!end) return `${v}-01`;
+    const [y, m] = v.split('-').map(Number);
+    // Day 0 of the next month index is the last day of month m.
+    return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+  }
+  return null;
+};
+
+/**
+ * Longest stretches with no transaction. Runs on every item (full history by
+ * default), so the answer is exact rather than estimated from monthly totals.
+ */
+const findSpendingGaps = (ctx: ExpenseToolContext, args: Args): ToolResult => {
+  const kind = args.kind === 'expense' || args.kind === 'income' ? args.kind : 'any';
+  const fromBound = boundOf(args.from, false);
+  const toBound = boundOf(args.to, true);
+  const today = localToday();
+  const endDate = !toBound || toBound > today ? today : toBound;
+  const n = Math.floor(Number(args.limit));
+  const limit = Number.isFinite(n) && n > 0 ? Math.min(n, 20) : 5;
+
+  const days = new Set<number>();
+  for (const item of ctx.items) {
+    if (!DATE_ONLY.test(item.date)) continue;
+    if (kind !== 'any' && item.kind !== kind) continue;
+    if (fromBound && item.date < fromBound) continue;
+    if (toBound && item.date > toBound) continue;
+    days.add(dayNumber(item.date));
+  }
+  const sorted = [...days].sort((a, b) => a - b);
+  if (!sorted.length) {
+    return { transactionDays: 0, note: 'No transactions in this period.' };
+  }
+
+  type Gap = { start: string; end: string | null; days: number; ongoing: boolean };
+  const gaps: Gap[] = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const empty = sorted[i] - sorted[i - 1] - 1;
+    if (empty > 0) {
+      gaps.push({
+        start: dateOfDayNumber(sorted[i - 1]),
+        end: dateOfDayNumber(sorted[i]),
+        days: empty,
+        ongoing: false,
+      });
+    }
+  }
+
+  const last = sorted[sorted.length - 1];
+  const currentEmptyDays = Math.max(0, dayNumber(endDate) - last - 1);
+  if (currentEmptyDays > 0) {
+    gaps.push({
+      start: dateOfDayNumber(last),
+      end: null,
+      days: currentEmptyDays,
+      ongoing: true,
+    });
+  }
+
+  const ranked = gaps.sort((a, b) => b.days - a.days).slice(0, limit);
+  const longest = ranked[0];
+  return {
+    kind,
+    windowStart: dateOfDayNumber(sorted[0]),
+    windowEnd: endDate,
+    transactionDays: sorted.length,
+    longestEmptyDays: longest?.days ?? 0,
+    longestFrom: longest?.start ?? null,
+    longestTo: longest?.end ?? null,
+    currentEmptyDays,
+    lastTransactionDate: dateOfDayNumber(last),
+    columns: 'lastTransactionBefore|firstTransactionAfter|emptyDays|ongoing',
+    rows: ranked
+      .map((g) => `${g.start}|${g.end ?? ''}|${g.days}|${g.ongoing ? 'yes' : 'no'}`)
+      .join('\n'),
+    note: 'emptyDays counts the full days with no matching transaction between two transaction days. Days before the first transaction in the window are not counted.',
+  };
+};
+
 export const expenseToolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'suggest_category',
@@ -547,6 +644,24 @@ export const expenseToolDeclarations: GeminiFunctionDeclaration[] = [
       },
     },
   },
+  {
+    name: 'find_spending_gaps',
+    description:
+      'Longest stretches with no transactions over the whole history (or a period): the longest gap in days with the transaction days on each side, the current gap since the last transaction, and the top gaps. Use for "longest period without any transaction", "how many days in a row without spending", "when did I have nothing recorded". Exact, computed from every row; do not estimate from monthly totals. Aggregates only.',
+    parameters: {
+      type: 'object',
+      properties: {
+        kind: {
+          type: 'string',
+          enum: ['any', 'expense', 'income'],
+          description: 'Which rows count as a transaction. Default any.',
+        },
+        from: { type: 'string', description: 'Start YYYY-MM or YYYY-MM-DD. Default: whole history.' },
+        to: { type: 'string', description: 'End YYYY-MM or YYYY-MM-DD. Default: today.' },
+        limit: { type: 'integer', description: 'Top gaps to list, default 5, max 20.' },
+      },
+    },
+  },
 ];
 
 export const expenseToolExecutors: Record<
@@ -558,6 +673,7 @@ export const expenseToolExecutors: Record<
   list_category_tags: listCategoryTags,
   find_similar_expenses: findSimilarExpenses,
   detect_recurring: detectRecurring,
+  find_spending_gaps: findSpendingGaps,
 };
 
 export const EXPENSE_TOOL_LABELS: Record<string, string> = {
@@ -566,6 +682,7 @@ export const EXPENSE_TOOL_LABELS: Record<string, string> = {
   list_category_tags: 'Listing category tags',
   find_similar_expenses: 'Finding similar expenses',
   detect_recurring: 'Detecting recurring expenses',
+  find_spending_gaps: 'Finding the longest gap without transactions',
 };
 
 /** Compact one-line notes for follow-up context. */
@@ -624,6 +741,8 @@ const describeToolCall = (
       return `find_similar_expenses(${JSON.stringify(args?.query || '')}) -> ${result.matched ?? 0} rows`;
     case 'detect_recurring':
       return `detect_recurring -> ${result.matched ?? 0} candidates`;
+    case 'find_spending_gaps':
+      return `find_spending_gaps(${args?.kind || 'any'}) -> longest ${result.longestEmptyDays ?? 0} empty days`;
     case 'aggregate':
       return `aggregate(${args?.groupBy || '?'}) -> ${result.groupCount ?? '?'} groups, total=${result.total ?? '?'}`;
     case 'query_transactions':

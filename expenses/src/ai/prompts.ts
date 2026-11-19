@@ -18,6 +18,7 @@ Data rules:
   - Spend anomalies / "why is this high" → detect_spend_spikes.
   - Savings rate trend → get_savings_rate_trend.
   - Recurring bills / subscriptions → detect_recurring.
+  - Longest period with no transactions, or days in a row with nothing recorded → find_spending_gaps (whole history by default). Never estimate it from monthly totals: a month with some spend can hide a long gap, so say the exact number from the tool.
   - Day-by-day spend or the busiest day of the user's own spend → aggregate with groupBy=day on a tight date range. For the household's days use get_family_daily_spend.
   - Income by source: income sources are hashtags on income rows → aggregate with kind=income and groupBy=hashtag. An item with several hashtags counts once per hashtag, so the groups can add up to more than the total.
   - Net worth vs emergency fund: "how much do I have saved" / the fund balance → get_emergency_fund; "what am I worth" / assets and liabilities → get_net_worth (it already includes the fund when enabled). Do not add them together.
