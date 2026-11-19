@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { FiEdit2, FiTrash2 } from 'react-icons/fi';
+import React, { useRef, useState } from 'react';
+import { FiChevronDown, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import useSwipeActions from '@shared/hooks/useSwipeActions';
 import { useLocalization } from '@shared/context/localization';
 import { isDesktopLayout } from '@shared/utils/isDesktopLayout';
@@ -9,6 +9,9 @@ import {
   MonthContributionGroup,
   formatContributionMonth,
 } from '../model';
+
+/** Months shown at first, and added by each "Load more". */
+const MONTHS_PAGE = 3;
 
 interface ContributionHistoryProps {
   groups: MonthContributionGroup[];
@@ -28,6 +31,7 @@ const ContributionHistory = ({
   const { t } = useLocalization();
   const listRef = useRef<HTMLDivElement>(null);
   const isDesktop = isDesktopLayout();
+  const [visibleMonths, setVisibleMonths] = useState(MONTHS_PAGE);
   const {
     handleTouchStart,
     handleTouchMove,
@@ -49,7 +53,7 @@ const ContributionHistory = ({
       className="relative flex flex-col gap-3 overflow-x-hidden overflow-y-auto touch-pan-y"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
-      {groups.map((group) => (
+      {groups.slice(0, visibleMonths).map((group) => (
         <div
           key={group.month}
           className="rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3"
@@ -172,6 +176,21 @@ const ContributionHistory = ({
           </div>
         </div>
       ))}
+      {groups.length > visibleMonths && (
+        <div className="flex items-center justify-center py-2">
+          <button
+            type="button"
+            onClick={() => setVisibleMonths(visibleMonths + MONTHS_PAGE)}
+            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--color-app-accent)]/40 bg-[var(--color-app-accent)]/20 px-5 py-2.5 text-[0.95rem] font-semibold text-[var(--color-app-accent)] transition-all duration-200 hover:bg-[var(--color-app-accent)]/30 [&_svg]:text-sm"
+          >
+            <FiChevronDown />
+            <span>
+              {t('common.loadMore')} ({groups.length - visibleMonths}{' '}
+              {t('common.remaining')})
+            </span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
