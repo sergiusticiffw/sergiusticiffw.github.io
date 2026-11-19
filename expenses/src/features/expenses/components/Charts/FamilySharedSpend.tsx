@@ -230,7 +230,9 @@ const FamilySharedSpend: React.FC<FamilySharedSpendProps> = ({
 
         {rows.length > 0 && (
           <>
-            <CategoryDonutBreakdown data={donutData} currency={currency} />
+            {!category && (
+              <CategoryDonutBreakdown data={donutData} currency={currency} />
+            )}
             <FamilyCategorySpendList
               rows={rows}
               categoryTotal={total}

@@ -17,7 +17,6 @@ import { useNetWorthAssets } from '@features/netWorth/assetsStore';
 import {
   AiError,
   GeminiContent,
-  GeminiRequest,
   StreamDebugEvent,
   describeAiError,
   streamGenerate,
@@ -56,6 +55,7 @@ import { getAiLanguage, getShareDescriptions } from '../storage';
 import { getToolDeclarations } from '../tools/definitions';
 import { TOOL_LABELS, executeTool } from '../tools/executors';
 import { summarizeToolResult } from '../tools/expenseTools';
+import { runToolLoop, type ToolLoopState, type ToolLoopStep } from '../runChat';
 import { formatFamilySummary, loadFamilyAiContext } from '../tools/familyTools';
 import { formatGoalsSummary } from '../tools/goalTools';
 import { formatNetWorthSummary } from '../tools/netWorthTools';
@@ -305,9 +305,12 @@ export function useAiChat(apiKey: string) {
           shared: shareDescriptions,
         },
       ];
-      let previousText = '';
-      let tokens = 0;
-      let model: string | undefined;
+      const loopState: ToolLoopState = {
+        text: '',
+        tokens: 0,
+        model: undefined,
+        toolCalls: [],
+      };
       let prefill: TransactionPrefill | undefined;
       const turnNotes: string[] = [];
 
@@ -374,54 +377,25 @@ export function useAiChat(apiKey: string) {
           loansLoaded,
         };
 
-        for (let round = 0; round <= AI_LIMITS.maxToolRounds; round++) {
-          const forceAnswer = round === AI_LIMITS.maxToolRounds;
-          const request: GeminiRequest = {
-            systemInstruction,
-            contents,
-            tools: [{ functionDeclarations: turnDeclarations }],
-            ...(forceAnswer && {
-              toolConfig: { functionCallingConfig: { mode: 'NONE' } },
-            }),
-            generationConfig: {
-              maxOutputTokens: AI_LIMITS.chatMaxOutputTokens,
-              thinkingConfig: { thinkingLevel: 'low' },
-            },
-          };
-
-          if (forceAnswer) {
-            addDebug({
-              kind: 'warn',
-              title: 'Forcing an answer',
-              subtitle: `Reached ${AI_LIMITS.maxToolRounds} tool rounds`,
-            });
-          }
-
-          addDebug({
-            kind: 'info',
-            title: `Round ${round + 1}`,
-            subtitle: forceAnswer
-              ? 'Model must answer without tools'
-              : 'Model may call tools',
-          });
-
-          // Offer a smaller model when this request runs too long.
+        // One streamed model call. The slow-request offer and the stream
+        // handlers live here; the loop itself is in runChat.ts.
+        const generateStep = (step: ToolLoopStep) => {
           let attemptModel: string | undefined;
           const slowTimer = setTimeout(() => {
             patchMessage(assistantId, {
               slowModel: attemptModel || preferModel || AI_MODELS.chat[0],
             });
           }, AI_LIMITS.slowRequestMs);
-          const result = await streamGenerate({
+          return streamGenerate({
             apiKey,
             tier: 'chat',
             preferModel,
-            request,
+            request: step.request,
             signal: controller.signal,
             onText: (text) =>
               patchMessage(assistantId, {
                 text: splitFollowUps(
-                  previousText ? `${previousText}\n\n${text}` : text
+                  step.previousText ? `${step.previousText}\n\n${text}` : text
                 ).answer,
                 activity: undefined,
               }),
@@ -433,75 +407,61 @@ export function useAiChat(apiKey: string) {
             clearTimeout(slowTimer);
             patchMessage(assistantId, { slowModel: undefined });
           });
+        };
 
-          const stepTokens = result.usage.totalTokenCount || 0;
-          tokens += stepTokens;
-          contents.push({
-            role: 'model',
-            parts: result.parts,
-            model: result.model,
-          });
-          model = result.model;
-          if (result.text) {
-            previousText = previousText
-              ? `${previousText}\n\n${result.text}`
-              : result.text;
-          }
-
-          if (!result.functionCalls.length || forceAnswer) break;
-
-          patchMessage(assistantId, {
-            activity: TOOL_LABELS[result.functionCalls[0].name] || 'Working',
-          });
-          contents.push({
-            role: 'user',
-            parts: await Promise.all(
-              result.functionCalls.map(async (call) => {
-                const started = Date.now();
-                const response = await executeTool(
-                  call.name,
-                  call.args,
-                  toolContext
-                );
-                const summaryLine = summarizeToolResult(
-                  call.name,
-                  call.args,
-                  response
-                );
-                // A failed call says nothing durable; keeping it would make the
+        await runToolLoop({
+          state: loopState,
+          contents,
+          systemInstruction,
+          declarations: turnDeclarations,
+          generate: generateStep,
+          executeTool: (name, args) => executeTool(name, args, toolContext),
+          events: {
+            onRound: ({ round, forceAnswer }) => {
+              if (forceAnswer) {
+                addDebug({
+                  kind: 'warn',
+                  title: 'Forcing an answer',
+                  subtitle: `Reached ${AI_LIMITS.maxToolRounds} tool rounds`,
+                });
+              }
+              addDebug({
+                kind: 'info',
+                title: `Round ${round + 1}`,
+                subtitle: forceAnswer
+                  ? 'Model must answer without tools'
+                  : 'Model may call tools',
+              });
+            },
+            onToolStart: (name) =>
+              patchMessage(assistantId, {
+                activity: TOOL_LABELS[name] || 'Working',
+              }),
+            onToolCall: ({ id, name, args, response, durationMs }) => {
+              const summaryLine = summarizeToolResult(name, args, response);
+              // A failed call says nothing durable; keeping it would make the
               // model repeat the failure instead of trying the tool again.
               if (!response.error) turnNotes.push(summaryLine);
-                addDebug({
-                  kind: 'tool',
-                  title: call.name,
-                  subtitle: TOOL_LABELS[call.name] || 'Working',
-                  summary: summaryLine,
-                  durationMs: Date.now() - started,
-                  data: {
-                    id: call.id || null,
-                    arguments: call.args || {},
-                    result: response,
-                  },
-                });
-                if (
-                  call.name === 'suggest_category' ||
-                  call.name === 'prepare_transaction'
-                ) {
-                  prefill = prefillFromSuggest(response) || prefill;
-                }
-                return {
-                  functionResponse: {
-                    ...(call.id && { id: call.id }),
-                    name: call.name,
-                    response,
-                  },
-                };
-              })
-            ),
-          });
-        }
+              addDebug({
+                kind: 'tool',
+                title: name,
+                subtitle: TOOL_LABELS[name] || 'Working',
+                summary: summaryLine,
+                durationMs,
+                data: {
+                  id: id || null,
+                  arguments: args || {},
+                  result: response,
+                },
+              });
+              if (name === 'suggest_category' || name === 'prepare_transaction') {
+                prefill = prefillFromSuggest(response) || prefill;
+              }
+            },
+          },
+        });
 
-        const { answer, followUps } = splitFollowUps(previousText);
+        const { answer, followUps } = splitFollowUps(loopState.text);
         if (!answer) {
           throw new AiError('unknown', 'Empty response');
         }
@@ -514,16 +474,18 @@ export function useAiChat(apiKey: string) {
             title: 'Turn finished',
             subtitle: [
               formatDebugMs(Date.now() - trace.startedAt),
-              tokens ? `${tokens.toLocaleString()} tokens` : '',
-              model || '',
+              loopState.tokens
+                ? `${loopState.tokens.toLocaleString()} tokens`
+                : '',
+              loopState.model || '',
             ]
               .filter(Boolean)
               .join(' · '),
             data: {
               answer,
               followUps,
-              tokens,
-              model,
+              tokens: loopState.tokens,
+              model: loopState.model,
             },
           });
         }
@@ -531,8 +493,8 @@ export function useAiChat(apiKey: string) {
           text: answer,
           status: 'done',
           activity: undefined,
-          tokens,
-          model,
+          tokens: loopState.tokens,
+          model: loopState.model,
           ...(followUps.length && { followUps }),
           ...(prefill && { prefill }),
           ...(trace && { debug: finishDebugTrace(trace) }),
@@ -543,9 +505,9 @@ export function useAiChat(apiKey: string) {
         const failedModel =
           (error instanceof AiError && error.model) ||
           preferModel ||
-          model ||
+          loopState.model ||
           AI_MODELS.chat[0];
-        const partial = splitFollowUps(previousText).answer;
+        const partial = splitFollowUps(loopState.text).answer;
         // A switch resends the same question, so nothing from this attempt is kept.
         const switching = switchingRef.current === assistantId;
         if (turnNotes.length && !switching) pushToolNotes(turnNotes);
@@ -582,7 +544,7 @@ export function useAiChat(apiKey: string) {
               : `${partial}\n\n_${errorText}_`,
           status: stopped ? 'stopped' : 'error',
           activity: undefined,
-          tokens: tokens || undefined,
+          tokens: loopState.tokens || undefined,
           failedModel,
           ...(prefill && { prefill }),
           ...(trace && { debug: finishDebugTrace(trace) }),
