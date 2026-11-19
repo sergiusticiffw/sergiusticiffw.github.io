@@ -223,6 +223,30 @@ export const partnerCategorySpendForDay = (
     .sort((a, b) => b.amount - a.amount || a.label.localeCompare(b.label));
 };
 
+/**
+ * Daily rows that match the calendar filters: one category (empty = all) and an
+ * inclusive YYYY-MM-DD date range (null = any).
+ */
+export const filterDailyRows = (
+  rows: FamilyCategoryDailyTotal[],
+  filters: {
+    category?: string;
+    dateRange?: { start: string; end: string } | null;
+  }
+): FamilyCategoryDailyTotal[] => {
+  const category = filters.category || '';
+  const range =
+    filters.dateRange?.start && filters.dateRange?.end
+      ? filters.dateRange
+      : null;
+  if (!category && !range) return rows;
+  return rows.filter((row) => {
+    if (category && (row.category_id || '0') !== category) return false;
+    if (range && (row.day < range.start || row.day > range.end)) return false;
+    return true;
+  });
+};
+
 /** Days where another member has shared-category spend (excludes myUid). */
 export const partnerDaysWithSpend = (
   rows: FamilyCategoryDailyTotal[],

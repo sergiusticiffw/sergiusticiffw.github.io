@@ -643,6 +643,9 @@ const NewHome = () => {
                     onMonthChange={handleMonthSwipe}
                     onEdit={handleEdit}
                     onDelete={(id) => setShowDeleteModal(id)}
+                    categoryFilter={selectedCategory}
+                    dateRange={dateRange}
+                    hidePartnerSpend={searchText !== '' || selectedTag !== ''}
                   />
                 )}
                 <div className="mt-8 flex flex-col gap-8">

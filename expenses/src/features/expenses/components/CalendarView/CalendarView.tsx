@@ -15,6 +15,11 @@ import { getSession } from '../../../../crypto/encryptionState';
 import { getDataProviderKind } from '../../../../data';
 import FamilyDaySpendSection from '@features/expenses/components/Charts/FamilyDaySpendSection';
 import {
+  filterDailyRows,
+  partnerDayTotal,
+  partnerDaysWithSpend,
+} from '@features/expenses/components/Charts/familyTotals';
+import {
   clearFamilyDailyTotalsCache,
   useFamilyDailyTotals,
 } from '@features/expenses/components/Charts/useFamilyDailyTotals';
@@ -38,6 +43,11 @@ interface CalendarViewProps {
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   pendingSyncIds?: Record<string, true>;
+  /** Active page filters, applied to other members' shared spend too. */
+  categoryFilter?: string;
+  dateRange?: { start: string; end: string } | null;
+  /** Text or tag filter is on: aggregates carry no descriptions, so they cannot match. */
+  hidePartnerSpend?: boolean;
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({
@@ -50,6 +60,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   onEdit,
   onDelete,
   pendingSyncIds,
+  categoryFilter = '',
+  dateRange = null,
+  hidePartnerSpend = false,
 }) => {
   // Month swipe is handled by the parent page (covers Budget Rings + calendar).
   void _onMonthChange;
@@ -88,13 +101,24 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     sharedCategoryIds,
     totalsSource,
     loading: familyLoading,
-    partnerDaysWithSpend,
-    partnerDayTotal,
   } = useFamilyDailyTotals(familyEnabled ? monthKey : null);
 
+  // Other members' rows that match the page filters (category, date range).
+  const partnerRows = useMemo(
+    () =>
+      hidePartnerSpend
+        ? []
+        : filterDailyRows(memberDailyRows, {
+            category: categoryFilter,
+            dateRange,
+          }),
+    [hidePartnerSpend, memberDailyRows, categoryFilter, dateRange]
+  );
+
   const partnerDays = useMemo(
-    () => (familyEnabled ? partnerDaysWithSpend(myUid) : new Set<string>()),
-    [familyEnabled, partnerDaysWithSpend, myUid]
+    () =>
+      familyEnabled ? partnerDaysWithSpend(partnerRows, myUid) : new Set<string>(),
+    [familyEnabled, partnerRows, myUid]
   );
 
   // Group transactions by date
@@ -129,7 +153,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           0
         );
         const othersTotal = familyEnabled
-          ? partnerDayTotal(date, myUid)
+          ? partnerDayTotal(partnerRows, date, myUid)
           : 0;
         if (dayTransactions.length === 0 && othersTotal <= 0) return null;
         const showPersonal = dayTransactions.length > 0;
@@ -150,7 +174,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     transactionsByDate,
     partnerDays,
     familyEnabled,
-    partnerDayTotal,
+    partnerRows,
     myUid,
   ]);
 
@@ -213,6 +237,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
   const showPartnerSection =
     familyEnabled &&
+    !hidePartnerSpend &&
     !!household &&
     !!selectedDate &&
     sharedCategoryIds.size > 0;
@@ -362,7 +387,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             {showPartnerSection && selectedDate && (
               <FamilyDaySpendSection
                 dayKey={selectedDate}
-                rows={memberDailyRows}
+                rows={partnerRows}
                 myUid={myUid}
                 members={household?.members || []}
                 sharedCategoryIds={sharedCategoryIds}
