@@ -9,6 +9,7 @@ import { useTags, normalizeTag } from '@shared/hooks/useTags';
 import { FormField, Loader } from '@shared/components/Common';
 import TagChips from '@shared/components/Common/TagChips';
 import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
+import { localTodayString } from '@shared/utils/localDate';
 import { FiPlus, FiEdit2 } from 'react-icons/fi';
 import { activeTags } from '../../../../tags/catalog';
 import { useTagCatalog } from '../../../../tags/store';
@@ -33,7 +34,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
   const initialState = {
     field_amount: '',
-    field_date: new Date().toISOString().slice(0, 10),
+    field_date: localTodayString(),
     field_category: '',
     field_description: '',
   };
@@ -86,6 +87,13 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     successMessageKeys: {
       add: 'notification.transactionAdded',
       edit: 'notification.transactionUpdated',
+    },
+    validate: (state) => {
+      const amount = parseFloat(String(state.field_amount));
+      if (isNaN(amount) || amount === 0) return 'ux.invalidAmount';
+      if (!state.field_date) return 'ux.dateRequired';
+      if (!state.field_category) return 'ux.categoryRequired';
+      return null;
     },
   });
 
@@ -172,6 +180,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           required
           placeholder={t('form.amountPlaceholder')}
           step={0.01}
+          inputMode="decimal"
+          autoFocus={formType === 'add'}
           isValid={getFieldValidation('field_amount', formState)}
           ariaLabel={t('transactionForm.amount')}
         />

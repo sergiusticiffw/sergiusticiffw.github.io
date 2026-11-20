@@ -23,6 +23,8 @@ export interface FormFieldProps {
   className?: string;
   autoComplete?: string;
   inputRef?: React.Ref<HTMLInputElement>;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+  autoFocus?: boolean;
 }
 
 const FormField: React.FC<FormFieldProps> = ({
@@ -43,6 +45,8 @@ const FormField: React.FC<FormFieldProps> = ({
   className = '',
   autoComplete,
   inputRef,
+  inputMode,
+  autoFocus,
 }) => {
   const { t } = useLocalization();
   const fieldId = id || name;
@@ -69,6 +73,8 @@ const FormField: React.FC<FormFieldProps> = ({
           disabled={disabled}
           aria-label={ariaLabel || label}
           autoComplete={autoComplete}
+          inputMode={inputMode}
+          autoFocus={autoFocus}
           className={`form-input ${isValid ? 'valid' : ''}`}
         />
       </div>

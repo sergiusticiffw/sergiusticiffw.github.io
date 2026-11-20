@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useLocalization } from '@shared/context/localization';
 import {
   DndContext,
   DragEndEvent,
@@ -76,6 +77,7 @@ function SortableChartItem({
   onMoveToHidden?: (chart: string) => void;
   moveToHiddenLabel?: string;
 }) {
+  const { t } = useLocalization();
   const {
     attributes,
     listeners,
@@ -111,7 +113,7 @@ function SortableChartItem({
           isHidden ? 'text-app-secondary' : 'text-app-primary'
         }`}
       >
-        {chart}
+        {t(`charts.name.${chart}`)}
       </span>
       {onMoveToHidden && moveToHiddenLabel && (
         <button
@@ -140,6 +142,7 @@ function DraggableHiddenItem({
   onMoveToVisible?: (chart: string) => void;
   moveToVisibleLabel?: string;
 }) {
+  const { t } = useLocalization();
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: `hidden-${chart}`,
@@ -163,7 +166,7 @@ function DraggableHiddenItem({
     >
       <BsGripVertical className="text-app-muted shrink-0" aria-hidden />
       <span className="text-sm text-app-secondary truncate flex-1 min-w-0">
-        {chart}
+        {t(`charts.name.${chart}`)}
       </span>
       {onMoveToVisible && moveToVisibleLabel && (
         <button

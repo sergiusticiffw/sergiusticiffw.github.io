@@ -5,6 +5,8 @@ interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  /** When this value changes (e.g. the current route), a shown error is cleared. */
+  resetKey?: unknown;
 }
 
 interface State {
@@ -49,9 +51,13 @@ class ErrorBoundary extends Component<Props, State> {
       error,
       errorInfo,
     });
+  }
 
-    // You can also log the error to an error reporting service here
-    // Example: logErrorToService(error, errorInfo);
+  componentDidUpdate(prevProps: Props): void {
+    // Navigating to another page should not keep showing the previous page's crash.
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.handleReset();
+    }
   }
 
   handleReset = (): void => {
@@ -88,52 +94,72 @@ interface ErrorFallbackProps {
   onReset: () => void;
 }
 
+const FALLBACK_TRANSLATIONS: Record<'en' | 'ro', Record<string, string>> = {
+  en: {
+    'error.boundary.title': 'Something went wrong',
+    'error.boundary.message':
+      'We encountered an unexpected error. Please try again or reload the page. Your saved data is not affected.',
+    'error.boundary.details': 'Error Details (Development Only)',
+    'error.boundary.tryAgain': 'Try Again',
+    'error.boundary.reload': 'Reload Page',
+  },
+  ro: {
+    'error.boundary.title': 'Ceva nu a mers bine',
+    'error.boundary.message':
+      'A apărut o eroare neașteptată. Încearcă din nou sau reîncarcă pagina. Datele tale salvate nu sunt afectate.',
+    'error.boundary.details': 'Detalii eroare (doar dezvoltare)',
+    'error.boundary.tryAgain': 'Încearcă din nou',
+    'error.boundary.reload': 'Reîncarcă pagina',
+  },
+};
+
 const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, onReset }) => {
-  // Fallback translations - Error Boundary must work even if context providers fail
-  // This ensures the error UI always displays, even if the error broke context providers
-  const getTranslation = (key: string): string => {
-    const translations: Record<string, string> = {
-      'error.boundary.title': 'Something went wrong',
-      'error.boundary.message':
-        'We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.',
-      'error.boundary.details': 'Error Details (Development Only)',
-      'error.boundary.tryAgain': 'Try Again',
-      'error.boundary.reload': 'Reload Page',
-    };
-    return translations[key] || key;
-  };
+  // Error Boundary must work even if context providers fail, so read the
+  // saved language directly instead of using the localization context.
+  let language: 'en' | 'ro' = 'en';
+  try {
+    if (localStorage.getItem('language') === 'ro') language = 'ro';
+  } catch {
+    /* storage unavailable */
+  }
+  const getTranslation = (key: string): string =>
+    FALLBACK_TRANSLATIONS[language][key] || key;
 
   return (
-    <div className="flex items-center justify-center min-h-[60vh] p-8 bg-[var(--background-color,#f5f5f5)]">
-      <div className="max-w-[600px] w-full bg-white rounded-xl p-8 shadow-md text-center">
-        <div className="text-6xl mb-4">⚠️</div>
-        <h2 className="text-2xl font-semibold text-[var(--text-color,#333)] mb-4">
+    <div
+      role="alert"
+      className="flex items-center justify-center min-h-[60vh] p-6"
+    >
+      <div className="max-w-[600px] w-full rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-center">
+        <h2 className="text-xl font-semibold text-app-primary mb-3">
           {getTranslation('error.boundary.title')}
         </h2>
-        <p className="text-[var(--text-secondary,#666)] mb-6 leading-relaxed">
+        <p className="text-app-secondary mb-6 leading-relaxed">
           {getTranslation('error.boundary.message')}
         </p>
         {error && import.meta.env.DEV && (
-          <details className="my-6 text-left bg-[#f8f8f8] rounded-lg p-4">
-            <summary className="cursor-pointer font-semibold text-[var(--text-color,#333)] mb-2 select-none hover:text-[var(--primary-color,#667eea)]">
+          <details className="my-6 text-left rounded-lg bg-black/30 p-4">
+            <summary className="cursor-pointer font-semibold text-app-primary mb-2 select-none">
               {getTranslation('error.boundary.details')}
             </summary>
-            <pre className="bg-[#1e1e1e] text-[#d4d4d4] p-4 rounded overflow-x-auto text-sm font-mono whitespace-pre-wrap break-all mt-2">
+            <pre className="text-app-secondary p-2 rounded overflow-x-auto text-sm font-mono whitespace-pre-wrap break-all mt-2">
               {error.toString()}
               {error.stack && `\n\n${error.stack}`}
             </pre>
           </details>
         )}
-        <div className="flex gap-4 justify-center mt-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-center mt-6">
           <button
+            type="button"
             onClick={onReset}
-            className="px-6 py-3 rounded-lg text-base font-medium cursor-pointer transition-all bg-[var(--primary-color,#667eea)] text-white hover:bg-[var(--primary-hover,#5568d3)] hover:-translate-y-px hover:shadow-lg"
+            className="min-h-12 px-6 py-3 rounded-xl text-base font-semibold cursor-pointer bg-[var(--color-app-accent)] text-[var(--color-btn-on-accent)] hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-app-accent)]"
           >
             {getTranslation('error.boundary.tryAgain')}
           </button>
           <button
+            type="button"
             onClick={() => window.location.reload()}
-            className="px-6 py-3 rounded-lg text-base font-medium cursor-pointer transition-all bg-[var(--secondary-color,#e2e8f0)] text-[var(--text-color,#333)] hover:bg-[var(--secondary-hover,#cbd5e0)] hover:-translate-y-px"
+            className="min-h-12 px-6 py-3 rounded-xl text-base font-semibold cursor-pointer border border-white/15 text-app-primary hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-app-accent)]"
           >
             {getTranslation('error.boundary.reload')}
           </button>

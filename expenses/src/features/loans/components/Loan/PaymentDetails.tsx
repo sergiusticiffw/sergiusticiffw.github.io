@@ -23,6 +23,7 @@ import ItemSyncIndicator from '@shared/components/Common/ItemSyncIndicator';
 import { Loader } from '@shared/components/Common';
 import DeleteConfirmDrawer from '@shared/components/VaulDrawer/DeleteConfirmDrawer';
 import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
+import { localTodayString } from '@shared/utils/localDate';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import { fetchLoans as fetchLoansService } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
@@ -66,7 +67,7 @@ const PaymentDetails = (props) => {
   const [focusedItem, setFocusedItem] = useState({
     nid: '',
     title: '',
-    field_date: new Date().toISOString().slice(0, 10),
+    field_date: localTodayString(),
     field_rate: undefined as number | undefined,
     field_pay_installment: undefined as number | undefined,
     field_pay_single_fee: undefined as number | undefined,
@@ -135,7 +136,7 @@ const PaymentDetails = (props) => {
       sum: payment.fpi ?? 0,
       badge:
         Number(payment.fisp) === 1 ? (
-          <span className="inline-block text-[0.7rem] font-semibold text-[#ff9800] bg-[rgba(255,152,0,0.15)] px-2 py-0.5 rounded-full uppercase tracking-wide">
+          <span className="inline-block text-xs font-semibold text-[#ff9800] bg-[rgba(255,152,0,0.15)] px-2 py-0.5 rounded-full uppercase tracking-wide">
             {t('payment.simulated')}
           </span>
         ) : undefined,
@@ -278,8 +279,8 @@ const PaymentDetails = (props) => {
         >
           <div className="mb-3">
             <p className="text-base text-white/50 m-0 mb-2">
-              {Math.min(nrOfItemsToShow, payments.length)} of {payments.length}{' '}
-              payments
+              {Math.min(nrOfItemsToShow, payments.length)} {t('ux.ofCount')}{' '}
+              {payments.length} {t('ux.payments')}
             </p>
             <div className="flex gap-2 flex-wrap">
               <button
@@ -287,14 +288,14 @@ const PaymentDetails = (props) => {
                 className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
                 onClick={() => handleSort('date')}
               >
-                Date {getSortIcon('date')}
+                {t('common.date')} {getSortIcon('date')}
               </button>
               <button
                 type="button"
                 className={`${sortBtn} ${sortField === 'amount' ? sortBtnActive : ''}`}
                 onClick={() => handleSort('amount')}
               >
-                Amount {getSortIcon('amount')}
+                {t('common.amount')} {getSortIcon('amount')}
               </button>
             </div>
           </div>
@@ -374,7 +375,7 @@ const PaymentDetails = (props) => {
                       <div className="flex items-center gap-2 flex-wrap text-base font-medium text-white/90 leading-snug break-words">
                         {payment.title}
                         {isSimulated && (
-                          <span className="inline-block text-[0.7rem] font-semibold text-[#ff9800] bg-[rgba(255,152,0,0.15)] px-2 py-0.5 rounded-full uppercase tracking-wide">
+                          <span className="inline-block text-xs font-semibold text-[#ff9800] bg-[rgba(255,152,0,0.15)] px-2 py-0.5 rounded-full uppercase tracking-wide">
                             {t('payment.simulated')}
                           </span>
                         )}
@@ -398,8 +399,8 @@ const PaymentDetails = (props) => {
                             handleEdit(payment.id);
                           }}
                           className="p-1.5 rounded-md text-white/45 hover:text-white/80 hover:bg-white/10 transition-colors [&_svg]:text-[0.95rem]"
-                          aria-label="Edit"
-                          title="Edit"
+                          aria-label={t('common.edit')}
+                          title={t('common.edit')}
                         >
                           <FiEdit2 />
                         </button>
@@ -411,8 +412,8 @@ const PaymentDetails = (props) => {
                             handleDeleteClick(payment.id);
                           }}
                           className="p-1.5 rounded-md text-white/45 hover:text-white/80 hover:bg-white/10 transition-colors [&_svg]:text-[0.95rem]"
-                          aria-label="Delete"
-                          title="Delete"
+                          aria-label={t('common.delete')}
+                          title={t('common.delete')}
                         >
                           <FiTrash2 />
                         </button>

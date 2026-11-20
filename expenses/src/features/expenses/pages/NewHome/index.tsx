@@ -12,12 +12,14 @@ import {
   parseMonthString,
 } from '@shared/utils/utils';
 import { getCategories, notificationType } from '@shared/utils/constants';
+import { localizeMonthKey } from '@shared/utils/monthLabel';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import { useHorizontalMonthSwipe } from '@shared/hooks/useHorizontalMonthSwipe';
 import TransactionFilters, { DateRangeValue } from '@features/expenses/components/Home/TransactionFilters';
 import VoiceEntryButton from '@features/expenses/components/Home/VoiceEntryButton';
 import { TransactionsList } from '@shared/components/TransactionsList';
 import { HeroSpendCard } from '@shared/components/HeroSpendCard';
+import MonthNavBar from '@shared/components/MonthNavBar';
 import BudgetRings from '@features/expenses/components/budgets/BudgetRings';
 import CalendarView from '@features/expenses/components/CalendarView';
 import FamilySharedSpend from '@features/expenses/components/Charts/FamilySharedSpend';
@@ -38,9 +40,8 @@ import { IconButton, cn } from '@shared/ui';
 import {
   FiPlus,
   FiEdit2,
+  FiTrash2,
   FiDollarSign,
-  FiChevronLeft,
-  FiChevronRight,
   FiList,
   FiCalendar,
 } from 'react-icons/fi';
@@ -67,7 +68,7 @@ const defaultMonthIndex = (months: string[]): number => {
 const NewHome = () => {
   useChartsThemeSync();
   const showNotification = useNotification();
-  const { t } = useLocalization();
+  const { t, language } = useLocalization();
   const { token } = useAuthState();
   const { data, dataDispatch } = useExpenseData();
   const noData = data.groupedData === null;
@@ -349,10 +350,6 @@ const NewHome = () => {
   const prevMonthTotal = prevMonthKey
     ? items.totals?.[prevMonthKey] || 0
     : 0;
-  const deltaPct =
-    prevMonthTotal > 0 && !hasFilters
-      ? (((displayTotal - prevMonthTotal) / prevMonthTotal) * 100).toFixed(1)
-      : null;
 
   const monthDate = currentMonth ? new Date(`${currentMonth} 1`) : new Date();
   const now = new Date();
@@ -366,6 +363,31 @@ const NewHome = () => {
   ).getDate();
   const today = now.getDate();
   const daysLeft = isCurrentMonth ? Math.max(0, daysInMonth - today) : null;
+
+  // Month-over-month change. While the month is still running, compare against
+  // the previous month up to the same day, otherwise a partial month is always
+  // compared with a full one and looks like a big saving.
+  const sumUpToDay = (txs: TransactionOrIncomeItem[], maxDay: number) =>
+    txs.reduce((sum, tx) => {
+      const day = parseInt(String(tx.dt || '').slice(8, 10), 10);
+      if (!day || day > maxDay) return sum;
+      return sum + (parseFloat(String(tx.sum)) || 0);
+    }, 0);
+  const paceAdjusted = isCurrentMonth && !hasFilters;
+  const deltaCurrent = paceAdjusted
+    ? sumUpToDay(items.groupedData?.[currentMonth] || [], today)
+    : displayTotal;
+  const deltaPrevious =
+    paceAdjusted && prevMonthKey
+      ? sumUpToDay(items.groupedData?.[prevMonthKey] || [], today)
+      : prevMonthTotal;
+  const deltaPct =
+    deltaPrevious > 0 && !hasFilters
+      ? (((deltaCurrent - deltaPrevious) / deltaPrevious) * 100).toFixed(1)
+      : null;
+  const deltaSuffix = paceAdjusted
+    ? t('ux.vsLastMonthSoFar')
+    : t('ux.vsLastMonth');
 
   const deleteItem = useMemo(() => {
     if (!showDeleteModal) return null;
@@ -397,7 +419,7 @@ const NewHome = () => {
     <>
       <IconButton
         size="sm"
-        aria-label="List"
+        aria-label={t('ux.listView')}
         aria-pressed={activeView === 'list'}
         className={cn(
           activeView === 'list' &&
@@ -409,7 +431,7 @@ const NewHome = () => {
       </IconButton>
       <IconButton
         size="sm"
-        aria-label="Calendar"
+        aria-label={t('ux.calendarView')}
         aria-pressed={activeView === 'calendar'}
         className={cn(
           activeView === 'calendar' &&
@@ -447,21 +469,23 @@ const NewHome = () => {
         }}
         title={t('transactionForm.editTransaction')}
         footer={
-          <button
-            type="submit"
-            form="transaction-form-edit"
-            disabled={transactionFormSubmitting}
-            className={BTN_SUBMIT_CLASS}
-          >
-            {transactionFormSubmitting ? (
-              <Loader variant="on-button" />
-            ) : (
-              <>
-                <FiEdit2 />
-                <span>{t('transactionForm.editTitle')}</span>
-              </>
-            )}
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              type="submit"
+              form="transaction-form-edit"
+              disabled={transactionFormSubmitting}
+              className={BTN_SUBMIT_CLASS}
+            >
+              {transactionFormSubmitting ? (
+                <Loader variant="on-button" />
+              ) : (
+                <>
+                  <FiEdit2 />
+                  <span>{t('transactionForm.editTitle')}</span>
+                </>
+              )}
+            </button>
+          </div>
         }
       >
         <TransactionForm
@@ -533,13 +557,19 @@ const NewHome = () => {
           <div {...monthSwipeHandlers}>
             <div className="pt-6">
               <HeroSpendCard
-                title={currentMonth || t('home.title')}
+                title={
+                  currentMonth
+                    ? localizeMonthKey(currentMonth, language)
+                    : t('home.title')
+                }
                 meta={`${filteredTransactions.length} ${filteredTransactions.length === 1 ? t('common.transaction') : t('common.transactions')}`}
-                label={t('home.spentThisMonth')}
+                label={
+                  isCurrentMonth ? t('home.spentThisMonth') : t('ux.spent')
+                }
                 amount={formatNumber(displayTotal)}
                 deltaLabel={
                   deltaPct != null
-                    ? `${Number(deltaPct) >= 0 ? '+' : ''}${deltaPct}% vs ${t('common.previous').toLowerCase()} month`
+                    ? `${Number(deltaPct) >= 0 ? '+' : ''}${deltaPct}% ${deltaSuffix}`
                     : undefined
                 }
                 deltaPositive={
@@ -553,18 +583,37 @@ const NewHome = () => {
               />
             </div>
 
-            {!hasFilters && (
-              <StatsGrid columns={2} filtered={false} className="gap-2 mb-4 sm:gap-2">
-                <StatCard
-                  value={formatNumber(displayIncome)}
-                  label={t('common.income')}
-                />
-                <StatCard
-                  value={formatNumber(displayProfit)}
-                  label={t('common.profit')}
-                />
-              </StatsGrid>
-            )}
+            <StatsGrid
+              columns={2}
+              filtered={false}
+              className={cn(
+                'gap-2 mb-4 sm:gap-2',
+                hasFilters && 'opacity-60'
+              )}
+            >
+              <StatCard
+                value={formatNumber(displayIncome)}
+                label={t('common.income')}
+                tone={displayIncome > 0 ? 'positive' : undefined}
+              />
+              <StatCard
+                value={`${displayProfit > 0 ? '+' : ''}${formatNumber(displayProfit)}`}
+                label={t('ux.net')}
+                labelHidden
+                tone={
+                  displayProfit > 0
+                    ? 'positive'
+                    : displayProfit < 0
+                      ? 'negative'
+                      : undefined
+                }
+                hint={
+                  displayIncome > 0
+                    ? `${t('ux.savingsRate')} ${Math.round((displayProfit / displayIncome) * 100)}%`
+                    : undefined
+                }
+              />
+            </StatsGrid>
 
             <BudgetRings monthLabel={currentMonth} visible={!hasFilters} />
 
@@ -689,32 +738,13 @@ const NewHome = () => {
           {/* Month nav: always on list; on calendar only md+ (mobile uses swipe). Hidden when filter panel open */}
           {!filterPanelOpen &&
             (activeView === 'list' || activeView === 'calendar') && (
-            <div
-              className={`fixed bottom-[70px] left-1/2 -translate-x-1/2 justify-center gap-4 z-[1050] bg-[var(--color-app-bg)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5 ${
-                activeView === 'calendar'
-                  ? 'hidden md:flex'
-                  : 'flex'
-              }`}
-            >
-              <button
-                type="button"
-                className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-app-subtle bg-app-surface-hover cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-app-secondary [&_svg]:text-[1.3rem] hover:not(:disabled):bg-app-surface-hover hover:not(:disabled):border-[var(--color-app-accent)]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
-                onClick={() => setCurrentMonthIndex(currentMonthIndex + 1)}
-                disabled={currentMonthIndex >= months.length - 1}
-                aria-label="Previous month"
-              >
-                <FiChevronLeft />
-              </button>
-              <button
-                type="button"
-                className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-app-subtle bg-app-surface-hover cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-app-secondary [&_svg]:text-[1.3rem] hover:not(:disabled):bg-app-surface-hover hover:not(:disabled):border-[var(--color-app-accent)]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
-                onClick={() => setCurrentMonthIndex(currentMonthIndex - 1)}
-                disabled={currentMonthIndex <= 0}
-                aria-label="Next month"
-              >
-                <FiChevronRight />
-              </button>
-            </div>
+            <MonthNavBar
+              className={activeView === 'calendar' ? 'hidden md:flex' : 'flex'}
+              onPrevious={() => setCurrentMonthIndex(currentMonthIndex + 1)}
+              onNext={() => setCurrentMonthIndex(currentMonthIndex - 1)}
+              previousDisabled={currentMonthIndex >= months.length - 1}
+              nextDisabled={currentMonthIndex <= 0}
+            />
           )}
 
           {/* FAB - hidden when filter panel is open to avoid overlap */}
@@ -726,6 +756,7 @@ const NewHome = () => {
                 setShowAddModal(true);
               }}
               title={t('transactionForm.addTransaction')}
+              aria-label={t('transactionForm.addTransaction')}
             >
               <FiPlus />
             </button>

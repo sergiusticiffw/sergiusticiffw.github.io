@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import IncomeForm from '@features/incomes/components/Income/IncomeForm';
@@ -19,6 +20,7 @@ import { useNotification } from '@shared/context/notification';
 import { useLocalization } from '@shared/context/localization';
 import { useChartsThemeSync } from '@shared/context/highcharts';
 import VaulDrawer from '@shared/components/VaulDrawer';
+import MonthNavBar from '@shared/components/MonthNavBar';
 import IncomeTable from '@features/incomes/components/Income/IncomeTable';
 import IncomeFilters from '@features/incomes/components/Income/IncomeFilters';
 import CalendarView from '@features/expenses/components/CalendarView';
@@ -42,6 +44,7 @@ import { TransactionOrIncomeItem } from '@shared/type/types';
 import {
   FiPlus,
   FiEdit2,
+  FiTrash2,
   FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
@@ -203,6 +206,19 @@ const Income = () => {
     (filters.dateRange?.start && filters.dateRange?.end)
   );
 
+  // Open on the current month once data is available, as Home does. Index 0 is
+  // the newest month with data, which can be a future-dated record.
+  const openedOnCurrentMonth = useRef(false);
+  useEffect(() => {
+    if (openedOnCurrentMonth.current || incomeMonths.length === 0) return;
+    openedOnCurrentMonth.current = true;
+    if (hasActiveFilters) return;
+    const now = new Date();
+    const todayKey = `${ENGLISH_MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`;
+    const index = incomeMonths.indexOf(todayKey);
+    if (index > 0) setCurrentMonthIndex(index);
+  }, [incomeMonths, hasActiveFilters]);
+
   useEffect(() => {
     if (hasActiveFilters) {
       setCurrentMonthIndex(0);
@@ -307,11 +323,18 @@ const Income = () => {
     if (filters.dateRange?.start && filters.dateRange?.end) {
       return getMonthsInRange(filters.dateRange.start, filters.dateRange.end);
     }
-    const firstDay = data.raw[data.raw.length - 1]?.dt;
+    // Average over the span of the income history itself (not the oldest
+    // record of any kind), otherwise the average is diluted by older expenses.
+    const incomeDates: string[] = (data.incomeData || [])
+      .map((item: TransactionOrIncomeItem) => String(item.dt || ''))
+      .filter(Boolean);
+    const firstDay = incomeDates.length
+      ? incomeDates.reduce((min, d) => (d < min ? d : min), incomeDates[0])
+      : data.raw[data.raw.length - 1]?.dt;
     return firstDay
       ? parseFloat(getMonthsPassed(firstDay as string).toFixed(2))
       : 1;
-  }, [filters.dateRange, data.raw]);
+  }, [filters.dateRange, data.raw, data.incomeData]);
 
   const averageIncome = totalIncome / Math.max(1, months);
 
@@ -335,7 +358,7 @@ const Income = () => {
     <>
       <IconButton
         size="sm"
-        aria-label="List"
+        aria-label={t('ux.listView')}
         aria-pressed={activeView === 'list'}
         className={cn(
           activeView === 'list' &&
@@ -347,7 +370,7 @@ const Income = () => {
       </IconButton>
       <IconButton
         size="sm"
-        aria-label="Calendar"
+        aria-label={t('ux.calendarView')}
         aria-pressed={activeView === 'calendar'}
         className={cn(
           activeView === 'calendar' &&
@@ -506,26 +529,13 @@ const Income = () => {
         !noData &&
         !filterPanelOpen &&
         incomeMonths.length > 0 && (
-          <div className="fixed bottom-[70px] left-1/2 -translate-x-1/2 hidden md:flex justify-center gap-4 z-[1050] bg-[var(--color-app-bg)] backdrop-blur-md py-3 px-5 rounded-[20px] shadow-lg max-[360px]:bottom-[60px] max-[360px]:py-2.5">
-            <button
-              type="button"
-              className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-app-subtle bg-app-surface-hover cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-app-secondary [&_svg]:text-[1.3rem] hover:not(:disabled):bg-app-surface-hover hover:not(:disabled):border-[var(--color-app-accent)]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
-              onClick={() => setCurrentMonthIndex(currentMonthIndex + 1)}
-              disabled={currentMonthIndex >= incomeMonths.length - 1}
-              aria-label="Previous month"
-            >
-              <FiChevronLeft />
-            </button>
-            <button
-              type="button"
-              className="w-[50px] h-[50px] flex items-center justify-center rounded-xl border border-app-subtle bg-app-surface-hover cursor-pointer transition-all duration-200 shadow-md [&_svg]:text-app-secondary [&_svg]:text-[1.3rem] hover:not(:disabled):bg-app-surface-hover hover:not(:disabled):border-[var(--color-app-accent)]/40 hover:not(:disabled):scale-105 disabled:opacity-30 disabled:cursor-not-allowed max-[360px]:w-[46px] max-[360px]:h-[46px]"
-              onClick={() => setCurrentMonthIndex(currentMonthIndex - 1)}
-              disabled={currentMonthIndex <= 0}
-              aria-label="Next month"
-            >
-              <FiChevronRight />
-            </button>
-          </div>
+          <MonthNavBar
+            className="hidden md:flex"
+            onPrevious={() => setCurrentMonthIndex(currentMonthIndex + 1)}
+            onNext={() => setCurrentMonthIndex(currentMonthIndex - 1)}
+            previousDisabled={currentMonthIndex >= incomeMonths.length - 1}
+            nextDisabled={currentMonthIndex <= 0}
+          />
         )}
 
       {/* Charts Section */}
@@ -575,26 +585,28 @@ const Income = () => {
           !isNewModal ? t('incomeForm.editIncome') : t('incomeForm.addIncome')
         }
         footer={
-          <button
-            type="submit"
-            form={`income-form-${!isNewModal ? 'edit' : 'add'}`}
-            disabled={incomeFormSubmitting}
-            className={BTN_SUBMIT_CLASS}
-          >
-            {incomeFormSubmitting ? (
-              <Loader variant="on-button" />
-            ) : !isNewModal ? (
-              <>
-                <FiEdit2 />
-                <span>{t('incomeForm.editIncome')}</span>
-              </>
-            ) : (
-              <>
-                <FiPlus />
-                <span>{t('incomeForm.addIncome')}</span>
-              </>
-            )}
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              type="submit"
+              form={`income-form-${!isNewModal ? 'edit' : 'add'}`}
+              disabled={incomeFormSubmitting}
+              className={BTN_SUBMIT_CLASS}
+            >
+              {incomeFormSubmitting ? (
+                <Loader variant="on-button" />
+              ) : !isNewModal ? (
+                <>
+                  <FiEdit2 />
+                  <span>{t('incomeForm.editIncome')}</span>
+                </>
+              ) : (
+                <>
+                  <FiPlus />
+                  <span>{t('incomeForm.addIncome')}</span>
+                </>
+              )}
+            </button>
+          </div>
         }
       >
         <IncomeForm
@@ -624,6 +636,7 @@ const Income = () => {
             }}
             className={FAB_CLASS}
             title={t('incomeForm.addIncome')}
+            aria-label={t('incomeForm.addIncome')}
           >
             <FiPlus />
           </button>

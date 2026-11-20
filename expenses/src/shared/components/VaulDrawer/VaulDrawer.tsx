@@ -1,6 +1,7 @@
 import React, { ReactNode, useRef, useState, useEffect } from 'react';
 import { Drawer } from 'vaul';
 import { FiX } from 'react-icons/fi';
+import { useLocalization } from '@shared/context/localization';
 
 interface VaulDrawerProps {
   show: boolean;
@@ -25,6 +26,7 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
   topContent,
   footer,
 }) => {
+  const { t } = useLocalization();
   const drawerBodyRef = useRef<HTMLDivElement>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
@@ -151,9 +153,10 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="cursor-pointer rounded-full border-none bg-transparent p-2 text-xl text-app-muted transition-colors hover:bg-white/10 hover:text-white"
+                    aria-label={t('common.close')}
+                    className="flex size-11 cursor-pointer items-center justify-center rounded-full border-none bg-transparent text-xl text-app-muted transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-[var(--color-app-accent)]"
                   >
-                    <FiX />
+                    <FiX aria-hidden="true" />
                   </button>
                 </>
               )}
@@ -176,6 +179,8 @@ const VaulDrawer: React.FC<VaulDrawerProps> = ({
               [&_.form-group_label]:relative [&_.form-group_label]:pl-3 [&_.form-group_label]:text-sm [&_.form-group_label]:font-semibold [&_.form-group_label]:text-app-secondary
               [&_.form-group.required_label]:before:absolute [&_.form-group.required_label]:before:left-0 [&_.form-group.required_label]:before:top-1/2 [&_.form-group.required_label]:before:-translate-y-1/2 [&_.form-group.required_label]:before:content-['*'] [&_.form-group.required_label]:before:font-bold [&_.form-group.required_label]:before:text-[0.9rem] [&_.form-group.required_label]:before:text-[var(--color-error)]
               [&_.form-input]:min-h-12 [&_.form-input]:w-full [&_.form-input]:rounded-lg [&_.form-input]:border [&_.form-input]:border-[var(--color-input-border)] [&_.form-input]:bg-[var(--color-input-bg)] [&_.form-input]:px-3 [&_.form-input]:py-3 [&_.form-input]:text-base [&_.form-input]:text-app-primary [&_.form-input]:outline-none
+              [&_.form-input:focus-visible]:border-[var(--color-app-accent)] [&_.form-input:focus-visible]:shadow-[0_0_0_2px_var(--color-app-accent)]
+              [&_.form-textarea:focus-visible]:border-[var(--color-app-accent)] [&_.form-textarea:focus-visible]:shadow-[0_0_0_2px_var(--color-app-accent)]
               [&_.form-textarea]:min-h-[90px] [&_.form-textarea]:w-full [&_.form-textarea]:rounded-lg [&_.form-textarea]:border [&_.form-textarea]:border-[var(--color-input-border)] [&_.form-textarea]:bg-[var(--color-input-bg)] [&_.form-textarea]:px-3 [&_.form-textarea]:py-3 [&_.form-textarea]:text-base [&_.form-textarea]:text-app-primary [&_.form-textarea]:outline-none"
           >
             {children}

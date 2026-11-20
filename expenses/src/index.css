@@ -258,6 +258,18 @@
   padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
 }
 
+/* Respect the OS "reduce motion" setting: no looping/sliding animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ═══ Theme overrides: background + accent (financial apps trend) ═══
    Analiză paletă: bg (fundal), accent (CTA, FAB, linkuri), accent-hover (hover),
    accent-shadow/glow (umbre). Culorile semantice (success, error, warning, info)

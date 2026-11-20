@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import LoanDetails from '@features/loans/components/Loan/LoanDetails';
 import LoanDashboard from '@features/loans/components/Loan/dashboard/LoanDashboard';
 import LoanForm from '@features/loans/components/Loan/LoanForm';
+import LoanSimulateDrawer from '@features/loans/components/Loan/LoanSimulateDrawer';
 import VaulDrawer from '@shared/components/VaulDrawer';
-import { useParams } from '@tanstack/react-router';
+import { Link, useParams } from '@tanstack/react-router';
 import PaymentDetails from '@features/loans/components/Loan/PaymentDetails';
 import PaymentForm from '@features/loans/components/Loan/PaymentForm';
 import { Loader, LoadingSpinner } from '@shared/components/Common';
@@ -38,12 +39,14 @@ import {
   FiPercent,
   FiTrendingDown,
   FiAlertCircle,
+  FiChevronLeft,
 } from 'react-icons/fi';
 import Notification from '@shared/components/Notification/Notification';
 import { useLocalization } from '@shared/context/localization';
 import { usePendingSyncIds } from '@shared/hooks/usePendingSyncIds';
 import { useChartsThemeSync } from '@shared/context/highcharts';
 import { PAGE_CONTAINER_CLASS } from '@shared/utils/layoutClasses';
+import { localTodayString } from '@shared/utils/localDate';
 
 const EPSILON = 0.001;
 
@@ -152,6 +155,7 @@ const Loan: React.FC = () => {
   const { id } = useParams({ from: '/expenses/loan/$id' });
   const { data, dataDispatch } = useLoan();
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showSimulate, setShowSimulate] = useState(false);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [prefillNextPayment, setPrefillNextPayment] = useState(false);
   const [loanFormEditSubmitting, setLoanFormEditSubmitting] = useState(false);
@@ -188,7 +192,7 @@ const Loan: React.FC = () => {
     [amort.schedule]
   );
   const emptyPaymentValues = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localTodayString();
     return {
       nid: '',
       title: '',
@@ -342,9 +346,32 @@ const Loan: React.FC = () => {
   }, [amortizationSchedule, currentLoanChange, latestPrincipalChange]);
 
   if (!loan) {
+    // Loans list not loaded yet: keep the spinner. Loaded but missing: say so.
+    if (loans == null) {
+      return (
+        <div className={PAGE_CONTAINER_CLASS}>
+          <LoadingSpinner />
+        </div>
+      );
+    }
     return (
       <div className={PAGE_CONTAINER_CLASS}>
-        <LoadingSpinner />
+        <div
+          role="alert"
+          className="mx-auto mt-16 flex max-w-md flex-col items-center gap-4 text-center"
+        >
+          <FiAlertCircle className="size-10 text-app-muted" aria-hidden="true" />
+          <h1 className="text-xl font-semibold text-app-primary">
+            {t('ux.loanNotFound')}
+          </h1>
+          <p className="text-app-secondary">{t('ux.loanNotFoundDesc')}</p>
+          <Link
+            to="/expenses/loans"
+            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[var(--color-app-accent)] px-6 text-base font-semibold text-[var(--color-btn-on-accent)]"
+          >
+            {t('ux.backToLoans')}
+          </Link>
+        </div>
       </div>
     );
   }
@@ -524,7 +551,14 @@ const Loan: React.FC = () => {
   return (
     <div className={`${PAGE_CONTAINER_CLASS} loan-container`}>
       {/* Header */}
-      <div className="w-full text-center mb-5 pt-6 flex flex-col items-center">
+      <div className="w-full text-center mb-5 pt-4 flex flex-col items-center">
+        <Link
+          to="/expenses/loans"
+          className="mb-2 inline-flex min-h-11 items-center gap-1 self-start rounded-lg pr-3 text-sm font-medium text-app-secondary hover:text-app-primary focus-visible:outline-2 focus-visible:outline-[var(--color-app-accent)]"
+        >
+          <FiChevronLeft className="size-5" aria-hidden="true" />
+          <span>{t('ux.backToLoans')}</span>
+        </Link>
         <h1 className="text-2xl font-bold text-white tracking-tight m-0">{loan?.title}</h1>
         <button
           type="button"
@@ -534,6 +568,16 @@ const Loan: React.FC = () => {
           <FiEdit2 className="w-5 h-5 shrink-0 text-[var(--color-app-accent)]" />
           <span>{t('loan.editLoan')}</span>
         </button>
+        {loan && (
+          <button
+            type="button"
+            onClick={() => setShowSimulate(true)}
+            className="w-full inline-flex items-center justify-center gap-2 mt-2 py-3 px-6 min-h-12 text-base font-semibold text-white bg-white/10 border border-white/10 rounded-xl hover:bg-white/15 hover:border-[var(--color-app-accent)] active:scale-[0.98] transition-all cursor-pointer"
+          >
+            <FiTrendingDown className="w-5 h-5 shrink-0 text-[var(--color-app-accent)]" />
+            <span>{t('simulate.open')}</span>
+          </button>
+        )}
       </div>
 
       {/* Error Message */}
@@ -553,7 +597,14 @@ const Loan: React.FC = () => {
             {formatNumber(progress)}%
           </span>
         </div>
-        <div className="w-full h-3 rounded-md bg-black/20 overflow-hidden shadow-inner">
+        <div
+          role="progressbar"
+          aria-label={t('loan.paymentProgress')}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress)}
+          className="w-full h-3 rounded-md bg-black/20 overflow-hidden shadow-inner"
+        >
           <div
             className="h-full rounded-md bg-gradient-to-r from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] transition-[width] duration-500"
             style={{ width: `${progress}%` }}
@@ -622,7 +673,7 @@ const Loan: React.FC = () => {
             <div className="flex items-center justify-between py-3 px-4 border-b border-white/5">
               <span className="inline-flex items-center gap-2 text-[0.825rem] text-white/55 font-medium">
                 <FiPercent className={iconTw} />
-                {t('loan.currentInterest')}
+                {t('ux.interestPaid')}
               </span>
               <span className="text-sm font-semibold text-white tabular-nums text-right">
                 {interestPaidDisplay}
@@ -830,11 +881,21 @@ const Loan: React.FC = () => {
         />
       </VaulDrawer>
 
+      {loan && (
+        <LoanSimulateDrawer
+          show={showSimulate}
+          onClose={() => setShowSimulate(false)}
+          loan={loan}
+          payments={paymentsForLoan}
+        />
+      )}
+
       {/* Floating Action Button */}
       <button
         onClick={() => openAddPayment(false)}
         className={FAB_CLASS}
         title={t('loan.addPayment')}
+        aria-label={t('loan.addPayment')}
       >
         <FiPlus />
       </button>

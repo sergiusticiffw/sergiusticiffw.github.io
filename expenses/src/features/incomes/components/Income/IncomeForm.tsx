@@ -6,6 +6,7 @@ import { useFormValidation } from '@shared/hooks/useFormValidation';
 import { useTags } from '@shared/hooks/useTags';
 import { FormField, Loader } from '@shared/components/Common';
 import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
+import { localTodayString } from '@shared/utils/localDate';
 import TagChips from '@shared/components/Common/TagChips';
 import { INCOME_TAG_KEY, activeTags } from '../../../../tags/catalog';
 import { useTagCatalog } from '../../../../tags/store';
@@ -35,7 +36,7 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
 
   const initialState = {
     field_amount: '',
-    field_date: new Date().toISOString().slice(0, 10),
+    field_date: localTodayString(),
     field_description: '',
   };
 
@@ -73,6 +74,12 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
       successMessageKeys: {
         add: 'notification.incomeAdded',
         edit: 'notification.incomeUpdated',
+      },
+      validate: (state) => {
+        const amount = parseFloat(String(state.field_amount));
+        if (isNaN(amount) || amount <= 0) return 'ux.invalidIncomeAmount';
+        if (!state.field_date) return 'ux.dateRequired';
+        return null;
       },
     });
 
@@ -132,6 +139,8 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
           required
           step="0.01"
           min="0"
+          inputMode="decimal"
+          autoFocus={formType === 'add'}
           isValid={getFieldValidation('field_amount', formState)}
           ariaLabel={t('incomeForm.amount')}
         />

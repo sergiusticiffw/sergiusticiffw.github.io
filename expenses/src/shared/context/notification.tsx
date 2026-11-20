@@ -191,7 +191,7 @@ export const NotificationProvider = ({
       value={{ showNotification, removeNotification, clearAllNotifications }}
     >
       {children}
-      <div className="fixed inset-0 pt-[calc(0.75rem+env(safe-area-inset-top,0))] pr-[calc(0.75rem+env(safe-area-inset-right,0))] pl-[calc(0.75rem+env(safe-area-inset-left,0))] pointer-events-none z-[9999] flex flex-col gap-2 md:pt-[calc(1rem+env(safe-area-inset-top,0))] md:pr-[calc(1.25rem+env(safe-area-inset-right,0))] md:pl-[env(safe-area-inset-left,0)] md:items-end">
+      <div aria-live="polite" className="fixed inset-0 pt-[calc(0.75rem+env(safe-area-inset-top,0))] pr-[calc(0.75rem+env(safe-area-inset-right,0))] pl-[calc(0.75rem+env(safe-area-inset-left,0))] pointer-events-none z-[9999] flex flex-col gap-2 md:pt-[calc(1rem+env(safe-area-inset-top,0))] md:pr-[calc(1.25rem+env(safe-area-inset-right,0))] md:pl-[env(safe-area-inset-left,0)] md:items-end">
         {notifications.map((notification, index) => (
           <div
             key={notification.id}

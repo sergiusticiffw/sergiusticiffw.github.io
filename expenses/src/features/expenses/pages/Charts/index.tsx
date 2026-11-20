@@ -227,6 +227,7 @@ const Charts = () => {
             onClick={() => setShowAddModal(true)}
             className={FAB_CLASS}
             title={t('transactionForm.addTransaction')}
+            aria-label={t('transactionForm.addTransaction')}
           >
             <FiPlus />
           </button>

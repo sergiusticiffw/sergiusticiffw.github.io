@@ -98,9 +98,9 @@ export const LoanPrincipalOverTime = ({
     yAxis: { min: 0, title: { text: currency } },
     tooltip: { valueDecimals: 2 },
     series: [
-      { name: t('common.active'), data: actual },
+      { name: t('ux.seriesActual'), data: actual },
       {
-        name: t('common.pending'),
+        name: t('ux.seriesProjected'),
         data: simulated,
         dashStyle: 'ShortDash',
         opacity: 0.7,

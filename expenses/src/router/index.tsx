@@ -5,6 +5,7 @@ import {
   createRouter,
   Outlet,
   redirect,
+  useLocation,
 } from '@tanstack/react-router';
 import { ErrorBoundary, LoadingSpinner } from '@shared/components/Common';
 import Navbar from '@shared/components/Navbar';
@@ -55,6 +56,7 @@ function RootComponent() {
   const encryption = useEncryptionState();
   const lockedOut = !!token && needsEncryptionKey(encryption);
   const userId = String(userDetails?.current_user?.uid ?? '');
+  const pathname = useLocation({ select: (location) => location.pathname });
 
   const shell = (
     <div className="h-dvh w-full max-w-full flex flex-col overflow-hidden bg-[var(--color-app-bg)]">
@@ -69,6 +71,7 @@ function RootComponent() {
         ) : (
           <Suspense fallback={<LoadingSpinner />}>
             <ErrorBoundary
+              resetKey={pathname}
               onError={(error, errorInfo) => {
                 logger.error(
                   'Application error caught by ErrorBoundary:',

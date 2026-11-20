@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import roLocale from '@fullcalendar/core/locales/ro';
 import { formatNumber, getLocale } from '@shared/utils/utils';
 import { useLocalization } from '@shared/context/localization';
 import { useAuthState } from '@shared/context/context';
@@ -66,7 +67,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 }) => {
   // Month swipe is handled by the parent page (covers Budget Rings + calendar).
   void _onMonthChange;
-  const { language } = useLocalization();
+  const { t, language } = useLocalization();
   const { userDetails } = useAuthState();
   // Prefer live session uid so partner filter matches RPC user_id.
   const myUid = String(
@@ -180,9 +181,24 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
   type AmountTier = 'amount-low' | 'amount-medium' | 'amount-high';
 
+  // Colour bands are relative to this month: the lowest third of personal
+  // spending days is green, the highest third red. Fixed 1000/3000 bands
+  // only apply when the month has too few days to rank.
+  const tierThresholds = useMemo(() => {
+    const totals = events
+      .filter((event) => !event.extendedProps.partnerOnly)
+      .map((event) => event.extendedProps.total)
+      .filter((total) => total > 0)
+      .sort((a, b) => a - b);
+    if (totals.length < 3) return { low: 1000, high: 3000 };
+    const at = (share: number) =>
+      totals[Math.min(totals.length - 1, Math.floor(share * totals.length))];
+    return { low: at(1 / 3), high: at(2 / 3) };
+  }, [events]);
+
   const getExpenseTier = (amount: number): AmountTier => {
-    if (amount < 1000) return 'amount-low';
-    if (amount < 3000) return 'amount-medium';
+    if (amount < tierThresholds.low) return 'amount-low';
+    if (amount < tierThresholds.high) return 'amount-medium';
     return 'amount-high';
   };
 
@@ -268,6 +284,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         }}
         height="auto"
         firstDay={1}
+        locales={[roLocale]}
+        locale={language === 'ro' ? 'ro' : 'en'}
         eventClick={handleEventClick}
         eventContent={(eventInfo) => {
           const amount = eventInfo.event.extendedProps.total;
@@ -292,8 +310,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                 {eventInfo.event.title}
               </div>
               {!partnerOnly && (
-                <div className="text-[0.65rem] font-medium opacity-95 max-[640px]:text-[0.58rem]">
-                  {count} items
+                <div className="text-xs font-medium opacity-95">
+                  {count} {t('ux.items')}
                 </div>
               )}
             </div>
@@ -333,7 +351,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         topContent={
           selectedDayTransactions.length > 0 ? (
             <>
-              Total: <strong>{formatNumber(selectedDayTotal)}</strong>
+              {t('common.total')}: <strong>{formatNumber(selectedDayTotal)}</strong>
             </>
           ) : undefined
         }

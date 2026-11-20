@@ -7,6 +7,7 @@ import {
   FiXCircle,
 } from 'react-icons/fi';
 import { NotificationOptions } from '@shared/context/notification';
+import { useLocalization } from '@shared/context/localization';
 
 interface NotificationProps {
   message: string;
@@ -25,6 +26,7 @@ const Notification: FC<NotificationProps> = ({
   duration,
   persistent,
 }) => {
+  const { t } = useLocalization();
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [progress, setProgress] = useState(100);
@@ -115,6 +117,7 @@ const Notification: FC<NotificationProps> = ({
   const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     if (touchStart === null) return;
     const currentX = e.targetTouches[0].clientX;
+    setTouchEnd(currentX);
     const distance = touchStart - currentX;
     setSwipeDistance(distance);
   };
@@ -150,13 +153,13 @@ const Notification: FC<NotificationProps> = ({
   const getTitle = () => {
     switch (type) {
       case 'success':
-        return 'Success';
+        return t('ux.toastSuccess');
       case 'error':
-        return 'Error';
+        return t('ux.toastError');
       case 'warning':
-        return 'Warning';
+        return t('ux.toastWarning');
       default:
-        return 'Info';
+        return t('ux.toastInfo');
     }
   };
 
@@ -184,6 +187,7 @@ const Notification: FC<NotificationProps> = ({
   return (
     <div
       ref={notificationRef}
+      role={type === 'error' ? 'alert' : 'status'}
       className={`${cardBase} ${typeStyles[type as keyof typeof typeStyles] || typeStyles.info} ${visibleClass} ${closingClass} ${clickableClass} ${pausedClass}`}
       onMouseEnter={handlePause}
       onMouseLeave={handlePause}
@@ -239,9 +243,9 @@ const Notification: FC<NotificationProps> = ({
             e.stopPropagation();
             handleClose();
           }}
-          aria-label="Close notification"
+          aria-label={t('common.close')}
         >
-          <FiX />
+          <FiX aria-hidden="true" />
         </button>
       </div>
       {!isPersistent && actualDuration > 0 && (

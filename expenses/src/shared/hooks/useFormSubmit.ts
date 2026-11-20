@@ -33,6 +33,11 @@ interface UseFormSubmitOptions<T> {
     edit: string;
   };
   useFetchRequest?: boolean;
+  /**
+   * Optional pre-submit check. Return a localization key describing the problem
+   * to block the submit (the form stays open with the user's input), or null.
+   */
+  validate?: (formState: T) => string | null;
 }
 
 interface UseFormSubmitReturn<T> {
@@ -89,6 +94,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
   additionalParams,
   successMessageKeys,
   useFetchRequest = true,
+  validate,
 }: UseFormSubmitOptions<T>): UseFormSubmitReturn<T> => {
   const dispatch = useAuthDispatch();
   const { token } = useAuthState();
@@ -136,6 +142,13 @@ export const useFormSubmit = <T extends Record<string, any>>({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (validate) {
+      const problem = validate(formState);
+      if (problem) {
+        showNotification(t(problem), notificationType.ERROR);
+        return;
+      }
+    }
     setIsSubmitting(true);
 
     try {
@@ -502,8 +515,8 @@ export const useFormSubmit = <T extends Record<string, any>>({
         t(paused ? 'privacy.writePaused' : 'error.unknown'),
         notificationType.ERROR
       );
+      // Keep the form open (with the user's input) so nothing typed is lost.
       setIsSubmitting(false);
-      if (!paused) onSuccess();
     }
   };
 

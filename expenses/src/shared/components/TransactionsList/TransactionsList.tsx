@@ -259,6 +259,8 @@ function TransactionsList({
             'p-3 sm:p-4'
           )}
           style={{ touchAction: 'pan-y pan-x pinch-zoom' }}
+          // Tap a row to open it (edit also offers delete); swipe stays a shortcut.
+          onClick={onEdit ? () => onEdit(transaction.id) : undefined}
           onTouchStart={
             !isDesktop
               ? (e) => handleTouchStart(e, transaction.id, listRef)

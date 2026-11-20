@@ -23,7 +23,6 @@ import {
   FiUser,
   FiLogOut,
   FiSettings,
-  FiBarChart2,
   FiDroplet,
   FiShield,
   FiPieChart,
@@ -35,18 +34,8 @@ import {
   FiChevronDown,
   FiChevronUp,
 } from 'react-icons/fi';
-import ChartsVisibilityDnd from '@shared/components/ChartsVisibilityDnd';
-import {
-  notificationType,
-  availableCharts,
-  currencies,
-} from '@shared/utils/constants';
-import {
-  readCustomChartsEnabled,
-  readStoredVisibleCharts,
-  writeCustomChartsEnabled,
-  writeStoredVisibleCharts,
-} from '@shared/utils/chartsVisibility';
+import { notificationType, currencies } from '@shared/utils/constants';
+import ChartsCustomizer from '@features/expenses/components/Charts/ChartsCustomizer';
 import { Switch } from '@shared/ui';
 import AiSettings from '@features/assistant/components/AiSettings';
 import TagSettings from '../../../features/profile/TagSettings';
@@ -71,7 +60,6 @@ import {
   replaceEmergencyFund,
 } from '../../../features/goals/store';
 import {
-  persistChartsToSupabase,
   persistGoalsToSupabase,
   persistLanguageToSupabase,
   persistNetWorthToSupabase,
@@ -125,24 +113,6 @@ const Profile = () => {
   const [lastBackupAt, setLastBackupAtState] = useState<string | null>(() =>
     getLastBackupAt()
   );
-  const [state, setState] = useState(() => ({
-    visibleCharts: readStoredVisibleCharts(),
-  }));
-  const [customChartsEnabled, setCustomChartsEnabled] = useState(
-    readCustomChartsEnabled
-  );
-
-  useEffect(() => {
-    const onPrefsApplied = () => {
-      setCustomChartsEnabled(readCustomChartsEnabled());
-      setState({ visibleCharts: readStoredVisibleCharts() });
-    };
-    window.addEventListener('expenses:prefs-applied', onPrefsApplied);
-    return () =>
-      window.removeEventListener('expenses:prefs-applied', onPrefsApplied);
-  }, []);
-
-  const [chartsAccordionOpen, setChartsAccordionOpen] = useState(false);
   const [backupAccordionOpen, setBackupAccordionOpen] = useState(false);
   const [importBusy, setImportBusy] = useState(false);
   const [importProgress, setImportProgress] =
@@ -473,63 +443,6 @@ const Profile = () => {
   });
   const [blink, setBlink] = useState(false);
 
-  const visibleChartsOrdered = state.visibleCharts.filter((c) =>
-    availableCharts.includes(c)
-  );
-  const hiddenChartsOrdered = availableCharts.filter(
-    (c) => !state.visibleCharts.includes(c)
-  );
-
-  const syncChartsToCloud = async (options: {
-    visibleCharts: string[];
-    customChartsEnabled: boolean;
-    notify: boolean;
-  }) => {
-    if (!navigator.onLine) {
-      if (options.notify) {
-        showNotification(t('goals.savedOffline'), notificationType.SUCCESS);
-      }
-      return;
-    }
-    if (getDataProviderKind() !== 'supabase') {
-      if (options.notify) {
-        showNotification(t('goals.localOnly'), notificationType.SUCCESS);
-      }
-      return;
-    }
-    const ok = await persistChartsToSupabase({
-      visibleCharts: options.visibleCharts,
-      customChartsEnabled: options.customChartsEnabled,
-    });
-    if (options.notify || !ok) {
-      showNotification(
-        ok ? t('notification.profileUpdated') : t('goals.syncErrorDrive'),
-        ok ? notificationType.SUCCESS : notificationType.ERROR
-      );
-    }
-  };
-
-  const handleCustomChartsEnabledChange = async (checked: boolean) => {
-    setCustomChartsEnabled(checked);
-    writeCustomChartsEnabled(checked);
-    await syncChartsToCloud({
-      visibleCharts: state.visibleCharts,
-      customChartsEnabled: checked,
-      notify: true,
-    });
-  };
-
-  const handleVisibleChartsChange = async (visible: string[]) => {
-    setState((prev) => ({ ...prev, visibleCharts: visible }));
-    writeStoredVisibleCharts(visible);
-    // Silent sync while dragging/reordering — toast only on failure.
-    await syncChartsToCloud({
-      visibleCharts: visible,
-      customChartsEnabled,
-      notify: false,
-    });
-  };
-
   const currentUser =
     userDetails && typeof userDetails === 'object'
       ? userDetails.current_user
@@ -636,7 +549,7 @@ const Profile = () => {
               value={language}
               name="language"
               onChange={handleLanguageChange}
-              className="w-full py-3 px-4 bg-app-surface border border-app-subtle rounded-lg text-app-primary text-sm md:text-[0.875rem] font-normal transition-all outline-none focus:border-[var(--color-app-accent)]/50 focus:bg-[var(--color-app-accent)]/5 [&_option]:bg-[var(--color-app-bg)] [&_option]:text-app-primary [&_option]:p-2"
+              className="w-full py-3 px-4 bg-app-surface border border-app-subtle rounded-lg text-app-primary text-sm md:text-[0.875rem] font-normal transition-all outline-none focus:border-[var(--color-app-accent)]/50 focus:bg-[var(--color-app-accent)]/5 focus-visible:shadow-[0_0_0_2px_var(--color-app-accent)] [&_option]:bg-[var(--color-app-bg)] [&_option]:text-app-primary [&_option]:p-2"
             >
               <option value="en">{t('profile.english')}</option>
               <option value="ro">{t('profile.romanian')}</option>
@@ -652,7 +565,7 @@ const Profile = () => {
               value={currency}
               name="currency"
               onChange={handleChange}
-              className="w-full py-3 px-4 bg-app-surface border border-app-subtle rounded-lg text-app-primary text-sm md:text-[0.875rem] font-normal transition-all outline-none focus:border-[var(--color-app-accent)]/50 focus:bg-[var(--color-app-accent)]/5 [&_option]:bg-[var(--color-app-bg)] [&_option]:text-app-primary [&_option]:p-2"
+              className="w-full py-3 px-4 bg-app-surface border border-app-subtle rounded-lg text-app-primary text-sm md:text-[0.875rem] font-normal transition-all outline-none focus:border-[var(--color-app-accent)]/50 focus:bg-[var(--color-app-accent)]/5 focus-visible:shadow-[0_0_0_2px_var(--color-app-accent)] [&_option]:bg-[var(--color-app-bg)] [&_option]:text-app-primary [&_option]:p-2"
             >
               {sortedCurrencies.map(([id, currency]) => (
                 <option key={id} value={id}>
@@ -841,62 +754,8 @@ const Profile = () => {
           )}
         </div>
 
-        {/* Charts Settings (accordion, closed by default) */}
-        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden md:rounded-[10px] transition-colors active:border-white/10">
-          <button
-            type="button"
-            onClick={() => setChartsAccordionOpen((o) => !o)}
-            className="w-full flex items-center justify-between gap-2.5 py-5 px-5 md:py-4 md:px-4 text-left bg-transparent border-none cursor-pointer [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:shrink-0"
-            aria-expanded={chartsAccordionOpen}
-          >
-            <div className="flex items-center gap-2.5 [&_svg]:text-[var(--color-app-accent)]">
-              <FiBarChart2 />
-              <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
-                {t('profile.chartsSettings')}
-              </h3>
-            </div>
-            {chartsAccordionOpen ? (
-              <FiChevronUp className="text-app-muted" aria-hidden />
-            ) : (
-              <FiChevronDown className="text-app-muted" aria-hidden />
-            )}
-          </button>
-          {chartsAccordionOpen && (
-            <div className="px-5 pb-5 pt-0 md:px-4 md:pb-4 border-t border-white/[0.06]">
-              <div className="pt-4 md:pt-3">
-                <h4 className="text-xs font-semibold text-app-muted m-0 mb-3 md:mb-2.5 uppercase tracking-wider">
-                  {t('profile.chartsVisibility')}
-                </h4>
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <span
-                    id="charts-customize-label"
-                    className="text-body text-app-secondary"
-                  >
-                    {t('profile.chartsCustomize')}
-                  </span>
-                  <Switch
-                    checked={customChartsEnabled}
-                    onCheckedChange={handleCustomChartsEnabledChange}
-                    aria-labelledby="charts-customize-label"
-                  />
-                </div>
-                {customChartsEnabled && (
-                  <>
-                    <p className="text-xs text-app-muted mb-3">
-                      {t('profile.chartsDragHint')}
-                    </p>
-                    <ChartsVisibilityDnd
-                      visibleCharts={visibleChartsOrdered}
-                      hiddenCharts={hiddenChartsOrdered}
-                      onVisibleChartsChange={handleVisibleChartsChange}
-                      t={t}
-                    />
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Chart visibility and order */}
+        <ChartsCustomizer />
 
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
           <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">

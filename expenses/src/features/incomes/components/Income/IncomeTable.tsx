@@ -156,7 +156,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                 className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
                 onClick={() => handleSort('date')}
               >
-                Date {getSortIcon('date')}
+                {t('common.date')} {getSortIcon('date')}
               </button>
             )}
             <button
@@ -164,7 +164,7 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
               className={`${sortBtn} ${sortField === 'amount' ? sortBtnActive : ''}`}
               onClick={() => handleSort('amount')}
             >
-              Amount {getSortIcon('amount')}
+              {t('common.amount')} {getSortIcon('amount')}
             </button>
           </div>
           {toolbarEnd && (
@@ -218,6 +218,8 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                 data-id={income.id}
                 className="bg-white/[0.05] rounded-2xl py-4 pr-6 pl-4 flex items-start gap-4 cursor-pointer transition-all duration-200 relative z-[1] w-full min-h-0 touch-pan-y overflow-hidden hover:bg-white/10 hover:translate-x-1 active:scale-[0.98]"
                 style={{ touchAction: 'pan-y pan-x pinch-zoom' }}
+                // Tap a row to open it (the edit sheet also offers delete).
+                onClick={() => handleEdit(income.id)}
                 onTouchStart={
                   !isDesktop ? (e) => handleTouchStart(e, income.id, listRef) : undefined
                 }
@@ -277,8 +279,8 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                         handleEdit(income.id);
                       }}
                       className="p-1.5 rounded-md text-white/45 hover:text-white/80 hover:bg-white/10 transition-colors [&_svg]:text-[0.95rem]"
-                      aria-label="Edit"
-                      title="Edit"
+                      aria-label={t('common.edit')}
+                      title={t('common.edit')}
                     >
                       <FiEdit2 />
                     </button>
@@ -290,8 +292,8 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
                         setShowDeleteModal(income.id);
                       }}
                       className="p-1.5 rounded-md text-white/45 hover:text-white/80 hover:bg-white/10 transition-colors [&_svg]:text-[0.95rem]"
-                      aria-label="Delete"
-                      title="Delete"
+                      aria-label={t('common.delete')}
+                      title={t('common.delete')}
                     >
                       <FiTrash2 />
                     </button>
