@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Copy } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { AssistantAnswer } from "@/components/assistant/assistant-answer";
@@ -7,7 +8,6 @@ import { AssistantSources } from "@/components/assistant/assistant-sources";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  INTERRUPTED,
   chatSession,
   clearChatSession,
   loadChatSession,
@@ -16,12 +16,18 @@ import {
   saveChatSession,
   writeAssistantScope,
 } from "@/lib/assistant/chat-session";
-import { nextChatModel, retryModelLabel } from "@/lib/assistant/models";
+import {
+  SLOW_REQUEST_MS,
+  nextChatModel,
+  retryModelLabel,
+} from "@/lib/assistant/models";
 import type { AssistantResult, AssistantTurn } from "@/lib/assistant/types";
 import { formatDurationUntil } from "@/lib/format";
 
 /** Bump when what is sent to the AI provider changes, to ask again. */
 const CONSENT_VERSION = "1";
+
+const STOPPED = "Oprit înainte de răspuns.";
 
 function consentKey(userId: string | undefined) {
   return `medicalAssistantConsent:${CONSENT_VERSION}:${userId ?? "anonymous"}`;
@@ -66,8 +72,19 @@ export function MedicalAssistant({
   const [quotaUntil, setQuotaUntil] = useState<number | null>(null);
   const [profileScope, setProfileScope] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [slow, setSlow] = useState(false);
+  const [attemptModel, setAttemptModel] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const slowTimerRef = useRef<number | null>(null);
+
+  function clearSlowTimer() {
+    if (slowTimerRef.current !== null) {
+      window.clearTimeout(slowTimerRef.current);
+      slowTimerRef.current = null;
+    }
+    setSlow(false);
+  }
 
   useLayoutEffect(() => {
     const stored = loadChatSession();
@@ -107,8 +124,12 @@ export function MedicalAssistant({
 
   useEffect(() => {
     return () => {
-      abortRef.current?.abort();
+      if (slowTimerRef.current !== null) {
+        window.clearTimeout(slowTimerRef.current);
+      }
+      const controller = abortRef.current;
       abortRef.current = null;
+      controller?.abort();
       Object.assign(chatSession, markInterrupted(chatSession));
       saveChatSession();
     };
@@ -133,9 +154,17 @@ export function MedicalAssistant({
   }
 
   async function ask(turns: AssistantTurn[], preferModel?: string) {
-    abortRef.current?.abort();
+    const previous = abortRef.current;
     const controller = new AbortController();
     abortRef.current = controller;
+    previous?.abort();
+
+    clearSlowTimer();
+    setAttemptModel(preferModel ?? null);
+    slowTimerRef.current = window.setTimeout(() => {
+      slowTimerRef.current = null;
+      setSlow(true);
+    }, SLOW_REQUEST_MS);
 
     setError(null);
     setFailedModel(null);
@@ -157,9 +186,7 @@ export function MedicalAssistant({
         scopeName ?? null,
         controller.signal,
       );
-      if (controller.signal.aborted) {
-        return;
-      }
+      controller.signal.throwIfAborted();
       if (result.error || !result.answer) {
         setError(result.error ?? "Asistentul nu a răspuns.");
         setFailedModel(result.failedModel ?? preferModel ?? null);
@@ -174,14 +201,20 @@ export function MedicalAssistant({
           ...(result.sources && result.sources.length > 0
             ? { sources: result.sources }
             : {}),
+          ...(result.model ? { model: result.model } : {}),
         },
       ]);
       setError(null);
       setFailedModel(null);
       setQuotaUntil(null);
     } catch (askError) {
+      // A newer request (model switch, new chat) took over; it owns the state now.
+      if (abortRef.current !== controller) {
+        return;
+      }
       if (controller.signal.aborted) {
-        setError(INTERRUPTED);
+        setError(STOPPED);
+        setFailedModel(preferModel ?? null);
         return;
       }
       setError(
@@ -194,11 +227,14 @@ export function MedicalAssistant({
     } finally {
       if (abortRef.current === controller) {
         abortRef.current = null;
-      }
-      if (!controller.signal.aborted) {
+        clearSlowTimer();
         setPending(false);
       }
     }
+  }
+
+  function stop() {
+    abortRef.current?.abort();
   }
 
   async function send(text: string) {
@@ -227,6 +263,7 @@ export function MedicalAssistant({
       : null;
   const canRetry = Boolean(error) && messages.at(-1)?.role === "user" && !pending;
   const altModel = canRetry ? nextChatModel(failedModel) : null;
+  const slowAlt = pending && slow ? nextChatModel(attemptModel) : null;
   const quotaWait =
     quotaUntil && quotaUntil > Date.now()
       ? formatDurationUntil(quotaUntil)
@@ -365,7 +402,11 @@ export function MedicalAssistant({
         ) : (
           messages.map((message, index) =>
             message.role === "user" ? (
-              <div key={`${message.role}-${index}`} className="flex justify-end">
+              <div
+                key={`${message.role}-${index}`}
+                className="flex items-center justify-end gap-1"
+              >
+                <CopyButton text={message.text} label="Copiază întrebarea" iconOnly />
                 <p className="max-w-[85%] rounded-2xl bg-muted px-3 py-2 text-sm">
                   {message.text}
                 </p>
@@ -380,6 +421,12 @@ export function MedicalAssistant({
                   {message.sources ? (
                     <AssistantSources sources={message.sources} />
                   ) : null}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <CopyButton text={message.text} label="Copiază răspunsul" />
+                    {message.model ? (
+                      <span>{retryModelLabel(message.model)}</span>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             ),
@@ -387,9 +434,24 @@ export function MedicalAssistant({
         )}
         {pending ? (
           <div className="flex justify-start">
-            <p className="max-w-[85%] rounded-2xl border bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm">
-              Caut în documente…
-            </p>
+            <div className="max-w-[85%] rounded-2xl border bg-card px-3 py-2 text-sm text-muted-foreground shadow-sm">
+              <p>Caut în documente…</p>
+              {slowAlt ? (
+                <div className="mt-1.5 flex flex-col items-start gap-1.5 text-xs">
+                  <span>Durează mai mult decât de obicei.</span>
+                  <button
+                    type="button"
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-foreground hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                    onClick={() => {
+                      void ask(messages, slowAlt);
+                    }}
+                  >
+                    <RetryIcon />
+                    Reîncearcă cu un model mai mic: {retryModelLabel(slowAlt)}
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         ) : null}
         {error ? (
@@ -450,8 +512,10 @@ export function MedicalAssistant({
             className="h-11"
             disabled={pending}
             onClick={() => {
-              abortRef.current?.abort();
+              const controller = abortRef.current;
               abortRef.current = null;
+              controller?.abort();
+              clearSlowTimer();
               clearChatSession();
               setMessages([]);
               setError(null);
@@ -478,9 +542,15 @@ export function MedicalAssistant({
             }
           }}
         />
-        <Button type="submit" className="h-11" disabled={pending || input.trim().length === 0}>
-          Trimite
-        </Button>
+        {pending ? (
+          <Button type="button" variant="outline" className="h-11" onClick={stop}>
+            Oprește
+          </Button>
+        ) : (
+          <Button type="submit" className="h-11" disabled={input.trim().length === 0}>
+            Trimite
+          </Button>
+        )}
       </form>
       <p className="pt-2 text-center text-xs text-muted-foreground">
         Răspuns generat de AI din datele dosarului, trimise către Google Gemini.
@@ -510,6 +580,50 @@ async function askAssistant(
     return { error: "Asistentul nu a putut consulta documentele." };
   }
   return payload;
+}
+
+function CopyButton({
+  text,
+  label,
+  iconOnly = false,
+}: {
+  text: string;
+  label: string;
+  iconOnly?: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard may be blocked (insecure context or denied permission).
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={copied ? "Copiat" : label}
+      className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-md px-2 text-xs text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      onClick={() => {
+        void copy();
+      }}
+    >
+      {copied ? (
+        <Check className="size-3.5" aria-hidden />
+      ) : (
+        <Copy className="size-3.5" aria-hidden />
+      )}
+      {iconOnly ? null : <span>{copied ? "Copiat" : "Copiază"}</span>}
+      <span className="sr-only" aria-live="polite">
+        {copied ? "Copiat" : ""}
+      </span>
+    </button>
+  );
 }
 
 function RetryIcon() {

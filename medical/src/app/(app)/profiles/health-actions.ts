@@ -38,17 +38,10 @@ function missingTable(code: string | undefined) {
   return code === "42P01" || code === "PGRST205";
 }
 
-/** Everything saved here was typed by a family member; `source` records that. */
-export async function addHealthEntry(
+function healthRow(
   kind: HealthKind,
   formData: FormData,
-): Promise<HealthActionResult> {
-  const parsedId = profileIdSchema.safeParse(formData.get("profileId"));
-  if (!parsedId.success || !HEALTH_KINDS.includes(kind)) {
-    return { error: "Verifică datele introduse." };
-  }
-  const profileId = parsedId.data;
-
+): { row: Record<string, unknown> } | { error: string } {
   let row: Record<string, unknown>;
   if (kind === "medication") {
     const parsed = medicationSchema.safeParse({
@@ -139,6 +132,25 @@ export async function addHealthEntry(
       notes: blank(data.notes),
     };
   }
+  return { row };
+}
+
+/** Everything saved here was typed by a family member; `source` records that. */
+export async function addHealthEntry(
+  kind: HealthKind,
+  formData: FormData,
+): Promise<HealthActionResult> {
+  const parsedId = profileIdSchema.safeParse(formData.get("profileId"));
+  if (!parsedId.success || !HEALTH_KINDS.includes(kind)) {
+    return { error: "Verifică datele introduse." };
+  }
+  const profileId = parsedId.data;
+
+  const parsed = healthRow(kind, formData);
+  if ("error" in parsed) {
+    return { error: parsed.error };
+  }
+  const { row } = parsed;
 
   const writer = await requireProfileWriter(profileId);
   if (!writer.familyId) {
@@ -159,6 +171,46 @@ export async function addHealthEntry(
   }
 
   revalidateMedicalData(profileId);
+  return { saved: true };
+}
+
+/** Replaces the editable fields of one entry; `source` and `done_at` stay as they were. */
+export async function updateHealthEntry(
+  kind: HealthKind,
+  formData: FormData,
+): Promise<HealthActionResult> {
+  const parsedId = profileIdSchema.safeParse(formData.get("profileId"));
+  const parsedEntry = profileIdSchema.safeParse(formData.get("id"));
+  if (!parsedId.success || !parsedEntry.success || !HEALTH_KINDS.includes(kind)) {
+    return { error: "Verifică datele introduse." };
+  }
+
+  const parsed = healthRow(kind, formData);
+  if ("error" in parsed) {
+    return { error: parsed.error };
+  }
+
+  const writer = await requireProfileWriter(parsedId.data);
+  if (!writer.familyId) {
+    return { error: writer.error ?? "Nu ai dreptul să modifici această persoană." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from(TABLES[kind])
+    .update(parsed.row)
+    .eq("id", parsedEntry.data)
+    .eq("profile_id", parsedId.data)
+    .select("id");
+  if (error) {
+    console.error("updateHealthEntry", kind, error.code);
+    return { error: "Nu s-a putut salva. Încearcă din nou." };
+  }
+  if (!data || data.length === 0) {
+    return { error: "Înregistrarea nu mai există sau nu ai dreptul să o modifici." };
+  }
+
+  revalidateMedicalData(parsedId.data);
   return { saved: true };
 }
 

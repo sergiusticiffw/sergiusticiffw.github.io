@@ -119,9 +119,16 @@ function asTurns(value: unknown): AssistantTurn[] {
     const sources = asSources(
       "sources" in item ? (item as { sources?: unknown }).sources : undefined,
     );
-    return sources
-      ? [{ role: item.role, text: item.text, sources }]
-      : [{ role: item.role, text: item.text }];
+    const model =
+      "model" in item && typeof item.model === "string" ? item.model : undefined;
+    return [
+      {
+        role: item.role,
+        text: item.text,
+        ...(sources ? { sources } : {}),
+        ...(model ? { model } : {}),
+      },
+    ];
   });
 }
 

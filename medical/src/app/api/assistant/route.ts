@@ -77,6 +77,7 @@ export async function POST(request: Request) {
     asTurns(body.messages),
     typeof body.preferModel === "string" ? body.preferModel : undefined,
     typeof body.profileScope === "string" ? body.profileScope : null,
+    request.signal,
   );
   return NextResponse.json(result);
 }

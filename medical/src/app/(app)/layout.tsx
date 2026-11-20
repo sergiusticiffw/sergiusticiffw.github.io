@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { BiometricLockGate } from "@/components/auth/biometric-lock-gate";
 import { AppNav } from "@/components/layout/app-nav";
+import { AppointmentReminders } from "@/components/layout/appointment-reminders";
 import { DriveReconnectBanner } from "@/components/layout/drive-reconnect-banner";
 import { NavigationLoader } from "@/components/layout/navigation-loader";
 import { OfflineSync } from "@/components/layout/offline-sync";
@@ -61,6 +62,9 @@ async function AppShell({ children }: { children: React.ReactNode }) {
         </header>
         <Suspense fallback={null}>
           <DriveReconnectBanner />
+        </Suspense>
+        <Suspense fallback={null}>
+          <AppointmentReminders />
         </Suspense>
         <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-4 pb-24 sm:py-6 sm:pb-24">
           {children}

@@ -20,6 +20,8 @@ export const metadata = {
 
 export const maxDuration = 60;
 
+const HOME_LIST_LIMIT = 3;
+
 export default function HomePage() {
   return (
     <div className="flex flex-col gap-6">
@@ -98,7 +100,7 @@ async function OverviewSection() {
     .is("done_at", null)
     .gte("starts_at", new Date().toISOString())
     .order("starts_at", { ascending: true })
-    .limit(5);
+    .limit(HOME_LIST_LIMIT);
   const nameById = new Map(people.map((person) => [person.id, person.display_name]));
   const appointments = appointmentsResult.error
     ? []
@@ -116,7 +118,7 @@ async function OverviewSection() {
       lastByPerson.set(record.profileId, record);
     }
   }
-  const recent = records.slice(0, 5);
+  const recent = records.slice(0, HOME_LIST_LIMIT);
 
   return (
     <div className="flex flex-col gap-6">

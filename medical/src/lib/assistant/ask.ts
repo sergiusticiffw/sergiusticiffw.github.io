@@ -30,6 +30,7 @@ export async function askMedicalAssistant(
   messages: AssistantTurn[],
   preferModel?: string,
   profileScope?: string | null,
+  signal?: AbortSignal,
 ): Promise<AssistantResult> {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
@@ -91,9 +92,17 @@ export async function askMedicalAssistant(
       people,
       preferModel:
         preferModel && isKnownModel(preferModel) ? preferModel : undefined,
+      signal,
     });
-    return { answer: result.answer, sources: result.sources };
+    return {
+      answer: result.answer,
+      sources: result.sources,
+      ...(result.model ? { model: result.model } : {}),
+    };
   } catch (error) {
+    if (signal?.aborted) {
+      return { error: "Anulat." };
+    }
     console.error(
       "askMedicalAssistant",
       error instanceof Error ? error.message : "unknown",

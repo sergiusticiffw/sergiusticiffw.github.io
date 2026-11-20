@@ -17,6 +17,9 @@ export const AI_MODELS = {
   ],
 } as const;
 
+/** After this long without an answer, offer to restart with a smaller model. */
+export const SLOW_REQUEST_MS = 5000;
+
 export const MODEL_LABELS: Record<string, string> = {
   "gemini-3.8-flash": "Gemini 3.8 Flash",
   "gemini-3.6-flash": "Gemini 3.6 Flash",

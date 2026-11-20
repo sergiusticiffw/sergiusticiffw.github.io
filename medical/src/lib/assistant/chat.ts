@@ -417,6 +417,7 @@ async function generate(
   contents: Content[],
   withTools: boolean,
   preferModel?: string,
+  signal?: AbortSignal,
 ) {
   const { models, candidates } = candidatesFor(preferModel);
   if (models.length > 0 && candidates.length === 0) {
@@ -428,6 +429,7 @@ async function generate(
   const deadline = Date.now() + BUDGET_MS;
 
   for (const model of candidates) {
+    signal?.throwIfAborted();
     const remaining = deadline - Date.now();
     if (remaining < 1_000) {
       lastStatus = 504;
@@ -446,7 +448,12 @@ async function generate(
           {
             method: "POST",
             cache: "no-store",
-            signal: AbortSignal.timeout(Math.min(REQUEST_MS, remaining)),
+            signal: signal
+              ? AbortSignal.any([
+                  signal,
+                  AbortSignal.timeout(Math.min(REQUEST_MS, remaining)),
+                ])
+              : AbortSignal.timeout(Math.min(REQUEST_MS, remaining)),
             headers: {
               "Content-Type": "application/json",
               "x-goog-api-key": apiKey,
@@ -455,6 +462,8 @@ async function generate(
           },
         );
       } catch (error) {
+        // The caller gave up (e.g. switched model): not a provider failure, so no cooldown.
+        signal?.throwIfAborted();
         if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
           lastStatus = 504;
           await rememberLimit({
@@ -469,7 +478,10 @@ async function generate(
         throw error;
       }
 
-      const payload = (await response.json().catch(() => ({}))) as {
+      const payload = (await response.json().catch(() => {
+        signal?.throwIfAborted();
+        return {};
+      })) as {
         error?: { message?: string; details?: GeminiErrorDetail[] };
         promptFeedback?: { blockReason?: string };
         candidates?: { content?: { parts?: Part[] }; finishReason?: string }[];
@@ -555,7 +567,8 @@ export async function answerMedicalQuestion(input: {
   records: CatalogRecord[];
   people: CatalogPerson[];
   preferModel?: string;
-}): Promise<{ answer: string; sources: AssistantSource[] }> {
+  signal?: AbortSignal;
+}): Promise<{ answer: string; sources: AssistantSource[]; model?: string }> {
   await recordAiQuestion(input.familyId);
   const instruction = systemInstruction(input.records.length, input.people);
   const contents: Content[] = input.messages.slice(-6).map((message) => ({
@@ -569,9 +582,11 @@ export async function answerMedicalQuestion(input: {
   const finish = (text: string) => ({
     answer: polishAnswer(text || "Nu am găsit un răspuns în dosar."),
     sources: [...cited.values()].slice(0, 12),
+    model,
   });
 
   for (let round = 0; round < MAX_ROUNDS; round += 1) {
+    input.signal?.throwIfAborted();
     const step = await generate(
       input.apiKey,
       input.familyId,
@@ -579,6 +594,7 @@ export async function answerMedicalQuestion(input: {
       contents,
       true,
       model,
+      input.signal,
     );
     model = step.model;
     const calls = step.parts.filter((part) => part.functionCall?.name);
@@ -617,6 +633,7 @@ export async function answerMedicalQuestion(input: {
     }
   }
 
+  input.signal?.throwIfAborted();
   const finalStep = await generate(
     input.apiKey,
     input.familyId,
@@ -624,7 +641,9 @@ export async function answerMedicalQuestion(input: {
     contents,
     false,
     model,
+    input.signal,
   );
+  model = finalStep.model;
   const text = finalStep.parts
     .map((part) => (part.thought ? "" : part.text?.trim() ?? ""))
     .filter(Boolean)

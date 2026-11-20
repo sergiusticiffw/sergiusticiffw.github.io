@@ -7,6 +7,7 @@ import {
   addHealthEntry,
   deleteHealthEntry,
   setAppointmentDone,
+  updateHealthEntry,
 } from "@/app/(app)/profiles/health-actions";
 import { LabTrendChart } from "@/components/profiles/lab-history";
 import { SourceBadge } from "@/components/records/source-badge";
@@ -34,6 +35,15 @@ const DIALOG_TITLES: Record<HealthKind, string> = {
   measurement: "Măsurătoare nouă",
 };
 
+const EDIT_TITLES: Record<HealthKind, string> = {
+  medication: "Editează medicamentul",
+  appointment: "Editează programarea",
+  vaccination: "Editează vaccinul",
+  measurement: "Editează măsurătoarea",
+};
+
+const VISIBLE_ROWS = 3;
+
 function countLabel(count: number, one: string, many: string) {
   if (count === 0) {
     return "";
@@ -46,6 +56,16 @@ function todayValue() {
   return new Date(now.getTime() - now.getTimezoneOffset() * 60_000)
     .toISOString()
     .slice(0, 10);
+}
+
+/** Date and time inputs in the browser's zone, matching how new appointments are read. */
+function localDateTime(value: string) {
+  const date = new Date(value);
+  const pad = (part: number) => String(part).padStart(2, "0");
+  return {
+    date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+    time: `${pad(date.getHours())}:${pad(date.getMinutes())}`,
+  };
 }
 
 function dateTime(value: string) {
@@ -75,12 +95,14 @@ function Field({
 
 function RowShell({
   children,
+  onEdit,
   onDelete,
   canEdit,
   name,
   busy,
 }: {
   children: ReactNode;
+  onEdit: () => void;
   onDelete: () => void;
   canEdit: boolean;
   name: string;
@@ -90,15 +112,26 @@ function RowShell({
     <li className="flex items-start justify-between gap-2 rounded-xl border bg-card p-3">
       <div className="flex min-w-0 flex-1 flex-col gap-1">{children}</div>
       {canEdit ? (
-        <Button
-          type="button"
-          variant="outline"
-          disabled={busy}
-          aria-label={`Șterge ${name}`}
-          onClick={onDelete}
-        >
-          Șterge
-        </Button>
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={busy}
+            aria-label={`Editează ${name}`}
+            onClick={onEdit}
+          >
+            Editează
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={busy}
+            aria-label={`Șterge ${name}`}
+            onClick={onDelete}
+          >
+            Șterge
+          </Button>
+        </div>
       ) : null}
     </li>
   );
@@ -107,18 +140,20 @@ function RowShell({
 function Section({
   title,
   empty,
-  count,
   canEdit,
   onAdd,
-  children,
+  items,
 }: {
   title: string;
   empty: string;
-  count: number;
   canEdit: boolean;
   onAdd: () => void;
-  children: ReactNode;
+  items: ReactNode[];
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const hidden = items.length - VISIBLE_ROWS;
+  const shown = expanded || hidden <= 0 ? items : items.slice(0, VISIBLE_ROWS);
+
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-3">
@@ -129,11 +164,21 @@ function Section({
           </Button>
         ) : null}
       </div>
-      {count === 0 ? (
+      {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">{empty}</p>
       ) : (
-        <ul className="flex flex-col gap-2">{children}</ul>
+        <ul className="flex flex-col gap-2">{shown}</ul>
       )}
+      {hidden > 0 ? (
+        <Button
+          type="button"
+          variant="ghost"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded ? "Arată mai puține" : `Arată toate (${items.length})`}
+        </Button>
+      ) : null}
     </section>
   );
 }
@@ -179,6 +224,7 @@ export function HealthTracking({
   const router = useRouter();
   const [listOpen, setListOpen] = useState(false);
   const [adding, setAdding] = useState<HealthKind | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [measurementKind, setMeasurementKind] =
     useState<MeasurementKind>("weight");
   const [error, setError] = useState<string | null>(null);
@@ -222,8 +268,25 @@ export function HealthTracking({
       return;
     }
     setAdding(null);
+    setEditingId(null);
     setMeasurementKind("weight");
     setError(null);
+  }
+
+  function openAdd(kind: HealthKind) {
+    setError(null);
+    setEditingId(null);
+    setAdding(kind);
+  }
+
+  function openEdit(kind: HealthKind, id: string) {
+    setError(null);
+    if (kind === "measurement") {
+      const item = health.measurements.find((entry) => entry.id === id);
+      setMeasurementKind(item?.kind ?? "weight");
+    }
+    setEditingId(id);
+    setAdding(kind);
   }
 
   async function submit(formData: FormData) {
@@ -231,6 +294,9 @@ export function HealthTracking({
       return;
     }
     formData.set("profileId", profileId);
+    if (editingId) {
+      formData.set("id", editingId);
+    }
     if (adding === "appointment") {
       const date = String(formData.get("date") ?? "");
       const time = String(formData.get("time") ?? "") || "09:00";
@@ -241,9 +307,12 @@ export function HealthTracking({
       );
     }
     const kind = adding;
-    const saved = await run(() => addHealthEntry(kind, formData));
+    const saved = await run(() =>
+      editingId ? updateHealthEntry(kind, formData) : addHealthEntry(kind, formData),
+    );
     if (saved) {
       setAdding(null);
+      setEditingId(null);
       setMeasurementKind("weight");
     }
   }
@@ -257,6 +326,32 @@ export function HealthTracking({
     .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
   const past = health.appointments.filter((item) => !upcoming.includes(item));
   const series = measurementSeries(health.measurements);
+
+  const editMedication =
+    adding === "medication" && editingId
+      ? health.medications.find((item) => item.id === editingId)
+      : undefined;
+  const editAppointment =
+    adding === "appointment" && editingId
+      ? health.appointments.find((item) => item.id === editingId)
+      : undefined;
+  const editAppointmentWhen = editAppointment
+    ? localDateTime(editAppointment.starts_at)
+    : null;
+  const editVaccination =
+    adding === "vaccination" && editingId
+      ? health.vaccinations.find((item) => item.id === editingId)
+      : undefined;
+  const editMeasurement =
+    adding === "measurement" && editingId
+      ? health.measurements.find((item) => item.id === editingId)
+      : undefined;
+  const editNotes =
+    editMedication?.notes ??
+    editAppointment?.notes ??
+    editVaccination?.notes ??
+    editMeasurement?.notes ??
+    "";
 
   const summary =
     [
@@ -311,16 +406,15 @@ export function HealthTracking({
       <Section
         title="Medicamente"
         empty="Niciun medicament notat."
-        count={health.medications.length}
         canEdit={canEdit}
-        onAdd={() => setAdding("medication")}
-      >
-        {health.medications.map((item) => (
+        onAdd={() => openAdd("medication")}
+        items={health.medications.map((item) => (
           <RowShell
             key={item.id}
             name={item.name}
             canEdit={canEdit}
             busy={pending}
+            onEdit={() => openEdit("medication", item.id)}
             onDelete={() => remove("medication", item.id)}
           >
             <p className="text-base font-medium">
@@ -343,21 +437,20 @@ export function HealthTracking({
             <SourceBadge source={item.source === "document" ? "document" : "manual"} />
           </RowShell>
         ))}
-      </Section>
+      />
 
       <Section
         title="Programări"
         empty="Nicio programare."
-        count={health.appointments.length}
         canEdit={canEdit}
-        onAdd={() => setAdding("appointment")}
-      >
-        {[...upcoming, ...past].map((item) => (
+        onAdd={() => openAdd("appointment")}
+        items={[...upcoming, ...past].map((item) => (
           <RowShell
             key={item.id}
             name={item.title}
             canEdit={canEdit}
             busy={pending}
+            onEdit={() => openEdit("appointment", item.id)}
             onDelete={() => remove("appointment", item.id)}
           >
             <p className="text-base font-medium">{item.title}</p>
@@ -390,21 +483,20 @@ export function HealthTracking({
             </div>
           </RowShell>
         ))}
-      </Section>
+      />
 
       <Section
         title="Vaccinări"
         empty="Nicio vaccinare notată."
-        count={health.vaccinations.length}
         canEdit={canEdit}
-        onAdd={() => setAdding("vaccination")}
-      >
-        {health.vaccinations.map((item) => (
+        onAdd={() => openAdd("vaccination")}
+        items={health.vaccinations.map((item) => (
           <RowShell
             key={item.id}
             name={item.vaccine_name}
             canEdit={canEdit}
             busy={pending}
+            onEdit={() => openEdit("vaccination", item.id)}
             onDelete={() => remove("vaccination", item.id)}
           >
             <p className="text-base font-medium">
@@ -429,16 +521,14 @@ export function HealthTracking({
             <SourceBadge source={item.source === "document" ? "document" : "manual"} />
           </RowShell>
         ))}
-      </Section>
+      />
 
       <Section
         title="Măsurători"
         empty="Nicio măsurătoare notată."
-        count={health.measurements.length}
         canEdit={canEdit}
-        onAdd={() => setAdding("measurement")}
-      >
-        {series.map((item) => {
+        onAdd={() => openAdd("measurement")}
+        items={series.map((item) => {
           const latest = item.points[0];
           const shown =
             latest.value !== null ? String(latest.value) : (latest.text ?? "—");
@@ -476,16 +566,28 @@ export function HealthTracking({
                           {item.unit ? ` ${item.unit}` : ""}
                         </span>
                         {canEdit ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled={pending}
-                            aria-label={`Șterge valoarea din ${point.date ?? "fără dată"}`}
-                            onClick={() => remove("measurement", point.recordId)}
-                          >
-                            Șterge
-                          </Button>
+                          <span className="flex shrink-0 gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={pending}
+                              aria-label={`Editează valoarea din ${point.date ?? "fără dată"}`}
+                              onClick={() => openEdit("measurement", point.recordId)}
+                            >
+                              Editează
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={pending}
+                              aria-label={`Șterge valoarea din ${point.date ?? "fără dată"}`}
+                              onClick={() => remove("measurement", point.recordId)}
+                            >
+                              Șterge
+                            </Button>
+                          </span>
                         ) : null}
                       </li>
                     ))}
@@ -495,14 +597,14 @@ export function HealthTracking({
             </li>
           );
         })}
-      </Section>
+      />
 
       </div>
       </FormDialog>
 
       <FormDialog
         open={adding !== null}
-        title={adding ? DIALOG_TITLES[adding] : ""}
+        title={adding ? (editingId ? EDIT_TITLES : DIALOG_TITLES)[adding] : ""}
         pending={pending}
         onClose={close}
         footer={
@@ -517,7 +619,12 @@ export function HealthTracking({
         }
       >
         {adding ? (
-          <form id={formId} action={submit} className="flex flex-col gap-3">
+          <form
+            key={`${adding}-${editingId ?? "new"}`}
+            id={formId}
+            action={submit}
+            className="flex flex-col gap-3"
+          >
             {error ? (
               <p role="alert" className="text-sm text-destructive">
                 {error}
@@ -526,23 +633,23 @@ export function HealthTracking({
             {adding === "medication" ? (
               <>
                 <Field id={`${formId}-name`} label="Nume">
-                  <Input id={`${formId}-name`} name="name" required maxLength={160} autoComplete="off" />
+                  <Input id={`${formId}-name`} name="name" required maxLength={160} autoComplete="off" defaultValue={editMedication?.name ?? ""} />
                 </Field>
                 <Field id={`${formId}-dose`} label="Doză">
-                  <Input id={`${formId}-dose`} name="dose" maxLength={120} autoComplete="off" placeholder="ex. 500 mg" />
+                  <Input id={`${formId}-dose`} name="dose" maxLength={120} autoComplete="off" placeholder="ex. 500 mg" defaultValue={editMedication?.dose ?? ""} />
                 </Field>
                 <Field id={`${formId}-schedule`} label="Cum se ia">
-                  <Input id={`${formId}-schedule`} name="schedule" maxLength={200} autoComplete="off" placeholder="ex. dimineața, după masă" />
+                  <Input id={`${formId}-schedule`} name="schedule" maxLength={200} autoComplete="off" placeholder="ex. dimineața, după masă" defaultValue={editMedication?.schedule ?? ""} />
                 </Field>
                 <Field id={`${formId}-by`} label="Prescris de">
-                  <Input id={`${formId}-by`} name="prescribedBy" maxLength={160} autoComplete="off" />
+                  <Input id={`${formId}-by`} name="prescribedBy" maxLength={160} autoComplete="off" defaultValue={editMedication?.prescribed_by ?? ""} />
                 </Field>
                 <div className="grid grid-cols-2 gap-2">
                   <Field id={`${formId}-start`} label="Început">
-                    <Input id={`${formId}-start`} name="startDate" type="date" />
+                    <Input id={`${formId}-start`} name="startDate" type="date" defaultValue={editMedication?.start_date ?? ""} />
                   </Field>
                   <Field id={`${formId}-end`} label="Sfârșit">
-                    <Input id={`${formId}-end`} name="endDate" type="date" />
+                    <Input id={`${formId}-end`} name="endDate" type="date" defaultValue={editMedication?.end_date ?? ""} />
                   </Field>
                 </div>
               </>
@@ -550,45 +657,45 @@ export function HealthTracking({
             {adding === "appointment" ? (
               <>
                 <Field id={`${formId}-title`} label="Titlu">
-                  <Input id={`${formId}-title`} name="title" required maxLength={160} autoComplete="off" placeholder="ex. Control cardiologie" />
+                  <Input id={`${formId}-title`} name="title" required maxLength={160} autoComplete="off" placeholder="ex. Control cardiologie" defaultValue={editAppointment?.title ?? ""} />
                 </Field>
                 <div className="grid grid-cols-2 gap-2">
                   <Field id={`${formId}-date`} label="Data">
-                    <Input id={`${formId}-date`} name="date" type="date" required defaultValue={todayValue()} />
+                    <Input id={`${formId}-date`} name="date" type="date" required defaultValue={editAppointmentWhen?.date ?? todayValue()} />
                   </Field>
                   <Field id={`${formId}-time`} label="Ora">
-                    <Input id={`${formId}-time`} name="time" type="time" defaultValue="09:00" />
+                    <Input id={`${formId}-time`} name="time" type="time" defaultValue={editAppointmentWhen?.time ?? "09:00"} />
                   </Field>
                 </div>
                 <Field id={`${formId}-doctor`} label="Medic">
-                  <Input id={`${formId}-doctor`} name="doctor" maxLength={160} autoComplete="off" />
+                  <Input id={`${formId}-doctor`} name="doctor" maxLength={160} autoComplete="off" defaultValue={editAppointment?.doctor ?? ""} />
                 </Field>
                 <Field id={`${formId}-location`} label="Loc">
-                  <Input id={`${formId}-location`} name="location" maxLength={200} autoComplete="off" />
+                  <Input id={`${formId}-location`} name="location" maxLength={200} autoComplete="off" defaultValue={editAppointment?.location ?? ""} />
                 </Field>
               </>
             ) : null}
             {adding === "vaccination" ? (
               <>
                 <Field id={`${formId}-vaccine`} label="Vaccin">
-                  <Input id={`${formId}-vaccine`} name="vaccineName" required maxLength={160} autoComplete="off" />
+                  <Input id={`${formId}-vaccine`} name="vaccineName" required maxLength={160} autoComplete="off" defaultValue={editVaccination?.vaccine_name ?? ""} />
                 </Field>
                 <div className="grid grid-cols-2 gap-2">
                   <Field id={`${formId}-given`} label="Data">
-                    <Input id={`${formId}-given`} name="givenOn" type="date" required defaultValue={todayValue()} />
+                    <Input id={`${formId}-given`} name="givenOn" type="date" required defaultValue={editVaccination?.given_on ?? todayValue()} />
                   </Field>
                   <Field id={`${formId}-dose-label`} label="Doza">
-                    <Input id={`${formId}-dose-label`} name="doseLabel" maxLength={80} autoComplete="off" placeholder="ex. doza 2" />
+                    <Input id={`${formId}-dose-label`} name="doseLabel" maxLength={80} autoComplete="off" placeholder="ex. doza 2" defaultValue={editVaccination?.dose_label ?? ""} />
                   </Field>
                 </div>
                 <Field id={`${formId}-lot`} label="Lot">
-                  <Input id={`${formId}-lot`} name="lotNumber" maxLength={80} autoComplete="off" />
+                  <Input id={`${formId}-lot`} name="lotNumber" maxLength={80} autoComplete="off" defaultValue={editVaccination?.lot_number ?? ""} />
                 </Field>
                 <Field id={`${formId}-admin`} label="Administrat de">
-                  <Input id={`${formId}-admin`} name="administeredBy" maxLength={160} autoComplete="off" />
+                  <Input id={`${formId}-admin`} name="administeredBy" maxLength={160} autoComplete="off" defaultValue={editVaccination?.administered_by ?? ""} />
                 </Field>
                 <Field id={`${formId}-next`} label="Următoarea doză (dacă ți-a spus medicul)">
-                  <Input id={`${formId}-next`} name="nextDueOn" type="date" />
+                  <Input id={`${formId}-next`} name="nextDueOn" type="date" defaultValue={editVaccination?.next_due_on ?? ""} />
                 </Field>
               </>
             ) : null}
@@ -612,7 +719,7 @@ export function HealthTracking({
                 </Field>
                 {measurementKind === "other" ? (
                   <Field id={`${formId}-label`} label="Denumire">
-                    <Input id={`${formId}-label`} name="label" maxLength={80} autoComplete="off" />
+                    <Input id={`${formId}-label`} name="label" maxLength={80} autoComplete="off" defaultValue={editMeasurement?.label ?? ""} />
                   </Field>
                 ) : null}
                 <div className="grid grid-cols-2 gap-2">
@@ -625,6 +732,12 @@ export function HealthTracking({
                       autoComplete="off"
                       inputMode="decimal"
                       placeholder={measurementKind === "blood_pressure" ? "120/80" : ""}
+                      defaultValue={
+                        editMeasurement
+                          ? (editMeasurement.value_text ??
+                            (editMeasurement.value === null ? "" : String(editMeasurement.value)))
+                          : ""
+                      }
                     />
                   </Field>
                   <Field id={`${formId}-unit`} label="Unitate">
@@ -634,17 +747,21 @@ export function HealthTracking({
                       name="unit"
                       maxLength={20}
                       autoComplete="off"
-                      defaultValue={MEASUREMENT_DEFAULT_UNITS[measurementKind]}
+                      defaultValue={
+                        editMeasurement && editMeasurement.kind === measurementKind
+                          ? (editMeasurement.unit ?? "")
+                          : MEASUREMENT_DEFAULT_UNITS[measurementKind]
+                      }
                     />
                   </Field>
                 </div>
                 <Field id={`${formId}-on`} label="Data">
-                  <Input id={`${formId}-on`} name="measuredOn" type="date" required defaultValue={todayValue()} />
+                  <Input id={`${formId}-on`} name="measuredOn" type="date" required defaultValue={editMeasurement?.measured_on ?? todayValue()} />
                 </Field>
               </>
             ) : null}
             <Field id={`${formId}-notes`} label="Notă (opțional)">
-              <Textarea id={`${formId}-notes`} name="notes" maxLength={1000} className="min-h-20" />
+              <Textarea id={`${formId}-notes`} name="notes" maxLength={1000} className="min-h-20" defaultValue={editNotes} />
             </Field>
           </form>
         ) : null}

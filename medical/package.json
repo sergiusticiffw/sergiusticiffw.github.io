@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --test src/lib/assistant/*.test.ts",
+    "test": "node --experimental-strip-types --test src/lib/*.test.ts src/lib/assistant/*.test.ts",
     "check:schema": "node scripts/check-drive-schema.mjs"
   },
   "dependencies": {
