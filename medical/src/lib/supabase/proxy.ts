@@ -79,13 +79,6 @@ export async function updateSession(request: NextRequest) {
     return redirectWithSession(supabaseResponse, url);
   }
 
-  if (user && pathname === "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/profiles";
-    url.search = "";
-    return redirectWithSession(supabaseResponse, url);
-  }
-
   const isPasswordUpdate = pathname === "/login/parola-noua";
   if (user && pathname.startsWith("/login") && !isPasswordUpdate) {
     const url = request.nextUrl.clone();

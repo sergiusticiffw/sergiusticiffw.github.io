@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +21,7 @@ export function FormDialog({
   children: ReactNode;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -43,6 +44,7 @@ export function FormDialog({
   return (
     <dialog
       ref={dialogRef}
+      aria-labelledby={titleId}
       className="m-0 h-dvh max-h-dvh w-full max-w-none rounded-none border-0 bg-card p-0 text-card-foreground shadow-lg backdrop:bg-black/50 backdrop:backdrop-blur-[2px] open:animate-in open:fade-in-0 sm:m-auto sm:h-auto sm:max-h-[min(92dvh,44rem)] sm:w-[min(100%-2rem,32rem)] sm:rounded-xl sm:border sm:open:zoom-in-95"
       onCancel={(event) => {
         event.preventDefault();
@@ -56,13 +58,16 @@ export function FormDialog({
     >
       <div className="flex h-full max-h-dvh flex-col sm:max-h-[min(92dvh,44rem)]">
         <div className="flex items-center justify-between gap-3 border-b px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
-          <h2 className="min-w-0 flex-1 truncate text-base font-semibold">
+          <h2
+            id={titleId}
+            className="min-w-0 flex-1 truncate text-base font-semibold"
+          >
             {title}
           </h2>
           <Button
             type="button"
             variant="outline"
-            className="h-9 shrink-0"
+            className="shrink-0"
             disabled={pending}
             onClick={close}
           >

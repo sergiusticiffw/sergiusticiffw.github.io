@@ -25,6 +25,16 @@ function emptyToNull(value: string) {
   return value === "" ? null : value;
 }
 
+function healthColumns(input: ProfileInput) {
+  return {
+    allergies: emptyToNull(input.allergies),
+    chronic_conditions: emptyToNull(input.chronicConditions),
+    current_medications: emptyToNull(input.currentMedications),
+    blood_type: emptyToNull(input.bloodType),
+    emergency_notes: emptyToNull(input.emergencyNotes),
+  };
+}
+
 export async function createProfile(
   input: ProfileInput,
 ): Promise<ProfileActionResult> {
@@ -47,6 +57,7 @@ export async function createProfile(
       birth_date: emptyToNull(parsed.data.birthDate),
       idnp: emptyToNull(parsed.data.idnp),
       notes: emptyToNull(parsed.data.notes),
+      ...healthColumns(parsed.data),
     })
     .select("id")
     .single();
@@ -92,6 +103,7 @@ export async function updateProfile(
       birth_date: emptyToNull(parsed.data.birthDate),
       idnp: emptyToNull(parsed.data.idnp),
       notes: emptyToNull(parsed.data.notes),
+      ...healthColumns(parsed.data),
     })
     .eq("id", parsedId.data)
     .eq("family_id", family.familyId)

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { PageFallback } from "@/components/layout/page-fallback";
 import { RecordDetail } from "@/components/records/record-detail";
@@ -18,7 +18,11 @@ export default function RecordPage({
 }) {
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/records" prefetch className="text-sm text-muted-foreground hover:underline">
+      <Link
+        href="/records"
+        prefetch
+        className="-my-2 inline-flex min-h-11 items-center text-sm text-muted-foreground hover:underline"
+      >
         Toate înregistrările
       </Link>
       <Suspense fallback={<PageFallback label="Se încarcă înregistrarea…" />}>
@@ -44,6 +48,9 @@ async function RecordSection({
   }
 
   const loaded = await loadFamilyRecord(family.familyId, id);
+  if (!loaded.error && !loaded.record) {
+    notFound();
+  }
   if (loaded.error || !loaded.record) {
     return (
       <p role="alert" className="text-sm text-destructive">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { ChangePasswordForm } from "@/components/profile/change-password-form";
 import { DriveSettings } from "@/components/profile/drive-settings";
+import { OfflineSettings } from "@/components/profile/offline-settings";
 import { SecuritySettings } from "@/components/profile/security-settings";
 import { PageFallback } from "@/components/layout/page-fallback";
 import {
@@ -43,7 +44,7 @@ export default function ProfilePage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Profil</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Cont</h1>
         <p className="text-sm text-muted-foreground">
           Contul tău, Google Drive și utilizarea asistentului.
         </p>
@@ -274,11 +275,11 @@ async function ProfileSection({
             {formatNumber(membersResult.count ?? 0)}
           </p>
           <div className="flex flex-wrap gap-3 pt-1">
-            <Link href="/family" className="text-sm underline-offset-4 hover:underline">
+            <Link href="/family" className="inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline">
               Gestionează familia
             </Link>
-            <Link href="/profiles" className="text-sm underline-offset-4 hover:underline">
-              Vezi profilurile
+            <Link href="/profiles" className="inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline">
+              Vezi persoanele
             </Link>
           </div>
         </CardContent>
@@ -294,6 +295,18 @@ async function ProfileSection({
         </CardHeader>
         <CardContent>
           <SecuritySettings userId={user.id} email={user.email} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Fișă de urgență offline</CardTitle>
+          <CardDescription>
+            Opțional. O copie criptată, doar pentru citire, pe acest dispozitiv.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <OfflineSettings userId={user.id} />
         </CardContent>
       </Card>
 

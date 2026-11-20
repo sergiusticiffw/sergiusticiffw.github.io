@@ -1,9 +1,11 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import { PageFallback } from "@/components/layout/page-fallback";
 import { ProfileDetail } from "@/components/profiles/profile-list";
 import { canWrite, getPageFamilyAccess, requireProfileWriter } from "@/lib/auth";
+import { loadHealth } from "@/lib/health";
 import { loadProfileDocsCard } from "@/lib/profile-docs-card";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,7 +22,11 @@ export default function ProfilePage({
 }) {
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/profiles" prefetch className="text-sm text-muted-foreground hover:underline">
+      <Link
+        href="/profiles"
+        prefetch
+        className="-my-2 inline-flex min-h-11 items-center text-sm text-muted-foreground hover:underline"
+      >
         Toate persoanele
       </Link>
       <Suspense fallback={<PageFallback label="Se încarcă persoana…" />}>
@@ -37,7 +43,7 @@ async function ProfileSection({
 }) {
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) {
-    return <p className="text-sm text-destructive">Persoana nu a fost găsită.</p>;
+    notFound();
   }
 
   const family = await getPageFamilyAccess();
@@ -58,6 +64,7 @@ async function ProfileSection({
     docsCard,
     connectionResult,
     writer,
+    health,
   ] = await Promise.all([
       supabase
         .from("profiles")
@@ -83,7 +90,9 @@ async function ProfileSection({
         .order("consultation_date", { ascending: false }),
       supabase
         .from("lab_tests")
-        .select("id, profile_id, source_document_id, test_name, sample_date")
+        .select(
+          "id, profile_id, source_document_id, test_name, sample_date, result_value, result_text, unit, reference_min, reference_max, reference_text",
+        )
         .eq("profile_id", id)
         .order("sample_date", { ascending: false }),
       loadProfileDocsCard(family.familyId, id),
@@ -93,6 +102,7 @@ async function ProfileSection({
         .eq("family_id", family.familyId)
         .maybeSingle(),
       requireProfileWriter(id),
+      loadHealth(id),
     ]);
 
   let documentsError = documentsResult.error;
@@ -206,7 +216,7 @@ async function ProfileSection({
       }
     : null;
   if (!profile) {
-    return <p className="text-sm text-destructive">Persoana nu a fost găsită.</p>;
+    notFound();
   }
 
   const documents = (documentsData ?? []) as {
@@ -238,6 +248,12 @@ async function ProfileSection({
         source_document_id: string | null;
         test_name: string;
         sample_date: string | null;
+        result_value: number | string | null;
+        result_text: string | null;
+        unit: string | null;
+        reference_min: number | string | null;
+        reference_max: number | string | null;
+        reference_text: string | null;
       }[]}
       insurances={docsCard.insurances}
       identityDocs={docsCard.identityDocs}
@@ -245,6 +261,7 @@ async function ProfileSection({
       canWrite={canWrite(family.role)}
       canEditRecords={Boolean(writer.familyId)}
       isAdmin={family.role === "admin"}
+      health={health}
     />
   );
 }

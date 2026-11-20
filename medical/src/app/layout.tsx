@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { RegisterServiceWorker } from "@/components/pwa/install-prompt";
+import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -51,13 +52,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="ro"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      style={{ backgroundColor: "#f4f8f8" }}
     >
-      <body
-        className="min-h-full flex flex-col"
-        style={{ backgroundColor: "#f4f8f8" }}
-      >
-        {children}
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <ToastProvider>{children}</ToastProvider>
         <RegisterServiceWorker />
       </body>
     </html>

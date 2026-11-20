@@ -9,6 +9,33 @@ import { createClient } from "@/lib/supabase/server";
 
 const FILE_ID = /^[A-Za-z0-9_-]{10,128}$/;
 
+// Medical files must not linger in the browser cache after logout or after
+// access is revoked, so nothing here is stored on the device.
+const NO_STORE = "private, no-store";
+
+/** RFC 6266 / 5987 header value that survives Romanian diacritics. */
+function contentDisposition(kind: "inline" | "attachment", filename: string) {
+  const ascii =
+    filename
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\x20-\x7e]/g, "_")
+      .replace(/["\\;]/g, "_")
+      .trim() || "document";
+  const encoded = encodeURIComponent(filename).replace(
+    /['()*]/g,
+    (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
+  return `${kind}; filename="${ascii}"; filename*=UTF-8''${encoded}`;
+}
+
+/** Non-PDF responses never need scripts, frames or network access. */
+function sandboxPolicy(mimeType: string) {
+  return mimeType === "application/pdf"
+    ? undefined
+    : "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox";
+}
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> },
@@ -81,9 +108,7 @@ export async function GET(
         status: 304,
         headers: {
           ETag: etag,
-          "Cache-Control": document.mime_type.startsWith("image/")
-            ? "private, max-age=31536000, immutable"
-            : "private, no-store",
+          "Cache-Control": NO_STORE,
           "X-Content-Type-Options": "nosniff",
         },
       });
@@ -95,19 +120,21 @@ export async function GET(
     );
     const download = new URL(request.url).searchParams.get("download") === "1";
     const filename = safeFilename(document.original_filename);
-    const isImage = document.mime_type.startsWith("image/");
+    const policy = sandboxPolicy(document.mime_type);
     return new NextResponse(driveResponse.body, {
       headers: {
         "Content-Type":
           document.mime_type === "text/plain"
             ? "text/plain; charset=utf-8"
             : document.mime_type,
-        "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${filename}"`,
-        "Cache-Control": isImage
-          ? "private, max-age=31536000, immutable"
-          : "private, no-store",
+        "Content-Disposition": contentDisposition(
+          download ? "attachment" : "inline",
+          filename,
+        ),
+        "Cache-Control": NO_STORE,
         ETag: etag,
         "X-Content-Type-Options": "nosniff",
+        ...(policy ? { "Content-Security-Policy": policy } : {}),
       },
     });
   } catch (downloadError) {

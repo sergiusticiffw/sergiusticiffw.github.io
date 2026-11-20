@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 
 const links = [
   {
-    href: "/profiles",
-    label: "Persoane",
-    match: (path: string) => path === "/profiles" || path.startsWith("/profiles/"),
+    href: "/",
+    label: "Acasă",
+    match: (path: string) =>
+      path === "/" || path === "/profiles" || path.startsWith("/profiles/"),
   },
   {
     href: "/records",
@@ -31,10 +32,12 @@ const links = [
   },
 ] as const;
 
-function FolderIcon() {
+function HomeIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-5" aria-hidden>
-      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
+      <path d="M10 21v-6h4v6" />
     </svg>
   );
 }
@@ -81,7 +84,7 @@ function UserIcon() {
 }
 
 const icons = {
-  "/profiles": FolderIcon,
+  "/": HomeIcon,
   "/records": ListIcon,
   "/assistant": ChatIcon,
   "/family": PeopleIcon,
@@ -108,8 +111,8 @@ export function AppNav() {
                 aria-current={active ? "page" : undefined}
                 className={
                   active
-                    ? "flex min-h-14 flex-col items-center justify-center gap-1 px-2 py-2 text-xs font-medium"
-                    : "flex min-h-14 flex-col items-center justify-center gap-1 px-2 py-2 text-xs text-muted-foreground"
+                    ? "relative flex min-h-14 flex-col items-center justify-center gap-1 px-2 py-2 text-[0.8125rem] font-semibold text-primary before:absolute before:inset-x-5 before:top-0 before:h-0.5 before:rounded-full before:bg-primary focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50 focus-visible:outline-none"
+                    : "relative flex min-h-14 flex-col items-center justify-center gap-1 px-2 py-2 text-[0.8125rem] text-muted-foreground focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50 focus-visible:outline-none"
                 }
               >
                 <Icon />

@@ -258,6 +258,7 @@ export function EditRecordButton({
       {children}
       <dialog
         ref={dialogRef}
+        aria-label="Modifică înregistrarea"
         className="m-0 h-dvh max-h-dvh w-full max-w-none rounded-none border-0 bg-card p-0 text-card-foreground shadow-lg backdrop:bg-black/50 backdrop:backdrop-blur-[2px] open:animate-in open:fade-in-0 sm:m-auto sm:h-auto sm:max-h-[min(92dvh,44rem)] sm:w-[min(100%-2rem,32rem)] sm:rounded-xl sm:border sm:open:zoom-in-95"
         onCancel={(event) => {
           event.preventDefault();
@@ -281,7 +282,7 @@ export function EditRecordButton({
             <Button
               type="button"
               variant="outline"
-              className="h-9"
+              className="h-11"
               disabled={pending !== null}
               onClick={closeForm}
             >
@@ -293,7 +294,7 @@ export function EditRecordButton({
             <Label htmlFor={`record-category-${id}`}>Tip</Label>
             <Select
               id={`record-category-${id}`}
-              className="h-9"
+              className="h-11"
               value={draftCategory}
               disabled={kind === "consultation"}
               onChange={(event) =>
@@ -317,7 +318,7 @@ export function EditRecordButton({
                 value={draftTitle}
                 maxLength={160}
                 required
-                className="h-9"
+                className="h-11"
                 onChange={(event) => setDraftTitle(event.target.value)}
               />
             </div>
@@ -329,7 +330,7 @@ export function EditRecordButton({
               type="date"
               required
               value={draftDate}
-              className="h-9"
+              className="h-11"
               onChange={(event) => setDraftDate(event.target.value)}
             />
           </div>
@@ -340,7 +341,7 @@ export function EditRecordButton({
             <Textarea
               id={`record-body-${id}`}
               value={draftBody}
-              className="max-h-48 min-h-24 text-sm"
+              className="max-h-48 min-h-24"
               onChange={(event) => setDraftBody(event.target.value)}
             />
           </div>
@@ -409,7 +410,7 @@ export function EditRecordButton({
                           <Button
                             type="button"
                             variant="outline"
-                            className="h-9"
+                            className="h-11"
                             disabled={pending === "delete"}
                             onClick={() => setConfirmFileId(null)}
                           >
@@ -418,7 +419,7 @@ export function EditRecordButton({
                           <Button
                             type="button"
                             variant="destructive"
-                            className="h-9"
+                            className="h-11"
                             disabled={pending === "delete"}
                             onClick={() => {
                               void onDeleteFile(file.id);
@@ -437,7 +438,7 @@ export function EditRecordButton({
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-9"
+                          className="h-11"
                           disabled={pending !== null}
                           onClick={() => {
                             replaceId.current = file.id;
@@ -451,7 +452,7 @@ export function EditRecordButton({
                         <Button
                           type="button"
                           variant="destructive"
-                          className="h-9"
+                          className="h-11"
                           disabled={pending !== null}
                           onClick={() => {
                             setError(null);

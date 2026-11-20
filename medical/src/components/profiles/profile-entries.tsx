@@ -9,6 +9,7 @@ import {
 } from "@/app/(app)/profiles/record-actions";
 import { saveDetectedDocument } from "@/app/(app)/profiles/scan-actions";
 import { DriveConnectCta } from "@/components/layout/drive-connect-cta";
+import { LabRowsEditor } from "@/components/profiles/lab-rows-editor";
 import {
   HomeUpload,
   type HomeUploadSaveAction,
@@ -21,10 +22,13 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { prepareUploads } from "@/lib/client-image";
 import { ACCEPTED_FILE_TYPES } from "@/lib/files";
+import { parseLabRowsField } from "@/lib/labs";
+import { recordBody } from "@/lib/validation/extraction";
 import {
   DEFAULT_RECORD_CATEGORY,
   parseRecordCategory,
   RECORD_CATEGORIES,
+  type RecordCategory,
 } from "@/lib/record-category";
 
 const initialResult: RecordActionResult = {};
@@ -151,6 +155,25 @@ function EntryForm({
     const title = String(formData.get("title") ?? "").trim().slice(0, 160);
     const summary = String(formData.get("summary") ?? "").trim();
     const category = parseRecordCategory(formData.get("category"));
+    const consultation = {
+      doctorName: String(formData.get("doctorName") ?? "").trim().slice(0, 200),
+      clinicName: String(formData.get("clinicName") ?? "").trim().slice(0, 200),
+      specialty: String(formData.get("specialty") ?? "").trim().slice(0, 200),
+      consultationDate: date,
+      summary: summary.slice(0, 4000),
+      recommendations: String(formData.get("recommendations") ?? "")
+        .trim()
+        .slice(0, 4000),
+    };
+    const labRows =
+      category === "Analiză" ? parseLabRowsField(formData.get("labRows")) : [];
+    // Keep who/where/recommendations searchable even when files are attached.
+    const note = recordBody({
+      idnp: "",
+      extractedText: "",
+      consultation,
+      labTests: [],
+    });
     if (!date) {
       setFileError("Data este obligatorie.");
       return;
@@ -182,7 +205,7 @@ function EntryForm({
         data.set("documentDate", date);
         data.set("category", category);
         data.set("title", title);
-        data.set("body", primaryId ? "" : summary || title);
+        data.set("body", primaryId ? "" : note || summary || title);
         data.set(
           "payload",
           primaryId
@@ -190,15 +213,8 @@ function EntryForm({
             : JSON.stringify({
                 idnp: "",
                 extractedText: summary,
-                consultation: {
-                  doctorName: "",
-                  clinicName: "",
-                  specialty: "",
-                  consultationDate: date,
-                  summary,
-                  recommendations: "",
-                },
-                labTests: [],
+                consultation,
+                labTests: labRows,
               }),
         );
         if (primaryId) {
@@ -265,6 +281,9 @@ export function ProfileEntries({
     null,
   );
   const [entryPending, setEntryPending] = useState(false);
+  const [entryCategory, setEntryCategory] = useState<RecordCategory>(
+    DEFAULT_RECORD_CATEGORY,
+  );
   const entryFormId = `entry-form-${profileId}`;
 
   function closePanel() {
@@ -272,6 +291,7 @@ export function ProfileEntries({
       return;
     }
     setSaveAction(null);
+    setEntryCategory(DEFAULT_RECORD_CATEGORY);
     setPanel(null);
   }
 
@@ -370,7 +390,10 @@ export function ProfileEntries({
               <Select
                 id={`consult-category-${profileId}`}
                 name="category"
-                defaultValue={DEFAULT_RECORD_CATEGORY}
+                value={entryCategory}
+                onChange={(event) =>
+                  setEntryCategory(parseRecordCategory(event.target.value))
+                }
               >
                 {RECORD_CATEGORIES.map((category) => (
                   <option key={category} value={category}>
@@ -401,7 +424,66 @@ export function ProfileEntries({
                 className="h-11"
               />
             </div>
-            <Textarea name="summary" className="min-h-24" placeholder="Notă" />
+            <details className="rounded-lg border px-3 py-1">
+              <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">
+                Medic și clinică (opțional)
+              </summary>
+              <div className="flex flex-col gap-3 pb-3">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`consult-doctor-${profileId}`}>Medic</Label>
+                  <Input
+                    id={`consult-doctor-${profileId}`}
+                    name="doctorName"
+                    maxLength={200}
+                    autoComplete="off"
+                    placeholder="ex. Dr. Popescu"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`consult-clinic-${profileId}`}>Clinică</Label>
+                  <Input
+                    id={`consult-clinic-${profileId}`}
+                    name="clinicName"
+                    maxLength={200}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`consult-specialty-${profileId}`}>
+                    Specialitate
+                  </Label>
+                  <Input
+                    id={`consult-specialty-${profileId}`}
+                    name="specialty"
+                    maxLength={200}
+                    autoComplete="off"
+                    placeholder="ex. Pediatrie"
+                  />
+                </div>
+              </div>
+            </details>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`consult-summary-${profileId}`}>Notă</Label>
+              <Textarea
+                id={`consult-summary-${profileId}`}
+                name="summary"
+                maxLength={4000}
+                className="min-h-24"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`consult-reco-${profileId}`}>
+                Recomandările medicului
+              </Label>
+              <Textarea
+                id={`consult-reco-${profileId}`}
+                name="recommendations"
+                maxLength={4000}
+                className="min-h-20"
+                placeholder="Doar ce a spus medicul, fără interpretări."
+              />
+            </div>
+            {entryCategory === "Analiză" ? <LabRowsEditor /> : null}
             <FileField
               id={`consult-files-${profileId}`}
               driveConnected={driveConnected}

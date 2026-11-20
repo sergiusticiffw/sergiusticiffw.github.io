@@ -12,23 +12,52 @@ import {
   clearChatSession,
   loadChatSession,
   markInterrupted,
+  readAssistantScope,
   saveChatSession,
+  writeAssistantScope,
 } from "@/lib/assistant/chat-session";
 import { nextChatModel, retryModelLabel } from "@/lib/assistant/models";
 import type { AssistantResult, AssistantTurn } from "@/lib/assistant/types";
 import { formatDurationUntil } from "@/lib/format";
 
-const SCOPE_KEY = "medicalAssistantProfileScope";
+/** Bump when what is sent to the AI provider changes, to ask again. */
+const CONSENT_VERSION = "1";
+
+function consentKey(userId: string | undefined) {
+  return `medicalAssistantConsent:${CONSENT_VERSION}:${userId ?? "anonymous"}`;
+}
+
+/**
+ * Fixed, constrained request for the doctor-visit summary. It asks only for
+ * what is already written in the records and for a source on every point.
+ */
+function visitPrompt(name: string) {
+  return `Pregătește un rezumat pentru vizita la medic a persoanei ${name}, folosind doar ce este notat în dosar: fișa de urgență, ultimele consultații și recomandările lor, analizele recente cu valorile și datele lor. Fă o listă scurtă, cu data fiecărui punct. Nu pune diagnostic, nu interpreta valorile și nu da sfaturi. Pentru fiecare punct citează înregistrarea sursă. Dacă o informație nu există în dosar, spune că lipsește.`;
+}
+
+/** Phone keyboards have no Shift key, so Enter must add a new line there. */
+function enterSends() {
+  try {
+    return !window.matchMedia("(pointer: coarse)").matches;
+  } catch {
+    return true;
+  }
+}
 
 export function MedicalAssistant({
   enabled,
   suggestions,
   people = [],
+  userId,
+  initialPersonId,
 }: {
   enabled: boolean;
   suggestions: string[];
   people?: { id: string; display_name: string }[];
+  userId?: string;
+  initialPersonId?: string;
 }) {
+  const [consented, setConsented] = useState<boolean | null>(null);
   const [messages, setMessages] = useState<AssistantTurn[]>([]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
@@ -46,16 +75,24 @@ export function MedicalAssistant({
     setError(stored.error);
     setFailedModel(stored.failedModel);
     setPending(false);
-    try {
-      const saved = localStorage.getItem(SCOPE_KEY);
-      if (saved && people.some((person) => person.id === saved)) {
-        setProfileScope(saved);
+    const requested =
+      initialPersonId && people.some((person) => person.id === initialPersonId)
+        ? initialPersonId
+        : null;
+    const saved = requested ?? readAssistantScope();
+    if (saved && people.some((person) => person.id === saved)) {
+      setProfileScope(saved);
+      if (requested) {
+        writeAssistantScope(requested);
       }
+    }
+    try {
+      setConsented(localStorage.getItem(consentKey(userId)) === "1");
     } catch {
-      // ignore
+      setConsented(false);
     }
     setReady(true);
-  }, [people]);
+  }, [people, userId, initialPersonId]);
 
   useEffect(() => {
     if (!ready) {
@@ -83,15 +120,16 @@ export function MedicalAssistant({
 
   function chooseScope(next: string | null) {
     setProfileScope(next);
+    writeAssistantScope(next);
+  }
+
+  function acceptConsent() {
     try {
-      if (next) {
-        localStorage.setItem(SCOPE_KEY, next);
-      } else {
-        localStorage.removeItem(SCOPE_KEY);
-      }
+      localStorage.setItem(consentKey(userId), "1");
     } catch {
-      // ignore
+      // Without storage the choice only lasts for this visit.
     }
+    setConsented(true);
   }
 
   async function ask(turns: AssistantTurn[], preferModel?: string) {
@@ -165,7 +203,7 @@ export function MedicalAssistant({
 
   async function send(text: string) {
     const question = text.trim();
-    if (!question || pending) {
+    if (!question || pending || !consented) {
       return;
     }
     const next = [...messages, { role: "user" as const, text: question }];
@@ -182,6 +220,11 @@ export function MedicalAssistant({
     await ask(messages, preferModel);
   }
 
+  const scopedPerson = profileScope
+    ? (people.find((person) => person.id === profileScope) ?? null)
+    : people.length === 1
+      ? people[0]
+      : null;
   const canRetry = Boolean(error) && messages.at(-1)?.role === "user" && !pending;
   const altModel = canRetry ? nextChatModel(failedModel) : null;
   const quotaWait =
@@ -194,9 +237,42 @@ export function MedicalAssistant({
       <div className="flex flex-1 flex-col items-start justify-center gap-3">
         <p className="max-w-md text-sm text-muted-foreground">
           Adaugă cheia Gemini în <span className="font-medium">GEMINI_API_KEY</span>{" "}
-          pe server ca să poți întreba despre documentele din dosar. Cheia se
-          creează gratuit în Google AI Studio și rămâne doar pe server.
+          pe server ca să poți întreba despre documentele din dosar. Cheia
+          rămâne doar pe server. Folosește un plan Gemini cu facturare: pe
+          planul gratuit Google poate folosi întrebările pentru îmbunătățirea
+          produselor sale.
         </p>
+      </div>
+    );
+  }
+
+  if (consented === null) {
+    return null;
+  }
+
+  if (!consented) {
+    return (
+      <div className="flex flex-1 flex-col items-start justify-center gap-4">
+        <div className="flex max-w-md flex-col gap-3 rounded-xl border bg-card p-4">
+          <h2 className="text-base font-semibold">
+            Înainte să folosești asistentul AI
+          </h2>
+          <p className="text-base text-muted-foreground">
+            Când pui o întrebare, textul întrebării și informațiile relevante
+            din dosar sunt trimise către Google Gemini ca să fie rezumate:
+            numele persoanelor, fișa de urgență (alergii, afecțiuni,
+            medicamente, grupa de sânge), notele consultațiilor, valorile
+            analizelor și textul extras din documente. Fișierele originale și
+            codurile IDNP nu sunt trimise.
+          </p>
+          <p className="text-base text-muted-foreground">
+            Răspunsurile sunt generate automat, pot conține greșeli și nu
+            înlocuiesc medicul. Asistentul nu modifică dosarul.
+          </p>
+          <Button type="button" className="h-11" onClick={acceptConsent}>
+            Am înțeles, folosesc asistentul
+          </Button>
+        </div>
       </div>
     );
   }
@@ -209,9 +285,10 @@ export function MedicalAssistant({
             type="button"
             className={
               profileScope == null
-                ? "rounded-full border border-foreground px-2.5 py-1 text-xs font-medium"
-                : "rounded-full border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
+                ? "min-h-11 rounded-full border-2 border-primary bg-primary/10 px-3.5 py-1 text-sm font-semibold"
+                : "min-h-11 rounded-full border px-3.5 py-1 text-sm text-muted-foreground hover:bg-muted"
             }
+            aria-pressed={profileScope == null}
             onClick={() => chooseScope(null)}
           >
             Toată familia
@@ -222,9 +299,10 @@ export function MedicalAssistant({
               type="button"
               className={
                 profileScope === person.id
-                  ? "rounded-full border border-foreground px-2.5 py-1 text-xs font-medium"
-                  : "rounded-full border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted"
+                  ? "min-h-11 rounded-full border-2 border-primary bg-primary/10 px-3.5 py-1 text-sm font-semibold"
+                  : "min-h-11 rounded-full border px-3.5 py-1 text-sm text-muted-foreground hover:bg-muted"
               }
+              aria-pressed={profileScope === person.id}
               onClick={() => chooseScope(person.id)}
             >
               {person.display_name}
@@ -232,13 +310,40 @@ export function MedicalAssistant({
           ))}
         </div>
       ) : null}
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-3">
+      <div
+        role="log"
+        aria-live="polite"
+        aria-label="Conversație cu asistentul"
+        className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-3"
+      >
         {messages.length === 0 ? (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-muted-foreground">
               Întreabă despre dosar. Răspunsul vine din câmpurile salvate, nu
               din fișier.
             </p>
+            {scopedPerson ? (
+              <div className="flex flex-col gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
+                <p className="text-base font-semibold">
+                  Pregătește vizita la medic
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Un rezumat generat de AI din ce este notat în dosarul lui{" "}
+                  {scopedPerson.display_name}, cu trimitere la fiecare
+                  înregistrare. Nu pune diagnostic și nu dă sfaturi.
+                </p>
+                <Button
+                  type="button"
+                  className="h-11 sm:w-fit"
+                  disabled={pending}
+                  onClick={() => {
+                    void send(visitPrompt(scopedPerson.display_name));
+                  }}
+                >
+                  Generează rezumatul
+                </Button>
+              </div>
+            ) : null}
             {suggestions.length > 0 ? (
               <div className="flex flex-col gap-2">
                 {suggestions.map((prompt) => (
@@ -246,7 +351,7 @@ export function MedicalAssistant({
                     key={prompt}
                     type="button"
                     disabled={pending}
-                    className="rounded-lg border px-3 py-2 text-left text-sm hover:bg-muted disabled:opacity-50"
+                    className="min-h-11 rounded-lg border px-3 py-2 text-left text-base hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-50"
                     onClick={() => {
                       void send(prompt);
                     }}
@@ -268,6 +373,9 @@ export function MedicalAssistant({
             ) : (
               <div key={`${message.role}-${index}`} className="flex justify-start">
                 <div className="max-w-[92%] rounded-2xl border bg-card px-3.5 py-2.5 text-sm shadow-sm">
+                  <p className="mb-1.5 inline-flex rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                    Generat de AI
+                  </p>
                   <AssistantAnswer text={message.text} />
                   {message.sources ? (
                     <AssistantSources sources={message.sources} />
@@ -364,7 +472,7 @@ export function MedicalAssistant({
           disabled={pending}
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            if (event.key === "Enter" && !event.shiftKey && enterSends()) {
               event.preventDefault();
               void send(input);
             }
@@ -375,7 +483,8 @@ export function MedicalAssistant({
         </Button>
       </form>
       <p className="pt-2 text-center text-xs text-muted-foreground">
-        Asistentul poate greși. Verifică documentul înainte de o decizie medicală.
+        Răspuns generat de AI din datele dosarului, trimise către Google Gemini.
+        Poate greși și nu înlocuiește medicul. Verifică documentul original.
       </p>
     </div>
   );

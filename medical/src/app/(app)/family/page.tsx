@@ -112,7 +112,7 @@ async function FamilySection() {
     }
     if (grantsResult.error) {
       console.error("familyGrants", grantsResult.error.code);
-      accessNote = "Aplică migrația pentru accesul pe profil.";
+      accessNote = "Accesul pe persoane nu a putut fi încărcat. Încearcă din nou.";
     } else {
       grants = (grantsResult.data ?? []) as ProfileGrant[];
     }

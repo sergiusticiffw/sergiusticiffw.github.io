@@ -6,14 +6,14 @@ import { loadRecordsIndex } from "@/lib/assistant/catalog";
 import { getPageFamilyAccess } from "@/lib/auth";
 
 export const metadata = {
-  title: "Înregistrări",
+  title: "Dosar",
 };
 
 export default function RecordsPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Înregistrări</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Dosar</h1>
         <p className="text-sm text-muted-foreground">
           Caută în tot dosarul. Filtrează după tip, persoană sau lună.
         </p>

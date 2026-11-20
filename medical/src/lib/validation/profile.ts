@@ -23,6 +23,22 @@ const birthDate = z
     { message: "Data nașterii nu este validă." },
   );
 
+export const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
+
+const bloodType = z
+  .string()
+  .trim()
+  .refine((value) => value === "" || (BLOOD_TYPES as readonly string[]).includes(value), {
+    message: "Grupa de sânge nu este validă.",
+  });
+
+function healthText(max: number, label: string) {
+  return z
+    .string()
+    .trim()
+    .max(max, { message: `${label}: cel mult ${max} de caractere.` });
+}
+
 export const profileSchema = z.object({
   displayName: z
     .string()
@@ -40,6 +56,12 @@ export const profileSchema = z.object({
     .string()
     .trim()
     .max(2000, { message: "Notele pot avea cel mult 2000 de caractere." }),
+  // Information entered by the family, not verified by a doctor.
+  allergies: healthText(1000, "Alergii"),
+  chronicConditions: healthText(1000, "Afecțiuni cronice"),
+  currentMedications: healthText(1000, "Medicamente curente"),
+  bloodType,
+  emergencyNotes: healthText(500, "Note de urgență"),
 });
 
 export const profileIdSchema = z.uuid({ message: "Profilul nu este valid." });

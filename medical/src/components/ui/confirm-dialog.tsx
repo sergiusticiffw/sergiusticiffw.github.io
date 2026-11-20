@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -28,6 +28,8 @@ export function ConfirmDialog({
   onCancel: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  const descriptionId = useId();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -44,6 +46,8 @@ export function ConfirmDialog({
   return (
     <dialog
       ref={dialogRef}
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
       className="m-auto w-[min(100%-2rem,26rem)] rounded-xl border bg-card p-0 text-card-foreground shadow-lg backdrop:bg-black/50 backdrop:backdrop-blur-[2px] open:animate-in open:fade-in-0 open:zoom-in-95"
       onCancel={(event) => {
         event.preventDefault();
@@ -80,8 +84,12 @@ export function ConfirmDialog({
             </svg>
           </span>
           <div className="flex flex-col gap-1">
-            <h2 className="text-base font-semibold">{title}</h2>
-            <div className="text-sm text-muted-foreground">{description}</div>
+            <h2 id={titleId} className="text-base font-semibold">
+              {title}
+            </h2>
+            <div id={descriptionId} className="text-sm text-muted-foreground">
+              {description}
+            </div>
           </div>
         </div>
         {error ? (
@@ -95,6 +103,7 @@ export function ConfirmDialog({
             variant="outline"
             className="h-11"
             disabled={pending}
+            autoFocus
             onClick={onCancel}
           >
             {cancelLabel}
@@ -104,7 +113,6 @@ export function ConfirmDialog({
             variant="destructive"
             className="h-11"
             disabled={pending}
-            autoFocus
             onClick={onConfirm}
           >
             {pending ? pendingLabel : confirmLabel}

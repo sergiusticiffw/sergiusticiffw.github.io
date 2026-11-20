@@ -203,10 +203,13 @@ async function createFolder(
 }
 
 const ROOT_FOLDER_NAME = "Dosar medical";
-/** Canonical My Drive folder for this family. Prefer env; falls back to known id. */
+/**
+ * Optional pinned My Drive folder, set only through the environment. There is
+ * deliberately no built-in fallback: a hardcoded id could send one family's
+ * uploads into another family's folder.
+ */
 const CANONICAL_ROOT_FOLDER_ID =
-  process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim() ||
-  "1q-yQh0PN3kyRZMXVxF6SuTnjwn8u6uVc";
+  process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID?.trim() || "";
 
 async function findFolder(
   accessToken: string,
@@ -292,8 +295,9 @@ export async function ensureDriveRoot(familyId: string) {
 
   const accessToken = await getAccessToken(familyId, connection.refreshToken);
 
-  // Always prefer the known "Dosar medical" folder when it is reachable.
+  // Prefer the pinned folder when one is configured and reachable.
   if (
+    CANONICAL_ROOT_FOLDER_ID &&
     FILE_ID.test(CANONICAL_ROOT_FOLDER_ID) &&
     (await folderAccessible(accessToken, CANONICAL_ROOT_FOLDER_ID))
   ) {

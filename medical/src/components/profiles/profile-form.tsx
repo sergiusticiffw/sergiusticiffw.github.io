@@ -19,14 +19,24 @@ import { Button } from "@/components/ui/button";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { profileSchema, type ProfileInput } from "@/lib/validation/profile";
+import {
+  BLOOD_TYPES,
+  profileSchema,
+  type ProfileInput,
+} from "@/lib/validation/profile";
 
 const emptyValues: ProfileInput = {
   displayName: "",
   birthDate: "",
   idnp: "",
   notes: "",
+  allergies: "",
+  chronicConditions: "",
+  currentMedications: "",
+  bloodType: "",
+  emergencyNotes: "",
 };
 
 export function ProfileForm({
@@ -182,6 +192,68 @@ export function ProfileForm({
           </p>
         ) : null}
       </div>
+
+      <fieldset className="flex flex-col gap-4 rounded-lg border p-3">
+        <legend className="px-1 text-sm font-medium">Fișă de urgență</legend>
+        <p className="text-sm text-muted-foreground">
+          Completat de familie, nu verificat de un medic. Apare în fruntea
+          paginii persoanei, ca să fie la îndemână la doctor sau la urgență.
+        </p>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={`blood-${idPrefix}`}>Grupa de sânge</Label>
+          <Select
+            id={`blood-${idPrefix}`}
+            aria-invalid={Boolean(form.formState.errors.bloodType)}
+            {...form.register("bloodType")}
+          >
+            <option value="">Necunoscută</option>
+            {BLOOD_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </Select>
+          {form.formState.errors.bloodType ? (
+            <p className="text-sm text-destructive">
+              {form.formState.errors.bloodType.message}
+            </p>
+          ) : null}
+        </div>
+        {(
+          [
+            ["allergies", "Alergii", "Ex: penicilină, arahide"],
+            ["chronicConditions", "Afecțiuni cronice", "Ex: astm, diabet"],
+            [
+              "currentMedications",
+              "Medicamente curente",
+              "Nume și doză, cum le-a scris medicul",
+            ],
+            ["emergencyNotes", "Note de urgență", "Ce trebuie să știe un medic imediat"],
+          ] as const
+        ).map(([field, label, placeholder]) => (
+          <div key={field} className="flex flex-col gap-2">
+            <Label htmlFor={`${field}-${idPrefix}`}>{label}</Label>
+            <Textarea
+              id={`${field}-${idPrefix}`}
+              className="min-h-20"
+              placeholder={placeholder}
+              aria-invalid={Boolean(form.formState.errors[field])}
+              aria-describedby={
+                form.formState.errors[field] ? `${field}-${idPrefix}-error` : undefined
+              }
+              {...form.register(field)}
+            />
+            {form.formState.errors[field] ? (
+              <p
+                id={`${field}-${idPrefix}-error`}
+                className="text-sm text-destructive"
+              >
+                {form.formState.errors[field]?.message}
+              </p>
+            ) : null}
+          </div>
+        ))}
+      </fieldset>
 
       <ProfileIdentityFields
         idPrefix={idPrefix}

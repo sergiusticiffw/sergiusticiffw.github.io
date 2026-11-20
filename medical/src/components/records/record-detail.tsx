@@ -6,6 +6,8 @@ import { DeleteRecordButton } from "@/components/profiles/delete-record-button";
 import { DocumentGallery } from "@/components/profiles/document-preview";
 import { EditRecordButton } from "@/components/profiles/edit-record-button";
 import { ShareFilesButton } from "@/components/records/share-files-button";
+import { SourceBadge } from "@/components/records/source-badge";
+import { Avatar } from "@/components/ui/avatar";
 import { formatBirthDate } from "@/lib/format";
 import { parseRecordCategory } from "@/lib/record-category";
 import type { FamilyRecord } from "@/lib/records";
@@ -22,27 +24,25 @@ export function RecordDetail({
       <Link
         href={`/profiles/${record.profileId}`}
         prefetch
-        className="text-sm text-muted-foreground hover:underline"
+        aria-label={`Înregistrare a persoanei ${record.profileName}. Deschide profilul`}
+        className="flex min-h-11 w-fit max-w-full items-center gap-2 rounded-full border bg-card py-1 pr-4 pl-1 text-sm font-medium hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
       >
-        Înapoi la profil
+        <Avatar name={record.profileName} size="sm" />
+        <span className="truncate">{record.profileName}</span>
       </Link>
-      <div className="flex flex-col gap-1">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col gap-1.5">
+        <p className="text-base text-muted-foreground">
           {parseRecordCategory(
             record.category || (record.kind === "lab" ? "Analiză" : "Consultație"),
           )}
           {` · `}
           {record.date ? formatBirthDate(record.date) : "Fără dată"}
-          {` · `}
-          <Link
-            href={`/profiles/${record.profileId}`}
-            prefetch
-            className="underline-offset-2 hover:underline"
-          >
-            {record.profileName}
-          </Link>
         </p>
         <h1 className="text-2xl font-semibold tracking-tight">{record.title}</h1>
+        <SourceBadge
+          source={record.kind === "document" ? "document" : "manual"}
+          showHint
+        />
       </div>
       {record.files.length > 0 ? (
         <div className="flex flex-col gap-3">
@@ -51,9 +51,9 @@ export function RecordDetail({
         </div>
       ) : null}
       {record.body ? (
-        <p className="whitespace-pre-wrap text-sm">{record.body}</p>
+        <p className="whitespace-pre-wrap text-base">{record.body}</p>
       ) : (
-        <p className="text-sm text-muted-foreground">Nu există text salvat.</p>
+        <p className="text-base text-muted-foreground">Nu există text salvat.</p>
       )}
       {canEdit ? (
         <div className="sticky bottom-[calc(3.5rem+max(0.5rem,env(safe-area-inset-bottom)))] z-20 -mx-4 mt-2 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/90">

@@ -80,28 +80,34 @@ function FileThumb({
   const kind = previewKind(file.filename, file.mimeType);
   const url = viewUrl(file.id);
   return (
-    <div className={compact ? "w-10" : "flex w-24 flex-col gap-1"}>
+    <div className={compact ? "w-11" : "flex w-24 flex-col gap-1"}>
       <div
         className={
           compact
-            ? "relative h-10 w-10 overflow-hidden rounded border bg-muted/40"
+            ? "relative h-11 w-11 overflow-hidden rounded border bg-muted/40"
             : "relative h-24 w-24 overflow-hidden rounded-md border bg-muted/40"
         }
       >
         {kind === "image" ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={url} alt="" className="h-full w-full object-cover" />
+          <img
+            src={url}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
         ) : (
           <span className="flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground">
             <PdfGlyph className={compact ? "size-5" : "size-8"} />
             {compact ? null : (
-              <span className="text-[10px]">{kindLabel[kind] ?? "Fișier"}</span>
+              <span className="text-xs">{kindLabel[kind] ?? "Fișier"}</span>
             )}
           </span>
         )}
         <button
           type="button"
-          className="absolute inset-0"
+          className="absolute inset-0 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
           aria-label={`Vezi ${file.filename}`}
           onClick={onOpen}
         />
@@ -325,6 +331,7 @@ export function DocumentGallery({
       </ul>
       <dialog
         ref={dialogRef}
+        aria-label={current ? `Document: ${current.filename}` : "Document"}
         className="m-0 h-dvh max-h-dvh w-full max-w-none border-0 bg-neutral-950 p-0 text-white backdrop:bg-black/80 open:flex open:flex-col sm:m-auto sm:h-[min(92dvh,52rem)] sm:max-h-[92dvh] sm:w-[min(100%-1.5rem,56rem)] sm:rounded-2xl"
         onClose={close}
         onClick={(event) => {

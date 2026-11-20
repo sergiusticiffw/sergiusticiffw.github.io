@@ -1,7 +1,65 @@
 import type { AssistantTurn } from "@/lib/assistant/types";
 
 const STORAGE_KEY = "medicalAssistantChat";
+/** Which family member the chat is limited to. */
+export const SCOPE_STORAGE_KEY = "medicalAssistantProfileScope";
 const MAX_STORED_MESSAGES = 60;
+
+/**
+ * Chat answers contain medical details, so they live in sessionStorage: they
+ * survive tab switches and reloads but disappear when the tab or installed app
+ * is closed. Earlier versions used localStorage, which outlived sessions and
+ * account changes on shared devices.
+ */
+function store(): Storage | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+function removeLegacyStorage() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(SCOPE_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+export function readAssistantScope(): string | null {
+  try {
+    return store()?.getItem(SCOPE_STORAGE_KEY) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeAssistantScope(scope: string | null) {
+  try {
+    if (scope) {
+      store()?.setItem(SCOPE_STORAGE_KEY, scope);
+    } else {
+      store()?.removeItem(SCOPE_STORAGE_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+/** Removes every assistant trace from this device (logout, account change). */
+export function clearAssistantDeviceData() {
+  clearChatSession();
+  writeAssistantScope(null);
+  removeLegacyStorage();
+}
 
 export const INTERRUPTED = "Întrerupt înainte să se termine răspunsul.";
 
@@ -82,7 +140,8 @@ export function markInterrupted(chat: StoredChat): StoredChat {
 
 function readStorage(): StoredChat {
   try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    removeLegacyStorage();
+    const stored = JSON.parse(store()?.getItem(STORAGE_KEY) || "null");
     const messages = asTurns(stored?.messages).slice(-MAX_STORED_MESSAGES);
     const error = typeof stored?.error === "string" ? stored.error : null;
     const failedModel =
@@ -117,7 +176,7 @@ export function saveChatSession() {
     awaiting: chatSession.awaiting,
   };
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    store()?.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch {
     // Storage full: keep the chat in memory only.
   }
@@ -128,8 +187,10 @@ export function clearChatSession() {
   chatSession.error = null;
   chatSession.failedModel = null;
   chatSession.awaiting = false;
-  if (typeof window !== "undefined") {
-    localStorage.removeItem(STORAGE_KEY);
+  try {
+    store()?.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore
   }
 }
 

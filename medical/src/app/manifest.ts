@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Dosar",
     description: "Dosar medical personal pentru familie.",
     id: "/",
-    start_url: "/profiles",
+    start_url: "/",
     scope: "/",
     display: "standalone",
     background_color: "#f4f8f8",

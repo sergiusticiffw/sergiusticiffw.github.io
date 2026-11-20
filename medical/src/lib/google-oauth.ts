@@ -80,6 +80,14 @@ export function decryptToken(payload: string) {
   ]).toString("utf8");
 }
 
+/**
+ * The token-encryption key must not double as the signing key, so the OAuth
+ * state is signed with a key derived from it for that single purpose.
+ */
+function stateKey(key: Buffer | string) {
+  return createHmac("sha256", key).update("medical:oauth-state:v1").digest();
+}
+
 export function createOAuthState(input: { userId: string; familyId: string }) {
   const config = getGoogleConfig();
   if (!config) {
@@ -93,7 +101,7 @@ export function createOAuthState(input: { userId: string; familyId: string }) {
       exp: Date.now() + STATE_TTL_MS,
     } satisfies OAuthState),
   ).toString("base64url");
-  const signature = createHmac("sha256", config.key)
+  const signature = createHmac("sha256", stateKey(config.key))
     .update(payload)
     .digest("base64url");
 
@@ -111,7 +119,7 @@ export function readOAuthState(state: string | null): OAuthState | null {
     return null;
   }
 
-  const expected = createHmac("sha256", config.key)
+  const expected = createHmac("sha256", stateKey(config.key))
     .update(payload)
     .digest("base64url");
   const actualBuffer = Buffer.from(signature);

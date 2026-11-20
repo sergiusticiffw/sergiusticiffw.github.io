@@ -4,8 +4,9 @@ import { useState } from "react";
 
 import { logout } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
-import { clearChatSession } from "@/lib/assistant/chat-session";
+import { clearAssistantDeviceData } from "@/lib/assistant/chat-session";
 import { clearUnlockOnLogout } from "@/lib/biometric-lock";
+import { clearOfflineOnLogout } from "@/lib/offline/vault";
 
 export function LogoutButton({
   userId,
@@ -24,11 +25,16 @@ export function LogoutButton({
       disabled={pending}
       onClick={() => {
         setPending(true);
-        clearChatSession();
+        clearAssistantDeviceData();
         if (userId) {
           clearUnlockOnLogout(userId);
         }
-        void logout();
+        // Remove the encrypted offline copy before the session ends.
+        void clearOfflineOnLogout(userId)
+          .catch(() => undefined)
+          .finally(() => {
+            void logout();
+          });
       }}
     >
       {pending ? "Se iese…" : "Ieșire"}

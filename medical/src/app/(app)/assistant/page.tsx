@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { MedicalAssistant } from "@/components/assistant/medical-assistant";
 import { PageFallback } from "@/components/layout/page-fallback";
 import { loadRecordsIndex, suggestFromIndex } from "@/lib/assistant/catalog";
-import { getPageFamilyAccess } from "@/lib/auth";
+import { getPageFamilyAccess, getPageUser } from "@/lib/auth";
 
 export const metadata = {
   title: "Asistent",
@@ -18,26 +18,36 @@ const genericSuggestions = [
   "Compară analizele recente din dosar.",
 ];
 
-export default function AssistantPage() {
+export default function AssistantPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ person?: string }>;
+}) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <h1 className="text-2xl font-semibold tracking-tight">Asistent</h1>
       <Suspense fallback={<PageFallback label="Se încarcă asistentul…" />}>
-        <AssistantSection />
+        <AssistantSection searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function AssistantSection() {
+async function AssistantSection({
+  searchParams,
+}: {
+  searchParams: Promise<{ person?: string }>;
+}) {
+  const requestedPerson = (await searchParams).person;
   const enabled = Boolean(process.env.GEMINI_API_KEY?.trim());
   if (!enabled) {
     return <MedicalAssistant enabled={false} suggestions={[]} />;
   }
 
+  const user = await getPageUser();
   const family = await getPageFamilyAccess();
   if (!family.familyId) {
-    return <MedicalAssistant enabled suggestions={[]} />;
+    return <MedicalAssistant enabled suggestions={[]} userId={user.id} />;
   }
 
   const index = await loadRecordsIndex(family.familyId);
@@ -58,6 +68,10 @@ async function AssistantSection() {
   return (
     <MedicalAssistant
       enabled
+      userId={user.id}
+      initialPersonId={
+        typeof requestedPerson === "string" ? requestedPerson : undefined
+      }
       suggestions={suggestions}
       people={index.people.map((person) => ({
         id: person.id,

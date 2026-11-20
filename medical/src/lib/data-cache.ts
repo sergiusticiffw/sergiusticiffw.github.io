@@ -33,6 +33,7 @@ export function revalidateMedicalData(profileId?: string, recordId?: string) {
     updateTag(profileCacheTag(profileId));
     revalidatePath(`/profiles/${profileId}`);
   }
+  revalidatePath("/");
   revalidatePath("/profiles");
   revalidatePath("/records");
   revalidatePath("/assistant");
@@ -44,6 +45,7 @@ export function revalidateMedicalData(profileId?: string, recordId?: string) {
 /** Family membership / invites / access grants. */
 export function revalidateFamilyMembers() {
   updateTag(FAMILY_CACHE_TAG);
+  revalidatePath("/");
   revalidatePath("/family");
   revalidatePath("/profiles");
   revalidatePath("/records");
@@ -63,6 +65,7 @@ export function revalidateAccount() {
 /** Insurance / identity card only — not medical records or the family catalog. */
 export function revalidateProfileDocsCard(profileId: string) {
   updateTag(profileDocsCardTag(profileId));
+  revalidatePath("/");
   revalidatePath(`/profiles/${profileId}`);
 }
 

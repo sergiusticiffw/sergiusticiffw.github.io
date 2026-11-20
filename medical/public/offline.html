@@ -9,10 +9,13 @@
       :root {
         color-scheme: light;
         --fg: #142428;
-        --muted: #5a6b70;
+        --muted: #4f6065;
         --bg: #f4f8f8;
         --card: #ffffff;
         --accent: #1f4f57;
+        --line: #d5e0e2;
+        --warn-bg: #fff4e0;
+        --warn-fg: #7a4a00;
       }
       * {
         box-sizing: border-box;
@@ -20,33 +23,67 @@
       body {
         margin: 0;
         min-height: 100dvh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1.5rem;
+        padding: 1rem;
         font-family: system-ui, sans-serif;
+        font-size: 1rem;
+        line-height: 1.5;
         background: var(--bg);
         color: var(--fg);
       }
       main {
-        width: min(100%, 22rem);
-        padding: 1.5rem;
-        border-radius: 1rem;
-        background: var(--card);
-        border: 1px solid #d5e0e2;
+        width: min(100%, 36rem);
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
       }
       h1 {
-        margin: 0 0 0.5rem;
-        font-size: 1.25rem;
+        margin: 0;
+        font-size: 1.375rem;
+      }
+      h2 {
+        margin: 0;
+        font-size: 1.125rem;
       }
       p {
         margin: 0;
         color: var(--muted);
-        font-size: 0.9375rem;
-        line-height: 1.45;
+      }
+      .card {
+        padding: 1rem;
+        border-radius: 1rem;
+        background: var(--card);
+        border: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .row b {
+        display: block;
+        font-size: 0.875rem;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .row span {
+        white-space: pre-wrap;
+        color: var(--fg);
+      }
+      .allergy {
+        background: var(--warn-bg);
+        color: var(--warn-fg);
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+      }
+      .allergy b,
+      .allergy span {
+        color: var(--warn-fg);
+      }
+      ul {
+        margin: 0;
+        padding-left: 1.1rem;
+        color: var(--fg);
       }
       button {
-        margin-top: 1.25rem;
         width: 100%;
         min-height: 2.75rem;
         border: 0;
@@ -57,16 +94,190 @@
         font-weight: 600;
         cursor: pointer;
       }
+      button:focus-visible {
+        outline: 3px solid #3b9aa8;
+        outline-offset: 2px;
+      }
+      .note {
+        font-size: 0.875rem;
+      }
+      [hidden] {
+        display: none !important;
+      }
     </style>
   </head>
   <body>
     <main>
       <h1>Ești offline</h1>
       <p>
-        Dosarul medical are nevoie de internet ca să citească datele și
-        documentele. Reîncearcă când ai conexiune.
+        Dosarul medical are nevoie de internet ca să citească datele noi și
+        documentele.
       </p>
       <button type="button" onclick="location.reload()">Reîncearcă</button>
+      <section id="offline-copy" hidden aria-labelledby="offline-title">
+        <h2 id="offline-title">Copie salvată pe acest dispozitiv</h2>
+        <p id="offline-meta" class="note" role="status"></p>
+        <div id="offline-people"></div>
+        <div id="offline-recent"></div>
+        <p class="note">
+          Copie doar pentru citire, completată de familie. Nu este verificată de
+          un medic și poate fi depășită. Documentele nu sunt disponibile offline.
+        </p>
+      </section>
     </main>
+    <script>
+      // Reads the optional encrypted copy written by src/lib/offline/vault.ts.
+      // Format: IndexedDB "dosar-offline" v1, store "kv", keys "key" and
+      // "snapshot". Everything is rendered with textContent, never innerHTML.
+      (function () {
+        var MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+        function get(db, key) {
+          return new Promise(function (resolve, reject) {
+            var request = db
+              .transaction("kv", "readonly")
+              .objectStore("kv")
+              .get(key);
+            request.onsuccess = function () {
+              resolve(request.result);
+            };
+            request.onerror = function () {
+              reject(request.error);
+            };
+          });
+        }
+
+        function open() {
+          return new Promise(function (resolve, reject) {
+            if (!window.indexedDB) {
+              reject(new Error("no-idb"));
+              return;
+            }
+            var request = indexedDB.open("dosar-offline", 1);
+            request.onupgradeneeded = function () {
+              // Nothing stored yet: do not create an empty database here.
+              request.transaction.abort();
+              reject(new Error("empty"));
+            };
+            request.onsuccess = function () {
+              resolve(request.result);
+            };
+            request.onerror = function () {
+              reject(request.error);
+            };
+          });
+        }
+
+        function el(tag, className, text) {
+          var node = document.createElement(tag);
+          if (className) node.className = className;
+          if (text !== undefined) node.textContent = text;
+          return node;
+        }
+
+        function row(label, value, className) {
+          if (!value) return null;
+          var wrapper = el("div", "row" + (className ? " " + className : ""));
+          wrapper.appendChild(el("b", "", label));
+          wrapper.appendChild(el("span", "", value));
+          return wrapper;
+        }
+
+        function age(birthDate) {
+          if (!birthDate) return "";
+          var parts = String(birthDate).split("-").map(Number);
+          if (parts.length < 3) return "";
+          var now = new Date();
+          var years = now.getFullYear() - parts[0];
+          if (
+            now.getMonth() + 1 < parts[1] ||
+            (now.getMonth() + 1 === parts[1] && now.getDate() < parts[2])
+          ) {
+            years -= 1;
+          }
+          return years >= 0 ? years + (years === 1 ? " an" : " ani") : "";
+        }
+
+        function render(snapshot, savedAt) {
+          var peopleBox = document.getElementById("offline-people");
+          var recentBox = document.getElementById("offline-recent");
+          peopleBox.textContent = "";
+          recentBox.textContent = "";
+          (snapshot.people || []).forEach(function (person) {
+            var card = el("article", "card");
+            card.style.marginBottom = "0.75rem";
+            var heading = el("h2", "", person.name);
+            card.appendChild(heading);
+            var sub = [age(person.birthDate), person.bloodType ? "Grupa " + person.bloodType : ""]
+              .filter(Boolean)
+              .join(" · ");
+            if (sub) card.appendChild(el("p", "", sub));
+            [
+              row("⚠ Alergii", person.allergies, "allergy"),
+              row("Afecțiuni cronice", person.chronicConditions),
+              row("Medicamente curente", person.currentMedications),
+              row("Note de urgență", person.emergencyNotes),
+            ].forEach(function (item) {
+              if (item) card.appendChild(item);
+            });
+            if (
+              !person.allergies &&
+              !person.chronicConditions &&
+              !person.currentMedications &&
+              !person.emergencyNotes
+            ) {
+              card.appendChild(el("p", "", "Fișa de urgență nu este completată."));
+            }
+            peopleBox.appendChild(card);
+          });
+          if ((snapshot.recent || []).length > 0) {
+            var card = el("article", "card");
+            card.appendChild(el("h2", "", "Ultimele înregistrări"));
+            var list = el("ul");
+            snapshot.recent.forEach(function (item) {
+              var line = [item.date, item.person, item.title]
+                .filter(Boolean)
+                .join(" · ");
+              list.appendChild(el("li", "", line));
+            });
+            card.appendChild(list);
+            recentBox.appendChild(card);
+          }
+          document.getElementById("offline-meta").textContent =
+            "Ultima sincronizare: " + new Date(savedAt).toLocaleString("ro-RO");
+          document.getElementById("offline-copy").hidden = false;
+        }
+
+        open()
+          .then(function (db) {
+            return Promise.all([get(db, "key"), get(db, "snapshot")]).then(
+              function (values) {
+                db.close();
+                return values;
+              },
+            );
+          })
+          .then(function (values) {
+            var keyRecord = values[0];
+            var stored = values[1];
+            if (
+              !keyRecord ||
+              !stored ||
+              keyRecord.userId !== stored.userId ||
+              Date.now() - stored.savedAt > MAX_AGE_MS
+            ) {
+              return;
+            }
+            return crypto.subtle
+              .decrypt({ name: "AES-GCM", iv: stored.iv }, keyRecord.key, stored.data)
+              .then(function (plain) {
+                render(JSON.parse(new TextDecoder().decode(plain)), stored.savedAt);
+              });
+          })
+          .catch(function () {
+            // No copy, or it cannot be read: keep the plain offline message.
+          });
+      })();
+    </script>
   </body>
 </html>

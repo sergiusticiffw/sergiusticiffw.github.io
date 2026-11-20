@@ -57,13 +57,6 @@ async function ProfilesSection() {
   const listError = profilesResult.error;
   if (listError) {
     console.error("listProfiles", listError.code);
-    if (listError.code === "42703" || listError.code === "PGRST204") {
-      return (
-        <p role="alert" className="text-sm text-destructive">
-          Aplică migrația pentru IDNP înainte să încarci profilurile.
-        </p>
-      );
-    }
     return (
       <p role="alert" className="text-sm text-destructive">
         Persoanele nu au putut fi încărcate.

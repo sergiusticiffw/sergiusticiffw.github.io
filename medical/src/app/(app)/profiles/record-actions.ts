@@ -4,6 +4,7 @@ import { revalidateMedicalData } from "@/lib/data-cache";
 
 import { requireProfileWriter } from "@/lib/auth";
 import { readUploadedFiles } from "@/lib/files";
+import { labInsertRows, parseLabRowsField } from "@/lib/labs";
 import { parseRecordCategory } from "@/lib/record-category";
 import {
   discardStoredDocument,
@@ -153,11 +154,13 @@ export async function createConsultation(
   const hasFiles = formData
     .getAll("file")
     .some((entry) => entry instanceof File && entry.size > 0);
-  if (!parsed.data.summary && !hasFiles) {
-    return { error: "Scrie o notă sau atașează un fișier." };
+  const category = parseRecordCategory(formData.get("category"));
+  const labRows =
+    category === "Analiză" ? parseLabRowsField(formData.get("labRows")) : [];
+  if (!parsed.data.summary && !hasFiles && labRows.length === 0) {
+    return { error: "Scrie o notă, adaugă valori sau atașează un fișier." };
   }
 
-  const category = parseRecordCategory(formData.get("category"));
   const body = recordBody({
     idnp: "",
     extractedText: "",
@@ -179,8 +182,41 @@ export async function createConsultation(
 
   const supabase = await createClient();
 
-  // With attached files the document row is the record; skip typed tables.
+  // With attached files the document row is the record. Reviewed lab values
+  // are linked to it so they appear in the record and in the lab history.
   if (files.documentId) {
+    if (labRows.length > 0) {
+      const { error } = await supabase.from("lab_tests").insert(
+        labInsertRows({
+          profileId: owner.profile.id,
+          rows: labRows,
+          fallbackDate: parsed.data.consultationDate,
+          category,
+          sourceDocumentId: files.documentId,
+        }),
+      );
+      if (error) {
+        console.error("createConsultation labs", error.code);
+        return { error: "Valorile analizelor nu au putut fi salvate." };
+      }
+    }
+    refresh(owner.profile.id);
+    return { saved: true };
+  }
+
+  if (category === "Analiză" && labRows.length > 0) {
+    const { error } = await supabase.from("lab_tests").insert(
+      labInsertRows({
+        profileId: owner.profile.id,
+        rows: labRows,
+        fallbackDate: parsed.data.consultationDate,
+        category,
+      }),
+    );
+    if (error) {
+      console.error("createConsultation labs", error.code);
+      return { error: "Valorile analizelor nu au putut fi salvate." };
+    }
     refresh(owner.profile.id);
     return { saved: true };
   }

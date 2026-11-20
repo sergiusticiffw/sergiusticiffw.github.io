@@ -2,8 +2,9 @@
 
 import { revalidateMedicalData } from "@/lib/data-cache";
 
-import { getFamilyAccess, requireProfileWriter } from "@/lib/auth";
+import { canWrite, getFamilyAccess, requireProfileWriter } from "@/lib/auth";
 import { readUploadedFiles } from "@/lib/files";
+import { labInsertRows, reviewedLabRows } from "@/lib/labs";
 import { readPrintedText } from "@/lib/ocr";
 import {
   discardStoredDocument,
@@ -46,6 +47,9 @@ function readError(error: unknown) {
   if (error instanceof Error && error.message === "timeout") {
     return "Citirea a durat prea mult. Încearcă o fotografie mai mică sau un singur document.";
   }
+  if (error instanceof Error && error.message === "too_large") {
+    return "Imaginea sau pagina este prea mare pentru a fi citită. Încearcă o fotografie mai mică.";
+  }
   return "Documentul nu a putut fi citit. Verifică fotografia și încearcă din nou.";
 }
 
@@ -84,14 +88,18 @@ async function profileByIdnp(familyId: string, idnp: string) {
 }
 
 export async function detectDocument(formData: FormData): Promise<DetectResult> {
-  const uploaded = await readUploadedFiles(formData.getAll("file"));
-  if ("error" in uploaded) {
-    return { error: uploaded.error };
-  }
-
+  // Reading a document is expensive, so only members who can save it may start it.
   const family = await getFamilyAccess();
   if (!family.familyId) {
     return { error: family.error ?? "Familia nu a putut fi încărcată." };
+  }
+  if (!canWrite(family.role)) {
+    return { error: "Rolul de vizualizare nu permite adăugarea documentelor." };
+  }
+
+  const uploaded = await readUploadedFiles(formData.getAll("file"));
+  if ("error" in uploaded) {
+    return { error: uploaded.error };
   }
 
   let extraction: Extraction;
@@ -216,6 +224,31 @@ export async function saveDetectedDocument(
       return { error: stored.error };
     }
     storedFiles.push(stored);
+  }
+
+  // Lab values only arrive from a form the person filled in and reviewed.
+  const reviewedLabs =
+    !recordId && parsed.success ? reviewedLabRows(parsed.data.labTests) : [];
+  if (reviewedLabs.length > 0 && storedFiles[0]) {
+    const supabase = await createClient();
+    const { error: labError } = await supabase.from("lab_tests").insert(
+      labInsertRows({
+        profileId: person.id,
+        rows: reviewedLabs,
+        fallbackDate: documentDate,
+        category,
+        sourceDocumentId: storedFiles[0].documentId,
+      }),
+    );
+    if (labError) {
+      console.error("saveDetectedDocument labs", labError.code);
+      await discardStoredDocument(
+        family.familyId,
+        storedFiles[0].documentId,
+        storedFiles[0].driveFileId,
+      );
+      return { error: "Valorile analizelor nu au putut fi salvate." };
+    }
   }
 
   if (formData.get("finalize") === "1") {
