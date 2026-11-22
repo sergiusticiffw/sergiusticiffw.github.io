@@ -1,4 +1,4 @@
-const CACHE = "dosar-shell-v4";
+const CACHE = "dosar-shell-v5";
 const SHELL = ["/offline.html", "/icons/icon-192.png", "/icons/icon-512.png"];
 const NAVIGATE_TIMEOUT_MS = 8_000;
 

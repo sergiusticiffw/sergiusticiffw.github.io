@@ -1,11 +1,13 @@
 "use client";
 
+import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 import {
   addHealthEntry,
   deleteHealthEntry,
+  setAppointmentCancelled,
   setAppointmentDone,
   updateHealthEntry,
 } from "@/app/(app)/profiles/health-actions";
@@ -18,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { formatBirthDate } from "@/lib/format";
-import type { HealthData, Measurement } from "@/lib/health-types";
+import type { Appointment, HealthData, Measurement } from "@/lib/health-types";
 import type { LabSeries } from "@/lib/labs";
 import {
   MEASUREMENT_DEFAULT_UNITS,
@@ -42,7 +44,16 @@ const EDIT_TITLES: Record<HealthKind, string> = {
   measurement: "Editează măsurătoarea",
 };
 
-const VISIBLE_ROWS = 3;
+/** Medications tab hidden for now; backend data remains. */
+const TABS = [
+  { id: "appointments", label: "Programări" },
+  { id: "vaccinations", label: "Vaccinuri" },
+  { id: "measurements", label: "Măsurători" },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
+const VISIBLE_ROWS = 5;
 
 function countLabel(count: number, one: string, many: string) {
   if (count === 0) {
@@ -93,6 +104,14 @@ function Field({
   );
 }
 
+function StatusBadge({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+      {children}
+    </span>
+  );
+}
+
 function RowShell({
   children,
   onEdit,
@@ -100,86 +119,89 @@ function RowShell({
   canEdit,
   name,
   busy,
+  deleteLabel = "Șterge",
 }: {
   children: ReactNode;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   canEdit: boolean;
   name: string;
   busy: boolean;
+  deleteLabel?: string;
 }) {
   return (
-    <li className="flex items-start justify-between gap-2 rounded-xl border bg-card p-3">
-      <div className="flex min-w-0 flex-1 flex-col gap-1">{children}</div>
-      {canEdit ? (
-        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={busy}
-            aria-label={`Editează ${name}`}
-            onClick={onEdit}
-          >
-            Editează
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={busy}
-            aria-label={`Șterge ${name}`}
-            onClick={onDelete}
-          >
-            Șterge
-          </Button>
+    <li className="flex items-start justify-between gap-2 rounded-lg border bg-card px-2.5 py-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">{children}</div>
+      {canEdit && (onEdit || onDelete) ? (
+        <div className="flex shrink-0 gap-1">
+          {onEdit ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              disabled={busy}
+              aria-label={`Editează ${name}`}
+              onClick={onEdit}
+            >
+              <Pencil />
+            </Button>
+          ) : null}
+          {onDelete ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              disabled={busy}
+              aria-label={`${deleteLabel} ${name}`}
+              onClick={onDelete}
+            >
+              <Trash2 />
+            </Button>
+          ) : null}
         </div>
       ) : null}
     </li>
   );
 }
 
-function Section({
-  title,
+function TruncatedList({
   empty,
-  canEdit,
-  onAdd,
   items,
 }: {
-  title: string;
   empty: string;
-  canEdit: boolean;
-  onAdd: () => void;
   items: ReactNode[];
 }) {
   const [expanded, setExpanded] = useState(false);
   const hidden = items.length - VISIBLE_ROWS;
   const shown = expanded || hidden <= 0 ? items : items.slice(0, VISIBLE_ROWS);
 
+  if (items.length === 0) {
+    return <p className="text-sm text-muted-foreground">{empty}</p>;
+  }
+
   return (
-    <section className="flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold">{title}</h3>
-        {canEdit ? (
-          <Button type="button" variant="outline" size="sm" onClick={onAdd}>
-            Adaugă
-          </Button>
-        ) : null}
-      </div>
-      {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{empty}</p>
-      ) : (
-        <ul className="flex flex-col gap-2">{shown}</ul>
-      )}
+    <div className="flex flex-col gap-1.5">
+      <ul className="flex flex-col gap-1.5">{shown}</ul>
       {hidden > 0 ? (
         <Button
           type="button"
           variant="ghost"
+          size="sm"
           aria-expanded={expanded}
           onClick={() => setExpanded((value) => !value)}
         >
           {expanded ? "Arată mai puține" : `Arată toate (${items.length})`}
         </Button>
       ) : null}
-    </section>
+    </div>
+  );
+}
+
+function Subheading({ children }: { children: ReactNode }) {
+  return (
+    <h4 className="pt-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+      {children}
+    </h4>
   );
 }
 
@@ -212,6 +234,16 @@ function measurementSeries(items: Measurement[]): LabSeries[] {
   return [...map.values()];
 }
 
+function appointmentStatus(item: Appointment) {
+  if (item.cancelled_at) {
+    return "Anulată";
+  }
+  if (item.done_at) {
+    return "Efectuată";
+  }
+  return null;
+}
+
 export function HealthTracking({
   profileId,
   health,
@@ -223,6 +255,7 @@ export function HealthTracking({
 }) {
   const router = useRouter();
   const [listOpen, setListOpen] = useState(false);
+  const [tab, setTab] = useState<TabId>("appointments");
   const [adding, setAdding] = useState<HealthKind | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [measurementKind, setMeasurementKind] =
@@ -322,15 +355,18 @@ export function HealthTracking({
   }
 
   const upcoming = health.appointments
-    .filter((item) => !item.done_at && new Date(item.starts_at).getTime() >= now)
+    .filter(
+      (item) =>
+        !item.done_at &&
+        !item.cancelled_at &&
+        new Date(item.starts_at).getTime() >= now,
+    )
     .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-  const past = health.appointments.filter((item) => !upcoming.includes(item));
+  const past = health.appointments
+    .filter((item) => !upcoming.includes(item))
+    .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   const series = measurementSeries(health.measurements);
 
-  const editMedication =
-    adding === "medication" && editingId
-      ? health.medications.find((item) => item.id === editingId)
-      : undefined;
   const editAppointment =
     adding === "appointment" && editingId
       ? health.appointments.find((item) => item.id === editingId)
@@ -347,7 +383,6 @@ export function HealthTracking({
       ? health.measurements.find((item) => item.id === editingId)
       : undefined;
   const editNotes =
-    editMedication?.notes ??
     editAppointment?.notes ??
     editVaccination?.notes ??
     editMeasurement?.notes ??
@@ -355,13 +390,80 @@ export function HealthTracking({
 
   const summary =
     [
-      countLabel(health.medications.length, "medicament", "medicamente"),
-      countLabel(health.appointments.length, "programare", "programări"),
+      countLabel(upcoming.length, "programare", "programări"),
       countLabel(health.vaccinations.length, "vaccin", "vaccinuri"),
       countLabel(health.measurements.length, "măsurătoare", "măsurători"),
     ]
       .filter(Boolean)
       .join(" · ") || "Nimic notat încă";
+
+  function appointmentRows(items: Appointment[]) {
+    return items.map((item) => {
+      const status = appointmentStatus(item);
+      return (
+        <RowShell
+          key={item.id}
+          name={item.title}
+          canEdit={canEdit}
+          busy={pending}
+          onEdit={() => openEdit("appointment", item.id)}
+          onDelete={() => remove("appointment", item.id)}
+        >
+          <p className="truncate text-sm font-medium">{item.title}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {[
+              dateTime(item.starts_at),
+              item.doctor,
+              item.location,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+            <SourceBadge source={item.source === "document" ? "document" : "manual"} />
+            {status ? <StatusBadge>{status}</StatusBadge> : null}
+            {canEdit && !item.cancelled_at ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                loading={pending}
+                onClick={() =>
+                  void run(() =>
+                    setAppointmentDone(profileId, item.id, !item.done_at),
+                  )
+                }
+              >
+                {item.done_at ? "Viitoare" : "Efectuată"}
+              </Button>
+            ) : null}
+            {canEdit ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                loading={pending}
+                onClick={() =>
+                  void run(() =>
+                    setAppointmentCancelled(
+                      profileId,
+                      item.id,
+                      !item.cancelled_at,
+                    ),
+                  )
+                }
+              >
+                {item.cancelled_at ? "Reactivează" : "Anulează"}
+              </Button>
+            ) : null}
+          </div>
+          {item.notes ? (
+            <p className="truncate text-xs text-muted-foreground">{item.notes}</p>
+          ) : null}
+        </RowShell>
+      );
+    });
+  }
 
   return (
     <section
@@ -371,7 +473,7 @@ export function HealthTracking({
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
           <h2 id={`health-${profileId}`} className="text-base font-semibold">
-            Medicamente, programări și vaccinuri
+            Programări, vaccinuri și măsurători
           </h2>
           <p className="text-sm text-muted-foreground">{summary}</p>
         </div>
@@ -388,218 +490,228 @@ export function HealthTracking({
 
       <FormDialog
         open={listOpen}
-        title="Medicamente, programări și vaccinuri"
+        title="Urmărire sănătate"
         pending={pending}
         onClose={closeList}
       >
-      <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted-foreground">
-        Notate de familie, nu verificate de un medic. Nu înlocuiesc indicațiile
-        medicului.
-      </p>
-      {error && adding === null ? (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
+        <div className="flex flex-col gap-3">
+          <p className="text-xs text-muted-foreground">
+            Notate de familie, nu verificate de un medic.
+          </p>
+          {error && adding === null ? (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          ) : null}
 
-      <Section
-        title="Medicamente"
-        empty="Niciun medicament notat."
-        canEdit={canEdit}
-        onAdd={() => openAdd("medication")}
-        items={health.medications.map((item) => (
-          <RowShell
-            key={item.id}
-            name={item.name}
-            canEdit={canEdit}
-            busy={pending}
-            onEdit={() => openEdit("medication", item.id)}
-            onDelete={() => remove("medication", item.id)}
+          <div
+            role="tablist"
+            aria-label="Secțiuni sănătate"
+            className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1"
           >
-            <p className="text-base font-medium">
-              {item.name}
-              {item.dose ? ` · ${item.dose}` : ""}
-            </p>
-            {item.schedule ? (
-              <p className="text-sm text-muted-foreground">{item.schedule}</p>
-            ) : null}
-            <p className="text-sm text-muted-foreground">
-              {[
-                item.start_date ? `din ${formatBirthDate(item.start_date)}` : null,
-                item.end_date ? `până la ${formatBirthDate(item.end_date)}` : null,
-                item.prescribed_by ? `de la ${item.prescribed_by}` : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-            {item.notes ? <p className="text-sm">{item.notes}</p> : null}
-            <SourceBadge source={item.source === "document" ? "document" : "manual"} />
-          </RowShell>
-        ))}
-      />
+            {TABS.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === entry.id}
+                className={`rounded-md px-1 py-1.5 text-center text-[0.7rem] font-medium transition-colors sm:text-xs ${
+                  tab === entry.id
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setTab(entry.id)}
+              >
+                {entry.label}
+              </button>
+            ))}
+          </div>
 
-      <Section
-        title="Programări"
-        empty="Nicio programare."
-        canEdit={canEdit}
-        onAdd={() => openAdd("appointment")}
-        items={[...upcoming, ...past].map((item) => (
-          <RowShell
-            key={item.id}
-            name={item.title}
-            canEdit={canEdit}
-            busy={pending}
-            onEdit={() => openEdit("appointment", item.id)}
-            onDelete={() => remove("appointment", item.id)}
-          >
-            <p className="text-base font-medium">{item.title}</p>
-            <p className="text-sm text-muted-foreground">
-              {dateTime(item.starts_at)}
-              {item.doctor ? ` · ${item.doctor}` : ""}
-              {item.location ? ` · ${item.location}` : ""}
-            </p>
-            {item.notes ? <p className="text-sm">{item.notes}</p> : null}
-            <div className="flex flex-wrap items-center gap-2">
-              <SourceBadge source={item.source === "document" ? "document" : "manual"} />
-              {item.done_at ? (
-                <span className="text-sm text-muted-foreground">Efectuată</span>
-              ) : null}
-              {canEdit ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={pending}
-                  onClick={() =>
-                    void run(() =>
-                      setAppointmentDone(profileId, item.id, !item.done_at),
-                    )
-                  }
-                >
-                  {item.done_at ? "Marchează ca viitoare" : "Marchează efectuată"}
-                </Button>
-              ) : null}
+          {tab === "appointments" ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold">Programări</h3>
+                {canEdit ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openAdd("appointment")}
+                  >
+                    Adaugă
+                  </Button>
+                ) : null}
+              </div>
+              {health.appointments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nicio programare.</p>
+              ) : (
+                <>
+                  {upcoming.length > 0 ? (
+                    <>
+                      <Subheading>Viitoare</Subheading>
+                      <TruncatedList empty="" items={appointmentRows(upcoming)} />
+                    </>
+                  ) : null}
+                  {past.length > 0 ? (
+                    <>
+                      <Subheading>Trecute / efectuate / anulate</Subheading>
+                      <TruncatedList empty="" items={appointmentRows(past)} />
+                    </>
+                  ) : null}
+                </>
+              )}
             </div>
-          </RowShell>
-        ))}
-      />
+          ) : null}
 
-      <Section
-        title="Vaccinări"
-        empty="Nicio vaccinare notată."
-        canEdit={canEdit}
-        onAdd={() => openAdd("vaccination")}
-        items={health.vaccinations.map((item) => (
-          <RowShell
-            key={item.id}
-            name={item.vaccine_name}
-            canEdit={canEdit}
-            busy={pending}
-            onEdit={() => openEdit("vaccination", item.id)}
-            onDelete={() => remove("vaccination", item.id)}
-          >
-            <p className="text-base font-medium">
-              {item.vaccine_name}
-              {item.dose_label ? ` · ${item.dose_label}` : ""}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {[
-                formatBirthDate(item.given_on),
-                item.administered_by,
-                item.lot_number ? `lot ${item.lot_number}` : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-            {item.next_due_on ? (
-              <p className="text-sm">
-                Următoarea doză notată: {formatBirthDate(item.next_due_on)}
-              </p>
-            ) : null}
-            {item.notes ? <p className="text-sm">{item.notes}</p> : null}
-            <SourceBadge source={item.source === "document" ? "document" : "manual"} />
-          </RowShell>
-        ))}
-      />
+          {tab === "vaccinations" ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold">Vaccinuri</h3>
+                {canEdit ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openAdd("vaccination")}
+                  >
+                    Adaugă
+                  </Button>
+                ) : null}
+              </div>
+              <TruncatedList
+                empty="Nicio vaccinare notată."
+                items={health.vaccinations.map((item) => (
+                  <RowShell
+                    key={item.id}
+                    name={item.vaccine_name}
+                    canEdit={canEdit}
+                    busy={pending}
+                    onEdit={() => openEdit("vaccination", item.id)}
+                    onDelete={() => remove("vaccination", item.id)}
+                  >
+                    <p className="truncate text-sm font-medium">
+                      {item.vaccine_name}
+                      {item.dose_label ? ` · ${item.dose_label}` : ""}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {[
+                        formatBirthDate(item.given_on),
+                        item.administered_by,
+                        item.lot_number ? `lot ${item.lot_number}` : null,
+                        item.next_due_on
+                          ? `următoarea ${formatBirthDate(item.next_due_on)}`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                    <SourceBadge
+                      source={item.source === "document" ? "document" : "manual"}
+                    />
+                  </RowShell>
+                ))}
+              />
+            </div>
+          ) : null}
 
-      <Section
-        title="Măsurători"
-        empty="Nicio măsurătoare notată."
-        canEdit={canEdit}
-        onAdd={() => openAdd("measurement")}
-        items={series.map((item) => {
-          const latest = item.points[0];
-          const shown =
-            latest.value !== null ? String(latest.value) : (latest.text ?? "—");
-          return (
-            <li key={item.key} className="rounded-xl border bg-card">
-              <details>
-                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-3 py-2 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
-                  <span className="min-w-0">
-                    <span className="block truncate text-base font-medium">
-                      {item.name}
-                    </span>
-                    <span className="block text-sm text-muted-foreground">
-                      {latest.date ? formatBirthDate(latest.date) : ""}
-                      {item.points.length > 1
-                        ? ` · ${item.points.length} valori`
-                        : ""}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-base font-semibold">
-                    {item.unit ? `${shown} ${item.unit}` : shown}
-                  </span>
-                </summary>
-                <div className="flex flex-col gap-3 border-t px-3 py-3">
-                  <LabTrendChart series={item} />
-                  <ul className="flex flex-col gap-1 text-sm">
-                    {item.points.map((point) => (
-                      <li
-                        key={point.recordId}
-                        className="flex items-center justify-between gap-2 border-t py-1 first:border-t-0"
-                      >
-                        <span>
-                          {point.date ? formatBirthDate(point.date) : "Fără dată"}
-                          {" · "}
-                          {point.value !== null ? point.value : point.text}
-                          {item.unit ? ` ${item.unit}` : ""}
-                        </span>
-                        {canEdit ? (
-                          <span className="flex shrink-0 gap-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              disabled={pending}
-                              aria-label={`Editează valoarea din ${point.date ?? "fără dată"}`}
-                              onClick={() => openEdit("measurement", point.recordId)}
-                            >
-                              Editează
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              disabled={pending}
-                              aria-label={`Șterge valoarea din ${point.date ?? "fără dată"}`}
-                              onClick={() => remove("measurement", point.recordId)}
-                            >
-                              Șterge
-                            </Button>
+          {tab === "measurements" ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold">Măsurători</h3>
+                {canEdit ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openAdd("measurement")}
+                  >
+                    Adaugă
+                  </Button>
+                ) : null}
+              </div>
+              <TruncatedList
+                empty="Nicio măsurătoare notată."
+                items={series.map((item) => {
+                  const latest = item.points[0];
+                  const shown =
+                    latest.value !== null
+                      ? String(latest.value)
+                      : (latest.text ?? "—");
+                  return (
+                    <li key={item.key} className="rounded-lg border bg-card">
+                      <details>
+                        <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-medium">
+                              {item.name}
+                            </span>
+                            <span className="block truncate text-xs text-muted-foreground">
+                              {latest.date ? formatBirthDate(latest.date) : ""}
+                              {item.points.length > 1
+                                ? ` · ${item.points.length} valori`
+                                : ""}
+                            </span>
                           </span>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </details>
-            </li>
-          );
-        })}
-      />
-
-      </div>
+                          <span className="shrink-0 text-sm font-semibold">
+                            {item.unit ? `${shown} ${item.unit}` : shown}
+                          </span>
+                        </summary>
+                        <div className="flex flex-col gap-2 border-t px-2.5 py-2">
+                          <LabTrendChart series={item} />
+                          <ul className="flex flex-col gap-1 text-xs">
+                            {item.points.map((point) => (
+                              <li
+                                key={point.recordId}
+                                className="flex items-center justify-between gap-2 border-t py-1 first:border-t-0"
+                              >
+                                <span className="truncate">
+                                  {point.date
+                                    ? formatBirthDate(point.date)
+                                    : "Fără dată"}
+                                  {" · "}
+                                  {point.value !== null ? point.value : point.text}
+                                  {item.unit ? ` ${item.unit}` : ""}
+                                </span>
+                                {canEdit ? (
+                                  <span className="flex shrink-0 gap-1">
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon-sm"
+                                      disabled={pending}
+                                      aria-label={`Editează valoarea din ${point.date ?? "fără dată"}`}
+                                      onClick={() =>
+                                        openEdit("measurement", point.recordId)
+                                      }
+                                    >
+                                      <Pencil />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon-sm"
+                                      disabled={pending}
+                                      aria-label={`Șterge valoarea din ${point.date ?? "fără dată"}`}
+                                      onClick={() =>
+                                        remove("measurement", point.recordId)
+                                      }
+                                    >
+                                      <Trash2 />
+                                    </Button>
+                                  </span>
+                                ) : null}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </details>
+                    </li>
+                  );
+                })}
+              />
+            </div>
+          ) : null}
+        </div>
       </FormDialog>
 
       <FormDialog
@@ -612,7 +724,7 @@ export function HealthTracking({
             <Button type="button" variant="outline" disabled={pending} onClick={close}>
               Renunță
             </Button>
-            <Button type="submit" form={formId} disabled={pending}>
+            <Button type="submit" form={formId} loading={pending}>
               {pending ? "Se salvează…" : "Salvează"}
             </Button>
           </>
@@ -629,30 +741,6 @@ export function HealthTracking({
               <p role="alert" className="text-sm text-destructive">
                 {error}
               </p>
-            ) : null}
-            {adding === "medication" ? (
-              <>
-                <Field id={`${formId}-name`} label="Nume">
-                  <Input id={`${formId}-name`} name="name" required maxLength={160} autoComplete="off" defaultValue={editMedication?.name ?? ""} />
-                </Field>
-                <Field id={`${formId}-dose`} label="Doză">
-                  <Input id={`${formId}-dose`} name="dose" maxLength={120} autoComplete="off" placeholder="ex. 500 mg" defaultValue={editMedication?.dose ?? ""} />
-                </Field>
-                <Field id={`${formId}-schedule`} label="Cum se ia">
-                  <Input id={`${formId}-schedule`} name="schedule" maxLength={200} autoComplete="off" placeholder="ex. dimineața, după masă" defaultValue={editMedication?.schedule ?? ""} />
-                </Field>
-                <Field id={`${formId}-by`} label="Prescris de">
-                  <Input id={`${formId}-by`} name="prescribedBy" maxLength={160} autoComplete="off" defaultValue={editMedication?.prescribed_by ?? ""} />
-                </Field>
-                <div className="grid grid-cols-2 gap-2">
-                  <Field id={`${formId}-start`} label="Început">
-                    <Input id={`${formId}-start`} name="startDate" type="date" defaultValue={editMedication?.start_date ?? ""} />
-                  </Field>
-                  <Field id={`${formId}-end`} label="Sfârșit">
-                    <Input id={`${formId}-end`} name="endDate" type="date" defaultValue={editMedication?.end_date ?? ""} />
-                  </Field>
-                </div>
-              </>
             ) : null}
             {adding === "appointment" ? (
               <>

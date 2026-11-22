@@ -264,12 +264,125 @@ export async function setAppointmentDone(
   const supabase = await createClient();
   const { error } = await supabase
     .from("appointments")
-    .update({ done_at: done ? new Date().toISOString() : null })
+    .update(
+      done
+        ? { done_at: new Date().toISOString(), cancelled_at: null }
+        : { done_at: null },
+    )
     .eq("id", parsedEntry.data)
     .eq("profile_id", parsedId.data);
   if (error) {
     console.error("setAppointmentDone", error.code);
     return { error: "Nu s-a putut actualiza. Încearcă din nou." };
+  }
+
+  revalidateMedicalData(parsedId.data);
+  return { saved: true };
+}
+
+export async function setAppointmentCancelled(
+  profileId: string,
+  id: string,
+  cancelled: boolean,
+): Promise<HealthActionResult> {
+  const parsedId = profileIdSchema.safeParse(profileId);
+  const parsedEntry = profileIdSchema.safeParse(id);
+  if (!parsedId.success || !parsedEntry.success) {
+    return { error: "Verifică datele introduse." };
+  }
+
+  const writer = await requireProfileWriter(parsedId.data);
+  if (!writer.familyId) {
+    return { error: writer.error ?? "Nu ai dreptul să modifici această persoană." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("appointments")
+    .update(
+      cancelled
+        ? { cancelled_at: new Date().toISOString(), done_at: null }
+        : { cancelled_at: null },
+    )
+    .eq("id", parsedEntry.data)
+    .eq("profile_id", parsedId.data);
+  if (error) {
+    console.error("setAppointmentCancelled", error.code);
+    return { error: "Nu s-a putut actualiza. Încearcă din nou." };
+  }
+
+  revalidateMedicalData(parsedId.data);
+  return { saved: true };
+}
+
+function todayDateChisinau() {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Chisinau",
+  }).format(new Date());
+}
+
+/** Sets end_date so the medication leaves the active list. */
+export async function stopMedication(
+  profileId: string,
+  id: string,
+  endDate?: string,
+): Promise<HealthActionResult> {
+  const parsedId = profileIdSchema.safeParse(profileId);
+  const parsedEntry = profileIdSchema.safeParse(id);
+  if (!parsedId.success || !parsedEntry.success) {
+    return { error: "Verifică datele introduse." };
+  }
+
+  const writer = await requireProfileWriter(parsedId.data);
+  if (!writer.familyId) {
+    return { error: writer.error ?? "Nu ai dreptul să modifici această persoană." };
+  }
+
+  const date =
+    endDate && /^\d{4}-\d{2}-\d{2}$/.test(endDate)
+      ? endDate
+      : todayDateChisinau();
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("medications")
+    .update({ end_date: date })
+    .eq("id", parsedEntry.data)
+    .eq("profile_id", parsedId.data);
+  if (error) {
+    console.error("stopMedication", error.code);
+    return { error: "Nu s-a putut opri medicamentul. Încearcă din nou." };
+  }
+
+  revalidateMedicalData(parsedId.data);
+  return { saved: true };
+}
+
+/** Clears end_date so the medication returns to the active list. */
+export async function reactivateMedication(
+  profileId: string,
+  id: string,
+): Promise<HealthActionResult> {
+  const parsedId = profileIdSchema.safeParse(profileId);
+  const parsedEntry = profileIdSchema.safeParse(id);
+  if (!parsedId.success || !parsedEntry.success) {
+    return { error: "Verifică datele introduse." };
+  }
+
+  const writer = await requireProfileWriter(parsedId.data);
+  if (!writer.familyId) {
+    return { error: writer.error ?? "Nu ai dreptul să modifici această persoană." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("medications")
+    .update({ end_date: null })
+    .eq("id", parsedEntry.data)
+    .eq("profile_id", parsedId.data);
+  if (error) {
+    console.error("reactivateMedication", error.code);
+    return { error: "Nu s-a putut reactiva medicamentul. Încearcă din nou." };
   }
 
   revalidateMedicalData(parsedId.data);

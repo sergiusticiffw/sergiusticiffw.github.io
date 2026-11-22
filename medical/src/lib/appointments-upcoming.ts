@@ -24,6 +24,7 @@ export async function loadUpcomingAppointments(
     .from("appointments")
     .select("id, profile_id, title, starts_at")
     .is("done_at", null)
+    .is("cancelled_at", null)
     .gte("starts_at", now.toISOString())
     .lt("starts_at", new Date(now.getTime() + WINDOW_MS).toISOString())
     .order("starts_at", { ascending: true })

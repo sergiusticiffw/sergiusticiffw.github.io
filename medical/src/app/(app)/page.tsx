@@ -98,6 +98,7 @@ async function OverviewSection() {
     .from("appointments")
     .select("id, profile_id, title, starts_at")
     .is("done_at", null)
+    .is("cancelled_at", null)
     .gte("starts_at", new Date().toISOString())
     .order("starts_at", { ascending: true })
     .limit(HOME_LIST_LIMIT);

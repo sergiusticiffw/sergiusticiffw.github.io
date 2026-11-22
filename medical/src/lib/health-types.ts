@@ -20,6 +20,7 @@ export type Appointment = {
   location: string | null;
   notes: string | null;
   done_at: string | null;
+  cancelled_at: string | null;
   source: "family" | "document";
 };
 

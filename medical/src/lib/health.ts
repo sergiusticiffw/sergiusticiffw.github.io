@@ -30,7 +30,7 @@ export async function loadHealth(profileId: string): Promise<HealthData> {
       supabase
         .from("appointments")
         .select(
-          "id, title, starts_at, doctor, location, notes, done_at, source",
+          "id, title, starts_at, doctor, location, notes, done_at, cancelled_at, source",
         )
         .eq("profile_id", profileId)
         .order("starts_at", { ascending: false })
