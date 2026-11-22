@@ -182,28 +182,32 @@ export function calculateInterestSavings(
   const loanData = buildLoanDataFromApiLoan(loan);
   if (!loanData) return 0;
 
-  const scheduledPayments = payments.filter(
-    (item) =>
-      !isEarlyPaymentFromApiItem(item) && Number(item.fisp ?? 0) === 0
-  );
+  try {
+    const scheduledPayments = payments.filter(
+      (item) =>
+        !isEarlyPaymentFromApiItem(item) && Number(item.fisp ?? 0) === 0
+    );
 
-  const withExtra = calculatePaydownOnly(
-    loanData,
-    buildEventsFromApiPayments(payments)
-  );
-  const withoutExtra = calculatePaydownOnly(
-    loanData,
-    buildEventsFromApiPayments(scheduledPayments)
-  );
+    const withExtra = calculatePaydownOnly(
+      loanData,
+      buildEventsFromApiPayments(payments)
+    );
+    const withoutExtra = calculatePaydownOnly(
+      loanData,
+      buildEventsFromApiPayments(scheduledPayments)
+    );
 
-  const interestWithExtra = withExtra.sum_of_interests ?? 0;
-  const interestWithoutExtra = withoutExtra.sum_of_interests ?? 0;
-  const savings = interestWithoutExtra - interestWithExtra;
+    const interestWithExtra = withExtra.sum_of_interests ?? 0;
+    const interestWithoutExtra = withoutExtra.sum_of_interests ?? 0;
+    const savings = interestWithoutExtra - interestWithExtra;
 
-  if (!Number.isFinite(savings) || savings <= 0) return 0;
+    if (!Number.isFinite(savings) || savings <= 0) return 0;
 
-  // Paying off early can save almost all interest, but never more than 100% of it.
-  return Math.min(savings, interestWithoutExtra);
+    // Paying off early can save almost all interest, but never more than 100% of it.
+    return Math.min(savings, interestWithoutExtra);
+  } catch {
+    return 0;
+  }
 }
 
 export const REGULAR_PAYMENT_TITLE = 'Regular' as const;

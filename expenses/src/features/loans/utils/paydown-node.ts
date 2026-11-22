@@ -834,12 +834,11 @@ class PaydownCalculator {
     }
 
     if (reduction < 0) {
-      const isSimulated = Boolean(this.eventArray[index].isSimulatedPayment);
-      // Hypothetical extras may be smaller than accrued interest; apply all to interest.
-      if (isEarly && isSimulated) {
+      // Early/extra may be smaller than accrued interest: put the payment on
+      // interest only, keep full-period accrual for GPI/sum consistency.
+      if (isEarly) {
         paymentInterest = installmentOrPrincipal;
         reduction = 0;
-        accruedInterest = installmentOrPrincipal;
       } else {
         throw new Error(
           `Exception: installment ${this.round(installmentOrPrincipal)} is too small to cover the interest ${this.round(accruedInterest)}: ${startDate} - ${endDate}`

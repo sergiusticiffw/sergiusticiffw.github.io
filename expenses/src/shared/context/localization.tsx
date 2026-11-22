@@ -989,6 +989,8 @@ const translations = {
     'notification.paymentAdded': 'Payment added successfully!',
     'notification.paymentUpdated': 'Payment updated successfully!',
     'notification.paymentDeleted': 'Payment deleted successfully!',
+    'notification.paymentRejected':
+      'Payment was rejected. This loan id is not on Drupal — open a loan from the Drupal list, or switch to the Supabase provider.',
     'notification.profileUpdated': 'Profile updated successfully!',
 
     // Loan
@@ -2221,6 +2223,8 @@ const translations = {
     'notification.paymentAdded': 'Plata a fost adăugată cu succes!',
     'notification.paymentUpdated': 'Plata a fost actualizată cu succes!',
     'notification.paymentDeleted': 'Plata a fost ștearsă cu succes!',
+    'notification.paymentRejected':
+      'Plata a fost respinsă. Acest credit nu e pe Drupal — deschide un credit din lista Drupal, sau treci pe providerul Supabase.',
     'notification.profileUpdated': 'Profilul a fost actualizat cu succes!',
 
     // Loan

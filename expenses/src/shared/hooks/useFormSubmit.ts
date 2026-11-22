@@ -52,6 +52,24 @@ interface UseFormSubmitReturn<T> {
   handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }
 
+/** Drupal/API validation failures should not be queued offline — they never sync. */
+const isUnprocessableEntityError = (error: unknown): boolean => {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : '';
+  return (
+    /HTTP 422\b/i.test(message) ||
+    /unprocessable/i.test(message) ||
+    /validation failed/i.test(message) ||
+    /entity found with UUID/i.test(message) ||
+    /referenced entity/i.test(message) ||
+    /correct primitive type/i.test(message)
+  );
+};
+
 async function providerWrite(
   token: string,
   nodeType: string,
@@ -328,6 +346,15 @@ export const useFormSubmit = <T extends Record<string, any>>({
             setFormState(initialState);
             onSuccess();
           } catch (error) {
+            if (isUnprocessableEntityError(error)) {
+              logger.error('Payment rejected by server:', error);
+              showNotification(
+                t('notification.paymentRejected'),
+                notificationType.ERROR
+              );
+              setIsSubmitting(false);
+              return;
+            }
             logger.error(
               'Online request failed, falling back to offline:',
               error

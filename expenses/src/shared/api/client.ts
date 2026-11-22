@@ -135,11 +135,11 @@ class ApiClient {
       }
     }
 
-    // Handle other errors
+    // Handle other errors (include status so callers can detect 422, etc.)
     const errorText = await response.text().catch(() => response.statusText);
-    const errorMessage = errorText || `HTTP error! status: ${response.status}`;
+    const errorMessage = errorText || response.statusText || 'Request failed';
 
-    throw new Error(errorMessage);
+    throw new Error(`HTTP ${response.status}: ${errorMessage}`);
   }
 
   /**

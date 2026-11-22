@@ -22,12 +22,44 @@ import {
   writeResultFromDrupalNode,
 } from './mappers';
 
-/** Drop Supabase-only payment keys Drupal cannot accept (unknown field_* → 422). */
-const stripSupabaseOnlyPaymentFields = (body: unknown): unknown => {
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const loanRefId = (raw: unknown): string => {
+  if (raw == null) return '';
+  if (typeof raw === 'object' && !Array.isArray(raw)) {
+    const obj = raw as { target_id?: unknown; target_uuid?: unknown; value?: unknown };
+    return String(obj.target_id ?? obj.target_uuid ?? obj.value ?? '');
+  }
+  return String(raw);
+};
+
+/**
+ * Drupal entity-reference expects { target_id } (int) or { target_uuid }.
+ * Bare UUID strings fail with "correct primitive type" / missing entity 422s.
+ * Also drop Supabase-only keys Drupal cannot accept (unknown field_* → 422).
+ */
+const normalizeDrupalPaymentBody = (body: unknown): unknown => {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return body;
   const next = { ...(body as Record<string, unknown>) };
   delete next.field_is_early_payment;
   delete next.fiep;
+
+  const ref = next.field_loan_reference;
+  const raw = Array.isArray(ref) ? ref[0] : ref;
+  const id = loanRefId(raw).trim();
+  if (!id) return next;
+
+  const asInt = Number(id);
+  if (Number.isFinite(asInt) && asInt > 0 && String(Math.trunc(asInt)) === id) {
+    next.field_loan_reference = [{ target_id: Math.trunc(asInt) }];
+  } else if (UUID_RE.test(id)) {
+    next.field_loan_reference = [
+      { target_type: 'node', target_uuid: id.toLowerCase() },
+    ];
+  } else {
+    next.field_loan_reference = [{ target_id: id }];
+  }
   return next;
 };
 
@@ -141,11 +173,24 @@ export function createDrupalDataProvider(): DataProvider {
     },
 
     async createPayment(body: unknown) {
+      const normalized = normalizeDrupalPaymentBody(body) as Record<
+        string,
+        unknown
+      >;
+      const ref = normalized?.field_loan_reference;
+      const raw = Array.isArray(ref) ? ref[0] : ref;
+      const id = loanRefId(raw).trim();
+      // UUID loan ids are almost always Supabase leftovers — Drupal has no such node.
+      if (UUID_RE.test(id)) {
+        return {
+          success: false,
+          error: new Error(
+            'HTTP 422: This loan id is not a Drupal node. Open a loan from the Drupal list (or switch to Supabase), then add the payment again.'
+          ),
+        };
+      }
       return asWrite(
-        await ensureClient().post(
-          API_ENDPOINTS.CREATE_NODE,
-          stripSupabaseOnlyPaymentFields(body)
-        )
+        await ensureClient().post(API_ENDPOINTS.CREATE_NODE, normalized)
       );
     },
 
@@ -153,7 +198,7 @@ export function createDrupalDataProvider(): DataProvider {
       return asWrite(
         await ensureClient().patch(
           API_ENDPOINTS.EXPENSE(id),
-          stripSupabaseOnlyPaymentFields(body)
+          normalizeDrupalPaymentBody(body)
         )
       );
     },

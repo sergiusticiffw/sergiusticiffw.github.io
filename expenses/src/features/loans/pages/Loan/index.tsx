@@ -183,10 +183,13 @@ const Loan: React.FC = () => {
     [filteredData?.data]
   );
   const amort = useAmortization(loan ?? null, paymentsForLoan);
-  const interestSavings = useMemo(
-    () => calculateInterestSavings(loan, paymentsForLoan),
-    [loan, paymentsForLoan]
-  );
+  const interestSavings = useMemo(() => {
+    try {
+      return calculateInterestSavings(loan, paymentsForLoan);
+    } catch {
+      return 0;
+    }
+  }, [loan, paymentsForLoan]);
   const nextRegularPayment = useMemo(
     () => getNextRegularPayment(amort.schedule),
     [amort.schedule]
@@ -355,19 +358,30 @@ const Loan: React.FC = () => {
       );
     }
     return (
-      <div className={PAGE_CONTAINER_CLASS}>
+      <div
+        className={`${PAGE_CONTAINER_CLASS} flex min-h-[70vh] flex-col items-center justify-center`}
+      >
         <div
           role="alert"
-          className="mx-auto mt-16 flex max-w-md flex-col items-center gap-4 text-center"
+          className="flex w-full max-w-sm flex-col items-center gap-5 px-2 text-center"
         >
-          <FiAlertCircle className="size-10 text-app-muted" aria-hidden="true" />
-          <h1 className="text-xl font-semibold text-app-primary">
-            {t('ux.loanNotFound')}
-          </h1>
-          <p className="text-app-secondary">{t('ux.loanNotFoundDesc')}</p>
+          <div
+            className="flex size-16 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]"
+            aria-hidden="true"
+          >
+            <FiAlertCircle className="size-8 text-app-muted" />
+          </div>
+          <div className="flex w-full flex-col gap-2">
+            <h1 className="m-0 text-2xl font-semibold tracking-tight text-app-primary">
+              {t('ux.loanNotFound')}
+            </h1>
+            <p className="m-0 text-pretty text-base leading-relaxed text-app-secondary">
+              {t('ux.loanNotFoundDesc')}
+            </p>
+          </div>
           <Link
             to="/expenses/loans"
-            className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[var(--color-app-accent)] px-6 text-base font-semibold text-[var(--color-btn-on-accent)]"
+            className="inline-flex min-h-12 w-full items-center justify-center whitespace-nowrap rounded-xl bg-[var(--color-app-accent)] px-6 text-base font-semibold text-[var(--color-btn-on-accent)] transition-opacity hover:opacity-90"
           >
             {t('ux.backToLoans')}
           </Link>
