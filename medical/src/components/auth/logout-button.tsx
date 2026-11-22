@@ -25,7 +25,7 @@ export function LogoutButton({
       disabled={pending}
       onClick={() => {
         setPending(true);
-        clearAssistantDeviceData();
+        clearAssistantDeviceData(userId);
         if (userId) {
           clearUnlockOnLogout(userId);
         }

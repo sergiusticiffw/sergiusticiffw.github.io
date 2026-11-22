@@ -1,42 +1,67 @@
 import type { AssistantTurn } from "@/lib/assistant/types";
 
-const STORAGE_KEY = "medicalAssistantChat";
+const LEGACY_CHAT_KEY = "medicalAssistantChat";
 /** Which family member the chat is limited to. */
 export const SCOPE_STORAGE_KEY = "medicalAssistantProfileScope";
 const MAX_STORED_MESSAGES = 60;
 
+/** Auth user whose chat is bound on this device. Null = local-only / unbound. */
+let boundUserId: string | null = null;
+
+function chatKey(userId: string | null) {
+  return userId ? `${LEGACY_CHAT_KEY}:${userId}` : LEGACY_CHAT_KEY;
+}
+
+function scopeKey(userId: string | null) {
+  return userId ? `${SCOPE_STORAGE_KEY}:${userId}` : SCOPE_STORAGE_KEY;
+}
+
 /**
- * Chat answers contain medical details, so they live in sessionStorage: they
- * survive tab switches and reloads but disappear when the tab or installed app
- * is closed. Earlier versions used localStorage, which outlived sessions and
- * account changes on shared devices.
+ * Chat is kept in localStorage keyed by auth user so it survives tab close and
+ * can sync to Supabase. Logout clears only this device; cloud prefs remain.
  */
 function store(): Storage | null {
   if (typeof window === "undefined") {
     return null;
   }
   try {
-    return window.sessionStorage;
+    return window.localStorage;
   } catch {
     return null;
   }
 }
 
-function removeLegacyStorage() {
+function removeLegacyUnscoped() {
   if (typeof window === "undefined") {
     return;
   }
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(LEGACY_CHAT_KEY);
     window.localStorage.removeItem(SCOPE_STORAGE_KEY);
+    window.sessionStorage.removeItem(LEGACY_CHAT_KEY);
+    window.sessionStorage.removeItem(SCOPE_STORAGE_KEY);
   } catch {
     // ignore
   }
 }
 
+export function getBoundChatUserId() {
+  return boundUserId;
+}
+
+/** Bind storage keys to an auth user before load/save/hydrate. */
+export function bindChatUser(userId: string | undefined | null) {
+  const next =
+    typeof userId === "string" && userId.trim().length > 0 ? userId.trim() : null;
+  if (boundUserId === next) {
+    return;
+  }
+  boundUserId = next;
+}
+
 export function readAssistantScope(): string | null {
   try {
-    return store()?.getItem(SCOPE_STORAGE_KEY) ?? null;
+    return store()?.getItem(scopeKey(boundUserId)) ?? null;
   } catch {
     return null;
   }
@@ -44,21 +69,40 @@ export function readAssistantScope(): string | null {
 
 export function writeAssistantScope(scope: string | null) {
   try {
+    const key = scopeKey(boundUserId);
     if (scope) {
-      store()?.setItem(SCOPE_STORAGE_KEY, scope);
+      store()?.setItem(key, scope);
     } else {
-      store()?.removeItem(SCOPE_STORAGE_KEY);
+      store()?.removeItem(key);
     }
   } catch {
     // ignore
   }
+  scheduleChatPush();
 }
 
-/** Removes every assistant trace from this device (logout, account change). */
-export function clearAssistantDeviceData() {
-  clearChatSession();
-  writeAssistantScope(null);
-  removeLegacyStorage();
+/** Removes every assistant trace from this device (logout, account change). Cloud prefs stay. */
+export function clearAssistantDeviceData(userId?: string | null) {
+  const target =
+    typeof userId === "string" && userId.trim().length > 0
+      ? userId.trim()
+      : boundUserId;
+  clearChatSession(false);
+  try {
+    const storage = store();
+    if (storage) {
+      if (target) {
+        storage.removeItem(chatKey(target));
+        storage.removeItem(scopeKey(target));
+      }
+      storage.removeItem(chatKey(null));
+      storage.removeItem(scopeKey(null));
+    }
+  } catch {
+    // ignore
+  }
+  removeLegacyUnscoped();
+  boundUserId = null;
 }
 
 export const INTERRUPTED = "Întrerupt înainte să se termine răspunsul.";
@@ -69,6 +113,12 @@ export type StoredChat = {
   failedModel: string | null;
   /** True while a request is in flight — survives tab changes via localStorage. */
   awaiting: boolean;
+};
+
+export type AssistantPreferences = {
+  v: 1;
+  aiChat: StoredChat;
+  profileScope: string | null;
 };
 
 function empty(): StoredChat {
@@ -132,6 +182,19 @@ function asTurns(value: unknown): AssistantTurn[] {
   });
 }
 
+function parseStoredChat(raw: unknown): StoredChat {
+  if (!raw || typeof raw !== "object") {
+    return empty();
+  }
+  const stored = raw as Record<string, unknown>;
+  const messages = asTurns(stored.messages).slice(-MAX_STORED_MESSAGES);
+  const error = typeof stored.error === "string" ? stored.error : null;
+  const failedModel =
+    typeof stored.failedModel === "string" ? stored.failedModel : null;
+  const awaiting = stored.awaiting === true;
+  return markInterrupted({ messages, error, failedModel, awaiting });
+}
+
 /** A question left without an answer (nav away / reload) becomes retryable. */
 export function markInterrupted(chat: StoredChat): StoredChat {
   const last = chat.messages.at(-1);
@@ -147,21 +210,16 @@ export function markInterrupted(chat: StoredChat): StoredChat {
 
 function readStorage(): StoredChat {
   try {
-    removeLegacyStorage();
-    const stored = JSON.parse(store()?.getItem(STORAGE_KEY) || "null");
-    const messages = asTurns(stored?.messages).slice(-MAX_STORED_MESSAGES);
-    const error = typeof stored?.error === "string" ? stored.error : null;
-    const failedModel =
-      typeof stored?.failedModel === "string" ? stored.failedModel : null;
-    const awaiting = stored?.awaiting === true;
-    return markInterrupted({ messages, error, failedModel, awaiting });
+    removeLegacyUnscoped();
+    const stored = JSON.parse(store()?.getItem(chatKey(boundUserId)) || "null");
+    return parseStoredChat(stored);
   } catch {
     return empty();
   }
 }
 
 export const chatSession: StoredChat =
-  typeof window === "undefined" ? empty() : readStorage();
+  typeof window === "undefined" ? empty() : empty();
 
 export function loadChatSession(): StoredChat {
   const stored = typeof window === "undefined" ? empty() : readStorage();
@@ -172,32 +230,95 @@ export function loadChatSession(): StoredChat {
   return stored;
 }
 
-export function saveChatSession() {
-  if (typeof window === "undefined") {
-    return;
-  }
-  const data: StoredChat = {
+function snapshotChat(): StoredChat {
+  return {
     messages: chatSession.messages.slice(-MAX_STORED_MESSAGES),
     error: chatSession.error,
     failedModel: chatSession.failedModel,
     awaiting: chatSession.awaiting,
   };
+}
+
+function scheduleChatPush() {
+  if (!boundUserId || typeof window === "undefined") {
+    return;
+  }
+  void import("@/lib/assistant/preferences-sync")
+    .then((m) =>
+      m.schedulePreferencesPush({
+        aiChat: readChatSessionForPrefs(),
+        profileScope: readAssistantScope(),
+      }),
+    )
+    .catch(() => undefined);
+}
+
+export function saveChatSession() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const data = snapshotChat();
   try {
-    store()?.setItem(STORAGE_KEY, JSON.stringify(data));
+    store()?.setItem(chatKey(boundUserId), JSON.stringify(data));
   } catch {
     // Storage full: keep the chat in memory only.
   }
+  scheduleChatPush();
 }
 
-export function clearChatSession() {
+/** Snapshot for user_preferences sync. */
+export function readChatSessionForPrefs(): StoredChat {
+  return snapshotChat();
+}
+
+/** Apply chat blob from Supabase preferences (login pull). */
+export function hydrateChatSessionFromPrefs(raw: unknown): void {
+  const next = parseStoredChat(raw);
+  chatSession.messages = next.messages;
+  chatSession.error = next.error;
+  chatSession.failedModel = next.failedModel;
+  chatSession.awaiting = next.awaiting;
+  try {
+    store()?.setItem(chatKey(boundUserId), JSON.stringify(snapshotChat()));
+  } catch {
+    // ignore quota
+  }
+}
+
+export function hydrateScopeFromPrefs(raw: unknown): void {
+  const scope = typeof raw === "string" && raw.trim() ? raw.trim() : null;
+  try {
+    const key = scopeKey(boundUserId);
+    if (scope) {
+      store()?.setItem(key, scope);
+    } else {
+      store()?.removeItem(key);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+export function readLocalPreferences(): AssistantPreferences {
+  return {
+    v: 1,
+    aiChat: readChatSessionForPrefs(),
+    profileScope: readAssistantScope(),
+  };
+}
+
+export function clearChatSession(push = true) {
   chatSession.messages = [];
   chatSession.error = null;
   chatSession.failedModel = null;
   chatSession.awaiting = false;
   try {
-    store()?.removeItem(STORAGE_KEY);
+    store()?.removeItem(chatKey(boundUserId));
   } catch {
     // ignore
+  }
+  if (push) {
+    scheduleChatPush();
   }
 }
 

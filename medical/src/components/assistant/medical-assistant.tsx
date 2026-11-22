@@ -1,13 +1,14 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { AssistantAnswer } from "@/components/assistant/assistant-answer";
 import { AssistantSources } from "@/components/assistant/assistant-sources";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  bindChatUser,
   chatSession,
   clearChatSession,
   loadChatSession,
@@ -21,6 +22,7 @@ import {
   nextChatModel,
   retryModelLabel,
 } from "@/lib/assistant/models";
+import { pullPreferences } from "@/lib/assistant/preferences-sync";
 import type { AssistantResult, AssistantTurn } from "@/lib/assistant/types";
 import { formatDurationUntil } from "@/lib/format";
 
@@ -86,29 +88,51 @@ export function MedicalAssistant({
     setSlow(false);
   }
 
-  useLayoutEffect(() => {
-    const stored = loadChatSession();
-    setMessages(stored.messages);
-    setError(stored.error);
-    setFailedModel(stored.failedModel);
-    setPending(false);
-    const requested =
-      initialPersonId && people.some((person) => person.id === initialPersonId)
-        ? initialPersonId
-        : null;
-    const saved = requested ?? readAssistantScope();
-    if (saved && people.some((person) => person.id === saved)) {
-      setProfileScope(saved);
-      if (requested) {
-        writeAssistantScope(requested);
+  useEffect(() => {
+    setReady(false);
+    let cancelled = false;
+
+    async function hydrate() {
+      bindChatUser(userId);
+      if (userId) {
+        await pullPreferences(userId);
       }
+      if (cancelled) {
+        return;
+      }
+
+      const stored = loadChatSession();
+      setMessages(stored.messages);
+      setError(stored.error);
+      setFailedModel(stored.failedModel);
+      setPending(false);
+
+      const requested =
+        initialPersonId && people.some((person) => person.id === initialPersonId)
+          ? initialPersonId
+          : null;
+      const saved = requested ?? readAssistantScope();
+      if (saved && people.some((person) => person.id === saved)) {
+        setProfileScope(saved);
+        if (requested) {
+          writeAssistantScope(requested);
+        }
+      } else {
+        setProfileScope(null);
+      }
+
+      try {
+        setConsented(localStorage.getItem(consentKey(userId)) === "1");
+      } catch {
+        setConsented(false);
+      }
+      setReady(true);
     }
-    try {
-      setConsented(localStorage.getItem(consentKey(userId)) === "1");
-    } catch {
-      setConsented(false);
-    }
-    setReady(true);
+
+    void hydrate();
+    return () => {
+      cancelled = true;
+    };
   }, [people, userId, initialPersonId]);
 
   useEffect(() => {
