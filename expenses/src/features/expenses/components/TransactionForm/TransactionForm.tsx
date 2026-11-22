@@ -181,7 +181,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           placeholder={t('form.amountPlaceholder')}
           step={0.01}
           inputMode="decimal"
-          autoFocus={formType === 'add'}
           isValid={getFieldValidation('field_amount', formState)}
           ariaLabel={t('transactionForm.amount')}
         />

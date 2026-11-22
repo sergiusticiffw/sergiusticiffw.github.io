@@ -140,7 +140,6 @@ const IncomeForm: React.FC<IncomeFormProps> = ({
           step="0.01"
           min="0"
           inputMode="decimal"
-          autoFocus={formType === 'add'}
           isValid={getFieldValidation('field_amount', formState)}
           ariaLabel={t('incomeForm.amount')}
         />
