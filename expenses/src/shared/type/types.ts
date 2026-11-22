@@ -190,6 +190,8 @@ export interface ApiPaymentItem {
   fr?: string | number;
   title?: string;
   fisp?: string | number;
+  /** Early/extra payment flag (Supabase-only; Drupal falls back to title keywords). */
+  fiep?: string | number;
   [key: string]: unknown;
 }
 

@@ -318,6 +318,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               fnp: node.field_new_principal?.[0] || '',
               fpm: node.field_payment_method?.[0] || '',
               fisp: node.field_is_simulated_payment?.[0] || 0,
+              fiep: node.field_is_early_payment?.[0] || 0,
               cr: isAdd ? Date.now() : undefined,
             };
             await savePaymentLocally(loanId, paymentToSave, isAdd);
@@ -342,6 +343,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
               fnp: node.field_new_principal?.[0] || '',
               fpm: node.field_payment_method?.[0] || '',
               fisp: node.field_is_simulated_payment?.[0] || 0,
+              fiep: node.field_is_early_payment?.[0] || 0,
               cr: isAdd ? Date.now() : undefined,
             };
             await savePaymentOffline(
@@ -373,6 +375,7 @@ export const useFormSubmit = <T extends Record<string, any>>({
             fnp: node.field_new_principal?.[0] || '',
             fpm: node.field_payment_method?.[0] || '',
             fisp: node.field_is_simulated_payment?.[0] || 0,
+            fiep: node.field_is_early_payment?.[0] || 0,
             cr: isAdd ? Date.now() : undefined,
           };
           await savePaymentOffline(

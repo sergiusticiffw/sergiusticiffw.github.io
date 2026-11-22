@@ -95,6 +95,8 @@ const translations = {
     'simulate.outsideTerm': 'Choose a date within the loan term.',
     'simulate.unavailable':
       'This loan cannot be simulated because its terms are incomplete.',
+    'simulate.error':
+      'Could not run this simulation with the current amount or date. Try a larger amount or another date.',
     'ux.seriesActual': 'Actual',
     'ux.seriesProjected': 'Projected',
     'ux.leftToPay': 'Left to pay',
@@ -1314,6 +1316,8 @@ const translations = {
     'simulate.outsideTerm': 'Alege o dată în perioada creditului.',
     'simulate.unavailable':
       'Acest credit nu poate fi simulat, pentru că termenii sunt incompleți.',
+    'simulate.error':
+      'Nu s-a putut rula simularea cu suma sau data curentă. Încearcă o sumă mai mare sau altă dată.',
     'ux.seriesActual': 'Efectiv',
     'ux.seriesProjected': 'Estimat',
     'ux.leftToPay': 'Rămas de plată',

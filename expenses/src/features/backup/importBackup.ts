@@ -427,6 +427,7 @@ export async function importBackupToSupabase(
         fnp: asText(row.fnp),
         fpm: asText(row.fpm),
         fisp: asText(row.fisp || '0'),
+        fiep: asText(row.fiep || '0'),
         encrypted_payload:
           (row as { encrypted_payload?: string; payload?: string })
             .encrypted_payload ||

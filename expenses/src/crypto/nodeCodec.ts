@@ -87,6 +87,7 @@ const PAYMENT_FIELDS: Array<[string, string]> = [
   ['fnp', 'field_new_principal'],
   ['fpm', 'field_payment_method'],
   ['fisp', 'field_is_simulated_payment'],
+  ['fiep', 'field_is_early_payment'],
 ];
 
 const asText = (value: unknown) =>
@@ -125,7 +126,15 @@ const filled = (pairs: Array<[string, string]>, fields: Record<string, string>) 
   const body: Record<string, unknown> = {};
   for (const [short, drupal] of pairs) {
     const value = fields[short] || '';
-    body[drupal] = value === '' ? [] : [drupal === 'field_is_simulated_payment' ? Number(value) || 0 : value];
+    body[drupal] =
+      value === ''
+        ? []
+        : [
+            drupal === 'field_is_simulated_payment' ||
+            drupal === 'field_is_early_payment'
+              ? Number(value) || 0
+              : value,
+          ];
   }
   return body;
 };

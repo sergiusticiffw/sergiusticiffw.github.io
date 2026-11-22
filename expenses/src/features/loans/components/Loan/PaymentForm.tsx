@@ -4,6 +4,7 @@ import { useFormSubmit } from '@shared/hooks/useFormSubmit';
 import { useFormValidation } from '@shared/hooks/useFormValidation';
 import { useParams } from '@tanstack/react-router';
 import { FormField, Loader } from '@shared/components/Common';
+import { Switch } from '@shared/ui';
 import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
 import { localTodayString } from '@shared/utils/localDate';
 import { useLoan } from '@shared/context/loan';
@@ -66,6 +67,7 @@ const deriveIntent = (v: Record<string, unknown>): PaymentIntent => {
   ) {
     return 'rate_change';
   }
+  if (Boolean(Number(v.field_is_early_payment ?? 0))) return 'extra';
   if (isEarlyPaymentByTitle(String(v.title ?? ''))) return 'extra';
   return 'regular';
 };
@@ -94,6 +96,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     field_payment_method: '',
     field_loan_reference: id,
     field_is_simulated_payment: false,
+    field_is_early_payment: false,
     field_intent: 'regular' as PaymentIntent,
   };
 
@@ -110,6 +113,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     // Coerce to a real boolean (avoid truthy strings like "0")
     field_is_simulated_payment: Boolean(
       Number(values.field_is_simulated_payment ?? 0)
+    ),
+    field_is_early_payment: Boolean(
+      Number(values.field_is_early_payment ?? 0)
     ),
     field_intent: deriveIntent(values),
   };
@@ -210,7 +216,14 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         field_pay_installment: [state.field_pay_installment],
         field_pay_single_fee: [state.field_pay_single_fee],
         field_new_recurring_amount: [state.field_new_recurring_amount],
-        field_is_simulated_payment: [state.field_is_simulated_payment ? 1 : 0],
+        field_is_simulated_payment: [
+          state.field_intent === 'rate_change'
+            ? 0
+            : state.field_is_simulated_payment
+              ? 1
+              : 0,
+        ],
+        field_is_early_payment: [state.field_intent === 'extra' ? 1 : 0],
         field_loan_reference: [id],
       };
 
@@ -260,6 +273,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     };
     for (const name of ALL_INTENT_FIELDS) {
       if (!INTENT_FIELDS[next].includes(name)) nextState[name] = '';
+    }
+    // Rate / terms changes are schedule events, not payments — never simulated.
+    if (next === 'rate_change') {
+      nextState.field_is_simulated_payment = false;
     }
     if (next === 'extra' && !formState.title) {
       nextState.title = t('paymentForm.extraTitle');
@@ -436,37 +453,32 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         )}
 
         {intent !== 'rate_change' && (
-          <div className="flex items-center gap-3 py-3 px-0 [&_input]:w-5 [&_input]:h-5 [&_input]:min-w-5 [&_input]:min-h-5 [&_input]:accent-[var(--color-app-accent)] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:rounded [&_input]:border-white/20">
-            <input
-              type="checkbox"
-              id="field_is_extra"
-              checked={intent === 'extra'}
-              onChange={(e) => toggleExtra(e.target.checked)}
-            />
-            <label
-              htmlFor="field_is_extra"
-              className="text-sm text-white/90 cursor-pointer select-none m-0 flex-1"
-            >
-              {t('paymentForm.intentExtra')}
+          <div className="flex flex-col gap-2 py-2">
+            <label className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3">
+              <span className="min-w-0 text-sm text-white/90">
+                {t('paymentForm.intentExtra')}
+              </span>
+              <Switch
+                checked={intent === 'extra'}
+                onCheckedChange={toggleExtra}
+              />
+            </label>
+            <label className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3">
+              <span className="min-w-0 text-sm text-white/90">
+                {t('paymentForm.simulatedPayment')}
+              </span>
+              <Switch
+                checked={Boolean(formState.field_is_simulated_payment)}
+                onCheckedChange={(checked) =>
+                  setFormState({
+                    ...formState,
+                    field_is_simulated_payment: checked,
+                  })
+                }
+              />
             </label>
           </div>
         )}
-
-        <div className="flex items-center gap-3 py-3 px-0 [&_input]:w-5 [&_input]:h-5 [&_input]:min-w-5 [&_input]:min-h-5 [&_input]:accent-[var(--color-app-accent)] [&_input]:cursor-pointer [&_input]:shrink-0 [&_input]:rounded [&_input]:border-white/20">
-          <input
-            type="checkbox"
-            id="field_is_simulated_payment"
-            name="field_is_simulated_payment"
-            checked={formState.field_is_simulated_payment}
-            onChange={handleChange}
-          />
-          <label
-            htmlFor="field_is_simulated_payment"
-            className="text-sm text-white/90 cursor-pointer select-none m-0 flex-1"
-          >
-            {t('paymentForm.simulatedPayment')}
-          </label>
-        </div>
 
         {!hideSubmitButton && (
           <div className="sticky bottom-0 left-0 right-0 z-10 bg-[var(--color-app-bg)] pt-3">

@@ -151,6 +151,7 @@ const PAYMENT_DRUPAL_TO_SHORT: Array<[string, string]> = [
   ['field_new_principal', 'fnp'],
   ['field_payment_method', 'fpm'],
   ['field_is_simulated_payment', 'fisp'],
+  ['field_is_early_payment', 'fiep'],
 ];
 
 export const paymentRowFromBody = (
@@ -192,6 +193,7 @@ export const paymentFromRow = (row: any): PaymentRecord => {
     fnp: row.fnp,
     fpm: row.fpm,
     fisp: row.fisp,
+    fiep: row.fiep,
   };
   if (row.encrypted_payload) {
     payment.encrypted_payload = row.encrypted_payload;

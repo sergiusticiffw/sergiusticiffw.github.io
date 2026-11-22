@@ -22,6 +22,15 @@ import {
   writeResultFromDrupalNode,
 } from './mappers';
 
+/** Drop Supabase-only payment keys Drupal cannot accept (unknown field_* → 422). */
+const stripSupabaseOnlyPaymentFields = (body: unknown): unknown => {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return body;
+  const next = { ...(body as Record<string, unknown>) };
+  delete next.field_is_early_payment;
+  delete next.fiep;
+  return next;
+};
+
 export function createDrupalDataProvider(): DataProvider {
   let client: ApiClient | null = null;
   let hooks: DataProviderHooks = {};
@@ -132,12 +141,20 @@ export function createDrupalDataProvider(): DataProvider {
     },
 
     async createPayment(body: unknown) {
-      return asWrite(await ensureClient().post(API_ENDPOINTS.CREATE_NODE, body));
+      return asWrite(
+        await ensureClient().post(
+          API_ENDPOINTS.CREATE_NODE,
+          stripSupabaseOnlyPaymentFields(body)
+        )
+      );
     },
 
     async updatePayment(id: string, body: unknown) {
       return asWrite(
-        await ensureClient().patch(API_ENDPOINTS.EXPENSE(id), body)
+        await ensureClient().patch(
+          API_ENDPOINTS.EXPENSE(id),
+          stripSupabaseOnlyPaymentFields(body)
+        )
       );
     },
 

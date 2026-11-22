@@ -52,9 +52,11 @@ export function isEarlyPayment(
   return Boolean(event.isEarlyPayment) || isEarlyPaymentByTitle(event.title);
 }
 
-/** Whether an API payment item is early (by title). Pure. */
+/** Whether an API payment item is early (flag or title). Pure. */
 export function isEarlyPaymentFromApiItem(item: ApiPaymentItem): boolean {
-  return isEarlyPaymentByTitle(item.title);
+  return (
+    Number(item.fiep ?? 0) === 1 || isEarlyPaymentByTitle(item.title)
+  );
 }
 
 /** Build PaydownEvent[] from API payment items. Pure. */

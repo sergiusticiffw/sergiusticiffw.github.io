@@ -834,9 +834,17 @@ class PaydownCalculator {
     }
 
     if (reduction < 0) {
-      throw new Error(
-        `Exception: installment ${this.round(installmentOrPrincipal)} is too small to cover the interest ${this.round(accruedInterest)}: ${startDate} - ${endDate}`
-      );
+      const isSimulated = Boolean(this.eventArray[index].isSimulatedPayment);
+      // Hypothetical extras may be smaller than accrued interest; apply all to interest.
+      if (isEarly && isSimulated) {
+        paymentInterest = installmentOrPrincipal;
+        reduction = 0;
+        accruedInterest = installmentOrPrincipal;
+      } else {
+        throw new Error(
+          `Exception: installment ${this.round(installmentOrPrincipal)} is too small to cover the interest ${this.round(accruedInterest)}: ${startDate} - ${endDate}`
+        );
+      }
     }
 
     this.sumOfInterests += accruedInterest;

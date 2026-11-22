@@ -7,7 +7,7 @@ import {
   getLoanSimulator,
   nextRegular,
 } from '../../../../ai/loanScenarios';
-import type { ExtraStrategy } from '../../../../ai/loanScenarios';
+import type { ExtraStrategy, ScenarioResult } from '../../../../ai/loanScenarios';
 
 type LoanSimulateDrawerProps = {
   show: boolean;
@@ -49,6 +49,34 @@ const LoanSimulateDrawer = ({
   const [dateInput, setDateInput] = useState('');
   const [strategy, setStrategy] = useState<ExtraStrategy>('reduce_term');
 
+  const date = dateInput || simulator?.defaultDate() || '';
+  const amount = parseFloat(amountInput.replace(',', '.'));
+  const hasAmount = Number.isFinite(amount) && amount > 0;
+  const dateInTerm = Boolean(
+    simulator && date >= simulator.startIso && date <= simulator.endIso
+  );
+  const canSimulate = Boolean(simulator && hasAmount && dateInTerm);
+
+  const run = useMemo((): {
+    baseline: ScenarioResult | null;
+    scenario: ScenarioResult | null;
+    error: string | null;
+  } => {
+    if (!simulator) {
+      return { baseline: null, scenario: null, error: null };
+    }
+    try {
+      const baseline = simulator.baseline(true);
+      const scenario = canSimulate
+        ? simulator.runExtra({ date, amount }, strategy)
+        : null;
+      return { baseline, scenario, error: null };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { baseline: null, scenario: null, error: message };
+    }
+  }, [simulator, canSimulate, date, amount, strategy]);
+
   if (!simulator) {
     return (
       <VaulDrawer show={show} onClose={onClose} title={t('simulate.title')}>
@@ -57,24 +85,21 @@ const LoanSimulateDrawer = ({
     );
   }
 
-  const date = dateInput || simulator.defaultDate();
-  const amount = parseFloat(amountInput.replace(',', '.'));
-  const hasAmount = Number.isFinite(amount) && amount > 0;
-  const dateInTerm = date >= simulator.startIso && date <= simulator.endIso;
-  const canSimulate = hasAmount && dateInTerm;
-
-  const baseline = simulator.baseline(true);
-  const scenario = canSimulate
-    ? simulator.runExtra({ date, amount }, strategy)
+  const { baseline, scenario, error } = run;
+  const baseNext = baseline ? nextRegular(baseline)?.installment ?? null : null;
+  const scenarioNext = scenario
+    ? nextRegular(scenario)?.installment ?? null
     : null;
+  const interestSaved =
+    baseline && scenario
+      ? Math.max(0, baseline.totalInterest - scenario.totalInterest)
+      : 0;
 
-  const baseNext = nextRegular(baseline)?.installment ?? null;
-  const scenarioNext = scenario ? nextRegular(scenario)?.installment ?? null : null;
-  const interestSaved = scenario
-    ? Math.max(0, baseline.totalInterest - scenario.totalInterest)
-    : 0;
-
-  const strategyOptions: { value: ExtraStrategy; label: string; desc: string }[] = [
+  const strategyOptions: {
+    value: ExtraStrategy;
+    label: string;
+    desc: string;
+  }[] = [
     {
       value: 'reduce_term',
       label: t('simulate.shorterTerm'),
@@ -118,7 +143,11 @@ const LoanSimulateDrawer = ({
           />
         </div>
 
-        <div role="group" aria-label={t('simulate.strategy')} className="grid grid-cols-2 gap-2">
+        <div
+          role="group"
+          aria-label={t('simulate.strategy')}
+          className="grid grid-cols-2 gap-2"
+        >
           {strategyOptions.map((option) => {
             const active = strategy === option.value;
             return (
@@ -140,15 +169,22 @@ const LoanSimulateDrawer = ({
           })}
         </div>
 
-        {!canSimulate && (
-          <p className="m-0 text-sm text-app-muted" role={amountInput && !dateInTerm ? 'alert' : undefined}>
+        {error ? (
+          <p className="m-0 text-sm text-rose-300" role="alert">
+            {t('simulate.error')}
+          </p>
+        ) : !canSimulate ? (
+          <p
+            className="m-0 text-sm text-app-muted"
+            role={amountInput && !dateInTerm ? 'alert' : undefined}
+          >
             {amountInput && !dateInTerm
               ? t('simulate.outsideTerm')
               : t('simulate.enterAmount')}
           </p>
-        )}
+        ) : null}
 
-        {scenario && (
+        {baseline && scenario && (
           <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 gap-y-3 text-sm">
               <span />
@@ -159,7 +195,9 @@ const LoanSimulateDrawer = ({
                 {t('simulate.withExtra')}
               </span>
 
-              <span className="text-app-secondary">{t('simulate.totalInterest')}</span>
+              <span className="text-app-secondary">
+                {t('simulate.totalInterest')}
+              </span>
               <span className="text-right tabular-nums text-app-primary">
                 {formatNumber(baseline.totalInterest)}
               </span>
@@ -167,7 +205,9 @@ const LoanSimulateDrawer = ({
                 {formatNumber(scenario.totalInterest)}
               </span>
 
-              <span className="text-app-secondary">{t('simulate.payoffDate')}</span>
+              <span className="text-app-secondary">
+                {t('simulate.payoffDate')}
+              </span>
               <span className="text-right tabular-nums text-app-primary">
                 {formatIsoDate(baseline.payoffDate, locale)}
               </span>
@@ -175,7 +215,9 @@ const LoanSimulateDrawer = ({
                 {formatIsoDate(scenario.payoffDate, locale)}
               </span>
 
-              <span className="text-app-secondary">{t('simulate.nextInstallment')}</span>
+              <span className="text-app-secondary">
+                {t('simulate.nextInstallment')}
+              </span>
               <span className="text-right tabular-nums text-app-primary">
                 {baseNext != null ? formatNumber(baseNext) : '-'}
               </span>
@@ -185,7 +227,9 @@ const LoanSimulateDrawer = ({
             </div>
 
             <div className="mt-4 border-t border-white/10 pt-3 text-sm">
-              <span className="text-app-secondary">{t('simulate.interestSaved')}: </span>
+              <span className="text-app-secondary">
+                {t('simulate.interestSaved')}:{' '}
+              </span>
               <strong className="tabular-nums text-[var(--color-app-accent)]">
                 {formatNumber(interestSaved)}
               </strong>

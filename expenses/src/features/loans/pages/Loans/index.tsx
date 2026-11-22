@@ -198,7 +198,7 @@ const Loans: FC = () => {
         paymentItems
           .map(
             (p) =>
-              `${p.id}|${p.cr ?? ''}|${p.fdt ?? ''}|${p.fpi ?? ''}|${p.fpsf ?? ''}|${p.fr ?? ''}|${p.fnp ?? ''}|${p.fpm ?? ''}|${p.fisp ?? ''}`
+              `${p.id}|${p.cr ?? ''}|${p.fdt ?? ''}|${p.fpi ?? ''}|${p.fpsf ?? ''}|${p.fr ?? ''}|${p.fnp ?? ''}|${p.fpm ?? ''}|${p.fisp ?? ''}|${p.fiep ?? ''}`
           )
           .join('~')
       );

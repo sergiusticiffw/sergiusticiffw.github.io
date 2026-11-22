@@ -75,6 +75,7 @@ const PaymentDetails = (props) => {
     field_new_principal: undefined as number | undefined,
     field_payment_method: '',
     field_is_simulated_payment: false,
+    field_is_early_payment: false,
   });
 
   const handleEdit = (nid: string) => {
@@ -90,6 +91,7 @@ const PaymentDetails = (props) => {
       field_new_principal: item.fnp ? Number(item.fnp) : undefined,
       field_payment_method: item.fpm || '',
       field_is_simulated_payment: Boolean(Number(item.fisp)),
+      field_is_early_payment: Boolean(Number(item.fiep)),
     });
     setShowEditModal(true);
   };
