@@ -488,7 +488,12 @@ export function EditRecordButton({
             >
               Renunță
             </Button>
-            <Button type="submit" className="h-11 sm:w-fit" disabled={pending !== null}>
+            <Button
+              type="submit"
+              className="h-11 sm:w-fit"
+              loading={pending === "save"}
+              disabled={pending !== null}
+            >
               {pending === "save" ? "Se salvează…" : "Salvează"}
             </Button>
           </div>

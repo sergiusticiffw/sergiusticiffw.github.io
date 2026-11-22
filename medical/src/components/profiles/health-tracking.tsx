@@ -288,6 +288,22 @@ export function HealthTracking({
     }
   }
 
+  // Avoid relying on form="" + type="submit" (Base UI defaults to type=button).
+  function saveFromForm() {
+    if (pending) {
+      return;
+    }
+    const form = document.getElementById(formId);
+    if (!(form instanceof HTMLFormElement)) {
+      return;
+    }
+    if (!form.reportValidity()) {
+      return;
+    }
+    setPending(true);
+    void submit(new FormData(form));
+  }
+
   function closeList() {
     if (pending) {
       return;
@@ -324,6 +340,7 @@ export function HealthTracking({
 
   async function submit(formData: FormData) {
     if (!adding) {
+      setPending(false);
       return;
     }
     formData.set("profileId", profileId);
@@ -340,6 +357,7 @@ export function HealthTracking({
       );
     }
     const kind = adding;
+    // pending may already be true from the Save click; run() keeps it set.
     const saved = await run(() =>
       editingId ? updateHealthEntry(kind, formData) : addHealthEntry(kind, formData),
     );
@@ -724,7 +742,7 @@ export function HealthTracking({
             <Button type="button" variant="outline" disabled={pending} onClick={close}>
               Renunță
             </Button>
-            <Button type="submit" form={formId} loading={pending}>
+            <Button type="button" loading={pending} onClick={saveFromForm}>
               {pending ? "Se salvează…" : "Salvează"}
             </Button>
           </>
@@ -734,8 +752,14 @@ export function HealthTracking({
           <form
             key={`${adding}-${editingId ?? "new"}`}
             id={formId}
-            action={submit}
             className="flex flex-col gap-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (pending) {
+                return;
+              }
+              void submit(new FormData(event.currentTarget));
+            }}
           >
             {error ? (
               <p role="alert" className="text-sm text-destructive">

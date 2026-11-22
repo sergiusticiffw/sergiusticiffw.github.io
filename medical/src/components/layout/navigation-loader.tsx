@@ -80,7 +80,7 @@ export function NavigationLoader() {
         <div className="h-full w-1/3 animate-[nav-progress_1s_ease-in-out_infinite] rounded-full bg-primary" />
       </div>
       <div className="flex h-full flex-col items-center justify-center gap-3 bg-background/55 backdrop-blur-[1px]">
-        <Spinner />
+        <Spinner className="size-8 text-primary" />
         <p className="text-sm text-muted-foreground">Se încarcă…</p>
       </div>
     </div>

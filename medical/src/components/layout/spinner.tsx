@@ -1,7 +1,8 @@
+/** Inherits `currentColor` so it stays visible on primary buttons too. */
 export function Spinner({ className = "size-8" }: { className?: string }) {
   return (
     <svg
-      className={`animate-spin text-primary ${className}`}
+      className={`animate-spin ${className}`}
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden

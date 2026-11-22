@@ -71,7 +71,7 @@ export function NewPasswordForm() {
       <Button
         type="submit"
         className="h-11 w-full"
-        disabled={form.formState.isSubmitting}
+        loading={form.formState.isSubmitting}
       >
         {form.formState.isSubmitting ? "Se salvează…" : "Salvează parola"}
       </Button>

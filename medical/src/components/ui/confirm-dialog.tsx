@@ -112,7 +112,7 @@ export function ConfirmDialog({
             type="button"
             variant="destructive"
             className="h-11"
-            disabled={pending}
+            loading={pending}
             onClick={onConfirm}
           >
             {pending ? pendingLabel : confirmLabel}

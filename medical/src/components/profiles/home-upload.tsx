@@ -41,6 +41,7 @@ export type UploadPerson = {
 export type HomeUploadSaveAction = {
   label: string;
   disabled: boolean;
+  loading: boolean;
   onSave: () => void;
 };
 
@@ -371,6 +372,7 @@ export function HomeUpload({
     onSaveActionChange({
       label,
       disabled: pending !== null || !driveConnected,
+      loading: pending === "save",
       onSave: () => {
         saveRef.current();
       },
@@ -545,6 +547,7 @@ export function HomeUpload({
             <Button
               type="button"
               className="h-11"
+              loading={pending === "save"}
               disabled={pending !== null || !driveConnected}
               onClick={() => {
                 void onSave();
@@ -652,6 +655,7 @@ export function HomeUpload({
         <Button
           type="button"
           className="h-11 sm:w-fit"
+          loading={pending === "prepare" || pending === "detect"}
           disabled={
             pending !== null || files.length === 0 || !driveConnected
           }

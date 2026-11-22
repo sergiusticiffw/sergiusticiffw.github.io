@@ -58,7 +58,7 @@ export function DeleteRecordButton({
         type="button"
         variant="destructive"
         className={compact ? "h-7 px-2 text-xs sm:w-fit" : "h-11 w-full"}
-        disabled={pending}
+        loading={pending}
         onClick={() => {
           setError(null);
           setOpen(true);

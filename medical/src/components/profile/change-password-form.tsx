@@ -81,7 +81,7 @@ export function ChangePasswordForm() {
         type="submit"
         variant="outline"
         className="h-11 w-fit"
-        disabled={form.formState.isSubmitting}
+        loading={form.formState.isSubmitting}
       >
         {form.formState.isSubmitting ? "Se salvează…" : "Schimbă parola"}
       </Button>

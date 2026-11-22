@@ -247,7 +247,7 @@ function RenameFamily({ name }: { name: string }) {
               type="submit"
               form="rename-family-form"
               className="h-11 sm:w-fit"
-              disabled={pending}
+              loading={pending}
             >
               {pending ? "Se salvează…" : "Salvează"}
             </Button>
@@ -311,7 +311,7 @@ function InviteDialog({
             type="submit"
             form="invite-member-form"
             className="h-11 sm:w-fit"
-            disabled={pending}
+            loading={pending}
           >
             {pending ? "Se invită…" : "Invită"}
           </Button>
@@ -406,7 +406,7 @@ function ProfileAccessForm({
               type="submit"
               form={`access-form-${profile.id}`}
               className="h-11 sm:w-fit"
-              disabled={pending}
+              loading={pending}
             >
               {pending ? "Se salvează…" : "Salvează accesul"}
             </Button>
@@ -498,6 +498,7 @@ function MemberRow({ member }: { member: FamilyMember }) {
               type="submit"
               form={`member-role-${member.user_id}`}
               className="h-11 sm:w-fit"
+              loading={rolePending}
               disabled={rolePending || removePending}
             >
               {rolePending ? "Se salvează…" : "Salvează rolul"}
@@ -575,7 +576,7 @@ function InviteRow({ invite }: { invite: FamilyInvite }) {
       <p className="min-w-0 truncate text-sm">
         {invite.email} · {roleLabel[invite.role]}
       </p>
-      <Button type="submit" variant="outline" className="h-8 text-xs" disabled={pending}>
+      <Button type="submit" variant="outline" className="h-8 text-xs" loading={pending}>
         {pending ? "Se anulează…" : "Anulează"}
       </Button>
       <Notice state={state} />

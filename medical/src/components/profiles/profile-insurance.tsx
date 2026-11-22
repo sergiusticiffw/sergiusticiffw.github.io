@@ -631,7 +631,7 @@ export function ProfileInsuranceSection({
               type="submit"
               form={addFormId}
               className="h-11 sm:w-fit"
-              disabled={formPending}
+              loading={formPending}
             >
               {formPending ? "Se salvează…" : "Salvează"}
             </Button>
@@ -669,7 +669,7 @@ export function ProfileInsuranceSection({
               type="submit"
               form={editFormId}
               className="h-11 sm:w-fit"
-              disabled={formPending}
+              loading={formPending}
             >
               {formPending ? "Se salvează…" : "Salvează"}
             </Button>

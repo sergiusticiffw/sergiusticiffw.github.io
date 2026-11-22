@@ -253,7 +253,7 @@ export function ProfileDetail({
                 type="submit"
                 form={editFormId}
                 className="h-11 sm:w-fit"
-                disabled={editPending}
+                loading={editPending}
               >
                 {editPending ? "Se salvează…" : "Salvează"}
               </Button>
@@ -360,7 +360,7 @@ export function ProfileDetail({
                 <Button
                   type="button"
                   variant="destructive"
-                  disabled={pending}
+                  loading={pending}
                   onClick={() => {
                     setError(null);
                     setConfirmingDelete(true);

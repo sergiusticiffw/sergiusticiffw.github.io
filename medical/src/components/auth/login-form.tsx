@@ -90,6 +90,7 @@ export function LoginForm() {
         type="button"
         variant="outline"
         className="h-11 w-full"
+        loading={passkeyPending}
         disabled={busy}
         onClick={() => {
           void onPasskeyLogin();
@@ -140,7 +141,12 @@ export function LoginForm() {
             </p>
           ) : null}
         </div>
-        <Button type="submit" className="h-11 w-full" disabled={busy}>
+        <Button
+          type="submit"
+          className="h-11 w-full"
+          loading={form.formState.isSubmitting}
+          disabled={busy}
+        >
           {form.formState.isSubmitting ? "Se verifică…" : "Intră în cont"}
         </Button>
         <Link

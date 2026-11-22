@@ -22,7 +22,7 @@ export function LogoutButton({
       type="button"
       variant="outline"
       className={className ?? "h-9 px-3 sm:h-11 sm:px-4"}
-      disabled={pending}
+      loading={pending}
       onClick={() => {
         setPending(true);
         clearAssistantDeviceData(userId);

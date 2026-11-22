@@ -249,6 +249,7 @@ export function SecuritySettings({
         <Button
           type="button"
           className="h-11 w-full sm:w-fit"
+          loading={passkeyPending}
           disabled={pending || passkeyLoading}
           onClick={() => {
             void onRegisterPasskey();
@@ -282,6 +283,7 @@ export function SecuritySettings({
           <Button
             type="button"
             className="h-11 w-full sm:w-fit"
+            loading={lockPending}
             disabled={pending || !lockSupported || !lockAvailable}
             onClick={() => {
               void onEnableLock();

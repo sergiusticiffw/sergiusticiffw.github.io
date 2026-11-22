@@ -137,7 +137,7 @@ export function OfflineSettings({ userId }: { userId: string }) {
         ) : (
           <Button
             type="button"
-            disabled={pending}
+            loading={pending}
             aria-describedby={statusId}
             onClick={() => void turnOn()}
           >

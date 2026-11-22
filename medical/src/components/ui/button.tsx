@@ -50,6 +50,7 @@ function Button({
   size = "default",
   loading = false,
   disabled,
+  type = "button",
   children,
   ...props
 }: ButtonPrimitive.Props &
@@ -63,6 +64,8 @@ function Button({
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...props}
+      // Base UI defaults native buttons to type="button"; keep caller type.
+      type={type}
     >
       {loading ? <Spinner className="size-4" /> : null}
       {children}

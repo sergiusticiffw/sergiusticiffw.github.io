@@ -188,7 +188,7 @@ export function BiometricLockGate({
                 <Button
                   type="button"
                   className="h-11 w-full"
-                  disabled={pending}
+                  loading={pending}
                   onClick={() => {
                     void unlockWithBiometric();
                   }}
@@ -237,7 +237,7 @@ export function BiometricLockGate({
                     required
                   />
                 </div>
-                <Button type="submit" className="h-11 w-full" disabled={pending}>
+                <Button type="submit" className="h-11 w-full" loading={pending}>
                   {pending ? "Se verifică…" : "Deblochează cu parola"}
                 </Button>
                 <Button

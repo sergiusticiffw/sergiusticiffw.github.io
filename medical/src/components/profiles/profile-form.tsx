@@ -268,7 +268,7 @@ export function ProfileForm({
           <Button
             type="submit"
             className="h-11 sm:min-w-36"
-            disabled={form.formState.isSubmitting}
+            loading={form.formState.isSubmitting}
           >
             {form.formState.isSubmitting ? "Se salvează…" : submitLabel}
           </Button>
@@ -324,7 +324,7 @@ export function AddProfileButton({
               type="submit"
               form={formId}
               className="h-11 sm:w-fit"
-              disabled={pending}
+              loading={pending}
             >
               {pending ? "Se salvează…" : "Adaugă persoană"}
             </Button>

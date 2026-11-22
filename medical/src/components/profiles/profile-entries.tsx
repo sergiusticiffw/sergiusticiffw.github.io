@@ -132,9 +132,10 @@ function EntryForm({
     formData.delete("file");
     setFileError(null);
     setState(initialResult);
+    // Show loader immediately — footer button is outside this form.
+    setPending(true);
 
     if (chosen.length === 0) {
-      setPending(true);
       try {
         const result = await action(initialResult, formData);
         setState(result);
@@ -176,14 +177,15 @@ function EntryForm({
     });
     if (!date) {
       setFileError("Data este obligatorie.");
+      setPending(false);
       return;
     }
     if (!title) {
       setFileError("Titlul este obligatoriu.");
+      setPending(false);
       return;
     }
 
-    setPending(true);
     let primaryId: string | null = null;
     try {
       // Shrink photos so each request stays under the hosting body limit.
@@ -247,10 +249,16 @@ function EntryForm({
     <form
       id={formId}
       ref={formRef}
-      action={submit}
       method="post"
       encType="multipart/form-data"
       className="flex flex-col gap-3"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (saving) {
+          return;
+        }
+        void submit(new FormData(event.currentTarget));
+      }}
     >
       <input type="hidden" name="profileId" value={profileId} />
       {fileError ?? state.error ? (
@@ -261,6 +269,20 @@ function EntryForm({
       {children}
     </form>
   );
+}
+
+function submitFormById(formId: string, pending: boolean) {
+  if (pending) {
+    return;
+  }
+  const form = document.getElementById(formId);
+  if (!(form instanceof HTMLFormElement)) {
+    return;
+  }
+  if (!form.reportValidity()) {
+    return;
+  }
+  form.requestSubmit();
 }
 
 export function ProfileEntries({
@@ -337,10 +359,11 @@ export function ProfileEntries({
                 Renunță
               </Button>
               <Button
-                type="submit"
-                form={entryFormId}
+                type="button"
                 className="h-11 sm:w-fit"
+                loading={entryPending}
                 disabled={entryPending}
+                onClick={() => submitFormById(entryFormId, entryPending)}
               >
                 {entryPending ? "Se salvează…" : "Salvează"}
               </Button>
@@ -359,6 +382,7 @@ export function ProfileEntries({
               <Button
                 type="button"
                 className="h-11 sm:w-fit"
+                loading={saveAction.loading}
                 disabled={saveAction.disabled}
                 onClick={saveAction.onSave}
               >
