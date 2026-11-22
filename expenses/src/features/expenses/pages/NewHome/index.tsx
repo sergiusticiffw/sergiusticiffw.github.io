@@ -594,19 +594,12 @@ const NewHome = () => {
               <StatCard
                 value={formatNumber(displayIncome)}
                 label={t('common.income')}
-                tone={displayIncome > 0 ? 'positive' : undefined}
               />
               <StatCard
                 value={`${displayProfit > 0 ? '+' : ''}${formatNumber(displayProfit)}`}
                 label={t('ux.net')}
                 labelHidden
-                tone={
-                  displayProfit > 0
-                    ? 'positive'
-                    : displayProfit < 0
-                      ? 'negative'
-                      : undefined
-                }
+                tone={displayProfit < 0 ? 'negative' : undefined}
                 hint={
                   displayIncome > 0
                     ? `${t('ux.savingsRate')} ${Math.round((displayProfit / displayIncome) * 100)}%`
