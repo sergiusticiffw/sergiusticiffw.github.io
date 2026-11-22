@@ -64,6 +64,18 @@ const FamilyGoalsProgress: React.FC<FamilyGoalsProgressProps> = ({
             const limit = goal.monthly_limit;
             const ratio = limit > 0 ? Math.min(spent / limit, 1.25) : 0;
             const over = spent > limit + 0.005;
+            const pctStatus =
+              limit > 0
+                ? over
+                  ? Math.round(((spent - limit) / limit) * 100)
+                  : Math.max(0, Math.round(((limit - spent) / limit) * 100))
+                : null;
+            const statusText =
+              pctStatus === null
+                ? null
+                : over
+                  ? t('family.goalPctOver').replace('{pct}', String(pctStatus))
+                  : t('family.goalPctLeft').replace('{pct}', String(pctStatus));
             const label =
               categories.find((c) => c.value === goal.category_id)?.label ||
               goal.category_id;
@@ -72,18 +84,31 @@ const FamilyGoalsProgress: React.FC<FamilyGoalsProgressProps> = ({
                 key={goal.category_id}
                 className="border-b border-white/5 px-4 py-3 last:border-b-0"
               >
-                <div className="mb-1.5 flex items-center justify-between gap-2 text-[0.95rem]">
+                <div className="mb-1.5 flex items-start justify-between gap-2 text-[0.95rem]">
                   <span className="min-w-0 truncate font-medium text-white">
                     {label}
                   </span>
-                  <span
-                    className={
-                      over
-                        ? 'tabular-nums text-rose-300'
-                        : 'tabular-nums text-white/70'
-                    }
-                  >
-                    {formatNumber(spent)} / {formatNumber(limit)} {currency}
+                  <span className="shrink-0 text-right">
+                    <span
+                      className={
+                        over
+                          ? 'block tabular-nums text-rose-300'
+                          : 'block tabular-nums text-white/70'
+                      }
+                    >
+                      {formatNumber(spent)} / {formatNumber(limit)} {currency}
+                    </span>
+                    {statusText ? (
+                      <span
+                        className={
+                          over
+                            ? 'mt-0.5 block text-xs tabular-nums text-rose-300/90'
+                            : 'mt-0.5 block text-xs tabular-nums text-white/50'
+                        }
+                      >
+                        {statusText}
+                      </span>
+                    ) : null}
                   </span>
                 </div>
                 <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
