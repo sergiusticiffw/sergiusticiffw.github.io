@@ -11,6 +11,8 @@ import {
   setGoalsEnabled,
   useNetWorthEnabled,
   setNetWorthEnabled,
+  useLoansEnabled,
+  setLoansEnabled,
   useOnboardingComplete,
   setOnboardingComplete,
 } from '@stores/settingsStore';
@@ -26,6 +28,7 @@ import {
   FiDroplet,
   FiShield,
   FiPieChart,
+  FiCreditCard,
   FiDatabase,
   FiDownload,
   FiUpload,
@@ -62,6 +65,7 @@ import {
 import {
   persistGoalsToSupabase,
   persistLanguageToSupabase,
+  persistLoansToSupabase,
   persistNetWorthToSupabase,
 } from '../../../features/profile/preferencesSync';
 import {
@@ -99,10 +103,12 @@ const Profile = () => {
   const currentTheme = useSettingsTheme();
   const goalsEnabled = useGoalsEnabled();
   const netWorthEnabled = useNetWorthEnabled();
+  const loansEnabled = useLoansEnabled();
   const onboardingComplete = useOnboardingComplete();
   const apiClient = useApiClient();
   const [goalsSyncing, setGoalsSyncing] = useState(false);
   const [netWorthSyncing, setNetWorthSyncing] = useState(false);
+  const [loansSyncing, setLoansSyncing] = useState(false);
   const [backupBusy, setBackupBusy] = useState(false);
   const [backupList, setBackupList] = useState<DriveBackupListItem[]>([]);
   const [backupListLoading, setBackupListLoading] = useState(false);
@@ -181,6 +187,32 @@ const Profile = () => {
       showNotification(t('goals.syncError'), notificationType.ERROR);
     } finally {
       setNetWorthSyncing(false);
+    }
+  };
+
+  const handleLoansEnabledChange = async (checked: boolean) => {
+    setLoansEnabled(checked);
+
+    if (!navigator.onLine) {
+      showNotification(t('goals.savedOffline'), notificationType.SUCCESS);
+      return;
+    }
+    if (getDataProviderKind() !== 'supabase') {
+      showNotification(t('goals.localOnly'), notificationType.SUCCESS);
+      return;
+    }
+
+    setLoansSyncing(true);
+    try {
+      const ok = await persistLoansToSupabase({ enabled: checked });
+      showNotification(
+        ok ? t('notification.profileUpdated') : t('goals.syncErrorDrive'),
+        ok ? notificationType.SUCCESS : notificationType.ERROR
+      );
+    } catch {
+      showNotification(t('goals.syncError'), notificationType.ERROR);
+    } finally {
+      setLoansSyncing(false);
     }
   };
 
@@ -764,6 +796,43 @@ const Profile = () => {
 
         {/* Chart visibility and order */}
         <ChartsCustomizer />
+
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
+          <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">
+            <FiCreditCard />
+            <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
+              {t('profile.loans')}
+            </h3>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <span
+                id="loans-enabled-label"
+                className="block text-body text-app-secondary"
+              >
+                {t('profile.loansEnable')}
+              </span>
+              <p className="m-0 mt-1 text-xs text-app-muted">
+                {t('profile.loansEnableHint')}
+              </p>
+            </div>
+            <Switch
+              checked={loansEnabled}
+              onCheckedChange={handleLoansEnabledChange}
+              disabled={loansSyncing}
+              aria-labelledby="loans-enabled-label"
+            />
+          </div>
+          {loansEnabled && (
+            <button
+              type="button"
+              className="mt-3 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm font-medium text-app-secondary hover:bg-white/[0.07] hover:text-app-primary cursor-pointer"
+              onClick={() => navigate({ to: '/expenses/loans' })}
+            >
+              {t('profile.loansOpen')}
+            </button>
+          )}
+        </div>
 
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl py-5 px-5 md:py-4 md:px-4 md:rounded-[10px] transition-colors active:border-white/10">
           <div className="flex items-center gap-2.5 mb-4 md:mb-3.5 [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:text-[var(--color-app-accent)]">

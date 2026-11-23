@@ -222,4 +222,6 @@ export interface SettingsState {
   goalsEnabled: boolean;
   /** Net worth feature. Off by default. */
   netWorthEnabled: boolean;
+  /** Loans feature. Off by default. */
+  loansEnabled: boolean;
 }

@@ -47,6 +47,7 @@ export type ProfilePreferences = {
   onboardingComplete?: boolean;
   goalsEnabled?: boolean;
   netWorthEnabled?: boolean;
+  loansEnabled?: boolean;
   visibleCharts?: string[];
   customChartsEnabled?: boolean;
   aiLanguage?: string;

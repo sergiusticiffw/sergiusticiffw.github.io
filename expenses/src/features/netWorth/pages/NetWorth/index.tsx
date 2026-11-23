@@ -13,7 +13,11 @@ import {
 } from 'react-icons/fi';
 import { useLoan } from '@stores/loanStore';
 import { useEmergencyFund } from '@features/goals/store';
-import { useGoalsEnabled, useSettingsCurrency } from '@stores/settingsStore';
+import {
+  useGoalsEnabled,
+  useLoansEnabled,
+  useSettingsCurrency,
+} from '@stores/settingsStore';
 import { fetchLoans as fetchLoansService } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useLocalization } from '@shared/context/localization';
@@ -74,6 +78,7 @@ const NetWorth = () => {
   const showNotification = useNotification();
   const currency = useSettingsCurrency();
   const goalsEnabled = useGoalsEnabled();
+  const loansEnabled = useLoansEnabled();
   const fund = useEmergencyFund();
   const assetsState = useNetWorthAssets();
   const { data, dataDispatch } = useLoan();
@@ -489,27 +494,31 @@ const NetWorth = () => {
                         <span className="text-sm font-semibold tabular-nums text-app-secondary">
                           {formatNumber(loan.remaining)}
                         </span>
-                        <Link
-                          to="/expenses/loan/$id"
-                          params={{ id: String(loan.id) }}
-                          className="p-1.5 text-app-muted hover:text-app-primary"
-                          aria-label={t('netWorth.openLoan')}
-                        >
-                          <FiPieChart size={15} />
-                        </Link>
+                        {loansEnabled && (
+                          <Link
+                            to="/expenses/loan/$id"
+                            params={{ id: String(loan.id) }}
+                            className="p-1.5 text-app-muted hover:text-app-primary"
+                            aria-label={t('netWorth.openLoan')}
+                          >
+                            <FiPieChart size={15} />
+                          </Link>
+                        )}
                       </div>
                     </li>
                   ))}
               </ul>
             )}
-            <div className="px-4 pb-3">
-              <Link
-                to="/expenses/loans"
-                className="text-xs font-medium text-[var(--color-app-accent)] no-underline hover:underline"
-              >
-                {t('netWorth.openLoans')}
-              </Link>
-            </div>
+            {loansEnabled && (
+              <div className="px-4 pb-3">
+                <Link
+                  to="/expenses/loans"
+                  className="text-xs font-medium text-[var(--color-app-accent)] no-underline hover:underline"
+                >
+                  {t('netWorth.openLoans')}
+                </Link>
+              </div>
+            )}
           </section>
         </div>
       )}

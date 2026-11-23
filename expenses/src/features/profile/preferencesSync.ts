@@ -9,6 +9,7 @@ import { getSession } from '../../crypto/encryptionState';
 import {
   hydrateSettings,
   setGoalsEnabled,
+  setLoansEnabled,
   setNetWorthEnabled,
   setOnboardingComplete,
   setSettingsTheme,
@@ -75,6 +76,7 @@ export const readLocalPreferences = (): ProfilePreferences => {
     // onboardingComplete is never taken from local defaults — see flushPreferencesPush.
     goalsEnabled: !!settingsStore.state.goalsEnabled,
     netWorthEnabled: !!settingsStore.state.netWorthEnabled,
+    loansEnabled: !!settingsStore.state.loansEnabled,
     visibleCharts: readStoredVisibleCharts(),
     customChartsEnabled: readCustomChartsEnabled(),
     aiLanguage: getAiLanguage(),
@@ -111,6 +113,9 @@ export const applyPreferencesLocally = (
     }
     if (typeof p.netWorthEnabled === 'boolean') {
       setNetWorthEnabled(p.netWorthEnabled);
+    }
+    if (typeof p.loansEnabled === 'boolean') {
+      setLoansEnabled(p.loansEnabled);
     }
     if (Array.isArray(p.visibleCharts)) {
       writeStoredVisibleCharts(p.visibleCharts.filter((c) => typeof c === 'string'));
@@ -384,6 +389,29 @@ export const persistChartsToSupabase = async (options?: {
         ? options.customChartsEnabled
         : readCustomChartsEnabled(),
   });
+  return flushPreferencesPush();
+};
+
+/**
+ * Persist Loans enabled flag to Supabase profiles.preferences immediately.
+ * Returns false when offline / not Supabase / not signed in / push failed.
+ * No-op on Drupal (caller should toast local-only).
+ */
+export const persistLoansToSupabase = async (options?: {
+  enabled?: boolean;
+}): Promise<boolean> => {
+  if (getDataProviderKind() !== 'supabase') return false;
+  if (!navigator.onLine) return false;
+  const session = getSession();
+  const token = getStoredToken();
+  if (!session?.uid || !token || !isUuid(session.uid)) return false;
+
+  const enabled =
+    options?.enabled !== undefined
+      ? options.enabled
+      : !!settingsStore.state.loansEnabled;
+
+  schedulePreferencesPush({ loansEnabled: enabled });
   return flushPreferencesPush();
 };
 

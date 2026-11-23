@@ -51,6 +51,13 @@ function requireNetWorthEnabled() {
   }
 }
 
+function requireLoansEnabled() {
+  requireAuth();
+  if (!settingsStore.state.loansEnabled) {
+    throw redirect({ to: '/expenses/user' });
+  }
+}
+
 function RootComponent() {
   const { token, userDetails } = useAuthState();
   const encryption = useEncryptionState();
@@ -130,14 +137,14 @@ const incomeRoute = createRoute({
 const loansRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/expenses/loans',
-  beforeLoad: requireAuth,
+  beforeLoad: requireLoansEnabled,
   component: Loans,
 });
 
 const loanIdRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/expenses/loan/$id',
-  beforeLoad: requireAuth,
+  beforeLoad: requireLoansEnabled,
   component: Loan,
 });
 

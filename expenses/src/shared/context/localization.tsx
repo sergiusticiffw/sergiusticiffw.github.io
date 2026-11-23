@@ -221,6 +221,11 @@ const translations = {
     'profile.netWorthEnableHint':
       'Shows net worth on Charts. Off by default.',
     'profile.netWorthOpen': 'Open net worth',
+    'profile.loans': 'Loans',
+    'profile.loansEnable': 'Enable loans',
+    'profile.loansEnableHint':
+      'Shows loans in the navigation. Off by default.',
+    'profile.loansOpen': 'Open loans',
 
     // Goals / emergency fund
     'goals.title': 'Emergency fund',
@@ -1450,6 +1455,11 @@ const translations = {
     'profile.netWorthEnableHint':
       'Afișează averea netă pe Charts. Dezactivată implicit.',
     'profile.netWorthOpen': 'Deschide averea netă',
+    'profile.loans': 'Împrumuturi',
+    'profile.loansEnable': 'Activează împrumuturile',
+    'profile.loansEnableHint':
+      'Afișează împrumuturile în navigare. Dezactivate implicit.',
+    'profile.loansOpen': 'Deschide împrumuturile',
 
     // Goals / emergency fund
     'goals.title': 'Fond de urgență',

@@ -1,7 +1,7 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import type { LinkProps } from '@tanstack/react-router';
 import { useLocalization } from '@shared/context/localization';
-import { useGoalsEnabled } from '@stores/settingsStore';
+import { useGoalsEnabled, useLoansEnabled } from '@stores/settingsStore';
 import {
   FiHome,
   FiBarChart2,
@@ -47,6 +47,7 @@ const NavItem = ({ to, label, icon, exact, forceActive }: NavItemProps) => (
 const Navbar = () => {
   const { t } = useLocalization();
   const goalsEnabled = useGoalsEnabled();
+  const loansEnabled = useLoansEnabled();
   const pathname = useLocation({ select: (location) => location.pathname });
   // The loan details page (/expenses/loan/:id) belongs to the Loans tab.
   const onLoanDetails = /\/loan\/[^/]+/.test(pathname);
@@ -76,12 +77,14 @@ const Navbar = () => {
           label={t('nav.income')}
           icon={<FiDollarSign />}
         />
-        <NavItem
-          to="/expenses/loans"
-          label={t('nav.loans')}
-          icon={<FiCreditCard />}
-          forceActive={onLoanDetails}
-        />
+        {loansEnabled && (
+          <NavItem
+            to="/expenses/loans"
+            label={t('nav.loans')}
+            icon={<FiCreditCard />}
+            forceActive={onLoanDetails}
+          />
+        )}
         {goalsEnabled && (
           <NavItem
             to="/expenses/goals"

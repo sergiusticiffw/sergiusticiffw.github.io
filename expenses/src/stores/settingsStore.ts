@@ -9,6 +9,7 @@ const THEME_KEY = 'theme';
 const ONBOARDING_KEY = 'onboardingComplete';
 const GOALS_ENABLED_KEY = 'goalsEnabled';
 const NET_WORTH_ENABLED_KEY = 'netWorthEnabled';
+const LOANS_ENABLED_KEY = 'loansEnabled';
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -35,6 +36,7 @@ const initialState: SettingsState = {
   onboardingComplete: readJson(ONBOARDING_KEY, false),
   goalsEnabled: readJson(GOALS_ENABLED_KEY, false),
   netWorthEnabled: readJson(NET_WORTH_ENABLED_KEY, false),
+  loansEnabled: readJson(LOANS_ENABLED_KEY, false),
 };
 
 const settingsStore = new Store<SettingsState>(initialState);
@@ -61,6 +63,10 @@ export function useGoalsEnabled(): boolean {
 
 export function useNetWorthEnabled(): boolean {
   return useStore(settingsStore, (s) => s.netWorthEnabled);
+}
+
+export function useLoansEnabled(): boolean {
+  return useStore(settingsStore, (s) => s.loansEnabled);
 }
 
 function persist<K extends keyof SettingsState>(key: string, value: SettingsState[K]) {
@@ -99,6 +105,12 @@ export function setNetWorthEnabled(value: boolean): void {
   persist(NET_WORTH_ENABLED_KEY, value);
   settingsStore.setState((s) => ({ ...s, netWorthEnabled: value }));
   pushPrefs({ netWorthEnabled: value });
+}
+
+export function setLoansEnabled(value: boolean): void {
+  persist(LOANS_ENABLED_KEY, value);
+  settingsStore.setState((s) => ({ ...s, loansEnabled: value }));
+  pushPrefs({ loansEnabled: value });
 }
 
 export function hydrateSettings(partial: Partial<SettingsState>): void {
