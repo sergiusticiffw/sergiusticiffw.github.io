@@ -9,6 +9,8 @@ export const metadata = {
   title: "Asistent",
 };
 
+export const instant = false;
+
 export const maxDuration = 60;
 
 const genericSuggestions = [

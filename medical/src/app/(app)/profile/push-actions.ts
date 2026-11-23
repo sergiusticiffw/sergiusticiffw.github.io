@@ -44,8 +44,14 @@ export async function savePushSubscription(
   );
 
   if (error) {
-    console.error("savePushSubscription", error.code);
-    return { error: "Abonamentul nu a putut fi salvat." };
+    console.error("savePushSubscription", error.code, error.message);
+    if (error.code === "42P01" || error.code === "PGRST205") {
+      return { error: "Aplică migrația pentru notificări în Supabase." };
+    }
+    if (error.code === "42501") {
+      return { error: "Nu ai dreptul să salvezi abonamentul (RLS)." };
+    }
+    return { error: `Abonamentul nu a putut fi salvat (${error.code || "eroare"}).` };
   }
 
   return { saved: true, enabled: true };

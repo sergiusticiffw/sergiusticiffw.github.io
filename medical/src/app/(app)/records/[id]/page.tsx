@@ -11,6 +11,8 @@ export const metadata = {
   title: "Înregistrare",
 };
 
+export const instant = false;
+
 export default function RecordPage({
   params,
 }: {

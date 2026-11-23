@@ -14,18 +14,14 @@ export function RegisterServiceWorker() {
       return;
     }
 
+    // Keep SW registered in every env — Web Push needs it. In development we
+    // still clear old caches so stale shells do not stick around.
     if (process.env.NODE_ENV === "development") {
-      void navigator.serviceWorker.getRegistrations().then((registrations) => {
-        for (const registration of registrations) {
-          void registration.unregister();
-        }
-      });
       void caches.keys().then((keys) => {
         for (const key of keys) {
           void caches.delete(key);
         }
       });
-      return;
     }
 
     // Defer so the first paint / hydration is not racing the SW on iOS.

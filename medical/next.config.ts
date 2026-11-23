@@ -79,6 +79,11 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "32mb",
     },
+    // Auth layout wraps pages in Suspense; don't auto-validate every route
+    // for Instant Navigation (pages can opt in with `export const instant = true`).
+    instantInsights: {
+      validationLevel: "manual-warning",
+    },
   },
   outputFileTracingIncludes: {
     "/profiles/**": [

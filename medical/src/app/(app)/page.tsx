@@ -18,6 +18,8 @@ export const metadata = {
   title: "Acasă",
 };
 
+export const instant = false;
+
 export const maxDuration = 60;
 
 const HOME_LIST_LIMIT = 3;

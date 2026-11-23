@@ -11,6 +11,9 @@ import { PersonSwitcher } from "@/components/layout/person-switcher";
 import { getPageFamilyAccess, getPageUser } from "@/lib/auth";
 import { loadFamilyPeople } from "@/lib/people";
 
+/** Auth shell streams behind Suspense; navigations into (app) may block. */
+export const instant = false;
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <Suspense

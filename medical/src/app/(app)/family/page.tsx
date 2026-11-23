@@ -15,6 +15,8 @@ export const metadata = {
   title: "Familie",
 };
 
+export const instant = false;
+
 const roles: FamilyRole[] = ["admin", "editor", "viewer"];
 
 function asRole(value: string): FamilyRole {

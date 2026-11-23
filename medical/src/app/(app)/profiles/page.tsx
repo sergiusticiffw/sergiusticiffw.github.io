@@ -12,6 +12,8 @@ export const metadata = {
   title: "Persoane",
 };
 
+export const instant = false;
+
 export const maxDuration = 60;
 
 export default function ProfilesPage() {

@@ -1,6 +1,6 @@
 import "server-only";
 
-import webpush from "web-push";
+import { sendNotification, setVapidDetails } from "web-push";
 
 import { getVapidConfig } from "@/lib/push/vapid";
 
@@ -25,10 +25,10 @@ export async function sendWebPush(
     return { ok: false, error: "VAPID lipsește." };
   }
 
-  webpush.setVapidDetails(vapid.subject, vapid.publicKey, vapid.privateKey);
+  setVapidDetails(vapid.subject, vapid.publicKey, vapid.privateKey);
 
   try {
-    await webpush.sendNotification(
+    await sendNotification(
       {
         endpoint: subscription.endpoint,
         keys: {

@@ -33,6 +33,9 @@ export const metadata = {
   title: "Cont",
 };
 
+/** Profile loads auth + Drive + AI stats; skip instant-nav validation for this segment. */
+export const instant = false;
+
 const roleLabels: Record<FamilyRole, string> = {
   admin: "Administrator",
   editor: "Editor",

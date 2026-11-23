@@ -1,9 +1,10 @@
+import { timingSafeEqual } from "node:crypto";
+
 import { NextResponse } from "next/server";
 
 import { sendDailyAppointmentReminders } from "@/lib/push/reminders";
 import { getVapidConfig } from "@/lib/push/vapid";
 
-export const runtime = "nodejs";
 export const maxDuration = 60;
 
 function authorized(request: Request) {
@@ -12,7 +13,16 @@ function authorized(request: Request) {
     return false;
   }
   const header = request.headers.get("authorization");
-  return header === `Bearer ${secret}`;
+  if (!header?.startsWith("Bearer ")) {
+    return false;
+  }
+  const token = header.slice("Bearer ".length).trim();
+  const expected = Buffer.from(secret);
+  const provided = Buffer.from(token);
+  if (expected.length === 0 || expected.length !== provided.length) {
+    return false;
+  }
+  return timingSafeEqual(expected, provided);
 }
 
 async function run(request: Request) {

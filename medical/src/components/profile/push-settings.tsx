@@ -8,6 +8,8 @@ import {
 } from "@/app/(app)/profile/push-actions";
 import { Button } from "@/components/ui/button";
 
+const READY_MS = 12_000;
+
 function urlBase64ToUint8Array(base64: string) {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
   const raw = atob((base64 + padding).replace(/-/g, "+").replace(/_/g, "/"));
@@ -18,12 +20,48 @@ function urlBase64ToUint8Array(base64: string) {
   return output;
 }
 
+async function withTimeout<T>(promise: Promise<T>, ms: number, message: string) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(message)), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
+}
+
+/** Register (or reuse) the SW so push works even before deferred PWA setup. */
+async function ensureServiceWorker() {
+  if (!("serviceWorker" in navigator)) {
+    throw new Error("Service Worker nu este disponibil în acest browser.");
+  }
+  const registration = await navigator.serviceWorker.register("/sw.js", {
+    updateViaCache: "none",
+  });
+  await withTimeout(
+    navigator.serviceWorker.ready,
+    READY_MS,
+    "Service Worker nu a pornit. Reîncarcă pagina și încearcă din nou.",
+  );
+  return registration;
+}
+
 async function currentSubscription() {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
     return null;
   }
-  const registration = await navigator.serviceWorker.ready;
-  return registration.pushManager.getSubscription();
+  try {
+    const registration = await ensureServiceWorker();
+    return registration.pushManager.getSubscription();
+  } catch {
+    return null;
+  }
 }
 
 export function PushSettings({
@@ -53,6 +91,11 @@ export function PushSettings({
       setError("Cheile VAPID lipsesc pe server.");
       return;
     }
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setError("Notificările cer HTTPS (sau localhost).");
+      return;
+    }
+
     setPending(true);
     setError(null);
     setMessage(null);
@@ -63,19 +106,28 @@ export function PushSettings({
         return;
       }
 
-      const registration = await navigator.serviceWorker.ready;
+      const registration = await ensureServiceWorker();
       let subscription = await registration.pushManager.getSubscription();
       if (!subscription) {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-        });
+        subscription = await withTimeout(
+          registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+          }),
+          READY_MS,
+          "Abonamentul push a expirat timpul de așteptare.",
+        );
       }
 
       const json = subscription.toJSON();
       const endpoint = json.endpoint ?? "";
       const p256dh = json.keys?.p256dh ?? "";
       const auth = json.keys?.auth ?? "";
+      if (!endpoint || !p256dh || !auth) {
+        setError("Browserul nu a returnat cheile de abonament.");
+        return;
+      }
+
       const formData = new FormData();
       formData.set("endpoint", endpoint);
       formData.set("p256dh", p256dh);

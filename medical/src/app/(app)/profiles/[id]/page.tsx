@@ -13,6 +13,8 @@ export const metadata = {
   title: "Persoană",
 };
 
+export const instant = false;
+
 export const maxDuration = 60;
 
 export default function ProfilePage({

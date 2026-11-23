@@ -9,6 +9,8 @@ export const metadata = {
   title: "Dosar",
 };
 
+export const instant = false;
+
 export default function RecordsPage() {
   return (
     <div className="flex flex-col gap-4">
