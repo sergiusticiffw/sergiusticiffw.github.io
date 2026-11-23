@@ -33,6 +33,10 @@ interface IncomeTableProps {
   hideDateColumn?: boolean;
   /** Hides the "Date" sort button. */
   hideDateSortButton?: boolean;
+  /** Hides the "Amount" sort button. */
+  hideAmountSortButton?: boolean;
+  /** Hides the "Income Records" heading. */
+  hideTitle?: boolean;
   /** Renders on the same row as sort controls, aligned to the right. */
   toolbarEnd?: React.ReactNode;
 }
@@ -49,6 +53,8 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   pendingSyncIds,
   hideDateColumn = false,
   hideDateSortButton = false,
+  hideAmountSortButton = false,
+  hideTitle = false,
   toolbarEnd,
 }) => {
   const listRef = useRef<any>(null);
@@ -138,42 +144,54 @@ const IncomeTable: React.FC<IncomeTableProps> = ({
   const sortBtnActive =
     'bg-[var(--color-app-accent)]/20 text-[var(--color-app-accent)] font-medium';
 
+  const showSortRow =
+    !hideDateSortButton || !hideAmountSortButton || !!toolbarEnd;
+  const showHeader = !hideTitle || showSortRow;
+
   return (
     <div
       className="flex flex-col gap-2 w-full relative overflow-x-hidden overflow-y-auto touch-pan-y"
       style={{ WebkitOverflowScrolling: 'touch' }}
       ref={listRef}
     >
-      <div className="mb-3">
-        <h3 className="text-lg font-semibold text-white m-0 mb-2 tracking-tight text-center">
-          {t('income.incomeRecords')}
-        </h3>
-        <div className="flex items-center gap-2">
-          <div className="flex gap-2 min-w-0">
-            {!hideDateSortButton && (
-              <button
-                type="button"
-                className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
-                onClick={() => handleSort('date')}
-              >
-                {t('common.date')} {getSortIcon('date')}
-              </button>
-            )}
-            <button
-              type="button"
-              className={`${sortBtn} ${sortField === 'amount' ? sortBtnActive : ''}`}
-              onClick={() => handleSort('amount')}
-            >
-              {t('common.amount')} {getSortIcon('amount')}
-            </button>
-          </div>
-          {toolbarEnd && (
-            <div className="ml-auto flex items-center gap-1 shrink-0">
-              {toolbarEnd}
+      {showHeader && (
+        <div className="mb-3">
+          {!hideTitle && (
+            <h3 className="text-lg font-semibold text-white m-0 mb-2 tracking-tight text-center">
+              {t('income.incomeRecords')}
+            </h3>
+          )}
+          {showSortRow && (
+            <div className="flex items-center gap-2">
+              <div className="flex gap-2 min-w-0">
+                {!hideDateSortButton && (
+                  <button
+                    type="button"
+                    className={`${sortBtn} ${sortField === 'date' ? sortBtnActive : ''}`}
+                    onClick={() => handleSort('date')}
+                  >
+                    {t('common.date')} {getSortIcon('date')}
+                  </button>
+                )}
+                {!hideAmountSortButton && (
+                  <button
+                    type="button"
+                    className={`${sortBtn} ${sortField === 'amount' ? sortBtnActive : ''}`}
+                    onClick={() => handleSort('amount')}
+                  >
+                    {t('common.amount')} {getSortIcon('amount')}
+                  </button>
+                )}
+              </div>
+              {toolbarEnd && (
+                <div className="ml-auto flex items-center gap-1 shrink-0">
+                  {toolbarEnd}
+                </div>
+              )}
             </div>
           )}
         </div>
-      </div>
+      )}
 
       <div className="flex flex-col gap-2">
         {sortedItems.map((income) => {

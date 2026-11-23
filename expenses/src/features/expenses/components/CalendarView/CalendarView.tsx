@@ -468,6 +468,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             pendingSyncIds={pendingSyncIds}
             hideDateColumn
             hideDateSortButton
+            hideAmountSortButton
+            hideTitle
           />
         ) : (
           <>
