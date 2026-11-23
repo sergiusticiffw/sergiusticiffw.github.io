@@ -12,6 +12,7 @@ import {
 } from "@/app/(app)/profiles/document-actions";
 import type { PreviewFile } from "@/components/profiles/document-preview";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -399,70 +400,34 @@ export function EditRecordButton({
                 {files.map((file) => (
                   <li key={file.id} className="rounded-lg border px-3 py-2">
                     <p className="truncate text-sm">{file.filename}</p>
-                    {confirmFileId === file.id ? (
-                      <div className="mt-2 flex flex-col gap-2">
-                        <p className="text-xs text-muted-foreground">
-                          {files.length > 1
-                            ? "Se șterge doar acest fișier din Google Drive. Restul rămân."
-                            : "Este ultimul fișier. Se șterge toată înregistrarea."}
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="h-11"
-                            disabled={pending === "delete"}
-                            onClick={() => setConfirmFileId(null)}
-                          >
-                            Renunță
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            className="h-11"
-                            disabled={pending === "delete"}
-                            onClick={() => {
-                              void onDeleteFile(file.id);
-                            }}
-                          >
-                            {pending === "delete"
-                              ? "Se șterge…"
-                              : files.length > 1
-                                ? "Șterge fișierul"
-                                : "Șterge înregistrarea"}
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-11"
-                          disabled={pending !== null}
-                          onClick={() => {
-                            replaceId.current = file.id;
-                            replaceRef.current?.click();
-                          }}
-                        >
-                          {pending === "replace" && replacingId === file.id
-                            ? "Se înlocuiește…"
-                            : "Înlocuiește"}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          className="h-11"
-                          disabled={pending !== null}
-                          onClick={() => {
-                            setError(null);
-                            setConfirmFileId(file.id);
-                          }}
-                        >
-                          Șterge
-                        </Button>
-                      </div>
-                    )}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11"
+                        disabled={pending !== null}
+                        onClick={() => {
+                          replaceId.current = file.id;
+                          replaceRef.current?.click();
+                        }}
+                      >
+                        {pending === "replace" && replacingId === file.id
+                          ? "Se înlocuiește…"
+                          : "Înlocuiește"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        className="h-11"
+                        disabled={pending !== null}
+                        onClick={() => {
+                          setError(null);
+                          setConfirmFileId(file.id);
+                        }}
+                      >
+                        Șterge
+                      </Button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -499,6 +464,32 @@ export function EditRecordButton({
           </div>
         </form>
       </dialog>
+      <ConfirmDialog
+        open={confirmFileId !== null}
+        title={
+          files.length > 1 ? "Ștergi fișierul?" : "Ștergi înregistrarea?"
+        }
+        description={
+          files.length > 1
+            ? "Se șterge doar acest fișier din Google Drive. Restul rămân."
+            : "Este ultimul fișier. Se șterge toată înregistrarea."
+        }
+        confirmLabel={
+          files.length > 1 ? "Șterge fișierul" : "Șterge înregistrarea"
+        }
+        pending={pending === "delete"}
+        error={error}
+        onConfirm={() => {
+          if (confirmFileId) {
+            void onDeleteFile(confirmFileId);
+          }
+        }}
+        onCancel={() => {
+          if (pending !== "delete") {
+            setConfirmFileId(null);
+          }
+        }}
+      />
     </>
   );
 }

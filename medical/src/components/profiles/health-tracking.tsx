@@ -14,6 +14,7 @@ import {
 import { LabTrendChart } from "@/components/profiles/lab-history";
 import { SourceBadge } from "@/components/records/source-badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FormDialog } from "@/components/ui/form-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,19 @@ const EDIT_TITLES: Record<HealthKind, string> = {
   appointment: "Editează programarea",
   vaccination: "Editează vaccinul",
   measurement: "Editează măsurătoarea",
+};
+
+const DELETE_TITLES: Record<HealthKind, string> = {
+  medication: "Ștergi medicamentul?",
+  appointment: "Ștergi programarea?",
+  vaccination: "Ștergi vaccinul?",
+  measurement: "Ștergi măsurătoarea?",
+};
+
+type DeletingEntry = {
+  kind: HealthKind;
+  id: string;
+  label: string;
 };
 
 /** Medications tab hidden for now; backend data remains. */
@@ -262,6 +276,8 @@ export function HealthTracking({
     useState<MeasurementKind>("weight");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [deleting, setDeleting] = useState<DeletingEntry | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [now] = useState(() => Date.now());
   const formId = `health-form-${profileId}`;
 
@@ -368,8 +384,34 @@ export function HealthTracking({
     }
   }
 
-  function remove(kind: HealthKind, id: string) {
-    void run(() => deleteHealthEntry(kind, profileId, id));
+  function askDelete(kind: HealthKind, id: string, label: string) {
+    setDeleteError(null);
+    setDeleting({ kind, id, label });
+  }
+
+  async function confirmDelete() {
+    if (!deleting || pending) {
+      return;
+    }
+    setPending(true);
+    setDeleteError(null);
+    try {
+      const result = await deleteHealthEntry(
+        deleting.kind,
+        profileId,
+        deleting.id,
+      );
+      if (result.error) {
+        setDeleteError(result.error);
+        return;
+      }
+      setDeleting(null);
+      router.refresh();
+    } catch {
+      setDeleteError("Nu s-a putut șterge. Încearcă din nou.");
+    } finally {
+      setPending(false);
+    }
   }
 
   const upcoming = health.appointments
@@ -425,7 +467,7 @@ export function HealthTracking({
           canEdit={canEdit}
           busy={pending}
           onEdit={() => openEdit("appointment", item.id)}
-          onDelete={() => remove("appointment", item.id)}
+          onDelete={() => askDelete("appointment", item.id, item.title)}
         >
           <p className="truncate text-sm font-medium">{item.title}</p>
           <p className="truncate text-xs text-muted-foreground">
@@ -605,7 +647,9 @@ export function HealthTracking({
                     canEdit={canEdit}
                     busy={pending}
                     onEdit={() => openEdit("vaccination", item.id)}
-                    onDelete={() => remove("vaccination", item.id)}
+                    onDelete={() =>
+                      askDelete("vaccination", item.id, item.vaccine_name)
+                    }
                   >
                     <p className="truncate text-sm font-medium">
                       {item.vaccine_name}
@@ -711,7 +755,21 @@ export function HealthTracking({
                                       disabled={pending}
                                       aria-label={`Șterge valoarea din ${point.date ?? "fără dată"}`}
                                       onClick={() =>
-                                        remove("measurement", point.recordId)
+                                        askDelete(
+                                          "measurement",
+                                          point.recordId,
+                                          [
+                                            item.name,
+                                            point.date
+                                              ? formatBirthDate(point.date)
+                                              : null,
+                                            point.value !== null
+                                              ? `${point.value}${item.unit ? ` ${item.unit}` : ""}`
+                                              : point.text,
+                                          ]
+                                            .filter(Boolean)
+                                            .join(" · "),
+                                        )
                                       }
                                     >
                                       <Trash2 />
@@ -878,6 +936,34 @@ export function HealthTracking({
           </form>
         ) : null}
       </FormDialog>
+
+      <ConfirmDialog
+        open={deleting !== null}
+        title={deleting ? DELETE_TITLES[deleting.kind] : "Ștergi?"}
+        description={
+          deleting ? (
+            <>
+              <span className="font-medium text-foreground">{deleting.label}</span>
+              {" · "}
+              Acțiunea nu poate fi anulată.
+            </>
+          ) : (
+            "Acțiunea nu poate fi anulată."
+          )
+        }
+        confirmLabel="Șterge"
+        pending={pending}
+        error={deleteError}
+        onConfirm={() => {
+          void confirmDelete();
+        }}
+        onCancel={() => {
+          if (!pending) {
+            setDeleting(null);
+            setDeleteError(null);
+          }
+        }}
+      />
     </section>
   );
 }
