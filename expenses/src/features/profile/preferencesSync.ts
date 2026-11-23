@@ -270,25 +270,40 @@ export const flushPreferencesPush = async (): Promise<boolean> => {
     const provider = getDataProvider();
     provider.configure(liveToken);
 
-    // Full preferences replace would otherwise clobber onboardingComplete with
-    // the local default (false). Only rewrite it when explicitly patched.
+    // Full preferences replace: fold remote fields that this device must not
+    // clobber (onboarding, AI usage, feature flags not in this patch).
+    const existing = await provider.getProfile(session.uid);
+    if (!existing.success) {
+      restorePending(patch);
+      return false;
+    }
+    const remote = existing.data?.preferences as
+      | ProfilePreferences
+      | undefined;
+
+    if (remote?.aiUsage != null) hydrateAiUsageFromPrefs(remote.aiUsage);
+    next.aiUsage = readAiUsageForPrefs();
+
     if (!Object.prototype.hasOwnProperty.call(patch, 'onboardingComplete')) {
-      const existing = await provider.getProfile(session.uid);
-      if (!existing.success) {
-        restorePending(patch);
-        return false;
-      }
-      const remote = existing.data?.preferences as
-        | ProfilePreferences
-        | undefined;
-      // The whole preferences object is replaced below: fold in the other
-      // devices' usage first so this write never erases it.
-      if (remote?.aiUsage != null) hydrateAiUsageFromPrefs(remote.aiUsage);
-      next.aiUsage = readAiUsageForPrefs();
       if (typeof remote?.onboardingComplete === 'boolean') {
         next.onboardingComplete = remote.onboardingComplete;
       } else {
         delete next.onboardingComplete;
+      }
+    }
+
+    // Feature toggles: only overwrite when explicitly patched; otherwise keep
+    // the cloud value so a stale local default (false) cannot re-enable/disable
+    // after another device (or this device's prior toggle) already synced.
+    const FEATURE_FLAGS = [
+      'loansEnabled',
+      'goalsEnabled',
+      'netWorthEnabled',
+    ] as const;
+    for (const key of FEATURE_FLAGS) {
+      if (Object.prototype.hasOwnProperty.call(patch, key)) continue;
+      if (typeof remote?.[key] === 'boolean') {
+        next[key] = remote[key];
       }
     }
 
@@ -449,7 +464,10 @@ export const persistNetWorthToSupabase = async (options?: {
   return flushPreferencesPush();
 };
 
-/** Pull prefs from profile after Supabase login. Remote wins for missing locals. */
+/**
+ * Pull prefs from profile (login + hard refresh). Cloud is source of truth for
+ * feature toggles when the preferences blob exists.
+ */
 export const pullPreferencesFromProfile = async (): Promise<boolean> => {
   if (getDataProviderKind() !== 'supabase') return false;
   const session = getSession();
@@ -459,11 +477,29 @@ export const pullPreferencesFromProfile = async (): Promise<boolean> => {
   }
 
   try {
+    if (!(await ensureFreshSupabaseSession())) {
+      return false;
+    }
+
+    const { getSupabaseClient } = await import(
+      '../../data/providers/supabase/client'
+    );
+    const { data: auth } = await getSupabaseClient().auth.getSession();
+    const liveToken = auth.session?.access_token || token;
+
     const provider = getDataProvider();
-    provider.configure(token);
+    provider.configure(liveToken);
     const result = await provider.getProfile(session.uid);
     if (!result.success || !result.data?.preferences) return false;
-    applyPreferencesLocally(result.data.preferences);
+
+    const prefs = result.data.preferences as ProfilePreferences;
+    // loansEnabled defaults off: if the cloud blob has no key yet, force false
+    // so a stale local enable cannot survive hard refresh before the first sync.
+    applyPreferencesLocally({
+      ...prefs,
+      loansEnabled:
+        typeof prefs.loansEnabled === 'boolean' ? prefs.loansEnabled : false,
+    });
     // Also hydrate currency from profile columns if present.
     if (result.data.currency) {
       hydrateSettings({ currency: result.data.currency });
