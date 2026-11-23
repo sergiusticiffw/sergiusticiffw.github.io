@@ -1,0 +1,208 @@
+/* Premium financial month grid + Highcharts month chart under it */
+
+.calendar-view-component .month-chart-wrapper .highcharts-container {
+  width: 100% !important;
+}
+@media (max-width: 640px) {
+  .calendar-view-component .month-chart-wrapper .highcharts-container {
+    height: 350px !important;
+  }
+  .calendar-view-component .month-chart-wrapper svg {
+    height: 350px !important;
+  }
+  .calendar-view-component .month-chart-wrapper text {
+    font-size: 13px !important;
+  }
+}
+
+.calendar-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+}
+
+.calendar-weekday {
+  padding: 0.55rem 0.1rem 0.4rem;
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.calendar-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  min-height: 4rem;
+  min-width: 0;
+  padding: 0.35rem 0.2rem 0.4rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: transparent;
+  color: inherit;
+  text-align: center;
+  cursor: default;
+  overflow: hidden;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.calendar-day--interactive {
+  cursor: pointer;
+}
+
+.calendar-day--interactive:hover {
+  filter: brightness(1.06);
+}
+
+.calendar-day--interactive:focus-visible {
+  outline: 2px solid var(--color-app-accent);
+  outline-offset: 2px;
+}
+
+.calendar-day--other {
+  opacity: 0.35;
+}
+
+/* Rings via inset shadow — no border-width change / layout shift */
+.calendar-day--today {
+  box-shadow: inset 0 0 0 1px var(--color-app-accent);
+}
+
+.calendar-day--selected {
+  box-shadow: inset 0 0 0 1.5px
+    color-mix(in srgb, var(--color-app-accent) 90%, white);
+}
+
+.calendar-day--today.calendar-day--selected {
+  box-shadow: inset 0 0 0 1.5px var(--color-app-accent);
+}
+
+.calendar-day-number {
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  color: rgba(10, 10, 10, 0.72);
+  margin-bottom: 0.2rem;
+}
+
+.calendar-day--today .calendar-day-number {
+  color: #0a0a0a;
+  font-weight: 700;
+}
+
+.calendar-day--other .calendar-day-number {
+  color: var(--color-text-placeholder);
+}
+
+.calendar-day:not(.calendar-day--has-data) .calendar-day-number,
+.calendar-day:not(.calendar-day--heatmap) .calendar-day-number {
+  color: var(--color-text-muted);
+}
+
+.calendar-day--today:not(.calendar-day--has-data) .calendar-day-number {
+  color: var(--color-text-primary);
+}
+
+/*
+ * Solid cell fills — palette from reference:
+ * green #00b048 · amber #e0a000 · red #d00010 · blue #5080d8
+ * Cell size unchanged (~64px / 4rem).
+ */
+.calendar-day--heatmap.calendar-day--tier-low {
+  background: #00b048;
+  color: #0a0a0a;
+}
+.calendar-day--heatmap.calendar-day--tier-medium {
+  background: #e0a000;
+  color: #0a0a0a;
+}
+.calendar-day--heatmap.calendar-day--tier-high {
+  background: #d00010;
+  color: #0a0a0a;
+}
+.calendar-day--heatmap.calendar-day--income {
+  background: #00b048;
+  color: #0a0a0a;
+}
+.calendar-day--heatmap.calendar-day--partner {
+  background: #5080d8;
+  color: #ffffff;
+}
+
+.calendar-day--heatmap.calendar-day--partner .calendar-day-number {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.calendar-day--heatmap.calendar-day--partner.calendar-day--today .calendar-day-number {
+  color: #ffffff;
+}
+
+.calendar-day-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  margin-top: auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.calendar-day-amount {
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: inherit;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.calendar-day-count {
+  font-size: 0.62rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: inherit;
+  opacity: 0.85;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .calendar-day {
+    min-height: 4rem; /* ~64px */
+    padding: 0.3rem 0.12rem 0.35rem;
+    border-radius: 0.65rem;
+  }
+  .calendar-weekday {
+    padding: 0.45rem 0.05rem 0.3rem;
+    font-size: 0.58rem;
+  }
+  .calendar-day-number {
+    font-size: 0.65rem;
+    margin-bottom: 0.15rem;
+  }
+  .calendar-day-amount {
+    font-size: 0.74rem;
+  }
+  .calendar-day-count {
+    font-size: 0.58rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-day {
+    transition: none;
+  }
+}

@@ -333,8 +333,6 @@ html.highcharts-dark .highcharts-background {
   .overflow-touch { -webkit-overflow-scrolling: touch; }
 }
 
-@import "./fullcalendar-overrides.css";
-
 /* Custom CSS doar unde Tailwind nu poate: amort scrollbar */
 @layer components {
   /* Amortization table: scrollbar */

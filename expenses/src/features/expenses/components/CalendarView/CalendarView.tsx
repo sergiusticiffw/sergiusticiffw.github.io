@@ -1,8 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import roLocale from '@fullcalendar/core/locales/ro';
 import { formatNumber, getLocale } from '@shared/utils/utils';
 import { useLocalization } from '@shared/context/localization';
 import { useAuthState } from '@shared/context/context';
@@ -24,6 +20,7 @@ import {
   clearFamilyDailyTotalsCache,
   useFamilyDailyTotals,
 } from '@features/expenses/components/Charts/useFamilyDailyTotals';
+import './calendar.css';
 
 /** Calendar day drawer: personal txs + other members' shared category totals. */
 interface Transaction {
@@ -32,6 +29,21 @@ interface Transaction {
   sum: number | string;
   cat: string;
   dt: string;
+}
+
+type AmountTier = 'low' | 'medium' | 'high';
+
+interface DayCell {
+  key: string;
+  day: number;
+  inMonth: boolean;
+  isToday: boolean;
+}
+
+interface DayAgg {
+  total: number;
+  count: number;
+  partnerOnly: boolean;
 }
 
 interface CalendarViewProps {
@@ -49,6 +61,83 @@ interface CalendarViewProps {
   dateRange?: { start: string; end: string } | null;
   /** Text or tag filter is on: aggregates carry no descriptions, so they cannot match. */
   hidePartnerSpend?: boolean;
+}
+
+const WEEKDAY_KEYS = [1, 2, 3, 4, 5, 6, 0] as const; // Monday-first
+
+/** Compact amount for tight calendar cells; drawer keeps full formatNumber. */
+function formatCalendarAmount(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) {
+    const n = value / 1_000_000;
+    return `${n.toFixed(n >= 10 ? 0 : 1).replace(/\.0$/, '')}M`;
+  }
+  if (abs >= 1000) {
+    const n = value / 1000;
+    return `${n.toFixed(n >= 100 ? 0 : 1).replace(/\.0$/, '')}k`;
+  }
+  return formatNumber(value);
+}
+
+function toDateKey(year: number, monthIndex: number, day: number): string {
+  return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+function todayKey(): string {
+  const now = new Date();
+  return toDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function parseMonthLabel(label: string): { year: number; monthIndex: number } | null {
+  const key = labelToMonthKey(label);
+  if (key) {
+    const [y, m] = key.split('-').map(Number);
+    return { year: y, monthIndex: m - 1 };
+  }
+  const parts = label.trim().split(/\s+/);
+  if (parts.length < 2) return null;
+  const year = parseInt(parts[parts.length - 1], 10);
+  const monthName = parts.slice(0, -1).join(' ');
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  const monthIndex = months.indexOf(monthName);
+  if (!year || monthIndex < 0) return null;
+  return { year, monthIndex };
+}
+
+function buildMonthCells(year: number, monthIndex: number): DayCell[] {
+  const first = new Date(year, monthIndex, 1);
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+  // getDay(): 0=Sun … 6=Sat → Monday-first offset
+  const startOffset = (first.getDay() + 6) % 7;
+  const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+  const today = todayKey();
+  const cells: DayCell[] = [];
+
+  for (let i = 0; i < totalCells; i++) {
+    const dayNum = i - startOffset + 1;
+    const date = new Date(year, monthIndex, dayNum);
+    const key = toDateKey(date.getFullYear(), date.getMonth(), date.getDate());
+    cells.push({
+      key,
+      day: date.getDate(),
+      inMonth: dayNum >= 1 && dayNum <= daysInMonth,
+      isToday: key === today,
+    });
+  }
+  return cells;
 }
 
 const CalendarView: React.FC<CalendarViewProps> = ({
@@ -69,7 +158,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   void _onMonthChange;
   const { t, language } = useLocalization();
   const { userDetails } = useAuthState();
-  // Prefer live session uid so partner filter matches RPC user_id.
   const myUid = String(
     getSession()?.uid ||
       (userDetails &&
@@ -84,7 +172,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     if (variant !== 'expense') return null;
     const fromLabel = labelToMonthKey(currentMonth);
     if (fromLabel) return fromLabel;
-    // Fallback: first personal tx date in the loaded set.
     const dt = transactions.find((tx) => tx.dt)?.dt;
     return dt && dt.length >= 7 ? dt.slice(0, 7) : null;
   }, [currentMonth, variant, transactions]);
@@ -104,7 +191,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     loading: familyLoading,
   } = useFamilyDailyTotals(familyEnabled ? monthKey : null);
 
-  // Other members' rows that match the page filters (category, date range).
   const partnerRows = useMemo(
     () =>
       hidePartnerSpend
@@ -122,14 +208,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     [familyEnabled, partnerRows, myUid]
   );
 
-  // Group transactions by date
   const transactionsByDate = useMemo(() => {
     return transactions.reduce(
       (acc, transaction) => {
         const date = transaction.dt;
-        if (!acc[date]) {
-          acc[date] = [];
-        }
+        if (!acc[date]) acc[date] = [];
         acc[date].push(transaction);
         return acc;
       },
@@ -137,40 +220,32 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     );
   }, [transactions]);
 
-  const events = useMemo(() => {
+  const dayAggs = useMemo(() => {
     const dates = new Set<string>([
       ...Object.keys(transactionsByDate),
       ...partnerDays,
     ]);
-    return [...dates]
-      .map((date) => {
-        const dayTransactions = transactionsByDate[date] || [];
-        const personalTotal = dayTransactions.reduce(
-          (sum, tx) =>
-            sum +
-            (typeof tx.sum === 'string'
-              ? parseFloat(tx.sum)
-              : Number(tx.sum) || 0),
-          0
-        );
-        const othersTotal = familyEnabled
-          ? partnerDayTotal(partnerRows, date, myUid)
-          : 0;
-        if (dayTransactions.length === 0 && othersTotal <= 0) return null;
-        const showPersonal = dayTransactions.length > 0;
-        return {
-          id: date,
-          date,
-          title: `${formatNumber(showPersonal ? personalTotal : othersTotal)}`,
-          allDay: true,
-          extendedProps: {
-            total: showPersonal ? personalTotal : othersTotal,
-            count: dayTransactions.length,
-            partnerOnly: !showPersonal,
-          },
-        };
-      })
-      .filter((event): event is NonNullable<typeof event> => !!event);
+    const map = new Map<string, DayAgg>();
+    for (const date of dates) {
+      const dayTransactions = transactionsByDate[date] || [];
+      const personalTotal = dayTransactions.reduce(
+        (sum, tx) =>
+          sum +
+          (typeof tx.sum === 'string' ? parseFloat(tx.sum) : Number(tx.sum) || 0),
+        0
+      );
+      const othersTotal = familyEnabled
+        ? partnerDayTotal(partnerRows, date, myUid)
+        : 0;
+      if (dayTransactions.length === 0 && othersTotal <= 0) continue;
+      const showPersonal = dayTransactions.length > 0;
+      map.set(date, {
+        total: showPersonal ? personalTotal : othersTotal,
+        count: dayTransactions.length,
+        partnerOnly: !showPersonal,
+      });
+    }
+    return map;
   }, [
     transactionsByDate,
     partnerDays,
@@ -179,52 +254,42 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     myUid,
   ]);
 
-  type AmountTier = 'amount-low' | 'amount-medium' | 'amount-high';
-
-  // Colour bands are relative to this month: the lowest third of personal
-  // spending days is green, the highest third red. Fixed 1000/3000 bands
-  // only apply when the month has too few days to rank.
   const tierThresholds = useMemo(() => {
-    const totals = events
-      .filter((event) => !event.extendedProps.partnerOnly)
-      .map((event) => event.extendedProps.total)
+    const totals = [...dayAggs.values()]
+      .filter((agg) => !agg.partnerOnly)
+      .map((agg) => agg.total)
       .filter((total) => total > 0)
       .sort((a, b) => a - b);
     if (totals.length < 3) return { low: 1000, high: 3000 };
     const at = (share: number) =>
       totals[Math.min(totals.length - 1, Math.floor(share * totals.length))];
     return { low: at(1 / 3), high: at(2 / 3) };
-  }, [events]);
+  }, [dayAggs]);
 
   const getExpenseTier = (amount: number): AmountTier => {
-    if (amount < tierThresholds.low) return 'amount-low';
-    if (amount < tierThresholds.high) return 'amount-medium';
-    return 'amount-high';
+    if (amount < tierThresholds.low) return 'low';
+    if (amount < tierThresholds.high) return 'medium';
+    return 'high';
   };
 
-  const getEventColorClasses = (tier: AmountTier): string => {
-    if (tier === 'amount-low') return 'bg-green-500/90 text-white';
-    if (tier === 'amount-medium') return 'bg-amber-400/90 text-stone-900';
-    return 'bg-red-600/90 text-white';
-  };
+  const monthParts = useMemo(
+    () => parseMonthLabel(currentMonth),
+    [currentMonth]
+  );
 
-  const getMonthIndex = (monthName: string) => {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return months.indexOf(monthName);
-  };
+  const cells = useMemo(() => {
+    if (!monthParts) return [];
+    return buildMonthCells(monthParts.year, monthParts.monthIndex);
+  }, [monthParts]);
+
+  const weekdayLabels = useMemo(() => {
+    const locale = getLocale(language);
+    // 2024-01-01 is a Monday — iterate Mon→Sun
+    return WEEKDAY_KEYS.map((_, i) => {
+      const d = new Date(2024, 0, 1 + i);
+      return d.toLocaleDateString(locale, { weekday: 'short' });
+    });
+  }, [language]);
 
   const openDay = (clickedDate: string) => {
     const dayTransactions = transactionsByDate[clickedDate] || [];
@@ -234,11 +299,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
       setSelectedDate(clickedDate);
       setShowDayModal(true);
     }
-  };
-
-  const handleEventClick = (event: { event: { id?: string } }) => {
-    const clickedDate = event.event.id;
-    if (clickedDate) openDay(clickedDate);
   };
 
   const selectedDayTransactions = selectedDate
@@ -258,74 +318,93 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     !!selectedDate &&
     sharedCategoryIds.size > 0;
 
+  const dateLocale = getLocale(language);
+
   return (
     <div
       className="calendar-view-component w-full relative"
       data-no-month-swipe={showDayModal ? true : undefined}
     >
-      <FullCalendar
-        key={currentMonth}
-        plugins={[dayGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        initialDate={
-          currentMonth
-            ? new Date(
-                parseInt(currentMonth.split(' ')[1], 10),
-                getMonthIndex(currentMonth.split(' ')[0]),
-                1
-              )
-            : new Date()
-        }
-        events={events}
-        headerToolbar={{
-          left: '',
-          center: '',
-          right: '',
-        }}
-        height="auto"
-        firstDay={1}
-        locales={[roLocale]}
-        locale={language === 'ro' ? 'ro' : 'en'}
-        eventClick={handleEventClick}
-        eventContent={(eventInfo) => {
-          const amount = eventInfo.event.extendedProps.total;
-          const count = eventInfo.event.extendedProps.count as number;
-          const partnerOnly = !!eventInfo.event.extendedProps.partnerOnly;
-          const baseClasses =
-            'px-3 py-2 rounded-lg flex flex-col items-center justify-center min-h-10 border-0 outline-none text-center font-semibold leading-tight shadow-[0_1px_3px_rgba(0,0,0,0.2)] box-border ';
-          const colorClasses =
-            variant === 'income'
-              ? 'bg-green-500/90 text-white'
-              : partnerOnly
-                ? 'bg-[var(--color-app-accent)]/90 text-white'
-                : getEventColorClasses(getExpenseTier(amount));
-          const responsiveClasses =
-            'max-[640px]:px-2.5 max-[640px]:py-1.5 max-[640px]:min-h-9 max-[640px]:rounded-md';
+      <div className="calendar-month-grid" role="grid" aria-label={currentMonth}>
+        {weekdayLabels.map((label, i) => (
+          <div key={WEEKDAY_KEYS[i]} className="calendar-weekday" role="columnheader">
+            {label}
+          </div>
+        ))}
+
+        {cells.map((cell) => {
+          const agg = dayAggs.get(cell.key);
+          const interactive = !!agg;
+          const tier =
+            agg && !agg.partnerOnly && variant === 'expense'
+              ? getExpenseTier(agg.total)
+              : null;
+          const dateLabel = new Date(
+            `${cell.key}T12:00:00`
+          ).toLocaleDateString(dateLocale, {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          });
+          const txWord =
+            agg && agg.count === 1
+              ? t('common.transaction')
+              : t('common.transactions');
+          const ariaLabel = agg
+            ? agg.partnerOnly || agg.count <= 0
+              ? `${dateLabel}, ${formatNumber(agg.total)}`
+              : `${dateLabel}, ${formatNumber(agg.total)}, ${agg.count} ${txWord}`
+            : dateLabel;
+
+          const classNames = [
+            'calendar-day',
+            'calendar-day--heatmap',
+            !cell.inMonth ? 'calendar-day--other' : '',
+            cell.isToday ? 'calendar-day--today' : '',
+            selectedDate === cell.key && showDayModal
+              ? 'calendar-day--selected'
+              : '',
+            interactive ? 'calendar-day--interactive' : '',
+            interactive ? 'calendar-day--has-data' : '',
+            agg?.partnerOnly ? 'calendar-day--partner' : '',
+            variant === 'income' && agg ? 'calendar-day--income' : '',
+            tier ? `calendar-day--tier-${tier}` : '',
+          ]
+            .filter(Boolean)
+            .join(' ');
 
           return (
-            <div
-              className={`${baseClasses} ${colorClasses} ${responsiveClasses}`}
+            <button
+              key={cell.key}
+              type="button"
+              role="gridcell"
+              className={classNames}
+              disabled={!interactive}
+              aria-label={ariaLabel}
+              aria-current={cell.isToday ? 'date' : undefined}
+              onClick={() => {
+                if (interactive) openDay(cell.key);
+              }}
             >
-              <div className="text-[0.95rem] font-bold mb-0.5 leading-tight tracking-wide max-[640px]:text-[0.8rem]">
-                {eventInfo.event.title}
-              </div>
-              {!partnerOnly && (
-                <div className="text-xs font-medium opacity-95">
-                  {count} {t('ux.items')}
-                </div>
+              <span className="calendar-day-number" aria-hidden>
+                {cell.day}
+              </span>
+              {agg && (
+                <span className="calendar-day-meta" aria-hidden>
+                  <span className="calendar-day-amount">
+                    {formatCalendarAmount(agg.total)}
+                  </span>
+                  {!agg.partnerOnly && agg.count > 0 && (
+                    <span className="calendar-day-count">
+                      {agg.count} tx
+                    </span>
+                  )}
+                </span>
               )}
-            </div>
+            </button>
           );
-        }}
-        dayCellClassNames={(args) => {
-          const classes = ['calendar-day-cell'];
-          if (args.isToday) {
-            classes.push('calendar-day-today');
-          }
-          return classes.join(' ');
-        }}
-        dayHeaderClassNames="calendar-day-header"
-      />
+        })}
+      </div>
 
       {variant === 'expense' && (
         <div className="month-chart-wrapper mt-6 p-0">
@@ -340,18 +419,35 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           selectedDate
             ? (() => {
                 const locale = getLocale(language);
-                return new Date(selectedDate).toLocaleDateString(locale, {
+                const dateStr = new Date(
+                  `${selectedDate}T12:00:00`
+                ).toLocaleDateString(locale, {
                   day: 'numeric',
                   month: 'long',
                   year: 'numeric',
                 });
+                const n = selectedDayTransactions.length;
+                if (n <= 0) return dateStr;
+                const word =
+                  n === 1
+                    ? t('common.transaction')
+                    : t('common.transactions');
+                return `${dateStr} · ${n} ${word}`;
               })()
             : ''
         }
         topContent={
-          selectedDayTransactions.length > 0 ? (
+          selectedDayTransactions.length > 0 ||
+          (selectedDate && dayAggs.get(selectedDate)) ? (
             <>
-              {t('common.total')}: <strong>{formatNumber(selectedDayTotal)}</strong>
+              {t('common.total')}:{' '}
+              <strong>
+                {formatNumber(
+                  selectedDayTotal ||
+                    dayAggs.get(selectedDate!)?.total ||
+                    0
+                )}
+              </strong>
             </>
           ) : undefined
         }

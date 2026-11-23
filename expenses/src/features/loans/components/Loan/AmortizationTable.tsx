@@ -1,11 +1,18 @@
 import React, { useMemo } from 'react';
 import {
-  useReactTable,
-  getCoreRowModel,
+  useTable,
+  tableFeatures,
+  columnSizingFeature,
+  columnVisibilityFeature,
   flexRender,
   type ColumnDef,
   type Row,
 } from '@tanstack/react-table';
+
+const tableFeaturesSet = tableFeatures({
+  columnSizingFeature,
+  columnVisibilityFeature,
+});
 import { useLocalization } from '@shared/context/localization';
 import { formatNumber } from '@shared/utils/utils';
 
@@ -64,7 +71,9 @@ const TD_WAS_PAYED = '!bg-[#1e3a2f] text-[#d4edda]';
 const TD_STICKY_ANNUAL = '!bg-[#141414]';
 const TD_STICKY_WAS_PAYED = '!bg-[#1e3a2f]';
 
-function getRowKind(row: Row<AmortizationRow>): 'annual' | 'was-payed' | '' {
+function getRowKind(
+  row: Row<typeof tableFeaturesSet, AmortizationRow>
+): 'annual' | 'was-payed' | '' {
   const original = row.original;
   if ('type' in original && original.type === 'annual_summary') return 'annual';
   if ('was_payed' in original && original.was_payed) return 'was-payed';
@@ -120,7 +129,9 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
 }) => {
   const { t } = useLocalization();
 
-  const columns = useMemo<ColumnDef<AmortizationRow>[]>(
+  const columns = useMemo<
+    ColumnDef<typeof tableFeaturesSet, AmortizationRow>[]
+  >(
     () => [
       {
         id: 'date',
@@ -224,10 +235,10 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
     [t]
   );
 
-  const table = useReactTable({
+  const table = useTable({
+    features: tableFeaturesSet,
     data: amortizationSchedule,
     columns,
-    getCoreRowModel: getCoreRowModel(),
   });
 
   const rows = table.getRowModel().rows;

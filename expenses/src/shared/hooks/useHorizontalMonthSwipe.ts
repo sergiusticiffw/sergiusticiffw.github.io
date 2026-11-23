@@ -20,8 +20,14 @@ export function useHorizontalMonthSwipe(
     (event: TouchEvent) => {
       if (!enabled) return;
       const target = event.target as HTMLElement | null;
-      // Don't steal swipes from text inputs / range controls.
-      if (target?.closest('input, textarea, select, [data-no-month-swipe]')) {
+      // Don't steal swipes from inputs, opted-out regions, or Vaul drawers.
+      // Drawers render in a portal (outside the calendar DOM), but React still
+      // bubbles touch events up the component tree to this page handler.
+      if (
+        target?.closest(
+          'input, textarea, select, [data-no-month-swipe], [data-vaul-drawer], [data-vaul-overlay]'
+        )
+      ) {
         tracking.current = false;
         return;
       }

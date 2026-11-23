@@ -4,8 +4,19 @@
 import React, { useEffect, ReactNode } from 'react';
 import Highcharts from 'highcharts';
 import Highstock from 'highcharts/highstock';
-import BrandDark from 'highcharts/themes/brand-dark';
 import { useSettingsTheme } from '@stores/settingsStore';
+
+/** Series colors from the removed Highcharts 12 brand-dark theme. */
+const BRAND_SERIES_COLORS = [
+  '#8087E8',
+  '#A3EDBA',
+  '#F19E53',
+  '#6699A1',
+  '#E1D369',
+  '#87B4E7',
+  '#DA6D85',
+  '#BBBAC5',
+];
 
 const APP_BG = 'var(--color-app-bg)';
 
@@ -34,10 +45,15 @@ function refreshRenderedCharts(): void {
 export function applyHighchartsConfig(): void {
   document.documentElement.classList.add('highcharts-dark');
 
-  Highcharts.setOptions(BrandDark.theme);
-  Highstock.setOptions(BrandDark.theme);
-
-  setOptionsOnAll(buildAppChartOptions());
+  // brand-dark was removed in Highcharts 13. Dark palette keeps labels readable;
+  // series colors stay the previous brand set.
+  setOptionsOnAll({
+    palette: {
+      colorScheme: 'dark',
+      colors: BRAND_SERIES_COLORS,
+    },
+    ...buildAppChartOptions(),
+  });
   refreshRenderedCharts();
 }
 
