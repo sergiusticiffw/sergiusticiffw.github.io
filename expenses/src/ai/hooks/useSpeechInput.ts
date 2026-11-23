@@ -10,7 +10,9 @@ interface Recognition {
   lang: string;
   interimResults: boolean;
   continuous: boolean;
-  onresult: ((event: { resultIndex: number; results: SpeechResultList }) => void) | null;
+  onresult:
+    | ((event: { resultIndex: number; results: SpeechResultList }) => void)
+    | null;
   onerror: ((event: { error: string }) => void) | null;
   onend: (() => void) | null;
   start: () => void;
@@ -26,7 +28,6 @@ const RecognitionImpl: RecognitionConstructor | undefined =
 const SPEECH_LANGS: Record<string, string> = {
   Romanian: 'ro-RO',
   English: 'en-US',
-  Russian: 'ru-RU',
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -98,7 +99,9 @@ export function useSpeechInput(onText: (text: string) => void, silenceMs = 0) {
     };
     recognition.onerror = (event) => {
       if (event.error !== 'aborted' && event.error !== 'no-speech') {
-        setError(ERROR_MESSAGES[event.error] || 'Voice input failed. Try again.');
+        setError(
+          ERROR_MESSAGES[event.error] || 'Voice input failed. Try again.'
+        );
       }
     };
     recognition.onend = () => {

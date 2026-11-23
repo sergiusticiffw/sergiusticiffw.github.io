@@ -5,12 +5,11 @@ export type AiLanguage = (typeof AI_LANGUAGES)[number];
 
 export type AiLocalizedString = Record<AiLanguage, string>;
 
-/** Build a localized string for Romanian / English / Russian. */
-export const L = (
-  Romanian: string,
-  English: string,
-  Russian: string
-): AiLocalizedString => ({ Romanian, English, Russian });
+/** Build a localized string for Romanian / English. */
+export const L = (Romanian: string, English: string): AiLocalizedString => ({
+  Romanian,
+  English,
+});
 
 export const resolveAiLanguage = (value?: string): AiLanguage => {
   const language = value || getAiLanguage();
@@ -19,10 +18,7 @@ export const resolveAiLanguage = (value?: string): AiLanguage => {
     : AI_LANGUAGES[0];
 };
 
-export const aiText = (
-  texts: AiLocalizedString,
-  language?: string
-): string => {
+export const aiText = (texts: AiLocalizedString, language?: string): string => {
   const key = resolveAiLanguage(language);
   return texts[key] || texts.English;
 };

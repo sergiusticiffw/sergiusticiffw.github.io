@@ -71,7 +71,7 @@ export const AI_STORAGE_KEYS = {
   debug: 'aiDebug',
 };
 
-export const AI_LANGUAGES = ['Romanian', 'English', 'Russian'] as const;
+export const AI_LANGUAGES = ['Romanian', 'English'] as const;
 
 export const AI_INSIGHT_LIMITS = {
   maxOutputTokens: 2048,

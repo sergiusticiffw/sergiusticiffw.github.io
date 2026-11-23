@@ -27,8 +27,7 @@ export const buildFamilyPrompts = (
       'family',
       L(
         'Cât am cheltuit împreună pe categoriile comune luna aceasta?',
-        'How much have we spent together on the shared categories this month?',
-        'Сколько мы вместе потратили на общие категории в этом месяце?'
+        'How much have we spent together on the shared categories this month?'
       )
     )
   );
@@ -38,16 +37,14 @@ export const buildFamilyPrompts = (
         'family',
         L(
           'Am depășit limita familiei la vreo categorie luna aceasta?',
-          'Have we gone over any family limit this month?',
-          'Мы превысили какой-либо семейный лимит в этом месяце?'
+          'Have we gone over any family limit this month?'
         )
       ),
       prompt(
         'family',
         L(
           'Cât mai putem cheltui în familie până la sfârșitul lunii, pe fiecare limită?',
-          'How much can we still spend as a family this month, per limit?',
-          'Сколько мы ещё можем потратить семьёй в этом месяце по каждому лимиту?'
+          'How much can we still spend as a family this month, per limit?'
         )
       )
     );
@@ -58,16 +55,14 @@ export const buildFamilyPrompts = (
         'family',
         L(
           'Cine a contribuit cel mai mult la categoriile comune?',
-          'Who contributed the most to the shared categories?',
-          'Кто больше всех вложился в общие категории?'
+          'Who contributed the most to the shared categories?'
         )
       ),
       prompt(
         'family',
         L(
           'Ce a cheltuit familia ieri pe categoriile comune?',
-          'What did the family spend yesterday on the shared categories?',
-          'Сколько семья потратила вчера на общие категории?'
+          'What did the family spend yesterday on the shared categories?'
         )
       )
     );
@@ -78,8 +73,7 @@ export const buildFamilyPrompts = (
         'family',
         L(
           'Care e ponderea mea din venitul comun al familiei?',
-          'What is my share of the family income?',
-          'Какова моя доля в общем доходе семьи?'
+          'What is my share of the family income?'
         )
       )
     );
@@ -90,8 +84,7 @@ export const buildFamilyPrompts = (
         'family',
         L(
           'Ce s-a schimbat recent în familie?',
-          'What changed recently in the family?',
-          'Что недавно изменилось в семье?'
+          'What changed recently in the family?'
         )
       )
     );
@@ -109,19 +102,11 @@ export const buildNetWorthPrompts = (options: {
   const out: DataPrompt[] = [
     prompt(
       'netWorth',
-      L(
-        'Care e valoarea mea netă acum?',
-        'What is my net worth right now?',
-        'Каков мой чистый капитал сейчас?'
-      )
+      L('Care e valoarea mea netă acum?', 'What is my net worth right now?')
     ),
     prompt(
       'netWorth',
-      L(
-        'Ce dețin și ce datorez?',
-        'What do I own and what do I owe?',
-        'Чем я владею и что должен?'
-      )
+      L('Ce dețin și ce datorez?', 'What do I own and what do I owe?')
     ),
   ];
   if (options.goalsEnabled) {
@@ -130,8 +115,7 @@ export const buildNetWorthPrompts = (options: {
         'netWorth',
         L(
           'Cât din valoarea mea netă reprezintă fondul de urgență?',
-          'How much of my net worth is the emergency fund?',
-          'Какую часть моего чистого капитала составляет резервный фонд?'
+          'How much of my net worth is the emergency fund?'
         )
       )
     );
@@ -142,8 +126,7 @@ export const buildNetWorthPrompts = (options: {
         'netWorth',
         L(
           'Cât din datorii sunt dobânzi viitoare?',
-          'How much of what I owe is future interest?',
-          'Какая часть моих долгов — это будущие проценты?'
+          'How much of what I owe is future interest?'
         )
       )
     );
