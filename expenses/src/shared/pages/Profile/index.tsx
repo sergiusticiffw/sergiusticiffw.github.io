@@ -474,8 +474,16 @@ const Profile = () => {
           </div>
           <div className="flex items-center gap-3 py-3 md:py-2.5">
             <div className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] shrink-0" />
-            <div className="text-[0.9rem] md:text-sm text-app-secondary font-medium tracking-tight">
-              {currentUser.name}
+            <div className="min-w-0">
+              <div className="text-[0.9rem] md:text-sm text-app-secondary font-medium tracking-tight">
+                {currentUser.name}
+              </div>
+              <div className="mt-0.5 text-xs text-app-muted">
+                {t('profile.dataProvider')}:{' '}
+                {getDataProviderKind() === 'supabase'
+                  ? t('profile.providerSupabase')
+                  : t('profile.providerDrupal')}
+              </div>
             </div>
           </div>
         </div>

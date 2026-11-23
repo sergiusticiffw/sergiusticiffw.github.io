@@ -470,6 +470,9 @@ const translations = {
     'profile.chartsMoveToHidden': 'Move to Hidden',
     'profile.chartsMoveToVisible': 'Move to Visible',
     'profile.account': 'Account',
+    'profile.dataProvider': 'Data provider',
+    'profile.providerDrupal': 'Drupal',
+    'profile.providerSupabase': 'Supabase',
     'profile.signOut': 'Sign Out',
     'biometric.title': 'Screen lock',
     'biometric.body':
@@ -1698,6 +1701,9 @@ const translations = {
     'profile.chartsMoveToHidden': 'Mută la Ascunse',
     'profile.chartsMoveToVisible': 'Mută la Vizibile',
     'profile.account': 'Cont',
+    'profile.dataProvider': 'Provider de date',
+    'profile.providerDrupal': 'Drupal',
+    'profile.providerSupabase': 'Supabase',
     'profile.signOut': 'Deconectare',
     'biometric.title': 'Blocare ecran',
     'biometric.body':
