@@ -9,7 +9,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Completează `.env.local` cu adresa proiectului Supabase și cheia anonimă. Nu adăuga cheia `service_role` în acest proiect: accesul la date trece prin sesiunea utilizatorului și prin politicile RLS.
+Completează `.env.local` cu adresa proiectului Supabase și cheia anonimă. Accesul obișnuit la date trece prin sesiunea utilizatorului și RLS. `SUPABASE_SERVICE_ROLE_KEY` e doar pentru cron-ul de push (server); nu o expune în client.
 
 Clientul OAuth Google și cheia de criptare rămân doar pe server. Nu le prefixa cu `NEXT_PUBLIC_`.
 
@@ -39,6 +39,16 @@ Pentru un cont Google personal, aplicația folosește OAuth 2.0 al contului tău
 La citire, PDF-ul, fișierul Word (.docx) și fișierul text își dau textul din fișier, iar fotografia este citită local cu OCR. Citirea nu pune un diagnostic. Dacă în text apare un IDNP de 13 cifre, persoana este profilul cu acel IDNP. După ce verifici titlul, data și textul, serverul urcă fișierul în folderul privat al acelei persoane și salvează înregistrarea. Ștergerea documentului șterge și rândurile create din el.
 
 Pagina Asistent înlocuiește lista de înregistrări. Întrebările sunt trimise la Gemini împreună cu textul deja salvat, ca să caute, să filtreze și să rezume documentele. Cheia `GEMINI_API_KEY` stă doar pe server. Asistentul nu înlocuiește un medic.
+
+## Notificări push (programări)
+
+Reminder zilnic ~07:00 Chișinău (cron Vercel `0 5 * * *` UTC = 07:00 EET / 08:00 EEST) pentru programările de azi și de mâine.
+
+1. Aplică [`supabase/migrations/20261123120000_push_notifications.sql`](supabase/migrations/20261123120000_push_notifications.sql).
+2. Generează cheile: `npx web-push generate-vapid-keys`.
+3. În Vercel / `.env.local`: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`.
+4. Pe telefon: Cont → Activează notificările. Pe iPhone: iOS 16.4+, app pe ecranul Home.
+5. Test manual: `curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain/api/cron/appointment-reminders`
 
 Aplică mai întâi migrația inițială, apoi [`supabase/migrations/20261013140000_idnp_extraction.sql`](supabase/migrations/20261013140000_idnp_extraction.sql).
 

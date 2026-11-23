@@ -5,8 +5,11 @@ import { LogoutButton } from "@/components/auth/logout-button";
 import { ChangePasswordForm } from "@/components/profile/change-password-form";
 import { DriveSettings } from "@/components/profile/drive-settings";
 import { OfflineSettings } from "@/components/profile/offline-settings";
+import { PushSettings } from "@/components/profile/push-settings";
 import { SecuritySettings } from "@/components/profile/security-settings";
 import { PageFallback } from "@/components/layout/page-fallback";
+import { getPushSubscriptionStatus } from "@/app/(app)/profile/push-actions";
+import { getPublicVapidKey } from "@/lib/push/vapid";
 import {
   Card,
   CardContent,
@@ -83,6 +86,7 @@ async function ProfileSection({
     ai,
     profilesResult,
     membersResult,
+    pushStatus,
   ] = await Promise.all([
     supabase.from("families").select("name").eq("id", family.familyId).maybeSingle(),
     supabase.auth.getUser(),
@@ -94,7 +98,9 @@ async function ProfileSection({
       .from("family_members")
       .select("user_id", { count: "exact", head: true })
       .eq("family_id", family.familyId),
+    getPushSubscriptionStatus(),
   ]);
+  const vapidPublicKey = getPublicVapidKey();
 
   if (familyResult.error) {
     console.error("profileFamily", familyResult.error.code);
@@ -282,6 +288,26 @@ async function ProfileSection({
               Vezi persoanele
             </Link>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Notificări programări</CardTitle>
+          <CardDescription>
+            Reminder zilnic pe telefon pentru programările de azi și de mâine.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {pushStatus.error ? (
+            <p role="alert" className="mb-2 text-sm text-destructive">
+              {pushStatus.error}
+            </p>
+          ) : null}
+          <PushSettings
+            vapidPublicKey={vapidPublicKey}
+            initiallyEnabled={pushStatus.enabled}
+          />
         </CardContent>
       </Card>
 
