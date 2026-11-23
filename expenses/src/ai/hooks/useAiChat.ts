@@ -7,6 +7,7 @@ import {
 } from '@stores/loanStore';
 import {
   useGoalsEnabled,
+  useLoansEnabled,
   useNetWorthEnabled,
   useSettingsCurrency,
 } from '@stores/settingsStore';
@@ -56,7 +57,11 @@ import { getToolDeclarations } from '../tools/definitions';
 import { TOOL_LABELS, executeTool } from '../tools/executors';
 import { summarizeToolResult } from '../tools/expenseTools';
 import { runToolLoop, type ToolLoopState, type ToolLoopStep } from '../runChat';
-import { formatFamilySummary, loadFamilyAiContext } from '../tools/familyTools';
+import {
+  formatFamilySummary,
+  hasActiveFamilyMembership,
+  loadFamilyAiContext,
+} from '../tools/familyTools';
 import { formatGoalsSummary } from '../tools/goalTools';
 import { formatNetWorthSummary } from '../tools/netWorthTools';
 
@@ -171,6 +176,7 @@ export function useAiChat(apiKey: string) {
   const loanLoading = useLoanLoading();
   const currency = useSettingsCurrency();
   const goalsEnabled = useGoalsEnabled();
+  const loansEnabled = useLoansEnabled();
   const emergencyFund = useEmergencyFund();
   const netWorthEnabled = useNetWorthEnabled();
   const netWorthAssets = useNetWorthAssets();
@@ -189,12 +195,16 @@ export function useAiChat(apiKey: string) {
   const shareDescriptions = getShareDescriptions();
   const items = useMemo(() => getAiItems(raw || []), [raw]);
   const loanContext = useMemo(
-    () => buildLoanContext(loans, loanPayments, shareDescriptions),
-    [loans, loanPayments, shareDescriptions]
+    () =>
+      loansEnabled
+        ? buildLoanContext(loans, loanPayments, shareDescriptions)
+        : buildLoanContext(null, null, shareDescriptions),
+    [loansEnabled, loans, loanPayments, shareDescriptions]
   );
-  const hasLoans = loanContext.snapshots.length > 0;
-  const loansLoaded = loans !== null;
-  // Same figures as the Net Worth page. The emergency fund counts only when Goals is on.
+  const hasLoans = loansEnabled && loanContext.snapshots.length > 0;
+  const loansLoaded = loansEnabled && loans !== null;
+  // Same figures as the Net Worth page. Emergency fund only when Goals is on;
+  // loan liabilities only when Loans is on.
   const netWorth = useMemo(
     () =>
       netWorthEnabled
@@ -202,12 +212,15 @@ export function useAiChat(apiKey: string) {
             emergencyFund: goalsEnabled ? emergencyFund.balance : 0,
             cash: 0,
             customAssets: netWorthAssets.items,
-            loans: computeLoanLiabilities(loans, loanPayments),
+            loans: loansEnabled
+              ? computeLoanLiabilities(loans, loanPayments)
+              : [],
           })
         : null,
     [
       netWorthEnabled,
       goalsEnabled,
+      loansEnabled,
       emergencyFund.balance,
       netWorthAssets.items,
       loans,
@@ -216,7 +229,9 @@ export function useAiChat(apiKey: string) {
   );
   const summary = useMemo(() => {
     let text = buildDataSummary(items, currency || 'MDL', shareDescriptions);
-    if (loanContext.summary) text = `${text}\n\n${loanContext.summary}`;
+    if (loansEnabled && loanContext.summary) {
+      text = `${text}\n\n${loanContext.summary}`;
+    }
     if (goalsEnabled) {
       text = `${text}\n\n${formatGoalsSummary(emergencyFund, items)}`;
     }
@@ -231,6 +246,7 @@ export function useAiChat(apiKey: string) {
     items,
     currency,
     shareDescriptions,
+    loansEnabled,
     loanContext.summary,
     goalsEnabled,
     emergencyFund,
@@ -337,16 +353,22 @@ export function useAiChat(apiKey: string) {
           maxToolRounds: AI_LIMITS.maxToolRounds,
           maxOutputTokens: AI_LIMITS.chatMaxOutputTokens,
           goalsEnabled,
+          loansEnabled,
           hasLoans,
+          netWorthEnabled: !!netWorth,
         },
       });
 
       try {
-        const family = await loadFamilyAiContext(items);
+        const familyRaw = await loadFamilyAiContext(items);
+        const family = hasActiveFamilyMembership(familyRaw)
+          ? familyRaw
+          : null;
         const turnSummary = family
           ? `${summary}\n\n${formatFamilySummary(family)}`
           : summary;
         const turnDeclarations = getToolDeclarations({
+          loansEnabled,
           hasLoans,
           goalsEnabled,
           hasFamily: !!family,
@@ -561,6 +583,7 @@ export function useAiChat(apiKey: string) {
       currency,
       emergencyFund,
       goalsEnabled,
+      loansEnabled,
       hasLoans,
       items,
       loanContext,
@@ -619,9 +642,11 @@ export function useAiChat(apiKey: string) {
     stop,
     switchModel,
     reset,
+    // When Loans is off we never fetch — do not wait on loanStore.loading (stays true).
     hasData:
-      (loans !== null || !loanLoading) &&
-      (items.length > 0 || loanContext.snapshots.length > 0),
+      (!loansEnabled || loans !== null || !loanLoading) &&
+      (items.length > 0 ||
+        (loansEnabled && loanContext.snapshots.length > 0)),
     summaryTokens: Math.round(summary.length / 4),
     loans: loanContext.snapshots,
   };

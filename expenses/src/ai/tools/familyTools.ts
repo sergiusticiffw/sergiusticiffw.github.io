@@ -232,9 +232,18 @@ const buildSnapshot = (
   };
 };
 
+/** True when the user belongs to a real household (owner or member). */
+export const hasActiveFamilyMembership = (
+  family: FamilyAiSnapshot | null | undefined
+): boolean => {
+  if (!family?.householdId) return false;
+  return family.members.some((m) => m.isYou);
+};
+
 /**
  * Prefetch family aggregates for the AI (Supabase household only). The server
  * part is cached ~60s; the local fallback follows the current `items`.
+ * Returns null when the user has no household / is not a member.
  */
 export const loadFamilyAiContext = async (
   items: AiItem[]
@@ -263,7 +272,9 @@ export const loadFamilyAiContext = async (
     cache = { uid: session.uid, encrypted, at: now, remote };
   }
 
-  return remote ? buildSnapshot(remote, items, encrypted, session.uid) : null;
+  if (!remote) return null;
+  const snapshot = buildSnapshot(remote, items, encrypted, session.uid);
+  return hasActiveFamilyMembership(snapshot) ? snapshot : null;
 };
 
 const SOURCE_NOTES: Record<Exclude<FamilyAiSource, 'rpc'>, string> = {
@@ -378,13 +389,13 @@ export const formatFamilySummary = (family: FamilyAiSnapshot): string => {
 const requireFamily = (
   ctx: FamilyToolContext
 ): FamilyAiSnapshot | { error: string } => {
-  if (!ctx.family) {
+  if (!hasActiveFamilyMembership(ctx.family)) {
     return {
       error:
-        'Family budget is not active for this account (no household, or not using Supabase).',
+        'Family budget is not active for this account (no household, or you are not a member).',
     };
   }
-  return ctx.family;
+  return ctx.family!;
 };
 
 const MONTH = /^\d{4}-\d{2}$/;

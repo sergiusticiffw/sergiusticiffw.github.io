@@ -28,13 +28,18 @@ import { fetchLoans } from '@features/loans/api/loans';
 import { useApiClient } from '@shared/hooks/useApiClient';
 import { useExpenseData, useExpenseRaw } from '@stores/expenseStore';
 import { useLoan } from '@stores/loanStore';
-import { useGoalsEnabled, useNetWorthEnabled } from '@stores/settingsStore';
+import {
+  useGoalsEnabled,
+  useLoansEnabled,
+  useNetWorthEnabled,
+} from '@stores/settingsStore';
 import { modelLabel, nextChatModel } from '../../../../ai/config';
 import {
   buildFamilyPrompts,
   buildNetWorthPrompts,
 } from '../../../../ai/featurePrompts';
 import {
+  hasActiveFamilyMembership,
   loadFamilyAiContext,
   type FamilyAiSnapshot,
 } from '../../../../ai/tools/familyTools';
@@ -313,12 +318,17 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
   const seenSuggestions = useRef(new Set<string>());
   const netWorthEnabled = useNetWorthEnabled();
   const goalsEnabled = useGoalsEnabled();
+  const loansEnabled = useLoansEnabled();
   const [family, setFamily] = useState<FamilyAiSnapshot | null>(null);
   useEffect(() => {
     let cancelled = false;
     loadFamilyAiContext(getAiItems(raw || []))
       .then((snapshot) => {
-        if (!cancelled) setFamily(snapshot);
+        if (!cancelled) {
+          setFamily(
+            hasActiveFamilyMembership(snapshot) ? snapshot : null
+          );
+        }
       })
       .catch(() => undefined);
     return () => {
@@ -330,12 +340,12 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
     const next = pickSuggestedPrompts(
       [
         ...buildDataPrompts(getAiItems(raw || []), getShareDescriptions()),
-        ...buildLoanPrompts(loans),
+        ...(loansEnabled ? buildLoanPrompts(loans) : []),
         ...buildFamilyPrompts(family),
         ...buildNetWorthPrompts({
           enabled: netWorthEnabled,
           goalsEnabled,
-          hasLoans: loans.length > 0,
+          hasLoans: loansEnabled && loans.length > 0,
         }),
       ],
       6,
@@ -343,19 +353,23 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
     );
     seenSuggestions.current = next.seen;
     setSuggestions(next.prompts);
-  }, [raw, loans, family, netWorthEnabled, goalsEnabled]);
+  }, [raw, loans, family, netWorthEnabled, goalsEnabled, loansEnabled]);
 
-  const sourceKey = `${raw?.length ? 'expenses' : ''}:${loans.length}:${
-    family ? `${family.totalsSource}${family.goals.length}` : ''
-  }:${netWorthEnabled}:${goalsEnabled}`;
+  const sourceKey = `${raw?.length ? 'expenses' : ''}:${
+    loansEnabled ? loans.length : 0
+  }:${
+    family
+      ? `${family.householdId}:${family.totalsSource}${family.goals.length}`
+      : 'nofamily'
+  }:${netWorthEnabled}:${goalsEnabled}:${loansEnabled}`;
   const pickedFor = useRef('');
   useEffect(() => {
-    if (!raw?.length && !loans.length) return;
+    if (!raw?.length && !(loansEnabled && loans.length)) return;
     if (pickedFor.current === sourceKey) return;
     pickedFor.current = sourceKey;
     seenSuggestions.current = new Set();
     shuffleSuggestions();
-  }, [sourceKey, raw, loans, shuffleSuggestions]);
+  }, [sourceKey, raw, loans, loansEnabled, shuffleSuggestions]);
 
   const online = useOnline();
   const endRef = useRef<HTMLDivElement>(null);
@@ -654,12 +668,14 @@ const Assistant = () => {
   const apiClient = useApiClient();
   const { apiKey, status } = useAiApiKey();
 
+  const loansEnabled = useLoansEnabled();
   const loansFetched = useRef(false);
   useEffect(() => {
+    if (!loansEnabled) return;
     if (loansFetched.current || data.loans || !apiClient) return;
     loansFetched.current = true;
     fetchLoans(apiClient, dataDispatch);
-  }, [data.loans, apiClient, dataDispatch]);
+  }, [loansEnabled, data.loans, apiClient, dataDispatch]);
 
   useEffect(() => {
     if (!apiClient || !expenses.loading) return;

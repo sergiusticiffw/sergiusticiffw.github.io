@@ -1,6 +1,9 @@
 import { aiText, L } from './aiLocale';
 import type { DataPrompt } from './dataPrompts';
-import type { FamilyAiSnapshot } from './tools/familyTools';
+import {
+  hasActiveFamilyMembership,
+  type FamilyAiSnapshot,
+} from './tools/familyTools';
 
 const prompt = (
   kind: DataPrompt['kind'],
@@ -14,10 +17,10 @@ const prompt = (
 export const buildFamilyPrompts = (
   family: FamilyAiSnapshot | null
 ): DataPrompt[] => {
-  if (!family) return [];
+  if (!hasActiveFamilyMembership(family)) return [];
   const out: DataPrompt[] = [];
-  const household = family.totalsSource === 'rpc';
-  const others = family.members.some((member) => !member.isYou);
+  const household = family!.totalsSource === 'rpc';
+  const others = family!.members.some((member) => !member.isYou);
 
   out.push(
     prompt(

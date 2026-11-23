@@ -135,21 +135,24 @@ export const toolDeclarations: GeminiFunctionDeclaration[] = [
 ];
 
 export interface ToolDeclarationOptions {
+  /** Feature flag from Profile — not merely “user has loan rows”. */
+  loansEnabled?: boolean;
   hasLoans: boolean;
   goalsEnabled: boolean;
   hasFamily?: boolean;
   netWorthEnabled?: boolean;
 }
 
-/** Skip loan/goals/net-worth/family tools when unused — fewer tokens, less model confusion. */
+/** Skip loan/goals/net-worth/family tools when disabled — fewer tokens, less model confusion. */
 export const getToolDeclarations = ({
+  loansEnabled = false,
   hasLoans,
   goalsEnabled,
   hasFamily = false,
   netWorthEnabled = false,
 }: ToolDeclarationOptions): GeminiFunctionDeclaration[] => {
   let list = [...coreToolDeclarations];
-  if (hasLoans) {
+  if (loansEnabled && hasLoans) {
     list = [...list, ...loanReadDeclarations, ...loanToolDeclarations];
   }
   if (goalsEnabled) {

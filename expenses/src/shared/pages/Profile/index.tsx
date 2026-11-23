@@ -45,7 +45,7 @@ import TagSettings from '../../../features/profile/TagSettings';
 import FamilySettings from '../../../features/profile/FamilySettings';
 import PrivacySettings from '../../../features/privacy/PrivacySettings';
 import BiometricSettings from '../../../features/privacy/BiometricSettings';
-import { getDataProviderKind } from '../../../data';
+import { getDataProvider, getDataProviderKind } from '../../../data';
 import {
   PAGE_CONTAINER_CLASS,
   BTN_SUBMIT_CLASS,
@@ -128,6 +128,7 @@ const Profile = () => {
   const importFileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const isSupabase = getDataProviderKind() === 'supabase';
+  const [resolvedDisplayName, setResolvedDisplayName] = useState('');
 
   const handleGoalsEnabledChange = async (checked: boolean) => {
     setGoalsEnabled(checked);
@@ -480,10 +481,78 @@ const Profile = () => {
       ? userDetails.current_user
       : undefined;
 
+  // Live Auth / household display name (stale sessions often still store email as name).
+  useEffect(() => {
+    if (!isSupabase || !currentUser?.uid) {
+      setResolvedDisplayName('');
+      return;
+    }
+    const uid = String(currentUser.uid);
+    let cancelled = false;
+    (async () => {
+      let fromAuth = '';
+      let fromHousehold = '';
+      try {
+        const [{ getSupabaseClient }, { displayNameFromUser }] =
+          await Promise.all([
+            import('../../../data/providers/supabase/client'),
+            import('../../../data/providers/supabase/auth'),
+          ]);
+        const { data } = await getSupabaseClient().auth.getUser();
+        fromAuth = displayNameFromUser(data.user) || '';
+      } catch {
+        // ignore
+      }
+      try {
+        if (token) {
+          const provider = getDataProvider();
+          provider.configure(token);
+          const house = await provider.getHousehold();
+          if (house.success && house.data?.members) {
+            const me = house.data.members.find(
+              (m) => String(m.user_id) === uid
+            );
+            fromHousehold = String(me?.display_name || '').trim();
+          }
+        }
+      } catch {
+        // ignore — no household is fine
+      }
+      if (!cancelled) {
+        setResolvedDisplayName(fromHousehold || fromAuth);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isSupabase, currentUser?.uid, token]);
+
   // After LOGOUT, auth clears userDetails before navigate finishes — avoid crash.
   if (!currentUser) {
     return null;
   }
+
+  const storedName = String(currentUser.name || '').trim();
+  const storedIsEmail = storedName.includes('@');
+  const displayName =
+    resolvedDisplayName ||
+    (!storedIsEmail && storedName ? storedName : '');
+  const accountEmail = String(
+    currentUser.email || (storedIsEmail ? storedName : '') || ''
+  ).trim();
+
+  const avatarInitials = (() => {
+    const raw = displayName || accountEmail;
+    if (!raw) return '?';
+    if (raw.includes('@')) {
+      return (raw[0] || '?').toUpperCase();
+    }
+    const parts = raw.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase();
+    }
+    return raw.slice(0, 2).toUpperCase();
+  })();
 
   return (
     <div className={`${PAGE_CONTAINER_CLASS} flex flex-col items-center pt-5 md:pt-4`}>
@@ -505,11 +574,29 @@ const Profile = () => {
             </h3>
           </div>
           <div className="flex items-center gap-3 py-3 md:py-2.5">
-            <div className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] shrink-0" />
+            <div
+              className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-[var(--color-app-accent)] to-[var(--color-app-accent-hover)] shrink-0 flex items-center justify-center text-sm md:text-[0.8rem] font-semibold text-white tracking-wide"
+              aria-hidden
+            >
+              {avatarInitials}
+            </div>
             <div className="min-w-0">
-              <div className="text-[0.9rem] md:text-sm text-app-secondary font-medium tracking-tight">
-                {currentUser.name}
-              </div>
+              {displayName ? (
+                <div className="text-[0.9rem] md:text-sm text-app-secondary font-medium tracking-tight">
+                  {displayName}
+                </div>
+              ) : null}
+              {accountEmail ? (
+                <div
+                  className={`truncate ${
+                    displayName
+                      ? 'mt-0.5 text-xs text-app-muted'
+                      : 'text-[0.9rem] md:text-sm text-app-secondary font-medium tracking-tight'
+                  }`}
+                >
+                  {accountEmail}
+                </div>
+              ) : null}
               <div className="mt-0.5 text-xs text-app-muted">
                 {t('profile.dataProvider')}:{' '}
                 {getDataProviderKind() === 'supabase'

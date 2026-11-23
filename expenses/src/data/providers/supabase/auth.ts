@@ -12,16 +12,49 @@ const oauthRedirectTo = () => {
   return `${base}/expenses/login`;
 };
 
+/** Prefer Auth "Display name" (Google full_name / name), never invent from email alone. */
+export const displayNameFromUser = (
+  user?: {
+    email?: string | null;
+    user_metadata?: Record<string, unknown> | null;
+    identities?: Array<{ identity_data?: Record<string, unknown> | null }> | null;
+  } | null
+): string | undefined => {
+  const meta = user?.user_metadata || {};
+  const candidates: unknown[] = [
+    meta.full_name,
+    meta.name,
+    meta.display_name,
+    meta.preferred_username,
+  ];
+  for (const identity of user?.identities || []) {
+    const data = identity?.identity_data || {};
+    candidates.push(data.full_name, data.name, data.display_name);
+  }
+  for (const c of candidates) {
+    const s = String(c || '').trim();
+    if (s && !s.includes('@')) return s;
+  }
+  return undefined;
+};
+
 const sessionFromSupabase = async (
   accessToken: string,
   refreshToken: string | undefined,
   userId: string,
-  email?: string | null
+  user?: {
+    email?: string | null;
+    user_metadata?: Record<string, unknown> | null;
+    identities?: Array<{ identity_data?: Record<string, unknown> | null }> | null;
+  } | null
 ): Promise<AuthSession> => {
   const supabase = getSupabaseClient();
   let currency: string | undefined;
   let encryption_status: string | undefined;
-  let name = email || undefined;
+  const email = user?.email ?? null;
+  const displayName = displayNameFromUser(user);
+  // Keep email as last-resort label only when Auth has no display name.
+  const name = displayName || email || undefined;
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -35,7 +68,7 @@ const sessionFromSupabase = async (
     encryption_status = mapped.encryption_status;
   }
 
-  const normalizedEmail = String(email || name || '')
+  const normalizedEmail = String(email || '')
     .trim()
     .toLowerCase();
   const sessionEmail =
@@ -83,7 +116,7 @@ export function createSupabaseAuthProvider(): AuthProvider {
             data.session.access_token,
             data.session.refresh_token,
             data.user.id,
-            data.user.email
+            data.user
           );
           return { success: true, data: session };
         }
@@ -163,7 +196,7 @@ export function createSupabaseAuthProvider(): AuthProvider {
           data.session.access_token,
           data.session.refresh_token,
           data.session.user.id,
-          data.session.user.email
+          data.session.user
         );
         return { success: true, data: session };
       } catch (error) {
@@ -188,7 +221,7 @@ export function createSupabaseAuthProvider(): AuthProvider {
           data.session.access_token,
           data.session.refresh_token,
           data.user.id,
-          data.user.email
+          data.user
         );
         return { success: true, data: session };
       } catch (error) {
@@ -210,7 +243,7 @@ export function createSupabaseAuthProvider(): AuthProvider {
           sess.access_token,
           sess.refresh_token,
           sess.user.id,
-          sess.user.email
+          sess.user
         );
         callback(session);
       });
