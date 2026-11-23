@@ -43,22 +43,25 @@ const ContributionHistory = ({
 
   if (groups.length === 0) {
     return (
-      <p className="m-0 text-caption text-app-muted">{t('goals.historyEmpty')}</p>
+      <p className="m-0 px-4 py-3 text-sm text-app-muted">
+        {t('goals.historyEmpty')}
+      </p>
     );
   }
 
   return (
     <div
       ref={listRef}
-      className="relative flex flex-col gap-3 overflow-x-hidden overflow-y-auto touch-pan-y"
+      className="relative overflow-x-hidden overflow-y-auto touch-pan-y"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
-      {groups.slice(0, visibleMonths).map((group) => (
-        <div
-          key={group.month}
-          className="rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3"
-        >
-          <div className="mb-2 flex items-baseline justify-between gap-3">
+      {groups.slice(0, visibleMonths).map((group, groupIndex, visible) => (
+        <div key={group.month}>
+          <div
+            className={`flex items-baseline justify-between gap-3 px-4 py-2.5 ${
+              groupIndex > 0 ? 'border-t border-white/10' : ''
+            }`}
+          >
             <p className="m-0 text-sm font-semibold text-app-primary">
               {formatContributionMonth(group.month, monthNames)}
             </p>
@@ -75,18 +78,18 @@ const ContributionHistory = ({
               </span>
             </p>
           </div>
-          <div className="flex flex-col gap-1.5">
-            {group.entries.map((entry: Contribution) => {
+          <ul className="m-0 list-none p-0">
+            {group.entries.map((entry: Contribution, entryIndex, list) => {
               const isThisItemSwiped = swipedItemId === entry.id;
+              const isLastEntry =
+                entryIndex === list.length - 1 &&
+                groupIndex === visible.length - 1;
               return (
-                <div
-                  key={entry.id}
-                  className="relative w-full overflow-hidden rounded-xl"
-                >
+                <li key={entry.id} className="relative overflow-hidden">
                   {!isDesktop && (
                     <div
                       data-swipe-actions
-                      className={`absolute inset-0 z-[1] flex items-center justify-between rounded-xl opacity-0 transition-opacity duration-200 pointer-events-none ${
+                      className={`absolute inset-0 z-[1] flex items-center justify-between opacity-0 transition-opacity duration-200 pointer-events-none ${
                         isThisItemSwiped && (deleteVisible || editVisible)
                           ? 'opacity-100'
                           : ''
@@ -107,7 +110,9 @@ const ContributionHistory = ({
 
                   <div
                     data-id={entry.id}
-                    className="relative z-[1] flex w-full items-center justify-between gap-3 rounded-xl bg-white/[0.04] px-3 py-2.5 text-caption transition-colors hover:bg-white/[0.07]"
+                    className={`relative z-[1] flex w-full items-center justify-between gap-3 px-4 py-3 text-sm transition-colors ${
+                      !isLastEntry ? 'border-b border-white/[0.04]' : ''
+                    }`}
                     style={{ touchAction: 'pan-y pan-x pinch-zoom' }}
                     onTouchStart={
                       !isDesktop
@@ -170,20 +175,20 @@ const ContributionHistory = ({
                       )}
                     </div>
                   </div>
-                </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </div>
       ))}
       {groups.length > visibleMonths && (
-        <div className="flex items-center justify-center py-2">
+        <div className="flex items-center justify-center border-t border-white/10 py-3">
           <button
             type="button"
             onClick={() => setVisibleMonths(visibleMonths + MONTHS_PAGE)}
-            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-[var(--color-app-accent)]/40 bg-[var(--color-app-accent)]/20 px-5 py-2.5 text-[0.95rem] font-semibold text-[var(--color-app-accent)] transition-all duration-200 hover:bg-[var(--color-app-accent)]/30 [&_svg]:text-sm"
+            className="inline-flex cursor-pointer items-center justify-center gap-1.5 text-sm font-medium text-white/55 hover:text-[var(--color-app-accent)]"
           >
-            <FiChevronDown />
+            <FiChevronDown className="size-3.5" aria-hidden />
             <span>
               {t('common.loadMore')} ({groups.length - visibleMonths}{' '}
               {t('common.remaining')})

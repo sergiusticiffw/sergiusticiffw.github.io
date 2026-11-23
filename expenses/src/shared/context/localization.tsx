@@ -172,6 +172,7 @@ const translations = {
     'nav.profile': 'Profile',
     'netWorth.title': 'Net worth',
     'netWorth.subtitle': 'One number for your overall money situation.',
+    'netWorth.openCharts': 'Charts',
     'netWorth.netWorth': 'Net worth',
     'netWorth.formula': 'Assets − remaining principal & interest',
     'netWorth.assets': 'Assets',
@@ -231,6 +232,11 @@ const translations = {
     // Goals / emergency fund
     'goals.title': 'Emergency fund',
     'goals.subtitle': 'Track how much you have set aside for unexpected costs.',
+    'goals.openNetWorth': 'Net worth',
+    'goals.settingsShort': 'Settings',
+    'goals.askAiShort': 'Ask AI',
+    'goals.askAiPrompt':
+      'Summarize my emergency fund: current balance, months of essential spending covered, distance to my target, and whether my planned monthly contribution is enough.',
     'goals.currentBalance': 'Current balance',
     'goals.progress': 'Progress toward target',
     'goals.ofTarget': '{left} left of {target}',
@@ -1430,6 +1436,7 @@ const translations = {
     'nav.profile': 'Profil',
     'netWorth.title': 'Avere netă',
     'netWorth.subtitle': 'O singură cifră pentru situația ta financiară.',
+    'netWorth.openCharts': 'Grafice',
     'netWorth.netWorth': 'Avere netă',
     'netWorth.formula': 'Active − principal & dobândă rămase',
     'netWorth.assets': 'Active',
@@ -1493,6 +1500,11 @@ const translations = {
     'goals.title': 'Fond de urgență',
     'goals.subtitle':
       'Ține evidența sumei puse deoparte pentru cheltuieli neașteptate.',
+    'goals.openNetWorth': 'Avere netă',
+    'goals.settingsShort': 'Setări',
+    'goals.askAiShort': 'Întreabă AI',
+    'goals.askAiPrompt':
+      'Rezumă-mi fondul de urgență: soldul curent, câte luni de cheltuieli esențiale acoperă, cât lipsește până la țintă și dacă contribuția lunară planificată e suficientă.',
     'goals.currentBalance': 'Sold curent',
     'goals.progress': 'Progres spre țintă',
     'goals.ofTarget': '{left} rămas din {target}',

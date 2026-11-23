@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
+  FiBarChart2,
   FiCreditCard,
   FiDollarSign,
   FiEdit2,
@@ -29,7 +30,6 @@ import {
   FormField,
   Loader,
   LoadingSpinner,
-  PageHeader,
 } from '@shared/components/Common';
 import VaulDrawer from '@shared/components/VaulDrawer';
 import {
@@ -72,6 +72,9 @@ const kindIcon = (kind: NetWorthAssetKind) => {
   if (kind === 'vehicle') return FiTruck;
   return FiDollarSign;
 };
+
+const chipClass =
+  'inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-medium text-app-primary cursor-pointer hover:bg-white/10';
 
 const NetWorth = () => {
   const { t } = useLocalization();
@@ -226,39 +229,51 @@ const NetWorth = () => {
 
   return (
     <div className={PAGE_CONTAINER_CLASS}>
-      <PageHeader
-        title={t('netWorth.title')}
-        subtitle={t('netWorth.subtitle')}
-      />
+      <div className="mb-5 pt-4 flex flex-col items-stretch">
+        <h1 className="m-0 text-2xl font-bold tracking-tight text-white text-left">
+          {t('netWorth.title')}
+        </h1>
+        <p className="m-0 mt-1 text-sm text-white/50 text-left">
+          {t('netWorth.subtitle')}
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Link
+            to="/expenses/charts"
+            className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-white/55 no-underline hover:text-[var(--color-app-accent)] focus-visible:outline-2 focus-visible:outline-[var(--color-app-accent)]"
+          >
+            <FiBarChart2 className="size-3.5 shrink-0" aria-hidden />
+            <span>{t('netWorth.openCharts')}</span>
+          </Link>
+        </div>
+      </div>
 
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <div className="flex flex-col gap-4 pb-8 max-w-[600px] mx-auto w-full">
-          {/* Hero figure */}
-          <div className="rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.08] to-white/[0.03] px-5 py-6 text-center shadow-[0_8px_28px_rgba(0,0,0,0.24)]">
-            <p className="m-0 text-xs uppercase tracking-[0.14em] text-app-muted">
+        <div className="flex flex-col gap-4 pb-8 w-full">
+          <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.03] p-6 pb-5 shadow-lg">
+            <h2 className="m-0 mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">
               {t('netWorth.netWorth')}
-            </p>
-            <p
-              className={`m-0 mt-2 font-extrabold tabular-nums tracking-tight leading-none ${
-                snapshot.netWorth >= 0
-                  ? 'text-app-primary'
-                  : 'text-[var(--color-expense)]'
-              }`}
-              style={{ fontSize: 'clamp(2rem, 9vw, 2.75rem)' }}
-            >
-              {formatNumber(snapshot.netWorth)}
-            </p>
-            <p className="m-0 mt-2 text-sm text-app-muted">{currency}</p>
-            <p className="m-0 mt-3 text-xs text-app-muted leading-relaxed">
-              {t('netWorth.formula')}
-            </p>
+            </h2>
+            <div className="mb-2">
+              <span
+                className={`text-4xl font-extrabold tracking-tight tabular-nums sm:text-3xl ${
+                  snapshot.netWorth >= 0
+                    ? 'text-white'
+                    : 'text-[var(--color-expense)]'
+                }`}
+              >
+                {formatNumber(snapshot.netWorth)}
+              </span>
+              <span className="ml-2 text-sm font-medium text-white/45">
+                {currency}
+              </span>
+            </div>
+            <p className="m-0 text-sm text-white/55">{t('netWorth.formula')}</p>
           </div>
 
-          {/* Assets */}
-          <section className="rounded-xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
-            <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/[0.06]">
+          <section className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+            <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10">
               <h2 className="m-0 text-sm font-semibold text-app-primary inline-flex items-center gap-2">
                 <FiDollarSign className="text-[var(--color-income)]" />
                 {t('netWorth.assets')}
@@ -283,7 +298,7 @@ const NetWorth = () => {
                     {t('netWorth.emergencyFund')}
                   </p>
                   {!goalsEnabled && (
-                    <p className="m-0 mt-0.5 text-[11px] text-app-muted">
+                    <p className="m-0 mt-0.5 text-caption text-app-muted">
                       {t('netWorth.goalsDisabledHint')}
                     </p>
                   )}
@@ -373,7 +388,7 @@ const NetWorth = () => {
                           <p className="m-0 text-sm text-app-primary truncate">
                             {asset.name}
                           </p>
-                          <p className="m-0 mt-0.5 text-[11px] text-app-muted">
+                          <p className="m-0 mt-0.5 text-caption text-app-muted">
                             {kindLabel(asset.kind)}
                           </p>
                         </div>
@@ -408,14 +423,14 @@ const NetWorth = () => {
                 );
               })}
             </ul>
-            <div className="px-4 py-3 border-t border-white/[0.06] flex flex-col gap-2">
-              <p className="m-0 text-[11px] text-app-muted">
+            <div className="px-4 py-3 border-t border-white/10 flex flex-col gap-2">
+              <p className="m-0 text-caption text-app-muted">
                 {t('netWorth.addAssetHint')}
               </p>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-app-primary cursor-pointer hover:bg-white/[0.08]"
+                  className={chipClass}
                   onClick={() =>
                     openNewAsset({
                       kind: 'property',
@@ -428,7 +443,7 @@ const NetWorth = () => {
                 </button>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-app-primary cursor-pointer hover:bg-white/[0.08]"
+                  className={chipClass}
                   onClick={() =>
                     openNewAsset({
                       kind: 'vehicle',
@@ -441,7 +456,7 @@ const NetWorth = () => {
                 </button>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-app-primary cursor-pointer hover:bg-white/[0.08]"
+                  className={chipClass}
                   onClick={() => openNewAsset()}
                 >
                   <FiPlus size={13} aria-hidden />
@@ -451,9 +466,8 @@ const NetWorth = () => {
             </div>
           </section>
 
-          {/* Liabilities */}
-          <section className="rounded-xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
-            <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/[0.06]">
+          <section className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+            <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10">
               <h2 className="m-0 text-sm font-semibold text-app-primary inline-flex items-center gap-2">
                 <FiCreditCard className="text-[var(--color-expense)]" />
                 {t('netWorth.liabilities')}
@@ -484,7 +498,7 @@ const NetWorth = () => {
                         <p className="m-0 text-sm text-app-primary truncate">
                           {loan.name}
                         </p>
-                        <p className="m-0 mt-0.5 text-[11px] text-app-muted">
+                        <p className="m-0 mt-0.5 text-caption text-app-muted">
                           {loan.status === 'pending'
                             ? `${t('netWorth.loanPending')} · ${t('netWorth.loanPrincipal')} ${formatNumber(loan.principal)} · ${t('netWorth.loanInterest')} ${formatNumber(loan.interest)}`
                             : `${t('netWorth.loanPrincipal')} ${formatNumber(loan.principal)} · ${t('netWorth.loanInterest')} ${formatNumber(loan.interest)}`}
@@ -510,10 +524,10 @@ const NetWorth = () => {
               </ul>
             )}
             {loansEnabled && (
-              <div className="px-4 pb-3">
+              <div className="px-4 pb-3 pt-1">
                 <Link
                   to="/expenses/loans"
-                  className="text-xs font-medium text-[var(--color-app-accent)] no-underline hover:underline"
+                  className="text-sm font-medium text-white/55 no-underline hover:text-[var(--color-app-accent)]"
                 >
                   {t('netWorth.openLoans')}
                 </Link>
@@ -531,6 +545,20 @@ const NetWorth = () => {
         }}
         title={
           assetDraft.id ? t('netWorth.editAssetTitle') : t('netWorth.addAssetTitle')
+        }
+        footer={
+          <button
+            type="button"
+            className={BTN_SUBMIT_CLASS}
+            onClick={saveAsset}
+            disabled={savingAsset}
+          >
+            {savingAsset ? (
+              <Loader variant="on-button" />
+            ) : (
+              <span>{t('netWorth.saveAsset')}</span>
+            )}
+          </button>
         }
       >
         <div className="flex flex-col gap-3 pb-2">
@@ -580,18 +608,6 @@ const NetWorth = () => {
             min={0}
             placeholder="0"
           />
-          <button
-            type="button"
-            className={BTN_SUBMIT_CLASS}
-            onClick={saveAsset}
-            disabled={savingAsset}
-          >
-            {savingAsset ? (
-              <Loader variant="on-button" />
-            ) : (
-              <span>{t('netWorth.saveAsset')}</span>
-            )}
-          </button>
         </div>
       </VaulDrawer>
 

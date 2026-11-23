@@ -18,6 +18,18 @@ export const BTN_SUBMIT_CLASS =
   '[&_svg]:size-5 [&_svg]:shrink-0 ' +
   'hover:opacity-90 disabled:opacity-70 disabled:cursor-not-allowed';
 
+/**
+ * Styles for `.form-group` / `.form-input` / `.form-textarea`.
+ * Used by VaulDrawer body and any in-page form surface that renders FormField.
+ */
+export const FORM_SURFACE_CLASS =
+  '[&_.form-group]:mb-4 [&_.form-group]:flex [&_.form-group]:flex-col [&_.form-group]:gap-2 ' +
+  '[&_.form-group_label]:relative [&_.form-group_label]:pl-3 [&_.form-group_label]:text-sm [&_.form-group_label]:font-semibold [&_.form-group_label]:text-app-secondary ' +
+  "[&_.form-group.required_label]:before:absolute [&_.form-group.required_label]:before:left-0 [&_.form-group.required_label]:before:top-1/2 [&_.form-group.required_label]:before:-translate-y-1/2 [&_.form-group.required_label]:before:content-['*'] [&_.form-group.required_label]:before:font-bold [&_.form-group.required_label]:before:text-[0.9rem] [&_.form-group.required_label]:before:text-[var(--color-error)] " +
+  '[&_.form-input]:min-h-12 [&_.form-input]:w-full [&_.form-input]:rounded-lg [&_.form-input]:border [&_.form-input]:border-[var(--color-input-border)] [&_.form-input]:bg-[var(--color-input-bg)] [&_.form-input]:px-3 [&_.form-input]:py-3 [&_.form-input]:text-base [&_.form-input]:text-app-primary [&_.form-input]:outline-none ' +
+  '[&_.form-input:focus-visible]:border-[var(--color-app-accent)] [&_.form-input:focus-visible]:shadow-[0_0_0_2px_var(--color-app-accent)] ' +
+  '[&_.form-textarea]:min-h-[90px] [&_.form-textarea]:w-full [&_.form-textarea]:rounded-lg [&_.form-textarea]:border [&_.form-textarea]:border-[var(--color-input-border)] [&_.form-textarea]:bg-[var(--color-input-bg)] [&_.form-textarea]:px-3 [&_.form-textarea]:py-3 [&_.form-textarea]:text-base [&_.form-textarea]:text-app-primary [&_.form-textarea]:outline-none ' +
+  '[&_.form-textarea:focus-visible]:border-[var(--color-app-accent)] [&_.form-textarea:focus-visible]:shadow-[0_0_0_2px_var(--color-app-accent)]';
 /** Floating Action Button (înlocuie .fab) – Charts, Income, Loans, Loan detail, NewHome */
 export const FAB_CLASS =
   'fixed z-[1000] flex cursor-pointer select-none items-center justify-center border-0 rounded-full ' +
