@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import {
   useTable,
   tableFeatures,
@@ -8,6 +8,7 @@ import {
   type ColumnDef,
   type Row,
 } from '@tanstack/react-table';
+import { FiCrosshair } from 'react-icons/fi';
 
 const tableFeaturesSet = tableFeatures({
   columnSizingFeature,
@@ -38,6 +39,7 @@ interface AnnualSummary {
 }
 
 type AmortizationRow = PaymentLog | AnnualSummary;
+type RowKind = 'annual' | 'was-payed' | 'current' | '';
 
 interface AmortizationTableProps {
   amortizationSchedule: AmortizationRow[];
@@ -64,47 +66,84 @@ const STICKY_FIRST_HEADER =
   'sticky top-0 left-0 z-50 overflow-hidden border-r border-app-subtle bg-[var(--color-app-bg)] shadow-[6px_0_10px_-4px_rgba(0,0,0,0.55)]';
 const ROW_BASE = 'flex w-full min-w-max';
 const ROW_ANNUAL = 'border-t border-b border-[var(--color-border-medium)]';
-const ROW_WAS_PAYED = 'bg-[#1e3a2f]';
-const TD_ANNUAL =
-  '!bg-[#141414] font-bold text-[var(--color-text-primary)]';
-const TD_WAS_PAYED = '!bg-[#1e3a2f] text-[#d4edda]';
+const ROW_WAS_PAYED = 'bg-[#2a4f3c]';
+const ROW_CURRENT =
+  'border-l-[3px] border-l-[var(--color-app-accent)] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--color-app-accent)_55%,transparent)]';
+const TD_ANNUAL = '!bg-[#141414] font-bold text-[var(--color-text-primary)]';
+const TD_WAS_PAYED = '!bg-[#2a4f3c] text-[#e2f5e9]';
+const TD_CURRENT =
+  '!bg-[color-mix(in_srgb,var(--color-app-accent)_32%,var(--color-app-bg))] text-white font-semibold';
 const TD_STICKY_ANNUAL = '!bg-[#141414]';
-const TD_STICKY_WAS_PAYED = '!bg-[#1e3a2f]';
+const TD_STICKY_WAS_PAYED = '!bg-[#2a4f3c]';
+const TD_STICKY_CURRENT =
+  '!bg-[color-mix(in_srgb,var(--color-app-accent)_32%,var(--color-app-bg))]';
+
+const PAID_BG = '#2a4f3c';
+const CURRENT_BG =
+  'color-mix(in srgb, var(--color-app-accent) 32%, var(--color-app-bg))';
+
+/** First unpaid installment row (skips annual totals + change markers). */
+function findNextUnpaidIndex(schedule: AmortizationRow[]): number {
+  for (let i = 0; i < schedule.length; i++) {
+    const row = schedule[i];
+    if ('type' in row && row.type === 'annual_summary') continue;
+    const payment = row as PaymentLog;
+    if (payment.was_payed === true) continue;
+    if (payment.installment == null || payment.installment === '-') continue;
+    const amount =
+      typeof payment.installment === 'number'
+        ? payment.installment
+        : Number(payment.installment);
+    if (!Number.isFinite(amount) || amount <= 0) continue;
+    if (!payment.date || typeof payment.date !== 'string') continue;
+    return i;
+  }
+  return -1;
+}
 
 function getRowKind(
-  row: Row<typeof tableFeaturesSet, AmortizationRow>
-): 'annual' | 'was-payed' | '' {
+  row: Row<typeof tableFeaturesSet, AmortizationRow>,
+  currentIndex: number
+): RowKind {
   const original = row.original;
   if ('type' in original && original.type === 'annual_summary') return 'annual';
+  if (currentIndex >= 0 && row.index === currentIndex) return 'current';
   if ('was_payed' in original && original.was_payed) return 'was-payed';
   return '';
 }
 
-function cellToneClass(kind: 'annual' | 'was-payed' | '', sticky = false): string {
-  if (kind === 'annual') return sticky ? `${TD_ANNUAL} ${TD_STICKY_ANNUAL}` : TD_ANNUAL;
+function cellToneClass(kind: RowKind, sticky = false): string {
+  if (kind === 'annual')
+    return sticky ? `${TD_ANNUAL} ${TD_STICKY_ANNUAL}` : TD_ANNUAL;
   if (kind === 'was-payed') {
     return sticky ? `${TD_WAS_PAYED} ${TD_STICKY_WAS_PAYED}` : TD_WAS_PAYED;
+  }
+  if (kind === 'current') {
+    return sticky ? `${TD_CURRENT} ${TD_STICKY_CURRENT}` : TD_CURRENT;
   }
   return '';
 }
 
-function rowToneClass(kind: 'annual' | 'was-payed' | ''): string {
+function rowToneClass(kind: RowKind): string {
   if (kind === 'annual') return ROW_ANNUAL;
   if (kind === 'was-payed') return ROW_WAS_PAYED;
+  if (kind === 'current') return ROW_CURRENT;
   return '';
 }
 
 function cellFlexStyle(
   minWidth: number,
   sticky = false,
-  kind: 'annual' | 'was-payed' | '' = ''
+  kind: RowKind = ''
 ): React.CSSProperties {
   const toneBg =
     kind === 'was-payed'
-      ? '#1e3a2f'
+      ? PAID_BG
       : kind === 'annual'
         ? '#141414'
-        : undefined;
+        : kind === 'current'
+          ? CURRENT_BG
+          : undefined;
 
   // Sticky col stays fixed width; others grow to fill desktop width
   if (sticky) {
@@ -128,6 +167,19 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
   amortizationSchedule,
 }) => {
   const { t } = useLocalization();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const nextUnpaidIndex = useMemo(
+    () => findNextUnpaidIndex(amortizationSchedule),
+    [amortizationSchedule]
+  );
+
+  const scrollToCurrent = (behavior: ScrollBehavior = 'smooth') => {
+    const el = scrollRef.current?.querySelector<HTMLElement>(
+      '[data-amort-current="1"]'
+    );
+    el?.scrollIntoView({ block: 'center', behavior });
+  };
 
   const columns = useMemo<
     ColumnDef<typeof tableFeaturesSet, AmortizationRow>[]
@@ -137,7 +189,7 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
         id: 'date',
         accessorKey: 'date',
         header: t('amortization.date'),
-        size: 128,
+        size: 108,
         cell: (info) => {
           const row = info.row.original;
           if ('type' in row && row.type === 'annual_summary') {
@@ -248,9 +300,22 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
     [columns]
   );
 
+  const jumpLabel = t('amortization.jumpToCurrent');
+
   return (
-    <div className={AMORT_ROOT}>
-      <div className={AMORT_SCROLL}>
+    <div className={`${AMORT_ROOT} group/amort`}>
+      {nextUnpaidIndex >= 0 && (
+        <button
+          type="button"
+          onClick={() => scrollToCurrent('smooth')}
+          aria-label={jumpLabel}
+          title={jumpLabel}
+          className="absolute top-1.5 right-1.5 z-[60] inline-flex size-8 items-center justify-center rounded-md text-[var(--color-app-accent)]/70 hover:bg-white/10 hover:text-[var(--color-app-accent)] focus-visible:outline-2 focus-visible:outline-[var(--color-app-accent)]"
+        >
+          <FiCrosshair className="size-4" aria-hidden />
+        </button>
+      )}
+      <div ref={scrollRef} className={AMORT_SCROLL}>
         <div className={AMORT_INNER} style={{ minWidth: minTableWidth }}>
           <div
             role="row"
@@ -282,11 +347,14 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
             style={{ minWidth: minTableWidth }}
           >
             {rows.map((row) => {
-              const kind = getRowKind(row);
+              const kind = getRowKind(row, nextUnpaidIndex);
+              const isCurrent = kind === 'current';
               return (
                 <div
                   key={row.id}
                   role="row"
+                  data-amort-current={isCurrent ? '1' : undefined}
+                  aria-current={isCurrent ? 'true' : undefined}
                   className={`${ROW_BASE} ${rowToneClass(kind)}`}
                 >
                   {row.getVisibleCells().map((cell, index) => {
@@ -297,7 +365,11 @@ const AmortizationTable: React.FC<AmortizationTableProps> = ({
                         key={cell.id}
                         role="cell"
                         className={`${AMORT_TD} ${align} ${sticky ? STICKY_FIRST : ''} ${cellToneClass(kind, sticky)}`}
-                        style={cellFlexStyle(cell.column.getSize(), sticky, kind)}
+                        style={cellFlexStyle(
+                          cell.column.getSize(),
+                          sticky,
+                          kind
+                        )}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

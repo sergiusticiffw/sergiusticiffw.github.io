@@ -22,6 +22,9 @@ interface LoanDetailsProps {
   totalPaidAmount?: number;
 }
 
+/** Flip to true to show the pie cost breakdown again. */
+const SHOW_LOAN_COST_BREAKDOWN = false;
+
 const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
   const { t } = useLocalization();
   const loan: PaydownResult | null = props?.loan ?? null;
@@ -149,14 +152,18 @@ const LoanDetails: React.FC<LoanDetailsProps> = (props) => {
 
   return (
     <div className="charts-page amortization-schedule">
-      <LoanCostBreakdown
-        data={{
-          principal: principalForChart,
-          sumOfInterest,
-          sumInstallments,
-        }}
-      />
-      <br />
+      {SHOW_LOAN_COST_BREAKDOWN ? (
+        <>
+          <LoanCostBreakdown
+            data={{
+              principal: principalForChart,
+              sumOfInterest,
+              sumInstallments,
+            }}
+          />
+          <br />
+        </>
+      ) : null}
 
       {loan?.annual_summaries && Object.keys(loan.annual_summaries).length > 0 ? (
         <>

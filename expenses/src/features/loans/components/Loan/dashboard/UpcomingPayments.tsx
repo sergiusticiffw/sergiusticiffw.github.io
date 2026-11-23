@@ -54,7 +54,25 @@ const UpcomingPayments: React.FC<UpcomingPaymentsProps> = ({
         <div className="text-3xl font-bold text-white tabular-nums tracking-tight">
           {formatNumber(payment.installment)}
         </div>
-        <div className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-white/45">
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-white/[0.04] border border-white/5 px-3 py-2.5">
+            <div className="text-[0.7rem] uppercase tracking-wide text-white/45 font-medium">
+              {t('loan.upcoming.principal')}
+            </div>
+            <div className="mt-0.5 text-sm font-semibold text-white tabular-nums">
+              {formatNumber(payment.principal)}
+            </div>
+          </div>
+          <div className="rounded-xl bg-white/[0.04] border border-white/5 px-3 py-2.5">
+            <div className="text-[0.7rem] uppercase tracking-wide text-white/45 font-medium">
+              {t('loan.upcoming.interest')}
+            </div>
+            <div className="mt-0.5 text-sm font-semibold text-white tabular-nums">
+              {formatNumber(payment.interest)}
+            </div>
+          </div>
+        </div>
+        <div className="mt-2.5 inline-flex items-center gap-1.5 text-sm text-white/45">
           <FiCalendar className="w-3.5 h-3.5 shrink-0" />
           <span className="tabular-nums">{payment.date}</span>
         </div>

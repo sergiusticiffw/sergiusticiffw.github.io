@@ -1,21 +1,17 @@
 import React, { useMemo } from 'react';
 import type { PaydownResult, PaymentLog } from '@features/loans/utils/amortization';
 import {
-  calculateMilestones,
   countRemainingPayments,
   getUpcomingPayments,
   getTotalInterest,
 } from '@features/loans/utils/loanSimulation';
 import LoanKpiCards from './LoanKpiCards';
-import LoanMilestones from './LoanMilestones';
 import UpcomingPayments from './UpcomingPayments';
 
 interface LoanDashboardProps {
   paydown: PaydownResult | null;
   schedule: PaymentLog[];
   loanStatus: string;
-  progress: number;
-  principalPaid: number;
   totalPrincipal: number;
   totalPaidAmount: number;
   remainingDisplay: string;
@@ -27,8 +23,6 @@ const LoanDashboard: React.FC<LoanDashboardProps> = ({
   paydown,
   schedule,
   loanStatus,
-  progress,
-  principalPaid,
   totalPrincipal,
   totalPaidAmount,
   remainingDisplay,
@@ -41,17 +35,6 @@ const LoanDashboard: React.FC<LoanDashboardProps> = ({
   const interestToPrincipalRatio = useMemo(
     () => (totalPrincipal > 0 ? (totalInterest / totalPrincipal) * 100 : 0),
     [totalInterest, totalPrincipal]
-  );
-
-  const milestones = useMemo(
-    () =>
-      calculateMilestones(
-        schedule,
-        totalPrincipal,
-        principalPaid,
-        paydown?.remaining_principal_after_paid ?? paydown?.remaining_principal
-      ),
-    [schedule, totalPrincipal, principalPaid, paydown]
   );
 
   const upcomingPayment = useMemo(
@@ -79,24 +62,11 @@ const LoanDashboard: React.FC<LoanDashboardProps> = ({
       </div>
 
       {isActive && (
-        <>
-          <UpcomingPayments
-            payment={upcomingPayment}
-            remainingCount={remainingPaymentsCount}
-            onAddPayment={onAddPayment}
-          />
-
-          <LoanMilestones
-            milestones={milestones}
-            progress={
-              milestones.every((m) => m.completed) ? 100 : progress
-            }
-          />
-        </>
-      )}
-
-      {loanStatus === 'completed' && (
-        <LoanMilestones milestones={milestones} progress={100} />
+        <UpcomingPayments
+          payment={upcomingPayment}
+          remainingCount={remainingPaymentsCount}
+          onAddPayment={onAddPayment}
+        />
       )}
     </div>
   );

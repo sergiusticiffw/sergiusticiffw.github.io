@@ -4,7 +4,7 @@ import LoanDashboard from '@features/loans/components/Loan/dashboard/LoanDashboa
 import LoanForm from '@features/loans/components/Loan/LoanForm';
 import LoanSimulateDrawer from '@features/loans/components/Loan/LoanSimulateDrawer';
 import VaulDrawer from '@shared/components/VaulDrawer';
-import { Link, useParams } from '@tanstack/react-router';
+import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import PaymentDetails from '@features/loans/components/Loan/PaymentDetails';
 import PaymentForm from '@features/loans/components/Loan/PaymentForm';
 import { Loader, LoadingSpinner } from '@shared/components/Common';
@@ -26,6 +26,7 @@ import {
   calculateInterestSavings,
   buildEventsFromApiPayments,
 } from '@features/loans/utils/amortization';
+import { calculateMilestones } from '@features/loans/utils/loanSimulation';
 import { getEffectiveRateFromSchedule } from '@features/loans/utils/loanSnapshot';
 import type { ApiLoan, ApiPaymentItem, LoanPaymentsEntry } from '@shared/type/types';
 import {
@@ -40,6 +41,7 @@ import {
   FiTrendingDown,
   FiAlertCircle,
   FiChevronLeft,
+  FiZap,
 } from 'react-icons/fi';
 import Notification from '@shared/components/Notification/Notification';
 import { useLocalization } from '@shared/context/localization';
@@ -153,6 +155,7 @@ const sumPaidAfterMarker = (
 const Loan: React.FC = () => {
   useChartsThemeSync();
   const { id } = useParams({ from: '/expenses/loan/$id' });
+  const navigate = useNavigate();
   const { data, dataDispatch } = useLoan();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSimulate, setShowSimulate] = useState(false);
@@ -516,6 +519,13 @@ const Loan: React.FC = () => {
       ? t('loan.notStarted')
       : formatNumber(principalPaid);
 
+  const milestones = calculateMilestones(
+    amortizationSchedule,
+    totalPrincipal,
+    principalPaid,
+    paydown?.remaining_principal_after_paid ?? paydown?.remaining_principal
+  );
+
   const totalInterestExpected =
     (paydown?.sum_of_interests ?? 0) + (paydown?.unpaid_interest ?? 0);
   const remainingInterest =
@@ -565,7 +575,7 @@ const Loan: React.FC = () => {
   return (
     <div className={`${PAGE_CONTAINER_CLASS} loan-container`}>
       {/* Header */}
-      <div className="w-full text-center mb-5 pt-4 flex flex-col items-center">
+      <div className="w-full mb-5 pt-4 flex flex-col items-stretch">
         <Link
           to="/expenses/loans"
           className="mb-2 inline-flex min-h-11 items-center gap-1 self-start rounded-lg pr-3 text-sm font-medium text-app-secondary hover:text-app-primary focus-visible:outline-2 focus-visible:outline-[var(--color-app-accent)]"
@@ -573,24 +583,50 @@ const Loan: React.FC = () => {
           <FiChevronLeft className="size-5" aria-hidden="true" />
           <span>{t('ux.backToLoans')}</span>
         </Link>
-        <h1 className="text-2xl font-bold text-white tracking-tight m-0">{loan?.title}</h1>
-        <button
-          type="button"
-          onClick={() => setShowEditModal(true)}
-          className="w-full inline-flex items-center justify-center gap-2 mt-4 py-3 px-6 min-h-12 text-base font-semibold text-white bg-white/10 border border-white/10 rounded-xl hover:bg-white/15 hover:border-[var(--color-app-accent)] active:scale-[0.98] transition-all cursor-pointer"
-        >
-          <FiEdit2 className="w-5 h-5 shrink-0 text-[var(--color-app-accent)]" />
-          <span>{t('loan.editLoan')}</span>
-        </button>
-        {loan && (
+        <div className="flex items-start gap-2">
+          <h1 className="flex-1 min-w-0 text-2xl font-bold text-white tracking-tight m-0 text-left">
+            {loan?.title}
+          </h1>
           <button
             type="button"
-            onClick={() => setShowSimulate(true)}
-            className="w-full inline-flex items-center justify-center gap-2 mt-2 py-3 px-6 min-h-12 text-base font-semibold text-white bg-white/10 border border-white/10 rounded-xl hover:bg-white/15 hover:border-[var(--color-app-accent)] active:scale-[0.98] transition-all cursor-pointer"
+            onClick={() => setShowEditModal(true)}
+            aria-label={t('loan.editLoan')}
+            title={t('loan.editLoan')}
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-app-muted hover:bg-white/8 hover:text-[var(--color-app-accent)] focus-visible:outline-2 focus-visible:outline-[var(--color-app-accent)]"
           >
-            <FiTrendingDown className="w-5 h-5 shrink-0 text-[var(--color-app-accent)]" />
-            <span>{t('simulate.open')}</span>
+            <FiEdit2 className="size-4" aria-hidden />
           </button>
+        </div>
+        {loan && (
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <button
+              type="button"
+              onClick={() => setShowSimulate(true)}
+              className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-white/55 hover:text-[var(--color-app-accent)] focus-visible:outline-2 focus-visible:outline-[var(--color-app-accent)]"
+            >
+              <FiTrendingDown className="size-3.5 shrink-0" aria-hidden />
+              <span>{t('simulate.openShort')}</span>
+            </button>
+            <span className="text-white/20" aria-hidden>
+              ·
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const name = String(loan.title || '').trim() || t('loan.loan');
+                navigate({
+                  to: '/expenses/assistant',
+                  state: {
+                    prompt: t('loan.askAiPrompt').replace('{name}', name),
+                  },
+                });
+              }}
+              className="inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-white/55 hover:text-[var(--color-app-accent)] focus-visible:outline-2 focus-visible:outline-[var(--color-app-accent)]"
+            >
+              <FiZap className="size-3.5 shrink-0" aria-hidden />
+              <span>{t('loan.askAiShort')}</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -624,6 +660,26 @@ const Loan: React.FC = () => {
             style={{ width: `${progress}%` }}
           />
         </div>
+        {milestones.length > 0 && (
+          <div className="mt-4 grid grid-cols-4 gap-2">
+            {milestones.map((m) => (
+              <div key={m.id} className="min-w-0 text-center">
+                <div
+                  className={`text-sm font-semibold tabular-nums ${
+                    m.completed
+                      ? 'text-[var(--color-app-accent)]'
+                      : 'text-white/45'
+                  }`}
+                >
+                  {m.percent}%
+                </div>
+                <div className="mt-0.5 text-[0.7rem] text-white/35 tabular-nums truncate">
+                  {m.date ?? t('loan.milestones.estimated')}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-white/5 text-sm text-white/55">
           <span className="inline-flex items-center gap-2">
             <FiCalendar className={iconTw} />
@@ -636,13 +692,11 @@ const Loan: React.FC = () => {
         </div>
       </div>
 
-      {/* Dashboard: KPIs, upcoming payments, milestones */}
+      {/* Dashboard: KPIs, upcoming payments */}
       <LoanDashboard
         paydown={paydown}
         schedule={amortizationSchedule}
         loanStatus={loanStatus}
-        progress={progress}
-        principalPaid={principalPaid}
         totalPrincipal={totalPrincipal}
         totalPaidAmount={totalPaidAmount}
         remainingDisplay={remainingPrincipalDisplay}

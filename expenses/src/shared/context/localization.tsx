@@ -75,6 +75,7 @@ const translations = {
     'paymentForm.intentRate': 'Rate / terms change',
     'paymentForm.extraTitle': 'Extra payment',
     'simulate.open': 'Simulate extra payment',
+    'simulate.openShort': 'Simulate',
     'simulate.title': 'Simulate an extra payment',
     'simulate.hint':
       'Estimate only. Nothing is saved. Uses the same schedule as this loan page.',
@@ -176,9 +177,11 @@ const translations = {
     'netWorth.assets': 'Assets',
     'netWorth.liabilities': 'Liabilities',
     'netWorth.emergencyFund': 'Emergency fund',
-    'netWorth.goalsDisabledHint': 'Enable Goals in Profile to manage this fund.',
+    'netWorth.goalsDisabledHint':
+      'Enable Goals in Profile to manage this fund.',
     'netWorth.cash': 'Cash & accounts',
-    'netWorth.cashHint': 'Bank, cash, or other liquid balances you want included.',
+    'netWorth.cashHint':
+      'Bank, cash, or other liquid balances you want included.',
     'netWorth.editCash': 'Edit cash',
     'netWorth.editCashTitle': 'Cash & accounts',
     'netWorth.saveCash': 'Save',
@@ -218,13 +221,11 @@ const translations = {
     'profile.netWorthHint':
       'Emergency fund + assets − remaining loan principal & interest, in one figure.',
     'profile.netWorthEnable': 'Enable net worth',
-    'profile.netWorthEnableHint':
-      'Shows net worth on Charts. Off by default.',
+    'profile.netWorthEnableHint': 'Shows net worth on Charts. Off by default.',
     'profile.netWorthOpen': 'Open net worth',
     'profile.loans': 'Loans',
     'profile.loansEnable': 'Enable loans',
-    'profile.loansEnableHint':
-      'Shows loans in the navigation. Off by default.',
+    'profile.loansEnableHint': 'Shows loans in the navigation. Off by default.',
     'profile.loansOpen': 'Open loans',
 
     // Goals / emergency fund
@@ -237,8 +238,7 @@ const translations = {
     'goals.avgMonthlySpend': 'Avg essential spend',
     'goals.avgMonthlySpendHint':
       'Excludes entertainment, gifts, travel, and investments',
-    'goals.excludedCategories':
-      'Essential spend excludes: {categories}.',
+    'goals.excludedCategories': 'Essential spend excludes: {categories}.',
     'goals.monthsCovered': 'Months covered',
     'goals.eta': 'Time to goal',
     'goals.monthsCoveredValue': '{months} months of spending covered',
@@ -255,13 +255,16 @@ const translations = {
     'goals.suggestedTarget': 'Suggested target: {amount}',
     'goals.contributionLabel': 'Planned monthly contribution (optional)',
     'goals.contributionPlaceholder': '0',
-    'goals.contributionHint': 'Used only for time-to-goal estimate — not the ledger',
-    'goals.targetMonthsDriveHint': 'Coverage choice is saved to Google Drive with your fund',
+    'goals.contributionHint':
+      'Used only for time-to-goal estimate — not the ledger',
+    'goals.targetMonthsDriveHint':
+      'Coverage choice is saved to Google Drive with your fund',
     'goals.addSavingTitle': 'Fund movement',
     'goals.addSavingDescription':
       'Add a deposit or use a negative amount when you take money from the fund.',
     'goals.addSavingAmount': 'Amount',
-    'goals.addSavingAmountHint': 'Positive adds to the fund; negative withdraws',
+    'goals.addSavingAmountHint':
+      'Positive adds to the fund; negative withdraws',
     'goals.addSavingMonth': 'Month',
     'goals.addSaving': 'Record movement',
     'goals.addSavingBusy': 'Saving…',
@@ -269,7 +272,8 @@ const translations = {
     'goals.addWithdrawalDone': 'Withdrawal recorded',
     'goals.invalidAddAmount': 'Enter a non-zero amount (use minus to withdraw)',
     'goals.historyTitle': 'Contribution history',
-    'goals.historyEmpty': 'No movements yet. Add a deposit or withdrawal above.',
+    'goals.historyEmpty':
+      'No movements yet. Add a deposit or withdrawal above.',
     'goals.historyMonthTotal': 'Total',
     'goals.editContributionTitle': 'Edit movement',
     'goals.editContributionSave': 'Save changes',
@@ -291,8 +295,7 @@ const translations = {
     'goals.syncFailed': 'Cloud sync unavailable — local copy kept',
     'goals.syncError': 'Could not sync the emergency fund',
     'goals.syncErrorDrive': 'Could not save Goals to your account. Try again.',
-    'goals.claimed':
-      'Goals recovered for this account.',
+    'goals.claimed': 'Goals recovered for this account.',
     'goals.invalidContribution': 'Enter a valid contribution',
 
     // Offline
@@ -347,8 +350,7 @@ const translations = {
     'budgetRings.unlocks': 'Unlocks {date}',
     'budgetRings.noteEarly':
       '{viewed} is based on {source}, your last completed month.',
-    'budgetRings.noteAverage':
-      'Average of your last {count} completed {unit}.',
+    'budgetRings.noteAverage': 'Average of your last {count} completed {unit}.',
     'budgetRings.noteAll':
       'Average of all {count} completed months before this one.',
     'budgetRings.month': 'month',
@@ -485,7 +487,8 @@ const translations = {
     'biometric.toggle': 'Unlock with biometrics',
     'biometric.statusLabel': 'Status',
     'biometric.status.unsupported': 'unavailable in this browser',
-    'biometric.status.unavailable': 'no Face ID / fingerprint / Windows Hello on this device',
+    'biometric.status.unavailable':
+      'no Face ID / fingerprint / Windows Hello on this device',
     'biometric.status.active': 'on for this device',
     'biometric.status.inactive': 'off',
     'biometric.enabled': 'Biometric unlock is on for this device.',
@@ -497,11 +500,13 @@ const translations = {
     'biometric.unlock': 'Unlock',
     'biometric.unlocking': 'Checking…',
     'biometric.useGoogle': 'Sign in with Google',
-    'biometric.err.unsupported': 'This device does not support biometric unlock.',
+    'biometric.err.unsupported':
+      'This device does not support biometric unlock.',
     'biometric.err.unavailable':
       'No Face ID, fingerprint, or Windows Hello on this device.',
     'biometric.err.cancelled': 'Biometric prompt was cancelled.',
-    'biometric.err.enrollFailed': 'Biometrics could not be enabled on this device.',
+    'biometric.err.enrollFailed':
+      'Biometrics could not be enabled on this device.',
     'biometric.err.notEnabled': 'Biometric unlock is not enabled.',
     'biometric.err.missingCredential':
       'Biometric credential is missing. Turn it on again from Profile.',
@@ -521,7 +526,8 @@ const translations = {
     'privacy.savedDrive': 'Key saved in Google Drive',
     'privacy.unlockButton': 'Unlock my data',
     'privacy.unlockTitle': 'Unlock my data',
-    'privacy.writePaused': 'Editing is paused while your data is being locked or unlocked.',
+    'privacy.writePaused':
+      'Editing is paused while your data is being locked or unlocked.',
     'privacy.keyNeededTitle': 'Unlock your data',
     'privacy.keyNeededBody':
       'This account is locked. Sync stays paused until you provide the key from Google Drive or paste it.',
@@ -534,9 +540,11 @@ const translations = {
       'Without the key the encrypted expenses cannot be recovered. You can sign out, or contact the admin. The app will not delete them.',
     'privacy.keyAccepted': 'Key saved on this device.',
     'privacy.keyMismatch': "This key doesn't match your data.",
-    'privacy.invalidKey': "That key doesn't look right. Check it and try again.",
+    'privacy.invalidKey':
+      "That key doesn't look right. Check it and try again.",
     'privacy.noDriveKey': 'No key was found in Google Drive.',
-    'privacy.driveDifferent': 'A different key is already saved in Google Drive.',
+    'privacy.driveDifferent':
+      'A different key is already saved in Google Drive.',
     'privacy.continue': 'Continue',
     'privacy.retry': 'Check again',
     'privacy.generateKey': 'Generate key',
@@ -549,7 +557,8 @@ const translations = {
       'Your expenses will be readable by the server admin again. The key on this device is deleted when it finishes.',
     'privacy.typeUnlock': 'Type UNLOCK to confirm',
     'privacy.deleteDrive': 'Also delete the key from Google Drive',
-    'privacy.doneLock': 'Your data is locked. Keep the key somewhere you can find it.',
+    'privacy.doneLock':
+      'Your data is locked. Keep the key somewhere you can find it.',
     'privacy.doneUnlock': 'Your data is readable again.',
     'privacy.pause': 'Pause',
     'privacy.minimize': 'Minimize',
@@ -559,8 +568,10 @@ const translations = {
     'privacy.unlockingTitle': 'Unlocking your data',
     'privacy.browsing': 'You can keep browsing. Editing is paused.',
     'privacy.eta': 'about {min} min left',
-    'privacy.corrupt': "{count} items couldn't be decrypted. Nothing was deleted.",
-    'privacy.inProgress': 'A lock or unlock is still in progress. Continue it from the bar at the top.',
+    'privacy.corrupt':
+      "{count} items couldn't be decrypted. Nothing was deleted.",
+    'privacy.inProgress':
+      'A lock or unlock is still in progress. Continue it from the bar at the top.',
     'privacy.check.online': "You're online",
     'privacy.check.session': 'Your session is valid for at least another hour',
     'privacy.check.queue': 'All your changes are synced',
@@ -569,8 +580,10 @@ const translations = {
     'privacy.hint.online': 'Connect to the internet and try again.',
     'privacy.hint.session': 'Log out and log in again, then retry.',
     'privacy.hint.queue': '{count} changes are still waiting to sync.',
-    'privacy.hint.failed': '{count} changes failed to sync. Edit or delete them first.',
-    'privacy.hint.server': "Couldn't load your items from the server. Try again in a bit.",
+    'privacy.hint.failed':
+      '{count} changes failed to sync. Edit or delete them first.',
+    'privacy.hint.server':
+      "Couldn't load your items from the server. Try again in a bit.",
     'privacy.phase.decrypt': 'Decrypt',
     'privacy.phase.transform': 'Encrypt',
     'privacy.phase.verify': 'Verify',
@@ -630,8 +643,7 @@ const translations = {
     'family.scopePersonal': 'Personal',
     'family.scopeFamily': 'Family',
     'family.totalsLoading': 'Loading family totals…',
-    'family.totalsEmpty':
-      'No shared-category spend this month yet.',
+    'family.totalsEmpty': 'No shared-category spend this month yet.',
     'family.totalsNoShared':
       'Pick shared categories in Profile → Family budget.',
     'family.totalsError': 'Could not load family totals.',
@@ -640,8 +652,7 @@ const translations = {
     'family.totalsSpentAllTime': 'combined all time',
     'family.totalsAvgMonth': 'avg / month',
     'family.totalsAvgDay': 'avg / day',
-    'family.totalsEmptyYear':
-      'No shared-category spend this year yet.',
+    'family.totalsEmptyYear': 'No shared-category spend this year yet.',
     'family.totalsEmptyAllTime':
       'No shared-category spend for this filter yet.',
     'family.totalsHint': 'Combined totals for shared categories',
@@ -651,7 +662,8 @@ const translations = {
     'family.daySpentTitle': 'Family spent',
     'family.daySpentEmpty': 'No shared family spend this day.',
     'family.partnerDaySpentTitle': 'Others spent',
-    'family.partnerDaySpentEmpty': 'No shared spend from other members this day.',
+    'family.partnerDaySpentEmpty':
+      'No shared spend from other members this day.',
     'family.memberBreakdown': 'Contribution by member',
     'family.memberBreakdownEmpty': 'No member split for this category.',
     'family.memberYou': 'You',
@@ -675,7 +687,8 @@ const translations = {
     'family.toggleRole': 'Promote / demote admin',
     'family.roleUpdated': 'Member role updated.',
     'family.transferOwnership': 'Transfer ownership',
-    'family.ownershipTransferred': 'Ownership transferred. You are now an admin.',
+    'family.ownershipTransferred':
+      'Ownership transferred. You are now an admin.',
     'family.transferConfirmTitle': 'Transfer ownership?',
     'family.transferConfirmMessage':
       'Make {member} the owner? You will become an admin and can leave afterward.',
@@ -723,7 +736,8 @@ const translations = {
     'profile.aiCancel': 'Cancel',
     'profile.aiShow': 'Show key',
     'profile.aiHide': 'Hide key',
-    'profile.aiHint': 'Create a free key in Google AI Studio. Use a project without billing and restrict the key to the Gemini API.',
+    'profile.aiHint':
+      'Create a free key in Google AI Studio. Use a project without billing and restrict the key to the Gemini API.',
     'profile.aiLanguage': 'Reply language',
     'profile.aiShare': 'Share descriptions with AI',
     'profile.aiShareHint':
@@ -732,7 +746,8 @@ const translations = {
     'profile.aiDebugHint':
       'New replies show every step, payload, and response. Not saved with chat history.',
     'profile.aiDebugOn': 'Debug on',
-    'profile.aiStatsHint': 'Questions, requests and tokens are for today, added up across all your devices, and reset with the Gemini daily quota at midnight Pacific time. A model pause stays on this device so that model is skipped until the limit passes.',
+    'profile.aiStatsHint':
+      'Questions, requests and tokens are for today, added up across all your devices, and reset with the Gemini daily quota at midnight Pacific time. A model pause stays on this device so that model is skipped until the limit passes.',
     'profile.aiQuestions': 'Questions',
     'profile.aiRequests': 'Gemini requests',
     'profile.aiTokens': 'Tokens used',
@@ -743,16 +758,19 @@ const translations = {
     'profile.aiNextModel': '{model} failed; it is skipped until {time}.',
     'profile.aiNoPause': 'No model is paused right now.',
     'profile.aiSaved': 'Gemini API key saved.',
-    'profile.aiSavedLocal': 'Saved on this device only. It did not sync to your profile.',
+    'profile.aiSavedLocal':
+      'Saved on this device only. It did not sync to your profile.',
     'profile.aiRemoved': 'Gemini API key removed.',
-    'profile.aiRemovedLocal': 'Removed on this device. It could not be removed from your profile.',
+    'profile.aiRemovedLocal':
+      'Removed on this device. It could not be removed from your profile.',
     'profile.aiTestOk': 'Key works ({model}).',
     'profile.aiLimits': 'Model limits',
     'profile.aiDailyLimit': 'daily limit',
     'profile.aiMinuteLimit': 'per-minute limit',
     'profile.aiPausedUntil': 'paused until {time}',
     'assistant.title': 'Assistant',
-    'assistant.empty': 'Ask about spending, income, loans, or which category a purchase belongs in. Figures come from your data.',
+    'assistant.empty':
+      'Ask about spending, income, loans, or which category a purchase belongs in. Figures come from your data.',
     'assistant.kindExpense': 'Expenses',
     'assistant.kindIncome': 'Income',
     'assistant.kindLoan': 'Loans',
@@ -785,7 +803,8 @@ const translations = {
     'assistant.disclaimer': 'AI can make mistakes. Check important numbers.',
     'assistant.debugDisclaimer':
       'Debug is on. Each reply includes the request trail.',
-    'assistant.needKey': 'Add your Gemini API key in your profile to use the assistant. You can create a free key in Google AI Studio.',
+    'assistant.needKey':
+      'Add your Gemini API key in your profile to use the assistant. You can create a free key in Google AI Studio.',
     'assistant.openProfile': 'Open profile',
     'assistant.thinking': 'Thinking',
     'assistant.working': 'Working',
@@ -836,8 +855,7 @@ const translations = {
     'login.chooseBackend': 'Account type',
     'login.backendDrupal': 'Classic',
     'login.backendSupabase': 'New',
-    'login.backendDrupalHint':
-      'Use your existing Drupal account and data.',
+    'login.backendDrupalHint': 'Use your existing Drupal account and data.',
     'login.backendSupabaseHint':
       'Use the new Supabase account. Import a backup if you are migrating.',
 
@@ -1004,6 +1022,11 @@ const translations = {
     // Loan
     'loan.addLoan': 'Add Loan',
     'loan.editLoan': 'Edit Loan',
+    'loan.askAi': 'Ask AI about this loan',
+    'loan.askAiShort': 'Ask AI',
+    'loan.askAiPrompt':
+      'Summarize my loan "{name}": remaining principal, interest paid so far, next installment, projected payoff, and whether an early payment would help.',
+    'loan.loan': 'loan',
     'loan.deleteLoan': 'Delete Loan',
     'loan.addPayment': 'Add Payment',
     'loan.principal': 'Principal',
@@ -1050,6 +1073,8 @@ const translations = {
     'loan.upcoming.overdue': 'Overdue',
     'loan.upcoming.remainingOne': '1 payment remaining',
     'loan.upcoming.remainingCount': '{count} payments remaining',
+    'loan.upcoming.principal': 'Principal',
+    'loan.upcoming.interest': 'Interest',
     'loan.dashboard': 'Loan Planning',
 
     // Loans Page
@@ -1083,6 +1108,7 @@ const translations = {
     'amortization.interest': 'Interest',
     'amortization.principal': 'Principal',
     'amortization.fee': 'Fee',
+    'amortization.jumpToCurrent': 'Jump to next unpaid',
 
     // Modals
     'modal.deleteTitle': 'Delete Confirmation',
@@ -1306,6 +1332,7 @@ const translations = {
     'paymentForm.intentRate': 'Dobândă / condiții',
     'paymentForm.extraTitle': 'Plată extra',
     'simulate.open': 'Simulează plată extra',
+    'simulate.openShort': 'Simulează',
     'simulate.title': 'Simulează o plată extra',
     'simulate.hint':
       'Doar estimare. Nu se salvează nimic. Folosește același grafic ca pagina acestui credit.',
@@ -1314,7 +1341,8 @@ const translations = {
     'simulate.strategy': 'Efect',
     'simulate.shorterTerm': 'Termen mai scurt',
     'simulate.lowerInstallment': 'Rată mai mică',
-    'simulate.shorterTermDesc': 'Aceeași rată, creditul se termină mai devreme.',
+    'simulate.shorterTermDesc':
+      'Aceeași rată, creditul se termină mai devreme.',
     'simulate.lowerInstallmentDesc': 'Rată mai mică, aceeași dată de final.',
     'simulate.current': 'Plan actual',
     'simulate.withExtra': 'Cu plata extra',
@@ -1463,7 +1491,8 @@ const translations = {
 
     // Goals / emergency fund
     'goals.title': 'Fond de urgență',
-    'goals.subtitle': 'Ține evidența sumei puse deoparte pentru cheltuieli neașteptate.',
+    'goals.subtitle':
+      'Ține evidența sumei puse deoparte pentru cheltuieli neașteptate.',
     'goals.currentBalance': 'Sold curent',
     'goals.progress': 'Progres spre țintă',
     'goals.ofTarget': '{left} rămas din {target}',
@@ -1471,8 +1500,7 @@ const translations = {
     'goals.avgMonthlySpend': 'Cheltuieli esențiale / lună',
     'goals.avgMonthlySpendHint':
       'Fără divertisment, cadouri, travel și investiții',
-    'goals.excludedCategories':
-      'Cheltuielile esențiale exclud: {categories}.',
+    'goals.excludedCategories': 'Cheltuielile esențiale exclud: {categories}.',
     'goals.monthsCovered': 'Luni acoperite',
     'goals.eta': 'Timp până la țintă',
     'goals.monthsCoveredValue': '{months} luni de cheltuieli acoperite',
@@ -1489,8 +1517,10 @@ const translations = {
     'goals.suggestedTarget': 'Țintă sugerată: {amount}',
     'goals.contributionLabel': 'Contribuție lunară planificată (opțional)',
     'goals.contributionPlaceholder': '0',
-    'goals.contributionHint': 'Doar pentru estimarea timpului până la țintă — nu e istoricul',
-    'goals.targetMonthsDriveHint': 'Acoperirea se salvează în Google Drive odată cu fondul',
+    'goals.contributionHint':
+      'Doar pentru estimarea timpului până la țintă — nu e istoricul',
+    'goals.targetMonthsDriveHint':
+      'Acoperirea se salvează în Google Drive odată cu fondul',
     'goals.addSavingTitle': 'Mișcare în fond',
     'goals.addSavingDescription':
       'Adaugă o depunere sau o sumă negativă când scoți bani din fond.',
@@ -1501,9 +1531,11 @@ const translations = {
     'goals.addSavingBusy': 'Se salvează…',
     'goals.addSavingDone': 'Depunerea a fost adăugată în fond',
     'goals.addWithdrawalDone': 'Retragerea a fost înregistrată',
-    'goals.invalidAddAmount': 'Introdu o sumă diferită de zero (minus pentru retragere)',
+    'goals.invalidAddAmount':
+      'Introdu o sumă diferită de zero (minus pentru retragere)',
     'goals.historyTitle': 'Istoric contribuții',
-    'goals.historyEmpty': 'Nicio mișcare încă. Adaugă o depunere sau o retragere mai sus.',
+    'goals.historyEmpty':
+      'Nicio mișcare încă. Adaugă o depunere sau o retragere mai sus.',
     'goals.historyMonthTotal': 'Total',
     'goals.editContributionTitle': 'Editează mișcarea',
     'goals.editContributionSave': 'Salvează modificările',
@@ -1516,7 +1548,8 @@ const translations = {
     'goals.saving': 'Se salvează…',
     'goals.saved': 'Fondul de urgență a fost actualizat',
     'goals.savedDrive': 'Fondul de urgență a fost salvat în cont',
-    'goals.savedOffline': 'Salvat pe acest dispozitiv — se sincronizează când ești online',
+    'goals.savedOffline':
+      'Salvat pe acest dispozitiv — se sincronizează când ești online',
     'goals.syncing': 'Se sincronizează cu Google Drive…',
     'goals.synced': 'Sincronizat cu contul tău',
     'goals.localOnly': 'Salvat doar pe acest dispozitiv',
@@ -1524,9 +1557,9 @@ const translations = {
     'goals.offline': 'Offline — doar pe acest dispozitiv',
     'goals.syncFailed': 'Sync cloud indisponibil — copia locală e păstrată',
     'goals.syncError': 'Nu s-a putut sincroniza fondul de urgență',
-    'goals.syncErrorDrive': 'Nu s-a putut salva Goals în cont. Încearcă din nou.',
-    'goals.claimed':
-      'Goals au fost recuperate pentru acest cont.',
+    'goals.syncErrorDrive':
+      'Nu s-a putut salva Goals în cont. Încearcă din nou.',
+    'goals.claimed': 'Goals au fost recuperate pentru acest cont.',
     'goals.invalidContribution': 'Introdu o contribuție validă',
 
     // Offline
@@ -1568,7 +1601,8 @@ const translations = {
     'home.voiceUnderstanding': 'Înțeleg…',
     'home.voiceReview': 'Adaug asta?',
     'home.voiceEmpty': 'Nu am auzit o tranzacție. Încearcă din nou.',
-    'home.voiceUnsupported': 'Introducerea vocală nu este disponibilă în acest browser.',
+    'home.voiceUnsupported':
+      'Introducerea vocală nu este disponibilă în acest browser.',
     'home.voiceExpense': 'Cheltuială',
     'home.voiceIncome': 'Venit',
     'home.voiceRemove': 'Elimină',
@@ -1582,8 +1616,7 @@ const translations = {
     'budgetRings.unlocks': 'Se deblochează pe {date}',
     'budgetRings.noteEarly':
       '{viewed} se bazează pe {source}, ultima ta lună încheiată.',
-    'budgetRings.noteAverage':
-      'Media ultimelor tale {count} {unit} încheiate.',
+    'budgetRings.noteAverage': 'Media ultimelor tale {count} {unit} încheiate.',
     'budgetRings.noteAll':
       'Media tuturor celor {count} luni încheiate înainte de aceasta.',
     'budgetRings.month': 'lună',
@@ -1695,7 +1728,8 @@ const translations = {
     'profile.backupListLoad': 'Încarcă backup-urile din Drive',
     'profile.backupListLoading': 'Se încarcă backup-urile…',
     'profile.backupListEmpty': 'Niciun backup pe Google Drive încă.',
-    'profile.backupListError': 'Nu s-au putut încărca backup-urile din Google Drive',
+    'profile.backupListError':
+      'Nu s-au putut încărca backup-urile din Google Drive',
     'profile.backupDownload': 'Descarcă',
     'profile.backupDownloading': 'Se descarcă…',
     'profile.backupDownloadDone': 'Backup descărcat',
@@ -1704,7 +1738,8 @@ const translations = {
     'profile.chartsVisibility': 'Vizibilitatea Graficelor',
     'profile.chartsVisible': 'Vizibile',
     'profile.chartsHidden': 'Ascunse',
-    'profile.chartsDragHint': 'Trage pentru a reordona sau muta între secțiuni.',
+    'profile.chartsDragHint':
+      'Trage pentru a reordona sau muta între secțiuni.',
     'profile.chartsCustomize': 'Personalizează graficele',
     'profile.chartsDropHere': 'Trage graficele aici',
     'profile.chartsAllVisible': 'Toate graficele sunt vizibile',
@@ -1721,23 +1756,28 @@ const translations = {
     'biometric.toggle': 'Deblocare cu biometrie',
     'biometric.statusLabel': 'Stare',
     'biometric.status.unsupported': 'indisponibil în acest browser',
-    'biometric.status.unavailable': 'fără Face ID / amprentă / Windows Hello pe dispozitiv',
+    'biometric.status.unavailable':
+      'fără Face ID / amprentă / Windows Hello pe dispozitiv',
     'biometric.status.active': 'activ pe acest dispozitiv',
     'biometric.status.inactive': 'inactiv',
-    'biometric.enabled': 'Deblocarea biometrică este activă pe acest dispozitiv.',
+    'biometric.enabled':
+      'Deblocarea biometrică este activă pe acest dispozitiv.',
     'biometric.disabled': 'Deblocarea biometrică a fost dezactivată.',
-    'biometric.disableConfirm': 'Dezactivezi deblocarea biometrică pe acest dispozitiv?',
+    'biometric.disableConfirm':
+      'Dezactivezi deblocarea biometrică pe acest dispozitiv?',
     'biometric.lockTitle': 'Deblochează Expenses',
     'biometric.lockBody':
       'Folosește biometria acestui dispozitiv sau autentifică-te din nou cu Google.',
     'biometric.unlock': 'Deblochează',
     'biometric.unlocking': 'Se verifică…',
     'biometric.useGoogle': 'Autentificare cu Google',
-    'biometric.err.unsupported': 'Dispozitivul nu suportă deblocare biometrică.',
+    'biometric.err.unsupported':
+      'Dispozitivul nu suportă deblocare biometrică.',
     'biometric.err.unavailable':
       'Nu există Face ID, amprentă sau Windows Hello pe acest dispozitiv.',
     'biometric.err.cancelled': 'Promptul biometric a fost anulat.',
-    'biometric.err.enrollFailed': 'Biometria nu a putut fi activată pe acest dispozitiv.',
+    'biometric.err.enrollFailed':
+      'Biometria nu a putut fi activată pe acest dispozitiv.',
     'biometric.err.notEnabled': 'Deblocarea biometrică nu este activă.',
     'biometric.err.missingCredential':
       'Credentialul biometric lipsește. Reactivează din Profil.',
@@ -1757,7 +1797,8 @@ const translations = {
     'privacy.savedDrive': 'Cheia e salvată în Google Drive',
     'privacy.unlockButton': 'Deblochează datele',
     'privacy.unlockTitle': 'Deblochează datele',
-    'privacy.writePaused': 'Editarea e oprită cât timp datele se blochează sau se deblochează.',
+    'privacy.writePaused':
+      'Editarea e oprită cât timp datele se blochează sau se deblochează.',
     'privacy.keyNeededTitle': 'Deblochează datele',
     'privacy.keyNeededBody':
       'Contul e blocat. Sincronizarea stă pe pauză până aduci cheia din Google Drive sau o lipești aici.',
@@ -1770,7 +1811,8 @@ const translations = {
       'Fără cheie, cheltuielile criptate nu pot fi recuperate. Te poți deconecta sau poți contacta adminul. Aplicația nu le șterge.',
     'privacy.keyAccepted': 'Cheia a fost salvată pe dispozitiv.',
     'privacy.keyMismatch': 'Cheia nu se potrivește cu datele tale.',
-    'privacy.invalidKey': 'Cheia nu pare completă. Verific-o și încearcă din nou.',
+    'privacy.invalidKey':
+      'Cheia nu pare completă. Verific-o și încearcă din nou.',
     'privacy.noDriveKey': 'Nu există o cheie în Google Drive.',
     'privacy.driveDifferent': 'În Google Drive e deja salvată o altă cheie.',
     'privacy.continue': 'Continuă',
@@ -1785,7 +1827,8 @@ const translations = {
       'Cheltuielile vor putea fi citite din nou de adminul serverului. Cheia de pe dispozitiv se șterge la final.',
     'privacy.typeUnlock': 'Scrie UNLOCK pentru confirmare',
     'privacy.deleteDrive': 'Șterge și cheia din Google Drive',
-    'privacy.doneLock': 'Datele sunt blocate. Păstrează cheia undeva de unde o poți recupera.',
+    'privacy.doneLock':
+      'Datele sunt blocate. Păstrează cheia undeva de unde o poți recupera.',
     'privacy.doneUnlock': 'Datele sunt din nou lizibile.',
     'privacy.pause': 'Pauză',
     'privacy.minimize': 'Minimizează',
@@ -1795,18 +1838,23 @@ const translations = {
     'privacy.unlockingTitle': 'Se deblochează datele',
     'privacy.browsing': 'Poți răsfoi în continuare. Editarea e oprită.',
     'privacy.eta': 'cam {min} min rămase',
-    'privacy.corrupt': '{count} înregistrări nu au putut fi decriptate. Nu s-a șters nimic.',
-    'privacy.inProgress': 'O blocare sau deblocare e încă în curs. Continuă din bara de sus.',
+    'privacy.corrupt':
+      '{count} înregistrări nu au putut fi decriptate. Nu s-a șters nimic.',
+    'privacy.inProgress':
+      'O blocare sau deblocare e încă în curs. Continuă din bara de sus.',
     'privacy.check.online': 'Ești online',
     'privacy.check.session': 'Sesiunea e validă cel puțin încă o oră',
     'privacy.check.queue': 'Toate modificările sunt sincronizate',
     'privacy.check.failed': 'Nicio modificare nu a eșuat la sincronizare',
     'privacy.check.server': 'Serverul răspunde',
     'privacy.hint.online': 'Conectează-te la internet și încearcă din nou.',
-    'privacy.hint.session': 'Deconectează-te, autentifică-te din nou, apoi reîncearcă.',
+    'privacy.hint.session':
+      'Deconectează-te, autentifică-te din nou, apoi reîncearcă.',
     'privacy.hint.queue': '{count} modificări încă așteaptă sincronizarea.',
-    'privacy.hint.failed': '{count} modificări au eșuat. Editează-le sau șterge-le întâi.',
-    'privacy.hint.server': 'Nu am putut încărca înregistrările de pe server. Încearcă din nou.',
+    'privacy.hint.failed':
+      '{count} modificări au eșuat. Editează-le sau șterge-le întâi.',
+    'privacy.hint.server':
+      'Nu am putut încărca înregistrările de pe server. Încearcă din nou.',
     'privacy.phase.decrypt': 'Decriptare',
     'privacy.phase.transform': 'Criptare',
     'privacy.phase.verify': 'Verificare',
@@ -1891,7 +1939,8 @@ const translations = {
     'family.partnerDaySpentEmpty':
       'Nicio cheltuială comună de la ceilalți membri în ziua asta.',
     'family.memberBreakdown': 'Contribuție pe membru',
-    'family.memberBreakdownEmpty': 'Nicio împărțire pe membru pentru categoria asta.',
+    'family.memberBreakdownEmpty':
+      'Nicio împărțire pe membru pentru categoria asta.',
     'family.memberYou': 'Tu',
     'family.leaveConfirmTitle': 'Părăsești familia?',
     'family.leaveConfirmMessage':
@@ -1913,8 +1962,7 @@ const translations = {
     'family.toggleRole': 'Promovează / retrogradează admin',
     'family.roleUpdated': 'Rolul membrului a fost actualizat.',
     'family.transferOwnership': 'Transferă ownership',
-    'family.ownershipTransferred':
-      'Ownership transferat. Acum ești admin.',
+    'family.ownershipTransferred': 'Ownership transferat. Acum ești admin.',
     'family.transferConfirmTitle': 'Transferi ownership?',
     'family.transferConfirmMessage':
       'Îl faci pe {member} owner? Tu vei deveni admin și poți părăsi familia după.',
@@ -1944,8 +1992,7 @@ const translations = {
     'family.activity.member_left': 'Membru a plecat',
     'family.activity.member_removed': 'Membru eliminat',
     'family.activity.member_role_changed': 'Rol schimbat',
-    'family.activity.shared_categories_updated':
-      'Categorii comune actualizate',
+    'family.activity.shared_categories_updated': 'Categorii comune actualizate',
     'family.activity.ownership_transferred': 'Ownership transferat',
     'family.activity.goal_updated': 'Țintă actualizată',
     'family.activity.goal_deleted': 'Țintă ștearsă',
@@ -1963,7 +2010,8 @@ const translations = {
     'profile.aiCancel': 'Anulează',
     'profile.aiShow': 'Arată cheia',
     'profile.aiHide': 'Ascunde cheia',
-    'profile.aiHint': 'Creează o cheie gratuită în Google AI Studio. Folosește un proiect fără billing și restricționează cheia la Gemini API.',
+    'profile.aiHint':
+      'Creează o cheie gratuită în Google AI Studio. Folosește un proiect fără billing și restricționează cheia la Gemini API.',
     'profile.aiLanguage': 'Limba răspunsurilor',
     'profile.aiShare': 'Trimite descrierile către AI',
     'profile.aiShareHint':
@@ -1972,7 +2020,8 @@ const translations = {
     'profile.aiDebugHint':
       'Răspunsurile noi arată fiecare pas, payload și răspuns. Nu se salvează în istoricul chatului.',
     'profile.aiDebugOn': 'Debug activ',
-    'profile.aiStatsHint': 'Întrebările, cererile și tokenii sunt pentru azi, adunate de pe toate dispozitivele tale, și se resetează odată cu cota zilnică Gemini, la miezul nopții ora Pacific. Pauza unui model rămâne pe dispozitiv ca să fie sărit până trece limita.',
+    'profile.aiStatsHint':
+      'Întrebările, cererile și tokenii sunt pentru azi, adunate de pe toate dispozitivele tale, și se resetează odată cu cota zilnică Gemini, la miezul nopții ora Pacific. Pauza unui model rămâne pe dispozitiv ca să fie sărit până trece limita.',
     'profile.aiQuestions': 'Întrebări',
     'profile.aiRequests': 'Cereri către Gemini',
     'profile.aiTokens': 'Tokeni folosiți',
@@ -1983,16 +2032,19 @@ const translations = {
     'profile.aiNextModel': '{model} a eșuat; se sare peste el până la {time}.',
     'profile.aiNoPause': 'Niciun model nu este în pauză acum.',
     'profile.aiSaved': 'Cheia API Gemini a fost salvată.',
-    'profile.aiSavedLocal': 'Salvată doar pe acest dispozitiv. Nu s-a sincronizat în profil.',
+    'profile.aiSavedLocal':
+      'Salvată doar pe acest dispozitiv. Nu s-a sincronizat în profil.',
     'profile.aiRemoved': 'Cheia API Gemini a fost ștearsă.',
-    'profile.aiRemovedLocal': 'Ștearsă de pe acest dispozitiv. Nu a putut fi ștearsă din profil.',
+    'profile.aiRemovedLocal':
+      'Ștearsă de pe acest dispozitiv. Nu a putut fi ștearsă din profil.',
     'profile.aiTestOk': 'Cheia funcționează ({model}).',
     'profile.aiLimits': 'Limite modele',
     'profile.aiDailyLimit': 'limită zilnică',
     'profile.aiMinuteLimit': 'limită pe minut',
     'profile.aiPausedUntil': 'în pauză până la {time}',
     'assistant.title': 'Asistent',
-    'assistant.empty': 'Întreabă despre cheltuieli, venituri, credite sau în ce categorie să pui o cumpărătură. Cifrele vin din datele tale.',
+    'assistant.empty':
+      'Întreabă despre cheltuieli, venituri, credite sau în ce categorie să pui o cumpărătură. Cifrele vin din datele tale.',
     'assistant.kindExpense': 'Cheltuieli',
     'assistant.kindIncome': 'Venituri',
     'assistant.kindLoan': 'Credite',
@@ -2006,7 +2058,8 @@ const translations = {
     'assistant.showQuestions': 'Întrebări sugerate',
     'assistant.backToChat': 'Înapoi la conversație',
     'assistant.basedOnData': 'Pe baza datelor tale',
-    'assistant.tokensOverview': 'Rezumatul datelor: ~{tokens} tokeni per cerere',
+    'assistant.tokensOverview':
+      'Rezumatul datelor: ~{tokens} tokeni per cerere',
     'assistant.newChat': 'Chat nou',
     'assistant.copy': 'Copiază',
     'assistant.copied': 'Copiat',
@@ -2025,7 +2078,8 @@ const translations = {
     'assistant.disclaimer': 'AI poate greși. Verifică cifrele importante.',
     'assistant.debugDisclaimer':
       'Debug e activ. Fiecare răspuns include traseul request-urilor.',
-    'assistant.needKey': 'Adaugă cheia API Gemini în profil ca să folosești asistentul. Poți crea o cheie gratuită în Google AI Studio.',
+    'assistant.needKey':
+      'Adaugă cheia API Gemini în profil ca să folosești asistentul. Poți crea o cheie gratuită în Google AI Studio.',
     'assistant.openProfile': 'Deschide profilul',
     'assistant.thinking': 'Mă gândesc',
     'assistant.working': 'Lucrez',
@@ -2076,8 +2130,7 @@ const translations = {
     'login.chooseBackend': 'Tip cont',
     'login.backendDrupal': 'Clasic',
     'login.backendSupabase': 'Nou',
-    'login.backendDrupalHint':
-      'Folosește contul și datele Drupal existente.',
+    'login.backendDrupalHint': 'Folosește contul și datele Drupal existente.',
     'login.backendSupabaseHint':
       'Folosește contul nou Supabase. Importă un backup dacă migrezi.',
 
@@ -2246,6 +2299,11 @@ const translations = {
     // Loan
     'loan.addLoan': 'Adaugă Împrumut',
     'loan.editLoan': 'Editează Împrumutul',
+    'loan.askAi': 'Întreabă AI despre acest credit',
+    'loan.askAiShort': 'Întreabă AI',
+    'loan.askAiPrompt':
+      'Rezumă-mi creditul "{name}": principal rămas, dobândă plătită, următoarea rată, data estimată de închidere și dacă merită o plată anticipată.',
+    'loan.loan': 'credit',
     'loan.deleteLoan': 'Șterge Împrumutul',
     'loan.addPayment': 'Adaugă Plata',
     'loan.principal': 'Principal',
@@ -2293,6 +2351,8 @@ const translations = {
     'loan.upcoming.overdue': 'Întârziat',
     'loan.upcoming.remainingOne': 'Mai rămâne 1 plată',
     'loan.upcoming.remainingCount': 'Mai rămân {count} plăți',
+    'loan.upcoming.principal': 'Principal',
+    'loan.upcoming.interest': 'Dobândă',
     'loan.dashboard': 'Planificare Împrumut',
 
     // Loans Page
@@ -2326,6 +2386,7 @@ const translations = {
     'amortization.interest': 'Dobanda de plată',
     'amortization.principal': 'Sold Credit',
     'amortization.fee': 'Comision',
+    'amortization.jumpToCurrent': 'Sari la următoarea neplătită',
 
     // Modals
     'modal.deleteTitle': 'Confirmare Ștergere',

@@ -6,6 +6,10 @@ import type { PaydownResult, PaymentLog } from './paydown-node';
 export interface UpcomingPayment {
   date: string;
   installment: number;
+  /** Principal reduction from the schedule row. */
+  principal: number;
+  /** Interest portion from the schedule row. */
+  interest: number;
   daysUntil: number;
   isOverdue: boolean;
 }
@@ -38,6 +42,12 @@ function parseSchedulePrincipal(value: number | string | undefined): number {
   if (value == null || value === '-' || value === '') return 0;
   const num = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(num) && num >= 0 ? num : 0;
+}
+
+function parseScheduleAmount(value: number | string | undefined): number {
+  if (value == null || value === '-' || value === '') return 0;
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(num) && num >= 0 ? Math.round(num * 100) / 100 : 0;
 }
 
 function isScheduleRow(row: PaymentLog | { type?: string }): row is PaymentLog {
@@ -95,6 +105,8 @@ export function getUpcomingPayments(
     results.push({
       date: row.date,
       installment,
+      principal: parseScheduleAmount(row.reduction),
+      interest: parseScheduleAmount(row.interest),
       daysUntil,
       isOverdue: daysUntil < 0,
     });
