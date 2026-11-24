@@ -14,7 +14,7 @@ import { AI_LANGUAGES, modelLabel } from '../../../ai/config';
 import { maskApiKey } from '../../../ai/apiKey';
 import { describeAiError, testApiKey } from '../../../ai/client';
 import { isAiDebugEnabled, setAiDebugEnabled } from '../../../ai/debug';
-import { useAiApiKey } from '../../../ai/hooks/useAiApiKey';
+import { useAiAccess } from '../../../ai/hooks/useAiAccess';
 import { getSessionAiStats } from '../../../ai/sessionStats';
 import {
   PREFS_APPLIED_EVENT,
@@ -33,43 +33,64 @@ const fieldClass =
 const secondaryBtn =
   'rounded-lg border border-white/10 px-3 py-2 text-sm text-app-secondary hover:bg-white/5 disabled:opacity-50';
 
-const AiSettings = () => {
+type KeyProvider = 'gemini' | 'openrouter';
+
+const KeyBlock = ({
+  provider,
+  label,
+  pasteLabel,
+  hint,
+  hintHref,
+  hintLinkText,
+  apiKey,
+  synced,
+  onSave,
+  onRemove,
+}: {
+  provider: KeyProvider;
+  label: string;
+  pasteLabel: string;
+  hint: string;
+  hintHref: string;
+  hintLinkText: string;
+  apiKey: string;
+  synced?: boolean;
+  onSave: (key: string) => Promise<'synced' | 'local'>;
+  onRemove: () => Promise<'synced' | 'local'>;
+}) => {
   const showNotification = useNotification();
   const { t } = useLocalization();
-  const { apiKey, status, save, synced } = useAiApiKey();
-  const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [share, setShare] = useState(getShareDescriptions);
-  const [language, setLanguage] = useState(getAiLanguage);
-  const [debug, setDebug] = useState(isAiDebugEnabled);
-  // Usage from other devices arrives with the synced preferences.
-  const [, setStatsVersion] = useState(0);
-  useEffect(() => {
-    const refresh = () => setStatsVersion((version) => version + 1);
-    window.addEventListener(PREFS_APPLIED_EVENT, refresh);
-    // Fetch what the other devices used since this one last synced.
-    void pullPreferencesFromProfile();
-    return () => window.removeEventListener(PREFS_APPLIED_EVENT, refresh);
-  }, []);
-  const stats = getSessionAiStats();
-  const lastModel =
-    stats.usage.lastModel || stats.lastFailed?.model || null;
 
   const notifySaved = (result: 'synced' | 'local', removed = false) => {
     if (removed) {
       showNotification(
         result === 'synced'
-          ? t('profile.aiRemoved')
-          : t('profile.aiRemovedLocal'),
+          ? t(
+              provider === 'gemini'
+                ? 'profile.aiRemoved'
+                : 'profile.aiOrRemoved'
+            )
+          : t(
+              provider === 'gemini'
+                ? 'profile.aiRemovedLocal'
+                : 'profile.aiOrRemovedLocal'
+            ),
         result === 'synced' ? notificationType.SUCCESS : notificationType.ERROR
       );
       return;
     }
     showNotification(
-      result === 'synced' ? t('profile.aiSaved') : t('profile.aiSavedLocal'),
+      result === 'synced'
+        ? t(provider === 'gemini' ? 'profile.aiSaved' : 'profile.aiOrSaved')
+        : t(
+            provider === 'gemini'
+              ? 'profile.aiSavedLocal'
+              : 'profile.aiOrSavedLocal'
+          ),
       result === 'synced' ? notificationType.SUCCESS : notificationType.ERROR
     );
   };
@@ -80,13 +101,13 @@ const AiSettings = () => {
     if (!key) return;
     setBusy(true);
     try {
-      await testApiKey(key);
+      await testApiKey(key, provider);
     } catch (error) {
       showNotification(describeAiError(error), notificationType.ERROR);
       setBusy(false);
       return;
     }
-    const result = await save(key);
+    const result = await onSave(key);
     setDraft('');
     setEditing(false);
     notifySaved(result);
@@ -96,7 +117,7 @@ const AiSettings = () => {
   const handleTest = async () => {
     setBusy(true);
     try {
-      const model = await testApiKey(apiKey);
+      const model = await testApiKey(apiKey, provider);
       showNotification(
         t('profile.aiTestOk').replace('{model}', model),
         notificationType.SUCCESS
@@ -109,46 +130,23 @@ const AiSettings = () => {
 
   const handleRemove = async () => {
     setBusy(true);
-    const result = await save('');
+    const result = await onRemove();
     notifySaved(result, true);
     setBusy(false);
   };
 
   return (
-    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden md:rounded-[10px] transition-colors active:border-white/10">
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="w-full flex items-center justify-between gap-2.5 py-5 px-5 md:py-4 md:px-4 text-left bg-transparent border-none cursor-pointer [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:shrink-0"
-        aria-expanded={open}
-      >
-        <div className="flex items-center gap-2.5 [&_svg]:text-[var(--color-app-accent)]">
-          <LuSparkles />
-          <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
-            {t('profile.aiTitle')}
-          </h3>
-        </div>
-        {open ? (
-          <FiChevronUp className="text-app-muted" aria-hidden />
-        ) : (
-          <FiChevronDown className="text-app-muted" aria-hidden />
-        )}
-      </button>
-
-      {open && (
-      <div className="px-5 pb-5 pt-0 md:px-4 md:pb-4 border-t border-white/[0.06]">
-      <div className="pt-4 md:pt-3">
-      {status === 'loading' ? (
-        <p className="text-sm text-app-muted">{t('common.loading')}</p>
-      ) : apiKey && !editing ? (
+    <div className="mb-4 border-b border-white/[0.06] pb-4 last:mb-0 last:border-0 last:pb-0">
+      <p className="mb-2 text-sm font-medium text-app-primary">{label}</p>
+      {apiKey && !editing ? (
         <>
           <div className="mb-3 flex items-center justify-between gap-3">
             <span className="text-sm text-app-secondary">
-              {t('profile.aiKey')}
+              {t('profile.aiKeyMasked')}
             </span>
             <code className="text-xs text-app-muted">{maskApiKey(apiKey)}</code>
           </div>
-          {!synced && (
+          {synced === false && (
             <p className="mb-3 text-xs text-amber-300/90">
               {t('profile.aiSavedLocal')}
             </p>
@@ -187,10 +185,10 @@ const AiSettings = () => {
               type={reveal ? 'text' : 'password'}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder={t('profile.aiPaste')}
+              placeholder={pasteLabel}
               autoComplete="off"
               spellCheck={false}
-              aria-label={t('profile.aiKey')}
+              aria-label={label}
               className={`${fieldClass} pr-11`}
             />
             <button
@@ -222,17 +220,105 @@ const AiSettings = () => {
             )}
           </div>
           <p className="mt-3 text-xs leading-relaxed text-app-muted">
-            {t('profile.aiHint')}{' '}
+            {hint}{' '}
             <a
-              href="https://aistudio.google.com/apikey"
+              href={hintHref}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[var(--color-app-accent)] underline"
             >
-              aistudio.google.com/apikey
+              {hintLinkText}
             </a>
           </p>
         </form>
+      )}
+    </div>
+  );
+};
+
+const AiSettings = () => {
+  const { t } = useLocalization();
+  const {
+    geminiApiKey,
+    geminiStatus,
+    geminiSynced,
+    saveGemini,
+    openrouterApiKey,
+    saveOpenrouter,
+  } = useAiAccess();
+  const [open, setOpen] = useState(false);
+  const [share, setShare] = useState(getShareDescriptions);
+  const [language, setLanguage] = useState(getAiLanguage);
+  const [debug, setDebug] = useState(isAiDebugEnabled);
+  // Usage from other devices arrives with the synced preferences.
+  const [, setStatsVersion] = useState(0);
+  useEffect(() => {
+    const refresh = () => setStatsVersion((version) => version + 1);
+    window.addEventListener(PREFS_APPLIED_EVENT, refresh);
+    void pullPreferencesFromProfile();
+    return () => window.removeEventListener(PREFS_APPLIED_EVENT, refresh);
+  }, []);
+  const stats = getSessionAiStats();
+  const lastModel =
+    stats.usage.lastModel || stats.lastFailed?.model || null;
+
+  return (
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden md:rounded-[10px] transition-colors active:border-white/10">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="w-full flex items-center justify-between gap-2.5 py-5 px-5 md:py-4 md:px-4 text-left bg-transparent border-none cursor-pointer [&_svg]:text-lg md:[&_svg]:text-base [&_svg]:shrink-0"
+        aria-expanded={open}
+      >
+        <div className="flex items-center gap-2.5 [&_svg]:text-[var(--color-app-accent)]">
+          <LuSparkles />
+          <h3 className="text-base md:text-sm font-semibold text-app-primary m-0 tracking-tight">
+            {t('profile.aiTitle')}
+          </h3>
+        </div>
+        {open ? (
+          <FiChevronUp className="text-app-muted" aria-hidden />
+        ) : (
+          <FiChevronDown className="text-app-muted" aria-hidden />
+        )}
+      </button>
+
+      {open && (
+      <div className="px-5 pb-5 pt-0 md:px-4 md:pb-4 border-t border-white/[0.06]">
+      <div className="pt-4 md:pt-3">
+      <p className="mb-4 text-xs leading-relaxed text-app-muted">
+        {t('profile.aiCascadeKeys')}
+      </p>
+
+      {geminiStatus === 'loading' ? (
+        <p className="text-sm text-app-muted">{t('common.loading')}</p>
+      ) : (
+        <>
+          <KeyBlock
+            provider="gemini"
+            label={t('profile.aiKey')}
+            pasteLabel={t('profile.aiPaste')}
+            hint={t('profile.aiHint')}
+            hintHref="https://aistudio.google.com/apikey"
+            hintLinkText="aistudio.google.com/apikey"
+            apiKey={geminiApiKey}
+            synced={geminiSynced}
+            onSave={saveGemini}
+            onRemove={() => saveGemini('')}
+          />
+          <KeyBlock
+            provider="openrouter"
+            label={t('profile.aiOrKey')}
+            pasteLabel={t('profile.aiOrPaste')}
+            hint={t('profile.aiOrHint')}
+            hintHref="https://openrouter.ai/keys"
+            hintLinkText="openrouter.ai/keys"
+            apiKey={openrouterApiKey}
+            synced
+            onSave={saveOpenrouter}
+            onRemove={() => saveOpenrouter('')}
+          />
+        </>
       )}
 
       <label className="mt-4 flex items-center justify-between gap-3">

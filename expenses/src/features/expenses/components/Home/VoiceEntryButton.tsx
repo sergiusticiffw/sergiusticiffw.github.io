@@ -13,9 +13,13 @@ import TagChips from '@shared/components/Common/TagChips';
 import { normalizeTag } from '@shared/hooks/useTags';
 import { addTagToText, getSuggestionTranslationKey, removeTagFromText } from '@shared/utils/utils';
 import { BTN_SUBMIT_CLASS } from '@shared/utils/layoutClasses';
-import { AiError, describeAiError } from '../../../../ai/client';
+import {
+  AiError,
+  describeAiError,
+  hasAiAccess,
+} from '../../../../ai/client';
 import { AI_MODELS, modelLabel, nextModel } from '../../../../ai/config';
-import { useAiApiKey } from '../../../../ai/hooks/useAiApiKey';
+import { useAiAccess } from '../../../../ai/hooks/useAiAccess';
 import { useSpeechInput } from '../../../../ai/hooks/useSpeechInput';
 import { localToday } from '../../../../ai/data';
 import {
@@ -60,7 +64,8 @@ const VoiceEntryButton = ({
   const { token, currency } = useAuthState();
   const { dataDispatch } = useExpenseData();
   const showNotification = useNotification();
-  const { apiKey } = useAiApiKey();
+  const { geminiApiKey, openrouterApiKey } = useAiAccess();
+  const apiKey = geminiApiKey;
   const categories = getCategories();
   const [phase, setPhase] = useState<Phase>('closed');
   const [transcript, setTranscript] = useState('');
@@ -167,7 +172,7 @@ const VoiceEntryButton = ({
       showNotification(t('home.voiceUnsupported'), notificationType.ERROR);
       return;
     }
-    if (!apiKey) {
+    if (!hasAiAccess(geminiApiKey, openrouterApiKey)) {
       setPhase('needKey');
       return;
     }

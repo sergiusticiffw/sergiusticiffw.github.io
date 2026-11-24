@@ -11,6 +11,21 @@ export const setStoredApiKey = (key: string) => {
   }
 };
 
+export const getStoredOpenrouterApiKey = (): string =>
+  localStorage.getItem(AI_STORAGE_KEYS.openrouterApiKey) || '';
+
+export const setStoredOpenrouterApiKey = (key: string) => {
+  if (key) {
+    localStorage.setItem(AI_STORAGE_KEYS.openrouterApiKey, key);
+  } else {
+    localStorage.removeItem(AI_STORAGE_KEYS.openrouterApiKey);
+  }
+  // Supabase-only sync via preferences (no Drupal field_*).
+  void import('../features/profile/preferencesSync')
+    .then((m) => m.schedulePreferencesPush({ openrouterApiKey: key }))
+    .catch(() => undefined);
+};
+
 /** Session flag: Drupal confirmed there is no key, so components don't ask again. */
 export const keyLookup = { serverHasNoKey: false };
 

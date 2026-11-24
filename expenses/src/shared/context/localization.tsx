@@ -734,6 +734,7 @@ const translations = {
     'common.uncategorized': 'Uncategorized',
     'profile.aiTitle': 'AI assistant',
     'profile.aiKey': 'Gemini API key',
+    'profile.aiKeyMasked': 'Key',
     'profile.aiPaste': 'Paste your Gemini API key',
     'profile.aiSave': 'Save key',
     'profile.aiTest': 'Test',
@@ -743,7 +744,19 @@ const translations = {
     'profile.aiShow': 'Show key',
     'profile.aiHide': 'Hide key',
     'profile.aiHint':
-      'Create a free key in Google AI Studio. Use a project without billing and restrict the key to the Gemini API.',
+      'Primary provider. Create a free key in Google AI Studio. Use a project without billing and restrict the key to the Gemini API.',
+    'profile.aiOrKey': 'OpenRouter Free key (fallback)',
+    'profile.aiOrPaste': 'Paste your OpenRouter API key',
+    'profile.aiOrHint':
+      'Fallback if Gemini fails or is slow. Uses openrouter/free only. Create a key at',
+    'profile.aiOrSaved': 'OpenRouter API key saved.',
+    'profile.aiOrSavedLocal':
+      'OpenRouter key saved on this device only.',
+    'profile.aiOrRemoved': 'OpenRouter API key removed.',
+    'profile.aiOrRemovedLocal':
+      'OpenRouter key removed on this device.',
+    'profile.aiCascadeKeys':
+      'Order: Gemini → OpenRouter Free. If Gemini fails or takes too long (~12s), OpenRouter is used automatically.',
     'profile.aiLanguage': 'Reply language',
     'profile.aiShare': 'Share descriptions with AI',
     'profile.aiShareHint':
@@ -753,9 +766,9 @@ const translations = {
       'New replies show every step, payload, and response. Not saved with chat history.',
     'profile.aiDebugOn': 'Debug on',
     'profile.aiStatsHint':
-      'Questions, requests and tokens are for today, added up across all your devices, and reset with the Gemini daily quota at midnight Pacific time. A model pause stays on this device so that model is skipped until the limit passes.',
+      'Questions, requests and tokens are for today, added up across all your devices. A model pause stays on this device so that model is skipped until the limit passes.',
     'profile.aiQuestions': 'Questions',
-    'profile.aiRequests': 'Gemini requests',
+    'profile.aiRequests': 'AI requests',
     'profile.aiTokens': 'Tokens used',
     'profile.aiLastModel': 'Last model',
     'profile.aiNotUsed': 'not used in this visit',
@@ -810,7 +823,7 @@ const translations = {
     'assistant.debugDisclaimer':
       'Debug is on. Each reply includes the request trail.',
     'assistant.needKey':
-      'Add your Gemini API key in your profile to use the assistant. You can create a free key in Google AI Studio.',
+      'Add a Gemini or OpenRouter Free API key in your profile to use the assistant.',
     'assistant.openProfile': 'Open profile',
     'assistant.thinking': 'Thinking',
     'assistant.working': 'Working',
@@ -2014,6 +2027,7 @@ const translations = {
     'common.uncategorized': 'Fără categorie',
     'profile.aiTitle': 'Asistent AI',
     'profile.aiKey': 'Cheie API Gemini',
+    'profile.aiKeyMasked': 'Cheie',
     'profile.aiPaste': 'Lipește cheia API Gemini',
     'profile.aiSave': 'Salvează cheia',
     'profile.aiTest': 'Testează',
@@ -2023,7 +2037,19 @@ const translations = {
     'profile.aiShow': 'Arată cheia',
     'profile.aiHide': 'Ascunde cheia',
     'profile.aiHint':
-      'Creează o cheie gratuită în Google AI Studio. Folosește un proiect fără billing și restricționează cheia la Gemini API.',
+      'Provider principal. Creează o cheie gratuită în Google AI Studio. Folosește un proiect fără billing și restricționează cheia la Gemini API.',
+    'profile.aiOrKey': 'Cheie OpenRouter Free (fallback)',
+    'profile.aiOrPaste': 'Lipește cheia API OpenRouter',
+    'profile.aiOrHint':
+      'Fallback dacă Gemini eșuează sau e lent. Folosește doar openrouter/free. Creează o cheie la',
+    'profile.aiOrSaved': 'Cheia API OpenRouter a fost salvată.',
+    'profile.aiOrSavedLocal':
+      'Cheia OpenRouter a fost salvată doar pe acest dispozitiv.',
+    'profile.aiOrRemoved': 'Cheia API OpenRouter a fost ștearsă.',
+    'profile.aiOrRemovedLocal':
+      'Cheia OpenRouter a fost ștearsă pe acest dispozitiv.',
+    'profile.aiCascadeKeys':
+      'Ordine: Gemini → OpenRouter Free. Dacă Gemini eșuează sau durează prea mult (~12s), se folosește automat OpenRouter.',
     'profile.aiLanguage': 'Limba răspunsurilor',
     'profile.aiShare': 'Trimite descrierile către AI',
     'profile.aiShareHint':
@@ -2033,9 +2059,9 @@ const translations = {
       'Răspunsurile noi arată fiecare pas, payload și răspuns. Nu se salvează în istoricul chatului.',
     'profile.aiDebugOn': 'Debug activ',
     'profile.aiStatsHint':
-      'Întrebările, cererile și tokenii sunt pentru azi, adunate de pe toate dispozitivele tale, și se resetează odată cu cota zilnică Gemini, la miezul nopții ora Pacific. Pauza unui model rămâne pe dispozitiv ca să fie sărit până trece limita.',
+      'Întrebările, cererile și tokenii sunt pentru azi, adunate de pe toate dispozitivele tale. Pauza unui model rămâne pe dispozitiv ca să fie sărit până trece limita.',
     'profile.aiQuestions': 'Întrebări',
-    'profile.aiRequests': 'Cereri către Gemini',
+    'profile.aiRequests': 'Cereri AI',
     'profile.aiTokens': 'Tokeni folosiți',
     'profile.aiLastModel': 'Ultimul model',
     'profile.aiNotUsed': 'încă nu a fost folosit în vizita asta',
@@ -2091,7 +2117,7 @@ const translations = {
     'assistant.debugDisclaimer':
       'Debug e activ. Fiecare răspuns include traseul request-urilor.',
     'assistant.needKey':
-      'Adaugă cheia API Gemini în profil ca să folosești asistentul. Poți crea o cheie gratuită în Google AI Studio.',
+      'Adaugă o cheie Gemini sau OpenRouter Free în profil ca să folosești asistentul.',
     'assistant.openProfile': 'Deschide profilul',
     'assistant.thinking': 'Mă gândesc',
     'assistant.working': 'Lucrez',

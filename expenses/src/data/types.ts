@@ -55,6 +55,8 @@ export type ProfilePreferences = {
   aiChat?: unknown;
   /** Today's AI usage per device: `{ date, devices }`. Resets with the Gemini daily quota. */
   aiUsage?: unknown;
+  /** OpenRouter API key (Supabase prefs only — never a Drupal field_*). */
+  openrouterApiKey?: string;
   emergencyFund?: Record<string, unknown>;
   /** Optional cash / accounts balance for net worth (legacy). */
   netWorthCash?: number;

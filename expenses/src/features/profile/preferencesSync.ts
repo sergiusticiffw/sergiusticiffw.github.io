@@ -24,8 +24,10 @@ import {
 import {
   getAiLanguage,
   getShareDescriptions,
+  getStoredOpenrouterApiKey,
   setAiLanguage,
   setShareDescriptions,
+  setStoredOpenrouterApiKey,
 } from '../../ai/storage';
 import {
   hydrateChatSessionFromPrefs,
@@ -83,6 +85,7 @@ export const readLocalPreferences = (): ProfilePreferences => {
     aiShareDescriptions: getShareDescriptions(),
     aiChat: readChatSessionForPrefs(),
     aiUsage: readAiUsageForPrefs(),
+    openrouterApiKey: getStoredOpenrouterApiKey(),
     emergencyFund: fund as unknown as Record<string, unknown>,
     netWorthCash: getNetWorthCash(),
     netWorthAssets: getNetWorthAssets() as unknown as Record<string, unknown>,
@@ -128,6 +131,9 @@ export const applyPreferencesLocally = (
     }
     if (typeof p.aiShareDescriptions === 'boolean') {
       setShareDescriptions(p.aiShareDescriptions);
+    }
+    if (typeof p.openrouterApiKey === 'string') {
+      setStoredOpenrouterApiKey(p.openrouterApiKey);
     }
     if (p.aiChat != null) {
       hydrateChatSessionFromPrefs(p.aiChat);

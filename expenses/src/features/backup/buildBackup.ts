@@ -13,7 +13,10 @@ import type {
 import type { TagMap, TagMode } from '../../tags/catalog';
 import { sanitizeMap } from '../../tags/catalog';
 import { getTagCatalog, refreshTagCatalog } from '../../tags/store';
-import { getStoredApiKey } from '../../ai/storage';
+import {
+  getStoredApiKey,
+  getStoredOpenrouterApiKey,
+} from '../../ai/storage';
 import { fetchApiKeyFromServer } from '../../ai/apiKey';
 import type { GoalsDriveBundle } from '../goals/driveSync';
 import { getEmergencyFund } from '../goals/store';
@@ -38,6 +41,8 @@ export interface BackupProfile {
   tag_mode?: TagMode;
   custom_tags?: TagMap;
   gemini_api_key?: string;
+  /** OpenRouter Free key (local / Supabase preferences). */
+  openrouter_api_key?: string;
 }
 
 export interface ExpensesBackupSnapshot {
@@ -128,6 +133,7 @@ const loadProfile = async (
   let customTags = sanitizeMap(localCatalog.custom);
   let currency: string | undefined;
   let gemini = (getStoredApiKey() || '').trim();
+  const openrouter = (getStoredOpenrouterApiKey() || '').trim();
 
   if (apiClient) {
     try {
@@ -169,6 +175,7 @@ const loadProfile = async (
     tag_mode: tagMode,
     custom_tags: customTags,
     ...(gemini ? { gemini_api_key: gemini } : {}),
+    ...(openrouter ? { openrouter_api_key: openrouter } : {}),
   };
 };
 

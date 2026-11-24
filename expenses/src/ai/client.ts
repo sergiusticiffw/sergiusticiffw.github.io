@@ -1,269 +1,89 @@
+import { AI_LIMITS } from './config';
+import { streamGemini, testGeminiApiKey } from './providers/gemini';
 import {
-  AI_DEFAULT_COOLDOWN_SECONDS,
-  AI_MODELS,
-  AiModelTier,
-  GEMINI_API_URL,
-} from './config';
-import { recordAiRequest, recordSessionLimit } from './sessionStats';
-import { getModelCooldowns, saveModelLimit, setModelCooldown } from './storage';
+  streamOpenRouter,
+  testOpenRouterApiKey,
+} from './providers/openrouter';
+import { getStoredOpenrouterApiKey } from './storage';
+import {
+  AiError,
+  GeminiResult,
+  StreamOptions,
+} from './types';
 
-export interface GeminiPart {
-  text?: string;
-  thought?: boolean;
-  thoughtSignature?: string;
-  functionCall?: { id?: string; name: string; args?: Record<string, unknown> };
-  functionResponse?: {
-    id?: string;
-    name: string;
-    response: Record<string, unknown>;
-  };
-}
+export type {
+  GeminiPart,
+  GeminiContent,
+  GeminiFunctionDeclaration,
+  GeminiRequest,
+  GeminiUsage,
+  GeminiResult,
+  AiErrorKind,
+  StreamDebugEvent,
+  StreamOptions,
+} from './types';
+export { AiError } from './types';
 
-export interface GeminiContent {
-  role: 'user' | 'model';
-  parts: GeminiPart[];
-  /** Model that produced this turn. Local only, never sent to the API. */
-  model?: string;
-  /**
-   * Whether description sharing was on when this turn was written. Local only,
-   * never sent to the API. Missing means unknown (older saved chats).
-   */
-  shared?: boolean;
-}
+const isAbort = (error: unknown) =>
+  (error as Error)?.name === 'AbortError' ||
+  (typeof DOMException !== 'undefined' &&
+    error instanceof DOMException &&
+    error.name === 'AbortError');
 
-export interface GeminiFunctionDeclaration {
-  name: string;
-  description: string;
-  parameters?: Record<string, unknown>;
-}
-
-export interface GeminiRequest {
-  systemInstruction?: { parts: { text: string }[] };
-  contents: GeminiContent[];
-  tools?: { functionDeclarations: GeminiFunctionDeclaration[] }[];
-  toolConfig?: { functionCallingConfig: { mode: 'AUTO' | 'ANY' | 'NONE' } };
-  generationConfig?: {
-    temperature?: number;
-    maxOutputTokens?: number;
-    responseMimeType?: string;
-    responseSchema?: Record<string, unknown>;
-    thinkingConfig?: { thinkingLevel?: 'minimal' | 'low' | 'medium' | 'high' };
-  };
-}
-
-export interface GeminiUsage {
-  promptTokenCount?: number;
-  candidatesTokenCount?: number;
-  thoughtsTokenCount?: number;
-  cachedContentTokenCount?: number;
-  totalTokenCount?: number;
-}
-
-export interface GeminiResult {
-  /** Model parts exactly as received (signatures included), for the history. */
-  parts: GeminiPart[];
-  text: string;
-  functionCalls: NonNullable<GeminiPart['functionCall']>[];
-  usage: GeminiUsage;
-  finishReason?: string;
-  model: string;
-}
-
-export type AiErrorKind =
-  'invalid_key' | 'quota' | 'offline' | 'blocked' | 'model' | 'unknown';
-
-export class AiError extends Error {
-  constructor(
-    public kind: AiErrorKind,
-    message: string,
-    public retryAfterSeconds?: number,
-    public daily = false,
-    public quota?: { quotaId?: string; limit?: number },
-    public model?: string
-  ) {
-    super(message);
-    this.name = 'AiError';
-  }
-}
-
-/** Parses "29405s", "8h10m5s", or a plain number of seconds. */
-const parseDuration = (text: string): number | undefined => {
-  const value = text.trim();
-  const hms = value.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+(?:\.\d+)?)s)?$/i);
-  if (hms && (hms[1] || hms[2] || hms[3])) {
-    return Math.ceil(
-      Number(hms[1] || 0) * 3600 +
-        Number(hms[2] || 0) * 60 +
-        Number(hms[3] || 0)
-    );
-  }
-  const seconds = parseFloat(value);
-  return Number.isNaN(seconds) ? undefined : Math.ceil(seconds);
-};
-
-const parseRetryDelay = (
-  details: any[] | undefined,
-  message?: string
-): number | undefined => {
-  const retry = details?.find(
-    (d) => typeof d?.retryDelay === 'string'
-  )?.retryDelay;
-  if (retry) {
-    const seconds = parseDuration(retry);
-    if (seconds !== undefined) return seconds;
-  }
-  const fromMessage = message?.match(/retry in ([0-9.hms]+)/i)?.[1];
-  return fromMessage ? parseDuration(fromMessage) : undefined;
-};
-
-const quotaText = (v: any) => `${v?.quotaId ?? ''}${v?.quotaMetric ?? ''}`;
-const isPerDay = (v: any) => /PerDay/i.test(quotaText(v));
-
-const isDailyQuota = (message: string, details: any[] | undefined) =>
-  /per ?day/i.test(message) ||
-  !!details?.some((d) => d?.violations?.some(isPerDay));
-
-const cooldownUntil = (error: AiError) =>
-  Date.now() + (error.retryAfterSeconds ?? AI_DEFAULT_COOLDOWN_SECONDS) * 1000;
-
-/** Signatures from another model fail validation, so they are replaced with the documented bypass value. */
-const SKIP_SIGNATURE = 'skip_thought_signature_validator';
-
-const contentsFor = (contents: GeminiContent[], model: string) =>
-  contents.map(({ model: author, shared: _shared, ...content }) =>
-    author && author !== model
-      ? {
-          ...content,
-          parts: content.parts.map((part) =>
-            part.thoughtSignature
-              ? { ...part, thoughtSignature: SKIP_SIGNATURE }
-              : part
-          ),
-        }
-      : content
-  );
-
-const toAiError = async (response: Response): Promise<AiError> => {
-  let message = `HTTP ${response.status}`;
-  let details: any[] | undefined;
-  try {
-    const body = await response.json();
-    message = body?.error?.message || message;
-    details = body?.error?.details;
-  } catch {
-    // non-JSON error body
-  }
-  if (response.status === 429) {
-    const violations: any[] =
-      details?.flatMap((d) => d?.violations || []) || [];
-    const violation =
-      violations.find(isPerDay) ||
-      violations.find((v) => v?.quotaId || v?.quotaMetric);
-    const limit =
-      Number(violation?.quotaValue) ||
-      Number(message.match(/limit:\s*(\d+)/i)?.[1]) ||
-      undefined;
-    return new AiError(
-      'quota',
-      message,
-      parseRetryDelay(details, message),
-      isDailyQuota(message, details),
-      {
-        quotaId: violation?.quotaId || violation?.quotaMetric,
-        limit,
-      }
-    );
-  }
-  if (
-    response.status === 401 ||
-    response.status === 403 ||
-    /api key/i.test(message)
-  ) {
-    return new AiError('invalid_key', message);
-  }
-  if (response.status === 404) {
-    return new AiError('model', message);
-  }
-  return new AiError('unknown', message);
-};
-
-const headers = (apiKey: string) => ({
-  'Content-Type': 'application/json',
-  'x-goog-api-key': apiKey,
-});
-
-/** Models that returned 404 for this key during the session. */
-const unavailableModels = new Set<string>();
-
-async function* readSse(response: Response, signal?: AbortSignal) {
-  const reader = response.body!.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  try {
-    while (true) {
-      if (signal?.aborted) return;
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      let separator: number;
-      while ((separator = buffer.indexOf('\n')) >= 0) {
-        const line = buffer.slice(0, separator).trim();
-        buffer = buffer.slice(separator + 1);
-        if (line.startsWith('data:')) {
-          const payload = line.slice(5).trim();
-          if (payload) yield JSON.parse(payload);
-        }
-      }
-    }
-    const rest = buffer.trim();
-    if (rest.startsWith('data:') && rest.slice(5).trim()) {
-      yield JSON.parse(rest.slice(5).trim());
-    }
-  } finally {
-    reader.releaseLock();
-  }
-}
-
-export type StreamDebugEvent =
-  | {
-      type: 'skipped';
-      model: string;
-      reason: 'cooldown' | 'unavailable';
-      until?: number;
-    }
-  | { type: 'attempt'; model: string; url: string; request: GeminiRequest }
-  | {
-      type: 'http_error';
-      model: string;
-      status: number;
-      durationMs: number;
-      error: AiError;
-    }
-  | {
-      type: 'success';
-      model: string;
-      durationMs: number;
-      chunkCount: number;
-      result: GeminiResult;
-    };
-
-interface StreamOptions {
-  apiKey: string;
-  tier: AiModelTier;
-  request: GeminiRequest;
-  signal?: AbortSignal;
-  onText?: (textSoFar: string) => void;
-  /** Start from this model (and later ones). Used when retrying with an alternate. */
-  preferModel?: string;
-  onDebug?: (event: StreamDebugEvent) => void;
-}
+const isTimeout = (error: unknown) =>
+  (error as Error)?.name === 'TimeoutError' ||
+  (typeof DOMException !== 'undefined' &&
+    error instanceof DOMException &&
+    error.name === 'TimeoutError');
 
 /**
- * Streams one model step. Text is surfaced through `onText` as it arrives;
- * function calls and the raw parts are returned when the step completes.
+ * Run `fn` with a soft timeout. User abort on `outer` is rethrown as AbortError.
+ * Soft timeout aborts only the inner signal so the cascade can continue.
+ */
+const withProviderTimeout = async <T>(
+  outer: AbortSignal | undefined,
+  timeoutMs: number | null,
+  fn: (signal: AbortSignal) => Promise<T>
+): Promise<T> => {
+  if (!timeoutMs || timeoutMs <= 0) {
+    if (outer?.aborted) throw outer.reason ?? new DOMException('Aborted', 'AbortError');
+    return fn(outer ?? new AbortController().signal);
+  }
+
+  const inner = new AbortController();
+  const onOuterAbort = () => {
+    inner.abort(outer?.reason ?? new DOMException('Aborted', 'AbortError'));
+  };
+  if (outer?.aborted) onOuterAbort();
+  else outer?.addEventListener('abort', onOuterAbort, { once: true });
+
+  const timer = setTimeout(() => {
+    inner.abort(new DOMException('Provider timeout', 'TimeoutError'));
+  }, timeoutMs);
+
+  try {
+    return await fn(inner.signal);
+  } catch (error) {
+    if (outer?.aborted) throw error;
+    if (isTimeout(error) || (isAbort(error) && !outer?.aborted)) {
+      throw new AiError('unknown', `Provider timed out after ${timeoutMs}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    outer?.removeEventListener('abort', onOuterAbort);
+  }
+};
+
+/**
+ * Streams one model step.
+ * Cascade: Gemini → OpenRouter Free (last / best effort).
+ * Soft-timeout on Gemini moves to OpenRouter.
+ * Does not fall back after a user abort (Stop).
  */
 export async function streamGenerate({
   apiKey,
+  openrouterApiKey,
   tier,
   request,
   signal,
@@ -275,155 +95,97 @@ export async function streamGenerate({
     throw new AiError('offline', 'No internet connection');
   }
 
-  const list: string[] = [...AI_MODELS[tier]];
-  const start = preferModel ? list.indexOf(preferModel) : 0;
-  const cooldowns = getModelCooldowns();
-  const available: string[] = [];
-  const candidates: string[] = [];
+  const orKey = (openrouterApiKey ?? getStoredOpenrouterApiKey()).trim();
+  const geminiKey = (apiKey || '').trim();
+  const errors: AiError[] = [];
+  const failoverMs = AI_LIMITS.providerFailoverMs;
+  let startedProvider = false;
 
-  for (const model of list.slice(start >= 0 && preferModel ? start : 0)) {
-    if (unavailableModels.has(model)) {
-      onDebug?.({ type: 'skipped', model, reason: 'unavailable' });
-      continue;
-    }
-    available.push(model);
-    if (cooldowns[model]) {
-      onDebug?.({
-        type: 'skipped',
-        model,
-        reason: 'cooldown',
-        until: cooldowns[model],
-      });
-      continue;
-    }
-    candidates.push(model);
-  }
+  const tryProvider = async (
+    label: string,
+    timeoutMs: number | null,
+    run: (signal: AbortSignal) => Promise<GeminiResult>
+  ): Promise<GeminiResult | null> => {
+    try {
+      // Only clear partial stream when switching providers — not on the first
+      // attempt, or "Thinking" disappears (onText clears activity).
+      if (startedProvider) onText?.('');
+      startedProvider = true;
+      return await withProviderTimeout(signal, timeoutMs, run);
+    } catch (error) {
+      // User hit Stop — do not cascade.
+      if (signal?.aborted || isAbort(error)) throw error;
 
-  if (available.length && !candidates.length) throw allLimitedError(available);
-
-  let lastError: AiError | null = null;
-
-  for (const model of candidates) {
-    const url = `${GEMINI_API_URL}/models/${model}:streamGenerateContent?alt=sse`;
-    const payload: GeminiRequest = {
-      ...request,
-      contents: contentsFor(request.contents, model),
-    };
-    onDebug?.({ type: 'attempt', model, url, request: payload });
-    const started = Date.now();
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: headers(apiKey),
-      body: JSON.stringify(payload),
-      signal,
-    });
-
-    if (!response.ok) {
-      lastError = await toAiError(response);
+      const ai =
+        error instanceof AiError
+          ? error
+          : new AiError(
+              'unknown',
+              error instanceof Error ? error.message : `${label} failed`
+            );
+      errors.push(ai);
       onDebug?.({
         type: 'http_error',
-        model,
-        status: response.status,
-        durationMs: Date.now() - started,
-        error: lastError,
+        model: ai.model || label,
+        status: 0,
+        durationMs: 0,
+        error: ai,
       });
-      if (lastError.kind === 'model') {
-        unavailableModels.add(model);
-        continue;
-      }
-      if (lastError.kind === 'quota') {
-        const until = cooldownUntil(lastError);
-        const at = Date.now();
-        setModelCooldown(model, until);
-        saveModelLimit(model, {
-          at,
-          until,
-          daily: lastError.daily,
-          retryAfterSeconds: lastError.retryAfterSeconds,
-          ...lastError.quota,
-        });
-        recordSessionLimit(model, {
-          model,
-          at,
-          until,
-          daily: lastError.daily,
-          limit: lastError.quota?.limit,
-        });
-        continue;
-      }
-      lastError.model = model;
-      throw lastError;
+      return null;
     }
+  };
 
-    const parts: GeminiPart[] = [];
-    let text = '';
-    let usage: GeminiUsage = {};
-    let finishReason: string | undefined;
-    let chunkCount = 0;
-
-    for await (const chunk of readSse(response, signal)) {
-      chunkCount += 1;
-      const candidate = chunk?.candidates?.[0];
-      if (chunk?.promptFeedback?.blockReason) {
-        throw new AiError(
-          'blocked',
-          `Blocked: ${chunk.promptFeedback.blockReason}`
-        );
-      }
-      for (const part of (candidate?.content?.parts || []) as GeminiPart[]) {
-        parts.push(part);
-        if (part.text && !part.thought) {
-          text += part.text;
-          onText?.(text);
-        }
-      }
-      if (candidate?.finishReason) finishReason = candidate.finishReason;
-      if (chunk?.usageMetadata) usage = chunk.usageMetadata;
-    }
-
-    const functionCalls = parts
-      .filter((p) => p.functionCall)
-      .map((p) => p.functionCall!);
-
-    const result = { parts, text, functionCalls, usage, finishReason, model };
-    onDebug?.({
-      type: 'success',
-      model,
-      durationMs: Date.now() - started,
-      chunkCount,
-      result,
-    });
-    recordAiRequest(model, usage.totalTokenCount || 0);
-    return result;
+  // 1) Gemini (primary) — fail or slow → OpenRouter
+  if (geminiKey) {
+    const result = await tryProvider('gemini', failoverMs, (sig) =>
+      streamGemini({
+        apiKey: geminiKey,
+        tier,
+        request,
+        signal: sig,
+        onText,
+        preferModel,
+        onDebug,
+      })
+    );
+    if (result) return result;
   }
 
-  if (lastError?.kind === 'quota') throw allLimitedError(available);
-  throw lastError || new AiError('model', 'No available model');
+  // 2) OpenRouter Free — last / best effort (no soft timeout)
+  if (orKey) {
+    const result = await tryProvider('openrouter', null, (sig) =>
+      streamOpenRouter({
+        apiKey: orKey,
+        tier,
+        request,
+        signal: sig,
+        onText,
+        onDebug,
+      })
+    );
+    if (result) return result;
+  }
+
+  if (!geminiKey && !orKey) {
+    throw new AiError(
+      'invalid_key',
+      'No AI provider configured. Add a Gemini or OpenRouter key.'
+    );
+  }
+
+  throw (
+    errors[errors.length - 1] ||
+    new AiError('unknown', 'All AI providers failed')
+  );
 }
 
-const allLimitedError = (models: string[]) => {
-  const cooldowns = getModelCooldowns();
-  const waitMs =
-    Math.min(...models.map((m) => cooldowns[m] ?? Date.now())) - Date.now();
-  return new AiError(
-    'quota',
-    'All models are rate limited',
-    Math.max(1, Math.ceil(waitMs / 1000))
-  );
-};
-
-/** Validates the key and model access without spending generation quota. */
-export async function testApiKey(apiKey: string): Promise<string> {
-  let lastError: AiError | null = null;
-  for (const model of AI_MODELS.chat) {
-    const response = await fetch(`${GEMINI_API_URL}/models/${model}`, {
-      headers: headers(apiKey),
-    });
-    if (response.ok) return model;
-    lastError = await toAiError(response);
-    if (lastError.kind !== 'model') throw lastError;
-  }
-  throw lastError || new AiError('model', 'No available model');
+/** Test a Gemini or OpenRouter key. */
+export async function testApiKey(
+  apiKey: string,
+  provider: 'gemini' | 'openrouter' = 'gemini'
+): Promise<string> {
+  if (provider === 'openrouter') return testOpenRouterApiKey(apiKey);
+  return testGeminiApiKey(apiKey);
 }
 
 const formatWait = (seconds: number) => {
@@ -439,11 +201,11 @@ export const describeAiError = (error: unknown): string => {
   if (error instanceof AiError) {
     switch (error.kind) {
       case 'invalid_key':
-        return 'Your Gemini API key was rejected. Check it in Profile → AI assistant.';
+        return 'Your API key was rejected. Check it in Profile → AI assistant.';
       case 'quota':
         return error.retryAfterSeconds
-          ? `Free tier limit reached on all models. Try again in ${formatWait(error.retryAfterSeconds)}.`
-          : 'Free tier limit reached on all models. Try again a bit later.';
+          ? `Free tier limit reached. Try again in ${formatWait(error.retryAfterSeconds)}.`
+          : 'Free tier limit reached. Try again a bit later.';
       case 'offline':
         return 'You are offline. The assistant needs an internet connection.';
       case 'blocked':
@@ -457,3 +219,11 @@ export const describeAiError = (error: unknown): string => {
   if ((error as Error)?.name === 'AbortError') return 'Stopped.';
   return 'AI request failed. Try again.';
 };
+
+/** True when Gemini and/or OpenRouter key is available. */
+export const hasAiAccess = (
+  geminiKey?: string,
+  openrouterKey?: string
+): boolean =>
+  Boolean((geminiKey || '').trim()) ||
+  Boolean((openrouterKey || getStoredOpenrouterApiKey()).trim());

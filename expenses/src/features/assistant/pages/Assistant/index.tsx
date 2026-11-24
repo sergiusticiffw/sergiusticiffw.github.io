@@ -48,7 +48,7 @@ import { getAiItems } from '../../../../ai/data';
 import { isAiDebugEnabled } from '../../../../ai/debug';
 import { buildLoanPrompts } from '../../../../ai/loans';
 import { buildDataPrompts } from '../../../../ai/dataPrompts';
-import { useAiApiKey } from '../../../../ai/hooks/useAiApiKey';
+import { useAiAccess } from '../../../../ai/hooks/useAiAccess';
 import { useAiChat } from '../../../../ai/hooks/useAiChat';
 import { useSpeechInput } from '../../../../ai/hooks/useSpeechInput';
 import { getShareDescriptions } from '../../../../ai/storage';
@@ -296,7 +296,10 @@ const AssistantMessage: React.FC<{
   );
 };
 
-const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
+const Chat: React.FC<{ apiKey: string; openrouterApiKey?: string }> = ({
+  apiKey,
+  openrouterApiKey = '',
+}) => {
   const { t } = useLocalization();
   const {
     messages,
@@ -308,7 +311,7 @@ const Chat: React.FC<{ apiKey: string }> = ({ apiKey }) => {
     reset,
     hasData,
     loans,
-  } = useAiChat(apiKey);
+  } = useAiChat(apiKey, openrouterApiKey);
   const [input, setInput] = useState('');
   const raw = useExpenseRaw();
   const [suggestions, setSuggestions] = useState<SuggestedPrompt[] | null>(
@@ -666,7 +669,7 @@ const Assistant = () => {
   const { data: expenses, dataDispatch: expenseDispatch } = useExpenseData();
   const { data, dataDispatch } = useLoan();
   const apiClient = useApiClient();
-  const { apiKey, status } = useAiApiKey();
+  const { status, geminiApiKey, openrouterApiKey } = useAiAccess();
 
   const loansEnabled = useLoansEnabled();
   const loansFetched = useRef(false);
@@ -709,7 +712,9 @@ const Assistant = () => {
           </div>
         </div>
       )}
-      {status === 'ready' && <Chat apiKey={apiKey} />}
+      {status === 'ready' && (
+        <Chat apiKey={geminiApiKey} openrouterApiKey={openrouterApiKey} />
+      )}
     </div>
   );
 };

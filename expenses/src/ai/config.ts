@@ -1,13 +1,15 @@
 export const GEMINI_API_URL =
   'https://generativelanguage.googleapis.com/v1beta';
 
+export const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1';
+
 /** Drupal user field that stores the user's own Gemini API key. */
 export const AI_KEY_FIELD = 'field_gemini_api_key';
 
 /**
- * Model candidates per tier, tried in order. The free tier has a separate quota
+ * Model candidates per tier / provider. Gemini free tier has a separate quota
  * per model, so when one hits its limit (429) or is retired (404) the next one
- * is used. The first model is retried once its cooldown passes.
+ * is used. OpenRouter Free uses a single router model.
  * gemini-3.5-flash is deprecated; Google routes those requests to gemini-3.6-flash.
  */
 export const AI_MODELS = {
@@ -18,20 +20,27 @@ export const AI_MODELS = {
     'gemini-3.1-flash-lite',
   ],
   lite: ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.6-flash'],
+  openrouterChat: ['openrouter/free'],
+  openrouterLite: ['openrouter/free'],
 } as const;
 
 /** Cooldown when a 429 has no retryDelay. */
 export const AI_DEFAULT_COOLDOWN_SECONDS = 60;
 
-export type AiModelTier = keyof typeof AI_MODELS;
+export type AiModelTier = 'chat' | 'lite';
 
-/** Short model label shown under answers, e.g. "3.8-flash". */
-export const modelLabel = (model?: string): string | null =>
-  model ? model.replace(/^gemini-/, '') : null;
+/** Short model label shown under answers, e.g. "3.8-flash" or "free". */
+export const modelLabel = (model?: string): string | null => {
+  if (!model) return null;
+  if (model === 'openrouter/free' || model.startsWith('openrouter/')) {
+    return model.replace(/^openrouter\//, '');
+  }
+  return model.replace(/^gemini-/, '');
+};
 
-/** Next model in a tier after `after`, or the second model if none is given. */
+/** Next model in a Gemini tier after `after`, or the second model if none is given. */
 export const nextModel = (
-  tier: keyof typeof AI_MODELS,
+  tier: AiModelTier,
   after?: string
 ): string | null => {
   const list = AI_MODELS[tier] as readonly string[];
@@ -52,6 +61,11 @@ export const AI_LIMITS = {
   maxHistoryTurns: 8,
   /** After this long without a finished request, the chat offers a smaller model. */
   slowRequestMs: 5000,
+  /**
+   * Soft timeout for Gemini. On expiry the cascade moves to OpenRouter Free.
+   * OpenRouter (last) has no soft timeout.
+   */
+  providerFailoverMs: 12_000,
   toolRowsDefault: 50,
   toolRowsMax: 300,
   toolGroupsDefault: 60,
@@ -61,6 +75,7 @@ export const AI_LIMITS = {
 
 export const AI_STORAGE_KEYS = {
   apiKey: 'geminiApiKey',
+  openrouterApiKey: 'openrouterApiKey',
   shareDescriptions: 'aiShareDescriptions',
   usage: 'aiUsage',
   language: 'aiLanguage',

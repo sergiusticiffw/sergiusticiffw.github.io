@@ -20,6 +20,7 @@ import {
   GeminiContent,
   StreamDebugEvent,
   describeAiError,
+  hasAiAccess,
   streamGenerate,
 } from '../client';
 import { AI_LIMITS, AI_MODELS } from '../config';
@@ -169,7 +170,7 @@ const prefillFromSuggest = (
   };
 };
 
-export function useAiChat(apiKey: string) {
+export function useAiChat(apiKey: string, openrouterApiKey = '') {
   const raw = useExpenseRaw();
   const loans = useLoanList();
   const loanPayments = useLoanPayments();
@@ -280,7 +281,14 @@ export function useAiChat(apiKey: string) {
   const send = useCallback(
     async (question: string, preferModel?: string) => {
       const trimmed = question.trim();
-      if (!trimmed || busy || busyRef.current || !apiKey) return;
+      if (
+        !trimmed ||
+        busy ||
+        busyRef.current ||
+        !hasAiAccess(apiKey, openrouterApiKey)
+      ) {
+        return;
+      }
       busyRef.current = true;
       recordAiQuestion();
 
@@ -410,17 +418,22 @@ export function useAiChat(apiKey: string) {
           }, AI_LIMITS.slowRequestMs);
           return streamGenerate({
             apiKey,
+            openrouterApiKey,
             tier: 'chat',
             preferModel,
             request: step.request,
             signal: controller.signal,
-            onText: (text) =>
+            onText: (text) => {
+              const answer = splitFollowUps(
+                step.previousText ? `${step.previousText}\n\n${text}` : text
+              ).answer;
+              // Keep Thinking/Working while text is still empty (e.g. provider
+              // failover calls onText('') to reset — must not clear activity).
               patchMessage(assistantId, {
-                text: splitFollowUps(
-                  step.previousText ? `${step.previousText}\n\n${text}` : text
-                ).answer,
-                activity: undefined,
-              }),
+                text: answer,
+                ...(answer ? { activity: undefined } : {}),
+              });
+            },
             onDebug: (event) => {
               if (event.type === 'attempt') attemptModel = event.model;
               logStreamDebug(event, addDebug);
@@ -579,6 +592,7 @@ export function useAiChat(apiKey: string) {
     },
     [
       apiKey,
+      openrouterApiKey,
       busy,
       currency,
       emergencyFund,

@@ -14,7 +14,10 @@ import {
   applyGoalsBackupBundle,
   requireGoalsOwnerKey,
 } from '../goals/driveSync';
-import { setStoredApiKey } from '../../ai/storage';
+import {
+  setStoredApiKey,
+  setStoredOpenrouterApiKey,
+} from '../../ai/storage';
 import {
   applyImportedTagCatalog,
   refreshTagCatalog,
@@ -240,6 +243,10 @@ export async function importBackupToSupabase(
     typeof profile.gemini_api_key === 'string'
       ? profile.gemini_api_key.trim()
       : '';
+  const openrouter =
+    typeof profile.openrouter_api_key === 'string'
+      ? profile.openrouter_api_key.trim()
+      : '';
   const currency =
     typeof profile.currency === 'string' && profile.currency.trim()
       ? profile.currency.trim()
@@ -300,6 +307,7 @@ export async function importBackupToSupabase(
   }
   if (currency) setSettingsCurrency(currency);
   if (gemini) setStoredApiKey(gemini);
+  if (openrouter) setStoredOpenrouterApiKey(openrouter);
 
   try {
     const provider = getDataProvider();
