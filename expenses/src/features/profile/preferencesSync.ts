@@ -132,8 +132,11 @@ export const applyPreferencesLocally = (
     if (typeof p.aiShareDescriptions === 'boolean') {
       setShareDescriptions(p.aiShareDescriptions);
     }
+    // Hydrate without re-push. Empty remote must clear local so an intentional
+    // remove on another device sticks; flush preserves non-empty cloud keys
+    // when the patch did not touch openrouterApiKey (see flushPreferencesPush).
     if (typeof p.openrouterApiKey === 'string') {
-      setStoredOpenrouterApiKey(p.openrouterApiKey);
+      setStoredOpenrouterApiKey(p.openrouterApiKey, false);
     }
     if (p.aiChat != null) {
       hydrateChatSessionFromPrefs(p.aiChat);
@@ -311,6 +314,26 @@ export const flushPreferencesPush = async (): Promise<boolean> => {
       if (typeof remote?.[key] === 'boolean') {
         next[key] = remote[key];
       }
+    }
+
+    // OpenRouter key: never clobber a non-empty cloud value with a blank local
+    // copy unless this flush explicitly patches openrouterApiKey (save/remove).
+    if (!Object.prototype.hasOwnProperty.call(patch, 'openrouterApiKey')) {
+      const localKey = (next.openrouterApiKey || '').trim();
+      const remoteKey = (remote?.openrouterApiKey || '').trim();
+      if (localKey) {
+        next.openrouterApiKey = localKey;
+      } else if (remoteKey) {
+        next.openrouterApiKey = remoteKey;
+        // Keep this device in sync without scheduling another push.
+        setStoredOpenrouterApiKey(remoteKey, false);
+      } else {
+        delete next.openrouterApiKey;
+      }
+    } else {
+      const patched = (patch.openrouterApiKey || '').trim();
+      if (patched) next.openrouterApiKey = patched;
+      else delete next.openrouterApiKey;
     }
 
     const result = await provider.updateProfile(session.uid, {

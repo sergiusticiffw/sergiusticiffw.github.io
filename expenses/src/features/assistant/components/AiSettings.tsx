@@ -244,6 +244,7 @@ const AiSettings = () => {
     geminiSynced,
     saveGemini,
     openrouterApiKey,
+    openrouterSynced,
     saveOpenrouter,
   } = useAiAccess();
   const [open, setOpen] = useState(false);
@@ -314,7 +315,7 @@ const AiSettings = () => {
             hintHref="https://openrouter.ai/keys"
             hintLinkText="openrouter.ai/keys"
             apiKey={openrouterApiKey}
-            synced
+            synced={openrouterSynced}
             onSave={saveOpenrouter}
             onRemove={() => saveOpenrouter('')}
           />

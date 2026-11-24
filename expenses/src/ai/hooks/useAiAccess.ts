@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { PREFS_APPLIED_EVENT } from '../../features/profile/preferencesSync';
+import { getDataProviderKind } from '../../data';
+import {
+  flushPreferencesPush,
+  PREFS_APPLIED_EVENT,
+  schedulePreferencesPush,
+} from '../../features/profile/preferencesSync';
 import {
   getStoredOpenrouterApiKey,
   setStoredOpenrouterApiKey,
@@ -16,6 +21,7 @@ export function useAiAccess() {
   const [openrouterApiKey, setOpenrouterApiKey] = useState(
     getStoredOpenrouterApiKey
   );
+  const [openrouterSynced, setOpenrouterSynced] = useState(true);
 
   useEffect(() => {
     const refresh = () => setOpenrouterApiKey(getStoredOpenrouterApiKey());
@@ -25,9 +31,19 @@ export function useAiAccess() {
 
   const saveOpenrouter = useCallback(async (key: string) => {
     const trimmed = key.trim();
-    setStoredOpenrouterApiKey(trimmed);
+    // Local first; await a real preferences flush so reload keeps the key.
+    setStoredOpenrouterApiKey(trimmed, false);
     setOpenrouterApiKey(trimmed);
-    return 'synced' as const;
+
+    if (getDataProviderKind() !== 'supabase' || !navigator.onLine) {
+      setOpenrouterSynced(false);
+      return 'local' as const;
+    }
+
+    schedulePreferencesPush({ openrouterApiKey: trimmed });
+    const ok = await flushPreferencesPush();
+    setOpenrouterSynced(ok);
+    return ok ? ('synced' as const) : ('local' as const);
   }, []);
 
   const hasProvider = Boolean(gemini.apiKey) || Boolean(openrouterApiKey);
@@ -48,6 +64,7 @@ export function useAiAccess() {
     geminiSynced: gemini.synced,
     saveGemini: gemini.save,
     openrouterApiKey,
+    openrouterSynced,
     saveOpenrouter,
   };
 }

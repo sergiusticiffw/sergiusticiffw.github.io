@@ -14,12 +14,17 @@ export const setStoredApiKey = (key: string) => {
 export const getStoredOpenrouterApiKey = (): string =>
   localStorage.getItem(AI_STORAGE_KEYS.openrouterApiKey) || '';
 
-export const setStoredOpenrouterApiKey = (key: string) => {
+/**
+ * Persist OpenRouter key locally. Set `sync` false when hydrating from the
+ * server so we do not schedule a re-push that can race and wipe the cloud value.
+ */
+export const setStoredOpenrouterApiKey = (key: string, sync = true) => {
   if (key) {
     localStorage.setItem(AI_STORAGE_KEYS.openrouterApiKey, key);
   } else {
     localStorage.removeItem(AI_STORAGE_KEYS.openrouterApiKey);
   }
+  if (!sync) return;
   // Supabase-only sync via preferences (no Drupal field_*).
   void import('../features/profile/preferencesSync')
     .then((m) => m.schedulePreferencesPush({ openrouterApiKey: key }))
