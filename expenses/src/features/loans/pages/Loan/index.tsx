@@ -40,7 +40,6 @@ import {
   FiPercent,
   FiTrendingDown,
   FiAlertCircle,
-  FiChevronLeft,
   FiZap,
 } from 'react-icons/fi';
 import Notification from '@shared/components/Notification/Notification';
@@ -576,13 +575,6 @@ const Loan: React.FC = () => {
     <div className={`${PAGE_CONTAINER_CLASS} loan-container`}>
       {/* Header */}
       <div className="w-full mb-5 pt-4 flex flex-col items-stretch">
-        <Link
-          to="/expenses/loans"
-          className="mb-2 inline-flex min-h-11 items-center gap-1 self-start rounded-lg pr-3 text-sm font-medium text-app-secondary hover:text-app-primary focus-visible:outline-2 focus-visible:outline-[var(--color-app-accent)]"
-        >
-          <FiChevronLeft className="size-5" aria-hidden="true" />
-          <span>{t('ux.backToLoans')}</span>
-        </Link>
         <div className="flex items-start gap-2">
           <h1 className="flex-1 min-w-0 text-2xl font-bold text-white tracking-tight m-0 text-left">
             {loan?.title}
