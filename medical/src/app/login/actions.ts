@@ -16,6 +16,7 @@ import {
 export type ActionResult = {
   error?: string;
   message?: string;
+  userId?: string;
 };
 
 export async function login(input: LoginInput): Promise<ActionResult> {
@@ -26,16 +27,15 @@ export async function login(input: LoginInput): Promise<ActionResult> {
 
   try {
     const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
     if (error) {
       return { error: "Emailul sau parola nu sunt corecte." };
     }
+    return { userId: data.user?.id };
   } catch (error) {
     console.error("login", error instanceof Error ? error.name : "unknown");
     return { error: "Conexiunea cu Supabase nu este configurată." };
   }
-
-  redirect("/profiles");
 }
 
 /** Verifies password without redirect — used by biometric lock fallback. */

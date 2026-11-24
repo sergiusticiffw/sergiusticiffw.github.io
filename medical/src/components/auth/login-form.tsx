@@ -10,8 +10,19 @@ import { login } from "@/app/login/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { markUnlocked } from "@/lib/biometric-lock";
 import { createClient } from "@/lib/supabase/client";
 import { loginSchema, type LoginInput } from "@/lib/validation/auth";
+
+async function markSessionUnlocked() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    markUnlocked(user.id);
+  }
+}
 
 function formatPasskeyLoginError(error: {
   message?: string;
@@ -51,7 +62,15 @@ export function LoginForm() {
     const result = await login(values);
     if (result?.error) {
       setFormError(result.error);
+      return;
     }
+    if (result.userId) {
+      markUnlocked(result.userId);
+    } else {
+      await markSessionUnlocked();
+    }
+    router.replace("/profiles");
+    router.refresh();
   });
 
   async function onPasskeyLogin() {
@@ -64,6 +83,7 @@ export function LoginForm() {
         setFormError(formatPasskeyLoginError(error));
         return;
       }
+      await markSessionUnlocked();
       router.replace("/profiles");
       router.refresh();
     } catch (err) {
