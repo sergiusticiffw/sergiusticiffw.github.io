@@ -209,6 +209,7 @@ export const profileFromRow = (row: any): UserProfile => ({
   currency: row.currency || undefined,
   encryption_status: row.encryption_status || undefined,
   gemini_api_key: row.gemini_api_key || '',
+  openrouter_api_key: row.openrouter_api_key || '',
   tag_mode: row.tag_mode === 'custom' ? 'custom' : 'default',
   custom_tags: (row.custom_tags as TagCatalog['custom']) || {},
   preferences:
@@ -228,6 +229,9 @@ export const profileUpdateFromPatch = (patch: ProfilePatch) => {
   }
   if (patch.gemini_api_key !== undefined) {
     update.gemini_api_key = patch.gemini_api_key;
+  }
+  if (patch.openrouter_api_key !== undefined) {
+    update.openrouter_api_key = patch.openrouter_api_key;
   }
   if (patch.tag_mode !== undefined) update.tag_mode = patch.tag_mode;
   if (patch.custom_tags !== undefined) update.custom_tags = patch.custom_tags;

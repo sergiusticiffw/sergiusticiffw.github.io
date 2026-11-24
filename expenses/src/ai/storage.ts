@@ -14,25 +14,20 @@ export const setStoredApiKey = (key: string) => {
 export const getStoredOpenrouterApiKey = (): string =>
   localStorage.getItem(AI_STORAGE_KEYS.openrouterApiKey) || '';
 
-/**
- * Persist OpenRouter key locally. Set `sync` false when hydrating from the
- * server so we do not schedule a re-push that can race and wipe the cloud value.
- */
-export const setStoredOpenrouterApiKey = (key: string, sync = true) => {
+/** Persist OpenRouter key locally (server sync goes through updateProfile). */
+export const setStoredOpenrouterApiKey = (key: string) => {
   if (key) {
     localStorage.setItem(AI_STORAGE_KEYS.openrouterApiKey, key);
   } else {
     localStorage.removeItem(AI_STORAGE_KEYS.openrouterApiKey);
   }
-  if (!sync) return;
-  // Supabase-only sync via preferences (no Drupal field_*).
-  void import('../features/profile/preferencesSync')
-    .then((m) => m.schedulePreferencesPush({ openrouterApiKey: key }))
-    .catch(() => undefined);
 };
 
-/** Session flag: Drupal confirmed there is no key, so components don't ask again. */
+/** Session flag: Drupal confirmed there is no Gemini key, so components don't ask again. */
 export const keyLookup = { serverHasNoKey: false };
+
+/** Session flag: server confirmed there is no OpenRouter key. */
+export const openrouterKeyLookup = { serverHasNoKey: false };
 
 export const getShareDescriptions = (): boolean =>
   localStorage.getItem(AI_STORAGE_KEYS.shareDescriptions) !== 'false';
@@ -169,4 +164,5 @@ export const setModelCooldown = (model: string, until: number) => {
 export const clearAiLocalData = () => {
   Object.values(AI_STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
   keyLookup.serverHasNoKey = false;
+  openrouterKeyLookup.serverHasNoKey = false;
 };

@@ -254,7 +254,7 @@ export async function importBackupToSupabase(
 
   const { data: existingProfile } = await supabase
     .from('profiles')
-    .select('tag_mode, custom_tags, gemini_api_key, currency')
+    .select('tag_mode, custom_tags, gemini_api_key, openrouter_api_key, currency')
     .eq('id', userId)
     .maybeSingle();
 
@@ -284,12 +284,13 @@ export async function importBackupToSupabase(
         }
       : {}),
     ...(gemini ? { gemini_api_key: gemini } : {}),
+    ...(openrouter ? { openrouter_api_key: openrouter } : {}),
   };
 
   const { data: savedProfile, error: profileError } = await supabase
     .from('profiles')
     .upsert(profileRow, { onConflict: 'id' })
-    .select('id, tag_mode, custom_tags, gemini_api_key, currency')
+    .select('id, tag_mode, custom_tags, gemini_api_key, openrouter_api_key, currency')
     .single();
   if (profileError) {
     throw new ImportBackupError(`Profile update failed: ${profileError.message}`);

@@ -17,7 +17,10 @@ import {
   getStoredApiKey,
   getStoredOpenrouterApiKey,
 } from '../../ai/storage';
-import { fetchApiKeyFromServer } from '../../ai/apiKey';
+import {
+  fetchApiKeyFromServer,
+  fetchOpenrouterApiKeyFromServer,
+} from '../../ai/apiKey';
 import type { GoalsDriveBundle } from '../goals/driveSync';
 import { getEmergencyFund } from '../goals/store';
 import { settingsStore } from '../../stores/settingsStore';
@@ -133,7 +136,7 @@ const loadProfile = async (
   let customTags = sanitizeMap(localCatalog.custom);
   let currency: string | undefined;
   let gemini = (getStoredApiKey() || '').trim();
-  const openrouter = (getStoredOpenrouterApiKey() || '').trim();
+  let openrouter = (getStoredOpenrouterApiKey() || '').trim();
 
   if (apiClient) {
     try {
@@ -150,6 +153,8 @@ const loadProfile = async (
         }
         const serverKey = (p.gemini_api_key || '').trim();
         if (serverKey) gemini = serverKey;
+        const serverOr = (p.openrouter_api_key || '').trim();
+        if (serverOr) openrouter = serverOr;
       }
     } catch {
       // fall through to local + explicit key fetch
@@ -160,6 +165,17 @@ const loadProfile = async (
     try {
       const key = (await fetchApiKeyFromServer(uid, accessToken)).trim();
       if (key) gemini = key;
+    } catch {
+      // keep local
+    }
+  }
+
+  if (accessToken && (!openrouter || openrouter.length < 8)) {
+    try {
+      const key = (
+        await fetchOpenrouterApiKeyFromServer(uid, accessToken)
+      ).trim();
+      if (key) openrouter = key;
     } catch {
       // keep local
     }

@@ -24,10 +24,8 @@ import {
 import {
   getAiLanguage,
   getShareDescriptions,
-  getStoredOpenrouterApiKey,
   setAiLanguage,
   setShareDescriptions,
-  setStoredOpenrouterApiKey,
 } from '../../ai/storage';
 import {
   hydrateChatSessionFromPrefs,
@@ -85,7 +83,6 @@ export const readLocalPreferences = (): ProfilePreferences => {
     aiShareDescriptions: getShareDescriptions(),
     aiChat: readChatSessionForPrefs(),
     aiUsage: readAiUsageForPrefs(),
-    openrouterApiKey: getStoredOpenrouterApiKey(),
     emergencyFund: fund as unknown as Record<string, unknown>,
     netWorthCash: getNetWorthCash(),
     netWorthAssets: getNetWorthAssets() as unknown as Record<string, unknown>,
@@ -131,12 +128,6 @@ export const applyPreferencesLocally = (
     }
     if (typeof p.aiShareDescriptions === 'boolean') {
       setShareDescriptions(p.aiShareDescriptions);
-    }
-    // Hydrate without re-push. Empty remote must clear local so an intentional
-    // remove on another device sticks; flush preserves non-empty cloud keys
-    // when the patch did not touch openrouterApiKey (see flushPreferencesPush).
-    if (typeof p.openrouterApiKey === 'string') {
-      setStoredOpenrouterApiKey(p.openrouterApiKey, false);
     }
     if (p.aiChat != null) {
       hydrateChatSessionFromPrefs(p.aiChat);
@@ -316,25 +307,8 @@ export const flushPreferencesPush = async (): Promise<boolean> => {
       }
     }
 
-    // OpenRouter key: never clobber a non-empty cloud value with a blank local
-    // copy unless this flush explicitly patches openrouterApiKey (save/remove).
-    if (!Object.prototype.hasOwnProperty.call(patch, 'openrouterApiKey')) {
-      const localKey = (next.openrouterApiKey || '').trim();
-      const remoteKey = (remote?.openrouterApiKey || '').trim();
-      if (localKey) {
-        next.openrouterApiKey = localKey;
-      } else if (remoteKey) {
-        next.openrouterApiKey = remoteKey;
-        // Keep this device in sync without scheduling another push.
-        setStoredOpenrouterApiKey(remoteKey, false);
-      } else {
-        delete next.openrouterApiKey;
-      }
-    } else {
-      const patched = (patch.openrouterApiKey || '').trim();
-      if (patched) next.openrouterApiKey = patched;
-      else delete next.openrouterApiKey;
-    }
+    // Drop legacy OpenRouter key from preferences blob (now a profile column).
+    delete (next as { openrouterApiKey?: string }).openrouterApiKey;
 
     const result = await provider.updateProfile(session.uid, {
       preferences: next,

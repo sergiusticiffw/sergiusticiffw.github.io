@@ -55,8 +55,6 @@ export type ProfilePreferences = {
   aiChat?: unknown;
   /** Today's AI usage per device: `{ date, devices }`. Resets with the Gemini daily quota. */
   aiUsage?: unknown;
-  /** OpenRouter API key (Supabase prefs only — never a Drupal field_*). */
-  openrouterApiKey?: string;
   emergencyFund?: Record<string, unknown>;
   /** Optional cash / accounts balance for net worth (legacy). */
   netWorthCash?: number;
@@ -69,6 +67,8 @@ export interface UserProfile {
   currency?: string;
   encryption_status?: string;
   gemini_api_key?: string;
+  /** Supabase column; never a Drupal field_* (device-local on Drupal). */
+  openrouter_api_key?: string;
   tag_mode?: TagMode;
   custom_tags?: TagCatalog['custom'];
   preferences?: ProfilePreferences | Record<string, unknown>;
@@ -80,6 +80,7 @@ export interface ProfilePatch {
   currency?: string;
   encryption_status?: string;
   gemini_api_key?: string | null;
+  openrouter_api_key?: string | null;
   tag_mode?: TagMode;
   custom_tags?: TagCatalog['custom'];
   preferences?: ProfilePreferences | Record<string, unknown>;
