@@ -33,7 +33,7 @@ import {
   useLoansEnabled,
   useNetWorthEnabled,
 } from '@stores/settingsStore';
-import { modelLabel, nextChatModel } from '../../../../ai/config';
+import { modelLabel, nextChatModel, nextRetryModel } from '../../../../ai/config';
 import {
   buildFamilyPrompts,
   buildNetWorthPrompts,
@@ -296,7 +296,10 @@ const AssistantMessage: React.FC<{
   );
 };
 
-const Chat: React.FC<{ apiKey: string; openrouterApiKey?: string }> = ({
+const Chat: React.FC<{
+  apiKey: string;
+  openrouterApiKey?: string;
+}> = ({
   apiKey,
   openrouterApiKey = '',
 }) => {
@@ -520,7 +523,7 @@ const Chat: React.FC<{ apiKey: string; openrouterApiKey?: string }> = ({
               online &&
               !busy;
             const altModel = canRetry
-              ? nextChatModel(message.failedModel || message.model)
+              ? nextRetryModel(message.failedModel || message.model)
               : null;
             const slowAltModel =
               message.status === 'streaming' && message.slowModel

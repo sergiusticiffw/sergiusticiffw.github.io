@@ -105,16 +105,25 @@ export type StreamDebugEvent =
       result: GeminiResult;
     };
 
+export type AiProviderKeys = {
+  gemini?: string;
+  openrouter?: string;
+};
+
 export interface StreamOptions {
-  /** Gemini API key (primary). */
+  /** Gemini API key (legacy alias for keys.gemini). */
   apiKey?: string;
-  /** OpenRouter API key for free-router fallback. */
+  /** OpenRouter API key (legacy alias for keys.openrouter). */
   openrouterApiKey?: string;
+  /** Optional bag of provider keys; overrides legacy fields when set. */
+  keys?: AiProviderKeys;
   tier: 'chat' | 'lite';
   request: GeminiRequest;
   signal?: AbortSignal;
   onText?: (textSoFar: string) => void;
   /** Start from this Gemini model (and later ones). Used when retrying with an alternate. */
   preferModel?: string;
+  /** Prefer this provider first in the cascade. */
+  preferProvider?: 'gemini' | 'openrouter';
   onDebug?: (event: StreamDebugEvent) => void;
 }

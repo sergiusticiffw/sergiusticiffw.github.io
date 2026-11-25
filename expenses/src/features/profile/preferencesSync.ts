@@ -28,6 +28,16 @@ import {
   setShareDescriptions,
 } from '../../ai/storage';
 import {
+  cleanAiPreferences,
+  getAiPreferences,
+  setAiPreferences,
+} from '../../ai/aiPreferences';
+import {
+  cleanProviderSettings,
+  getProviderSettings,
+  setProviderSettings,
+} from '../../ai/providerSettings';
+import {
   hydrateChatSessionFromPrefs,
   readChatSessionForPrefs,
 } from '../../ai/chatSession';
@@ -83,6 +93,8 @@ export const readLocalPreferences = (): ProfilePreferences => {
     aiShareDescriptions: getShareDescriptions(),
     aiChat: readChatSessionForPrefs(),
     aiUsage: readAiUsageForPrefs(),
+    aiProviders: getProviderSettings(),
+    aiBehavior: getAiPreferences(),
     emergencyFund: fund as unknown as Record<string, unknown>,
     netWorthCash: getNetWorthCash(),
     netWorthAssets: getNetWorthAssets() as unknown as Record<string, unknown>,
@@ -134,6 +146,12 @@ export const applyPreferencesLocally = (
     }
     if (p.aiUsage != null) {
       hydrateAiUsageFromPrefs(p.aiUsage);
+    }
+    if (p.aiProviders != null) {
+      setProviderSettings(cleanProviderSettings(p.aiProviders));
+    }
+    if (p.aiBehavior != null) {
+      setAiPreferences(cleanAiPreferences(p.aiBehavior));
     }
     if (p.emergencyFund && typeof p.emergencyFund === 'object') {
       const remote = normalizeEmergencyFund(p.emergencyFund);

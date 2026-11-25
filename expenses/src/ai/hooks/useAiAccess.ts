@@ -15,7 +15,7 @@ import { useAiApiKey, ApiKeyStatus } from './useAiApiKey';
 export type AiAccessStatus = ApiKeyStatus;
 
 /**
- * Gemini + OpenRouter keys with the same profile sync pattern as Gemini
+ * Gemini + OpenRouter keys with profile sync
  * (localStorage mirror + pull/push via updateProfile on Supabase).
  */
 export function useAiAccess() {
@@ -96,5 +96,9 @@ export function useAiAccess() {
     openrouterApiKey,
     openrouterSynced,
     saveOpenrouter,
+    keys: {
+      gemini: gemini.apiKey,
+      openrouter: openrouterApiKey,
+    },
   };
 }

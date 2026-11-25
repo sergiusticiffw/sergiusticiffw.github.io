@@ -745,7 +745,7 @@ const translations = {
     'profile.aiHide': 'Hide key',
     'profile.aiHint':
       'Primary provider. Create a free key in Google AI Studio. Use a project without billing and restrict the key to the Gemini API.',
-    'profile.aiOrKey': 'OpenRouter Free key (fallback)',
+    'profile.aiOrKey': 'OpenRouter Free key',
     'profile.aiOrPaste': 'Paste your OpenRouter API key',
     'profile.aiOrHint':
       'Fallback if Gemini fails or is slow. Uses openrouter/free only. Create a key at',
@@ -756,7 +756,36 @@ const translations = {
     'profile.aiOrRemovedLocal':
       'OpenRouter key removed on this device.',
     'profile.aiCascadeKeys':
-      'Order: Gemini → OpenRouter Free. If Gemini fails or takes too long (~12s), OpenRouter is used automatically.',
+      'Use the arrows to set priority. The first enabled provider with a key is primary; others are fallbacks.',
+    'profile.aiKeySaved': '{provider} API key saved.',
+    'profile.aiKeySavedRateLimited':
+      '{provider} key saved, but the provider is rate-limited right now. Try a chat later.',
+    'profile.aiKeySavedLocal':
+      '{provider} key saved on this device only.',
+    'profile.aiKeyRemoved': '{provider} API key removed.',
+    'profile.aiKeyRemovedLocal':
+      '{provider} key removed on this device.',
+    'profile.aiSectionProviders': '1. Providers & API keys',
+    'profile.aiSectionUsage': '2. Usage & performance',
+    'profile.aiSectionPrefs': '3. AI preferences',
+    'profile.aiProviderOrder': 'Fallback priority (use arrows to reorder)',
+    'profile.aiMoveUp': 'Move up',
+    'profile.aiMoveDown': 'Move down',
+    'profile.aiPrimary': 'primary',
+    'profile.aiProviderEnabled': 'Enabled',
+    'profile.aiUsageMonthHint':
+      'This month on this device: requests, fallbacks, latency and tokens from recorded AI calls.',
+    'profile.aiUsageToday': 'Today (synced counters)',
+    'profile.aiTotalRequests': 'Total requests',
+    'profile.aiFallbackRequests': 'Fallback activations',
+    'profile.aiSuccessRate': 'Success rate',
+    'profile.aiAvgLatency': 'Avg. response time',
+    'profile.aiRateLimitErrors': 'Rate-limit / quota errors',
+    'profile.aiProviderDist': 'Provider distribution',
+    'profile.aiResponseStyle': 'Response style',
+    'profile.aiStyle.concise': 'Concise',
+    'profile.aiStyle.balanced': 'Balanced',
+    'profile.aiStyle.detailed': 'Detailed',
     'profile.aiLanguage': 'Reply language',
     'profile.aiShare': 'Share descriptions with AI',
     'profile.aiShareHint':
@@ -2038,7 +2067,7 @@ const translations = {
     'profile.aiHide': 'Ascunde cheia',
     'profile.aiHint':
       'Provider principal. Creează o cheie gratuită în Google AI Studio. Folosește un proiect fără billing și restricționează cheia la Gemini API.',
-    'profile.aiOrKey': 'Cheie OpenRouter Free (fallback)',
+    'profile.aiOrKey': 'Cheie OpenRouter Free',
     'profile.aiOrPaste': 'Lipește cheia API OpenRouter',
     'profile.aiOrHint':
       'Fallback dacă Gemini eșuează sau e lent. Folosește doar openrouter/free. Creează o cheie la',
@@ -2049,7 +2078,36 @@ const translations = {
     'profile.aiOrRemovedLocal':
       'Cheia OpenRouter a fost ștearsă pe acest dispozitiv.',
     'profile.aiCascadeKeys':
-      'Ordine: Gemini → OpenRouter Free. Dacă Gemini eșuează sau durează prea mult (~12s), se folosește automat OpenRouter.',
+      'Folosește săgețile pentru prioritate. Primul activ cu cheie este principal; restul sunt fallback.',
+    'profile.aiKeySaved': 'Cheia API {provider} a fost salvată.',
+    'profile.aiKeySavedRateLimited':
+      'Cheia {provider} a fost salvată, dar providerul e rate-limited acum. Încearcă chat-ul mai târziu.',
+    'profile.aiKeySavedLocal':
+      'Cheia {provider} a fost salvată doar pe acest dispozitiv.',
+    'profile.aiKeyRemoved': 'Cheia API {provider} a fost ștearsă.',
+    'profile.aiKeyRemovedLocal':
+      'Cheia {provider} a fost ștearsă pe acest dispozitiv.',
+    'profile.aiSectionProviders': '1. Provideri & chei API',
+    'profile.aiSectionUsage': '2. Utilizare & performanță',
+    'profile.aiSectionPrefs': '3. Preferințe AI',
+    'profile.aiProviderOrder': 'Prioritate fallback (săgeți pentru ordine)',
+    'profile.aiMoveUp': 'Mută în sus',
+    'profile.aiMoveDown': 'Mută în jos',
+    'profile.aiPrimary': 'principal',
+    'profile.aiProviderEnabled': 'Activat',
+    'profile.aiUsageMonthHint':
+      'Luna aceasta pe acest dispozitiv: cereri, fallback, latență și tokeni din apelurile AI înregistrate.',
+    'profile.aiUsageToday': 'Azi (contoare sincronizate)',
+    'profile.aiTotalRequests': 'Total cereri',
+    'profile.aiFallbackRequests': 'Activări fallback',
+    'profile.aiSuccessRate': 'Rată de succes',
+    'profile.aiAvgLatency': 'Timp mediu de răspuns',
+    'profile.aiRateLimitErrors': 'Erori rate-limit / cotă',
+    'profile.aiProviderDist': 'Distribuție pe provider',
+    'profile.aiResponseStyle': 'Stil răspuns',
+    'profile.aiStyle.concise': 'Concise',
+    'profile.aiStyle.balanced': 'Echilibrat',
+    'profile.aiStyle.detailed': 'Detaliat',
     'profile.aiLanguage': 'Limba răspunsurilor',
     'profile.aiShare': 'Trimite descrierile către AI',
     'profile.aiShareHint':

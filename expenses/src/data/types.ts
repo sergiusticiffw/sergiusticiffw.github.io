@@ -55,6 +55,10 @@ export type ProfilePreferences = {
   aiChat?: unknown;
   /** Today's AI usage per device: `{ date, devices }`. Resets with the Gemini daily quota. */
   aiUsage?: unknown;
+  /** Provider order / enable / timeout / model preferences. */
+  aiProviders?: unknown;
+  /** Reply style and financial-context behavior toggles. */
+  aiBehavior?: unknown;
   emergencyFund?: Record<string, unknown>;
   /** Optional cash / accounts balance for net worth (legacy). */
   netWorthCash?: number;

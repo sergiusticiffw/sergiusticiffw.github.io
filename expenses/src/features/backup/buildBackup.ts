@@ -44,7 +44,7 @@ export interface BackupProfile {
   tag_mode?: TagMode;
   custom_tags?: TagMap;
   gemini_api_key?: string;
-  /** OpenRouter Free key (local / Supabase preferences). */
+  /** OpenRouter Free key (local / Supabase column). */
   openrouter_api_key?: string;
 }
 
@@ -137,7 +137,6 @@ const loadProfile = async (
   let currency: string | undefined;
   let gemini = (getStoredApiKey() || '').trim();
   let openrouter = (getStoredOpenrouterApiKey() || '').trim();
-
   if (apiClient) {
     try {
       const result = await apiClient.getProfile(uid);

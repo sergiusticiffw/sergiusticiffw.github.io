@@ -1,4 +1,9 @@
-import { AI_INSIGHT_LIMITS, AI_LANGUAGES, AI_STORAGE_KEYS } from './config';
+import {
+  AI_INSIGHT_LIMITS,
+  AI_LANGUAGES,
+  AI_REMOVED_STORAGE_KEYS,
+  AI_STORAGE_KEYS,
+} from './config';
 
 export const getStoredApiKey = (): string =>
   localStorage.getItem(AI_STORAGE_KEYS.apiKey) || '';
@@ -163,6 +168,7 @@ export const setModelCooldown = (model: string, until: number) => {
 /** Removes every AI-related value from this device (used on logout). */
 export const clearAiLocalData = () => {
   Object.values(AI_STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+  AI_REMOVED_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
   keyLookup.serverHasNoKey = false;
   openrouterKeyLookup.serverHasNoKey = false;
 };

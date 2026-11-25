@@ -51,6 +51,10 @@ import {
 } from '../debug';
 import { getAiItems } from '../data';
 import { buildLoanContext } from '../loans';
+import {
+  buildBehaviorInstruction,
+  getAiPreferences,
+} from '../aiPreferences';
 import { buildChatSystemInstruction, splitFollowUps } from '../prompts';
 import { recordAiQuestion } from '../sessionStats';
 import { getAiLanguage, getShareDescriptions } from '../storage';
@@ -369,9 +373,8 @@ export function useAiChat(apiKey: string, openrouterApiKey = '') {
 
       try {
         const familyRaw = await loadFamilyAiContext(items);
-        const family = hasActiveFamilyMembership(familyRaw)
-          ? familyRaw
-          : null;
+        const family =
+          familyRaw && hasActiveFamilyMembership(familyRaw) ? familyRaw : null;
         const turnSummary = family
           ? `${summary}\n\n${formatFamilySummary(family)}`
           : summary;
@@ -388,7 +391,8 @@ export function useAiChat(apiKey: string, openrouterApiKey = '') {
               text: buildChatSystemInstruction(
                 turnSummary,
                 getAiLanguage(),
-                recentToolNotesText(shareDescriptions)
+                recentToolNotesText(shareDescriptions),
+                buildBehaviorInstruction(getAiPreferences())
               ),
             },
           ],
@@ -419,6 +423,10 @@ export function useAiChat(apiKey: string, openrouterApiKey = '') {
           return streamGenerate({
             apiKey,
             openrouterApiKey,
+            keys: {
+              gemini: apiKey,
+              openrouter: openrouterApiKey,
+            },
             tier: 'chat',
             preferModel,
             request: step.request,

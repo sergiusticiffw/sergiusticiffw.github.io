@@ -59,19 +59,173 @@ const cooldownUntil = (error: AiError) =>
 /** Signatures from another model fail validation, so they are replaced with the documented bypass value. */
 const SKIP_SIGNATURE = 'skip_thought_signature_validator';
 
+/**
+ * Gemini 3 requires thoughtSignature on functionCall parts in the current turn.
+ * Cross-provider history (e.g. OpenRouter) and lost stream signatures need the
+ * documented bypass; foreign signatures must never be forwarded as-is.
+ */
+const preparePartsForGemini = (
+  parts: GeminiPart[],
+  foreignAuthor: boolean
+): GeminiPart[] =>
+  parts.map((part) => {
+    let next = part;
+    if (foreignAuthor && part.thoughtSignature) {
+      next = { ...next, thoughtSignature: SKIP_SIGNATURE };
+    }
+    if (part.functionCall && !next.thoughtSignature) {
+      next = { ...next, thoughtSignature: SKIP_SIGNATURE };
+    }
+    return next;
+  });
+
 const contentsFor = (contents: GeminiContent[], model: string) =>
-  contents.map(({ model: author, shared: _shared, ...content }) =>
-    author && author !== model
-      ? {
-          ...content,
-          parts: content.parts.map((part) =>
-            part.thoughtSignature
-              ? { ...part, thoughtSignature: SKIP_SIGNATURE }
-              : part
-          ),
-        }
-      : content
-  );
+  contents.map(({ model: author, shared: _shared, ...content }) => ({
+    ...content,
+    parts: preparePartsForGemini(
+      content.parts,
+      Boolean(author && author !== model)
+    ),
+  }));
+
+/** Normalize REST/SSE field names to our camelCase GeminiPart shape. */
+const normalizePart = (raw: Record<string, unknown>): GeminiPart => {
+  const thoughtSignature =
+    (typeof raw.thoughtSignature === 'string' && raw.thoughtSignature) ||
+    (typeof raw.thought_signature === 'string' && raw.thought_signature) ||
+    undefined;
+  const thought = Boolean(raw.thought);
+  const text = typeof raw.text === 'string' ? raw.text : undefined;
+
+  const fcRaw = (raw.functionCall || raw.function_call) as
+    | Record<string, unknown>
+    | undefined;
+  const functionCall = fcRaw
+    ? {
+        ...(typeof fcRaw.id === 'string' ? { id: fcRaw.id } : {}),
+        name: String(fcRaw.name || ''),
+        args:
+          fcRaw.args && typeof fcRaw.args === 'object'
+            ? (fcRaw.args as Record<string, unknown>)
+            : {},
+      }
+    : undefined;
+
+  const frRaw = (raw.functionResponse || raw.function_response) as
+    | Record<string, unknown>
+    | undefined;
+  const functionResponse = frRaw
+    ? {
+        ...(typeof frRaw.id === 'string' ? { id: frRaw.id } : {}),
+        name: String(frRaw.name || ''),
+        response:
+          frRaw.response && typeof frRaw.response === 'object'
+            ? (frRaw.response as Record<string, unknown>)
+            : {},
+      }
+    : undefined;
+
+  const part: GeminiPart = {};
+  if (text !== undefined) part.text = text;
+  if (thought) part.thought = true;
+  if (thoughtSignature) part.thoughtSignature = thoughtSignature;
+  if (functionCall?.name) part.functionCall = functionCall;
+  if (functionResponse?.name) part.functionResponse = functionResponse;
+  return part;
+};
+
+const isEmptyPart = (part: GeminiPart) =>
+  !part.text &&
+  !part.functionCall &&
+  !part.functionResponse &&
+  !part.thoughtSignature;
+
+/**
+ * Aggregate SSE part deltas into the parts we echo back on the next tool round.
+ * Preserves thoughtSignature on functionCall parts (Gemini 3 requirement).
+ */
+const aggregateStreamParts = () => {
+  const parts: GeminiPart[] = [];
+  let textBuf = '';
+  let textIsThought = false;
+  let textSignature: string | undefined;
+  let pendingFc: GeminiPart | null = null;
+
+  const flushText = () => {
+    if (!textBuf && !textSignature) return;
+    const part: GeminiPart = {};
+    if (textBuf) part.text = textBuf;
+    if (textIsThought) part.thought = true;
+    if (textSignature) part.thoughtSignature = textSignature;
+    parts.push(part);
+    textBuf = '';
+    textIsThought = false;
+    textSignature = undefined;
+  };
+
+  const flushFc = () => {
+    if (!pendingFc) return;
+    parts.push(pendingFc);
+    pendingFc = null;
+  };
+
+  const push = (raw: Record<string, unknown>) => {
+    const part = normalizePart(raw);
+    if (isEmptyPart(part)) return;
+
+    if (part.functionCall) {
+      flushText();
+      const samePending =
+        pendingFc?.functionCall &&
+        ((part.functionCall.id &&
+          pendingFc.functionCall.id === part.functionCall.id) ||
+          (!part.functionCall.id &&
+            !pendingFc.functionCall.id &&
+            pendingFc.functionCall.name === part.functionCall.name));
+      if (samePending && pendingFc?.functionCall) {
+        pendingFc = {
+          ...pendingFc,
+          functionCall: {
+            ...pendingFc.functionCall,
+            ...part.functionCall,
+            args: {
+              ...(pendingFc.functionCall.args || {}),
+              ...(part.functionCall.args || {}),
+            },
+          },
+          thoughtSignature:
+            part.thoughtSignature || pendingFc.thoughtSignature,
+        };
+      } else {
+        flushFc();
+        pendingFc = part;
+      }
+      return;
+    }
+
+    flushFc();
+
+    if (part.text !== undefined || part.thought || part.thoughtSignature) {
+      const isThought = Boolean(part.thought);
+      if (textBuf && isThought !== textIsThought) flushText();
+      if (!textBuf) textIsThought = isThought;
+      if (part.text) textBuf += part.text;
+      if (part.thoughtSignature) textSignature = part.thoughtSignature;
+      return;
+    }
+
+    flushText();
+    parts.push(part);
+  };
+
+  const finish = () => {
+    flushText();
+    flushFc();
+    return parts;
+  };
+
+  return { push, finish };
+};
 
 export const geminiHttpError = async (response: Response): Promise<AiError> => {
   let message = `HTTP ${response.status}`;
@@ -267,7 +421,7 @@ export async function streamGemini({
       throw lastError;
     }
 
-    const parts: GeminiPart[] = [];
+    const aggregator = aggregateStreamParts();
     let text = '';
     let usage: GeminiUsage = {};
     let finishReason: string | undefined;
@@ -282,8 +436,12 @@ export async function streamGemini({
           `Blocked: ${chunk.promptFeedback.blockReason}`
         );
       }
-      for (const part of (candidate?.content?.parts || []) as GeminiPart[]) {
-        parts.push(part);
+      for (const raw of (candidate?.content?.parts || []) as Record<
+        string,
+        unknown
+      >[]) {
+        aggregator.push(raw);
+        const part = normalizePart(raw);
         if (part.text && !part.thought) {
           text += part.text;
           onText?.(text);
@@ -293,6 +451,7 @@ export async function streamGemini({
       if (chunk?.usageMetadata) usage = chunk.usageMetadata;
     }
 
+    const parts = aggregator.finish();
     const functionCalls = parts
       .filter((p) => p.functionCall)
       .map((p) => p.functionCall!);

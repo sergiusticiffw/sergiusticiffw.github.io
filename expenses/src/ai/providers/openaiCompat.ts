@@ -1,6 +1,6 @@
 /**
  * Shared GeminiRequest ↔ OpenAI chat-completions conversion + SSE parsing.
- * Used by OpenRouter (and any future OpenAI-compatible providers).
+ * Used by OpenRouter.
  */
 import {
   AiError,
@@ -218,7 +218,12 @@ export const messageToGeminiResult = (
       args: parseArgs(tc.function?.arguments),
     };
     functionCalls.push(fc);
-    parts.push({ functionCall: fc });
+    // Gemini 3 rejects tool history without a signature; OpenRouter never
+    // provides one, so stamp the documented bypass for cross-provider turns.
+    parts.push({
+      functionCall: fc,
+      thoughtSignature: 'skip_thought_signature_validator',
+    });
   }
 
   return {
@@ -266,14 +271,21 @@ export const parseDuration = (text: string): number | undefined => {
 
 export const openAiHttpError = async (response: Response): Promise<AiError> => {
   let message = `HTTP ${response.status}`;
+  let errorType = '';
   try {
     const body = await response.json();
+    const err = body?.error;
     message =
-      body?.error?.message ||
-      body?.error ||
+      (typeof err === 'object' ? err?.message : null) ||
+      (typeof err === 'string' ? err : null) ||
       body?.message ||
       message;
     if (typeof message !== 'string') message = JSON.stringify(message);
+    errorType =
+      (typeof err === 'object' && typeof err?.type === 'string'
+        ? err.type
+        : '') ||
+      (typeof body?.type === 'string' ? body.type : '');
   } catch {
     // non-JSON
   }
@@ -284,12 +296,24 @@ export const openAiHttpError = async (response: Response): Promise<AiError> => {
           message.match(/retry in ([0-9.hms]+)/i)?.[1] ||
           ''
       ) || undefined;
-    return new AiError('quota', message, retry, /per ?day|daily/i.test(message));
+    const daily = /per ?day|daily/i.test(message);
+    // OpenRouter etc. often return type: "rate_limited" without "rate limit" in message.
+    const rateLimited =
+      /rate.?limit/i.test(errorType) ||
+      /rate.?limit|too many requests/i.test(message);
+    return new AiError(
+      'quota',
+      rateLimited && !/rate.?limit/i.test(message)
+        ? `Rate limit exceeded. ${message}`.trim()
+        : message,
+      retry,
+      daily
+    );
   }
   if (response.status === 401 || response.status === 403) {
     return new AiError('invalid_key', message);
   }
-  if (response.status === 404) {
+  if (response.status === 404 || response.status === 410) {
     return new AiError('model', message);
   }
   if (response.status === 503 || /capacity|busy|overloaded/i.test(message)) {

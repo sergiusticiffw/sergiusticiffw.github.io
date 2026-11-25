@@ -1,4 +1,5 @@
 import { AI_STORAGE_KEYS } from './config';
+import type { AiFallbackReason, AiProviderId } from './providerSettings';
 import {
   effectiveCooldownUntil,
   getModelCooldowns,
@@ -292,4 +293,126 @@ function pausedModels(now: number): SessionAiLimit[] {
     paused.set(model, { model, at: until, until, daily: false });
   }
   return [...paused.values()].sort((a, b) => b.at - a.at);
+}
+
+/** Cap stored per-request events (local device). */
+const MAX_USAGE_EVENTS = 400;
+
+export type AiUsageEvent = {
+  at: number;
+  provider: AiProviderId;
+  model: string;
+  ok: boolean;
+  latencyMs: number;
+  tokens: number;
+  errorKind?: string;
+  fallback?: boolean;
+  fallbackReason?: AiFallbackReason;
+};
+
+const loadUsageEvents = (): AiUsageEvent[] => {
+  try {
+    const raw = JSON.parse(
+      localStorage.getItem(AI_STORAGE_KEYS.usageEvents) || '[]'
+    );
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((row) => row && typeof row === 'object')
+      .map((row) => {
+        const r = row as Record<string, unknown>;
+        return {
+          at: typeof r.at === 'number' ? r.at : 0,
+          provider: r.provider as AiProviderId,
+          model: typeof r.model === 'string' ? r.model : '',
+          ok: r.ok === true,
+          latencyMs: typeof r.latencyMs === 'number' ? r.latencyMs : 0,
+          tokens: typeof r.tokens === 'number' ? r.tokens : 0,
+          errorKind:
+            typeof r.errorKind === 'string' ? r.errorKind : undefined,
+          fallback: r.fallback === true,
+          fallbackReason: r.fallbackReason as AiFallbackReason | undefined,
+        };
+      })
+      .filter((e) => e.at > 0 && e.provider && e.model);
+  } catch {
+    return [];
+  }
+};
+
+let usageEvents = loadUsageEvents();
+
+const saveUsageEvents = () => {
+  try {
+    localStorage.setItem(
+      AI_STORAGE_KEYS.usageEvents,
+      JSON.stringify(usageEvents.slice(-MAX_USAGE_EVENTS))
+    );
+  } catch {
+    // ignore
+  }
+};
+
+export function recordAiUsageEvent(
+  event: Omit<AiUsageEvent, 'at'> & { at?: number }
+) {
+  usageEvents = [
+    ...usageEvents,
+    { ...event, at: event.at ?? Date.now() },
+  ].slice(-MAX_USAGE_EVENTS);
+  saveUsageEvents();
+}
+
+export type AiUsageMetrics = {
+  total: number;
+  success: number;
+  failed: number;
+  fallbacks: number;
+  successRate: number;
+  avgLatencyMs: number;
+  tokens: number;
+  rateLimitErrors: number;
+  byProvider: Record<string, number>;
+};
+
+const monthStartMs = (now = new Date()) =>
+  new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+export function getAiUsageMetrics(range: 'today' | 'month' = 'month'): AiUsageMetrics {
+  const start =
+    range === 'today'
+      ? new Date(geminiUsageDate() + 'T00:00:00').getTime()
+      : monthStartMs();
+  // For "today" use Pacific quota day via event timestamps vs reset — filter by calendar local day as approximation for events.
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const from = range === 'today' ? todayStart.getTime() : start;
+
+  const events = usageEvents.filter((e) => e.at >= from);
+  const success = events.filter((e) => e.ok);
+  const failed = events.filter((e) => !e.ok);
+  const fallbacks = events.filter((e) => e.fallback).length;
+  const latencySum = success.reduce((s, e) => s + e.latencyMs, 0);
+  const tokens = success.reduce((s, e) => s + e.tokens, 0);
+  const rateLimitErrors = failed.filter(
+    (e) =>
+      e.errorKind === 'quota' ||
+      e.fallbackReason === 'rate_limit' ||
+      e.fallbackReason === 'quota'
+  ).length;
+  const byProvider: Record<string, number> = {};
+  for (const e of success) {
+    byProvider[e.provider] = (byProvider[e.provider] || 0) + 1;
+  }
+  const total = events.length;
+  return {
+    total,
+    success: success.length,
+    failed: failed.length,
+    fallbacks,
+    successRate: total ? (success.length / total) * 100 : 100,
+    avgLatencyMs: success.length ? latencySum / success.length : 0,
+    tokens,
+    rateLimitErrors,
+    byProvider,
+  };
 }

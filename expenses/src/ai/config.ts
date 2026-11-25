@@ -52,6 +52,16 @@ export const nextModel = (
 export const nextChatModel = (after?: string): string | null =>
   nextModel('chat', after);
 
+/**
+ * Alternate model for the Retry button. Only walks the Gemini list when the
+ * failed model was Gemini — otherwise null (avoid "Retry with 3.5-flash" after
+ * an OpenRouter failure).
+ */
+export const nextRetryModel = (after?: string): string | null => {
+  if (!after || !after.startsWith('gemini-')) return null;
+  return nextChatModel(after);
+};
+
 export const AI_LIMITS = {
   /** Safety cap per step; includes thinking tokens. Actual usage is much lower. */
   chatMaxOutputTokens: 4096,
@@ -62,10 +72,10 @@ export const AI_LIMITS = {
   /** After this long without a finished request, the chat offers a smaller model. */
   slowRequestMs: 5000,
   /**
-   * Soft timeout for Gemini. On expiry the cascade moves to OpenRouter Free.
-   * OpenRouter (last) has no soft timeout.
+   * Soft timeout for the non-final provider. On expiry the cascade moves on.
+   * The last provider has no soft timeout.
    */
-  providerFailoverMs: 12_000,
+  providerFailoverMs: 25_000,
   toolRowsDefault: 50,
   toolRowsMax: 300,
   toolGroupsDefault: 60,
@@ -78,7 +88,10 @@ export const AI_STORAGE_KEYS = {
   openrouterApiKey: 'openrouterApiKey',
   shareDescriptions: 'aiShareDescriptions',
   usage: 'aiUsage',
+  usageEvents: 'aiUsageEvents',
   language: 'aiLanguage',
+  preferences: 'aiPreferences',
+  providers: 'aiProviders',
   insights: 'aiInsights',
   chat: 'aiChat',
   modelCooldowns: 'aiModelCooldowns',
@@ -86,7 +99,18 @@ export const AI_STORAGE_KEYS = {
   debug: 'aiDebug',
 };
 
+/** localStorage leftovers from removed providers (Mistral, SambaNova). */
+export const AI_REMOVED_STORAGE_KEYS = [
+  'mistralApiKey',
+  'sambanovaApiKey',
+  'aiMistralApiKey',
+  'aiSambanovaApiKey',
+] as const;
+
 export const AI_LANGUAGES = ['Romanian', 'English'] as const;
+
+export const AI_RESPONSE_STYLES = ['concise', 'balanced', 'detailed'] as const;
+export type AiResponseStyle = (typeof AI_RESPONSE_STYLES)[number];
 
 export const AI_INSIGHT_LIMITS = {
   maxOutputTokens: 2048,

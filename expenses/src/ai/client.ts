@@ -1,12 +1,20 @@
-import { AI_LIMITS } from './config';
 import { streamGemini, testGeminiApiKey } from './providers/gemini';
 import {
   streamOpenRouter,
   testOpenRouterApiKey,
 } from './providers/openrouter';
+import {
+  AiFallbackReason,
+  AiProviderId,
+  fallbackReasonFromError,
+  getProviderSettings,
+  providerLabel,
+} from './providerSettings';
+import { recordAiUsageEvent } from './sessionStats';
 import { getStoredOpenrouterApiKey } from './storage';
 import {
   AiError,
+  AiProviderKeys,
   GeminiResult,
   StreamOptions,
 } from './types';
@@ -21,6 +29,7 @@ export type {
   AiErrorKind,
   StreamDebugEvent,
   StreamOptions,
+  AiProviderKeys,
 } from './types';
 export { AiError } from './types';
 
@@ -75,45 +84,114 @@ const withProviderTimeout = async <T>(
   }
 };
 
+const resolveKeys = (options: StreamOptions): Required<AiProviderKeys> => {
+  const bag = options.keys || {};
+  return {
+    gemini: (bag.gemini ?? options.apiKey ?? '').trim(),
+    openrouter: (
+      bag.openrouter ??
+      options.openrouterApiKey ??
+      getStoredOpenrouterApiKey()
+    ).trim(),
+  };
+};
+
+const hasAnyProviderKey = (keys: Required<AiProviderKeys>) =>
+  Boolean(keys.gemini || keys.openrouter);
+
+const keyFor = (
+  id: AiProviderId,
+  keys: Required<AiProviderKeys>
+): string => {
+  switch (id) {
+    case 'gemini':
+      return keys.gemini;
+    case 'openrouter':
+      return keys.openrouter;
+  }
+};
+
+const shouldFallback = (
+  reason: AiFallbackReason,
+  settings: ReturnType<typeof getProviderSettings>
+): boolean => {
+  if (!settings.fallbackEnabled) return false;
+  if (reason === 'rate_limit' && !settings.fallbackOnRateLimit) return false;
+  if (reason === 'quota' && !settings.fallbackOnQuota) return false;
+  return true;
+};
+
 /**
  * Streams one model step.
- * Cascade: Gemini → OpenRouter Free (last / best effort).
- * Soft-timeout on Gemini moves to OpenRouter.
+ * Walks enabled providers in user order; soft-timeout moves to the next.
  * Does not fall back after a user abort (Stop).
  */
 export async function streamGenerate({
   apiKey,
   openrouterApiKey,
+  keys: keysOpt,
   tier,
   request,
   signal,
   onText,
   preferModel,
+  preferProvider,
   onDebug,
 }: StreamOptions): Promise<GeminiResult> {
   if (!navigator.onLine) {
     throw new AiError('offline', 'No internet connection');
   }
 
-  const orKey = (openrouterApiKey ?? getStoredOpenrouterApiKey()).trim();
-  const geminiKey = (apiKey || '').trim();
+  const keys = resolveKeys({ apiKey, openrouterApiKey, keys: keysOpt, tier, request });
+  const settings = getProviderSettings();
   const errors: AiError[] = [];
-  const failoverMs = AI_LIMITS.providerFailoverMs;
+  const tried: AiProviderId[] = [];
   let startedProvider = false;
+  let previousProvider: AiProviderId | null = null;
+  let previousReason: AiFallbackReason | null = null;
+
+  let candidates = settings.order.filter((id) => {
+    const entry = settings.providers[id];
+    return entry?.enabled && Boolean(keyFor(id, keys));
+  });
+  if (preferProvider && candidates.includes(preferProvider)) {
+    candidates = [
+      preferProvider,
+      ...candidates.filter((id) => id !== preferProvider),
+    ];
+  }
+
+  if (!candidates.length) {
+    throw new AiError(
+      'invalid_key',
+      hasAnyProviderKey(keys)
+        ? 'No enabled AI provider with a key. Check Profile → AI assistant.'
+        : 'No AI provider configured. Add a Gemini or OpenRouter key.'
+    );
+  }
 
   const tryProvider = async (
-    label: string,
+    id: AiProviderId,
     timeoutMs: number | null,
     run: (signal: AbortSignal) => Promise<GeminiResult>
   ): Promise<GeminiResult | null> => {
     try {
-      // Only clear partial stream when switching providers — not on the first
-      // attempt, or "Thinking" disappears (onText clears activity).
       if (startedProvider) onText?.('');
       startedProvider = true;
-      return await withProviderTimeout(signal, timeoutMs, run);
+      tried.push(id);
+      const started = Date.now();
+      const result = await withProviderTimeout(signal, timeoutMs, run);
+      recordAiUsageEvent({
+        provider: id,
+        model: result.model,
+        ok: true,
+        latencyMs: Date.now() - started,
+        tokens: result.usage.totalTokenCount || 0,
+        fallback: previousProvider != null,
+        fallbackReason: previousReason || undefined,
+      });
+      return result;
     } catch (error) {
-      // User hit Stop — do not cascade.
       if (signal?.aborted || isAbort(error)) throw error;
 
       const ai =
@@ -121,12 +199,22 @@ export async function streamGenerate({
           ? error
           : new AiError(
               'unknown',
-              error instanceof Error ? error.message : `${label} failed`
+              error instanceof Error ? error.message : `${providerLabel(id)} failed`
             );
       errors.push(ai);
+      recordAiUsageEvent({
+        provider: id,
+        model: ai.model || id,
+        ok: false,
+        latencyMs: 0,
+        tokens: 0,
+        errorKind: ai.kind,
+        fallback: previousProvider != null,
+        fallbackReason: previousReason || undefined,
+      });
       onDebug?.({
         type: 'http_error',
-        model: ai.model || label,
+        model: ai.model || id,
         status: 0,
         durationMs: 0,
         error: ai,
@@ -135,54 +223,95 @@ export async function streamGenerate({
     }
   };
 
-  // 1) Gemini (primary) — fail or slow → OpenRouter
-  if (geminiKey) {
-    const result = await tryProvider('gemini', failoverMs, (sig) =>
-      streamGemini({
-        apiKey: geminiKey,
+  for (let i = 0; i < candidates.length; i++) {
+    const id = candidates[i];
+    const entry = settings.providers[id];
+    const isLast = i === candidates.length - 1;
+    const timeoutMs = isLast ? null : entry.timeoutMs;
+    const modelPref =
+      preferModel && id === 'gemini'
+        ? preferModel
+        : entry.model === 'auto'
+          ? 'auto'
+          : entry.model;
+
+    if (previousProvider && previousReason) {
+      if (!shouldFallback(previousReason, settings)) {
+        break;
+      }
+    }
+
+    const result = await tryProvider(id, timeoutMs, (sig) => {
+      const common = {
         tier,
         request,
         signal: sig,
         onText,
-        preferModel,
         onDebug,
-      })
-    );
+        preferModel: modelPref === 'auto' ? undefined : modelPref,
+      };
+      switch (id) {
+        case 'gemini':
+          return streamGemini({
+            apiKey: keys.gemini,
+            ...common,
+            preferModel:
+              preferModel ||
+              (modelPref === 'auto' ? undefined : modelPref),
+          });
+        case 'openrouter':
+          return streamOpenRouter({
+            apiKey: keys.openrouter,
+            ...common,
+            preferModel: modelPref,
+          });
+      }
+    });
+
     if (result) return result;
+
+    const lastError = errors[errors.length - 1];
+    previousProvider = id;
+    previousReason = fallbackReasonFromError(lastError);
+    if (!settings.fallbackEnabled && !isLast) break;
   }
 
-  // 2) OpenRouter Free — last / best effort (no soft timeout)
-  if (orKey) {
-    const result = await tryProvider('openrouter', null, (sig) =>
-      streamOpenRouter({
-        apiKey: orKey,
-        tier,
-        request,
-        signal: sig,
-        onText,
-        onDebug,
-      })
-    );
-    if (result) return result;
-  }
+  const last = errors[errors.length - 1];
+  const summary = errors
+    .map((err, i) => {
+      const id = tried[i] || 'provider';
+      const why =
+        err.kind === 'quota'
+          ? /rate.?limit|too many requests|rpm/i.test(err.message)
+            ? 'rate limit'
+            : err.daily
+              ? 'daily quota'
+              : 'quota'
+          : err.kind === 'model'
+            ? 'model unavailable'
+            : err.message || err.kind;
+      return `${providerLabel(id as AiProviderId)}: ${why}`;
+    })
+    .join(' → ');
 
-  if (!geminiKey && !orKey) {
-    throw new AiError(
-      'invalid_key',
-      'No AI provider configured. Add a Gemini or OpenRouter key.'
-    );
-  }
-
-  throw (
-    errors[errors.length - 1] ||
-    new AiError('unknown', 'All AI providers failed')
+  throw new AiError(
+    last?.kind || 'unknown',
+    summary
+      ? `All AI providers failed (${summary}).`
+      : 'All AI providers failed',
+    last?.retryAfterSeconds,
+    last?.daily,
+    last?.quota,
+    last?.model
   );
 }
 
-/** Test a Gemini or OpenRouter key. */
+export type AiKeyProvider = 'gemini' | 'openrouter';
+
+/** Test a provider API key. */
 export async function testApiKey(
   apiKey: string,
-  provider: 'gemini' | 'openrouter' = 'gemini'
+  provider: AiKeyProvider = 'gemini'
 ): Promise<string> {
   if (provider === 'openrouter') return testOpenRouterApiKey(apiKey);
   return testGeminiApiKey(apiKey);
@@ -197,30 +326,55 @@ const formatWait = (seconds: number) => {
   return `${seconds}s`;
 };
 
+const isRateLimitMessage = (message: string) =>
+  /rate.?limit|too many requests|rpm|requests per/i.test(message);
+
 export const describeAiError = (error: unknown): string => {
   if (error instanceof AiError) {
     switch (error.kind) {
       case 'invalid_key':
         return 'Your API key was rejected. Check it in Profile → AI assistant.';
-      case 'quota':
-        return error.retryAfterSeconds
-          ? `Free tier limit reached. Try again in ${formatWait(error.retryAfterSeconds)}.`
-          : 'Free tier limit reached. Try again a bit later.';
+      case 'quota': {
+        const wait = error.retryAfterSeconds
+          ? ` Try again in ${formatWait(error.retryAfterSeconds)}.`
+          : ' Try again a bit later.';
+        if (/All AI providers failed/i.test(error.message)) {
+          return `${error.message}${wait}`;
+        }
+        if (error.daily) return `Daily quota reached.${wait}`;
+        if (isRateLimitMessage(error.message)) {
+          return `Rate limit reached.${wait}`;
+        }
+        return `Provider limit reached.${wait}`;
+      }
       case 'offline':
         return 'You are offline. The assistant needs an internet connection.';
       case 'blocked':
         return 'The model declined to answer this request.';
       case 'model':
-        return 'The AI model is not available for this key.';
+        return error.message && !/^HTTP \d+/.test(error.message)
+          ? `Model unavailable: ${error.message}`
+          : 'The AI model is not available for this key. Pick another model or refresh the list.';
       default:
-        return `AI request failed: ${error.message}`;
+        if (/All AI providers failed/i.test(error.message)) {
+          return error.message;
+        }
+        return error.message
+          ? `AI request failed: ${error.message}`
+          : 'AI request failed. Try again.';
     }
   }
   if ((error as Error)?.name === 'AbortError') return 'Stopped.';
-  return 'AI request failed. Try again.';
+  const message = error instanceof Error ? error.message : '';
+  if (/failed to fetch|networkerror|load failed/i.test(message)) {
+    return 'Could not reach the AI provider (network or CORS). Check the key and try again.';
+  }
+  return message
+    ? `AI request failed: ${message}`
+    : 'AI request failed. Try again.';
 };
 
-/** True when Gemini and/or OpenRouter key is available. */
+/** True when any configured provider key is available. */
 export const hasAiAccess = (
   geminiKey?: string,
   openrouterKey?: string

@@ -114,15 +114,20 @@ export const splitFollowUps = (
 export const buildChatSystemInstruction = (
   summary: string,
   language: string,
-  toolNotes?: string
+  toolNotes?: string,
+  behaviorNotes?: string
 ) => {
   const notes =
     toolNotes && toolNotes.trim()
       ? `\n\nRECENT TOOL NOTES (from earlier turns in this chat; reuse when the follow-up refers to them)\n${toolNotes.trim()}`
       : '';
+  const behavior =
+    behaviorNotes && behaviorNotes.trim()
+      ? `\n\nBEHAVIOR PREFERENCES\n${behaviorNotes.trim()}`
+      : '';
   // The summary comes first and the volatile notes last, so the stable prefix
   // of the request stays identical between turns and keeps the prompt cache warm.
-  return `${CHAT_SYSTEM_PROMPT}\n\nReply language: always write the entire answer in ${language}. Chart titles, series names and follow-up offers must also be in ${language}.\n\nDATA SUMMARY\n${summary}${notes}`;
+  return `${CHAT_SYSTEM_PROMPT}\n\nReply language: always write the entire answer in ${language}. Chart titles, series names and follow-up offers must also be in ${language}.${behavior}\n\nDATA SUMMARY\n${summary}${notes}`;
 };
 
 export const INSIGHT_SYSTEM_PROMPT = `You write short insight cards for a personal expense tracker. You receive one block of pre-computed data and a task, and return JSON.
