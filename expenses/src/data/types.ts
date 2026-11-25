@@ -55,6 +55,8 @@ export type ProfilePreferences = {
   aiChat?: unknown;
   /** Today's AI usage per device: `{ date, devices }`. Resets with the Gemini daily quota. */
   aiUsage?: unknown;
+  /** Per-request AI usage events for Usage dashboard (merged across devices). */
+  aiUsageEvents?: unknown;
   /** Provider order / enable / timeout / model preferences. */
   aiProviders?: unknown;
   /** Reply style and financial-context behavior toggles. */

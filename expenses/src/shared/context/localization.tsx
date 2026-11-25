@@ -774,7 +774,7 @@ const translations = {
     'profile.aiPrimary': 'primary',
     'profile.aiProviderEnabled': 'Enabled',
     'profile.aiUsageMonthHint':
-      'This month on this device: requests, fallbacks, latency and tokens from recorded AI calls.',
+      'This month across your devices: requests, fallbacks, latency and tokens from recorded AI calls.',
     'profile.aiUsageToday': 'Today (synced counters)',
     'profile.aiTotalRequests': 'Total requests',
     'profile.aiFallbackRequests': 'Fallback activations',
@@ -2096,7 +2096,7 @@ const translations = {
     'profile.aiPrimary': 'principal',
     'profile.aiProviderEnabled': 'Activat',
     'profile.aiUsageMonthHint':
-      'Luna aceasta pe acest dispozitiv: cereri, fallback, latență și tokeni din apelurile AI înregistrate.',
+      'Luna aceasta pe toate dispozitivele: cereri, fallback, latență și tokeni din apelurile AI înregistrate.',
     'profile.aiUsageToday': 'Azi (contoare sincronizate)',
     'profile.aiTotalRequests': 'Total cereri',
     'profile.aiFallbackRequests': 'Activări fallback',

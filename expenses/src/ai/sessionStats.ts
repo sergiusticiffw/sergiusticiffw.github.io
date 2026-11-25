@@ -295,7 +295,7 @@ function pausedModels(now: number): SessionAiLimit[] {
   return [...paused.values()].sort((a, b) => b.at - a.at);
 }
 
-/** Cap stored per-request events (local device). */
+/** Cap stored per-request events (synced across devices via preferences). */
 const MAX_USAGE_EVENTS = 400;
 
 export type AiUsageEvent = {
@@ -310,30 +310,49 @@ export type AiUsageEvent = {
   fallbackReason?: AiFallbackReason;
 };
 
+const eventKey = (e: AiUsageEvent) =>
+  `${e.at}|${e.provider}|${e.model}|${e.ok ? 1 : 0}|${e.latencyMs}|${e.tokens}|${e.errorKind || ''}|${e.fallback ? 1 : 0}|${e.fallbackReason || ''}`;
+
+const cleanUsageEvents = (raw: unknown): AiUsageEvent[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((row) => row && typeof row === 'object')
+    .map((row) => {
+      const r = row as Record<string, unknown>;
+      return {
+        at: typeof r.at === 'number' ? r.at : 0,
+        provider: r.provider as AiProviderId,
+        model: typeof r.model === 'string' ? r.model : '',
+        ok: r.ok === true,
+        latencyMs: typeof r.latencyMs === 'number' ? r.latencyMs : 0,
+        tokens: typeof r.tokens === 'number' ? r.tokens : 0,
+        errorKind:
+          typeof r.errorKind === 'string' ? r.errorKind : undefined,
+        fallback: r.fallback === true,
+        fallbackReason: r.fallbackReason as AiFallbackReason | undefined,
+      };
+    })
+    .filter((e) => e.at > 0 && e.provider && e.model);
+};
+
+const mergeUsageEvents = (
+  local: AiUsageEvent[],
+  remote: AiUsageEvent[]
+): AiUsageEvent[] => {
+  const map = new Map<string, AiUsageEvent>();
+  for (const e of [...remote, ...local]) {
+    map.set(eventKey(e), e);
+  }
+  return [...map.values()]
+    .sort((a, b) => a.at - b.at)
+    .slice(-MAX_USAGE_EVENTS);
+};
+
 const loadUsageEvents = (): AiUsageEvent[] => {
   try {
-    const raw = JSON.parse(
-      localStorage.getItem(AI_STORAGE_KEYS.usageEvents) || '[]'
+    return cleanUsageEvents(
+      JSON.parse(localStorage.getItem(AI_STORAGE_KEYS.usageEvents) || '[]')
     );
-    if (!Array.isArray(raw)) return [];
-    return raw
-      .filter((row) => row && typeof row === 'object')
-      .map((row) => {
-        const r = row as Record<string, unknown>;
-        return {
-          at: typeof r.at === 'number' ? r.at : 0,
-          provider: r.provider as AiProviderId,
-          model: typeof r.model === 'string' ? r.model : '',
-          ok: r.ok === true,
-          latencyMs: typeof r.latencyMs === 'number' ? r.latencyMs : 0,
-          tokens: typeof r.tokens === 'number' ? r.tokens : 0,
-          errorKind:
-            typeof r.errorKind === 'string' ? r.errorKind : undefined,
-          fallback: r.fallback === true,
-          fallbackReason: r.fallbackReason as AiFallbackReason | undefined,
-        };
-      })
-      .filter((e) => e.at > 0 && e.provider && e.model);
   } catch {
     return [];
   }
@@ -341,7 +360,7 @@ const loadUsageEvents = (): AiUsageEvent[] => {
 
 let usageEvents = loadUsageEvents();
 
-const saveUsageEvents = () => {
+const persistUsageEventsLocal = () => {
   try {
     localStorage.setItem(
       AI_STORAGE_KEYS.usageEvents,
@@ -350,6 +369,17 @@ const saveUsageEvents = () => {
   } catch {
     // ignore
   }
+};
+
+const saveUsageEvents = () => {
+  persistUsageEventsLocal();
+  void import('../features/profile/preferencesSync')
+    .then((m) =>
+      m.schedulePreferencesPush({
+        aiUsageEvents: usageEvents.slice(-MAX_USAGE_EVENTS),
+      })
+    )
+    .catch(() => undefined);
 };
 
 export function recordAiUsageEvent(
@@ -361,6 +391,16 @@ export function recordAiUsageEvent(
   ].slice(-MAX_USAGE_EVENTS);
   saveUsageEvents();
 }
+
+/** Snapshot for profiles.preferences. */
+export const readAiUsageEventsForPrefs = (): AiUsageEvent[] =>
+  usageEvents.slice(-MAX_USAGE_EVENTS);
+
+/** Merge events pulled from another device; never drop newer local rows. */
+export const hydrateAiUsageEventsFromPrefs = (raw: unknown): void => {
+  usageEvents = mergeUsageEvents(usageEvents, cleanUsageEvents(raw));
+  persistUsageEventsLocal();
+};
 
 export type AiUsageMetrics = {
   total: number;

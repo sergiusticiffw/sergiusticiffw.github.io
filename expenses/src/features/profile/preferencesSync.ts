@@ -42,7 +42,9 @@ import {
   readChatSessionForPrefs,
 } from '../../ai/chatSession';
 import {
+  hydrateAiUsageEventsFromPrefs,
   hydrateAiUsageFromPrefs,
+  readAiUsageEventsForPrefs,
   readAiUsageForPrefs,
 } from '../../ai/sessionStats';
 import {
@@ -93,6 +95,7 @@ export const readLocalPreferences = (): ProfilePreferences => {
     aiShareDescriptions: getShareDescriptions(),
     aiChat: readChatSessionForPrefs(),
     aiUsage: readAiUsageForPrefs(),
+    aiUsageEvents: readAiUsageEventsForPrefs(),
     aiProviders: getProviderSettings(),
     aiBehavior: getAiPreferences(),
     emergencyFund: fund as unknown as Record<string, unknown>,
@@ -146,6 +149,9 @@ export const applyPreferencesLocally = (
     }
     if (p.aiUsage != null) {
       hydrateAiUsageFromPrefs(p.aiUsage);
+    }
+    if (p.aiUsageEvents != null) {
+      hydrateAiUsageEventsFromPrefs(p.aiUsageEvents);
     }
     if (p.aiProviders != null) {
       setProviderSettings(cleanProviderSettings(p.aiProviders));
@@ -301,6 +307,11 @@ export const flushPreferencesPush = async (): Promise<boolean> => {
 
     if (remote?.aiUsage != null) hydrateAiUsageFromPrefs(remote.aiUsage);
     next.aiUsage = readAiUsageForPrefs();
+
+    if (remote?.aiUsageEvents != null) {
+      hydrateAiUsageEventsFromPrefs(remote.aiUsageEvents);
+    }
+    next.aiUsageEvents = readAiUsageEventsForPrefs();
 
     if (!Object.prototype.hasOwnProperty.call(patch, 'onboardingComplete')) {
       if (typeof remote?.onboardingComplete === 'boolean') {
@@ -525,6 +536,12 @@ export const pullPreferencesFromProfile = async (): Promise<boolean> => {
     if (result.data.currency) {
       hydrateSettings({ currency: result.data.currency });
     }
+    // Upload merged usage events after apply releases applyingRemote.
+    setTimeout(() => {
+      schedulePreferencesPush({
+        aiUsageEvents: readAiUsageEventsForPrefs(),
+      });
+    }, 0);
     return true;
   } catch {
     return false;
