@@ -192,9 +192,10 @@ export function useAiChat(apiKey: string, openrouterApiKey = '') {
   const busyRef = useRef(false);
   // Set while a request is aborted on purpose to resend it with another model.
   const switchingRef = useRef<string | null>(null);
-  const [pendingSwitch, setPendingSwitch] = useState<{
+  const [pendingRetry, setPendingRetry] = useState<{
     assistantId: string;
-    model: string;
+    question: string;
+    preferModel?: string;
   } | null>(null);
 
   const shareDescriptions = getShareDescriptions();
@@ -429,6 +430,10 @@ export function useAiChat(apiKey: string, openrouterApiKey = '') {
             },
             tier: 'chat',
             preferModel,
+            // "Retry with gemini-…" must hit Gemini first, not the cascade head.
+            preferProvider: preferModel?.startsWith('gemini-')
+              ? 'gemini'
+              : undefined,
             request: step.request,
             signal: controller.signal,
             onText: (text) => {
@@ -617,38 +622,74 @@ export function useAiChat(apiKey: string, openrouterApiKey = '') {
     ]
   );
 
-  /** Re-asks the question behind a failed answer, replacing both messages. */
+  const beginRetry = useCallback(
+    (assistantId: string, questionText: string, preferModel?: string) => {
+      setMessages((prev) => {
+        const index = prev.findIndex((m) => m.id === assistantId);
+        const question = index > 0 ? prev[index - 1] : null;
+        const dropIds = new Set<string>([assistantId]);
+        if (question?.role === 'user') dropIds.add(question.id);
+        return prev.filter((m) => !dropIds.has(m.id));
+      });
+      void send(questionText, preferModel);
+    },
+    [send]
+  );
+
+  /** Re-asks the question behind a failed/stopped answer, replacing both messages. */
   const retry = useCallback(
     (assistantId: string, preferModel?: string) => {
-      if (busy) return;
       const index = messages.findIndex((m) => m.id === assistantId);
       const question = messages[index - 1];
       if (index < 1 || question?.role !== 'user') return;
-      setMessages((prev) =>
-        prev.filter((m) => m.id !== assistantId && m.id !== question.id)
-      );
-      send(question.text, preferModel);
+
+      // Stop any in-flight turn first, then resend once busy clears.
+      if (busyRef.current || abortRef.current) {
+        switchingRef.current = assistantId;
+        setPendingRetry({
+          assistantId,
+          question: question.text,
+          preferModel,
+        });
+        abortRef.current?.abort();
+        return;
+      }
+
+      beginRetry(assistantId, question.text, preferModel);
     },
-    [busy, messages, send]
+    [beginRetry, messages]
   );
 
   const stop = useCallback(() => abortRef.current?.abort(), []);
 
   /** Aborts the running request and asks the same question again with `model`. */
-  const switchModel = useCallback((assistantId: string, model: string) => {
-    if (!abortRef.current) return;
-    switchingRef.current = assistantId;
-    setPendingSwitch({ assistantId, model });
-    abortRef.current.abort();
-  }, []);
+  const switchModel = useCallback(
+    (assistantId: string, model: string) => {
+      const index = messages.findIndex((m) => m.id === assistantId);
+      const question = messages[index - 1];
+      if (index < 1 || question?.role !== 'user') return;
+      if (!abortRef.current && !busyRef.current) {
+        beginRetry(assistantId, question.text, model);
+        return;
+      }
+      switchingRef.current = assistantId;
+      setPendingRetry({
+        assistantId,
+        question: question.text,
+        preferModel: model,
+      });
+      abortRef.current?.abort();
+    },
+    [beginRetry, messages]
+  );
 
   useEffect(() => {
-    if (busy || !pendingSwitch) return;
-    const { assistantId, model } = pendingSwitch;
-    setPendingSwitch(null);
+    if (busy || !pendingRetry) return;
+    const { assistantId, question, preferModel } = pendingRetry;
+    setPendingRetry(null);
     switchingRef.current = null;
-    retry(assistantId, model);
-  }, [busy, pendingSwitch, retry]);
+    beginRetry(assistantId, question, preferModel);
+  }, [beginRetry, busy, pendingRetry]);
 
   const reset = useCallback(() => {
     abortRef.current?.abort();

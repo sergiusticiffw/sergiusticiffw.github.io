@@ -44,7 +44,8 @@ const defaultEntry = (
   timeoutMs: number | null
 ): AiProviderEntry => ({
   id,
-  enabled: true,
+  // OpenRouter is opt-in; Gemini stays on by default.
+  enabled: id !== 'openrouter',
   timeoutMs,
   model: 'auto',
 });
@@ -77,7 +78,8 @@ const cleanEntry = (
   // Timeout + model are fixed defaults (no UI); only enabled is user-editable.
   return {
     ...base,
-    enabled: row.enabled !== false,
+    enabled:
+      typeof row.enabled === 'boolean' ? row.enabled : base.enabled,
   };
 };
 

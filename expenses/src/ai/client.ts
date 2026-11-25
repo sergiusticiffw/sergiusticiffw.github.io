@@ -224,10 +224,17 @@ export async function streamGenerate({
   };
 
   for (let i = 0; i < candidates.length; i++) {
+    if (signal?.aborted) {
+      throw signal.reason ?? new DOMException('Aborted', 'AbortError');
+    }
     const id = candidates[i];
     const entry = settings.providers[id];
     const isLast = i === candidates.length - 1;
-    const timeoutMs = isLast ? null : entry.timeoutMs;
+    // Explicit Gemini model retry: do not soft-timeout Gemini — user asked for it.
+    const timeoutMs =
+      isLast || (preferModel?.startsWith('gemini-') && id === 'gemini')
+        ? null
+        : entry.timeoutMs;
     const modelPref =
       preferModel && id === 'gemini'
         ? preferModel
