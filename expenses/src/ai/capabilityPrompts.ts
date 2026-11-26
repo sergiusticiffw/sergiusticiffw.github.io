@@ -98,6 +98,20 @@ export const CAPABILITY_PROMPTS: {
     ),
   },
   {
+    kind: 'expense',
+    prompt: L(
+      'Care e cea mai lungă perioadă fără nicio cheltuială?',
+      'What is the longest stretch with no expenses recorded?'
+    ),
+  },
+  {
+    kind: 'expense',
+    prompt: L(
+      'Care e luna cu cele mai multe zile fără cheltuieli?',
+      'Which month has the most days without expenses?'
+    ),
+  },
+  {
     kind: 'income',
     prompt: L(
       'Care e rata mea de economisire pe ultimele 12 luni și se îmbunătățește?',

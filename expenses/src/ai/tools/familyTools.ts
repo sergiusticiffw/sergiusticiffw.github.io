@@ -428,6 +428,40 @@ const parseRange = (
   return { start: month, end: month };
 };
 
+/** Earliest–latest month present in family aggregates (else `fallback`). */
+const allTimeMonthRange = (
+  family: FamilyAiSnapshot,
+  fallback: string
+): { start: string; end: string } => {
+  let start = '';
+  let end = '';
+  const consider = (month: string) => {
+    if (!MONTH.test(month)) return;
+    if (!start || month < start) start = month;
+    if (!end || month > end) end = month;
+  };
+  for (const row of family.categoryTotals) consider(row.month);
+  for (const row of family.memberTotals) consider(row.month);
+  if (!start || !end) return { start: fallback, end: fallback };
+  if (end > fallback) end = fallback;
+  return { start, end };
+};
+
+/**
+ * For shared totals: explicit month/from/to, otherwise the full history
+ * covered by the household aggregates (all-time).
+ */
+const parseSharedTotalsRange = (
+  family: FamilyAiSnapshot,
+  args: Args,
+  current: string
+): { start: string; end: string } | { error: string } => {
+  if (args.from || args.to || (args.month != null && String(args.month).trim() !== '')) {
+    return parseRange(args, current);
+  }
+  return allTimeMonthRange(family, current);
+};
+
 const resolveCategoryId = (
   family: FamilyAiSnapshot,
   raw: unknown
@@ -513,7 +547,7 @@ const getFamilySharedTotals = (
   if ('error' in family) return family;
 
   const current = localToday().slice(0, 7);
-  const range = parseRange(args, current);
+  const range = parseSharedTotalsRange(family, args, current);
   if ('error' in range) return range;
   const { start, end } = range;
 
@@ -905,6 +939,166 @@ const getFamilyActivity = (ctx: FamilyToolContext, args: Args): ToolResult => {
   };
 };
 
+const DAY_MS = 86_400_000;
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+const dayNumber = (date: string) => {
+  const [y, m, d] = date.split('-').map(Number);
+  return Math.round(Date.UTC(y, m - 1, d) / DAY_MS);
+};
+
+const dateOfDayNumber = (n: number) =>
+  new Date(n * DAY_MS).toISOString().slice(0, 10);
+
+/**
+ * Longest stretches with no household spend on shared categories, from daily
+ * aggregates (not estimated from monthly totals).
+ */
+const findFamilySpendingGaps = async (
+  ctx: FamilyToolContext,
+  args: Args
+): Promise<ToolResult> => {
+  const family = requireFamily(ctx);
+  if ('error' in family) return family;
+  if (family.totalsSource !== 'rpc') {
+    return withSource(family, {
+      error:
+        'Family spending gaps need household daily totals, which are unavailable for this data source. Use find_spending_gaps with the shared category ids on the user\'s own transactions instead.',
+    });
+  }
+
+  const current = localToday().slice(0, 7);
+  const today = localToday();
+  const range =
+    args.from || args.to || (args.month != null && String(args.month).trim() !== '')
+      ? parseRange(args, current)
+      : allTimeMonthRange(family, current);
+  if ('error' in range) return range;
+
+  let months = monthsBetween(range.start, range.end);
+  let truncatedWindow = false;
+  if (months.length > MAX_DAILY_MONTHS) {
+    months = months.slice(-MAX_DAILY_MONTHS);
+    truncatedWindow = true;
+  }
+  if (!months.length) {
+    return withSource(family, {
+      transactionDays: 0,
+      note: 'No shared-category months in this period.',
+    });
+  }
+
+  let categoryId = '';
+  if (args.category) {
+    const found = resolveCategoryId(family, args.category);
+    if (typeof found !== 'string') return found;
+    categoryId = found;
+  }
+  let member: FamilyAiMember | null = null;
+  if (args.member) {
+    const found = resolveMember(family, args.member);
+    if ('error' in found) return found;
+    member = found;
+  }
+
+  const n = Math.floor(Number(args.limit));
+  const limit = Number.isFinite(n) && n > 0 ? Math.min(n, 20) : 5;
+
+  const loaded = await loadDailyRows(family, months);
+  if (loaded.failed.length === months.length) {
+    return {
+      error: `Daily family data could not be loaded for ${loaded.failed.join(', ')}.`,
+    };
+  }
+
+  const spendByDay = new Map<string, number>();
+  for (const row of loaded.rows) {
+    if (!DATE_ONLY.test(row.day)) continue;
+    if (categoryId && row.category_id !== categoryId) continue;
+    if (member && row.user_id.toLowerCase() !== member.userId.toLowerCase()) {
+      continue;
+    }
+    spendByDay.set(row.day, (spendByDay.get(row.day) || 0) + row.total);
+  }
+
+  const sorted = [...spendByDay.entries()]
+    .filter(([, total]) => total !== 0)
+    .map(([day]) => dayNumber(day))
+    .sort((a, b) => a - b);
+
+  if (!sorted.length) {
+    return withSource(family, {
+      from: months[0],
+      to: months[months.length - 1],
+      transactionDays: 0,
+      note: 'No shared-category spend days in this window.',
+      ...(truncatedWindow && {
+        windowNote: `Daily data is limited to ${MAX_DAILY_MONTHS} months; used ${months[0]}…${months[months.length - 1]}.`,
+      }),
+      ...(loaded.failed.length && {
+        loadNote: `Could not load ${loaded.failed.join(', ')}; those months are missing.`,
+      }),
+    });
+  }
+
+  type Gap = { start: string; end: string | null; days: number; ongoing: boolean };
+  const gaps: Gap[] = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const empty = sorted[i] - sorted[i - 1] - 1;
+    if (empty > 0) {
+      gaps.push({
+        start: dateOfDayNumber(sorted[i - 1]),
+        end: dateOfDayNumber(sorted[i]),
+        days: empty,
+        ongoing: false,
+      });
+    }
+  }
+
+  const last = sorted[sorted.length - 1];
+  const endDate = today;
+  const currentEmptyDays = Math.max(0, dayNumber(endDate) - last - 1);
+  if (currentEmptyDays > 0) {
+    gaps.push({
+      start: dateOfDayNumber(last),
+      end: null,
+      days: currentEmptyDays,
+      ongoing: true,
+    });
+  }
+
+  const ranked = gaps.sort((a, b) => b.days - a.days).slice(0, limit);
+  const longest = ranked[0];
+  return withSource(family, {
+    from: months[0],
+    to: months[months.length - 1],
+    category: categoryId ? categoryName(categoryId) : null,
+    member: member?.label || null,
+    windowStart: dateOfDayNumber(sorted[0]),
+    windowEnd: endDate,
+    transactionDays: sorted.length,
+    longestEmptyDays: longest?.days ?? 0,
+    longestFrom: longest?.start ?? null,
+    longestTo: longest?.end ?? null,
+    currentEmptyDays,
+    lastTransactionDate: dateOfDayNumber(last),
+    columns: 'lastSpendBefore|firstSpendAfter|emptyDays|ongoing',
+    rows: ranked
+      .map(
+        (g) =>
+          `${g.start}|${g.end ?? ''}|${g.days}|${g.ongoing ? 'yes' : 'no'}`
+      )
+      .join('\n'),
+    note: 'emptyDays counts full calendar days with no shared-category household spend between two spend days. Days before the first spend day in the window are not counted.',
+    ...(truncatedWindow && {
+      windowNote: `Daily data is limited to ${MAX_DAILY_MONTHS} months; used ${months[0]}…${months[months.length - 1]}.`,
+    }),
+    ...(loaded.failed.length && {
+      loadNote: `Could not load ${loaded.failed.join(', ')}; those months are missing.`,
+    }),
+  });
+};
+
 export const familyToolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'get_family_overview',
@@ -915,13 +1109,14 @@ export const familyToolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'get_family_shared_totals',
     description:
-      'Combined family spend on shared categories only (aggregates). Optional month (YYYY-MM, default current), or from/to months, and optional category ids. Returns the total, number of months and the monthly average. groupBy: category (default for one month), month, member, or omit for month x category over a range. Prefer this for family totals, averages and trends.',
+      'Combined family spend on shared categories only (aggregates). Omit month/from/to for ALL-TIME (full history in the household aggregates). Or pass month (YYYY-MM), or from/to months, and optional category ids. Returns the total, number of months and the monthly average. groupBy: member (who contributed most — prefer for ranking), category (default for one month), month, or omit for month x category over a range. Prefer this for family totals, averages, all-time contribution ranking and trends.',
     parameters: {
       type: 'object',
       properties: {
         month: {
           type: 'string',
-          description: 'YYYY-MM. Default current month.',
+          description:
+            'YYYY-MM. Omit together with from/to for all-time.',
         },
         from: { type: 'string', description: 'Start month YYYY-MM (range).' },
         to: { type: 'string', description: 'End month YYYY-MM (range).' },
@@ -933,7 +1128,8 @@ export const familyToolDeclarations: GeminiFunctionDeclaration[] = [
         groupBy: {
           type: 'string',
           enum: ['category', 'month', 'member'],
-          description: 'How to group the rows.',
+          description:
+            'How to group the rows. Use member for "who contributed most".',
         },
       },
     },
@@ -1021,6 +1217,31 @@ export const familyToolDeclarations: GeminiFunctionDeclaration[] = [
       },
     },
   },
+  {
+    name: 'find_family_spending_gaps',
+    description:
+      'Longest stretches with no household spend on shared (common) categories, from daily aggregates: longest empty gap in days, the current gap since the last shared spend day, and the top gaps. Prefer for "longest period without registrations on shared categories", "how many days in a row with nothing on the family budget". Omit month/from/to for the full available history (capped at 24 months of daily data). Optional category or member filter. Exact; do not estimate from monthly totals.',
+    parameters: {
+      type: 'object',
+      properties: {
+        month: {
+          type: 'string',
+          description: 'YYYY-MM. Omit with from/to for all available history.',
+        },
+        from: { type: 'string', description: 'Start month YYYY-MM.' },
+        to: { type: 'string', description: 'End month YYYY-MM.' },
+        category: {
+          type: 'string',
+          description: 'Optional shared category id or name.',
+        },
+        member: { type: 'string', description: 'Optional member name, or "me".' },
+        limit: {
+          type: 'integer',
+          description: 'Top gaps to list, default 5, max 20.',
+        },
+      },
+    },
+  },
 ];
 
 export const familyToolExecutors: Record<
@@ -1034,6 +1255,7 @@ export const familyToolExecutors: Record<
   get_family_income: getFamilyIncome,
   get_family_daily_spend: getFamilyDailySpend,
   get_family_activity: getFamilyActivity,
+  find_family_spending_gaps: findFamilySpendingGaps,
 };
 
 export const FAMILY_TOOL_LABELS: Record<string, string> = {
@@ -1044,4 +1266,5 @@ export const FAMILY_TOOL_LABELS: Record<string, string> = {
   get_family_income: 'Checking family income',
   get_family_daily_spend: 'Checking daily family spend',
   get_family_activity: 'Reading family activity',
+  find_family_spending_gaps: 'Finding family gaps without shared spend',
 };

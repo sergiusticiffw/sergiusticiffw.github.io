@@ -502,11 +502,16 @@ const findSpendingGaps = (ctx: ExpenseToolContext, args: Args): ToolResult => {
   const endDate = !toBound || toBound > today ? today : toBound;
   const n = Math.floor(Number(args.limit));
   const limit = Number.isFinite(n) && n > 0 ? Math.min(n, 20) : 5;
+  const cats =
+    Array.isArray(args.categories) && args.categories.length
+      ? new Set(args.categories.map(String))
+      : null;
 
   const days = new Set<number>();
   for (const item of ctx.items) {
     if (!DATE_ONLY.test(item.date)) continue;
     if (kind !== 'any' && item.kind !== kind) continue;
+    if (cats && !cats.has(item.cat)) continue;
     if (fromBound && item.date < fromBound) continue;
     if (toBound && item.date > toBound) continue;
     days.add(dayNumber(item.date));
@@ -545,6 +550,7 @@ const findSpendingGaps = (ctx: ExpenseToolContext, args: Args): ToolResult => {
   const longest = ranked[0];
   return {
     kind,
+    categories: cats ? [...cats] : null,
     windowStart: dateOfDayNumber(sorted[0]),
     windowEnd: endDate,
     transactionDays: sorted.length,
@@ -557,7 +563,127 @@ const findSpendingGaps = (ctx: ExpenseToolContext, args: Args): ToolResult => {
     rows: ranked
       .map((g) => `${g.start}|${g.end ?? ''}|${g.days}|${g.ongoing ? 'yes' : 'no'}`)
       .join('\n'),
-    note: 'emptyDays counts the full days with no matching transaction between two transaction days. Days before the first transaction in the window are not counted.',
+    note: 'emptyDays counts the full days with no matching transaction between two transaction days. Days before the first transaction in the window are not counted. With categories set, only the user\'s own rows in those categories count (for household shared gaps use find_family_spending_gaps).',
+  };
+};
+
+const daysInMonthUtc = (yearMonth: string): number => {
+  const [y, m] = yearMonth.split('-').map(Number);
+  return new Date(Date.UTC(y, m, 0)).getUTCDate();
+};
+
+const shiftMonthYm = (month: string, delta: number): string => {
+  const [y, m] = month.split('-').map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+};
+
+/**
+ * Rank calendar months by how many days had no matching transaction.
+ * Window starts at the first month with data (or `from`), so empty history
+ * before the first transaction does not inflate early months.
+ */
+const rankEmptyDaysByMonth = (
+  ctx: ExpenseToolContext,
+  args: Args
+): ToolResult => {
+  const kind =
+    args.kind === 'income' || args.kind === 'any' ? args.kind : 'expense';
+  const fromBound = boundOf(args.from, false);
+  const toBound = boundOf(args.to, true);
+  const today = localToday();
+  const endDate = !toBound || toBound > today ? today : toBound;
+  const cats =
+    Array.isArray(args.categories) && args.categories.length
+      ? new Set(args.categories.map(String))
+      : null;
+  const n = Math.floor(Number(args.limit));
+  const limit = Number.isFinite(n) && n > 0 ? Math.min(n, 36) : 12;
+
+  const daysByMonth = new Map<string, Set<string>>();
+  let firstDate = '';
+  for (const item of ctx.items) {
+    if (!DATE_ONLY.test(item.date)) continue;
+    if (kind !== 'any' && item.kind !== kind) continue;
+    if (cats && !cats.has(item.cat)) continue;
+    if (fromBound && item.date < fromBound) continue;
+    if (item.date > endDate) continue;
+    const month = item.date.slice(0, 7);
+    let set = daysByMonth.get(month);
+    if (!set) {
+      set = new Set();
+      daysByMonth.set(month, set);
+    }
+    set.add(item.date);
+    if (!firstDate || item.date < firstDate) firstDate = item.date;
+  }
+
+  if (!firstDate) {
+    return {
+      kind,
+      categories: cats ? [...cats] : null,
+      monthCount: 0,
+      note: 'No matching transactions in this period.',
+    };
+  }
+
+  const startMonth = fromBound
+    ? fromBound.slice(0, 7)
+    : firstDate.slice(0, 7);
+  const endMonth = endDate.slice(0, 7);
+  const todayDay = Number(today.slice(8, 10));
+
+  type MonthRow = {
+    month: string;
+    daysInMonth: number;
+    daysCounted: number;
+    daysWithTx: number;
+    emptyDays: number;
+  };
+  const rows: MonthRow[] = [];
+  for (
+    let month = startMonth;
+    month <= endMonth && rows.length < 120;
+    month = shiftMonthYm(month, 1)
+  ) {
+    const dim = daysInMonthUtc(month);
+    const daysCounted =
+      month === today.slice(0, 7) ? Math.min(dim, todayDay) : dim;
+    const daysWithTx = daysByMonth.get(month)?.size || 0;
+    const emptyDays = Math.max(0, daysCounted - daysWithTx);
+    rows.push({
+      month,
+      daysInMonth: dim,
+      daysCounted,
+      daysWithTx,
+      emptyDays,
+    });
+  }
+
+  const ranked = [...rows].sort((a, b) => {
+    if (b.emptyDays !== a.emptyDays) return b.emptyDays - a.emptyDays;
+    return a.month < b.month ? 1 : a.month > b.month ? -1 : 0;
+  });
+  const top = ranked.slice(0, limit);
+  const winner = top[0];
+
+  return {
+    kind,
+    categories: cats ? [...cats] : null,
+    windowStart: startMonth,
+    windowEnd: endMonth,
+    monthCount: rows.length,
+    mostEmptyMonth: winner?.month ?? null,
+    mostEmptyDays: winner?.emptyDays ?? 0,
+    mostEmptyDaysWithTx: winner?.daysWithTx ?? 0,
+    columns: 'month|emptyDays|daysWithTx|daysCounted|daysInMonth',
+    rows: top
+      .map(
+        (r) =>
+          `${r.month}|${r.emptyDays}|${r.daysWithTx}|${r.daysCounted}|${r.daysInMonth}`
+      )
+      .join('\n'),
+    note: 'emptyDays = daysCounted − distinct days with a matching transaction. For the current month, daysCounted stops at today so future days are not counted as empty. Window starts at the first month with data unless from is set.',
   };
 };
 
@@ -647,7 +773,7 @@ export const expenseToolDeclarations: GeminiFunctionDeclaration[] = [
   {
     name: 'find_spending_gaps',
     description:
-      'Longest stretches with no transactions over the whole history (or a period): the longest gap in days with the transaction days on each side, the current gap since the last transaction, and the top gaps. Use for "longest period without any transaction", "how many days in a row without spending", "when did I have nothing recorded". Exact, computed from every row; do not estimate from monthly totals. Aggregates only.',
+      'Longest stretches with no transactions over the whole history (or a period): the longest gap in days with the transaction days on each side, the current gap since the last transaction, and the top gaps. Use for "longest period without any transaction", "how many days in a row without spending", "when did I have nothing recorded". Optional categories (ids) restrict to those categories on the user\'s own rows — for household shared-category gaps prefer find_family_spending_gaps when available. Exact, computed from every row; do not estimate from monthly totals. Aggregates only.',
     parameters: {
       type: 'object',
       properties: {
@@ -656,9 +782,47 @@ export const expenseToolDeclarations: GeminiFunctionDeclaration[] = [
           enum: ['any', 'expense', 'income'],
           description: 'Which rows count as a transaction. Default any.',
         },
+        categories: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Optional category ids. Use shared category ids from FAMILY BUDGET for gaps on common categories in the user\'s own transactions.',
+        },
         from: { type: 'string', description: 'Start YYYY-MM or YYYY-MM-DD. Default: whole history.' },
         to: { type: 'string', description: 'End YYYY-MM or YYYY-MM-DD. Default: today.' },
         limit: { type: 'integer', description: 'Top gaps to list, default 5, max 20.' },
+      },
+    },
+  },
+  {
+    name: 'rank_empty_days_by_month',
+    description:
+      'Rank months by how many calendar days had no matching transaction (default: expenses). Returns the month with the most empty days, plus a ranking. Use for "which month had the most days without expenses", "luna cu cele mai multe zile fără cheltuieli". Exact from every row; do not guess from monthly totals. Optional categories filter. Window starts at the first month with data unless from is set; the current month only counts days up to today.',
+    parameters: {
+      type: 'object',
+      properties: {
+        kind: {
+          type: 'string',
+          enum: ['expense', 'income', 'any'],
+          description: 'Which rows count. Default expense.',
+        },
+        categories: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional category ids to restrict which transactions count.',
+        },
+        from: {
+          type: 'string',
+          description: 'Start YYYY-MM or YYYY-MM-DD. Default: first month with data.',
+        },
+        to: {
+          type: 'string',
+          description: 'End YYYY-MM or YYYY-MM-DD. Default: today.',
+        },
+        limit: {
+          type: 'integer',
+          description: 'Top months to list, default 12, max 36.',
+        },
       },
     },
   },
@@ -674,6 +838,7 @@ export const expenseToolExecutors: Record<
   find_similar_expenses: findSimilarExpenses,
   detect_recurring: detectRecurring,
   find_spending_gaps: findSpendingGaps,
+  rank_empty_days_by_month: rankEmptyDaysByMonth,
 };
 
 export const EXPENSE_TOOL_LABELS: Record<string, string> = {
@@ -683,6 +848,7 @@ export const EXPENSE_TOOL_LABELS: Record<string, string> = {
   find_similar_expenses: 'Finding similar expenses',
   detect_recurring: 'Detecting recurring expenses',
   find_spending_gaps: 'Finding the longest gap without transactions',
+  rank_empty_days_by_month: 'Ranking months by empty days',
 };
 
 /** Compact one-line notes for follow-up context. */
@@ -743,6 +909,8 @@ const describeToolCall = (
       return `detect_recurring -> ${result.matched ?? 0} candidates`;
     case 'find_spending_gaps':
       return `find_spending_gaps(${args?.kind || 'any'}) -> longest ${result.longestEmptyDays ?? 0} empty days`;
+    case 'rank_empty_days_by_month':
+      return `rank_empty_days_by_month(${args?.kind || 'expense'}) -> ${result.mostEmptyMonth ?? '?'} (${result.mostEmptyDays ?? 0} empty days)`;
     case 'aggregate':
       return `aggregate(${args?.groupBy || '?'}) -> ${result.groupCount ?? '?'} groups, total=${result.total ?? '?'}`;
     case 'query_transactions':

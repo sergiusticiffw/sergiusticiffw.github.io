@@ -54,8 +54,8 @@ export const buildFamilyPrompts = (
       prompt(
         'family',
         L(
-          'Cine a contribuit cel mai mult la categoriile comune?',
-          'Who contributed the most to the shared categories?'
+          'Cine a contribuit cel mai mult la categoriile comune din tot timpul?',
+          'Who contributed the most to the shared categories of all time?'
         )
       ),
       prompt(
@@ -63,6 +63,13 @@ export const buildFamilyPrompts = (
         L(
           'Ce a cheltuit familia ieri pe categoriile comune?',
           'What did the family spend yesterday on the shared categories?'
+        )
+      ),
+      prompt(
+        'family',
+        L(
+          'Care e cea mai lungă perioadă fără înregistrări pe categoriile comune?',
+          'What is the longest stretch with no spend on the shared categories?'
         )
       )
     );
