@@ -297,6 +297,22 @@ export async function setAppointmentCancelled(
   }
 
   const supabase = await createClient();
+  if (cancelled) {
+    const { data: current, error: readError } = await supabase
+      .from("appointments")
+      .select("done_at")
+      .eq("id", parsedEntry.data)
+      .eq("profile_id", parsedId.data)
+      .maybeSingle();
+    if (readError) {
+      console.error("setAppointmentCancelled read", readError.code);
+      return { error: "Nu s-a putut actualiza. Încearcă din nou." };
+    }
+    if (current?.done_at) {
+      return { error: "O programare efectuată nu mai poate fi anulată." };
+    }
+  }
+
   const { error } = await supabase
     .from("appointments")
     .update(

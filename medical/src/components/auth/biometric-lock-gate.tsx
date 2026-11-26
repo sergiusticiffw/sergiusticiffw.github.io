@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useState,
   type FormEvent,
   type ReactNode,
@@ -59,6 +60,7 @@ export function BiometricLockGate({
       setReady(true);
       return;
     }
+    // Off → unlock immediately (no "Se încarcă…" flash after hydration).
     if (!isBiometricEnabled(userId)) {
       setLocked(false);
       setReady(true);
@@ -68,7 +70,8 @@ export function BiometricLockGate({
     setReady(true);
   }, [userId]);
 
-  useEffect(() => {
+  // Before paint so disabled biometric never flashes the loading placeholder.
+  useLayoutEffect(() => {
     syncLockState();
   }, [syncLockState]);
 

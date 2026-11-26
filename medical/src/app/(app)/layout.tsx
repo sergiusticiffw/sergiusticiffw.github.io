@@ -29,8 +29,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 }
 
 async function AppShell({ children }: { children: React.ReactNode }) {
-  const user = await getPageUser();
-  const family = await getPageFamilyAccess();
+  const [user, family] = await Promise.all([
+    getPageUser(),
+    getPageFamilyAccess(),
+  ]);
   const people = family.familyId
     ? (await loadFamilyPeople(family.familyId)).people.map((person) => ({
         id: person.id,

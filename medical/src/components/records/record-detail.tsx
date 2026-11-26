@@ -50,6 +50,30 @@ export function RecordDetail({
           <ShareFilesButton files={record.files} title={record.title} />
         </div>
       ) : null}
+      {record.doctorName || record.clinicName || record.specialty ? (
+        <dl className="grid gap-2 text-sm sm:grid-cols-3">
+          {record.doctorName ? (
+            <div className="flex flex-col gap-0.5">
+              <dt className="text-muted-foreground">Medic</dt>
+              <dd className="font-medium">{record.doctorName}</dd>
+            </div>
+          ) : null}
+          {record.clinicName ? (
+            <div className="flex flex-col gap-0.5">
+              <dt className="text-muted-foreground">
+                {record.kind === "lab" ? "Laborator" : "Clinică"}
+              </dt>
+              <dd className="font-medium">{record.clinicName}</dd>
+            </div>
+          ) : null}
+          {record.specialty ? (
+            <div className="flex flex-col gap-0.5">
+              <dt className="text-muted-foreground">Specialitate</dt>
+              <dd className="font-medium">{record.specialty}</dd>
+            </div>
+          ) : null}
+        </dl>
+      ) : null}
       {record.body ? (
         <p className="whitespace-pre-wrap text-base">{record.body}</p>
       ) : (
@@ -65,6 +89,9 @@ export function RecordDetail({
               date={record.date ?? ""}
               body={record.editBody || record.body}
               category={record.category}
+              doctorName={record.doctorName ?? ""}
+              clinicName={record.clinicName ?? ""}
+              specialty={record.specialty ?? ""}
               files={record.files}
             />
             <DeleteRecordButton

@@ -89,7 +89,15 @@ function validRecordDate(value: string) {
 export async function updateRecord(
   kind: RecordKind,
   id: string,
-  input: { title: string; date: string; body: string; category?: string },
+  input: {
+    title: string;
+    date: string;
+    body: string;
+    category?: string;
+    doctorName?: string;
+    clinicName?: string;
+    specialty?: string;
+  },
 ): Promise<DocumentActionResult> {
   if (!recordKinds.includes(kind)) {
     return { error: "Înregistrarea nu este validă." };
@@ -102,6 +110,9 @@ export async function updateRecord(
   const title = input.title.trim().slice(0, 160);
   const body = input.body.trim().slice(0, 20000);
   const date = input.date.trim();
+  const doctorName = (input.doctorName ?? "").trim().slice(0, 200);
+  const clinicName = (input.clinicName ?? "").trim().slice(0, 200);
+  const specialty = (input.specialty ?? "").trim().slice(0, 200);
   const category: RecordCategory = parseRecordCategory(
     input.category ?? DEFAULT_RECORD_CATEGORY,
   );
@@ -153,8 +164,20 @@ export async function updateRecord(
     kind === "document"
       ? { title, document_date: date, extracted_text: body || null, category }
       : kind === "consultation"
-        ? { consultation_date: date, summary: body }
-        : { test_name: title, sample_date: date, result_text: body || null, category };
+        ? {
+            consultation_date: date,
+            summary: body,
+            doctor_name: doctorName || null,
+            clinic_name: clinicName || null,
+            specialty: specialty || null,
+          }
+        : {
+            test_name: title,
+            sample_date: date,
+            result_text: body || null,
+            category,
+            laboratory: clinicName || null,
+          };
 
   const saved = await supabase.from(table).update(changes).eq("id", row.id);
   if (saved.error) {
@@ -166,6 +189,47 @@ export async function updateRecord(
       return { error: "Aplică migrațiile pentru titlu și textul documentului." };
     }
     return { error: "Înregistrarea nu a putut fi modificată." };
+  }
+
+  if (kind === "document") {
+    const linked = await supabase
+      .from("consultations")
+      .select("id")
+      .eq("source_document_id", row.id)
+      .maybeSingle();
+    if (linked.error) {
+      console.error("updateRecord consultation", linked.error.code);
+      return { error: "Detaliile medicului nu au putut fi salvate." };
+    }
+    const fields = {
+      doctor_name: doctorName || null,
+      clinic_name: clinicName || null,
+      specialty: specialty || null,
+    };
+    const hasFields = Boolean(doctorName || clinicName || specialty);
+    if (linked.data) {
+      const patched = await supabase
+        .from("consultations")
+        .update(fields)
+        .eq("id", (linked.data as { id: string }).id);
+      if (patched.error) {
+        console.error("updateRecord consultation patch", patched.error.code);
+        return { error: "Detaliile medicului nu au putut fi salvate." };
+      }
+    } else if (hasFields) {
+      const inserted = await supabase.from("consultations").insert({
+        profile_id: row.profile_id,
+        source_document_id: row.id,
+        consultation_date: date,
+        ...fields,
+        summary: null,
+        recommendations: null,
+      });
+      if (inserted.error) {
+        console.error("updateRecord consultation insert", inserted.error.code);
+        return { error: "Detaliile medicului nu au putut fi salvate." };
+      }
+    }
   }
 
   revalidateRecord(row.profile_id);

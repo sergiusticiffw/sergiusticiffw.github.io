@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import { parseRecordCategory } from "@/lib/record-category";
 import { documentSchema } from "@/lib/validation/document";
 import {
+  consultationIsPresent,
   extractionSchema,
   MAX_EXTRACTED_TEXT,
   type Extraction,
@@ -229,25 +230,56 @@ export async function saveDetectedDocument(
   // Lab values only arrive from a form the person filled in and reviewed.
   const reviewedLabs =
     !recordId && parsed.success ? reviewedLabRows(parsed.data.labTests) : [];
-  if (reviewedLabs.length > 0 && storedFiles[0]) {
+  const consultationDraft =
+    !recordId && parsed.success ? parsed.data.consultation : null;
+  if ((reviewedLabs.length > 0 || (consultationDraft && consultationIsPresent(consultationDraft))) && storedFiles[0]) {
     const supabase = await createClient();
-    const { error: labError } = await supabase.from("lab_tests").insert(
-      labInsertRows({
-        profileId: person.id,
-        rows: reviewedLabs,
-        fallbackDate: documentDate,
-        category,
-        sourceDocumentId: storedFiles[0].documentId,
-      }),
-    );
-    if (labError) {
-      console.error("saveDetectedDocument labs", labError.code);
-      await discardStoredDocument(
-        family.familyId,
-        storedFiles[0].documentId,
-        storedFiles[0].driveFileId,
+    if (reviewedLabs.length > 0) {
+      const { error: labError } = await supabase.from("lab_tests").insert(
+        labInsertRows({
+          profileId: person.id,
+          rows: reviewedLabs,
+          fallbackDate: documentDate,
+          category,
+          sourceDocumentId: storedFiles[0].documentId,
+        }),
       );
-      return { error: "Valorile analizelor nu au putut fi salvate." };
+      if (labError) {
+        console.error("saveDetectedDocument labs", labError.code);
+        await discardStoredDocument(
+          family.familyId,
+          storedFiles[0].documentId,
+          storedFiles[0].driveFileId,
+        );
+        return { error: "Valorile analizelor nu au putut fi salvate." };
+      }
+    }
+    if (
+      consultationDraft &&
+      (consultationDraft.doctorName.trim() ||
+        consultationDraft.clinicName.trim() ||
+        consultationDraft.specialty.trim())
+    ) {
+      const { error: consultationError } = await supabase.from("consultations").insert({
+        profile_id: person.id,
+        source_document_id: storedFiles[0].documentId,
+        consultation_date:
+          consultationDraft.consultationDate || documentDate,
+        doctor_name: consultationDraft.doctorName.trim() || null,
+        clinic_name: consultationDraft.clinicName.trim() || null,
+        specialty: consultationDraft.specialty.trim() || null,
+        summary: consultationDraft.summary.trim() || null,
+        recommendations: consultationDraft.recommendations.trim() || null,
+      });
+      if (consultationError) {
+        console.error("saveDetectedDocument consultation", consultationError.code);
+        await discardStoredDocument(
+          family.familyId,
+          storedFiles[0].documentId,
+          storedFiles[0].driveFileId,
+        );
+        return { error: "Detaliile medicului nu au putut fi salvate." };
+      }
     }
   }
 

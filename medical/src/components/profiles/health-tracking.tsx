@@ -497,7 +497,7 @@ export function HealthTracking({
                 {item.done_at ? "Viitoare" : "Efectuată"}
               </Button>
             ) : null}
-            {canEdit ? (
+            {canEdit && (item.cancelled_at || !item.done_at) ? (
               <Button
                 type="button"
                 variant="outline"

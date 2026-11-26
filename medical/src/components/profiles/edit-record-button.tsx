@@ -34,6 +34,9 @@ export function EditRecordButton({
   date,
   body,
   category = DEFAULT_RECORD_CATEGORY,
+  doctorName = "",
+  clinicName = "",
+  specialty = "",
   files = [],
   children,
 }: {
@@ -43,6 +46,9 @@ export function EditRecordButton({
   date: string;
   body: string;
   category?: string | null;
+  doctorName?: string;
+  clinicName?: string;
+  specialty?: string;
   files?: PreviewFile[];
   children?: ReactNode;
 }) {
@@ -61,6 +67,9 @@ export function EditRecordButton({
   const [draftTitle, setDraftTitle] = useState(title);
   const [draftDate, setDraftDate] = useState(date);
   const [draftBody, setDraftBody] = useState(body);
+  const [draftDoctorName, setDraftDoctorName] = useState(doctorName);
+  const [draftClinicName, setDraftClinicName] = useState(clinicName);
+  const [draftSpecialty, setDraftSpecialty] = useState(specialty);
   const [draftCategory, setDraftCategory] = useState<RecordCategory>(() =>
     kind === "lab"
       ? parseRecordCategory(category || "Analiză")
@@ -92,6 +101,9 @@ export function EditRecordButton({
     setDraftTitle(title);
     setDraftDate(date);
     setDraftBody(body);
+    setDraftDoctorName(doctorName);
+    setDraftClinicName(clinicName);
+    setDraftSpecialty(specialty);
     setDraftCategory(
       kind === "lab"
         ? parseRecordCategory(category || "Analiză")
@@ -113,6 +125,9 @@ export function EditRecordButton({
       date: draftDate,
       body: draftBody,
       category: draftCategory,
+      doctorName: draftDoctorName,
+      clinicName: draftClinicName,
+      specialty: draftSpecialty,
     });
     setPending(null);
     if (result.error) {
@@ -335,6 +350,57 @@ export function EditRecordButton({
               onChange={(event) => setDraftDate(event.target.value)}
             />
           </div>
+          {kind === "lab" ? (
+            <div className="flex flex-col gap-1">
+              <Label htmlFor={`record-clinic-${id}`}>Laborator</Label>
+              <Input
+                id={`record-clinic-${id}`}
+                value={draftClinicName}
+                maxLength={200}
+                autoComplete="off"
+                className="h-11"
+                onChange={(event) => setDraftClinicName(event.target.value)}
+              />
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor={`record-doctor-${id}`}>Medic</Label>
+                <Input
+                  id={`record-doctor-${id}`}
+                  value={draftDoctorName}
+                  maxLength={200}
+                  autoComplete="off"
+                  className="h-11"
+                  placeholder="ex. Dr. Popescu"
+                  onChange={(event) => setDraftDoctorName(event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor={`record-clinic-${id}`}>Clinică</Label>
+                <Input
+                  id={`record-clinic-${id}`}
+                  value={draftClinicName}
+                  maxLength={200}
+                  autoComplete="off"
+                  className="h-11"
+                  onChange={(event) => setDraftClinicName(event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor={`record-specialty-${id}`}>Specialitate</Label>
+                <Input
+                  id={`record-specialty-${id}`}
+                  value={draftSpecialty}
+                  maxLength={200}
+                  autoComplete="off"
+                  className="h-11"
+                  placeholder="ex. Pediatrie"
+                  onChange={(event) => setDraftSpecialty(event.target.value)}
+                />
+              </div>
+            </>
+          )}
           <div className="flex flex-col gap-1">
             <Label htmlFor={`record-body-${id}`}>
               {kind === "consultation" ? "Notă" : "Text"}

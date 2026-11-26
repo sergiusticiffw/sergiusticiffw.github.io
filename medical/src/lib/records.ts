@@ -22,6 +22,9 @@ export type FamilyRecord = {
   editTitle: string;
   editBody: string;
   body: string;
+  doctorName: string | null;
+  clinicName: string | null;
+  specialty: string | null;
   files: FamilyRecordFile[];
 };
 
@@ -173,6 +176,14 @@ export async function loadFamilyRecord(
         .filter(Boolean)
         .join(" · ");
 
+    const consultation = consultations.data as {
+      doctor_name: string | null;
+      clinic_name: string | null;
+      specialty: string | null;
+      summary: string | null;
+      recommendations: string | null;
+    } | null;
+
     return {
       record: {
         kind: "document",
@@ -185,6 +196,9 @@ export async function loadFamilyRecord(
         editTitle: primaryRow.title?.trim() || "",
         editBody: primaryRow.extracted_text?.trim() || "",
         body,
+        doctorName: consultation?.doctor_name?.trim() || null,
+        clinicName: consultation?.clinic_name?.trim() || null,
+        specialty: consultation?.specialty?.trim() || null,
         files: files.map((file) => ({
           id: file.id,
           filename: file.original_filename,
@@ -239,6 +253,9 @@ export async function loadFamilyRecord(
         editTitle: "",
         editBody: consultation.summary?.trim() || "",
         body,
+        doctorName: consultation.doctor_name?.trim() || null,
+        clinicName: consultation.clinic_name?.trim() || null,
+        specialty: consultation.specialty?.trim() || null,
         files: [],
       },
       error: null,
@@ -293,6 +310,9 @@ export async function loadFamilyRecord(
       editTitle: lab.test_name,
       editBody: lab.result_text?.trim() || "",
       body,
+      doctorName: null,
+      clinicName: lab.laboratory?.trim() || null,
+      specialty: null,
       files: [],
     },
     error: null,

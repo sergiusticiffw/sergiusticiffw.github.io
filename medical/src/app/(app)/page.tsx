@@ -6,7 +6,7 @@ import { PageFallback } from "@/components/layout/page-fallback";
 import { AddProfileButton } from "@/components/profiles/profile-form";
 import { RecordRow } from "@/components/records/record-row";
 import { Avatar } from "@/components/ui/avatar";
-import { loadRecordsIndex } from "@/lib/assistant/catalog";
+import { loadRecentRecords } from "@/lib/assistant/catalog";
 import { getPageFamilyAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatAge, formatBirthDate } from "@/lib/format";
@@ -47,16 +47,8 @@ async function OverviewSection() {
 
   const familyId = family.familyId;
   const supabase = await createClient();
-  const [peopleResult, index, connection] = await Promise.all([
-    loadFamilyPeople(familyId),
-    loadRecordsIndex(familyId),
-    supabase
-      .from("google_drive_connections")
-      .select("family_id")
-      .eq("family_id", familyId)
-      .maybeSingle(),
-  ]);
 
+  const peopleResult = await loadFamilyPeople(familyId);
   if (peopleResult.error) {
     return (
       <p role="alert" className="text-base text-destructive">
@@ -67,6 +59,28 @@ async function OverviewSection() {
 
   const people = peopleResult.people;
   const isAdmin = family.role === "admin";
+
+  const [recentResult, connection, appointmentsResult, cards] =
+    await Promise.all([
+      loadRecentRecords(familyId, HOME_LIST_LIMIT),
+      supabase
+        .from("google_drive_connections")
+        .select("family_id")
+        .eq("family_id", familyId)
+        .maybeSingle(),
+      supabase
+        .from("appointments")
+        .select("id, profile_id, title, starts_at")
+        .is("done_at", null)
+        .is("cancelled_at", null)
+        .gte("starts_at", new Date().toISOString())
+        .order("starts_at", { ascending: true })
+        .limit(HOME_LIST_LIMIT),
+      Promise.all(
+        people.map((person) => loadProfileDocsCard(familyId, person.id)),
+      ),
+    ]);
+
   const driveConnected = Boolean(connection.data);
 
   if (people.length === 0) {
@@ -86,24 +100,12 @@ async function OverviewSection() {
   }
 
   const today = todayInChisinau();
-  const cards = await Promise.all(
-    people.map((person) => loadProfileDocsCard(familyId, person.id)),
-  );
   const alerts = people.flatMap((person, position) =>
     expiringInsurances(cards[position].insurances, today).map(
       ({ item, days }) => ({ person, title: item.title, end: item.end_date, days }),
     ),
   );
 
-  // Absent until the health-tracking migration is applied; ignore then.
-  const appointmentsResult = await supabase
-    .from("appointments")
-    .select("id, profile_id, title, starts_at")
-    .is("done_at", null)
-    .is("cancelled_at", null)
-    .gte("starts_at", new Date().toISOString())
-    .order("starts_at", { ascending: true })
-    .limit(HOME_LIST_LIMIT);
   const nameById = new Map(people.map((person) => [person.id, person.display_name]));
   const appointments = appointmentsResult.error
     ? []
@@ -114,7 +116,7 @@ async function OverviewSection() {
         starts_at: string;
       }[]);
 
-  const records = index.error ? [] : index.records;
+  const records = recentResult.error ? [] : recentResult.records;
   const lastByPerson = new Map<string, (typeof records)[number]>();
   for (const record of records) {
     if (!lastByPerson.has(record.profileId)) {

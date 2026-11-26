@@ -448,44 +448,40 @@ export function ProfileEntries({
                 className="h-11"
               />
             </div>
-            <details className="rounded-lg border px-3 py-1">
-              <summary className="flex min-h-11 cursor-pointer items-center text-sm font-medium">
-                Medic și clinică (opțional)
-              </summary>
-              <div className="flex flex-col gap-3 pb-3">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor={`consult-doctor-${profileId}`}>Medic</Label>
-                  <Input
-                    id={`consult-doctor-${profileId}`}
-                    name="doctorName"
-                    maxLength={200}
-                    autoComplete="off"
-                    placeholder="ex. Dr. Popescu"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor={`consult-clinic-${profileId}`}>Clinică</Label>
-                  <Input
-                    id={`consult-clinic-${profileId}`}
-                    name="clinicName"
-                    maxLength={200}
-                    autoComplete="off"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor={`consult-specialty-${profileId}`}>
-                    Specialitate
-                  </Label>
-                  <Input
-                    id={`consult-specialty-${profileId}`}
-                    name="specialty"
-                    maxLength={200}
-                    autoComplete="off"
-                    placeholder="ex. Pediatrie"
-                  />
-                </div>
-              </div>
-            </details>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`consult-doctor-${profileId}`}>Medic</Label>
+              <Input
+                id={`consult-doctor-${profileId}`}
+                name="doctorName"
+                maxLength={200}
+                autoComplete="off"
+                className="h-11"
+                placeholder="ex. Dr. Popescu"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`consult-clinic-${profileId}`}>Clinică</Label>
+              <Input
+                id={`consult-clinic-${profileId}`}
+                name="clinicName"
+                maxLength={200}
+                autoComplete="off"
+                className="h-11"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`consult-specialty-${profileId}`}>
+                Specialitate
+              </Label>
+              <Input
+                id={`consult-specialty-${profileId}`}
+                name="specialty"
+                maxLength={200}
+                autoComplete="off"
+                className="h-11"
+                placeholder="ex. Pediatrie"
+              />
+            </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor={`consult-summary-${profileId}`}>Notă</Label>
               <Textarea

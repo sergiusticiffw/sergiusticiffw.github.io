@@ -780,6 +780,221 @@ export async function loadRecordsIndex(familyId: string): Promise<{
   return { records, people: profiles, error: null };
 }
 
+/**
+ * Slim index for Acasă: a few recent rows, no OCR text, no 400/200/200 sweep.
+ * Fetches a small pool so we can also fill "last record" per person.
+ */
+export async function loadRecentRecords(
+  familyId: string,
+  limit = 3,
+): Promise<{
+  records: RecordIndexItem[];
+  error: string | null;
+}> {
+  "use cache: private";
+  useFamilyCache();
+  const pool = Math.max(limit * 4, 12);
+  const supabase = await createClient();
+  const [profilesResult, documentsResult, consultationsResult, labsResult] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, display_name")
+        .eq("family_id", familyId)
+        .order("display_name", { ascending: true }),
+      supabase
+        .from("medical_documents")
+        .select(
+          "id, profile_id, original_filename, document_date, category, title, record_id",
+        )
+        .is("record_id", null)
+        .order("document_date", { ascending: false })
+        .limit(pool),
+      supabase
+        .from("consultations")
+        .select(
+          "id, profile_id, source_document_id, consultation_date, doctor_name, summary",
+        )
+        .is("source_document_id", null)
+        .order("consultation_date", { ascending: false })
+        .limit(pool),
+      supabase
+        .from("lab_tests")
+        .select(
+          "id, profile_id, source_document_id, test_name, category, sample_date",
+        )
+        .is("source_document_id", null)
+        .order("sample_date", { ascending: false })
+        .limit(pool),
+    ]);
+
+  if (missingColumn(documentsResult.error?.code)) {
+    return {
+      records: [],
+      error: "Aplică migrațiile pentru titlu și imaginile din înregistrare.",
+    };
+  }
+
+  const listError =
+    profilesResult.error ??
+    documentsResult.error ??
+    consultationsResult.error ??
+    labsResult.error;
+  if (listError) {
+    console.error("loadRecentRecords", listError.code);
+    return { records: [], error: "Documentele nu au putut fi încărcate." };
+  }
+
+  const profiles = (profilesResult.data ?? []) as CatalogPerson[];
+  const names = new Map(
+    profiles.map((profile) => [profile.id, profile.display_name]),
+  );
+  const profileIds = new Set(profiles.map((profile) => profile.id));
+
+  const documents = (
+    (documentsResult.data ?? []) as {
+      id: string;
+      profile_id: string;
+      original_filename: string;
+      document_date: string | null;
+      category: string | null;
+      title: string | null;
+      record_id: string | null;
+    }[]
+  ).filter(
+    (item) =>
+      profileIds.has(item.profile_id) &&
+      item.category !== "Asigurare" &&
+      item.category !== "Act",
+  );
+
+  const consultations = (
+    (consultationsResult.data ?? []) as {
+      id: string;
+      profile_id: string;
+      source_document_id: string | null;
+      consultation_date: string;
+      doctor_name: string | null;
+      summary: string | null;
+    }[]
+  ).filter((item) => profileIds.has(item.profile_id));
+
+  const labs = (
+    (labsResult.data ?? []) as {
+      id: string;
+      profile_id: string;
+      source_document_id: string | null;
+      test_name: string;
+      category: string | null;
+      sample_date: string | null;
+    }[]
+  ).filter((item) => profileIds.has(item.profile_id));
+
+  const primaryIds = documents.map((doc) => doc.id);
+  const fileCountByPrimary = new Map<string, number>();
+  for (const id of primaryIds) {
+    fileCountByPrimary.set(id, 1);
+  }
+  if (primaryIds.length > 0) {
+    const extras = await supabase
+      .from("medical_documents")
+      .select("id, record_id")
+      .in("record_id", primaryIds);
+    if (!extras.error) {
+      for (const row of (extras.data ?? []) as {
+        id: string;
+        record_id: string | null;
+      }[]) {
+        if (!row.record_id) continue;
+        fileCountByPrimary.set(
+          row.record_id,
+          (fileCountByPrimary.get(row.record_id) ?? 1) + 1,
+        );
+      }
+    }
+  }
+
+  const records: RecordIndexItem[] = [];
+
+  for (const item of documents) {
+    const title =
+      item.title?.trim() ||
+      [
+        item.category,
+        (fileCountByPrimary.get(item.id) ?? 1) > 1
+          ? `${fileCountByPrimary.get(item.id)} fișiere`
+          : item.original_filename,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    const category = parseRecordCategory(item.category || "Consultație");
+    records.push({
+      id: item.id,
+      profileId: item.profile_id,
+      profileName: names.get(item.profile_id) ?? "Profil",
+      date: item.document_date,
+      title,
+      category,
+      snippet: "",
+      search: indexSearch(
+        `${title} ${category} ${names.get(item.profile_id) ?? ""}`,
+      ),
+      fileCount: fileCountByPrimary.get(item.id) ?? 1,
+    });
+  }
+
+  for (const item of consultations) {
+    const title = ["Consultație", item.doctor_name].filter(Boolean).join(" · ");
+    const snippet = redactIndex(item.summary ?? "").slice(0, 220);
+    records.push({
+      id: item.id,
+      profileId: item.profile_id,
+      profileName: names.get(item.profile_id) ?? "Profil",
+      date: item.consultation_date,
+      title,
+      category: "Consultație",
+      snippet,
+      search: indexSearch(
+        `${title} Consultație ${names.get(item.profile_id) ?? ""} ${snippet}`,
+      ),
+      fileCount: 0,
+    });
+  }
+
+  for (const item of labs) {
+    const category = parseRecordCategory(item.category || "Analiză");
+    const title = ["Analiză", item.test_name].filter(Boolean).join(" · ");
+    records.push({
+      id: item.id,
+      profileId: item.profile_id,
+      profileName: names.get(item.profile_id) ?? "Profil",
+      date: item.sample_date,
+      title,
+      category,
+      snippet: "",
+      search: indexSearch(
+        `${title} ${category} ${names.get(item.profile_id) ?? ""}`,
+      ),
+      fileCount: 0,
+    });
+  }
+
+  records.sort((left, right) => {
+    if (left.date === right.date) {
+      return left.title.localeCompare(right.title, "ro");
+    }
+    if (!left.date) {
+      return 1;
+    }
+    if (!right.date) {
+      return -1;
+    }
+    return right.date.localeCompare(left.date);
+  });
+
+  return { records, error: null };
+}
+
 const STOP_WORDS = new Set([
   "din",
   "in",

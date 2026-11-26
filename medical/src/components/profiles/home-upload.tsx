@@ -50,6 +50,9 @@ type RecordDraft = {
   title: string;
   date: string;
   body: string;
+  doctorName: string;
+  clinicName: string;
+  specialty: string;
 };
 
 type ProgressState = {
@@ -249,6 +252,9 @@ export function HomeUpload({
       title: suggestedTitle(files[0]),
       date: todayInputValue(),
       body: recordBody(nextExtraction),
+      doctorName: "",
+      clinicName: "",
+      specialty: "",
     });
     setProfileId(lockedProfileId ?? matchedProfileId ?? "");
     setMatchedName(matched);
@@ -305,6 +311,17 @@ export function HomeUpload({
           files.length > 1
             ? new File([file], `${index + 1}-${file.name}`, { type: file.type })
             : file;
+        const payloadExtraction: Extraction = {
+          ...extraction,
+          consultation: {
+            ...extraction.consultation,
+            doctorName: draft.doctorName.trim().slice(0, 200),
+            clinicName: draft.clinicName.trim().slice(0, 200),
+            specialty: draft.specialty.trim().slice(0, 200),
+            consultationDate:
+              extraction.consultation.consultationDate || draft.date,
+          },
+        };
         const data = new FormData();
         data.append("file", named);
         data.set("profileId", profileId);
@@ -312,7 +329,10 @@ export function HomeUpload({
         data.set("title", draft.title.trim());
         data.set("documentDate", draft.date);
         data.set("body", primaryId ? "" : draft.body);
-        data.set("payload", primaryId ? "{}" : JSON.stringify(extraction));
+        data.set(
+          "payload",
+          primaryId ? "{}" : JSON.stringify(payloadExtraction),
+        );
         if (lockedProfileId) {
           data.set("lockProfile", "1");
         }
@@ -531,6 +551,47 @@ export function HomeUpload({
             className="h-11"
             value={draft.date}
             onChange={(event) => setDraft({ ...draft, date: event.target.value })}
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="upload-doctor">Medic</Label>
+          <Input
+            id="upload-doctor"
+            maxLength={200}
+            autoComplete="off"
+            className="h-11"
+            placeholder="ex. Dr. Popescu"
+            value={draft.doctorName}
+            onChange={(event) =>
+              setDraft({ ...draft, doctorName: event.target.value })
+            }
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="upload-clinic">Clinică</Label>
+          <Input
+            id="upload-clinic"
+            maxLength={200}
+            autoComplete="off"
+            className="h-11"
+            value={draft.clinicName}
+            onChange={(event) =>
+              setDraft({ ...draft, clinicName: event.target.value })
+            }
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="upload-specialty">Specialitate</Label>
+          <Input
+            id="upload-specialty"
+            maxLength={200}
+            autoComplete="off"
+            className="h-11"
+            placeholder="ex. Pediatrie"
+            value={draft.specialty}
+            onChange={(event) =>
+              setDraft({ ...draft, specialty: event.target.value })
+            }
           />
         </div>
         <div className="flex flex-col gap-2">
