@@ -618,13 +618,15 @@ export async function loadRecordsIndex(familyId: string): Promise<{
       supabase
         .from("consultations")
         .select(
-          "id, profile_id, source_document_id, consultation_date, doctor_name, summary",
+          "id, profile_id, source_document_id, consultation_date, doctor_name, clinic_name, specialty, summary",
         )
         .order("consultation_date", { ascending: false })
         .limit(200),
       supabase
         .from("lab_tests")
-        .select("id, profile_id, source_document_id, test_name, category, sample_date")
+        .select(
+          "id, profile_id, source_document_id, test_name, category, sample_date, laboratory",
+        )
         .order("sample_date", { ascending: false })
         .limit(200),
     ]);
@@ -640,11 +642,46 @@ export async function loadRecordsIndex(familyId: string): Promise<{
     };
   }
 
+  let consultationsData = consultationsResult.data;
+  let consultationsError = consultationsResult.error;
+  if (missingColumn(consultationsError?.code)) {
+    const retry = await supabase
+      .from("consultations")
+      .select(
+        "id, profile_id, source_document_id, consultation_date, doctor_name, summary",
+      )
+      .order("consultation_date", { ascending: false })
+      .limit(200);
+    consultationsError = retry.error;
+    consultationsData = (retry.data ?? []).map((row) => ({
+      ...row,
+      clinic_name: null,
+      specialty: null,
+    }));
+  }
+
+  let labsData = labsResult.data;
+  let labsError = labsResult.error;
+  if (missingColumn(labsError?.code)) {
+    const retry = await supabase
+      .from("lab_tests")
+      .select(
+        "id, profile_id, source_document_id, test_name, category, sample_date",
+      )
+      .order("sample_date", { ascending: false })
+      .limit(200);
+    labsError = retry.error;
+    labsData = (retry.data ?? []).map((row) => ({
+      ...row,
+      laboratory: null,
+    }));
+  }
+
   const listError =
     profilesResult.error ??
     documentsError ??
-    consultationsResult.error ??
-    labsResult.error;
+    consultationsError ??
+    labsError;
   if (listError) {
     console.error("loadRecordsIndex", listError.code);
     return {
@@ -658,22 +695,25 @@ export async function loadRecordsIndex(familyId: string): Promise<{
   const names = new Map(profiles.map((profile) => [profile.id, profile.display_name]));
   const profileIds = new Set(profiles.map((profile) => profile.id));
 
-  const consultations = ((consultationsResult.data ?? []) as {
+  const consultations = ((consultationsData ?? []) as {
     id: string;
     profile_id: string;
     source_document_id: string | null;
     consultation_date: string;
     doctor_name: string | null;
+    clinic_name: string | null;
+    specialty: string | null;
     summary: string | null;
   }[]).filter((item) => profileIds.has(item.profile_id));
 
-  const labs = ((labsResult.data ?? []) as {
+  const labs = ((labsData ?? []) as {
     id: string;
     profile_id: string;
     source_document_id: string | null;
     test_name: string;
     category: string | null;
     sample_date: string | null;
+    laboratory: string | null;
   }[]).filter((item) => profileIds.has(item.profile_id));
 
   const documents = ((documentsData ?? []) as {
@@ -722,7 +762,17 @@ export async function loadRecordsIndex(familyId: string): Promise<{
       category,
       snippet,
       search: indexSearch(
-        `${title} ${category} ${names.get(item.profile_id) ?? ""} ${consultation?.doctor_name ?? ""} ${snippet}`,
+        [
+          title,
+          category,
+          names.get(item.profile_id) ?? "",
+          consultation?.doctor_name,
+          consultation?.clinic_name,
+          consultation?.specialty,
+          snippet,
+        ]
+          .filter(Boolean)
+          .join(" "),
       ),
       fileCount: files.length,
     });
@@ -740,7 +790,17 @@ export async function loadRecordsIndex(familyId: string): Promise<{
       category: "Consultație",
       snippet,
       search: indexSearch(
-        `${title} Consultație ${names.get(item.profile_id) ?? ""} ${snippet}`,
+        [
+          title,
+          "Consultație",
+          names.get(item.profile_id) ?? "",
+          item.doctor_name,
+          item.clinic_name,
+          item.specialty,
+          snippet,
+        ]
+          .filter(Boolean)
+          .join(" "),
       ),
       fileCount: 0,
     });
@@ -758,7 +818,14 @@ export async function loadRecordsIndex(familyId: string): Promise<{
       category,
       snippet: "",
       search: indexSearch(
-        `${title} ${category} ${names.get(item.profile_id) ?? ""}`,
+        [
+          title,
+          category,
+          names.get(item.profile_id) ?? "",
+          item.laboratory,
+        ]
+          .filter(Boolean)
+          .join(" "),
       ),
       fileCount: 0,
     });
