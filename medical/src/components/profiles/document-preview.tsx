@@ -205,7 +205,8 @@ export function DocumentGallery({
   compact?: boolean;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const touchX = useRef<number | null>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const ignoreSwipe = useRef(false);
   const leftForNativePdf = useRef(false);
   const preferNativePdf = useNativePdfViewer();
   const [index, setIndex] = useState(0);
@@ -380,21 +381,56 @@ export function DocumentGallery({
             <div
               className="relative flex min-h-0 flex-1 items-center justify-center px-1"
               onTouchStart={(event) => {
-                touchX.current = event.changedTouches[0]?.clientX ?? null;
-              }}
-              onTouchEnd={(event) => {
-                if (touchX.current == null || !many) {
+                // Pinch / multi-touch must not change slides.
+                if (event.touches.length !== 1) {
+                  ignoreSwipe.current = true;
+                  touchStart.current = null;
                   return;
                 }
-                const moved =
-                  (event.changedTouches[0]?.clientX ?? touchX.current) -
-                  touchX.current;
-                touchX.current = null;
-                if (moved > 48) {
+                ignoreSwipe.current = false;
+                const touch = event.touches[0];
+                touchStart.current = { x: touch.clientX, y: touch.clientY };
+              }}
+              onTouchMove={(event) => {
+                if (event.touches.length > 1) {
+                  ignoreSwipe.current = true;
+                  touchStart.current = null;
+                }
+              }}
+              onTouchEnd={(event) => {
+                const start = touchStart.current;
+                touchStart.current = null;
+                if (ignoreSwipe.current || !start || !many) {
+                  ignoreSwipe.current = false;
+                  return;
+                }
+                // Browser page zoom: panning should not flip files.
+                if (
+                  typeof window !== "undefined" &&
+                  window.visualViewport &&
+                  window.visualViewport.scale > 1.01
+                ) {
+                  return;
+                }
+                const end = event.changedTouches[0];
+                if (!end) {
+                  return;
+                }
+                const dx = end.clientX - start.x;
+                const dy = end.clientY - start.y;
+                // Only clear horizontal swipes; vertical/diagonal pans stay put.
+                if (Math.abs(dx) < 56 || Math.abs(dx) <= Math.abs(dy)) {
+                  return;
+                }
+                if (dx > 0) {
                   step(-1);
-                } else if (moved < -48) {
+                } else {
                   step(1);
                 }
+              }}
+              onTouchCancel={() => {
+                ignoreSwipe.current = false;
+                touchStart.current = null;
               }}
             >
               {many ? (
