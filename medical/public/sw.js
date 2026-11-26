@@ -64,51 +64,6 @@ function fetchWithTimeout(request, ms) {
   });
 }
 
-self.addEventListener("push", (event) => {
-  let data = { title: "Programare", body: "", url: "/" };
-  try {
-    if (event.data) {
-      data = { ...data, ...event.data.json() };
-    }
-  } catch {
-    // Keep defaults when payload is missing or invalid.
-  }
-
-  event.waitUntil(
-    self.registration.showNotification(data.title || "Programare", {
-      body: data.body || "",
-      data: { url: data.url || "/" },
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
-    }),
-  );
-});
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  const target = event.notification.data?.url || "/";
-  event.waitUntil(
-    (async () => {
-      const clients = await self.clients.matchAll({
-        type: "window",
-        includeUncontrolled: true,
-      });
-      for (const client of clients) {
-        if ("focus" in client) {
-          await client.focus();
-          if ("navigate" in client) {
-            await client.navigate(target);
-          }
-          return;
-        }
-      }
-      if (self.clients.openWindow) {
-        await self.clients.openWindow(target);
-      }
-    })(),
-  );
-});
-
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
     return;

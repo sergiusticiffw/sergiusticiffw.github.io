@@ -14,8 +14,8 @@ export function RegisterServiceWorker() {
       return;
     }
 
-    // Keep SW registered in every env — Web Push needs it. In development we
-    // still clear old caches so stale shells do not stick around.
+    // Keep SW registered for PWA offline shell. In development we still clear
+    // old caches so stale shells do not stick around.
     if (process.env.NODE_ENV === "development") {
       void caches.keys().then((keys) => {
         for (const key of keys) {

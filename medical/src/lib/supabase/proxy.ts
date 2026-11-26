@@ -8,8 +8,6 @@ function isPublicPath(pathname: string) {
     pathname === "/login" ||
     pathname.startsWith("/login/") ||
     pathname.startsWith("/auth/") ||
-    // Cron jobs use CRON_SECRET in the route handler (no user session).
-    pathname.startsWith("/api/cron/") ||
     pathname === "/sw.js" ||
     pathname === "/manifest.webmanifest"
   );
