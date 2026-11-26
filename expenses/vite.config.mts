@@ -15,6 +15,10 @@ export default defineConfig({
         background_color: '#13122d',
         theme_color: '#282a36',
       },
+      workbox: {
+        // Main bundle is ~2.1 MB; default Workbox limit is 2 MiB.
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+      },
     }),
   ],
   resolve: {

@@ -22,7 +22,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build && mv dist home"
+    "build": "vite build && rm -rf home && mv dist home"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
