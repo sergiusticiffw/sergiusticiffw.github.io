@@ -154,10 +154,17 @@ export function calculateMilestones(
   const milestoneDates: Record<string, string | null> = {};
   let cumulativePrincipalPaid = 0;
   const initialPrincipal = totalPrincipal;
+  // Last installment often leaves a tiny residual from rounding; treat near-zero as paid off.
+  const principalTolerance = Math.max(0.01, totalPrincipal * 1e-9);
+  let lastInstallmentDate: string | null = null;
 
   for (const row of schedule) {
     if (!isScheduleRow(row)) continue;
     const rowPrincipal = parseSchedulePrincipal(row.principal);
+
+    if (row.date && parseScheduleInstallment(row.installment) != null) {
+      lastInstallmentDate = row.date;
+    }
 
     if (row.was_payed === true) {
       cumulativePrincipalPaid = Math.max(
@@ -167,7 +174,10 @@ export function calculateMilestones(
 
       for (const t of thresholds) {
         const target = (t.percent / 100) * totalPrincipal;
-        if (milestoneDates[t.id] == null && cumulativePrincipalPaid >= target) {
+        if (
+          milestoneDates[t.id] == null &&
+          cumulativePrincipalPaid + principalTolerance >= target
+        ) {
           milestoneDates[t.id] = row.date ?? null;
         }
       }
@@ -176,11 +186,19 @@ export function calculateMilestones(
 
       for (const t of thresholds) {
         const target = (t.percent / 100) * totalPrincipal;
-        if (milestoneDates[t.id] == null && paidAtRow >= target) {
+        if (
+          milestoneDates[t.id] == null &&
+          paidAtRow + principalTolerance >= target
+        ) {
           milestoneDates[t.id] = row.date;
         }
       }
     }
+  }
+
+  // 100% is the final loan installment: if no row hits exact payoff, use the last payment date.
+  if (milestoneDates['100'] == null && lastInstallmentDate) {
+    milestoneDates['100'] = lastInstallmentDate;
   }
 
   return thresholds.map((t) => ({
